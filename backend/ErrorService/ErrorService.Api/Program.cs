@@ -1,4 +1,5 @@
 using ErrorService.Domain.Interfaces;
+using ErrorService.Infrastructure.Messaging;
 using ErrorService.Infrastructure.Persistence;
 using ErrorService.Infrastructure.Services;
 using ErrorService.Infrastructure.Services.Messaging;
@@ -35,6 +36,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Application Services
 builder.Services.AddScoped<IErrorLogRepository, EfErrorLogRepository>();
 builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
+
+// Event Publisher for RabbitMQ
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>

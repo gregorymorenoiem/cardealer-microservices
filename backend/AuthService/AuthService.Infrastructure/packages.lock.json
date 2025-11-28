@@ -935,12 +935,19 @@
           "System.Text.Json": "[8.0.4, )"
         }
       },
-      "errorservice.domain": {
+      "cardealer.contracts": {
         "type": "Project"
+      },
+      "errorservice.domain": {
+        "type": "Project",
+        "dependencies": {
+          "CarDealer.Contracts": "[1.0.0, )"
+        }
       },
       "errorservice.shared": {
         "type": "Project",
         "dependencies": {
+          "CarDealer.Contracts": "[1.0.0, )",
           "ErrorService.Domain": "[1.0.0, )",
           "Microsoft.AspNetCore.Http.Abstractions": "[2.3.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.0, )",

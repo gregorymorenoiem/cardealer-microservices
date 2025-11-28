@@ -1,3 +1,4 @@
+using CarDealer.Contracts.Events.Error;
 using ErrorService.Domain.Interfaces;
 using ErrorService.Shared.Exceptions;
 using Microsoft.AspNetCore.Http;
@@ -10,16 +11,19 @@ namespace ErrorService.Shared.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly IErrorReporter _errorReporter;
+        private readonly IEventPublisher? _eventPublisher;
         private readonly string _serviceName;
 
         public ErrorHandlingMiddleware(
             RequestDelegate next, 
-            IErrorReporter errorReporter, 
-            string serviceName = "UnknownService")
+            IErrorReporter errorReporter,
+            string serviceName = "UnknownService",
+            IEventPublisher? eventPublisher = null)
         {
             _next = next;
             _errorReporter = errorReporter;
             _serviceName = serviceName;
+            _eventPublisher = eventPublisher;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -48,6 +52,12 @@ namespace ErrorService.Shared.Middleware
             Log.Error(exception, "Unhandled exception in {ServiceName}", _serviceName);
 
             await StoreErrorInDatabase(exception, context, statusCode);
+
+            // Publish critical error event to RabbitMQ if status >= 500
+            if (statusCode >= 500 && _eventPublisher != null)
+            {
+                await PublishCriticalErrorEventAsync(exception, context, statusCode);
+            }
 
             context.Response.StatusCode = statusCode;
             
@@ -153,6 +163,42 @@ namespace ErrorService.Shared.Middleware
             catch (Exception logEx)
             {
                 Log.Error(logEx, "Failed to store error in ErrorService database");
+            }
+        }
+
+        private async Task PublishCriticalErrorEventAsync(Exception exception, HttpContext context, int statusCode)
+        {
+            try
+            {
+                var criticalEvent = new ErrorCriticalEvent
+                {
+                    ErrorId = Guid.NewGuid(),
+                    ServiceName = _serviceName,
+                    ExceptionType = exception.GetType().Name,
+                    Message = exception.Message,
+                    StackTrace = exception.StackTrace,
+                    StatusCode = statusCode,
+                    Endpoint = context.Request.Path,
+                    UserId = context.User?.FindFirst("sub")?.Value,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        ["RequestId"] = context.TraceIdentifier,
+                        ["HttpMethod"] = context.Request.Method,
+                        ["UserAgent"] = context.Request.Headers.UserAgent.ToString(),
+                        ["ClientIp"] = context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        ["Environment"] = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"
+                    }
+                };
+
+                await _eventPublisher!.PublishAsync(criticalEvent);
+                
+                Log.Information(
+                    "Published ErrorCriticalEvent {EventId} for {ExceptionType} in {ServiceName}",
+                    criticalEvent.EventId, exception.GetType().Name, _serviceName);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to publish ErrorCriticalEvent");
             }
         }
     }
