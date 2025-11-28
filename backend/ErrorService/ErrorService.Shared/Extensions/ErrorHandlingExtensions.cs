@@ -18,7 +18,7 @@ namespace ErrorService.Shared.Extensions
             var serviceName = app.ApplicationServices.GetService<ErrorHandlingMiddlewareOptions>()?.ServiceName ?? "UnknownService";
             var errorReporter = app.ApplicationServices.GetRequiredService<IErrorReporter>();
             var eventPublisher = app.ApplicationServices.GetService<IEventPublisher>(); // Optional
-            
+
             return app.UseMiddleware<ErrorHandlingMiddleware>(errorReporter, serviceName, eventPublisher);
         }
     }
@@ -27,4 +27,4 @@ namespace ErrorService.Shared.Extensions
     {
         public string ServiceName { get; set; } = "UnknownService";
     }
-}   
+}

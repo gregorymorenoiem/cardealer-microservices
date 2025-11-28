@@ -25,11 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AuthService\AuthService.Shared\AuthService.Shared.csproj" />
     <ProjectReference Include="..\NotificationService.Application\NotificationService.Application.csproj" />
     <ProjectReference Include="..\NotificationService.Infrastructure\NotificationService.Infrastructure.csproj" />
     <ProjectReference Include="..\NotificationService.Shared\NotificationService.Shared.csproj" />
-    <ProjectReference Include="..\..\ErrorService\ErrorService.Shared\ErrorService.Shared.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

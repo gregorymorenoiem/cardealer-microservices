@@ -1,5 +1,4 @@
-﻿using AuthService.Infrastructure.Services.Notification;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NotificationService.Domain.Interfaces;

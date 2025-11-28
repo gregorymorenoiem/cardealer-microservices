@@ -104,7 +104,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
             _channel?.Dispose();
             _connection?.Close();
             _connection?.Dispose();
-            
+
             _logger.LogInformation("RabbitMQ Event Publisher disposed");
         }
         catch (Exception ex)

@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using NotificationService.Infrastructure.Extensions;
 using NotificationService.Infrastructure.Persistence;
+using NotificationService.Infrastructure.Providers;
+using NotificationService.Infrastructure.Messaging;
+using NotificationService.Domain.Interfaces;
 using Serilog;
 using System.Reflection;
 using FluentValidation;
 using NotificationService.Shared;
-using ErrorService.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,12 @@ builder.Services.AddHealthChecks();
 // ✅ USAR DEPENDENCY INJECTION DE INFRASTRUCTURE (INCLUYE RABBITMQ)
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// 🔧 Register Teams Provider
+builder.Services.AddHttpClient<ITeamsProvider, TeamsProvider>();
+
+// 🔧 Register ErrorCriticalEvent Consumer as Hosted Service
+builder.Services.AddHostedService<ErrorCriticalEventConsumer>();
+
 // 1) DbContext del NotificationService
 var notificationConn = builder.Configuration.GetConnectionString("DefaultConnection");
 Console.WriteLine($"[DEBUG] NotificationService Connection = '{notificationConn}'");
@@ -41,9 +49,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(opts =>
     opts.UseNpgsql(notificationConn)
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
 );
-
-// 2) Configurar ErrorHandling para NotificationService (SOLO MIDDLEWARE)
-builder.Services.AddErrorHandling("NotificationService");
 
 // MediatR - Cargar assemblies de Application
 builder.Services.AddMediatR(cfg =>
@@ -84,10 +89,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// ✅ SOLO MIDDLEWARE DE ERROR SERVICE - NO INYECCIÓN DIRECTA
-app.UseMiddleware<ErrorService.Shared.Middleware.ResponseCaptureMiddleware>();
-app.UseErrorHandling();
 
 app.UseAuthorization();
 

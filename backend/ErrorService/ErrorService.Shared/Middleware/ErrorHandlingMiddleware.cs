@@ -15,7 +15,7 @@ namespace ErrorService.Shared.Middleware
         private readonly string _serviceName;
 
         public ErrorHandlingMiddleware(
-            RequestDelegate next, 
+            RequestDelegate next,
             IErrorReporter errorReporter,
             string serviceName = "UnknownService",
             IEventPublisher? eventPublisher = null)
@@ -31,7 +31,7 @@ namespace ErrorService.Shared.Middleware
             try
             {
                 await _next(context);
-                
+
                 if (context.Response.StatusCode == StatusCodes.Status400BadRequest)
                 {
                     await CaptureValidationErrorAsync(context);
@@ -60,14 +60,14 @@ namespace ErrorService.Shared.Middleware
             }
 
             context.Response.StatusCode = statusCode;
-            
-            var response = new 
-            { 
-                success = false, 
+
+            var response = new
+            {
+                success = false,
                 error = exception is AppException ? exception.Message : "Internal server error.",
                 traceId = context.TraceIdentifier
             };
-            
+
             await context.Response.WriteAsJsonAsync(response);
         }
 
@@ -75,7 +75,7 @@ namespace ErrorService.Shared.Middleware
         {
             try
             {
-                if (context.Items.TryGetValue("ResponseBody", out var responseBodyObj) && 
+                if (context.Items.TryGetValue("ResponseBody", out var responseBodyObj) &&
                     responseBodyObj is string responseBody)
                 {
                     var validationDetails = TryParseValidationResponse(responseBody);
@@ -191,7 +191,7 @@ namespace ErrorService.Shared.Middleware
                 };
 
                 await _eventPublisher!.PublishAsync(criticalEvent);
-                
+
                 Log.Information(
                     "Published ErrorCriticalEvent {EventId} for {ExceptionType} in {ServiceName}",
                     criticalEvent.EventId, exception.GetType().Name, _serviceName);
