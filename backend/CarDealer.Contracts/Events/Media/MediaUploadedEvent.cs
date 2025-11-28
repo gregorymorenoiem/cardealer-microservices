@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Media;
 public class MediaUploadedEvent : EventBase
 {
     public override string EventType => "media.uploaded";
-    
+
     public Guid MediaId { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty;

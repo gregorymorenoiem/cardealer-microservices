@@ -109,6 +109,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaService.Workers", "Med
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts", "CarDealer.Contracts\CarDealer.Contracts.csproj", "{9C54DCF7-1C5F-422A-9440-1CABBBA3A144}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts.Tests", "CarDealer.Contracts.Tests\CarDealer.Contracts.Tests.csproj", "{4849176B-A95D-4214-977C-75F06E05306B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -283,6 +285,10 @@ Global
 		{9C54DCF7-1C5F-422A-9440-1CABBBA3A144}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C54DCF7-1C5F-422A-9440-1CABBBA3A144}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C54DCF7-1C5F-422A-9440-1CABBBA3A144}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4849176B-A95D-4214-977C-75F06E05306B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4849176B-A95D-4214-977C-75F06E05306B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4849176B-A95D-4214-977C-75F06E05306B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4849176B-A95D-4214-977C-75F06E05306B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

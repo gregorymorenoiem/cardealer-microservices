@@ -11,7 +11,7 @@ public class ApiResponse<T>
     public string? Message { get; set; }
     public ErrorDetailsDto? Error { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    
+
     public static ApiResponse<T> SuccessResponse(T data, string? message = null)
     {
         return new ApiResponse<T>
@@ -21,7 +21,7 @@ public class ApiResponse<T>
             Message = message
         };
     }
-    
+
     public static ApiResponse<T> ErrorResponse(string message, ErrorDetailsDto? error = null)
     {
         return new ApiResponse<T>

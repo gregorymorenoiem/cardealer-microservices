@@ -9,7 +9,7 @@ namespace CarDealer.Contracts.Events.Notification;
 public class TeamsAlertSentEvent : EventBase
 {
     public override string EventType => "notification.teams.alert.sent";
-    
+
     public Guid AlertId { get; set; }
     public string WebhookUrl { get; set; } = string.Empty;
     public string AlertType { get; set; } = string.Empty; // Critical, Warning, Info

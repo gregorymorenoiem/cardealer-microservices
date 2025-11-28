@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Notification;
 public class NotificationSentEvent : EventBase
 {
     public override string EventType => "notification.sent";
-    
+
     public Guid NotificationId { get; set; }
     public string Channel { get; set; } = string.Empty; // Email, SMS, Push, Teams
     public string Recipient { get; set; } = string.Empty;

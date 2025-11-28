@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Notification;
 public class NotificationFailedEvent : EventBase
 {
     public override string EventType => "notification.failed";
-    
+
     public Guid NotificationId { get; set; }
     public string Channel { get; set; } = string.Empty;
     public string Recipient { get; set; } = string.Empty;

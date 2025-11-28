@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Media;
 public class MediaDeletedEvent : EventBase
 {
     public override string EventType => "media.deleted";
-    
+
     public Guid MediaId { get; set; }
     public Guid DeletedBy { get; set; }
     public DateTime DeletedAt { get; set; }

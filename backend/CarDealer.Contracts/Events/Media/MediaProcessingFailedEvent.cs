@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Media;
 public class MediaProcessingFailedEvent : EventBase
 {
     public override string EventType => "media.processing.failed";
-    
+
     public Guid MediaId { get; set; }
     public string ProcessingType { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;

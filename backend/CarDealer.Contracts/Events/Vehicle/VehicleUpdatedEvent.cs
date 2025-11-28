@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Vehicle;
 public class VehicleUpdatedEvent : EventBase
 {
     public override string EventType => "vehicle.updated";
-    
+
     public Guid VehicleId { get; set; }
     public Dictionary<string, object> Changes { get; set; } = new();
     public Guid UpdatedBy { get; set; }

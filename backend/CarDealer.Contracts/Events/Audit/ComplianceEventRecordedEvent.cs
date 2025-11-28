@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Audit;
 public class ComplianceEventRecordedEvent : EventBase
 {
     public override string EventType => "audit.compliance.recorded";
-    
+
     public Guid ComplianceId { get; set; }
     public string ComplianceType { get; set; } = string.Empty; // GDPR, SOC2, ISO27001
     public string EventDescription { get; set; } = string.Empty;

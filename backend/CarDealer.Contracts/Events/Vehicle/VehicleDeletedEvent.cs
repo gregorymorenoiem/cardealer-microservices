@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Vehicle;
 public class VehicleDeletedEvent : EventBase
 {
     public override string EventType => "vehicle.deleted";
-    
+
     public Guid VehicleId { get; set; }
     public string? Reason { get; set; }
     public Guid DeletedBy { get; set; }

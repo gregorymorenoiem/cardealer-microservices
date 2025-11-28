@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Media;
 public class MediaProcessedEvent : EventBase
 {
     public override string EventType => "media.processed";
-    
+
     public Guid MediaId { get; set; }
     public string ProcessingType { get; set; } = string.Empty;
     public DateTime ProcessedAt { get; set; }

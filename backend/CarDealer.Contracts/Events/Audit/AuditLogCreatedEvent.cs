@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Audit;
 public class AuditLogCreatedEvent : EventBase
 {
     public override string EventType => "audit.log.created";
-    
+
     public Guid AuditId { get; set; }
     public string ServiceName { get; set; } = string.Empty;
     public string Action { get; set; } = string.Empty;

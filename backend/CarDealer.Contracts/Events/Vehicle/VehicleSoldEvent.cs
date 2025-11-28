@@ -8,7 +8,7 @@ namespace CarDealer.Contracts.Events.Vehicle;
 public class VehicleSoldEvent : EventBase
 {
     public override string EventType => "vehicle.sold";
-    
+
     public Guid VehicleId { get; set; }
     public Guid CustomerId { get; set; }
     public decimal SalePrice { get; set; }
