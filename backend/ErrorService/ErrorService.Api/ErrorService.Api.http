@@ -1,0 +1,35 @@
+@ErrorService.Api_HostAddress = http://localhost:5083
+
+### Health Check
+GET {{ErrorService.Api_HostAddress}}/health
+Accept: application/json
+
+### Log an error
+POST {{ErrorService.Api_HostAddress}}/api/errors
+Content-Type: application/json
+
+{
+  "serviceName": "TestService",
+  "exceptionType": "System.Exception",
+  "message": "This is a test error",
+  "stackTrace": "at TestService.Method() in TestService.cs:line 123",
+  "endpoint": "/api/test",
+  "httpMethod": "GET",
+  "statusCode": 500,
+  "userId": "test-user-123",
+  "metadata": {
+    "additionalInfo": "Some additional context"
+  }
+}
+
+### Get errors
+GET {{ErrorService.Api_HostAddress}}/api/errors
+Accept: application/json
+
+### Get error stats
+GET {{ErrorService.Api_HostAddress}}/api/errors/stats
+Accept: application/json
+
+### Get service names
+GET {{ErrorService.Api_HostAddress}}/api/errors/services
+Accept: application/json

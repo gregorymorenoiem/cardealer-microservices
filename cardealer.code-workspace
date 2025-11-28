@@ -1,0 +1,43 @@
+{
+  "folders": [
+    {
+      "name": "Root (Docker/Config)",
+      "path": "."
+    },
+    {
+      "name": "Service: AdminService",
+      "path": "backend/AdminService"
+    },
+    {
+      "name": "Service: AuthService",
+      "path": "backend/AuthService"
+    },
+    {
+      "name": "Service: ContactService",
+      "path": "backend/ContactService"
+    },
+    {
+      "name": "Service: ErrorService",
+      "path": "backend/ErrorService"
+    },
+    {
+      "name": "Service: Gateway",
+      "path": "backend/Gateway"
+    },
+    {
+      "name": "Service: MediaService",
+      "path": "backend/MediaService"
+    },
+    {
+      "name": "Service: NotificationService",
+      "path": "backend/NotificationService"
+    },
+    {
+      "name": "Service: VehicleService",
+      "path": "backend/VehicleService"
+    }
+  ],
+  "settings": {
+    "editor.minimap.enabled": false
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "Routes": [
+
+    {
+      "UpstreamPathTemplate": "/api/errors/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/errors",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/errors",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/errors/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/errors/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/errors/stats",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/errors/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/errors/services",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/errors/services",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/errors/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/errors/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/error-service/swagger/{everything}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "errorservice", "Port": 80 }
+      ],
+      "DangerousAcceptAnyServerCertificateValidator": true,
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/auth/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "authservice", "Port": 80 }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [ "OPTIONS", "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "authservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/auth-service/swagger/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "authservice", "Port": 80 }
+      ],
+      "DangerousAcceptAnyServerCertificateValidator": true,
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/gateway-docs/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "gateway", "Port": 80 }
+      ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/notifications/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/notifications/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "notifications"
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+        "Key": "ErrorService",
+        "Config": [
+          {
+            "Name": "Error Service",
+            "Version": "v1",
+            "Url": "http://errorservice:80/swagger/v1/swagger.json"
+          }
+        ]
+    },
+    {
+      "Key": "NotificationService",
+      "Config": [
+        {
+          "Name": "Notification Service",
+          "Version": "v1",
+          "Url": "http://notificationservice:80/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "AuthService",
+      "Config": [
+        {
+          "Name": "Auth Service",
+          "Version": "v1",
+          "Url": "http://authservice:80/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:8443",
+    "DangerousAcceptAnyServerCertificateValidator": true
+  }
+}

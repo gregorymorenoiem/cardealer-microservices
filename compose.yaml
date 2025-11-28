@@ -1,0 +1,259 @@
+services:
+  # PostgreSQL Database for ErrorService
+  errorservice-db:
+    image: postgres:16
+    container_name: errorservice-db
+    environment:
+      POSTGRES_DB: errorservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25432:5432" # Cambiado a puerto alto
+    volumes:
+      - errorservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ErrorService API
+  errorservice:
+    build:
+      context: ./backend # Actualizado: El contexto ahora es la carpeta backend
+      dockerfile: ErrorService/ErrorService.Api/Dockerfile.dev
+    container_name: errorservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
+    ports:
+      - "15083:80" # Cambiado
+      - "24022:4022" # Cambiado
+    depends_on:
+      errorservice-db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      # Actualizado: los paths de volumen ahora apuntan a ./backend/
+      - ./backend/ErrorService:/app/ErrorService
+      - ./backend/ErrorService/ErrorService.Shared:/app/ErrorService.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # AuthService Database
+  # ------------------------
+  authservice-db:
+    image: postgres:16
+    container_name: authservice-db
+    environment:
+      POSTGRES_DB: authservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25434:5432" # Cambiado a puerto alto
+    volumes:
+      - authservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # AuthService API
+  # ------------------------
+  authservice:
+    build:
+      context: ./backend # Actualizado
+      dockerfile: AuthService/AuthService.Api/Dockerfile.dev
+    container_name: authservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=authservice-db;Database=authservice;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+    ports:
+      - "15085:80" # Cambiado
+      - "24023:4022" # Cambiado
+    depends_on:
+      authservice-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      # Actualizado
+      - ./backend/AuthService:/app/AuthService
+      - ./backend/AuthService/AuthService.Shared:/app/AuthService.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # NotificationService Database
+  # ------------------------
+  notificationservice-db:
+    image: postgres:16
+    container_name: notificationservice-db
+    environment:
+      POSTGRES_DB: notificationservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25433:5432" # Cambiado a puerto alto
+    volumes:
+      - notificationservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # RabbitMQ for Message Bus
+  # ------------------------
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "10002:5672" # AMQP - puerto alto
+      - "10003:15672" # Management UI - puerto alto
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # ------------------------
+  # NotificationService API
+  # ------------------------
+  notificationservice:
+    build:
+      context: ./backend # Actualizado
+      dockerfile: NotificationService/NotificationService.Api/Dockerfile.dev
+    container_name: notificationservice
+    restart: always
+    cpus: 0.75
+    mem_limit: 1g
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:80"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
+      ConnectionStrings__DefaultConnection: "Host=notificationservice-db;Database=notificationservice;Username=postgres;Password=password"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      NotificationSettings__SendGrid__ApiKey: "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"
+      NotificationSettings__SendGrid__FromEmail: "gregorymoreno.iem@gmail.com"
+      NotificationSettings__SendGrid__FromName: "CarGurus Dev"
+      NotificationSettings__Twilio__AccountSid: "AC19fec9dd3df70a34f6252c9ef649a532"
+      NotificationSettings__Twilio__AuthToken: "2221beebc69b7251062f2b10d7ed75e6"
+      NotificationSettings__Twilio__FromNumber: "+13476622382"
+      NotificationSettings__Firebase__ServiceAccountKeyPath: "/app/firebase-service-account.json"
+      NotificationSettings__Firebase__ProjectId: "cargurus-dev"
+      NotificationSettings__TemplatesPath: "/app/Templates"
+    ports:
+      - "15084:80" # Cambiado
+      - "24026:4022" # Cambiado
+    depends_on:
+      notificationservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      # Actualizado
+      - ./backend/NotificationService:/app/NotificationService
+      - ./backend/NotificationService/NotificationService.Shared:/app/NotificationService.Shared
+      - ./backend/NotificationService/NotificationService.Infrastructure/Templates:/app/Templates
+      - ./backend/firebase-dev-key.json:/app/firebase-service-account.json
+      # ESTA LÍNEA ES LA QUE AÑADIMOS ANTES PARA EL DEBUG
+      - ~/.vsdbg:/remote_debugger:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ------------------------
+  # Redis for Caching
+  # ------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ------------------------
+  # API Gateway
+  # ------------------------
+  gateway:
+    build:
+      context: ./backend # Actualizado
+      dockerfile: Gateway/Gateway.Api/Dockerfile.dev
+    container_name: gateway-service
+    restart: always
+    cpus: 0.50
+    mem_limit: 512m
+    depends_on:
+      - errorservice
+      - authservice
+      - notificationservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:80"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
+    volumes:
+      # Actualizado: de './:/app' a './backend:/app'
+      - ./backend:/app
+    ports:
+      - "18443:80" # Cambiado
+      - "24024:4022" # Cambiado
+    networks:
+      - cargurus-net
+
+volumes:
+  errorservice_data:
+  authservice_data:
+  notificationservice_data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  cargurus-net:
+    driver: bridge

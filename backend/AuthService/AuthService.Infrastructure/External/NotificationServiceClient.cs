@@ -1,0 +1,234 @@
+using System.Net.Http.Json;
+using System.Text.Json;
+using AuthService.Shared;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using ErrorService.Shared.Exceptions;
+
+namespace AuthService.Infrastructure.External;
+
+public class NotificationServiceClient
+{
+    private readonly HttpClient _httpClient;
+    private readonly NotificationServiceSettings _settings;
+    private readonly ILogger<NotificationServiceClient> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    public NotificationServiceClient(
+        HttpClient httpClient,
+        IOptions<NotificationServiceSettings> settings,
+        ILogger<NotificationServiceClient> logger)
+    {
+        _httpClient = httpClient;
+        _settings = settings.Value;
+        _logger = logger;
+
+        // Configurar HttpClient base
+        _httpClient.BaseAddress = new Uri(_settings.BaseUrl);
+        _httpClient.Timeout = TimeSpan.FromSeconds(_settings.TimeoutSeconds);
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "AuthService");
+
+        // Configurar opciones de JSON
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
+    }
+
+    public async Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true, Dictionary<string, object>? metadata = null)
+    {
+        if (!_settings.EnableNotifications)
+        {
+            _logger.LogWarning("Notifications are disabled. Email to {To} was not sent.", to);
+            return true; // Simular éxito si las notificaciones están deshabilitadas
+        }
+
+        try
+        {
+            // Usar el DTO exacto que espera el NotificationService
+            var request = new
+            {
+                To = to,
+                Subject = subject,
+                Body = body,
+                IsHtml = isHtml,
+                Metadata = metadata ?? new Dictionary<string, object>()
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", request, _jsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Leer la respuesta para verificar que se procesó correctamente
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var emailResponse = JsonSerializer.Deserialize<EmailNotificationResponse>(responseContent, _jsonOptions);
+
+                if (emailResponse != null && emailResponse.Status?.ToLower() == "sent")
+                {
+                    _logger.LogInformation("Email sent successfully to {To}, NotificationId: {NotificationId}", to, emailResponse.NotificationId);
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning("Email to {To} was accepted but may not have been sent. Response: {Response}", to, responseContent);
+                    return false;
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Failed to send email to {To}. Status: {StatusCode}, Error: {Error}",
+                    to, response.StatusCode, errorContent);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending email to {To}", to);
+            return false;
+        }
+    }
+
+    public async Task<bool> SendSmsAsync(string to, string message, Dictionary<string, object>? metadata = null)
+    {
+        if (!_settings.EnableNotifications)
+        {
+            _logger.LogWarning("Notifications are disabled. SMS to {To} was not sent.", to);
+            return true;
+        }
+
+        try
+        {
+            var request = new
+            {
+                To = to,
+                Message = message,
+                Metadata = metadata ?? new Dictionary<string, object>()
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/notifications/sms", request, _jsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var smsResponse = JsonSerializer.Deserialize<SmsNotificationResponse>(responseContent, _jsonOptions);
+
+                if (smsResponse != null && smsResponse.Status?.ToLower() == "sent")
+                {
+                    _logger.LogInformation("SMS sent successfully to {To}, NotificationId: {NotificationId}", to, smsResponse.NotificationId);
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning("SMS to {To} was accepted but may not have been sent. Response: {Response}", to, responseContent);
+                    return false;
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Failed to send SMS to {To}. Status: {StatusCode}, Error: {Error}",
+                    to, response.StatusCode, errorContent);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending SMS to {To}", to);
+            return false;
+        }
+    }
+
+    public async Task<bool> SendPushAsync(string deviceToken, string title, string body, object? data = null, Dictionary<string, object>? metadata = null)
+    {
+        if (!_settings.EnableNotifications)
+        {
+            _logger.LogWarning("Notifications are disabled. Push to {DeviceToken} was not sent.", deviceToken);
+            return true;
+        }
+
+        try
+        {
+            var request = new
+            {
+                DeviceToken = deviceToken,
+                Title = title,
+                Body = body,
+                Data = data,
+                Metadata = metadata ?? new Dictionary<string, object>()
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/notifications/push", request, _jsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var pushResponse = JsonSerializer.Deserialize<PushNotificationResponse>(responseContent, _jsonOptions);
+
+                if (pushResponse != null && pushResponse.Status?.ToLower() == "sent")
+                {
+                    _logger.LogInformation("Push notification sent successfully to device {DeviceToken}, NotificationId: {NotificationId}", deviceToken, pushResponse.NotificationId);
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning("Push to {DeviceToken} was accepted but may not have been sent. Response: {Response}", deviceToken, responseContent);
+                    return false;
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Failed to send push notification to {DeviceToken}. Status: {StatusCode}, Error: {Error}",
+                    deviceToken, response.StatusCode, errorContent);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending push notification to {DeviceToken}", deviceToken);
+            return false;
+        }
+    }
+
+    public async Task<NotificationStatusResponse?> GetNotificationStatusAsync(Guid notificationId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/api/notifications/{notificationId}/status");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<NotificationStatusResponse>(responseContent, _jsonOptions);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to get status for notification {NotificationId}. Status: {StatusCode}", notificationId, response.StatusCode);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting status for notification {NotificationId}", notificationId);
+            return null;
+        }
+    }
+
+    public async Task<bool> IsHealthyAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("/health");
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Notification service health check failed");
+            return false;
+        }
+    }
+
+
+}

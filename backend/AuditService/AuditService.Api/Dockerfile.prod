@@ -1,0 +1,43 @@
+# Stage 1: Build & Publish
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copiar sln y csproj para cache de dependencias
+COPY AuditService/AuditService.sln .
+COPY AuditService/AuditService.Api/AuditService.Api.csproj AuditService.Api/
+COPY AuditService/AuditService.Application/AuditService.Application.csproj AuditService.Application/
+COPY AuditService/AuditService.Domain/AuditService.Domain.csproj AuditService.Domain/
+COPY AuditService/AuditService.Infrastructure/AuditService.Infrastructure.csproj AuditService.Infrastructure/
+COPY AuditService/AuditService.Shared/AuditService.Shared.csproj AuditService.Shared/
+
+RUN dotnet restore AuditService.sln
+
+# Copiar todo y publicar
+COPY . .
+RUN dotnet publish AuditService/AuditService.Api -c Release -o /app
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+# Variables segun docker-compose (expose 80)
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS="http://+:80"
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+
+# Usuario no-root
+RUN adduser --disabled-password --gecos '' appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+# Copiar publicaci�n
+COPY --from=build --chown=appuser:appuser /app ./
+
+# Expone puerto 80 (compose expone 80)
+EXPOSE 80
+
+# Healthcheck a /api/health/ping
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost:80/api/health/ping || exit 1
+
+ENTRYPOINT ["dotnet", "AuditService.Api.dll"]

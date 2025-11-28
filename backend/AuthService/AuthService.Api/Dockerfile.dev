@@ -1,0 +1,37 @@
+############################################
+# Etapa única de desarrollo: SDK + hot-reload + debugger
+############################################
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# 1) Instala dotnet-watch y vsdbg para hot-reload y depuración remota
+RUN dotnet tool install --global dotnet-watch \
+    && export PATH="$PATH:/root/.dotnet/tools" \
+ && apt-get update \
+ && apt-get install -y unzip curl \
+ && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+
+WORKDIR /app
+
+# 2) Copia y restaura sólo el csproj de la API
+COPY AuthService/AuthService.Api/AuthService.Api.csproj ./AuthService/AuthService.Api/
+RUN dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
+
+# 3) Copia el resto del código fuente
+COPY . .
+
+# 4) Variables de entorno para desarrollo
+ENV ASPNETCORE_ENVIRONMENT=Development \
+    ASPNETCORE_URLS="http://+:80" \
+    DOTNET_MSBUILD_CONFIGURATION=Debug  \
+    DOTNET_BUILD_CONFIGURATION=Debug  \
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    NUGET_XMLDOC_MODE=none
+
+# 5) Exponer puertos HTTP y debug (mapped to 4023:4022)
+EXPOSE 80
+EXPOSE 4022
+
+# 6) Arranca vsdbg en modo servidor y luego hot-reload de la app
+ENTRYPOINT ["bash", "-lc", "\
+  /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
+  dotnet watch run --project AuthService/AuthService.Api/AuthService.Api.csproj --urls http://0.0.0.0:80\n"]

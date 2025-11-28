@@ -1,0 +1,77 @@
+@AuditService.Api_HostAddress = http://localhost:5084
+@ContentType = application/json
+
+### Health Check - Ping
+GET {{AuditService.Api_HostAddress}}/api/health/ping
+Accept: application/json
+
+### Health Check - Detailed
+GET {{AuditService.Api_HostAddress}}/api/health/detailed
+Accept: application/json
+
+### Get All Audit Logs (Paginated)
+GET {{AuditService.Api_HostAddress}}/api/audit?page=1&pageSize=10
+Accept: application/json
+
+### Get Audit Logs with Filters
+GET {{AuditService.Api_HostAddress}}/api/audit?userId=user123&action=LOGIN&fromDate=2024-01-01&toDate=2024-12-31
+Accept: application/json
+
+### Get Audit Log by ID
+GET {{AuditService.Api_HostAddress}}/api/audit/{{auditLogId}}
+Accept: application/json
+
+### Create Audit Log
+POST {{AuditService.Api_HostAddress}}/api/audit
+Content-Type: {{ContentType}}
+
+{
+  "userId": "user123",
+  "action": "LOGIN",
+  "resource": "AUTH",
+  "userIp": "192.168.1.100",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  "additionalData": {
+    "browser": "Chrome",
+    "platform": "Windows"
+  },
+  "success": true,
+  "serviceName": "AuthService",
+  "severity": 2
+}
+
+### Create Failed Audit Log
+POST {{AuditService.Api_HostAddress}}/api/audit
+Content-Type: {{ContentType}}
+
+{
+  "userId": "user456",
+  "action": "LOGIN",
+  "resource": "AUTH",
+  "userIp": "192.168.1.101",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+  "additionalData": {
+    "reason": "Invalid credentials",
+    "attemptCount": 3
+  },
+  "success": false,
+  "errorMessage": "Invalid username or password",
+  "serviceName": "AuthService",
+  "severity": 4
+}
+
+### Get Audit Statistics
+GET {{AuditService.Api_HostAddress}}/api/audit/stats?fromDate=2024-01-01&toDate=2024-12-31
+Accept: application/json
+
+### Get User Audit Logs
+GET {{AuditService.Api_HostAddress}}/api/audit/user/user123?page=1&pageSize=20
+Accept: application/json
+
+### Get Audit Logs by Action
+GET {{AuditService.Api_HostAddress}}/api/audit?action=LOGIN&page=1&pageSize=15
+Accept: application/json
+
+### Get Audit Logs by Date Range
+GET {{AuditService.Api_HostAddress}}/api/audit?fromDate=2024-10-01&toDate=2024-10-31&sortBy=createdAt&sortDescending=false
+Accept: application/json

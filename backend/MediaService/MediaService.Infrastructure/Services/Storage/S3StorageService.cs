@@ -1,0 +1,174 @@
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using MediaService.Domain.Interfaces.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace MediaService.Infrastructure.Services.Storage;
+
+public class S3StorageService : IMediaStorageService
+{
+    private readonly IAmazonS3 _s3Client;
+    private readonly S3StorageOptions _options;
+    private readonly ILogger<S3StorageService> _logger;
+
+    public S3StorageService(IOptions<S3StorageOptions> options, ILogger<S3StorageService> logger)
+    {
+        _options = options.Value;
+        _logger = logger;
+        _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, _options.Region);
+    }
+
+    public async Task<UploadUrlResponse> GenerateUploadUrlAsync(string storageKey, string contentType, TimeSpan? expiry = null)
+    {
+        var expires = DateTime.UtcNow.Add(expiry ?? TimeSpan.FromMinutes(_options.PreSignedUrlExpirationMinutes));
+
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _options.BucketName,
+            Key = storageKey,
+            Verb = HttpVerb.PUT,
+            Expires = expires,
+            ContentType = contentType
+        };
+
+        var uploadUrl = _s3Client.GetPreSignedURL(request);
+
+        var response = new UploadUrlResponse
+        {
+            UploadUrl = uploadUrl,
+            ExpiresAt = expires,
+            Headers = new Dictionary<string, string>
+            {
+                ["Content-Type"] = contentType
+            },
+            StorageKey = storageKey
+        };
+
+        return response;
+    }
+
+    public Task<bool> ValidateFileAsync(string contentType, long fileSize)
+    {
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "video/mp4", "application/pdf" };
+        var maxSize = 100 * 1024 * 1024;
+        var isValid = allowedTypes.Contains(contentType) && fileSize <= maxSize;
+        return Task.FromResult(isValid);
+    }
+
+    public Task<string> GenerateStorageKeyAsync(string ownerId, string? context, string fileName)
+    {
+        var safeFileName = Path.GetFileNameWithoutExtension(fileName)
+            .Replace(" ", "_")
+            .ToLowerInvariant();
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var random = Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
+
+        var key = $"{ownerId}/{context ?? "default"}/{timestamp}_{random}_{safeFileName}{extension}";
+        return Task.FromResult(key);
+    }
+
+    public async Task<bool> FileExistsAsync(string storageKey)
+    {
+        try
+        {
+            var request = new GetObjectMetadataRequest
+            {
+                BucketName = _options.BucketName,
+                Key = storageKey
+            };
+
+            await _s3Client.GetObjectMetadataAsync(request);
+            return true;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+    }
+
+    public async Task<string> GetFileUrlAsync(string storageKey)
+    {
+        if (!string.IsNullOrEmpty(_options.CdnBaseUrl))
+        {
+            return $"{_options.CdnBaseUrl}/{storageKey}";
+        }
+
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _options.BucketName,
+            Key = storageKey,
+            Expires = DateTime.UtcNow.AddHours(1)
+        };
+
+        return _s3Client.GetPreSignedURL(request);
+    }
+
+    public async Task UploadFileAsync(string storageKey, Stream fileStream, string contentType)
+    {
+        var transferUtility = new TransferUtility(_s3Client);
+
+        var request = new TransferUtilityUploadRequest
+        {
+            BucketName = _options.BucketName,
+            Key = storageKey,
+            InputStream = fileStream,
+            ContentType = contentType,
+            AutoCloseStream = false
+        };
+
+        await transferUtility.UploadAsync(request);
+    }
+
+    public async Task<Stream> DownloadFileAsync(string storageKey)
+    {
+        var request = new GetObjectRequest
+        {
+            BucketName = _options.BucketName,
+            Key = storageKey
+        };
+
+        var response = await _s3Client.GetObjectAsync(request);
+        return response.ResponseStream;
+    }
+
+    public async Task DeleteFileAsync(string storageKey)
+    {
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _options.BucketName,
+            Key = storageKey
+        };
+
+        await _s3Client.DeleteObjectAsync(request);
+    }
+
+    public async Task CopyFileAsync(string sourceKey, string destinationKey)
+    {
+        var request = new CopyObjectRequest
+        {
+            SourceBucket = _options.BucketName,
+            SourceKey = sourceKey,
+            DestinationBucket = _options.BucketName,
+            DestinationKey = destinationKey
+        };
+
+        await _s3Client.CopyObjectAsync(request);
+    }
+
+    public async Task<bool> IsHealthyAsync()
+    {
+        try
+        {
+            await _s3Client.ListBucketsAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "S3 storage health check failed");
+            return false;
+        }
+    }
+}

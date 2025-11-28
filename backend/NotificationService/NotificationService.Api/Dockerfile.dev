@@ -1,0 +1,31 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Install debugger with automatic license acceptance
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip curl procps \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg -s
+
+WORKDIR /app
+
+# Copy project files
+COPY NotificationService/NotificationService.Api/*.csproj ./NotificationService/NotificationService.Api/
+COPY NotificationService/NotificationService.Application/*.csproj ./NotificationService/NotificationService.Application/
+COPY NotificationService/NotificationService.Domain/*.csproj ./NotificationService/NotificationService.Domain/
+COPY NotificationService/NotificationService.Infrastructure/*.csproj ./NotificationService/NotificationService.Infrastructure/
+COPY NotificationService/NotificationService.Shared/*.csproj ./NotificationService/NotificationService.Shared/
+
+# Restore packages
+RUN dotnet restore "NotificationService/NotificationService.Api/NotificationService.Api.csproj"
+
+# Copy source code
+COPY NotificationService/ ./NotificationService/
+
+# Debug environment
+ENV ASPNETCORE_ENVIRONMENT=Development \
+    ASPNETCORE_URLS="http://+:80" \
+    DOTNET_USE_POLLING_FILE_WATCHER=true
+
+EXPOSE 80
+EXPOSE 4022
+
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "NotificationService/NotificationService.Api/NotificationService.Api.csproj", "--urls", "http://0.0.0.0:80"]

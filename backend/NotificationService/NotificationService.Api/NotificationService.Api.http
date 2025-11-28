@@ -1,0 +1,37 @@
+@NotificationService_HostAddress = http://localhost:5084
+
+### Health Check
+GET {{NotificationService_HostAddress}}/health
+
+### Send Email
+POST {{NotificationService_HostAddress}}/api/notifications/email
+Content-Type: application/json
+
+{
+  "to": "test@example.com",
+  "subject": "Test Email",
+  "body": "This is a test email from NotificationService",
+  "isHtml": true
+}
+
+### Send SMS
+POST {{NotificationService_HostAddress}}/api/notifications/sms
+Content-Type: application/json
+
+{
+  "to": "+1234567890",
+  "message": "This is a test SMS from NotificationService"
+}
+
+### Send Push Notification
+POST {{NotificationService_HostAddress}}/api/notifications/push
+Content-Type: application/json
+
+{
+  "deviceToken": "test-device-token",
+  "title": "Test Push",
+  "body": "This is a test push notification from NotificationService"
+}
+
+### Get Notification Status
+GET {{NotificationService_HostAddress}}/api/notifications/{notificationId}/status

@@ -1,0 +1,43 @@
+# Stage 1: Build & Publish
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copiar sln y csproj para cache de dependencias
+COPY AuthService/AuthService.sln .
+COPY AuthService/AuthService.Api/AuthService.Api.csproj AuthService.Api/
+COPY AuthService/AuthService.Application/AuthService.Application.csproj AuthService.Application/
+COPY AuthService/AuthService.Domain/AuthService.Domain.csproj AuthService.Domain/
+COPY AuthService/AuthService.Infrastructure/AuthService.Infrastructure.csproj AuthService.Infrastructure/
+COPY AuthService/AuthService.Shared/AuthService.Shared.csproj AuthService.Shared/
+
+RUN dotnet restore AuthService.sln
+
+# Copiar todo y publicar
+COPY . .
+RUN dotnet publish AuthService/AuthService.Api -c Release -o /app
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+# Variables según docker-compose.production.yml (expose 80)
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS="http://+:80"
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+
+# Usuario no-root
+RUN adduser --disabled-password --gecos '' appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+# Copiar publicación
+COPY --from=build --chown=appuser:appuser /app ./
+
+# Expone puerto 80 (compose expone 80)
+EXPOSE 80
+
+# Healthcheck a /health
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost:80/health || exit 1
+
+ENTRYPOINT ["dotnet", "AuthService.Api.dll"]

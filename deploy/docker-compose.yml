@@ -1,0 +1,524 @@
+services:
+  # ==================== DATABASES ====================
+
+  # PostgreSQL Database for ErrorService
+  errorservice-db:
+    image: postgres:16
+    container_name: errorservice-db-prod
+    environment:
+      POSTGRES_DB: errorservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - errorservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d errorservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # AuthService Database
+  authservice-db:
+    image: postgres:16
+    container_name: authservice-db-prod
+    environment:
+      POSTGRES_DB: authservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - authservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d authservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # NotificationService Database
+  notificationservice-db:
+    image: postgres:16
+    container_name: notificationservice-db-prod
+    environment:
+      POSTGRES_DB: notificationservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - notificationservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d notificationservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # VehicleService Database
+  vehicleservice-db:
+    image: postgres:16
+    container_name: vehicleservice-db-prod
+    environment:
+      POSTGRES_DB: vehicleservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - vehicleservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d vehicleservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ContactService Database
+  contactservice-db:
+    image: postgres:16
+    container_name: contactservice-db-prod
+    environment:
+      POSTGRES_DB: contactservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5436:5432"
+    volumes:
+      - contactservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d contactservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MediaService Database
+  mediaservice-db:
+    image: postgres:16
+    container_name: mediaservice-db-prod
+    environment:
+      POSTGRES_DB: mediaservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5437:5432"
+    volumes:
+      - mediaservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d mediaservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # AuditService Database
+  auditservice-db:
+    image: postgres:16
+    container_name: auditservice-db-prod
+    environment:
+      POSTGRES_DB: auditservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5438:5432"
+    volumes:
+      - auditservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d auditservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # AdminService Database
+  adminservice-db:
+    image: postgres:16
+    container_name: adminservice-db-prod
+    environment:
+      POSTGRES_DB: adminservice
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5439:5432"
+    volumes:
+      - adminservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d adminservice"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== MESSAGE BROKER & CACHE ====================
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq-prod
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis-prod
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== MICROSERVICES ====================
+
+  # ErrorService API
+  errorservice:
+    build:
+      context: ./errorservice
+      dockerfile: Dockerfile
+    container_name: errorservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+    ports:
+      - "5000:80"
+    depends_on:
+      errorservice-db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AuthService API
+  authservice:
+    build:
+      context: ./authservice
+      dockerfile: Dockerfile
+    container_name: authservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=authservice-db;Database=authservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__ErrorServiceConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASS}"
+      RabbitMQ__VirtualHost: "/"
+      JWT__Secret: "${JWT_SECRET}"
+      JWT__Issuer: "CarGurus-Prod"
+      JWT__Audience: "CarGurus-Users"
+      JWT__ExpireMinutes: "60"
+    ports:
+      - "5001:80"
+    depends_on:
+      authservice-db:
+        condition: service_healthy
+      errorservice-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NotificationService API
+  notificationservice:
+    build:
+      context: ./notificationservice
+      dockerfile: Dockerfile
+    container_name: notificationservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=notificationservice-db;Database=notificationservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASS}"
+      RabbitMQ__VirtualHost: "/"
+      NotificationSettings__SendGrid__ApiKey: "${SENDGRID_API_KEY}"
+      NotificationSettings__SendGrid__FromEmail: "${SENDGRID_FROM_EMAIL}"
+      NotificationSettings__SendGrid__FromName: "CarGurus"
+      NotificationSettings__Twilio__AccountSid: "${TWILIO_ACCOUNT_SID}"
+      NotificationSettings__Twilio__AuthToken: "${TWILIO_AUTH_TOKEN}"
+      NotificationSettings__Twilio__FromNumber: "${TWILIO_FROM_NUMBER}"
+      NotificationSettings__Firebase__ServiceAccountKeyPath: "/app/firebase-prod-key.json"
+      NotificationSettings__Firebase__ProjectId: "${FIREBASE_PROJECT_ID}"
+    ports:
+      - "5002:80"
+    depends_on:
+      notificationservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    volumes:
+      - ./firebase-prod-key.json:/app/firebase-prod-key.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # VehicleService API
+  vehicleservice:
+    build:
+      context: ./vehicleservice
+      dockerfile: Dockerfile
+    container_name: vehicleservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=vehicleservice-db;Database=vehicleservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__ErrorServiceConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      RabbitMQ__Host: "rabbitmq"
+    ports:
+      - "5003:80"
+    depends_on:
+      vehicleservice-db:
+        condition: service_healthy
+      errorservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ContactService API
+  contactservice:
+    build:
+      context: ./contactservice
+      dockerfile: Dockerfile
+    container_name: contactservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=contactservice-db;Database=contactservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__ErrorServiceConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      RabbitMQ__Host: "rabbitmq"
+    ports:
+      - "5004:80"
+    depends_on:
+      contactservice-db:
+        condition: service_healthy
+      errorservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MediaService API
+  mediaservice:
+    build:
+      context: ./mediaservice
+      dockerfile: Dockerfile
+    container_name: mediaservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=mediaservice-db;Database=mediaservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__ErrorServiceConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      RabbitMQ__Host: "rabbitmq"
+    ports:
+      - "5005:80"
+    depends_on:
+      mediaservice-db:
+        condition: service_healthy
+      errorservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AuditService API
+  auditservice:
+    build:
+      context: ./auditservice
+      dockerfile: Dockerfile
+    container_name: auditservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=auditservice-db;Database=auditservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__ErrorServiceConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+    ports:
+      - "5006:80"
+    depends_on:
+      auditservice-db:
+        condition: service_healthy
+      errorservice-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AdminService API
+  adminservice:
+    build:
+      context: ./adminservice
+      dockerfile: Dockerfile
+    container_name: adminservice-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=adminservice-db;Database=adminservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__ErrorServiceConnection: "Host=errorservice-db;Database=errorservice;Username=${DB_USER};Password=${DB_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+    ports:
+      - "5007:80"
+    depends_on:
+      adminservice-db:
+        condition: service_healthy
+      errorservice-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==================== API GATEWAY ====================
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway-prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+    ports:
+      - "8027:80"
+    depends_on:
+      - errorservice
+      - authservice
+      - notificationservice
+      - vehicleservice
+      - contactservice
+      - mediaservice
+      - auditservice
+      - adminservice
+    networks:
+      - cargurus-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ==================== VOLUMES ====================
+
+volumes:
+  errorservice_data:
+  authservice_data:
+  notificationservice_data:
+  vehicleservice_data:
+  contactservice_data:
+  mediaservice_data:
+  auditservice_data:
+  adminservice_data:
+  rabbitmq_data:
+  redis_data:
+
+# ==================== NETWORKS ====================
+
+networks:
+  cargurus-net:
+    driver: bridge

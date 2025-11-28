@@ -1,0 +1,24 @@
+# Stage 1: build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copia sólo el .csproj y restaura
+COPY Gateway/Gateway.Api/Gateway.Api.csproj ./Gateway.Api/
+RUN dotnet restore Gateway.Api/Gateway.Api.csproj
+
+# Copia todo y publica
+COPY . .
+RUN dotnet publish Gateway/Gateway.Api/Gateway.Api.csproj -c Release -o /app
+
+# Stage 2: runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+# Copia artifacts compilados
+COPY --from=build /app ./
+
+# Expone el puerto interno 80
+EXPOSE 80
+ENV ASPNETCORE_URLS="http://+:80"
+
+ENTRYPOINT ["dotnet", "Gateway.Api.dll"]
