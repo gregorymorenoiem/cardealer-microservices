@@ -3,7 +3,7 @@ using System.Text.Json;
 using AuthService.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 
 namespace AuthService.Infrastructure.External;
 

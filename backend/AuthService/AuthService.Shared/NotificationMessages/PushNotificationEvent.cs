@@ -1,4 +1,4 @@
-﻿
+
 namespace AuthService.Shared.NotificationMessages;
 
 public class PushNotificationEvent : NotificationEvent

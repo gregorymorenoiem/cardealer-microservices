@@ -3,7 +3,7 @@ using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
 using MediatR;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Application.DTOs.TwoFactor;
 
 namespace AuthService.Application.Features.TwoFactor.Commands.Enable2FA;

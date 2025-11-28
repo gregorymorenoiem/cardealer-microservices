@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace AuthService.Application.Features.PhoneVerification.Commands.UpdatePhoneNumber;
 

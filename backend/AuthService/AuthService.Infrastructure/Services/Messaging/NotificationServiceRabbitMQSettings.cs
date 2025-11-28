@@ -1,4 +1,4 @@
-ï»¿
+
 namespace AuthService.Infrastructure.Services.Messaging;
 
 public class NotificationServiceRabbitMQSettings
@@ -8,7 +8,7 @@ public class NotificationServiceRabbitMQSettings
     public string ExchangeName { get; set; } = "notification-exchange";
     public string RoutingKey { get; set; } = "notification.auth";
 
-    // Opcional: Configuraciones especÃ­ficas para tipos de notificaciÃ³n
+    // Opcional: Configuraciones específicas para tipos de notificación
     public string EmailQueueName { get; set; } = "notification-email-queue";
     public string SmsQueueName { get; set; } = "notification-sms-queue";
     public string PushQueueName { get; set; } = "notification-push-queue";

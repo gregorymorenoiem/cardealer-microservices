@@ -1,4 +1,4 @@
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Domain.Interfaces.Repositories;
 using MediatR;
 using AuthService.Domain.Enums;

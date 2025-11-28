@@ -1,6 +1,6 @@
-﻿using AuthService.Domain.Enums;
+using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Repositories;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

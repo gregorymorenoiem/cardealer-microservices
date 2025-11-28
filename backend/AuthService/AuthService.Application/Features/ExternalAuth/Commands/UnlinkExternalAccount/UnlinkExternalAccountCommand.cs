@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.UnlinkExternalAccount;
 

@@ -3,7 +3,7 @@ using AuthService.Domain.Interfaces.Services;
 using AuthService.Domain.Interfaces.Repositories;
 using MediatR;
 using AuthService.Application.DTOs.ExternalAuth;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;

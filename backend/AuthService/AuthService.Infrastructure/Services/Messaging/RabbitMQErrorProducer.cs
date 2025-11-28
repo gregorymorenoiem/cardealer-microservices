@@ -1,4 +1,4 @@
-﻿using AuthService.Shared.ErrorMessages;
+using AuthService.Shared.ErrorMessages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -116,14 +116,14 @@ public class RabbitMQErrorProducer : IErrorEventProducer, IDisposable
         }
     }
 
-    public async Task PublishErrorAsync(string errorCode, string errorMessage, string? stackTrace = null, string? userId = null, Dictionary<string, object>? metadata = null)
+    public Task PublishErrorAsync(string errorCode, string errorMessage, string? stackTrace = null, string? userId = null, Dictionary<string, object>? metadata = null)
     {
         var errorEvent = new RabbitMQErrorEvent(errorCode, errorMessage, stackTrace, userId)
         {
             Metadata = metadata ?? new Dictionary<string, object>()
         };
 
-        await PublishErrorAsync(errorEvent);
+        return PublishErrorAsync(errorEvent);
     }
 
     public void Dispose()

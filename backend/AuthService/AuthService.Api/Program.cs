@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using AuthService.Infrastructure.Extensions;
 using AuthService.Infrastructure.Persistence;
+using AuthService.Infrastructure.Messaging;
+using AuthService.Domain.Interfaces;
 using Serilog;
 using System.Reflection;
 using FluentValidation;
 using AuthService.Shared;
-using ErrorService.Shared.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Cors;
 using System.Threading.RateLimiting;
@@ -73,8 +74,8 @@ if (string.IsNullOrWhiteSpace(authConn))
 builder.Services.AddDbContext<ApplicationDbContext>(opts =>
     opts.UseNpgsql(authConn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
-// Error Handling
-builder.Services.AddErrorHandling("AuthService");
+// Event Publisher for RabbitMQ
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // MediatR & FluentValidation
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("AuthService.Application")));
@@ -140,7 +141,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseErrorHandling();
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();

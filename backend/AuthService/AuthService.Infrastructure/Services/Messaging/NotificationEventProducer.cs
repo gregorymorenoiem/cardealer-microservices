@@ -1,4 +1,4 @@
-﻿// AuthService.Infrastructure/Services/Messaging/NotificationEventProducer.cs
+// AuthService.Infrastructure/Services/Messaging/NotificationEventProducer.cs
 using AuthService.Infrastructure.Services.Messaging;
 using AuthService.Shared.NotificationMessages;
 using Microsoft.Extensions.Logging;
@@ -25,6 +25,11 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
     {
         _settings = notificationSettings.Value;
         _logger = logger;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
 
         var factory = new ConnectionFactory
         {
@@ -108,7 +113,7 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
         }
     }
 
-    public async Task PublishEmailAsync(string to, string subject, string body, Dictionary<string, object>? data = null)
+    public Task PublishEmailAsync(string to, string subject, string body, Dictionary<string, object>? data = null)
     {
         var notification = new EmailNotificationEvent
         {
@@ -119,10 +124,10 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
             TemplateName = "CustomEmail"
         };
 
-        await PublishNotificationAsync(notification);
+        return PublishNotificationAsync(notification);
     }
 
-    public async Task PublishSmsAsync(string to, string message, Dictionary<string, object>? data = null)
+    public Task PublishSmsAsync(string to, string message, Dictionary<string, object>? data = null)
     {
         var notification = new SmsNotificationEvent
         {
@@ -132,7 +137,7 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
             TemplateName = "CustomSMS"
         };
 
-        await PublishNotificationAsync(notification);
+        return PublishNotificationAsync(notification);
     }
 
     public void Dispose()

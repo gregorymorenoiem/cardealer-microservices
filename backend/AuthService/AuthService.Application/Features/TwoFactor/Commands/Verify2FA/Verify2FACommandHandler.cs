@@ -1,5 +1,5 @@
 // AuthService.Application/UseCases/Verify2FA/Verify2FACommandHandler.cs
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Domain.Entities;
 using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Repositories;

@@ -1,7 +1,7 @@
-﻿using AuthService.Application.DTOs.Auth;
+using AuthService.Application.DTOs.Auth;
 using AuthService.Application.DTOs.PhoneVerification;
 using AuthService.Domain.Interfaces.Repositories;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

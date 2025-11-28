@@ -1,4 +1,4 @@
-﻿using AuthService.Application.DTOs.ExternalAuth;
+using AuthService.Application.DTOs.ExternalAuth;
 using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Services;
 using MediatR;

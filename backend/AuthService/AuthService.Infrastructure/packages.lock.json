@@ -833,8 +833,8 @@
       },
       "System.IO.Pipelines": {
         "type": "Transitive",
-        "resolved": "6.0.3",
-        "contentHash": "ryTgF+iFkpGZY1vRQhfCzX0xTdlV3pyaTTqRu2ETbEv+HlV7O6y7hyQURnghNIXvctl5DuZ//Dpks6HdL/Txgw=="
+        "resolved": "9.0.0",
+        "contentHash": "eA3cinogwaNB4jdjQHOP3Z3EuyiDII7MT35jgtnsA4vkn0LUrrSHsU0nzHTzFzmaFYeKV7MYyMxOocFzsBHpTw=="
       },
       "System.Memory": {
         "type": "Transitive",
@@ -891,15 +891,16 @@
       },
       "System.Text.Encodings.Web": {
         "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "yev/k9GHAEGx2Rg3/tU6MQh4HGBXJs70y7j1LaM1i/ER9po+6nnQ6RRqTJn1E7Xu0fbIFK80Nh5EoODxrbxwBQ=="
+        "resolved": "9.0.0",
+        "contentHash": "e2hMgAErLbKyUUwt18qSBf9T5Y+SFAL3ZedM8fLupkVj8Rj2PZ9oxQ37XX2LF8fTO1wNIxvKpihD7Of7D/NxZw=="
       },
       "System.Text.Json": {
         "type": "Transitive",
-        "resolved": "8.0.4",
-        "contentHash": "bAkhgDJ88XTsqczoxEMliSrpijKZHhbJQldhAmObj/RbrN3sU5dcokuXmWJWsdQAhiMJ9bTayWsL1C9fbbCRhw==",
+        "resolved": "9.0.0",
+        "contentHash": "js7+qAu/9mQvnhA4EfGMZNEzXtJCDxgkgj8ohuxq/Qxv+R56G+ljefhiJHOxTNiw54q8vmABCWUwkMulNdlZ4A==",
         "dependencies": {
-          "System.Text.Encodings.Web": "8.0.0"
+          "System.IO.Pipelines": "9.0.0",
+          "System.Text.Encodings.Web": "9.0.0"
         }
       },
       "System.Threading.Channels": {
@@ -912,6 +913,7 @@
         "dependencies": {
           "AuthService.Domain": "[1.0.0, )",
           "AuthService.Shared": "[1.0.0, )",
+          "CarDealer.Contracts": "[1.0.0, )",
           "ErrorService.Shared": "[1.0.0, )",
           "FluentValidation": "[11.9.0, )",
           "MediatR": "[12.2.0, )",
@@ -922,6 +924,7 @@
         "type": "Project",
         "dependencies": {
           "AuthService.Shared": "[1.0.0, )",
+          "CarDealer.Contracts": "[1.0.0, )",
           "MediatR.Contracts": "[1.0.1, )",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[8.0.0, )"
         }
@@ -932,7 +935,7 @@
           "Microsoft.Extensions.Configuration.Binder": "[8.0.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.0, )",
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[8.0.0, )",
-          "System.Text.Json": "[8.0.4, )"
+          "System.Text.Json": "[9.0.0, )"
         }
       },
       "cardealer.contracts": {

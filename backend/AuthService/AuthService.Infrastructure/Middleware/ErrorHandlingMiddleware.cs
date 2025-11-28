@@ -1,8 +1,8 @@
-ï»¿using AuthService.Shared.ErrorMessages;
+using AuthService.Shared.ErrorMessages;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Infrastructure.Services.Messaging;
 
 namespace AuthService.Infrastructure.Middleware;
@@ -40,7 +40,7 @@ public class ErrorHandlingMiddleware
         var errorCode = GetErrorCode(exception);
         var statusCode = GetStatusCode(exception);
 
-        // Extraer informaciÃ³n del contexto
+        // Extraer información del contexto
         var userId = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var endpoint = context.Request.Path;
         var httpMethod = context.Request.Method;
@@ -64,7 +64,7 @@ public class ErrorHandlingMiddleware
             }
         };
 
-        // Publicar error asÃ­ncronamente (no esperar)
+        // Publicar error asíncronamente (no esperar)
         _ = _errorEventProducer.PublishErrorAsync(errorEvent);
 
         // Log local

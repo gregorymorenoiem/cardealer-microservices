@@ -1,4 +1,4 @@
-﻿using AuthService.Shared.NotificationMessages;
+using AuthService.Shared.NotificationMessages;
 
 namespace AuthService.Domain.Interfaces.Services;
 
