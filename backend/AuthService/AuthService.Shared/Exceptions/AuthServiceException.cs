@@ -9,10 +9,10 @@ public abstract class AuthServiceException : Exception
     public string ErrorCode { get; }
 
     protected AuthServiceException(
-        string message, 
-        int statusCode, 
+        string message,
+        int statusCode,
         string errorCode,
-        Exception? innerException = null) 
+        Exception? innerException = null)
         : base(message, innerException)
     {
         StatusCode = statusCode;

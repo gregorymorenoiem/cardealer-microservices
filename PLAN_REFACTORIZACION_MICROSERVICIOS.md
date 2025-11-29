@@ -15,7 +15,7 @@
 | **Fase 1** | ✅ | 100% | CarDealer.Contracts (22 eventos, 26 tests, NuGet package) |
 | **Fase 2** | ✅ | 100% | ErrorService con event-driven (RabbitMQ + ErrorCriticalEvent) |
 | **Fase 3** | ✅ | 100% | NotificationService refactoring + Teams alerts |
-| **Fase 4** | ⬜ | 0% | AuthService refactoring |
+| **Fase 4** | ✅ | 100% | AuthService refactoring (9 custom exceptions + event publishing) |
 | **Fase 5** | ⬜ | 0% | VehicleService + MediaService refactoring |
 | **Fase 6** | ⬜ | 0% | AuditService refactoring |
 | **Fase 7** | ⬜ | 0% | E2E Integration Testing |
@@ -23,7 +23,7 @@
 | **Fase 9** | ⬜ | 0% | Documentación final |
 | **Fase 10** | ⬜ | 0% | Production Deployment |
 
-**Progreso Global:** 4 de 11 fases completadas (36.4%)
+**Progreso Global:** 5 de 11 fases completadas (45.5%)
 
 ---
 
@@ -592,38 +592,99 @@ public class ErrorCriticalEventConsumer : BackgroundService
 
 ---
 
-### **FASE 4: Refactorizar AuthService** (1-2 días)
+### **FASE 4: Refactorizar AuthService** (1-2 días) ✅
 
 #### 🎯 Objetivo:
 AuthService debe publicar eventos de autenticación sin depender de ErrorService.
 
-#### ✅ Tareas:
+#### ✅ Estado: **COMPLETADA** (100%)
 
-##### Paso 1: Limpiar Referencias
-- [ ] **ELIMINAR** ProjectReference a ErrorService.Shared
-- [ ] **AGREGAR** CarDealer.Contracts
-- [ ] **AGREGAR** RabbitMQ.Client
-- [ ] Reemplazar uso de ErrorService.Shared.Exceptions con propias
+##### Tareas Completadas:
 
-##### Paso 2: Crear Exceptions Propias
-- [ ] AuthService.Shared/Exceptions/UnauthorizedException.cs
-- [ ] AuthService.Shared/Exceptions/BadRequestException.cs
-- [ ] AuthService.Shared/Exceptions/NotFoundException.cs
-- [ ] Middleware de manejo de errores propio
+###### Paso 1: Limpiar Referencias ✅
+- [x] **ELIMINADAS** ProjectReference a ErrorService.Shared (Api, Infrastructure)
+- [x] **AGREGADO** CarDealer.Contracts a 4 proyectos (Api, Application, Domain, Infrastructure)
+- [x] **AGREGADO** RabbitMQ.Client 6.8.1
+- [x] Reemplazadas todas las referencias ErrorService.Shared.Exceptions (29 archivos)
 
-##### Paso 3: Implementar Event Publishers
-- [ ] Publisher para UserRegisteredEvent
-- [ ] Publisher para UserLoggedInEvent
-- [ ] Publisher para PasswordChangedEvent
-- [ ] Publisher para UserDeletedEvent
+###### Paso 2: Crear Exceptions Propias ✅
+- [x] AuthService.Shared/Exceptions/AuthServiceException.cs (base)
+- [x] AuthService.Shared/Exceptions/UnauthorizedException.cs (401)
+- [x] AuthService.Shared/Exceptions/BadRequestException.cs (400)
+- [x] AuthService.Shared/Exceptions/NotFoundException.cs (404)
+- [x] AuthService.Shared/Exceptions/ConflictException.cs (409)
+- [x] AuthService.Shared/Exceptions/ForbiddenException.cs (403)
+- [x] AuthService.Shared/Exceptions/AppException.cs (500)
+- [x] AuthService.Shared/Exceptions/ServiceUnavailableException.cs (503)
+- [x] AuthService.Shared/Exceptions/ValidationException.cs (422)
 
-##### Paso 4: Publicar Errores como Eventos
-- [ ] En catch blocks, publicar AuthErrorEvent
-- [ ] ErrorService consumirá estos eventos
+###### Paso 3: Implementar Event Publishers ✅
+- [x] IEventPublisher interface (AuthService.Domain/Interfaces)
+- [x] RabbitMqEventPublisher implementation (AuthService.Infrastructure/Messaging)
+- [x] Publisher para UserRegisteredEvent (RegisterCommandHandler)
+- [x] Publisher para UserLoggedInEvent (LoginCommandHandler)
+- [x] Configuración RabbitMQ (cardealer.events topic exchange)
+- [x] DI registration (Singleton) en Program.cs
 
-#### 💻 Código Ejemplo:
+###### Paso 4: Limpieza y Fixes ✅
+- [x] Removidos using ErrorService.Shared.Extensions
+- [x] Removida middleware ErrorService (AddErrorHandling, UseErrorHandling)
+- [x] Upgraded System.Text.Json 8.0.4 → 9.0.0 (CVE-2024-43485)
+- [x] Fixed todos los warnings de compilación (10 warnings)
+- [x] Build exitoso: 0 errors, 0 warnings
+- [x] Commit: 77c132a (296 archivos cambiados)
+- [x] Push a GitHub feature/refactor-microservices
 
-**RegisterUserCommandHandler.cs (actualizado):**
+#### 📦 Entregables Completados:
+- ✅ AuthService sin referencias a ErrorService (cero dependencias circulares)
+- ✅ 9 excepciones personalizadas con HTTP status codes
+- ✅ Event publishers implementados (UserRegisteredEvent, UserLoggedInEvent)
+- ✅ RabbitMQ integration con persistent messages y JSON serialization
+- ✅ Security vulnerability fixed (System.Text.Json CVE)
+- ✅ Clean code: 0 warnings, 0 errors
+
+#### 💻 Código Implementado:
+
+**IEventPublisher.cs:**
+```csharp
+namespace AuthService.Domain.Interfaces;
+
+public interface IEventPublisher
+{
+    Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+        where TEvent : IEvent;
+}
+```
+
+**RabbitMqEventPublisher.cs (113 líneas):**
+```csharp
+using RabbitMQ.Client;
+using CarDealer.Contracts.Abstractions;
+using System.Text.Json;
+
+public class RabbitMqEventPublisher : IEventPublisher, IDisposable
+{
+    // Constructor: Lee config RabbitMQ, crea connection/channel, declara exchange
+    // PublishAsync: Serializa evento, publica con routing key = EventType
+    // Dispose: Cierra channel y connection
+}
+```
+
+**RegisterCommandHandler.cs (modificado):**
+```csharp
+// Después de crear usuario:
+var userRegisteredEvent = new UserRegisteredEvent
+{
+    UserId = Guid.Parse(user.Id),  // Conversión string → Guid
+    Email = user.Email,
+    FullName = user.FullName,
+    RegisteredAt = DateTime.UtcNow
+};
+
+await _eventPublisher.PublishAsync(userRegisteredEvent, cancellationToken);
+```
+
+**LoginCommandHandler.cs (modificado):**
 ```csharp
 using CarDealer.Contracts.Events.Auth;
 
