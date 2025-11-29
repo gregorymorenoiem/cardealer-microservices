@@ -8,6 +8,7 @@ using ErrorService.Shared.Middleware;
 using ErrorService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using CarDealer.Shared.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,15 +24,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database Context
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-}
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+// Database Context (multi-provider configuration)
+builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
 // Application Services
 builder.Services.AddScoped<IErrorLogRepository, EfErrorLogRepository>();

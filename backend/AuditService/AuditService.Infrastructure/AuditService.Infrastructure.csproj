@@ -45,6 +45,7 @@
     <ProjectReference Include="..\AuditService.Domain\AuditService.Domain.csproj" />
     <ProjectReference Include="..\AuditService.Shared\AuditService.Shared.csproj" />
     <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

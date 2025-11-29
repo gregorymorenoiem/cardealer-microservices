@@ -8,6 +8,7 @@ using Serilog;
 using System.Reflection;
 using FluentValidation;
 using NotificationService.Shared;
+using CarDealer.Shared.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,18 +38,8 @@ builder.Services.AddHttpClient<ITeamsProvider, TeamsProvider>();
 // 🔧 Register ErrorCriticalEvent Consumer as Hosted Service
 builder.Services.AddHostedService<ErrorCriticalEventConsumer>();
 
-// 1) DbContext del NotificationService
-var notificationConn = builder.Configuration.GetConnectionString("DefaultConnection");
-Console.WriteLine($"[DEBUG] NotificationService Connection = '{notificationConn}'");
-if (string.IsNullOrWhiteSpace(notificationConn))
-{
-    throw new InvalidOperationException("La cadena DefaultConnection no está configurada.");
-}
-
-builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseNpgsql(notificationConn)
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-);
+// Database Context (multi-provider configuration)
+builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
 // MediatR - Cargar assemblies de Application
 builder.Services.AddMediatR(cfg =>
@@ -62,24 +53,6 @@ builder.Services.Configure<NotificationSettings>(
     builder.Configuration.GetSection("NotificationSettings"));
 
 var app = builder.Build();
-
-// **Aplicar migraciones para NotificationService**
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        // Migraciones del NotificationService
-        var notificationContext = services.GetRequiredService<ApplicationDbContext>();
-        notificationContext.Database.Migrate();
-        Log.Information("NotificationService database migrations applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-    }
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

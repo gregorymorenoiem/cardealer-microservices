@@ -39,6 +39,7 @@
     <ProjectReference Include="..\AuthService.Infrastructure\AuthService.Infrastructure.csproj" />
     <ProjectReference Include="..\AuthService.Shared\AuthService.Shared.csproj" />
     <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

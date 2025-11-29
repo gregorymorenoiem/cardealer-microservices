@@ -7,6 +7,7 @@ using AuditService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using CarDealer.Shared.Database;
 
 
 namespace AuditService.Infrastructure.Extensions;
@@ -15,11 +16,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Database Context
-        services.AddDbContext<AuditDbContext>(options =>
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.MigrationsAssembly(typeof(AuditDbContext).Assembly.FullName)));
+        // Database Context (multi-provider configuration)
+        services.AddDatabaseProvider<AuditDbContext>(configuration);
 
         // Repositories
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();

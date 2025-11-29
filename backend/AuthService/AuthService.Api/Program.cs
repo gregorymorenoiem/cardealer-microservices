@@ -16,6 +16,7 @@ using AuthService.Domain.Interfaces.Services;
 using AuthService.Infrastructure.External;
 using AuthService.Infrastructure.Services.Notification;
 using Microsoft.Extensions.Options;
+using CarDealer.Shared.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,13 +67,8 @@ builder.Services.AddCors(options =>
 // TODA LA CONFIGURACIÓN EN UN SOLO LUGAR
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// DbContext
-var authConn = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrWhiteSpace(authConn))
-    throw new InvalidOperationException("La cadena DefaultConnection no está configurada.");
-
-builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseNpgsql(authConn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+// Database Context (multi-provider configuration)
+builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
 // Event Publisher for RabbitMQ
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();

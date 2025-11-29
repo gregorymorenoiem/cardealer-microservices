@@ -19,6 +19,7 @@
     <ProjectReference Include="..\MediaService.Shared\MediaService.Shared.csproj" />
     <ProjectReference Include="..\MediaService.Infrastructure\MediaService.Infrastructure.csproj" />
     <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

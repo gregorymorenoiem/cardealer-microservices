@@ -30,6 +30,7 @@
     <ProjectReference Include="..\ErrorService.Infrastructure\ErrorService.Infrastructure.csproj" />
     <ProjectReference Include="..\ErrorService.Shared\ErrorService.Shared.csproj" />
     <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -27,6 +27,7 @@
     <ProjectReference Include="..\AuditService.Application\AuditService.Application.csproj" />
     <ProjectReference Include="..\AuditService.Infrastructure\AuditService.Infrastructure.csproj" />
     <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

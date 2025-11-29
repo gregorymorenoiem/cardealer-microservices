@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using CarDealer.Shared.Database;
 
 namespace MediaService.Infrastructure.Extensions;
 
@@ -18,24 +19,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-
-        // DbContext
-        services.AddDbContext<ApplicationDbContext>(options =>
-        {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                connectionString = "Server=(localdb)\\mssqllocaldb;Database=MediaServiceDb;Trusted_Connection=true;MultipleActiveResultSets=true";
-            }
-            options.UseSqlServer(connectionString, sqlOptions =>
-            {
-                sqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
-                sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null);
-            });
-        });
+        // Database Context (multi-provider configuration)
+        services.AddDatabaseProvider<ApplicationDbContext>(configuration);
 
         // Repositories
         services.AddScoped<IMediaRepository, MediaRepository>();
