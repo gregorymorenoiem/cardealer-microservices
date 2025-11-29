@@ -8,11 +8,13 @@ using ErrorService.Shared;
 using ErrorService.Shared.RateLimiting;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Threading.Tasks;
 
 namespace ErrorService.Api.Controllers
 {
+    [Authorize(Policy = "ErrorServiceAccess")]
     [ApiController]
     [Route("api/[controller]")]
     public class ErrorsController : ControllerBase

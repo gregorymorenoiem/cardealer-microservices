@@ -9,6 +9,14 @@ using ErrorService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using CarDealer.Shared.Database;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
+using FluentValidation;
+using ErrorService.Application.Behaviors;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +30,107 @@ builder.Host.UseSerilog();
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Configurar Swagger con soporte JWT
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "ErrorService API",
+        Version = "v1",
+        Description = "API para gestión centralizada de errores en CarDealer Microservices"
+    });
+
+    // Configurar autenticación JWT en Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Ingrese el token JWT en el formato: Bearer {token}"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// Configurar autenticación JWT
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var secretKey = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = jwtSettings.GetValue<bool>("ValidateIssuer", true),
+        ValidateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true),
+        ValidateLifetime = jwtSettings.GetValue<bool>("ValidateLifetime", true),
+        ValidateIssuerSigningKey = jwtSettings.GetValue<bool>("ValidateIssuerSigningKey", true),
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+
+    // Logging para debugging
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Log.Warning("JWT Authentication failed: {Error}", context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Log.Debug("JWT Token validated for user: {User}",
+                context.Principal?.Identity?.Name ?? "Unknown");
+            return Task.CompletedTask;
+        }
+    };
+});
+
+// Configurar políticas de autorización
+builder.Services.AddAuthorization(options =>
+{
+    // Política para acceso general al ErrorService
+    options.AddPolicy("ErrorServiceAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("service", "errorservice", "all");
+    });
+
+    // Política para operaciones administrativas
+    options.AddPolicy("ErrorServiceAdmin", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("role", "admin", "errorservice-admin");
+    });
+
+    // Política para solo lectura
+    options.AddPolicy("ErrorServiceRead", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+    });
+});
 
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
@@ -37,6 +145,13 @@ builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(ErrorService.Application.UseCases.LogError.LogErrorCommand).Assembly));
+
+// Registrar FluentValidation
+builder.Services.AddValidatorsFromAssembly(
+    typeof(ErrorService.Application.UseCases.LogError.LogErrorCommandValidator).Assembly);
+
+// Agregar behavior de validación para MediatR
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("ErrorService");
@@ -72,18 +187,25 @@ app.UseCustomRateLimiting(rateLimitingConfig);
 
 app.UseHttpsRedirection();
 
+// Agregar autenticación y autorización
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Middleware para capturar respuestas
 app.UseMiddleware<ResponseCaptureMiddleware>();
 
 // Middleware para manejo de errores
 app.UseErrorHandling();
 
-app.UseAuthorization();
-
 app.MapControllers();
 
-// Health check endpoint
-app.MapGet("/health", () => Results.Ok("ErrorService is healthy"));
+// Health check endpoint - acceso anónimo
+app.MapGet("/health", [AllowAnonymous] () => Results.Ok(new
+{
+    service = "ErrorService",
+    status = "healthy",
+    timestamp = DateTime.UtcNow
+}));
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())
