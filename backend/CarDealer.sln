@@ -107,9 +107,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProfileService", "ProfileSe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaService.Workers", "MediaService\MediaService.Workers\MediaService.Workers.csproj", "{0F5873C2-8CE8-4584-9B87-E73D0F789C17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts", "CarDealer.Contracts\CarDealer.Contracts.csproj", "{9C54DCF7-1C5F-422A-9440-1CABBBA3A144}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Shared", "_Shared", "{A1B2C3D4-E5F6-7890-ABCD-1234567890AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts.Tests", "CarDealer.Contracts.Tests\CarDealer.Contracts.Tests.csproj", "{4849176B-A95D-4214-977C-75F06E05306B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarDealer.Contracts", "_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj", "{9C54DCF7-1C5F-422A-9440-1CABBBA3A144}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarDealer.Contracts.Tests", "_Shared\CarDealer.Contracts.Tests\CarDealer.Contracts.Tests.csproj", "{4849176B-A95D-4214-977C-75F06E05306B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarDealer.Shared", "_Shared\CarDealer.Shared\CarDealer.Shared.csproj", "{B2C3D4E5-F6A7-8901-BCDE-2345678901BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

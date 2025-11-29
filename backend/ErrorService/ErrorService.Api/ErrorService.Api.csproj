@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -29,8 +29,8 @@
     <ProjectReference Include="..\ErrorService.Application\ErrorService.Application.csproj" />
     <ProjectReference Include="..\ErrorService.Infrastructure\ErrorService.Infrastructure.csproj" />
     <ProjectReference Include="..\ErrorService.Shared\ErrorService.Shared.csproj" />
-    <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
-    <ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>
