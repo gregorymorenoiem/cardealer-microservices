@@ -49,7 +49,7 @@ public class RabbitMqEventConsumer : BackgroundService
             }
 
             var consumer = new EventingBasicConsumer(_channel);
-            
+
             consumer.Received += async (model, ea) =>
             {
                 try
@@ -166,7 +166,7 @@ public class RabbitMqEventConsumer : BackgroundService
 
             await _auditRepository.SaveAuditEventAsync(auditEvent, cancellationToken);
 
-            _logger.LogInformation("Audit event persisted successfully. EventId: {EventId}, Type: {EventType}", 
+            _logger.LogInformation("Audit event persisted successfully. EventId: {EventId}, Type: {EventType}",
                 auditEvent.EventId, auditEvent.EventType);
         }
         catch (Exception ex)
