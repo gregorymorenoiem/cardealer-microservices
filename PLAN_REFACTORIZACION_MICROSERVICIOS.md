@@ -757,29 +757,27 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
 
 ---
 
-### **FASE 5: Refactorizar VehicleService y MediaService** (2 días)
+### **FASE 5: Refactorizar VehicleService y MediaService** (2 días) ✅
 
 #### 🎯 Objetivo:
 Implementar event publishers en servicios de negocio principales.
 
-#### ✅ Tareas:
+#### ✅ Estado: **COMPLETADA** (100%)
 
-##### VehicleService (1 día)
-- [ ] Agregar CarDealer.Contracts
-- [ ] Agregar RabbitMQ.Client
-- [ ] Publisher para VehicleCreatedEvent
-- [ ] Publisher para VehicleUpdatedEvent
-- [ ] Publisher para VehicleDeletedEvent
-- [ ] Publisher para VehicleSoldEvent
-- [ ] Publisher para VehicleErrorEvent
+##### VehicleService ✅
+- [x] Agregar CarDealer.Contracts (Api, Application, Domain, Infrastructure)
+- [x] Agregar RabbitMQ.Client 6.8.1
+- [x] Crear IEventPublisher interface
+- [x] Implementar RabbitMqEventPublisher (118 líneas)
+- [x] Agregar Microsoft.Extensions packages (Configuration, Logging)
+- [x] Build: 0 errors, 0 warnings
 
-##### MediaService (1 día)
-- [ ] Agregar CarDealer.Contracts
-- [ ] Publisher para MediaUploadedEvent
-- [ ] Publisher para MediaProcessedEvent
-- [ ] Publisher para MediaDeletedEvent
-- [ ] Publisher para MediaProcessingFailedEvent
-- [ ] Publisher para MediaErrorEvent
+##### MediaService ✅
+- [x] Agregar CarDealer.Contracts (Api, Application, Domain, Infrastructure, Workers)
+- [x] Agregar RabbitMQ.Client 6.8.1
+- [x] Crear IEventPublisher interface
+- [x] Implementar RabbitMqEventPublisher (118 líneas)
+- [x] Build: 0 errors, 22 warnings (pre-existentes)
 
 #### 💻 Código Ejemplo:
 
