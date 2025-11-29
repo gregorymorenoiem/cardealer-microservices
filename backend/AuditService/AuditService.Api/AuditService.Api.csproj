@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AuditService.Application\AuditService.Application.csproj" />
     <ProjectReference Include="..\AuditService.Infrastructure\AuditService.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\CarDealer.Contracts\CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
