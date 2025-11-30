@@ -22,6 +22,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     private readonly IModel _channel;
     private readonly ILogger<RabbitMqEventPublisher> _logger;
     private readonly ErrorServiceMetrics _metrics;
+    private readonly IDeadLetterQueue? _deadLetterQueue;
     private readonly string _exchangeName;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly ResiliencePipeline _resiliencePipeline;
@@ -29,10 +30,12 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     public RabbitMqEventPublisher(
         IConfiguration configuration,
         ILogger<RabbitMqEventPublisher> logger,
-        ErrorServiceMetrics metrics)
+        ErrorServiceMetrics metrics,
+        IDeadLetterQueue? deadLetterQueue = null)
     {
         _logger = logger;
         _metrics = metrics;
+        _deadLetterQueue = deadLetterQueue;
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
 
         var factory = new ConnectionFactory
@@ -140,11 +143,26 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
             // Circuit is open, log the event but don't fail the request
             _logger.LogWarning(ex,
                 "⚠️ Circuit Breaker OPEN: Cannot publish event {EventType} with ID {EventId}. " +
-                "Event logged locally but not sent to RabbitMQ.",
+                "Event logged locally and queued for retry when RabbitMQ recovers.",
                 @event.EventType, @event.EventId);
 
-            // TODO: Consider implementing a local queue or dead-letter storage
-            // for events that couldn't be published during circuit open state
+            // ✅ Implementado: Dead Letter Queue para retry automático
+            if (_deadLetterQueue != null)
+            {
+                var failedEvent = new FailedEvent
+                {
+                    EventType = @event.EventType,
+                    EventJson = JsonSerializer.Serialize(@event, _jsonOptions),
+                    FailedAt = DateTime.UtcNow,
+                    RetryCount = 0
+                };
+                failedEvent.ScheduleNextRetry();
+                _deadLetterQueue.Enqueue(failedEvent);
+
+                _logger.LogInformation(
+                    "📮 Event {EventId} queued to DLQ for retry in {Minutes} minutes",
+                    failedEvent.Id, Math.Pow(2, 0)); // 1 minuto inicial
+            }
         }
         catch (Exception ex)
         {

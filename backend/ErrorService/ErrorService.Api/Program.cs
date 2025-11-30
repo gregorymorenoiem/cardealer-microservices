@@ -149,8 +149,17 @@ builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<ErrorService.Application.Metrics.ErrorServiceMetrics>();
 
-// Event Publisher for RabbitMQ
-builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
+// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
+builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
+    new ErrorService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+
+// Event Publisher for RabbitMQ (con DLQ integrado)
+builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+builder.Services.AddSingleton<IEventPublisher>(sp =>
+    sp.GetRequiredService<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+
+// Background Service para procesar DLQ
+builder.Services.AddHostedService<ErrorService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>

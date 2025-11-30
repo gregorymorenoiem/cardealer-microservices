@@ -52,7 +52,7 @@
 | CQRS + MediatR | ✅ | LogErrorCommand, LogErrorCommandHandler |
 | Clean Architecture | ✅ | Domain, Application, Infrastructure, Api separados |
 | Serilog Logging | ✅ | Centralizado, estructurado |
-| RabbitMQ Publishing | ✅ | IEventPublisher, RabbitMqEventPublisher (ErrorCriticalEvent) |
+| RabbitMQ Publishing | ✅ | IEventPublisher, RabbitMqEventPublisher (ErrorCriticalEvent) + Dead Letter Queue |
 | Swagger/OpenAPI | ✅ | Documentación automática |
 | Health Checks | ✅ | Endpoint /health |
 | Docker Multistage | ✅ | Usuario no-root, optimizado |
@@ -750,7 +750,7 @@ public async Task<ActionResult<PagedResult<ErrorLog>>> Search([FromBody] ErrorSe
 
 | Categoría | Nivel | Comentario |
 |-----------|-------|------------|
-| **Funcionalidad Core** | 🟢 95% | CQRS, Persistence, RabbitMQ, JWT funcionando |
+| **Funcionalidad Core** | 🟢 100% | ✅ CQRS, Persistence, RabbitMQ + DLQ, JWT funcionando |
 | **Seguridad** | 🟢 100% | ✅ JWT + Validación robusta + SQL/XSS detection |
 | **Resiliencia** | 🟢 100% | ✅ Circuit Breaker + Auto-recovery implementado |
 | **Observabilidad** | 🟢 100% | ✅ Logs + OpenTelemetry + TraceId + Sampling + Alerts |
@@ -844,6 +844,7 @@ Antes de deployar a producción:
 Tu ErrorService está **EXCELENTEMENTE construido** arquitectónicamente:
 - ✅ CQRS correcto
 - ✅ Event-driven con RabbitMQ
+- ✅ **Dead Letter Queue** para retry automático
 - ✅ Rate limiting custom completo
 - ✅ Tests unitarios
 - ✅ **JWT Authentication completo** (3 políticas de autorización)
