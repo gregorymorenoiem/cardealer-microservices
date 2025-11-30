@@ -17,6 +17,11 @@ using Microsoft.OpenApi.Models;
 using FluentValidation;
 using ErrorService.Application.Behaviors;
 using MediatR;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -139,6 +144,9 @@ builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration
 builder.Services.AddScoped<IErrorLogRepository, EfErrorLogRepository>();
 builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
 
+// Métricas personalizadas (Singleton para compartir estado)
+builder.Services.AddSingleton<ErrorService.Application.Metrics.ErrorServiceMetrics>();
+
 // Event Publisher for RabbitMQ
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
@@ -152,6 +160,47 @@ builder.Services.AddValidatorsFromAssembly(
 
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+// Configurar OpenTelemetry
+var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "ErrorService";
+var serviceVersion = builder.Configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0";
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
+        .AddAttributes(new Dictionary<string, object>
+        {
+            ["deployment.environment"] = builder.Environment.EnvironmentName,
+            ["service.namespace"] = "cardealer"
+        }))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.Filter = context =>
+            {
+                // Filtrar health checks para reducir ruido
+                return !context.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("ErrorService.*")
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri(otlpEndpoint);
+        }))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddMeter("ErrorService.*")
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri(otlpEndpoint);
+        }));
 
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("ErrorService");

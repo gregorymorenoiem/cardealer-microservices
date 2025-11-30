@@ -1,5 +1,6 @@
 using CarDealer.Contracts.Abstractions;
 using ErrorService.Domain.Interfaces;
+using ErrorService.Application.Metrics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -20,15 +21,18 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly ILogger<RabbitMqEventPublisher> _logger;
+    private readonly ErrorServiceMetrics _metrics;
     private readonly string _exchangeName;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly ResiliencePipeline _resiliencePipeline;
 
     public RabbitMqEventPublisher(
         IConfiguration configuration,
-        ILogger<RabbitMqEventPublisher> logger)
+        ILogger<RabbitMqEventPublisher> logger,
+        ErrorServiceMetrics metrics)
     {
         _logger = logger;
+        _metrics = metrics;
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
 
         var factory = new ConnectionFactory
@@ -68,6 +72,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 BreakDuration = TimeSpan.FromSeconds(30), // Circuit stays open for 30s
                 OnOpened = args =>
                 {
+                    _metrics.SetCircuitBreakerState(CircuitBreakerState.Open);
                     _logger.LogWarning(
                         "🔴 Circuit Breaker OPEN: RabbitMQ unavailable for {Duration}s. " +
                         "Events will be logged but not published.",
@@ -76,6 +81,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 },
                 OnClosed = args =>
                 {
+                    _metrics.SetCircuitBreakerState(CircuitBreakerState.Closed);
                     _logger.LogInformation(
                         "🟢 Circuit Breaker CLOSED: RabbitMQ connection restored. " +
                         "Resuming event publishing.");
@@ -83,6 +89,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 },
                 OnHalfOpened = args =>
                 {
+                    _metrics.SetCircuitBreakerState(CircuitBreakerState.HalfOpen);
                     _logger.LogInformation(
                         "🟡 Circuit Breaker HALF-OPEN: Testing RabbitMQ connection...");
                     return ValueTask.CompletedTask;
@@ -135,7 +142,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 "⚠️ Circuit Breaker OPEN: Cannot publish event {EventType} with ID {EventId}. " +
                 "Event logged locally but not sent to RabbitMQ.",
                 @event.EventType, @event.EventId);
-            
+
             // TODO: Consider implementing a local queue or dead-letter storage
             // for events that couldn't be published during circuit open state
         }
