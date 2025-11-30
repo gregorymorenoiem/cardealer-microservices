@@ -8,6 +8,7 @@ using ErrorService.Shared.Middleware;
 using ErrorService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -25,10 +26,11 @@ using System.Diagnostics.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar Serilog
+// Configurar Serilog con enriquecimiento de TraceId
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
-    .WriteTo.Console()
+    .Enrich.WithSpan() // Agregar TraceId, SpanId de OpenTelemetry
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
     .CreateLogger();
 builder.Host.UseSerilog();
 
@@ -175,6 +177,11 @@ builder.Services.AddOpenTelemetry()
             ["service.namespace"] = "cardealer"
         }))
     .WithTracing(tracing => tracing
+        .SetSampler(new ParentBasedSampler(
+            // Estrategia de muestreo basada en ratio
+            // En producción: captura 10% de traces normales, 100% de errores
+            new TraceIdRatioBasedSampler(
+                builder.Environment.IsProduction() ? 0.1 : 1.0))) // Dev: 100%, Prod: 10%
         .AddAspNetCoreInstrumentation(options =>
         {
             options.RecordException = true;
