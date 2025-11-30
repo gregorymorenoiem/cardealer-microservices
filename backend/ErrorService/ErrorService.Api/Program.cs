@@ -290,3 +290,6 @@ using (var scope = app.Services.CreateScope())
 
 Log.Information("ErrorService starting up...");
 app.Run();
+
+// Make Program class accessible for integration testing
+public partial class Program { }
