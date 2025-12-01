@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using UserService.Application.Interfaces;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace UserService.Infrastructure.External
 {
@@ -11,17 +12,34 @@ namespace UserService.Infrastructure.External
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<NotificationServiceClient> _logger;
+        private readonly IServiceDiscovery _serviceDiscovery;
 
-        public NotificationServiceClient(HttpClient httpClient, ILogger<NotificationServiceClient> logger)
+        public NotificationServiceClient(HttpClient httpClient, ILogger<NotificationServiceClient> logger, IServiceDiscovery serviceDiscovery)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _serviceDiscovery = serviceDiscovery;
+        }
+
+        private async Task<string> GetServiceUrlAsync()
+        {
+            try
+            {
+                var instance = await _serviceDiscovery.FindServiceInstanceAsync("NotificationService");
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://notificationservice:80";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error resolving NotificationService from Consul, using fallback");
+                return "http://notificationservice:80";
+            }
         }
 
         public async Task SendWelcomeEmailAsync(string email, string firstName, string lastName)
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var notification = new
                 {
                     To = email,
@@ -30,7 +48,7 @@ namespace UserService.Infrastructure.External
                     Type = "Email"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", notification);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", notification);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Welcome email sent to {Email}", email);
@@ -45,6 +63,7 @@ namespace UserService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var notification = new
                 {
                     To = email,
@@ -53,7 +72,7 @@ namespace UserService.Infrastructure.External
                     Type = "Email"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", notification);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", notification);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Role assignment notification sent to {Email}", email);
@@ -68,6 +87,7 @@ namespace UserService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var notification = new
                 {
                     To = email,
@@ -76,7 +96,7 @@ namespace UserService.Infrastructure.External
                     Type = "Email"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", notification);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", notification);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Password reset email sent to {Email}", email);

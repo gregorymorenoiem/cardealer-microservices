@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using UserService.Application.DTOs;
 using UserService.Application.Interfaces;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace UserService.Infrastructure.External
 {
@@ -13,18 +14,35 @@ namespace UserService.Infrastructure.External
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<RoleServiceClient> _logger;
+        private readonly IServiceDiscovery _serviceDiscovery;
 
-        public RoleServiceClient(HttpClient httpClient, ILogger<RoleServiceClient> logger)
+        public RoleServiceClient(HttpClient httpClient, ILogger<RoleServiceClient> logger, IServiceDiscovery serviceDiscovery)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _serviceDiscovery = serviceDiscovery;
+        }
+
+        private async Task<string> GetServiceUrlAsync()
+        {
+            try
+            {
+                var instance = await _serviceDiscovery.FindServiceInstanceAsync("RoleService");
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://roleservice:80";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error resolving RoleService from Consul, using fallback");
+                return "http://roleservice:80";
+            }
         }
 
         public async Task<bool> RoleExistsAsync(Guid roleId)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/api/roles/{roleId}");
+                var baseUrl = await GetServiceUrlAsync();
+                var response = await _httpClient.GetAsync($"{baseUrl}/api/roles/{roleId}");
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -38,7 +56,8 @@ namespace UserService.Infrastructure.External
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<RoleDetailsDto>($"/api/roles/{roleId}");
+                var baseUrl = await GetServiceUrlAsync();
+                return await _httpClient.GetFromJsonAsync<RoleDetailsDto>($"{baseUrl}/api/roles/{roleId}");
             }
             catch (Exception ex)
             {
