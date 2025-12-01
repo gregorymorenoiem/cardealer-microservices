@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RoleService.Domain\RoleService.Domain.csproj" />
+    <ProjectReference Include="..\RoleService.Shared\RoleService.Shared.csproj" />
   </ItemGroup>
   
 </Project>

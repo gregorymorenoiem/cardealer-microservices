@@ -1,104 +1,93 @@
-using RoleService.Application.DTOs;
-using RoleService.Application.UseCases.GetError;
-using RoleService.Application.UseCases.GetErrors;
-using RoleService.Application.UseCases.GetErrorStats;
-using RoleService.Application.UseCases.GetServiceNames;
-using RoleService.Application.UseCases.LogError;
-using RoleService.Shared;
-using RoleService.Shared.RateLimiting;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using RoleService.Application.DTOs.Roles;
+using RoleService.Application.UseCases.Roles.CreateRole;
+using RoleService.Application.UseCases.Roles.UpdateRole;
+using RoleService.Application.UseCases.Roles.DeleteRole;
+using RoleService.Application.UseCases.Roles.GetRole;
+using RoleService.Application.UseCases.Roles.GetRoles;
+using RoleService.Shared.Models;
+using RoleService.Shared.RateLimiting;
 
-namespace RoleService.Api.Controllers
+namespace RoleService.Api.Controllers;
+
+[Authorize(Policy = "RoleServiceAccess")]
+[ApiController]
+[Route("api/[controller]")]
+public class RolesController : ControllerBase
 {
-    [Authorize(Policy = "RoleServiceAccess")]
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ErrorsController : ControllerBase
+    private readonly IMediator _mediator;
+
+    public RolesController(IMediator mediator)
     {
-        private readonly IMediator _mediator;
+        _mediator = mediator;
+    }
 
-        public ErrorsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+    /// <summary>
+    /// Crea un nuevo role
+    /// </summary>
+    [HttpPost]
+    [RateLimit(maxRequests: 100, windowSeconds: 60)]
+    public async Task<ActionResult<ApiResponse<CreateRoleResponse>>> CreateRole([FromBody] CreateRoleRequest request)
+    {
+        var command = new CreateRoleCommand(request);
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<CreateRoleResponse>.Ok(result));
+    }
 
-        /// <summary>
-        /// Registra un nuevo error en el sistema
-        /// </summary>
-        [HttpPost]
-        [RateLimit(maxRequests: 200, windowSeconds: 60)]
-        public async Task<ActionResult<ApiResponse<LogErrorResponse>>> LogError([FromBody] LogErrorRequest request)
-        {
-            var command = new LogErrorCommand(request);
-            var result = await _mediator.Send(command);
-            return ApiResponse<LogErrorResponse>.Ok(result);
-        }
+    /// <summary>
+    /// Obtiene todos los roles con paginación
+    /// </summary>
+    [HttpGet]
+    [RateLimit(maxRequests: 150, windowSeconds: 60)]
+    public async Task<ActionResult<ApiResponse<PaginatedResult<RoleListItemDto>>>> GetRoles(
+        [FromQuery] bool? isActive = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        var query = new GetRolesQuery(isActive, page, pageSize);
+        var result = await _mediator.Send(query);
+        return Ok(ApiResponse<PaginatedResult<RoleListItemDto>>.Ok(result));
+    }
 
-        /// <summary>
-        /// Obtiene una lista de errores con filtros opcionales
-        /// </summary>
-        [HttpGet]
-        [RateLimit(maxRequests: 150, windowSeconds: 60)]
-        public async Task<ActionResult<ApiResponse<GetErrorsResponse>>> GetErrors(
-            [FromQuery] string? serviceName = null,
-            [FromQuery] DateTime? from = null,
-            [FromQuery] DateTime? to = null,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50)
-        {
-            var request = new GetErrorsRequest(serviceName, from, to, page, pageSize);
-            var query = new GetErrorsQuery(request);
-            var result = await _mediator.Send(query);
-            return ApiResponse<GetErrorsResponse>.Ok(result);
-        }
+    /// <summary>
+    /// Obtiene un role por ID con sus permisos
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [RateLimit(maxRequests: 200, windowSeconds: 60)]
+    public async Task<ActionResult<ApiResponse<RoleDetailsDto>>> GetRole(Guid id)
+    {
+        var query = new GetRoleByIdQuery(id);
+        var result = await _mediator.Send(query);
 
-        /// <summary>
-        /// Obtiene los detalles de un error específico
-        /// </summary>
-        [HttpGet("{id:guid}")]
-        [RateLimit(maxRequests: 200, windowSeconds: 60)]
-        public async Task<ActionResult<ApiResponse<GetErrorResponse>>> GetError(Guid id)
-        {
-            var request = new GetErrorRequest(id);
-            var query = new GetErrorQuery(request);
-            var result = await _mediator.Send(query);
+        if (result == null)
+            return NotFound(ApiResponse<object>.Fail("Role not found"));
 
-            if (result == null)
-                return NotFound(ApiResponse<object>.Fail("Error not found"));
+        return Ok(ApiResponse<RoleDetailsDto>.Ok(result));
+    }
 
-            return ApiResponse<GetErrorResponse>.Ok(result);
-        }
+    /// <summary>
+    /// Actualiza un role existente
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [RateLimit(maxRequests: 100, windowSeconds: 60)]
+    public async Task<ActionResult<ApiResponse<UpdateRoleResponse>>> UpdateRole(Guid id, [FromBody] UpdateRoleRequest request)
+    {
+        var command = new UpdateRoleCommand(id, request);
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<UpdateRoleResponse>.Ok(result));
+    }
 
-        /// <summary>
-        /// Obtiene estadísticas de errores en un rango de fechas
-        /// </summary>
-        [HttpGet("stats")]
-        [RateLimit(maxRequests: 100, windowSeconds: 60)]
-        public async Task<ActionResult<ApiResponse<GetErrorStatsResponse>>> GetStats(
-            [FromQuery] DateTime? from = null,
-            [FromQuery] DateTime? to = null)
-        {
-            var request = new GetErrorStatsRequest(from, to);
-            var query = new GetErrorStatsQuery(request);
-            var result = await _mediator.Send(query);
-            return ApiResponse<GetErrorStatsResponse>.Ok(result);
-        }
-
-        /// <summary>
-        /// Obtiene la lista de servicios que han registrado errores
-        /// </summary>
-        [HttpGet("services")]
-        [RateLimit(maxRequests: 150, windowSeconds: 60)]
-        public async Task<ActionResult<ApiResponse<GetServiceNamesResponse>>> GetServiceNames()
-        {
-            var request = new GetServiceNamesRequest();
-            var query = new GetServiceNamesQuery(request);
-            var result = await _mediator.Send(query);
-            return ApiResponse<GetServiceNamesResponse>.Ok(result);
-        }
+    /// <summary>
+    /// Elimina un role
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [RateLimit(maxRequests: 50, windowSeconds: 60)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteRole(Guid id)
+    {
+        var command = new DeleteRoleCommand(id);
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<bool>.Ok(result));
     }
 }

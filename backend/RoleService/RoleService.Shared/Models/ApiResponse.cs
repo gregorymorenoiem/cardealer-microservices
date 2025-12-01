@@ -1,4 +1,4 @@
-namespace RoleService.Shared
+namespace RoleService.Shared.Models
 {
     public class ApiResponse<T>
     {

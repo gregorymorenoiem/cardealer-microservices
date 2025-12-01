@@ -8,23 +8,23 @@ using System.Threading.Tasks;
 
 namespace RoleService.Infrastructure.Persistence
 {
-    public class EfRoleRepository : IRoleRepository
+    public class EfRoleLogRepository : IRoleLogRepository
     {
         private readonly ApplicationDbContext _context;
 
-        public EfRoleRepository(ApplicationDbContext context)
+        public EfRoleLogRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<Role?> GetByIdAsync(Guid id)
+        public async Task<RoleLog?> GetByIdAsync(Guid id)
         {
-            return await _context.Roles.FindAsync(id);
+            return await _context.RoleLogs.FindAsync(id);
         }
 
-        public async Task<IEnumerable<Role>> GetAsync(ErrorQuery query)
+        public async Task<IEnumerable<RoleLog>> GetAsync(RoleLogQuery query)
         {
-            var dbQuery = _context.Roles.AsNoTracking().AsQueryable();
+            var dbQuery = _context.RoleLogs.AsNoTracking().AsQueryable();
 
             // Aplicar filtros
             if (!string.IsNullOrWhiteSpace(query.ServiceName))
@@ -50,25 +50,25 @@ namespace RoleService.Infrastructure.Persistence
             return await dbQuery.ToListAsync();
         }
 
-        public async Task AddAsync(Role Role)
+        public async Task AddAsync(RoleLog roleLog)
         {
-            _context.Roles.Add(Role);
+            _context.RoleLogs.Add(roleLog);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            var Role = await _context.Roles.FindAsync(id);
-            if (Role != null)
+            var roleLog = await _context.RoleLogs.FindAsync(id);
+            if (roleLog != null)
             {
-                _context.Roles.Remove(Role);
+                _context.RoleLogs.Remove(roleLog);
                 await _context.SaveChangesAsync();
             }
         }
 
         public async Task<IEnumerable<string>> GetServiceNamesAsync()
         {
-            return await _context.Roles
+            return await _context.RoleLogs
                 .AsNoTracking()
                 .Select(e => e.ServiceName)
                 .Distinct()
@@ -76,9 +76,9 @@ namespace RoleService.Infrastructure.Persistence
                 .ToListAsync();
         }
 
-        public async Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null)
+        public async Task<RoleLogStats> GetStatsAsync(DateTime? from = null, DateTime? to = null)
         {
-            var baseQuery = _context.Roles.AsNoTracking().AsQueryable();
+            var baseQuery = _context.RoleLogs.AsNoTracking().AsQueryable();
 
             if (from.HasValue)
             {
@@ -113,7 +113,7 @@ namespace RoleService.Infrastructure.Persistence
 
             await Task.WhenAll(totalErrorsTask, errorsLast24HoursTask, errorsLast7DaysTask, errorsByServiceTask, errorsByStatusCodeTask);
 
-            return new ErrorStats
+            return new RoleLogStats
             {
                 TotalErrors = totalErrorsTask.Result,
                 ErrorsLast24Hours = errorsLast24HoursTask.Result,

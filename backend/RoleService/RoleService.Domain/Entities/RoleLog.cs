@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RoleService.Domain.Entities
 {
-    public class Role
+    public class RoleLog
     {
         public Guid Id { get; set; }
         public string ServiceName { get; set; } = null!;

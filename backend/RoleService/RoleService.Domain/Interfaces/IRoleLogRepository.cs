@@ -5,17 +5,17 @@ using RoleService.Domain.Entities;
 
 namespace RoleService.Domain.Interfaces
 {
-    public interface IRoleRepository
+    public interface IRoleLogRepository
     {
-        Task<Role?> GetByIdAsync(Guid id);
-        Task<IEnumerable<Role>> GetAsync(ErrorQuery query);
-        Task AddAsync(Role Role);
+        Task<RoleLog?> GetByIdAsync(Guid id);
+        Task<IEnumerable<RoleLog>> GetAsync(RoleLogQuery query);
+        Task AddAsync(RoleLog roleLog);
         Task DeleteAsync(Guid id);
         Task<IEnumerable<string>> GetServiceNamesAsync();
-        Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null);
+        Task<RoleLogStats> GetStatsAsync(DateTime? from = null, DateTime? to = null);
     }
 
-    public class ErrorQuery
+    public class RoleLogQuery
     {
         public string? ServiceName { get; set; }
         public DateTime? From { get; set; }
@@ -24,7 +24,7 @@ namespace RoleService.Domain.Interfaces
         public int PageSize { get; set; } = 50;
     }
 
-    public class ErrorStats
+    public class RoleLogStats
     {
         public int TotalErrors { get; set; }
         public int ErrorsLast24Hours { get; set; }

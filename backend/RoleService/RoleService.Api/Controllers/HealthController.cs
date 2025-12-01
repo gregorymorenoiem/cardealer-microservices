@@ -1,4 +1,4 @@
-using RoleService.Shared;
+using RoleService.Shared.Models;
 using RoleService.Shared.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 

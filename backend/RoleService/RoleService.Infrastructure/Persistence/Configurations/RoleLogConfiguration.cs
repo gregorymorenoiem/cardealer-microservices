@@ -5,9 +5,9 @@ using System.Text.Json;
 
 namespace RoleService.Infrastructure.Persistence.Configurations
 {
-    public class RoleConfiguration : IEntityTypeConfiguration<Role>
+    public class RoleLogConfiguration : IEntityTypeConfiguration<RoleLog>
     {
-        public void Configure(EntityTypeBuilder<Role> builder)
+        public void Configure(EntityTypeBuilder<RoleLog> builder)
         {
             builder.ToTable("error_logs");
 
