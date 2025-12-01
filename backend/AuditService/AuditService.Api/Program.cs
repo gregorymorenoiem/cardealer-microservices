@@ -1,20 +1,32 @@
 using AuditService.Infrastructure.Extensions;
 using AuditService.Infrastructure.Persistence;
+using AuditService.Infrastructure.Messaging;
+using AuditService.Infrastructure.BackgroundServices;
+using AuditService.Infrastructure.Metrics;
+using AuditService.Domain.Interfaces;
 using AuditService.Shared;
 using AuditService.Shared.Settings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-// REMOVER esta línea problemática
-// using AspNetCore.HealthChecks.UI.Client; 
-// EN SU LUGAR usar:
+using Serilog.Enrichers.Span;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using HealthChecks.UI.Client; // Este es el namespace correcto
+using HealthChecks.UI.Client;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+// Configure Serilog con enriquecimiento de TraceId/SpanId
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithSpan() // â† AGREGADO: TraceId y SpanId de OpenTelemetry
+    .WriteTo.Console(outputTemplate: 
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} " +
+        "TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -61,6 +73,68 @@ builder.Services.AddCors(options =>
 
 // Add Infrastructure services (Database, Repositories, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ========== ADVANCED FEATURES ==========
+
+// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
+builder.Services.AddSingleton<IDeadLetterQueue>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<InMemoryDeadLetterQueue>>();
+    return new InMemoryDeadLetterQueue(logger, maxRetries: 5);
+});
+
+// Background Service para procesar DLQ
+builder.Services.AddHostedService<DeadLetterQueueProcessor>();
+
+// MÃ©tricas personalizadas (Singleton para compartir estado)
+builder.Services.AddSingleton<AuditServiceMetrics>();
+
+// Configurar OpenTelemetry
+var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "AuditService";
+var serviceVersion = builder.Configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0";
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
+        .AddAttributes(new Dictionary<string, object>
+        {
+            ["deployment.environment"] = builder.Environment.EnvironmentName,
+            ["service.namespace"] = "cardealer"
+        }))
+    .WithTracing(tracing => tracing
+        .SetSampler(new ParentBasedSampler(
+            // Estrategia de muestreo: 10% en producciÃ³n, 100% en desarrollo
+            new TraceIdRatioBasedSampler(
+                builder.Environment.IsProduction() ? 0.1 : 1.0)))
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.Filter = context =>
+            {
+                // Filtrar health checks para reducir ruido
+                return !context.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("AuditService.*")
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri(otlpEndpoint);
+        }))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddMeter("AuditService.*")
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri(otlpEndpoint);
+        }));
+
+// ========================================
 
 // Add Health Checks
 builder.Services.AddHealthChecks()

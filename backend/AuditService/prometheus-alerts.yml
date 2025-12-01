@@ -1,0 +1,124 @@
+groups:
+  - name: audit_service_alerts
+    interval: 30s
+    rules:
+      # 1. High Error Rate en queries
+      - alert: HighAuditQueryErrorRate
+        expr: |
+          (rate(auditservice_audit_logs_queried_total{success="false"}[5m]) / 
+           rate(auditservice_audit_logs_queried_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: auditservice
+        annotations:
+          summary: "Alta tasa de errores en queries de auditoría"
+          description: "Más del 10% de queries están fallando en los últimos 5 minutos"
+
+      # 2. Circuit Breaker Open
+      - alert: AuditCircuitBreakerOpen
+        expr: auditservice_circuit_breaker_state{state="open"} == 1
+        for: 5m
+        labels:
+          severity: critical
+          service: auditservice
+        annotations:
+          summary: "Circuit Breaker abierto por más de 5 minutos"
+          description: "El Circuit Breaker de RabbitMQ está abierto, eventos siendo enviados a DLQ"
+
+      # 3. Slow Queries
+      - alert: SlowAuditQueries
+        expr: |
+          histogram_quantile(0.95, 
+            rate(auditservice_query_duration_ms_bucket[5m])) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          service: auditservice
+        annotations:
+          summary: "Queries de auditoría lentas detectadas"
+          description: "El P95 de duración de queries supera los 2 segundos"
+
+      # 4. High Memory Usage
+      - alert: AuditServiceHighMemory
+        expr: |
+          process_working_set_bytes{job="auditservice"} > 536870912
+        for: 5m
+        labels:
+          severity: warning
+          service: auditservice
+        annotations:
+          summary: "Uso alto de memoria en AuditService"
+          description: "El servicio está usando más de 512MB de memoria"
+
+      # 5. Dead Letter Queue Backlog
+      - alert: AuditDLQBacklog
+        expr: auditservice_dlq_queue_size > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: auditservice
+        annotations:
+          summary: "Acumulación en Dead Letter Queue"
+          description: "Hay más de 100 eventos pendientes en DLQ por más de 10 minutos"
+
+      # 6. Security Events Spike
+      - alert: AuditSecurityEventsSpike
+        expr: |
+          rate(auditservice_security_events_total[5m]) > 10
+        for: 3m
+        labels:
+          severity: critical
+          service: auditservice
+        annotations:
+          summary: "Spike en eventos de seguridad detectados"
+          description: "Más de 10 eventos de seguridad por segundo durante 3 minutos"
+
+      # 7. Database Connection Issues
+      - alert: AuditDatabaseConnectionIssues
+        expr: |
+          rate(auditservice_database_connection_errors_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          service: auditservice
+        annotations:
+          summary: "Errores de conexión a base de datos"
+          description: "Se detectaron errores al conectar con PostgreSQL"
+
+      # 8. No Audit Logs Created
+      - alert: NoAuditLogsCreated
+        expr: |
+          rate(auditservice_audit_logs_created_total[10m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          service: auditservice
+        annotations:
+          summary: "No se están creando audit logs"
+          description: "No se han creado audit logs en los últimos 15 minutos (posible problema)"
+
+      # 9. High Event Processing Latency
+      - alert: HighEventProcessingLatency
+        expr: |
+          histogram_quantile(0.95, 
+            rate(auditservice_event_processing_duration_ms_bucket[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: auditservice
+        annotations:
+          summary: "Alta latencia en procesamiento de eventos"
+          description: "El P95 de procesamiento de eventos supera 1 segundo"
+
+      # 10. Compliance Events Not Recorded
+      - alert: ComplianceEventsNotRecorded
+        expr: |
+          rate(auditservice_compliance_events_total[30m]) == 0
+        for: 30m
+        labels:
+          severity: info
+          service: auditservice
+        annotations:
+          summary: "No se están registrando eventos de compliance"
+          description: "No hay eventos de compliance en los últimos 30 minutos"

@@ -21,6 +21,9 @@
 
     <!-- RabbitMQ -->
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+    
+    <!-- Polly for Circuit Breaker -->
+    <PackageReference Include="Polly" Version="8.4.2" />
 
     <!-- Health Checks -->
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.2" />
