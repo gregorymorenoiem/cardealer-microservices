@@ -1,0 +1,53 @@
+groups:
+  - name: gateway_alerts
+    interval: 30s
+    rules:
+      - alert: HighGatewayErrorRate
+        expr: rate(gateway_requests_failed_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: gateway
+        annotations:
+          summary: "High error rate in Gateway"
+          description: "Gateway error rate is {{ $value }} errors/sec (threshold: 0.1)"
+
+      - alert: SlowGatewayRequests
+        expr: histogram_quantile(0.95, rate(gateway_request_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+          service: gateway
+        annotations:
+          summary: "Slow requests through Gateway"
+          description: "P95 gateway request latency is {{ $value }}s (threshold: 3s)"
+
+      - alert: DownstreamServiceErrors
+        expr: rate(gateway_downstream_service_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: gateway
+        annotations:
+          summary: "High downstream service error rate"
+          description: "Downstream service {{ $labels.service }} error rate is {{ $value }} errors/sec"
+
+      - alert: SlowDownstreamService
+        expr: histogram_quantile(0.95, rate(gateway_downstream_service_latency_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: gateway
+        annotations:
+          summary: "Slow downstream service response"
+          description: "P95 latency for {{ $labels.service }} is {{ $value }}s (threshold: 2s)"
+
+      - alert: GatewayHighMemory
+        expr: process_working_set_bytes{service="gateway"} > 1073741824
+        for: 5m
+        labels:
+          severity: warning
+          service: gateway
+        annotations:
+          summary: "Gateway high memory usage"
+          description: "Gateway memory usage is {{ $value | humanize }}B (threshold: 1GB)"
