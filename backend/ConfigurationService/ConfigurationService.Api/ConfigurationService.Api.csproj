@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Consul" Version="1.7.14.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
   </ItemGroup>
@@ -14,6 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\ConfigurationService.Application\ConfigurationService.Application.csproj" />
     <ProjectReference Include="..\ConfigurationService.Infrastructure\ConfigurationService.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Infrastructure\ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />
   </ItemGroup>
 
 </Project>

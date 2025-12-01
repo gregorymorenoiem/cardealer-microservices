@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Consul" Version="1.7.14.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
@@ -16,6 +17,9 @@
   <ItemGroup>
     <ProjectReference Include="..\LoggingService.Application\LoggingService.Application.csproj" />
     <ProjectReference Include="..\LoggingService.Infrastructure\LoggingService.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Infrastructure\ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />
   </ItemGroup>
 
 </Project>
