@@ -18,6 +18,10 @@ using Microsoft.OpenApi.Models;
 using FluentValidation;
 using RoleService.Application.Behaviors;
 using MediatR;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using RoleService.Api.Middleware;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
@@ -141,6 +145,18 @@ builder.Services.AddAuthorization(options =>
 
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
+
+// Service Discovery Configuration
+builder.Services.AddSingleton<IConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+    return new ConsulClient(config => config.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
 // Application Services - Repositories
 builder.Services.AddScoped<IRoleRepository, RoleService.Infrastructure.Repositories.EfRoleRepository>();
@@ -286,6 +302,9 @@ app.UseHttpsRedirection();
 // Agregar autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // Middleware para capturar respuestas
 app.UseMiddleware<ResponseCaptureMiddleware>();
