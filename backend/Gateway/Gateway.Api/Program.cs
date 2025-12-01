@@ -11,6 +11,10 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using Gateway.Metrics;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using Gateway.Api.Middleware;
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -109,12 +113,27 @@ builder.Services
 // 6. Swagger para Ocelot
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
+// 7. Configure Consul Client
+var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(config =>
+{
+    config.Address = new Uri(consulAddress);
+}));
+
+// 8. Configure Service Discovery
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
 var app = builder.Build();
 
 // 7. Middleware pipeline
 app.UseCors();
 app.UseSwagger();
 app.UseSwaggerForOcelotUI();
+
+// Service Discovery Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // 8. Agregar endpoint de salud para el Gateway
 app.MapGet("/health", () => Results.Ok("Gateway is healthy"));

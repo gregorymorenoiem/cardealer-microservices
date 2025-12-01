@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Consul" Version="1.7.14.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="MMLib.SwaggerForOcelot" Version="7.0.0" />
     <PackageReference Include="Ocelot" Version="22.0.1" />
@@ -25,6 +26,12 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.14.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.14.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Infrastructure\ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,9 +1,26 @@
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using ContactService.Api.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure Consul Client
+var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(config =>
+{
+    config.Address = new Uri(consulAddress);
+}));
+
+// Configure Service Discovery
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
 var app = builder.Build();
 
@@ -15,6 +32,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Service Discovery Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
+
+// Health endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "ContactService" }));
 
 var summaries = new[]
 {
