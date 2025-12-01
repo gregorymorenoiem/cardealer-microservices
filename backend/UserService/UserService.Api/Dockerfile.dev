@@ -1,0 +1,34 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Install dotnet-watch and debugger
+RUN dotnet tool install --global dotnet-watch \
+    && export PATH="$PATH:/root/.dotnet/tools" \
+    && apt-get update \
+    && apt-get install -y unzip curl \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+
+WORKDIR /app
+
+# Copiar los archivos de proyecto de ErrorService y restaurar
+
+COPY ErrorService/ErrorService.Api/ErrorService.Api.csproj ./ErrorService/ErrorService.Api/
+
+# Restaurar los paquetes de ErrorService.Api
+RUN dotnet restore "ErrorService/ErrorService.Api/ErrorService.Api.csproj"
+
+# Development environment variables
+ENV ASPNETCORE_ENVIRONMENT=Development \
+    ASPNETCORE_URLS="http://+:80" \
+    DOTNET_MSBUILD_CONFIGURATION=Debug \
+    DOTNET_BUILD_CONFIGURATION=Debug \
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    NUGET_XMLDOC_MODE=none
+
+# Expose HTTP and debug ports
+EXPOSE 80
+EXPOSE 4022
+
+# Start debugger and hot-reload
+ENTRYPOINT ["bash", "-lc", "\
+  /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
+  dotnet watch run --project ErrorService/ErrorService.Api/ErrorService.Api.csproj --urls http://0.0.0.0:80"]

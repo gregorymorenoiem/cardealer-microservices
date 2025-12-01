@@ -1,0 +1,58 @@
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY ErrorService/ErrorService.sln ./ErrorService/
+COPY ErrorService/ErrorService.Api/ErrorService.Api.csproj ./ErrorService/ErrorService.Api/
+COPY ErrorService/ErrorService.Application/ErrorService.Application.csproj ./ErrorService/ErrorService.Application/
+COPY ErrorService/ErrorService.Domain/ErrorService.Domain.csproj ./ErrorService/ErrorService.Domain/
+COPY ErrorService/ErrorService.Infrastructure/ErrorService.Infrastructure.csproj ./ErrorService/ErrorService.Infrastructure/
+COPY ErrorService/ErrorService.Shared/ErrorService.Shared.csproj ./ErrorService/ErrorService.Shared/
+
+# Restore packages
+RUN dotnet restore "ErrorService/ErrorService.Api/ErrorService.Api.csproj" --verbosity quiet
+
+# Copy source code and build
+COPY ErrorService/ ./ErrorService/
+WORKDIR "/src/ErrorService/ErrorService.Api"
+RUN dotnet publish "ErrorService.Api.csproj" -c Release -o /app/publish \
+    --no-restore \
+    --verbosity minimal \
+    -p:UseAppHost=false
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+# Install curl for healthchecks
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -s /bin/false appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# Copy published application
+COPY --from=build --chown=appuser:appuser /app/publish .
+
+# Environment variables
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:80
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
+# Security: Run as non-root user
+USER appuser
+
+ENTRYPOINT ["dotnet", "ErrorService.Api.dll"]
