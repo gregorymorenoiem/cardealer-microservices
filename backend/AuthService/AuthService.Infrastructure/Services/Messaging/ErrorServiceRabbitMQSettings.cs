@@ -1,4 +1,4 @@
-﻿
+
 namespace AuthService.Infrastructure.Services.Messaging;
 
 public class ErrorServiceRabbitMQSettings

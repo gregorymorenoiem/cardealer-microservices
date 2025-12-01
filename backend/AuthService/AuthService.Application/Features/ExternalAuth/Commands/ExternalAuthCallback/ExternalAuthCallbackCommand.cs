@@ -1,4 +1,4 @@
-﻿using AuthService.Application.DTOs.ExternalAuth;
+using AuthService.Application.DTOs.ExternalAuth;
 using MediatR;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.ExternalAuthCallback;

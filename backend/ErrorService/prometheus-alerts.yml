@@ -1,0 +1,127 @@
+# Prometheus Alerting Rules para ErrorService
+# Configuración de alertas proactivas para monitoreo 24/7
+# Compatible con Alertmanager
+
+groups:
+  - name: errorservice_alerts
+    interval: 30s
+    rules:
+      # Alerta: Tasa de errores alta (> 5% de requests)
+      - alert: ErrorServiceHighErrorRate
+        expr: |
+          (
+            rate(errorservice_errors_logged_total[5m])
+            /
+            rate(http_server_requests_total{service_name="ErrorService"}[5m])
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: errorservice
+          component: error-logging
+        annotations:
+          summary: "ErrorService: Alta tasa de errores detectada"
+          description: |
+            La tasa de errores ha superado el 5% en los últimos 5 minutos.
+            Tasa actual: {{ $value | humanizePercentage }}
+            Servicio: {{ $labels.service_name }}
+            Revisa los logs y traces en Jaeger para diagnosticar.
+
+      # Alerta: Errores críticos frecuentes (> 1% de requests)
+      - alert: ErrorServiceCriticalErrorsHigh
+        expr: |
+          (
+            rate(errorservice_errors_critical_total[5m])
+            /
+            rate(http_server_requests_total{service_name="ErrorService"}[5m])
+          ) > 0.01
+        for: 1m
+        labels:
+          severity: critical
+          service: errorservice
+          component: error-logging
+        annotations:
+          summary: "🚨 ErrorService: Errores críticos frecuentes (status >= 500)"
+          description: |
+            La tasa de errores críticos ha superado el 1% en los últimos 5 minutos.
+            Tasa actual: {{ $value | humanizePercentage }}
+            Servicio: {{ $labels.service_name }}
+            Acción requerida: Revisar inmediatamente en Jaeger (http://localhost:16686)
+
+      # Alerta: Circuit Breaker abierto
+      - alert: ErrorServiceCircuitBreakerOpen
+        expr: errorservice_circuitbreaker_state == 2
+        for: 30s
+        labels:
+          severity: warning
+          service: errorservice
+          component: rabbitmq-publisher
+        annotations:
+          summary: "ErrorService: Circuit Breaker abierto (RabbitMQ no disponible)"
+          description: |
+            El Circuit Breaker para RabbitMQ está en estado OPEN.
+            Estado actual: {{ $value }} (0=CLOSED, 1=HALF-OPEN, 2=OPEN)
+            Servicio: {{ $labels.service_name }}
+            Los eventos no se están publicando a RabbitMQ.
+            Verifica la salud de RabbitMQ y la conectividad de red.
+
+      # Alerta: Latencia P95 alta (> 500ms)
+      - alert: ErrorServiceHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(errorservice_error_processing_duration_bucket[5m])
+          ) > 500
+        for: 3m
+        labels:
+          severity: warning
+          service: errorservice
+          component: error-processing
+        annotations:
+          summary: "ErrorService: Alta latencia en procesamiento de errores"
+          description: |
+            El percentil 95 de latencia ha superado 500ms en los últimos 5 minutos.
+            Latencia P95: {{ $value | humanizeDuration }}
+            Servicio: {{ $labels.service_name }}
+            Considera revisar:
+            - Consultas de base de datos lentas
+            - Conexión a RabbitMQ
+            - Carga del sistema
+
+      # Alerta: Tasa de errores de procesamiento (failures)
+      - alert: ErrorServiceProcessingFailures
+        expr: |
+          (
+            sum(rate(errorservice_error_processing_duration_count{success="false"}[5m]))
+            /
+            sum(rate(errorservice_error_processing_duration_count[5m]))
+          ) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: errorservice
+          component: error-processing
+        annotations:
+          summary: "🚨 ErrorService: Alta tasa de fallos en procesamiento"
+          description: |
+            Más del 10% de los intentos de log de errores están fallando.
+            Tasa de fallos: {{ $value | humanizePercentage }}
+            Servicio: {{ $labels.service_name }}
+            Verifica:
+            - Conectividad con PostgreSQL
+            - Estado de RabbitMQ
+            - Logs de aplicación para excepciones
+
+# Configuración de Alertmanager (ejemplo)
+# Para integrar estas alertas, agrega este archivo a tu prometheus.yml:
+#
+# rule_files:
+#   - 'prometheus-alerts.yml'
+#
+# Y configura Alertmanager en prometheus.yml:
+#
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#       - targets: ['localhost:9093']
+#
+# Para Teams/Slack/Email, configura Alertmanager con webhooks.

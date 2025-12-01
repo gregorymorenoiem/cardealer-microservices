@@ -3,7 +3,7 @@ using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Domain.Enums;
 
 

@@ -21,6 +21,9 @@
 
     <!-- RabbitMQ -->
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+    
+    <!-- Polly for Circuit Breaker -->
+    <PackageReference Include="Polly" Version="8.4.2" />
 
     <!-- Health Checks -->
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.2" />
@@ -44,6 +47,8 @@
     <ProjectReference Include="..\AuditService.Application\AuditService.Application.csproj" />
     <ProjectReference Include="..\AuditService.Domain\AuditService.Domain.csproj" />
     <ProjectReference Include="..\AuditService.Shared\AuditService.Shared.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

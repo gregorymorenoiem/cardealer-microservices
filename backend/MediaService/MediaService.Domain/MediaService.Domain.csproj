@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MediaService.Shared\MediaService.Shared.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

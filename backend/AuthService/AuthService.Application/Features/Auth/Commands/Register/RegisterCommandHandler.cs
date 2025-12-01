@@ -1,5 +1,5 @@
 // AuthService.Application/UseCases/Register/RegisterCommandHandler.cs
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Domain.Entities;
 using RefreshTokenEntity = AuthService.Domain.Entities.RefreshToken;
 using AuthService.Domain.Interfaces.Repositories;
@@ -7,6 +7,8 @@ using AuthService.Domain.Interfaces.Services;
 using MediatR;
 using AuthService.Domain.Enums;
 using AuthService.Application.DTOs.Auth;
+using AuthService.Domain.Interfaces;
+using CarDealer.Contracts.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
@@ -18,6 +20,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IVerificationTokenRepository _verificationTokenRepository;
     private readonly IAuthNotificationService _notificationService;
+    private readonly IEventPublisher _eventPublisher;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
@@ -25,7 +28,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
         IVerificationTokenRepository verificationTokenRepository,
-        IAuthNotificationService notificationService)
+        IAuthNotificationService notificationService,
+        IEventPublisher eventPublisher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -33,6 +37,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         _refreshTokenRepository = refreshTokenRepository;
         _verificationTokenRepository = verificationTokenRepository;
         _notificationService = notificationService;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -78,6 +83,16 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
 
         // Send welcome email
         await _notificationService.SendWelcomeEmailAsync(user.Email!, user.UserName!);
+
+        // Publish UserRegisteredEvent
+        var userRegisteredEvent = new UserRegisteredEvent
+        {
+            UserId = Guid.Parse(user.Id),
+            Email = user.Email!,
+            FullName = user.UserName!, // Using UserName as FullName for now
+            RegisteredAt = user.CreatedAt
+        };
+        await _eventPublisher.PublishAsync(userRegisteredEvent, cancellationToken);
 
         // CORRECCIÓN: Usar operador de supresión nula (!) para evitar warnings
         return new RegisterResponse(

@@ -45,11 +45,7 @@ public class VerificationTokenConfiguration : IEntityTypeConfiguration<Verificat
             .IsRequired()
             .HasMaxLength(450);
 
-        // Relación con User
-        builder.HasOne<ApplicationUser>()
-            .WithMany(u => u.VerificationTokens)
-            .HasForeignKey(vt => vt.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // The relationship is configured in ApplicationUserConfiguration
 
         // Índices
         builder.HasIndex(vt => vt.Token)
@@ -64,8 +60,5 @@ public class VerificationTokenConfiguration : IEntityTypeConfiguration<Verificat
         builder.HasIndex(vt => vt.CreatedAt);
 
         builder.HasIndex(vt => new { vt.Email, vt.Type, vt.IsUsed });
-
-        // Ignorar propiedades computadas
-        builder.Ignore(vt => vt.IsValid());
     }
 }

@@ -1,4 +1,4 @@
-﻿using AuthService.Application.DTOs.ExternalAuth;
+using AuthService.Application.DTOs.ExternalAuth;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuthCallback;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalLogin;

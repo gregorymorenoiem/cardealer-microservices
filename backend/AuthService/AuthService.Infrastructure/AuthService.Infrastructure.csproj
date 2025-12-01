@@ -13,7 +13,9 @@
     
     <!-- JWT Authentication - ACTUALIZADO para evitar vulnerabilidad -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.0" />
+    <PackageReference Include="Polly" Version="8.4.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
     
     <!-- Entity Framework -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
@@ -52,7 +54,7 @@
   <ProjectReference Include="..\AuthService.Application\AuthService.Application.csproj" />
   <ProjectReference Include="..\AuthService.Domain\AuthService.Domain.csproj" />
   <ProjectReference Include="..\AuthService.Shared\AuthService.Shared.csproj" />
-  <ProjectReference Include="..\..\ErrorService\ErrorService.Shared\ErrorService.Shared.csproj" />
+  <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
 </ItemGroup>
 
 

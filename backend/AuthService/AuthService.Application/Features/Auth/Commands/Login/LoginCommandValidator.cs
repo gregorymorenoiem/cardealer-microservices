@@ -1,6 +1,7 @@
 // File: backend/AuthService/AuthService.Application/UseCases/Login/LoginCommandValidator.cs
 using FluentValidation;
 using AuthService.Application.Features.Auth.Commands.Login;
+using AuthService.Application.Validators;
 
 public class LoginCommandValidator : AbstractValidator<LoginCommand>
 {
@@ -10,7 +11,9 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
             .NotEmpty().WithMessage("This field is required.")
             .EmailAddress().WithMessage("Invalid email format.")
             .Matches(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-                .WithMessage("Email must be in the format name@example.com.");
+                .WithMessage("Email must be in the format name@example.com.")
+            .NoXss() // ✅ NUEVO: Protección XSS
+            .NoSqlInjection(); // ✅ NUEVO: Protección SQL Injection
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("This field is required.")

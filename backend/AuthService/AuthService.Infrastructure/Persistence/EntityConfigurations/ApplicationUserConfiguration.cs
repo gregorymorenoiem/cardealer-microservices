@@ -32,7 +32,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(u => u.VerificationTokens)
-            .WithOne()
+            .WithOne(vt => vt.User)
             .HasForeignKey(vt => vt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 

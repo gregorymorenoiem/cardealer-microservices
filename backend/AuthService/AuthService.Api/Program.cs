@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using AuthService.Infrastructure.Extensions;
 using AuthService.Infrastructure.Persistence;
+using AuthService.Infrastructure.Messaging;
+using AuthService.Infrastructure.BackgroundServices;
+using AuthService.Infrastructure.Metrics;
+using AuthService.Domain.Interfaces;
 using Serilog;
+using Serilog.Enrichers.Span;
 using System.Reflection;
 using FluentValidation;
 using AuthService.Shared;
-using ErrorService.Shared.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Cors;
 using System.Threading.RateLimiting;
@@ -15,18 +19,62 @@ using AuthService.Domain.Interfaces.Services;
 using AuthService.Infrastructure.External;
 using AuthService.Infrastructure.Services.Notification;
 using Microsoft.Extensions.Options;
+using CarDealer.Shared.Database;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar Serilog
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+// Configurar Serilog con TraceId/SpanId enrichment
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithSpan() // ✅ NUEVO: Correlación con OpenTelemetry traces
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 builder.Services.AddLogging();
+
+// OpenTelemetry con Sampling Strategy
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation()
+            .AddSource("AuthService")
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("AuthService"))
+            .SetSampler(new TraceIdRatioBasedSampler(
+                builder.Environment.IsProduction() ? 0.1 : 1.0)) // ✅ NUEVO: 10% prod, 100% dev
+            .AddOtlpExporter(options =>
+            {
+                options.Endpoint = new Uri(builder.Configuration["OpenTelemetry:Exporter:Otlp:Endpoint"] ?? "http://localhost:4317");
+            });
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter("AuthService")
+            .AddOtlpExporter(options =>
+            {
+                options.Endpoint = new Uri(builder.Configuration["OpenTelemetry:Exporter:Otlp:Endpoint"] ?? "http://localhost:4317");
+            });
+    });
 
 // Rate Limiting
 builder.Services.AddRateLimiter(options =>
@@ -65,16 +113,18 @@ builder.Services.AddCors(options =>
 // TODA LA CONFIGURACIÓN EN UN SOLO LUGAR
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// DbContext
-var authConn = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrWhiteSpace(authConn))
-    throw new InvalidOperationException("La cadena DefaultConnection no está configurada.");
+// Database Context (multi-provider configuration)
+builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
-builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseNpgsql(authConn).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+// ✅ NUEVO: Dead Letter Queue + Background Processor
+builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
+builder.Services.AddHostedService<DeadLetterQueueProcessor>();
 
-// Error Handling
-builder.Services.AddErrorHandling("AuthService");
+// ✅ NUEVO: Custom Metrics
+builder.Services.AddSingleton<AuthServiceMetrics>();
+
+// Event Publisher for RabbitMQ (ahora con DLQ)
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // MediatR & FluentValidation
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("AuthService.Application")));
@@ -140,16 +190,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseErrorHandling();
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Health Checks (ahora configurado en Infrastructure)
+// Health Checks
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
 
 app.MapControllers();
 
 Log.Information("AuthService starting up...");
 app.Run();
+
+public partial class Program { }

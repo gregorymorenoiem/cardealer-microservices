@@ -1,0 +1,147 @@
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using UserService.Application.Interfaces;
+
+namespace UserService.Infrastructure.External
+{
+    public class AuditServiceClient : IAuditServiceClient
+    {
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<AuditServiceClient> _logger;
+
+        public AuditServiceClient(HttpClient httpClient, ILogger<AuditServiceClient> logger)
+        {
+            _httpClient = httpClient;
+            _logger = logger;
+        }
+
+        public async Task LogUserCreatedAsync(Guid userId, string email, string performedBy)
+        {
+            try
+            {
+                var auditLog = new
+                {
+                    EntityType = "User",
+                    EntityId = userId.ToString(),
+                    Action = "Created",
+                    PerformedBy = performedBy,
+                    Details = $"User created: {email}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Audit log sent for user creation: {UserId}", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for user creation: {UserId}", userId);
+                // No lanzamos la excepción para no afectar el flujo principal
+            }
+        }
+
+        public async Task LogUserUpdatedAsync(Guid userId, string changes, string performedBy)
+        {
+            try
+            {
+                var auditLog = new
+                {
+                    EntityType = "User",
+                    EntityId = userId.ToString(),
+                    Action = "Updated",
+                    PerformedBy = performedBy,
+                    Details = changes,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Audit log sent for user update: {UserId}", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for user update: {UserId}", userId);
+            }
+        }
+
+        public async Task LogUserDeletedAsync(Guid userId, string email, string performedBy)
+        {
+            try
+            {
+                var auditLog = new
+                {
+                    EntityType = "User",
+                    EntityId = userId.ToString(),
+                    Action = "Deleted",
+                    PerformedBy = performedBy,
+                    Details = $"User deleted: {email}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Audit log sent for user deletion: {UserId}", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for user deletion: {UserId}", userId);
+            }
+        }
+
+        public async Task LogRoleAssignedAsync(Guid userId, Guid roleId, string performedBy)
+        {
+            try
+            {
+                var auditLog = new
+                {
+                    EntityType = "UserRole",
+                    EntityId = userId.ToString(),
+                    Action = "RoleAssigned",
+                    PerformedBy = performedBy,
+                    Details = $"Role {roleId} assigned to user {userId}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Audit log sent for role assignment: User {UserId}, Role {RoleId}", userId, roleId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for role assignment");
+            }
+        }
+
+        public async Task LogRoleRevokedAsync(Guid userId, Guid roleId, string performedBy)
+        {
+            try
+            {
+                var auditLog = new
+                {
+                    EntityType = "UserRole",
+                    EntityId = userId.ToString(),
+                    Action = "RoleRevoked",
+                    PerformedBy = performedBy,
+                    Details = $"Role {roleId} revoked from user {userId}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Audit log sent for role revocation: User {UserId}, Role {RoleId}", userId, roleId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for role revocation");
+            }
+        }
+    }
+}

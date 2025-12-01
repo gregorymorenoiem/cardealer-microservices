@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.Shared", "AuthS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.Api", "AuthService.Api\AuthService.Api.csproj", "{DC3C522F-60EC-47F7-9326-92CB306D563A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.Tests", "AuthService.Tests\AuthService.Tests.csproj", "{A8920F3C-6B26-476A-93F7-DF11AE31F199}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,5 +48,9 @@ Global
 		{DC3C522F-60EC-47F7-9326-92CB306D563A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC3C522F-60EC-47F7-9326-92CB306D563A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC3C522F-60EC-47F7-9326-92CB306D563A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8920F3C-6B26-476A-93F7-DF11AE31F199}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8920F3C-6B26-476A-93F7-DF11AE31F199}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8920F3C-6B26-476A-93F7-DF11AE31F199}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8920F3C-6B26-476A-93F7-DF11AE31F199}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

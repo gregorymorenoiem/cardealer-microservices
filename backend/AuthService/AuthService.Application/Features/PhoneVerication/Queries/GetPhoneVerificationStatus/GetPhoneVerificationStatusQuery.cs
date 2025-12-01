@@ -1,4 +1,4 @@
-﻿using AuthService.Application.DTOs.PhoneVerification;
+using AuthService.Application.DTOs.PhoneVerification;
 using MediatR;
 
 namespace AuthService.Application.Features.PhoneVerification.Queries.GetPhoneVerificationStatus;

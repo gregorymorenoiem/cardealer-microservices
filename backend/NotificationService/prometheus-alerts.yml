@@ -1,0 +1,103 @@
+groups:
+  - name: notificationservice_alerts
+    interval: 30s
+    rules:
+      - alert: HighNotificationFailureRate
+        expr: rate(notifications_failed_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: notificationservice
+        annotations:
+          summary: "High notification failure rate in NotificationService"
+          description: "Notification failure rate is {{ $value }} failures/sec (threshold: 0.1)"
+
+      - alert: NotificationCircuitBreakerOpen
+        expr: resilience_circuit_breaker_state{service="notificationservice"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          service: notificationservice
+        annotations:
+          summary: "NotificationService circuit breaker is OPEN"
+          description: "Circuit breaker {{ $labels.circuit_breaker }} is open - external notification provider unavailable"
+
+      - alert: SlowNotificationDelivery
+        expr: histogram_quantile(0.95, rate(notification_delivery_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: notificationservice
+        annotations:
+          summary: "Slow notification delivery in NotificationService"
+          description: "P95 notification delivery latency is {{ $value }}s (threshold: 5s)"
+
+      - alert: NotificationServiceHighMemory
+        expr: process_working_set_bytes{service="notificationservice"} > 1073741824
+        for: 5m
+        labels:
+          severity: warning
+          service: notificationservice
+        annotations:
+          summary: "NotificationService high memory usage"
+          description: "NotificationService memory usage is {{ $value | humanize }}B (threshold: 1GB)"
+
+      - alert: NotificationDLQBacklog
+        expr: dead_letter_queue_total{service="notificationservice"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: notificationservice
+        annotations:
+          summary: "NotificationService Dead Letter Queue backlog"
+          description: "{{ $value }} events in NotificationService DLQ need processing"
+
+      - alert: EmailDeliveryFailures
+        expr: rate(email_delivery_failures_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: notificationservice
+        annotations:
+          summary: "High email delivery failure rate"
+          description: "Email delivery failure rate is {{ $value }} failures/sec (threshold: 0.05)"
+
+      - alert: SMSDeliveryFailures
+        expr: rate(sms_delivery_failures_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: notificationservice
+        annotations:
+          summary: "High SMS delivery failure rate"
+          description: "SMS delivery failure rate is {{ $value }} failures/sec (threshold: 0.05)"
+
+      - alert: NotificationQueueBacklog
+        expr: queued_notifications > 500
+        for: 15m
+        labels:
+          severity: warning
+          service: notificationservice
+        annotations:
+          summary: "NotificationService queue backlog"
+          description: "{{ $value }} notifications queued for more than 15 minutes"
+
+      - alert: NoNotificationsSent
+        expr: increase(notifications_sent_total[15m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          service: notificationservice
+        annotations:
+          summary: "No notifications sent in last 15 minutes"
+          description: "NotificationService may be experiencing issues - no notifications sent"
+
+      - alert: NotificationDatabaseConnectionIssues
+        expr: rate(database_connection_errors_total{service="notificationservice"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: notificationservice
+        annotations:
+          summary: "NotificationService database connection issues"
+          description: "Database connection error rate is {{ $value }} errors/sec"

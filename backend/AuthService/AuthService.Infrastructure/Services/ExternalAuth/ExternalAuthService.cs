@@ -4,7 +4,7 @@ using AuthService.Domain.Interfaces.Services;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using System.Text.Json;
 
 namespace AuthService.Infrastructure.Services.ExternalAuth;

@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AuditService.Shared\AuditService.Shared.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

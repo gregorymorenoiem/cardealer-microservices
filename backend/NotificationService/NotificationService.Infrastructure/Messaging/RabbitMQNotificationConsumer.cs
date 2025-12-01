@@ -1,5 +1,4 @@
-﻿using AuthService.Shared.NotificationMessages;
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,6 +13,12 @@ using System.Text;
 using System.Text.Json;
 
 namespace NotificationService.Infrastructure.Messaging;
+
+// TODO: Replace AuthService.Shared.NotificationMessages events with CarDealer.Contracts events
+// Temporary DTOs for deserialization (should be in CarDealer.Contracts)
+public record EmailNotificationEvent(string To, string Subject, string Body, bool IsHtml, Dictionary<string, string>? Data);
+public record SmsNotificationEvent(string To, string Body, Dictionary<string, string>? Data);
+public record NotificationEvent(string Type, Dictionary<string, string>? Data);
 
 public class RabbitMQNotificationConsumer : BackgroundService
 {
@@ -222,7 +227,7 @@ public class RabbitMQNotificationConsumer : BackgroundService
             Subject: emailEvent.Subject,
             Body: emailEvent.Body,
             IsHtml: emailEvent.IsHtml,
-            Metadata: emailEvent.Data
+            Metadata: emailEvent.Data?.ToDictionary(k => k.Key, k => (object)k.Value)
         );
 
         // Usar el comando EXISTENTE de tu aplicación
@@ -256,7 +261,7 @@ public class RabbitMQNotificationConsumer : BackgroundService
         var request = new SendSmsNotificationRequest(
             To: smsEvent.To,
             Message: smsEvent.Body,
-            Metadata: smsEvent.Data
+            Metadata: smsEvent.Data?.ToDictionary(k => k.Key, k => (object)k.Value)
         );
 
         // Usar el comando EXISTENTE de tu aplicación

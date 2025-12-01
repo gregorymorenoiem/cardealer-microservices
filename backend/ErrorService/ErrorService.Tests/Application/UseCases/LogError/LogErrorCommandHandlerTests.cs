@@ -1,4 +1,5 @@
 using ErrorService.Application.DTOs;
+using ErrorService.Application.Metrics;
 using ErrorService.Application.UseCases.LogError;
 using ErrorService.Domain.Entities;
 using ErrorService.Domain.Interfaces;
@@ -18,8 +19,12 @@ namespace ErrorService.Tests.Application.UseCases.LogError
         {
             // Arrange
             var repoMock = new Mock<IErrorLogRepository>();
-            repoMock.Setup(r => r.AddAsync(It.IsAny<ErrorLog>())).Returns(Task.CompletedTask);
-            var handler = new LogErrorCommandHandler(repoMock.Object);
+            repoMock.Setup(r => r.AddAsync(It.IsAny<ErrorLog>()))
+                .Returns(Task.CompletedTask);
+
+            var metricsMock = new Mock<ErrorServiceMetrics>();
+
+            var handler = new LogErrorCommandHandler(repoMock.Object, metricsMock.Object);
             var request = new LogErrorRequest("Service", "Exception", "Message", "Stack", DateTime.UtcNow, "/endpoint", "POST", 500, "user", new Dictionary<string, object>());
             var command = new LogErrorCommand(request);
 

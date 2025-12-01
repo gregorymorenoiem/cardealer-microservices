@@ -1,10 +1,12 @@
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Domain.Entities;
 using RefreshTokenEntity = AuthService.Domain.Entities.RefreshToken;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
 using MediatR;
 using AuthService.Application.DTOs.Auth;
+using AuthService.Domain.Interfaces;
+using CarDealer.Contracts.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.Login;
 
@@ -14,17 +16,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IEventPublisher _eventPublisher;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IJwtGenerator jwtGenerator,
-        IRefreshTokenRepository refreshTokenRepository)
+        IRefreshTokenRepository refreshTokenRepository,
+        IEventPublisher eventPublisher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -77,6 +82,17 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
         user.ResetAccessFailedCount();
         await _userRepository.UpdateAsync(user, cancellationToken);
+
+        // Publish UserLoggedInEvent
+        var userLoggedInEvent = new UserLoggedInEvent
+        {
+            UserId = Guid.Parse(user.Id),
+            Email = user.Email!,
+            LoggedInAt = DateTime.UtcNow,
+            IpAddress = "127.0.0.1", // TODO: Get actual IP from context
+            UserAgent = null // TODO: Get actual UserAgent from context
+        };
+        await _eventPublisher.PublishAsync(userLoggedInEvent, cancellationToken);
 
         return new LoginResponse(
             user.Id,

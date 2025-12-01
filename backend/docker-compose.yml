@@ -8,13 +8,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
-      - "25432:5432"  # Cambiado a puerto alto
+      - "25432:5432" # Cambiado a puerto alto
     volumes:
       - errorservice_data:/var/lib/postgresql/data
     networks:
       - cargurus-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,8 +30,8 @@ services:
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
     ports:
-      - "15083:80"      # Cambiado
-      - "24022:4022"    # Cambiado
+      - "15083:80" # Cambiado
+      - "24022:4022" # Cambiado
     depends_on:
       errorservice-db:
         condition: service_healthy
@@ -41,7 +41,7 @@ services:
       - ./ErrorService:/app/ErrorService
       - ./ErrorService/ErrorService.Shared:/app/ErrorService.Shared
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -57,13 +57,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
-      - "25434:5432"  # Cambiado a puerto alto
+      - "25434:5432" # Cambiado a puerto alto
     volumes:
       - authservice_data:/var/lib/postgresql/data
     networks:
       - cargurus-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -95,8 +95,8 @@ services:
       AuthService__SmsQueueName: "notification-sms-queue"
       AuthService__PushQueueName: "notification-push-queue"
     ports:
-      - "15085:80"    # Cambiado
-      - "24023:4022"  # Cambiado
+      - "15085:80" # Cambiado
+      - "24023:4022" # Cambiado
     depends_on:
       authservice-db:
         condition: service_healthy
@@ -104,7 +104,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq: 
+      rabbitmq:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -112,7 +112,7 @@ services:
       - ./AuthService:/app/AuthService
       - ./AuthService/AuthService.Shared:/app/AuthService.Shared
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -128,13 +128,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
-      - "25433:5432"  # Cambiado a puerto alto
+      - "25433:5432" # Cambiado a puerto alto
     volumes:
       - notificationservice_data:/var/lib/postgresql/data
     networks:
       - cargurus-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -150,8 +150,8 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"   # AMQP - puerto alto
-      - "15672:15672"  # Management UI - puerto alto
+      - "5672:5672" # AMQP - puerto alto
+      - "15672:15672" # Management UI - puerto alto
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -161,7 +161,7 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-  
+
   # ------------------------
   # NotificationService API
   # ------------------------
@@ -204,8 +204,8 @@ services:
       NotificationSettings__Firebase__ProjectId: "cargurus-dev"
       NotificationSettings__TemplatesPath: "/app/Templates"
     ports:
-      - "15084:80"    # Cambiado
-      - "24026:4022"  # Cambiado
+      - "15084:80" # Cambiado
+      - "24026:4022" # Cambiado
     depends_on:
       notificationservice-db:
         condition: service_healthy
@@ -219,7 +219,7 @@ services:
       - ./NotificationService/NotificationService.Infrastructure/Templates:/app/Templates
       - ./firebase-dev-key.json:/app/firebase-service-account.json
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -238,7 +238,7 @@ services:
     networks:
       - cargurus-net
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -266,8 +266,8 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "18443:80"    # Cambiado
-      - "24024:4022"  # Cambiado
+      - "18443:80" # Cambiado
+      - "24024:4022" # Cambiado
     networks:
       - cargurus-net
 
@@ -283,7 +283,7 @@ services:
     volumes:
       - audit_db_data:/var/lib/postgresql/data
     networks:
-      - cargurus-network
+      - cargurus-net
 
   auditservice:
     build:
@@ -306,7 +306,7 @@ services:
       - rabbitmq
       - redis
     networks:
-      - cargurus-network
+      - cargurus-net
 
 volumes:
   errorservice_data:
@@ -315,7 +315,8 @@ volumes:
   rabbitmq_data:
   redis_data:
   audit_db_data:
-  
+
+
 networks:
   cargurus-net:
     driver: bridge

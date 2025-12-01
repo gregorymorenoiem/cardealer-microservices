@@ -2,7 +2,7 @@ using MediatR;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
 using Microsoft.Extensions.Logging;
-using ErrorService.Shared.Exceptions;
+using AuthService.Shared.Exceptions;
 using AuthService.Domain.Exceptions;
 using AuthService.Application.DTOs.Auth;
 

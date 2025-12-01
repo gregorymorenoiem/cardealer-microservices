@@ -20,6 +20,8 @@ using AuthService.Infrastructure.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using StackExchange.Redis;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;
+using Polly;
+using Polly.Extensions.Http;
 
 namespace AuthService.Infrastructure.Extensions;
 
@@ -128,11 +130,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IQRCodeService, QRCodeService>();
 
         // External Services
-        services.AddHttpClient<NotificationServiceClient>();
+        services.AddHttpClient<NotificationServiceClient>()
+            .AddPolicyHandler(GetRetryPolicy())
+            .AddPolicyHandler(GetCircuitBreakerPolicy());
         services.Configure<NotificationServiceSettings>(configuration.GetSection("NotificationService"));
 
         // External Authentication Services
-        services.AddHttpClient<ExternalTokenValidator>();
+        services.AddHttpClient<ExternalTokenValidator>()
+            .AddPolicyHandler(GetRetryPolicy())
+            .AddPolicyHandler(GetCircuitBreakerPolicy());
         services.AddScoped<IExternalTokenValidator, ExternalTokenValidator>();
         services.AddScoped<IExternalAuthService, ExternalAuthService>();
 
@@ -168,13 +174,13 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
         var healthChecksBuilder = services.AddHealthChecks()
-            .AddCheck<ApplicationHealthCheck>("application", HealthStatus.Unhealthy, new[] { "app" });
+            .AddCheck<ApplicationHealthCheck>("application", HealthStatus.Unhealthy, new[] { "app", "live", "ready" });
 
         // Redis Health Check
         var redisConnection = configuration.GetConnectionString("Redis");
         if (!string.IsNullOrEmpty(redisConnection))
         {
-            healthChecksBuilder.AddCheck<RedisHealthCheck>("redis", HealthStatus.Unhealthy, new[] { "cache", "redis" });
+            healthChecksBuilder.AddCheck<RedisHealthCheck>("redis", HealthStatus.Unhealthy, new[] { "cache", "redis", "ready" });
         }
 
         // External Services Health Check
@@ -182,10 +188,26 @@ public static class ServiceCollectionExtensions
         var notificationServiceUrl = configuration["NotificationService:BaseUrl"];
         if (!string.IsNullOrEmpty(errorServiceUrl) || !string.IsNullOrEmpty(notificationServiceUrl))
         {
-            services.AddHttpClient<ExternalServiceHealthCheck>();
-            healthChecksBuilder.AddCheck<ExternalServiceHealthCheck>("external-services", HealthStatus.Degraded, new[] { "external" });
+            services.AddHttpClient<ExternalServiceHealthCheck>()
+                .AddPolicyHandler(GetRetryPolicy())
+                .AddPolicyHandler(GetCircuitBreakerPolicy());
+            healthChecksBuilder.AddCheck<ExternalServiceHealthCheck>("external-services", HealthStatus.Degraded, new[] { "external", "ready" });
         }
 
         return services;
+    }
+
+    private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+    }
+
+    private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
     }
 }

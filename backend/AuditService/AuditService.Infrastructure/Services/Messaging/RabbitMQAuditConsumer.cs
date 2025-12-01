@@ -115,7 +115,7 @@ public class RabbitMQAuditConsumer : BackgroundService
 
         try
         {
-            var auditEvent = JsonSerializer.Deserialize<AuditEvent>(message, _jsonOptions);
+            var auditEvent = JsonSerializer.Deserialize<AuditService.Shared.AuditMessages.AuditEvent>(message, _jsonOptions);
 
             if (auditEvent == null)
             {
@@ -123,7 +123,7 @@ public class RabbitMQAuditConsumer : BackgroundService
                 return;
             }
 
-            // Crear AuditLog usando los métodos de creación
+            // Crear AuditLog usando los mï¿½todos de creaciï¿½n
             AuditLog auditLog;
 
             if (auditEvent.Success)
