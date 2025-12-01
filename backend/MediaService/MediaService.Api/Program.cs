@@ -155,8 +155,8 @@ builder.Services.AddHostedService<RabbitMQMediaConsumer>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>("database", HealthStatus.Unhealthy)
-    .AddCheck<StorageHealthCheck>("storage", HealthStatus.Degraded);
+    .AddCheck<DatabaseHealthCheck>("database", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy)
+    .AddCheck<StorageHealthCheck>("storage", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
 
 var app = builder.Build();
 
