@@ -35,6 +35,11 @@
     <!-- ✅ AGREGAR ESTE PAQUETE PARA PostAsJsonAsync -->
     <PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
 
+    <!-- Resilience & Logging -->
+    <PackageReference Include="Polly" Version="8.4.2" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+    
     <!-- Proveedores externos -->
     <PackageReference Include="SendGrid" Version="9.28.1" />
     <PackageReference Include="Twilio" Version="6.2.5" />
