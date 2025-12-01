@@ -146,3 +146,6 @@ app.MapControllers();
 
 Log.Information("NotificationService starting up with ErrorService middleware and RabbitMQ Consumer...");
 app.Run();
+
+// Expose Program class for integration testing
+public partial class Program { }

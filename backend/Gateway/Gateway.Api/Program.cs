@@ -50,7 +50,7 @@ builder.Services.AddOpenTelemetry()
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddSource(serviceName);
-        
+
         if (builder.Environment.IsDevelopment())
         {
             tracing.AddConsoleExporter();
@@ -68,7 +68,7 @@ builder.Services.AddOpenTelemetry()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
             .AddMeter(serviceName);
-        
+
         if (builder.Environment.IsDevelopment())
         {
             metrics.AddConsoleExporter();
@@ -82,7 +82,7 @@ builder.Services.AddOpenTelemetry()
 // 4. CORS simplificado
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ReactPolicy", policy => 
+    options.AddPolicy("ReactPolicy", policy =>
     {
         if (isDevelopment)
         {

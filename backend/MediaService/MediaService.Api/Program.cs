@@ -73,7 +73,7 @@ builder.Services.AddOpenTelemetry()
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddSource(serviceName);
-        
+
         if (builder.Environment.IsDevelopment())
         {
             tracing.AddConsoleExporter();
@@ -91,7 +91,7 @@ builder.Services.AddOpenTelemetry()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
             .AddMeter(serviceName);
-        
+
         if (builder.Environment.IsDevelopment())
         {
             metrics.AddConsoleExporter();
@@ -157,5 +157,10 @@ app.MapControllers();
 
 // Map health checks
 app.MapHealthChecks("/health");
+
+app.Run();
+
+// Expose Program class for integration testing
+public partial class Program { }
 
 app.Run();

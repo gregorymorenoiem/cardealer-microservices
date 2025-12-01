@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using CarDealer.Shared.Database;
+using System.Reflection;
 
 
 namespace AuditService.Infrastructure.Extensions;
@@ -23,6 +24,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // MediatR - Register handlers from Application assembly
+        var applicationAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "AuditService.Application");
+
+        if (applicationAssembly != null)
+        {
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(applicationAssembly));
+        }
 
         // Background Services - RabbitMQ Event Consumer
         services.AddHostedService<RabbitMqEventConsumer>();

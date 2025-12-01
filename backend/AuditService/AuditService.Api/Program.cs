@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .Enrich.WithSpan() // ← AGREGADO: TraceId y SpanId de OpenTelemetry
-    .WriteTo.Console(outputTemplate: 
+    .WriteTo.Console(outputTemplate:
         "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} " +
         "TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
     .CreateLogger();
@@ -234,3 +234,6 @@ Log.Information("Audit Service starting up...");
 Log.Information("Environment: {Environment}", app.Environment.EnvironmentName);
 
 app.Run();
+
+// Expose Program class for integration testing
+public partial class Program { }

@@ -52,7 +52,17 @@ public static class SqlInjectionValidator
             return false;
 
         var upperValue = value.ToUpperInvariant();
-        return SqlKeywords.Any(keyword => upperValue.Contains(keyword.ToUpperInvariant()));
+
+        // Use word boundary matching to avoid false positives
+        // e.g., "OR" should not match in "Normal", "AND" should not match in "command"
+        foreach (var keyword in SqlKeywords)
+        {
+            var pattern = $@"\b{System.Text.RegularExpressions.Regex.Escape(keyword.ToUpperInvariant())}\b";
+            if (System.Text.RegularExpressions.Regex.IsMatch(upperValue, pattern))
+                return true;
+        }
+
+        return false;
     }
 }
 

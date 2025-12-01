@@ -93,7 +93,8 @@ public class AuditController : ControllerBase
 
             if (!result.Success)
             {
-                return NotFound(result);
+                // Return 404 with error message, not the full ApiResponse
+                return NotFound(new { error = result.Error, timestamp = result.Timestamp });
             }
 
             return Ok(result);

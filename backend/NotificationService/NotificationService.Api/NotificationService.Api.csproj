@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>NotificationService.Api</RootNamespace>
     <AssemblyName>NotificationService.Api</AssemblyName>
+    <InternalsVisibleTo>NotificationService.Tests</InternalsVisibleTo>
   </PropertyGroup>
 
   <ItemGroup>
