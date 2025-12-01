@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBusService.Api", "Me
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBusService.Tests", "MessageBusService.Tests\MessageBusService.Tests.csproj", "{FC36C15B-F350-495D-94C0-CD53F86ECC91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBusService.IntegrationTests", "MessageBusService.IntegrationTests\MessageBusService.IntegrationTests.csproj", "{D352523F-ED9C-474F-AC96-F3560A716193}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{FC36C15B-F350-495D-94C0-CD53F86ECC91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC36C15B-F350-495D-94C0-CD53F86ECC91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC36C15B-F350-495D-94C0-CD53F86ECC91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D352523F-ED9C-474F-AC96-F3560A716193}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D352523F-ED9C-474F-AC96-F3560A716193}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D352523F-ED9C-474F-AC96-F3560A716193}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D352523F-ED9C-474F-AC96-F3560A716193}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
