@@ -244,6 +244,52 @@ services:
       retries: 3
 
   # ------------------------
+  # Seq - Centralized Logging
+  # ------------------------
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:80" # Web UI
+      - "5342:5341" # Ingestion
+    volumes:
+      - seq_data:/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # LoggingService API
+  # ------------------------
+  loggingservice:
+    build:
+      context: ./LoggingService
+      dockerfile: Dockerfile
+    container_name: loggingservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Seq__Url: "http://seq:80"
+    ports:
+      - "5096:80"
+    depends_on:
+      seq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
   # API Gateway
   # ------------------------
   gateway:
@@ -389,6 +435,7 @@ volumes:
   redis_data:
   audit_db_data:
   configurationservice_data:
+  seq_data:
 
 
 networks:
