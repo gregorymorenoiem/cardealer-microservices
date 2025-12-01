@@ -1,8 +1,8 @@
 using RoleService.Domain.Interfaces;
 using RoleService.Infrastructure.Messaging;
 using RoleService.Infrastructure.Persistence;
-using RoleService.Infrastructure.Services;
-using RoleService.Infrastructure.Services.Messaging;
+// using RoleService.Infrastructure.Services;
+// using RoleService.Infrastructure.Services.Messaging;
 using RoleService.Shared.Extensions;
 using RoleService.Shared.Middleware;
 using RoleService.Shared.RateLimiting;
@@ -142,32 +142,63 @@ builder.Services.AddAuthorization(options =>
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
-// Application Services
-builder.Services.AddScoped<IRoleRepository, EfRoleRepository>();
-builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
+// Application Services - Repositories
+builder.Services.AddScoped<IRoleRepository, RoleService.Infrastructure.Repositories.EfRoleRepository>();
+builder.Services.AddScoped<IPermissionRepository, RoleService.Infrastructure.Repositories.EfPermissionRepository>();
+builder.Services.AddScoped<IRolePermissionRepository, RoleService.Infrastructure.Repositories.EfRolePermissionRepository>();
+builder.Services.AddScoped<IRoleLogRepository, RoleService.Infrastructure.Persistence.EfRoleLogRepository>();
+
+// External Service Clients
+builder.Services.AddHttpClient<RoleService.Application.Interfaces.IAuditServiceClient, RoleService.Infrastructure.External.AuditServiceClient>(client =>
+{
+    var auditServiceUrl = builder.Configuration["ServiceUrls:AuditService"] ?? "https://localhost:7287";
+    client.BaseAddress = new Uri(auditServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<RoleService.Application.Interfaces.INotificationServiceClient, RoleService.Infrastructure.External.NotificationServiceClient>(client =>
+{
+    var notificationServiceUrl = builder.Configuration["ServiceUrls:NotificationService"] ?? "https://localhost:45954";
+    client.BaseAddress = new Uri(notificationServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<RoleService.Application.Interfaces.IErrorServiceClient, RoleService.Infrastructure.External.ErrorServiceClient>(client =>
+{
+    var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"] ?? "https://localhost:45952";
+    client.BaseAddress = new Uri(errorServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// Other Services
+// builder.Services.AddScoped<IRoleReporter, RoleReporter>();
 
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<RoleService.Application.Metrics.RoleServiceMetrics>();
 
 // Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-    new RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+// Comentado temporalmente - RabbitMQ no está corriendo
+// builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
+//     new RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
-builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-builder.Services.AddSingleton<IEventPublisher>(sp =>
-    sp.GetRequiredService<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+// builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+// builder.Services.AddSingleton<IEventPublisher>(sp =>
+//     sp.GetRequiredService<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>());
 
 // Background Service para procesar DLQ
-builder.Services.AddHostedService<RoleService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+// builder.Services.AddHostedService<RoleService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(RoleService.Application.UseCases.LogError.LogErrorCommand).Assembly));
+    cfg.RegisterServicesFromAssembly(typeof(RoleService.Application.UseCases.Roles.CreateRole.CreateRoleCommand).Assembly));
 
 // Registrar FluentValidation
 builder.Services.AddValidatorsFromAssembly(
-    typeof(RoleService.Application.UseCases.LogError.LogErrorCommandValidator).Assembly);
+    typeof(RoleService.Application.UseCases.Roles.CreateRole.CreateRoleCommandValidator).Assembly);
 
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
@@ -227,11 +258,11 @@ var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<Ra
 builder.Services.AddCustomRateLimiting(rateLimitingConfig);
 
 // Configurar RabbitMQ
-builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
-builder.Services.Configure<RoleServiceRabbitMQSettings>(builder.Configuration.GetSection("RoleService"));
+// builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
+// builder.Services.Configure<RoleServiceRabbitMQSettings>(builder.Configuration.GetSection("RoleService"));
 
 // Registrar el consumidor RabbitMQ como hosted service
-builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+// builder.Services.AddHostedService<RabbitMQErrorConsumer>();
 
 var app = builder.Build();
 

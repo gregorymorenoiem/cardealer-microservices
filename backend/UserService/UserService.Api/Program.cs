@@ -142,32 +142,67 @@ builder.Services.AddAuthorization(options =>
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
-// Application Services
-builder.Services.AddScoped<IRoleRepository, EfRoleRepository>();
-builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
+// Application Services - Repositories
+builder.Services.AddScoped<IUserRepository, UserService.Infrastructure.Persistence.UserRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserService.Infrastructure.Persistence.UserRoleRepository>();
+
+// Application Services - External clients
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IRoleServiceClient, UserService.Infrastructure.External.RoleServiceClient>(client =>
+{
+    var roleServiceUrl = builder.Configuration["ServiceUrls:RoleService"] ?? "https://localhost:45952";
+    client.BaseAddress = new Uri(roleServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IAuditServiceClient, UserService.Infrastructure.External.AuditServiceClient>(client =>
+{
+    var auditServiceUrl = builder.Configuration["ServiceUrls:AuditService"] ?? "https://localhost:7287";
+    client.BaseAddress = new Uri(auditServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<UserService.Application.Interfaces.INotificationServiceClient, UserService.Infrastructure.External.NotificationServiceClient>(client =>
+{
+    var notificationServiceUrl = builder.Configuration["ServiceUrls:NotificationService"] ?? "https://localhost:45954";
+    client.BaseAddress = new Uri(notificationServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IErrorServiceClient, UserService.Infrastructure.External.ErrorServiceClient>(client =>
+{
+    var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"] ?? "https://localhost:45952";
+    client.BaseAddress = new Uri(errorServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<UserService.Application.Metrics.UserServiceMetrics>();
 
 // Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-    new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+// TEMPORARY: Commented out for testing without RabbitMQ
+// builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
+//     new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
-builder.Services.AddSingleton<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-builder.Services.AddSingleton<IEventPublisher>(sp =>
-    sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+// TEMPORARY: Commented out for testing without RabbitMQ
+// builder.Services.AddSingleton<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+// builder.Services.AddSingleton<IEventPublisher>(sp =>
+//     sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
 
 // Background Service para procesar DLQ
-builder.Services.AddHostedService<UserService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+// builder.Services.AddHostedService<UserService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(UserService.Application.UseCases.LogError.LogErrorCommand).Assembly));
+    cfg.RegisterServicesFromAssembly(typeof(UserService.Application.UseCases.Users.CreateUser.CreateUserCommand).Assembly));
 
-// Registrar FluentValidation
-builder.Services.AddValidatorsFromAssembly(
-    typeof(UserService.Application.UseCases.LogError.LogErrorCommandValidator).Assembly);
+// Registrar FluentValidation (si hay validadores)
+// builder.Services.AddValidatorsFromAssembly(
+//     typeof(UserService.Application.UseCases.Users.CreateUser.CreateUserCommand).Assembly);
 
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
@@ -231,7 +266,8 @@ builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("R
 builder.Services.Configure<UserServiceRabbitMQSettings>(builder.Configuration.GetSection("UserService"));
 
 // Registrar el consumidor RabbitMQ como hosted service
-builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+// TEMPORARY: Commented out for testing without RabbitMQ
+// builder.Services.AddHostedService<RabbitMQErrorConsumer>();
 
 var app = builder.Build();
 
