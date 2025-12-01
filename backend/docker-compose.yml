@@ -308,6 +308,79 @@ services:
     networks:
       - cargurus-net
 
+  # ------------------------
+  # ConfigurationService Database
+  # ------------------------
+  configurationservice-db:
+    image: postgres:15
+    container_name: configurationservice-db
+    environment:
+      POSTGRES_DB: configurationservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - configurationservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  configurationservice:
+    build:
+      context: .
+      dockerfile: ConfigurationService/ConfigurationService.Api/Dockerfile
+    container_name: configurationservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=configurationservice-db;Database=configurationservice;Username=postgres;Password=password"
+      Encryption__Key: "SecureEncryptionKey123!ProductionKey"
+    ports:
+      - "5085:80"
+    depends_on:
+      configurationservice-db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # CacheService API
+  # ------------------------
+  cacheservice:
+    build:
+      context: ./CacheService
+      dockerfile: Dockerfile
+    container_name: cacheservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__Redis: "redis:6379"
+      CacheConfiguration__DefaultTtlSeconds: "3600"
+      CacheConfiguration__MaxTtlSeconds: "86400"
+      CacheConfiguration__EnableStatistics: "true"
+    ports:
+      - "5095:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   errorservice_data:
   authservice_data:
@@ -315,6 +388,7 @@ volumes:
   rabbitmq_data:
   redis_data:
   audit_db_data:
+  configurationservice_data:
 
 
 networks:
