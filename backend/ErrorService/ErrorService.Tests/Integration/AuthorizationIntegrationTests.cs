@@ -14,19 +14,19 @@ using Xunit;
 
 namespace ErrorService.Tests.Integration
 {
-    public class AuthorizationIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+    public class AuthorizationIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     {
-        private readonly WebApplicationFactory<Program> _factory;
-        private readonly string _validIssuer = "cardealer-auth";
-        private readonly string _validAudience = "cardealer-services";
-        private readonly string _validKey = "super-secret-key-for-testing-minimum-32-chars-long!";
+        private readonly CustomWebApplicationFactory _factory;
+        private readonly string _validIssuer = "cardealer-auth-dev";
+        private readonly string _validAudience = "cardealer-services-dev";
+        private readonly string _validKey = "development-jwt-secret-key-minimum-32-chars-long-for-testing!";
 
-        public AuthorizationIntegrationTests(WebApplicationFactory<Program> factory)
+        public AuthorizationIntegrationTests(CustomWebApplicationFactory factory)
         {
             _factory = factory;
         }
 
-        private string GenerateJwtToken(string serviceClaim = "errorservice", string role = "ErrorServiceAdmin", int expirationMinutes = 60)
+        private string GenerateJwtToken(string serviceClaim = "errorservice", string role = "ErrorServiceAdmin", int expirationMinutes = 180)
         {
             var claims = new[]
             {

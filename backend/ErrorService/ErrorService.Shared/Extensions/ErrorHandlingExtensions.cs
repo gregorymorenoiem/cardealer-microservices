@@ -16,10 +16,9 @@ namespace ErrorService.Shared.Extensions
         public static IApplicationBuilder UseErrorHandling(this IApplicationBuilder app)
         {
             var serviceName = app.ApplicationServices.GetService<ErrorHandlingMiddlewareOptions>()?.ServiceName ?? "UnknownService";
-            var errorReporter = app.ApplicationServices.GetRequiredService<IErrorReporter>();
-            var eventPublisher = app.ApplicationServices.GetService<IEventPublisher>(); // Optional
 
-            return app.UseMiddleware<ErrorHandlingMiddleware>(errorReporter, serviceName, eventPublisher);
+            // No resolver servicios Scoped aquí, el middleware los resolverá por request
+            return app.UseMiddleware<ErrorHandlingMiddleware>(serviceName);
         }
     }
 

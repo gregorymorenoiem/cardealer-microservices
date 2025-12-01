@@ -2,8 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using AuthService.Infrastructure.Extensions;
 using AuthService.Infrastructure.Persistence;
 using AuthService.Infrastructure.Messaging;
+using AuthService.Infrastructure.BackgroundServices;
+using AuthService.Infrastructure.Metrics;
 using AuthService.Domain.Interfaces;
 using Serilog;
+using Serilog.Enrichers.Span;
 using System.Reflection;
 using FluentValidation;
 using AuthService.Shared;
@@ -17,18 +20,61 @@ using AuthService.Infrastructure.External;
 using AuthService.Infrastructure.Services.Notification;
 using Microsoft.Extensions.Options;
 using CarDealer.Shared.Database;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar Serilog
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+// Configurar Serilog con TraceId/SpanId enrichment
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithSpan() // ✅ NUEVO: Correlación con OpenTelemetry traces
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 builder.Services.AddLogging();
+
+// OpenTelemetry con Sampling Strategy
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation()
+            .AddSource("AuthService")
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("AuthService"))
+            .SetSampler(new TraceIdRatioBasedSampler(
+                builder.Environment.IsProduction() ? 0.1 : 1.0)) // ✅ NUEVO: 10% prod, 100% dev
+            .AddOtlpExporter(options =>
+            {
+                options.Endpoint = new Uri(builder.Configuration["OpenTelemetry:Exporter:Otlp:Endpoint"] ?? "http://localhost:4317");
+            });
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter("AuthService")
+            .AddOtlpExporter(options =>
+            {
+                options.Endpoint = new Uri(builder.Configuration["OpenTelemetry:Exporter:Otlp:Endpoint"] ?? "http://localhost:4317");
+            });
+    });
 
 // Rate Limiting
 builder.Services.AddRateLimiter(options =>
@@ -70,7 +116,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
-// Event Publisher for RabbitMQ
+// ✅ NUEVO: Dead Letter Queue + Background Processor
+builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
+builder.Services.AddHostedService<DeadLetterQueueProcessor>();
+
+// ✅ NUEVO: Custom Metrics
+builder.Services.AddSingleton<AuthServiceMetrics>();
+
+// Event Publisher for RabbitMQ (ahora con DLQ)
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // MediatR & FluentValidation
@@ -142,10 +195,20 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Health Checks (ahora configurado en Infrastructure)
+// Health Checks
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
 
 app.MapControllers();
 
 Log.Information("AuthService starting up...");
 app.Run();
+
+public partial class Program { }

@@ -1,12 +1,16 @@
 // AuthService.Infrastructure/Services/Messaging/NotificationEventProducer.cs
 using AuthService.Infrastructure.Services.Messaging;
 using AuthService.Shared.NotificationMessages;
+using AuthService.Shared.Messaging;
+using AuthService.Domain.Interfaces;
+using AuthService.Domain.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System.Text.Json;
 using System.Text;
-using AuthService.Domain.Interfaces.Services;
+using Polly;
+using Polly.CircuitBreaker;
 
 namespace AuthService.Infrastructure.Services.Messaging;
 
@@ -17,14 +21,18 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
     private readonly NotificationServiceRabbitMQSettings _settings;
     private readonly ILogger<RabbitMQNotificationProducer> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly IDeadLetterQueue? _deadLetterQueue;
+    private readonly ResiliencePipeline _resiliencePipeline;
 
     public RabbitMQNotificationProducer(
         IOptions<RabbitMQSettings> rabbitMqSettings,
         IOptions<NotificationServiceRabbitMQSettings> notificationSettings,
-        ILogger<RabbitMQNotificationProducer> logger)
+        ILogger<RabbitMQNotificationProducer> logger,
+        IDeadLetterQueue? deadLetterQueue = null)
     {
         _settings = notificationSettings.Value;
         _logger = logger;
+        _deadLetterQueue = deadLetterQueue;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -38,7 +46,9 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
             UserName = rabbitMqSettings.Value.Username,
             Password = rabbitMqSettings.Value.Password,
             VirtualHost = rabbitMqSettings.Value.VirtualHost,
-            DispatchConsumersAsync = true
+            DispatchConsumersAsync = true,
+            AutomaticRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
         };
 
         _connection = factory.CreateConnection();
@@ -77,34 +87,76 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
                 ["x-message-ttl"] = 60000 // 1 minuto
             });
 
-        _logger.LogInformation("RabbitMQ Notification Producer initialized");
+        // Configure Circuit Breaker
+        _resiliencePipeline = new ResiliencePipelineBuilder()
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                FailureRatio = 0.5,
+                SamplingDuration = TimeSpan.FromSeconds(30),
+                MinimumThroughput = 3,
+                BreakDuration = TimeSpan.FromSeconds(30),
+                OnOpened = args =>
+                {
+                    _logger.LogWarning("🔴 Notification Producer Circuit Breaker OPEN: NotificationService unavailable");
+                    return ValueTask.CompletedTask;
+                },
+                OnClosed = args =>
+                {
+                    _logger.LogInformation("🟢 Notification Producer Circuit Breaker CLOSED: NotificationService restored");
+                    return ValueTask.CompletedTask;
+                }
+            })
+            .Build();
+
+        _logger.LogInformation("RabbitMQ Notification Producer initialized with Circuit Breaker");
     }
 
     public async Task PublishNotificationAsync(NotificationEvent notification)
     {
         try
         {
-            var message = JsonSerializer.Serialize(notification, _jsonOptions);
-            var body = Encoding.UTF8.GetBytes(message);
-
-            var properties = _channel.CreateBasicProperties();
-            properties.Persistent = true;
-            properties.ContentType = "application/json";
-            properties.MessageId = notification.Id;
-            properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            properties.Headers = new Dictionary<string, object>
+            await _resiliencePipeline.ExecuteAsync(async ct =>
             {
-                ["type"] = notification.Type,
-                ["template"] = notification.TemplateName
-            };
+                var message = JsonSerializer.Serialize(notification, _jsonOptions);
+                var body = Encoding.UTF8.GetBytes(message);
 
-            _channel.BasicPublish(
-                exchange: _settings.ExchangeName,
-                routingKey: _settings.RoutingKey,
-                basicProperties: properties,
-                body: body);
+                var properties = _channel.CreateBasicProperties();
+                properties.Persistent = true;
+                properties.ContentType = "application/json";
+                properties.MessageId = notification.Id;
+                properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                properties.Headers = new Dictionary<string, object>
+                {
+                    ["type"] = notification.Type,
+                    ["template"] = notification.TemplateName
+                };
 
-            _logger.LogInformation("Notification event published: {Type} to {To}", notification.Type, notification.To);
+                _channel.BasicPublish(
+                    exchange: _settings.ExchangeName,
+                    routingKey: _settings.RoutingKey,
+                    basicProperties: properties,
+                    body: body);
+
+                _logger.LogInformation("Notification event published: {Type} to {To}", notification.Type, notification.To);
+                return ValueTask.CompletedTask;
+            }, CancellationToken.None);
+        }
+        catch (BrokenCircuitException ex)
+        {
+            _logger.LogWarning(ex, "Circuit Breaker OPEN: Cannot publish notification {Type}. Queuing to DLQ.", notification.Type);
+
+            if (_deadLetterQueue != null)
+            {
+                var failedEvent = new FailedEvent
+                {
+                    EventType = "notification.event",
+                    EventJson = JsonSerializer.Serialize(notification, _jsonOptions),
+                    FailedAt = DateTime.UtcNow,
+                    RetryCount = 0
+                };
+                failedEvent.ScheduleNextRetry();
+                _deadLetterQueue.Enqueue(failedEvent);
+            }
         }
         catch (Exception ex)
         {

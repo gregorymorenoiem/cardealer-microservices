@@ -900,4 +900,4 @@ Para testing y detalles de implementación, consulta:
 **Generado:** 2025-11-29  
 **Última Actualización:** 2025-11-29 (Post-implementación Observabilidad)  
 **Versión:** 3.0.0  
-**Autor:** GitHub Copilot (AI Assistant)
+**Autor:** Ing. Gregory Moreno

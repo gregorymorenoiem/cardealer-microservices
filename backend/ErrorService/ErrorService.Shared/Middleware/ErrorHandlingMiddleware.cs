@@ -10,23 +10,17 @@ namespace ErrorService.Shared.Middleware
     public class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly IErrorReporter _errorReporter;
-        private readonly IEventPublisher? _eventPublisher;
         private readonly string _serviceName;
 
         public ErrorHandlingMiddleware(
             RequestDelegate next,
-            IErrorReporter errorReporter,
-            string serviceName = "UnknownService",
-            IEventPublisher? eventPublisher = null)
+            string serviceName = "UnknownService")
         {
             _next = next;
-            _errorReporter = errorReporter;
             _serviceName = serviceName;
-            _eventPublisher = eventPublisher;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, IErrorReporter errorReporter, IEventPublisher? eventPublisher = null)
         {
             try
             {
@@ -34,29 +28,29 @@ namespace ErrorService.Shared.Middleware
 
                 if (context.Response.StatusCode == StatusCodes.Status400BadRequest)
                 {
-                    await CaptureValidationErrorAsync(context);
+                    await CaptureValidationErrorAsync(context, errorReporter);
                 }
             }
             catch (AppException appEx)
             {
-                await HandleExceptionAsync(appEx, context, appEx.StatusCode);
+                await HandleExceptionAsync(appEx, context, appEx.StatusCode, errorReporter, eventPublisher);
             }
             catch (Exception ex)
             {
-                await HandleExceptionAsync(ex, context, StatusCodes.Status500InternalServerError);
+                await HandleExceptionAsync(ex, context, StatusCodes.Status500InternalServerError, errorReporter, eventPublisher);
             }
         }
 
-        private async Task HandleExceptionAsync(Exception exception, HttpContext context, int statusCode)
+        private async Task HandleExceptionAsync(Exception exception, HttpContext context, int statusCode, IErrorReporter errorReporter, IEventPublisher? eventPublisher)
         {
             Log.Error(exception, "Unhandled exception in {ServiceName}", _serviceName);
 
-            await StoreErrorInDatabase(exception, context, statusCode);
+            await StoreErrorInDatabase(exception, context, statusCode, errorReporter);
 
             // Publish critical error event to RabbitMQ if status >= 500
-            if (statusCode >= 500 && _eventPublisher != null)
+            if (statusCode >= 500 && eventPublisher != null)
             {
-                await PublishCriticalErrorEventAsync(exception, context, statusCode);
+                await PublishCriticalErrorEventAsync(exception, context, statusCode, eventPublisher);
             }
 
             context.Response.StatusCode = statusCode;
@@ -71,7 +65,7 @@ namespace ErrorService.Shared.Middleware
             await context.Response.WriteAsJsonAsync(response);
         }
 
-        private async Task CaptureValidationErrorAsync(HttpContext context)
+        private async Task CaptureValidationErrorAsync(HttpContext context, IErrorReporter errorReporter)
         {
             try
             {
@@ -103,7 +97,7 @@ namespace ErrorService.Shared.Middleware
                         }
                     };
 
-                    await _errorReporter.ReportErrorAsync(errorRequest);
+                    await errorReporter.ReportErrorAsync(errorRequest);
                 }
             }
             catch (Exception ex)
@@ -133,7 +127,7 @@ namespace ErrorService.Shared.Middleware
             return responseBody;
         }
 
-        private async Task StoreErrorInDatabase(Exception exception, HttpContext context, int statusCode)
+        private async Task StoreErrorInDatabase(Exception exception, HttpContext context, int statusCode, IErrorReporter errorReporter)
         {
             try
             {
@@ -158,7 +152,7 @@ namespace ErrorService.Shared.Middleware
                     }
                 };
 
-                await _errorReporter.ReportErrorAsync(errorRequest);
+                await errorReporter.ReportErrorAsync(errorRequest);
             }
             catch (Exception logEx)
             {
@@ -166,7 +160,7 @@ namespace ErrorService.Shared.Middleware
             }
         }
 
-        private async Task PublishCriticalErrorEventAsync(Exception exception, HttpContext context, int statusCode)
+        private async Task PublishCriticalErrorEventAsync(Exception exception, HttpContext context, int statusCode, IEventPublisher eventPublisher)
         {
             try
             {
@@ -190,7 +184,7 @@ namespace ErrorService.Shared.Middleware
                     }
                 };
 
-                await _eventPublisher!.PublishAsync(criticalEvent);
+                await eventPublisher.PublishAsync(criticalEvent);
 
                 Log.Information(
                     "Published ErrorCriticalEvent {EventId} for {ExceptionType} in {ServiceName}",

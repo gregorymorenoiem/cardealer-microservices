@@ -35,6 +35,13 @@
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+    
+    <!-- Polly for Circuit Breaker -->
+    <PackageReference Include="Polly" Version="8.4.2" />
+    
+    <!-- Serilog for logging -->
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
   </ItemGroup>
 
 </Project>

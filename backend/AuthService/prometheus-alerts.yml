@@ -1,0 +1,134 @@
+# Prometheus Alerting Rules for AuthService
+# Deploy this file to Prometheus server config directory
+
+groups:
+  - name: authservice_alerts
+    interval: 30s
+    rules:
+      # 1. High Error Rate Alert
+      - alert: HighErrorRate
+        expr: |
+          rate(auth_login_failure_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: authservice
+        annotations:
+          summary: "High login failure rate detected in AuthService"
+          description: "AuthService has more than 10 failed login attempts per second in the last 5 minutes. This could indicate a brute force attack or system issues."
+
+      # 2. Circuit Breaker Open Alert
+      - alert: CircuitBreakerOpen
+        expr: |
+          authservice_circuit_breaker_state{state="open"} == 1
+        for: 5m
+        labels:
+          severity: critical
+          service: authservice
+        annotations:
+          summary: "Circuit Breaker is OPEN in AuthService"
+          description: "The circuit breaker has been open for more than 5 minutes, indicating RabbitMQ or external service failures. Events are being queued to DLQ."
+
+      # 3. Slow Authentication Operations
+      - alert: SlowAuthentication
+        expr: |
+          histogram_quantile(0.95, rate(auth_duration_milliseconds_bucket[5m])) > 1000
+        for: 3m
+        labels:
+          severity: warning
+          service: authservice
+        annotations:
+          summary: "Slow authentication operations detected"
+          description: "95th percentile of authentication operations is taking more than 1 second. Current value: {{ $value }}ms"
+
+      # 4. High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes{job="authservice"} / 1024 / 1024 > 512
+        for: 5m
+        labels:
+          severity: warning
+          service: authservice
+        annotations:
+          summary: "High memory usage in AuthService"
+          description: "AuthService is using more than 512MB of memory. Current: {{ $value }}MB"
+
+      # 5. Failed Logins from Single IP
+      - alert: SuspiciousLoginActivity
+        expr: |
+          sum by (client_ip) (rate(auth_login_failure_total[1m])) > 5
+        for: 1m
+        labels:
+          severity: critical
+          service: authservice
+        annotations:
+          summary: "Suspicious login activity detected"
+          description: "More than 5 failed login attempts per minute from IP {{ $labels.client_ip }}. Possible brute force attack."
+
+      # 6. Dead Letter Queue Backlog
+      - alert: DLQBacklog
+        expr: |
+          authservice_dlq_total_events > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: authservice
+        annotations:
+          summary: "Dead Letter Queue has significant backlog"
+          description: "DLQ has more than 100 events pending retry. Current: {{ $value }} events. Check RabbitMQ connectivity."
+
+      # 7. 2FA Verification Failures
+      - alert: High2FAFailures
+        expr: |
+          rate(auth_2fa_verification_total{success="false"}[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: authservice
+        annotations:
+          summary: "High 2FA verification failure rate"
+          description: "More than 5 failed 2FA verifications per second. Users may be experiencing issues."
+
+      # 8. Database Connection Issues
+      - alert: DatabaseConnectionIssues
+        expr: |
+          up{job="authservice-db"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: authservice
+        annotations:
+          summary: "AuthService database is down"
+          description: "PostgreSQL database for AuthService is not responding."
+
+      # 9. Security Threats Detected
+      - alert: SecurityThreatsDetected
+        expr: |
+          rate(auth_security_threats_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: critical
+          service: authservice
+        annotations:
+          summary: "Security threats detected (SQL Injection / XSS)"
+          description: "More than 1 security threat per second detected in the last 5 minutes. Threat type: {{ $labels.threat_type }}"
+
+      # 10. Low Registration Rate (Anomaly Detection)
+      - alert: AnomalouslyLowRegistrations
+        expr: |
+          rate(auth_registration_total[1h]) < 0.01
+        for: 2h
+        labels:
+          severity: info
+          service: authservice
+        annotations:
+          summary: "Unusually low user registration rate"
+          description: "Less than 1 registration per hour in the last 2 hours. Possible issue with registration flow."
+
+# How to use:
+# 1. Copy this file to your Prometheus server: /etc/prometheus/rules/authservice_alerts.yml
+# 2. Update prometheus.yml to include this rule file:
+#    rule_files:
+#      - "rules/authservice_alerts.yml"
+# 3. Reload Prometheus: curl -X POST http://localhost:9090/-/reload
+# 4. View alerts at: http://localhost:9090/alerts
