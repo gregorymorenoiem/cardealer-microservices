@@ -17,7 +17,7 @@ public partial class Program
 
         // Configure Consul
         var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
-        builder.Services.AddSingleton<IConsulClient>(provider => 
+        builder.Services.AddSingleton<IConsulClient>(provider =>
             new ConsulClient(config => config.Address = new Uri(consulAddress)));
 
         // Register application services
@@ -32,7 +32,7 @@ public partial class Program
         });
 
         // Add MediatR
-        builder.Services.AddMediatR(cfg => 
+        builder.Services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(typeof(Application.Handlers.RegisterServiceHandler).Assembly));
 
         // Add CORS
