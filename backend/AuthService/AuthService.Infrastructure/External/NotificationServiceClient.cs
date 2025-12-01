@@ -4,6 +4,7 @@ using AuthService.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AuthService.Shared.Exceptions;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace AuthService.Infrastructure.External;
 
@@ -13,18 +14,20 @@ public class NotificationServiceClient
     private readonly NotificationServiceSettings _settings;
     private readonly ILogger<NotificationServiceClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly IServiceDiscovery _serviceDiscovery;
 
     public NotificationServiceClient(
         HttpClient httpClient,
         IOptions<NotificationServiceSettings> settings,
-        ILogger<NotificationServiceClient> logger)
+        ILogger<NotificationServiceClient> logger,
+        IServiceDiscovery serviceDiscovery)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
         _logger = logger;
+        _serviceDiscovery = serviceDiscovery;
 
-        // Configurar HttpClient base
-        _httpClient.BaseAddress = new Uri(_settings.BaseUrl);
+        // Configurar HttpClient (no establecer BaseAddress aquí, se resolverá dinámicamente)
         _httpClient.Timeout = TimeSpan.FromSeconds(_settings.TimeoutSeconds);
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "AuthService");
 
@@ -34,6 +37,25 @@ public class NotificationServiceClient
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
         };
+    }
+
+    private async Task<string> GetNotificationServiceUrlAsync()
+    {
+        try
+        {
+            var instance = await _serviceDiscovery.FindServiceInstanceAsync("NotificationService");
+            if (instance != null)
+            {
+                return $"http://{instance.Host}:{instance.Port}";
+            }
+            _logger.LogWarning("NotificationService not found in Consul, falling back to configured BaseUrl: {BaseUrl}", _settings.BaseUrl);
+            return _settings.BaseUrl;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error resolving NotificationService from Consul, falling back to configured BaseUrl: {BaseUrl}", _settings.BaseUrl);
+            return _settings.BaseUrl;
+        }
     }
 
     public async Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true, Dictionary<string, object>? metadata = null)
@@ -46,6 +68,8 @@ public class NotificationServiceClient
 
         try
         {
+            var baseUrl = await GetNotificationServiceUrlAsync();
+            
             // Usar el DTO exacto que espera el NotificationService
             var request = new
             {
@@ -56,7 +80,7 @@ public class NotificationServiceClient
                 Metadata = metadata ?? new Dictionary<string, object>()
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", request, _jsonOptions);
 
             if (response.IsSuccessStatusCode)
             {
@@ -100,6 +124,8 @@ public class NotificationServiceClient
 
         try
         {
+            var baseUrl = await GetNotificationServiceUrlAsync();
+            
             var request = new
             {
                 To = to,
@@ -107,7 +133,7 @@ public class NotificationServiceClient
                 Metadata = metadata ?? new Dictionary<string, object>()
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/api/notifications/sms", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/sms", request, _jsonOptions);
 
             if (response.IsSuccessStatusCode)
             {
@@ -150,6 +176,8 @@ public class NotificationServiceClient
 
         try
         {
+            var baseUrl = await GetNotificationServiceUrlAsync();
+            
             var request = new
             {
                 DeviceToken = deviceToken,
@@ -159,7 +187,7 @@ public class NotificationServiceClient
                 Metadata = metadata ?? new Dictionary<string, object>()
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/api/notifications/push", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/push", request, _jsonOptions);
 
             if (response.IsSuccessStatusCode)
             {
@@ -196,7 +224,8 @@ public class NotificationServiceClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/api/notifications/{notificationId}/status");
+            var baseUrl = await GetNotificationServiceUrlAsync();
+            var response = await _httpClient.GetAsync($"{baseUrl}/api/notifications/{notificationId}/status");
 
             if (response.IsSuccessStatusCode)
             {
@@ -220,7 +249,8 @@ public class NotificationServiceClient
     {
         try
         {
-            var response = await _httpClient.GetAsync("/health");
+            var baseUrl = await GetNotificationServiceUrlAsync();
+            var response = await _httpClient.GetAsync($"{baseUrl}/health");
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)

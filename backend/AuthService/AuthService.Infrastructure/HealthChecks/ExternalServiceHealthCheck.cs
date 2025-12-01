@@ -1,17 +1,24 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using ServiceDiscovery.Application.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace AuthService.Infrastructure.HealthChecks;
 
 public class ExternalServiceHealthCheck : IHealthCheck
 {
     private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
+    private readonly IServiceDiscovery _serviceDiscovery;
+    private readonly ILogger<ExternalServiceHealthCheck> _logger;
 
-    public ExternalServiceHealthCheck(HttpClient httpClient, IConfiguration configuration)
+    public ExternalServiceHealthCheck(
+        HttpClient httpClient, 
+        IServiceDiscovery serviceDiscovery,
+        ILogger<ExternalServiceHealthCheck> logger)
     {
         _httpClient = httpClient;
-        _configuration = configuration;
+        _serviceDiscovery = serviceDiscovery;
+        _logger = logger;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
@@ -20,16 +27,16 @@ public class ExternalServiceHealthCheck : IHealthCheck
 
         try
         {
-            // Check ErrorService
-            var errorServiceUrl = _configuration["ErrorService:BaseUrl"];
+            // Check ErrorService via Service Discovery
+            var errorServiceUrl = await GetServiceUrlAsync("ErrorService");
             if (!string.IsNullOrEmpty(errorServiceUrl))
             {
                 var isHealthy = await CheckServiceHealthAsync($"{errorServiceUrl}/health");
                 checks.Add(("ErrorService", errorServiceUrl, isHealthy));
             }
 
-            // Check NotificationService
-            var notificationServiceUrl = _configuration["NotificationService:BaseUrl"];
+            // Check NotificationService via Service Discovery
+            var notificationServiceUrl = await GetServiceUrlAsync("NotificationService");
             if (!string.IsNullOrEmpty(notificationServiceUrl))
             {
                 var isHealthy = await CheckServiceHealthAsync($"{notificationServiceUrl}/health");
@@ -56,6 +63,25 @@ public class ExternalServiceHealthCheck : IHealthCheck
         catch (Exception ex)
         {
             return HealthCheckResult.Unhealthy("External services health check failed", ex);
+        }
+    }
+
+    private async Task<string?> GetServiceUrlAsync(string serviceName)
+    {
+        try
+        {
+            var instance = await _serviceDiscovery.FindServiceInstanceAsync(serviceName);
+            if (instance != null)
+            {
+                return $"http://{instance.Host}:{instance.Port}";
+            }
+            _logger.LogWarning("{ServiceName} not found in Consul", serviceName);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error resolving {ServiceName} from Consul", serviceName);
+            return null;
         }
     }
 
