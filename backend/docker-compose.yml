@@ -960,7 +960,39 @@ services:
       retries: 3
       start_period: 20s
 
+  # ------------------------
+  # BackupDRService API
+  # ------------------------
+  backupdrservice:
+    build:
+      context: ./BackupDRService
+      dockerfile: Dockerfile
+    container_name: backupdrservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      BackupOptions__LocalStoragePath: "/var/backups/cardealer"
+      BackupOptions__DefaultRetentionDays: "30"
+      BackupOptions__MaxConcurrentJobs: "3"
+      BackupOptions__EnableCompressionByDefault: "true"
+      BackupOptions__PgDumpPath: "pg_dump"
+      BackupOptions__PgRestorePath: "pg_restore"
+      ConnectionStrings__DefaultPostgreSQL: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
+    ports:
+      - "15098:80"
+    volumes:
+      - backupdr_data:/var/backups/cardealer
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
 volumes:
+  backupdr_data:
   errorservice_data:
   authservice_data:
   notificationservice_data:

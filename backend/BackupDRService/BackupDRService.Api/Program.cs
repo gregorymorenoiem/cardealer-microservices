@@ -1,0 +1,77 @@
+using BackupDRService.Core.Interfaces;
+using BackupDRService.Core.Models;
+using BackupDRService.Core.Services;
+using Serilog;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("ServiceName", "BackupDRService")
+    .WriteTo.Console()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// Add services to the container
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Backup & DR Service API",
+        Version = "v1",
+        Description = "Servicio de backup y disaster recovery automatizado para CarDealer Microservices"
+    });
+});
+
+// Configure BackupOptions
+builder.Services.Configure<BackupOptions>(
+    builder.Configuration.GetSection(BackupOptions.SectionName));
+
+// Register services
+builder.Services.AddSingleton<IStorageProvider, LocalStorageProvider>();
+builder.Services.AddSingleton<IDatabaseBackupProvider, PostgreSqlBackupProvider>();
+builder.Services.AddSingleton<IBackupService, BackupService>();
+builder.Services.AddSingleton<IRestoreService, RestoreService>();
+
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Backup & DR Service API v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+
+app.UseSerilogRequestLogging();
+app.UseAuthorization();
+app.MapControllers();
+app.MapHealthChecks("/health");
+
+// Log startup
+Log.Information("BackupDRService starting on {Urls}", string.Join(", ", app.Urls));
+
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "BackupDRService terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
