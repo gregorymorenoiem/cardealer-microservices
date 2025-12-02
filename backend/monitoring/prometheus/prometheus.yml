@@ -106,6 +106,62 @@ scrape_configs:
           service: 'roleservice'
           tier: 'backend'
 
+  # AdminService
+  - job_name: 'adminservice'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['adminservice:80']
+        labels:
+          service: 'adminservice'
+          tier: 'backend'
+
+  # MessageBusService
+  - job_name: 'messagebusservice'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['messagebusservice:80']
+        labels:
+          service: 'messagebusservice'
+          tier: 'backend'
+
+  # ConfigurationService
+  - job_name: 'configurationservice'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['configurationservice:80']
+        labels:
+          service: 'configurationservice'
+          tier: 'backend'
+
+  # TracingService
+  - job_name: 'tracingservice'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['tracingservice:80']
+        labels:
+          service: 'tracingservice'
+          tier: 'backend'
+
+  # CacheService
+  - job_name: 'cacheservice'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['cacheservice:80']
+        labels:
+          service: 'cacheservice'
+          tier: 'backend'
+
+  # Consul
+  - job_name: 'consul'
+    metrics_path: '/v1/agent/metrics'
+    params:
+      format: ['prometheus']
+    static_configs:
+      - targets: ['consul:8500']
+        labels:
+          service: 'consul'
+          tier: 'infrastructure'
+
   # PostgreSQL Exporter (optional)
   - job_name: 'postgres'
     static_configs:

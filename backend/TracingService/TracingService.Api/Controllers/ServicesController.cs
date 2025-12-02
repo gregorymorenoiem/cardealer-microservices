@@ -25,9 +25,9 @@ public class ServicesController : ControllerBase
     public async Task<IActionResult> GetServices()
     {
         _logger.LogInformation("Getting list of services");
-        
+
         var services = await _mediator.Send(new GetServicesQuery());
-        
+
         return Ok(new { services, count = services.Count });
     }
 
@@ -39,9 +39,9 @@ public class ServicesController : ControllerBase
     public async Task<IActionResult> GetOperations(string serviceName)
     {
         _logger.LogInformation("Getting operations for service {ServiceName}", serviceName);
-        
+
         var operations = await _mediator.Send(new GetOperationsQuery { ServiceName = serviceName });
-        
+
         return Ok(new { serviceName, operations, count = operations.Count });
     }
 }

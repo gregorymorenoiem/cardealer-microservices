@@ -1,0 +1,30 @@
+groups:
+  - name: database
+    interval: 30s
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} is down."
+
+      - alert: HighDatabaseConnections
+        expr: sum by(datname) (pg_stat_database_numbackends) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections on {{ $labels.datname }}"
+          description: "Database {{ $labels.datname }} has more than 80 active connections."
+
+      - alert: SlowQueries
+        expr: rate(pg_stat_statements_mean_exec_time[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow queries detected"
+          description: "Average query execution time is above 1 second."

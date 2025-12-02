@@ -7,9 +7,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() 
-    { 
-        Title = "TracingService API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "TracingService API",
         Version = "v1",
         Description = "Distributed Tracing Service - Query interface for Jaeger traces"
     });
@@ -19,7 +19,7 @@ builder.Services.AddSwaggerGen(c =>
 var jaegerQueryUrl = builder.Configuration["Jaeger:QueryUrl"] ?? "http://localhost:16686";
 
 // Add MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(TracingService.Application.Queries.GetTraceByIdQuery).Assembly);
 });

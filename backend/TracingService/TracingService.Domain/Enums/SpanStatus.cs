@@ -10,12 +10,12 @@ public enum SpanStatus
     /// The default status.
     /// </summary>
     Unset = 0,
-    
+
     /// <summary>
     /// The operation completed successfully.
     /// </summary>
     Ok = 1,
-    
+
     /// <summary>
     /// The operation contains an error.
     /// </summary>

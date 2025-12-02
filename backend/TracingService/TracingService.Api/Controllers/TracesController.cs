@@ -26,9 +26,9 @@ public class TracesController : ControllerBase
     public async Task<IActionResult> GetTraceById(string traceId)
     {
         _logger.LogInformation("Getting trace {TraceId}", traceId);
-        
+
         var trace = await _mediator.Send(new GetTraceByIdQuery { TraceId = traceId });
-        
+
         if (trace == null)
         {
             _logger.LogWarning("Trace {TraceId} not found", traceId);
@@ -53,7 +53,7 @@ public class TracesController : ControllerBase
         [FromQuery] bool? hasError = null,
         [FromQuery] int limit = 100)
     {
-        _logger.LogInformation("Searching traces with filters: service={Service}, operation={Operation}", 
+        _logger.LogInformation("Searching traces with filters: service={Service}, operation={Operation}",
             serviceName, operationName);
 
         var query = new SearchTracesQuery
@@ -69,12 +69,12 @@ public class TracesController : ControllerBase
         };
 
         var traces = await _mediator.Send(query);
-        
-        return Ok(new 
-        { 
+
+        return Ok(new
+        {
             traces,
             count = traces.Count,
-            filters = new 
+            filters = new
             {
                 serviceName,
                 operationName,
@@ -96,9 +96,9 @@ public class TracesController : ControllerBase
     public async Task<IActionResult> GetSpansByTraceId(string traceId)
     {
         _logger.LogInformation("Getting spans for trace {TraceId}", traceId);
-        
+
         var spans = await _mediator.Send(new GetSpansByTraceIdQuery { TraceId = traceId });
-        
+
         return Ok(new { traceId, spans, count = spans.Count });
     }
 
@@ -122,7 +122,7 @@ public class TracesController : ControllerBase
         };
 
         var statistics = await _mediator.Send(query);
-        
+
         return Ok(statistics);
     }
 }

@@ -26,12 +26,12 @@ public class JaegerTraceQueryService : ITraceQueryService
         {
             var url = $"{_jaegerQueryUrl}/api/traces/{traceId}";
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
                 return null;
 
             var jaegerResponse = await response.Content.ReadFromJsonAsync<JaegerTraceResponse>(cancellationToken: cancellationToken);
-            
+
             if (jaegerResponse?.Data == null || jaegerResponse.Data.Count == 0)
                 return null;
 
@@ -57,38 +57,38 @@ public class JaegerTraceQueryService : ITraceQueryService
         try
         {
             var queryParams = new List<string>();
-            
+
             if (!string.IsNullOrEmpty(serviceName))
                 queryParams.Add($"service={Uri.EscapeDataString(serviceName)}");
-            
+
             if (!string.IsNullOrEmpty(operationName))
                 queryParams.Add($"operation={Uri.EscapeDataString(operationName)}");
-            
+
             if (startTime.HasValue)
                 queryParams.Add($"start={new DateTimeOffset(startTime.Value).ToUnixTimeMilliseconds()}000");
-            
+
             if (endTime.HasValue)
                 queryParams.Add($"end={new DateTimeOffset(endTime.Value).ToUnixTimeMilliseconds()}000");
-            
+
             if (minDurationMs.HasValue)
                 queryParams.Add($"minDuration={minDurationMs.Value}ms");
-            
+
             if (maxDurationMs.HasValue)
                 queryParams.Add($"maxDuration={maxDurationMs.Value}ms");
-            
+
             queryParams.Add($"limit={limit}");
-            
+
             if (hasError.HasValue && hasError.Value)
                 queryParams.Add("tags={\"error\":\"true\"}");
 
             var url = $"{_jaegerQueryUrl}/api/traces?{string.Join("&", queryParams)}";
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
                 return new List<Trace>();
 
             var jaegerResponse = await response.Content.ReadFromJsonAsync<JaegerTraceResponse>(cancellationToken: cancellationToken);
-            
+
             if (jaegerResponse?.Data == null)
                 return new List<Trace>();
 
@@ -156,7 +156,7 @@ public class JaegerTraceQueryService : ITraceQueryService
         var spansByService = traces.SelectMany(t => t.Spans)
                                    .GroupBy(s => s.ServiceName)
                                    .ToDictionary(g => g.Key, g => g.Count());
-        
+
         statistics.SpansByService = spansByService;
 
         if (spansByService.Any())
@@ -170,7 +170,7 @@ public class JaegerTraceQueryService : ITraceQueryService
                                     .Where(s => s.HasError)
                                     .GroupBy(s => s.ServiceName)
                                     .ToDictionary(g => g.Key, g => g.Count());
-        
+
         statistics.ErrorsByService = errorsByService;
 
         return statistics;
@@ -182,7 +182,7 @@ public class JaegerTraceQueryService : ITraceQueryService
         {
             var url = $"{_jaegerQueryUrl}/api/services";
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
                 return new List<string>();
 
@@ -201,7 +201,7 @@ public class JaegerTraceQueryService : ITraceQueryService
         {
             var url = $"{_jaegerQueryUrl}/api/services/{Uri.EscapeDataString(serviceName)}/operations";
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
                 return new List<string>();
 
