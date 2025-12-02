@@ -446,10 +446,17 @@ services:
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: "Host=configurationservice-db;Database=configurationservice;Username=postgres;Password=password"
       Encryption__Key: "SecureEncryptionKey123!ProductionKey"
+      Consul__Address: "http://consul:8500"
+      Service__Name: "ConfigurationService"
+      Service__Host: "configurationservice"
+      Service__Port: "80"
+      Service__HealthCheckUrl: "http://configurationservice:80/health"
     ports:
       - "5085:80"
     depends_on:
       configurationservice-db:
+        condition: service_healthy
+      consul:
         condition: service_healthy
     networks:
       - cargurus-net

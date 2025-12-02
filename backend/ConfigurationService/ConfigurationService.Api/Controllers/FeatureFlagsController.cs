@@ -1,4 +1,6 @@
 using ConfigurationService.Application.Queries;
+using ConfigurationService.Domain.Entities;
+using ConfigurationService.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +11,19 @@ namespace ConfigurationService.Api.Controllers;
 public class FeatureFlagsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IFeatureFlagManager _featureFlagManager;
 
-    public FeatureFlagsController(IMediator mediator)
+    public FeatureFlagsController(IMediator mediator, IFeatureFlagManager featureFlagManager)
     {
         _mediator = mediator;
+        _featureFlagManager = featureFlagManager;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateFeatureFlag([FromBody] FeatureFlag featureFlag)
+    {
+        var result = await _featureFlagManager.CreateFeatureFlagAsync(featureFlag);
+        return Ok(result);
     }
 
     [HttpGet("{key}/enabled")]

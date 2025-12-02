@@ -14,6 +14,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// HttpClient for health checks
+builder.Services.AddHttpClient();
+
 // Database
 builder.Services.AddDbContext<ConfigurationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -66,6 +69,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "ConfigurationService" }));
 
 // Service Discovery Auto-Registration
 app.UseMiddleware<ServiceRegistrationMiddleware>();
