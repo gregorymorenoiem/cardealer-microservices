@@ -69,7 +69,7 @@ public class NotificationServiceClient
         try
         {
             var baseUrl = await GetNotificationServiceUrlAsync();
-            
+
             // Usar el DTO exacto que espera el NotificationService
             var request = new
             {
@@ -125,7 +125,7 @@ public class NotificationServiceClient
         try
         {
             var baseUrl = await GetNotificationServiceUrlAsync();
-            
+
             var request = new
             {
                 To = to,
@@ -177,7 +177,7 @@ public class NotificationServiceClient
         try
         {
             var baseUrl = await GetNotificationServiceUrlAsync();
-            
+
             var request = new
             {
                 DeviceToken = deviceToken,

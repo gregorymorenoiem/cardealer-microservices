@@ -1,0 +1,103 @@
+groups:
+  - name: mediaservice_alerts
+    interval: 30s
+    rules:
+      - alert: HighMediaUploadErrorRate
+        expr: rate(media_uploads_failed_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "High media upload error rate in MediaService"
+          description: "MediaService upload error rate is {{ $value }} errors/sec (threshold: 0.1)"
+
+      - alert: MediaCircuitBreakerOpen
+        expr: resilience_circuit_breaker_state{service="mediaservice"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          service: mediaservice
+        annotations:
+          summary: "MediaService circuit breaker is OPEN"
+          description: "Circuit breaker {{ $labels.circuit_breaker }} is open - downstream dependency unavailable"
+
+      - alert: SlowMediaUploads
+        expr: histogram_quantile(0.95, rate(media_upload_duration_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "Slow media upload operations in MediaService"
+          description: "P95 media upload latency is {{ $value }}s (threshold: 10s)"
+
+      - alert: MediaServiceHighMemory
+        expr: process_working_set_bytes{service="mediaservice"} > 2147483648
+        for: 5m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "MediaService high memory usage"
+          description: "MediaService memory usage is {{ $value | humanize }}B (threshold: 2GB)"
+
+      - alert: MediaDLQBacklog
+        expr: dead_letter_queue_total{service="mediaservice"} > 50
+        for: 10m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "MediaService Dead Letter Queue backlog"
+          description: "{{ $value }} events in MediaService DLQ need processing"
+
+      - alert: MediaStorageQuotaExceeded
+        expr: media_storage_used_bytes > 107374182400
+        for: 1m
+        labels:
+          severity: critical
+          service: mediaservice
+        annotations:
+          summary: "MediaService storage quota exceeded"
+          description: "Storage usage is {{ $value | humanize }}B (threshold: 100GB)"
+
+      - alert: MediaDatabaseConnectionIssues
+        expr: rate(database_connection_errors_total{service="mediaservice"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: mediaservice
+        annotations:
+          summary: "MediaService database connection issues"
+          description: "Database connection error rate is {{ $value }} errors/sec"
+
+      - alert: NoMediaUploadsRecent
+        expr: increase(media_uploads_total[15m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "No media uploads in last 15 minutes"
+          description: "MediaService may be experiencing issues - no uploads recorded"
+
+      - alert: HighImageProcessingLatency
+        expr: histogram_quantile(0.95, rate(media_image_processing_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "High image processing latency"
+          description: "P95 image processing latency is {{ $value }}s (threshold: 5s)"
+
+      - alert: ThumbnailGenerationFailing
+        expr: rate(media_image_processing_total{operation="thumbnail"}[5m]) / rate(media_uploads_total{media_type="image"}[5m]) < 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: mediaservice
+        annotations:
+          summary: "Thumbnail generation success rate is low"
+          description: "Only {{ $value | humanizePercentage }} of images are getting thumbnails generated"

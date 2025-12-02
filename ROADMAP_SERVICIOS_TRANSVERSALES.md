@@ -53,7 +53,7 @@
 |---|----------|-----------------|---------------|
 | 6 | Distributed Tracing Service | 7h | Observabilidad de flujos entre servicios |
 | 7 | Metrics & Monitoring Service | 8h | Proactividad y alertas tempranas |
-| 8 | Scheduler Service | 6h | Automatización de tareas recurrentes |
+| 8 | Schxzeduler Service | 6h | Automatización de tareas recurrentes |
 | 9 | Health Check Aggregator | 5h | Monitoreo centralizado de salud |
 
 **Subtotal Media Prioridad: ~26 horas (~3.25 días)**

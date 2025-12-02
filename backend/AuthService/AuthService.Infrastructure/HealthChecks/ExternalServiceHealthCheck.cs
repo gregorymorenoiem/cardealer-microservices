@@ -12,7 +12,7 @@ public class ExternalServiceHealthCheck : IHealthCheck
     private readonly ILogger<ExternalServiceHealthCheck> _logger;
 
     public ExternalServiceHealthCheck(
-        HttpClient httpClient, 
+        HttpClient httpClient,
         IServiceDiscovery serviceDiscovery,
         ILogger<ExternalServiceHealthCheck> logger)
     {

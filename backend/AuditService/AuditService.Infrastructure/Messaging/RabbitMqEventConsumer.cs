@@ -2,6 +2,7 @@ using AuditService.Domain.Entities;
 using AuditService.Domain.Interfaces;
 using CarDealer.Contracts.Abstractions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -18,7 +19,7 @@ namespace AuditService.Infrastructure.Messaging;
 public class RabbitMqEventConsumer : BackgroundService
 {
     private readonly ILogger<RabbitMqEventConsumer> _logger;
-    private readonly IAuditRepository _auditRepository;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private IConnection? _connection;
     private IModel? _channel;
@@ -28,11 +29,11 @@ public class RabbitMqEventConsumer : BackgroundService
 
     public RabbitMqEventConsumer(
         ILogger<RabbitMqEventConsumer> logger,
-        IAuditRepository auditRepository,
+        IServiceScopeFactory scopeFactory,
         IConfiguration configuration)
     {
         _logger = logger;
-        _auditRepository = auditRepository;
+        _scopeFactory = scopeFactory;
         _configuration = configuration;
     }
 
@@ -164,7 +165,10 @@ public class RabbitMqEventConsumer : BackgroundService
                 CorrelationId = eventData.CorrelationId
             };
 
-            await _auditRepository.SaveAuditEventAsync(auditEvent, cancellationToken);
+            // Use scoped service to save the audit event
+            using var scope = _scopeFactory.CreateScope();
+            var auditRepository = scope.ServiceProvider.GetRequiredService<IAuditRepository>();
+            await auditRepository.SaveAuditEventAsync(auditEvent, cancellationToken);
 
             _logger.LogInformation("Audit event persisted successfully. EventId: {EventId}, Type: {EventType}",
                 auditEvent.EventId, auditEvent.EventType);
