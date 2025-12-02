@@ -355,6 +355,66 @@ services:
       - cargurus-net
 
   # ------------------------
+  # MessageBusService Database
+  # ------------------------
+  messagebus-db:
+    image: postgres:15
+    container_name: messagebus-db
+    environment:
+      POSTGRES_DB: messagebus_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25432:5432"
+    volumes:
+      - messagebus_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # MessageBusService API
+  # ------------------------
+  messagebusservice:
+    build:
+      context: .
+      dockerfile: MessageBusService/Dockerfile
+    container_name: messagebusservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=messagebus-db;Database=messagebus_db;Username=postgres;Password=password"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__VirtualHost: "/"
+      Consul__Address: "http://consul:8500"
+      Service__Name: "MessageBusService"
+      Service__Host: "messagebusservice"
+      Service__Port: "80"
+    ports:
+      - "5009:80"
+    depends_on:
+      messagebus-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
   # ConfigurationService Database
   # ------------------------
   configurationservice-db:
@@ -481,6 +541,7 @@ volumes:
   rabbitmq_data:
   redis_data:
   audit_db_data:
+  messagebus_data:
   configurationservice_data:
   seq_data:
   consul_data:

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MessageBusService.Domain.Entities;
+using System.Text.Json;
 
 namespace MessageBusService.Infrastructure.Data;
 
@@ -28,6 +29,13 @@ public class MessageBusDbContext : DbContext
             entity.HasIndex(e => e.Topic);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
+            
+            // Configure Headers as JSON instead of Hstore
+            entity.Property(e => e.Headers)
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null!),
+                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null!));
         });
 
         modelBuilder.Entity<MessageBatch>(entity =>
