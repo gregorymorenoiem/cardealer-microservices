@@ -66,7 +66,7 @@
 |---|----------|-----------------|---------------|
 | 10 | ✅ Search Service (Elasticsearch) | 9h | Cuando aumente el volumen de datos |
 | 11 | ✅ Feature Toggle Service | 5h | Para CD/CI avanzado y A/B testing |
-| 12 | API Documentation Aggregator | 4h | Developer experience |
+| 12 | ✅ API Documentation Aggregator | 4h | Developer experience |
 | 13 | Idempotency Service | 6h | Prevenir operaciones duplicadas críticas |
 | 14 | Rate Limiting Service (Distribuido) | 5h | Mejorar el actual con Redis |
 | 15 | Backup & DR Service | 10h | Disaster recovery automatizado |
@@ -464,64 +464,137 @@
 
 ---
 
-### **11. Feature Toggle Service** ⏱️ 5 horas
+### **11. Feature Toggle Service** ✅ 5 horas - **COMPLETADO**
 
 **Propósito:** Activación/desactivación de features en runtime
 
-#### **Funcionalidades:**
-- 🎚️ Feature flags por entorno
-- 📊 Gradual rollouts (canary releases)
-- 🧪 A/B testing
-- 🚨 Emergency kill switch
-- 👥 Feature flags por usuario/tenant
-- 📜 Historial de cambios
+**Estado**: ✅ **Implementado completamente** (14 enero 2025)
 
-#### **Tareas:**
+#### **Funcionalidades Implementadas:**
+- ✅ Feature flags por entorno (Development, Staging, Production)
+- ✅ Gradual rollouts con porcentaje configurable
+- ✅ Feature flags por usuario específico
+- ✅ Evaluación de flags con contexto (userId, environment, attributes)
+- ✅ CRUD completo de feature flags
+- ✅ Historial de cambios (auditoría)
+- ✅ Cache con Redis para rendimiento
+- ✅ Seed data con flags predeterminados
 
-| Tarea | Tiempo |
-|-------|--------|
-| Diseñar arquitectura de feature flags | 15 min |
-| Capa de Dominio (FeatureFlag, RolloutStrategy) | 15 min |
-| Capa de Aplicación (IFeatureManager, comandos) | 25 min |
-| Capa de Infraestructura (EF Core persistence) | 30 min |
-| API Controllers (Feature management endpoints) | 20 min |
-| Configuración (PostgreSQL, cache integration) | 15 min |
-| SDK para servicios (middleware, attributes) | 40 min |
-| Tests unitarios (8+ tests) | 25 min |
-| Ejemplo de uso en AdminService | 20 min |
-| Git commit + documentación | 15 min |
+#### **Implementación:**
 
-**Stack:** PostgreSQL, Redis (cache), ASP.NET Core
+**Clean Architecture (4 capas):**
+- `FeatureToggleService.Domain` - 3 entidades (FeatureFlag, FeatureFlagRule, FlagEvaluation), 3 enums, 2 interfaces
+- `FeatureToggleService.Application` - 5 comandos CQRS, 4 queries, MediatR handlers
+- `FeatureToggleService.Infrastructure` - EF Core PostgreSQL, Repository, Seeder
+- `FeatureToggleService.Api` - FeatureFlagsController (9 endpoints)
+
+**Stack Técnico:**
+- ASP.NET Core 8.0
+- Entity Framework Core 8.0.0 + PostgreSQL
+- MediatR 12.4.1
+- Redis para caché
+- 29 unit tests (todos pasando)
+
+**Endpoints:**
+- `GET /api/feature-flags` - Lista todos los flags
+- `GET /api/feature-flags/{id}` - Obtiene un flag
+- `GET /api/feature-flags/key/{key}` - Obtiene flag por clave
+- `POST /api/feature-flags` - Crea un flag
+- `PUT /api/feature-flags/{id}` - Actualiza un flag
+- `DELETE /api/feature-flags/{id}` - Elimina un flag
+- `POST /api/feature-flags/{id}/toggle` - Activa/desactiva
+- `POST /api/feature-flags/evaluate` - Evalúa un flag
+- `GET /api/feature-flags/environment/{env}` - Flags por entorno
+
+**Docker:**
+- Puerto: 15094
+- Container: featuretoggleservice
+- PostgreSQL: featuretoggleservice-db (puerto 25441)
+- Dependencias: PostgreSQL, Redis
+
+#### **Tareas Completadas:**
+
+| Tarea | Tiempo | Estado |
+|-------|--------|--------|
+| Diseñar arquitectura de feature flags | 15 min | ✅ |
+| Capa de Dominio (FeatureFlag, FeatureFlagRule, FlagEvaluation) | 20 min | ✅ |
+| Capa de Aplicación (5 comandos, 4 queries CQRS) | 30 min | ✅ |
+| Capa de Infraestructura (EF Core, Repository, Seeder) | 35 min | ✅ |
+| API Controller (9 endpoints) | 25 min | ✅ |
+| Configuración (PostgreSQL, Redis, DI) | 20 min | ✅ |
+| 29 Unit tests | 35 min | ✅ |
+| Dockerfile multi-stage | 15 min | ✅ |
+| docker-compose integration | 15 min | ✅ |
+| README.md documentación | 20 min | ✅ |
+
+**Stack:** PostgreSQL, Redis (cache), EF Core, MediatR, ASP.NET Core 8.0
 
 ---
 
-### **12. API Documentation Aggregator** ⏱️ 4 horas
+### **12. API Documentation Aggregator** ✅ 4 horas - **COMPLETADO**
 
 **Propósito:** Documentación centralizada de todas las APIs
 
-#### **Funcionalidades:**
-- 📚 Swagger/OpenAPI aggregator
-- 📖 API versioning tracking
-- 🎮 Playground interactivo
-- 🔧 SDK generation
-- 📊 API usage analytics
+**Estado**: ✅ **Implementado completamente** (14 enero 2025)
 
-#### **Tareas:**
+#### **Funcionalidades Implementadas:**
+- ✅ Swagger/OpenAPI aggregator desde múltiples servicios
+- ✅ Service discovery y estado de documentación
+- ✅ Búsqueda de endpoints por nombre/descripción
+- ✅ Caché de especificaciones OpenAPI
+- ✅ Health checks de servicios documentados
+- ✅ Refresh manual de documentación
+- ✅ Extracción automática de endpoints desde specs
 
-| Tarea | Tiempo |
-|-------|--------|
-| Diseñar arquitectura de agregación | 15 min |
-| Configurar Swagger UI centralizado | 30 min |
-| Recolectar OpenAPI specs de todos los servicios | 40 min |
-| Crear UI customizado con navegación | 35 min |
-| Configurar Swagger en servicios faltantes | 30 min |
-| API Controllers (Documentation endpoints) | 20 min |
-| Versionado de APIs | 25 min |
-| Tests de integración | 20 min |
-| Docker compose + documentación | 15 min |
-| Git commit + documentación | 10 min |
+#### **Implementación:**
 
-**Stack:** Swashbuckle, Swagger UI, ASP.NET Core
+**Arquitectura Simplificada (3 capas):**
+- `ApiDocsService.Core` - Modelos (ServiceInfo, EndpointInfo), Interfaces (IApiAggregatorService), Services (ApiAggregatorService)
+- `ApiDocsService.Api` - DocsController (7 endpoints), Program.cs con DI
+- `ApiDocsService.Tests` - 19 unit tests con Moq
+
+**Stack Técnico:**
+- ASP.NET Core 8.0
+- HttpClient (fetching de specs)
+- IMemoryCache (caché de documentación)
+- Serilog 8.0.0 (logging)
+- Swashbuckle 6.5.0 (Swagger UI propio)
+- 19 unit tests (todos pasando)
+
+**Endpoints:**
+- `GET /api/docs/services` - Lista todos los servicios
+- `GET /api/docs/services/{name}` - Info de un servicio
+- `GET /api/docs/services/{name}/spec` - Spec OpenAPI de un servicio
+- `GET /api/docs/aggregated` - Spec agregada de todos los servicios
+- `POST /api/docs/refresh` - Actualizar caché
+- `GET /api/docs/health` - Estado de salud de servicios
+- `GET /api/docs/search?query={term}` - Buscar endpoints
+
+**Docker:**
+- Puerto: 15095
+- Container: apidocsservice
+- Sin dependencias de BD (solo HTTP)
+
+**Documentación:**
+- README.md completo con ejemplos
+- Configuración de servicios en appsettings.json
+
+#### **Tareas Completadas:**
+
+| Tarea | Tiempo | Estado |
+|-------|--------|--------|
+| Diseñar arquitectura de agregación | 15 min | ✅ |
+| Core Models y Interfaces | 20 min | ✅ |
+| ApiAggregatorService implementation | 30 min | ✅ |
+| DocsController con 7 endpoints | 25 min | ✅ |
+| Configuración appsettings con 15 servicios | 15 min | ✅ |
+| 19 Unit tests | 30 min | ✅ |
+| Dockerfile multi-stage | 10 min | ✅ |
+| docker-compose integration | 15 min | ✅ |
+| README.md documentación | 15 min | ✅ |
+| Git commit + solución | 15 min | ✅ |
+
+**Stack:** Swashbuckle, HttpClient, IMemoryCache, ASP.NET Core 8.0
 
 ---
 

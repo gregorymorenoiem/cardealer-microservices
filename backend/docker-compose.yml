@@ -843,6 +843,55 @@ services:
       retries: 3
       start_period: 40s
 
+  # ------------------------
+  # ApiDocsService API (API Documentation Aggregator)
+  # ------------------------
+  apidocsservice:
+    build:
+      context: .
+      dockerfile: ApiDocsService/Dockerfile
+    container_name: apidocsservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Services__0__Name: "ErrorService"
+      Services__0__BaseUrl: "http://errorservice"
+      Services__0__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__1__Name: "AuthService"
+      Services__1__BaseUrl: "http://authservice"
+      Services__1__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__2__Name: "NotificationService"
+      Services__2__BaseUrl: "http://notificationservice"
+      Services__2__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__3__Name: "AuditService"
+      Services__3__BaseUrl: "http://auditservice"
+      Services__3__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__4__Name: "ConfigurationService"
+      Services__4__BaseUrl: "http://configurationservice"
+      Services__4__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__5__Name: "SchedulerService"
+      Services__5__BaseUrl: "http://schedulerservice"
+      Services__5__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__6__Name: "HealthCheckService"
+      Services__6__BaseUrl: "http://healthcheckservice"
+      Services__6__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__7__Name: "SearchService"
+      Services__7__BaseUrl: "http://searchservice"
+      Services__7__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__8__Name: "FeatureToggleService"
+      Services__8__BaseUrl: "http://featuretoggleservice"
+      Services__8__SwaggerEndpoint: "/swagger/v1/swagger.json"
+    ports:
+      - "15095:80"
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
 volumes:
   errorservice_data:
   authservice_data:
