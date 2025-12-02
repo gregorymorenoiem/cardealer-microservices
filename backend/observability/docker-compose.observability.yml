@@ -1,0 +1,172 @@
+# Observability Stack - Complete Telemetry Infrastructure
+# OpenTelemetry Collector + Jaeger + Zipkin + Prometheus + Grafana
+# Generated: December 2, 2025
+
+version: '3.8'
+
+services:
+  # OpenTelemetry Collector - Central telemetry hub
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: cardealer-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - otel-logs:/var/log/otel-collector
+    ports:
+      # OTLP gRPC receiver
+      - "4317:4317"
+      # OTLP HTTP receiver
+      - "4318:4318"
+      # Prometheus metrics exporter
+      - "8889:8889"
+      # Collector metrics
+      - "8888:8888"
+      # Health check
+      - "13133:13133"
+      # pprof profiling
+      - "1777:1777"
+      # zPages debugging
+      - "55679:55679"
+      # Jaeger gRPC
+      - "14250:14250"
+      # Jaeger thrift HTTP
+      - "14268:14268"
+      # Jaeger thrift compact
+      - "6831:6831/udp"
+      # Jaeger thrift binary
+      - "6832:6832/udp"
+      # Zipkin
+      - "9411:9411"
+    environment:
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=otel-collector,environment=development
+    networks:
+      - cardealer-network
+    depends_on:
+      - jaeger
+      - zipkin
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Jaeger - Distributed tracing backend
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: cardealer-jaeger
+    restart: unless-stopped
+    ports:
+      # Jaeger UI
+      - "16686:16686"
+      # Jaeger collector gRPC
+      - "14250:14250"
+      # Jaeger collector HTTP
+      - "14268:14268"
+      # Jaeger agent thrift compact
+      - "6831:6831/udp"
+      # Jaeger agent thrift binary
+      - "6832:6832/udp"
+      # Jaeger query HTTP
+      - "16687:16687"
+      # OTLP gRPC
+      - "4317:4317"
+      # OTLP HTTP
+      - "4318:4318"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+    volumes:
+      - jaeger-data:/badger
+    networks:
+      - cardealer-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Zipkin - Alternative tracing backend
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    container_name: cardealer-zipkin
+    restart: unless-stopped
+    ports:
+      # Zipkin UI
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    networks:
+      - cardealer-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9411/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Prometheus (reference to existing monitoring stack)
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: cardealer-prometheus-obs
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus-observability.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ./prometheus-observability.yml:/etc/prometheus/prometheus-observability.yml:ro
+      - prometheus-obs-data:/prometheus
+    ports:
+      - "9091:9090"
+    networks:
+      - cardealer-network
+
+  # Grafana (reference to existing monitoring stack)
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: cardealer-grafana-obs
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,redis-datasource
+    volumes:
+      - grafana-obs-data:/var/lib/grafana
+      - ./grafana/provisioning-obs:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards-obs:/var/lib/grafana/dashboards:ro
+    networks:
+      - cardealer-network
+    depends_on:
+      - prometheus
+      - jaeger
+
+networks:
+  cardealer-network:
+    name: cardealer-network
+    external: true
+
+volumes:
+  otel-logs:
+    driver: local
+  jaeger-data:
+    driver: local
+  prometheus-obs-data:
+    driver: local
+  grafana-obs-data:
+    driver: local

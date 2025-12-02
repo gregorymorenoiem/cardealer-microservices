@@ -1,0 +1,59 @@
+# Prometheus Configuration for Observability Stack
+# Scrapes metrics from OpenTelemetry Collector and Jaeger
+# Generated: December 2, 2025
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'cardealer-observability'
+    environment: 'development'
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # OpenTelemetry Collector metrics
+  - job_name: 'otel-collector'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['otel-collector:8888']
+        labels:
+          service: 'otel-collector'
+          tier: 'observability'
+
+  # OpenTelemetry Collector exported metrics
+  - job_name: 'otel-exported-metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['otel-collector:8889']
+        labels:
+          tier: 'observability'
+
+  # Jaeger metrics
+  - job_name: 'jaeger'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['jaeger:14269']
+        labels:
+          service: 'jaeger'
+          tier: 'observability'
+
+  # Microservices (scrape directly for additional metrics)
+  - job_name: 'microservices'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'auditservice:80'
+          - 'mediaservice:80'
+          - 'notificationservice:80'
+          - 'gateway:80'
+          - 'authservice:80'
+          - 'errorservice:80'
+          - 'userservice:80'
+          - 'roleservice:80'
+        labels:
+          tier: 'backend'
