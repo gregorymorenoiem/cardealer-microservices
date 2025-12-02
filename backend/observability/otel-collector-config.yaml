@@ -75,6 +75,8 @@ processors:
         action: delete
 
   # Span processor for filtering and sampling
+  # Production: 10% sampling reduces volume while maintaining visibility
+  # Testing: Temporarily set to 100% to verify all traces
   probabilistic_sampler:
     sampling_percentage: 10.0
     hash_seed: 22
