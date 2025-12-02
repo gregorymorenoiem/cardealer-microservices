@@ -20,7 +20,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Add MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateJobCommandHandler).Assembly));
 
 // Add Infrastructure layer (includes Hangfire, EF Core, repositories)

@@ -20,7 +20,7 @@ public class HangfireJobScheduler : IJobScheduler
     public string ScheduleRecurringJob(Job job)
     {
         var jobId = job.Id.ToString();
-        
+
         _recurringJobManager.AddOrUpdate(
             jobId,
             () => ExecuteJob(job.Id, job.JobType, job.Parameters),

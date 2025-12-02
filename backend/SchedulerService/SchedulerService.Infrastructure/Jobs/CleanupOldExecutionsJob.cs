@@ -21,8 +21,8 @@ public class CleanupOldExecutionsJob : IScheduledJob
         try
         {
             // Get retention days from parameters or use default
-            var retentionDays = parameters.ContainsKey("RetentionDays") 
-                ? int.Parse(parameters["RetentionDays"]) 
+            var retentionDays = parameters.ContainsKey("RetentionDays")
+                ? int.Parse(parameters["RetentionDays"])
                 : 30;
 
             var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);

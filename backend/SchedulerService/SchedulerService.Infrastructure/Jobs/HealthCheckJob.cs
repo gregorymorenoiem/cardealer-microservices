@@ -27,7 +27,7 @@ public class HealthCheckJob : IScheduledJob
             foreach (var service in services)
             {
                 _logger.LogInformation("Checking health of service: {Service}", service.Trim());
-                
+
                 // TODO: Implement actual health check logic
                 // This would make HTTP calls to /health endpoints
                 await Task.Delay(500); // Simulate health check

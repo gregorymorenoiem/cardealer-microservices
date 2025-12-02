@@ -46,7 +46,7 @@ public class JobsController : ControllerBase
     public async Task<ActionResult<Job>> GetById(Guid id)
     {
         var job = await _mediator.Send(new GetJobByIdQuery(id));
-        
+
         if (job == null)
             return NotFound(new { message = $"Job with ID {id} not found" });
 
@@ -103,7 +103,7 @@ public class JobsController : ControllerBase
     public async Task<ActionResult> Delete(Guid id)
     {
         var result = await _mediator.Send(new DeleteJobCommand(id));
-        
+
         if (!result)
             return NotFound(new { message = $"Job with ID {id} not found" });
 

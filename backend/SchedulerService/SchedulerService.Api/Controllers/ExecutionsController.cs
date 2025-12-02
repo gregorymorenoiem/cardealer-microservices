@@ -33,7 +33,7 @@ public class ExecutionsController : ControllerBase
     public async Task<ActionResult<JobExecution>> GetById(Guid id)
     {
         var execution = await _mediator.Send(new GetExecutionByIdQuery(id));
-        
+
         if (execution == null)
             return NotFound(new { message = $"Execution with ID {id} not found" });
 
