@@ -65,7 +65,8 @@ foreach ($service in $services) {
             # Update OpenTelemetry configuration
             if ($appSettings.PSObject.Properties.Name -contains "OpenTelemetry") {
                 Write-Host "  Updating existing OpenTelemetry configuration..." -ForegroundColor Gray
-            } else {
+            }
+            else {
                 Write-Host "  Adding new OpenTelemetry configuration..." -ForegroundColor Gray
             }
             
@@ -74,15 +75,16 @@ foreach ($service in $services) {
             # Write back to file
             $appSettings | ConvertTo-Json -Depth 10 | Set-Content $appSettingsPath
             
-            Write-Host "  ✓ $($service.Name) updated successfully" -ForegroundColor Green
+            Write-Host "  [OK] $($service.Name) updated successfully" -ForegroundColor Green
             $updatedCount++
-            
-        } catch {
-            Write-Host "  ✗ Error updating $($service.Name): $($_.Exception.Message)" -ForegroundColor Red
+        }
+        catch {
+            Write-Host "  [ERROR] Error updating $($service.Name): $($_.Exception.Message)" -ForegroundColor Red
             $errorCount++
         }
-    } else {
-        Write-Host "  ⚠ appsettings.json not found for $($service.Name)" -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "  [WARN] appsettings.json not found for $($service.Name)" -ForegroundColor Yellow
         $errorCount++
     }
     
@@ -99,10 +101,10 @@ if ($errorCount -gt 0) {
 }
 Write-Host ""
 Write-Host "OpenTelemetry Configuration:" -ForegroundColor Yellow
-Write-Host "  • Endpoint: http://otel-collector:4318 (HTTP)" -ForegroundColor White
-Write-Host "  • Protocol: HttpProtobuf" -ForegroundColor White
-Write-Host "  • Sampling: 10%" -ForegroundColor White
-Write-Host "  • Export Interval: 5s (traces), 60s (metrics)" -ForegroundColor White
+Write-Host "  - Endpoint: http://otel-collector:4318 (HTTP)" -ForegroundColor White
+Write-Host "  - Protocol: HttpProtobuf" -ForegroundColor White
+Write-Host "  - Sampling: 10%" -ForegroundColor White
+Write-Host "  - Export Interval: 5s (traces), 60s (metrics)" -ForegroundColor White
 Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Yellow
 Write-Host "  1. Start the observability stack: .\start-observability.ps1" -ForegroundColor White
