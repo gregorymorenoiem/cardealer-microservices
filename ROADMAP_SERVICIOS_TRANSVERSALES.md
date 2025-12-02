@@ -354,7 +354,7 @@
 
 ---
 
-### **9. Health Check Aggregator** ⏱️ 5 horas
+### **9. Health Check Aggregator** ✅ 5 horas - **COMPLETADO**
 
 **Propósito:** Monitoreo centralizado de salud de todos los servicios
 
@@ -368,21 +368,35 @@
 
 #### **Tareas:**
 
-| Tarea | Tiempo |
-|-------|--------|
-| Diseñar arquitectura de health checks | 15 min |
-| Capa de Dominio (HealthCheck, HealthStatus, Dependency) | 15 min |
-| Capa de Aplicación (IHealthAggregator, queries) | 25 min |
-| Capa de Infraestructura (Health check probes) | 30 min |
-| API Controllers (Health aggregator endpoint) | 20 min |
-| Configuración (health check UI, intervalos) | 20 min |
-| Agregar health endpoints en todos los servicios | 50 min |
-| Dashboard UI para visualización | 30 min |
-| Tests unitarios (6+ tests) | 20 min |
-| Docker compose health checks | 15 min |
-| Git commit + documentación | 20 min |
+| Tarea | Tiempo | Estado |
+|-------|--------|--------|
+| Diseñar arquitectura de health checks | 15 min | ✅ |
+| Capa de Dominio (HealthCheck, HealthStatus, Dependency) | 15 min | ✅ |
+| Capa de Aplicación (IHealthAggregator, queries) | 25 min | ✅ |
+| Capa de Infraestructura (Health check probes) | 30 min | ✅ |
+| API Controllers (Health aggregator endpoint) | 20 min | ✅ |
+| Configuración (health check UI, intervalos) | 20 min | ✅ |
+| Agregar health endpoints en todos los servicios | 50 min | ⏳ |
+| Dashboard UI para visualización | 30 min | ⏳ |
+| Tests unitarios (6+ tests) | 20 min | ✅ |
+| Docker compose health checks | 15 min | ✅ |
+| Git commit + documentación | 20 min | ✅ |
 
-**Stack:** AspNetCore.HealthChecks, ASP.NET Core, SignalR (dashboard)
+**Stack:** HttpClient, ASP.NET Core 8.0, MediatR
+
+**Implementación:**
+- ✅ Clean Architecture con 4 capas
+- ✅ 3 Entidades (SystemHealth, ServiceHealth, DependencyHealth)
+- ✅ 2 Enums (HealthStatus, DependencyType)
+- ✅ 3 Queries (GetSystemHealth, GetServiceHealth, GetRegisteredServices)
+- ✅ HttpHealthChecker para verificación vía HTTP
+- ✅ HealthAggregator con verificación paralela
+- ✅ 13 Tests unitarios pasando
+- ✅ API RESTful con 4 endpoints
+- ✅ Docker + docker-compose configurado (puerto 15092)
+- ✅ README completo con casos de uso y alertas
+- ⏳ Pendiente: Agregar health endpoints en servicios legacy
+- ⏳ Pendiente: Dashboard UI (opcional)
 
 ---
 
