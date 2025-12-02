@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RoleService.Application.Interfaces;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace RoleService.Infrastructure.External
 {
@@ -11,17 +12,34 @@ namespace RoleService.Infrastructure.External
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<ErrorServiceClient> _logger;
+        private readonly IServiceDiscovery _serviceDiscovery;
 
-        public ErrorServiceClient(HttpClient httpClient, ILogger<ErrorServiceClient> logger)
+        public ErrorServiceClient(HttpClient httpClient, ILogger<ErrorServiceClient> logger, IServiceDiscovery serviceDiscovery)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _serviceDiscovery = serviceDiscovery;
+        }
+
+        private async Task<string> GetServiceUrlAsync()
+        {
+            try
+            {
+                var instance = await _serviceDiscovery.FindServiceInstanceAsync("ErrorService");
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://errorservice:80";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error resolving ErrorService from Consul, using fallback");
+                return "http://errorservice:80";
+            }
         }
 
         public async Task LogErrorAsync(string exceptionType, string message, string stackTrace, string endpoint = null, int? statusCode = null)
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var errorLog = new
                 {
                     ServiceName = "RoleService",
@@ -33,7 +51,7 @@ namespace RoleService.Infrastructure.External
                     OccurredAt = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/errors", errorLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/errors", errorLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Error log sent to ErrorService: {ExceptionType}", exceptionType);

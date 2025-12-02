@@ -1,0 +1,95 @@
+# Alertmanager Configuration for CarDealer Microservices
+# Generated: December 1, 2025
+
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@cardealer.com'
+  smtp_auth_username: 'alerts@cardealer.com'
+  smtp_auth_password: 'your-smtp-password'
+  smtp_require_tls: true
+
+# Route configuration
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'service', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      group_wait: 0s
+      group_interval: 5m
+      repeat_interval: 4h
+    
+    # Warning alerts - batched notifications
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      group_wait: 30s
+      group_interval: 10m
+      repeat_interval: 12h
+
+# Receivers configuration
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'devops@cardealer.com'
+        headers:
+          Subject: '[CarDealer] Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <!DOCTYPE html>
+          <html>
+            <body>
+              <h2>Alert: {{ .GroupLabels.alertname }}</h2>
+              <p><strong>Severity:</strong> {{ .CommonLabels.severity }}</p>
+              <p><strong>Service:</strong> {{ .CommonLabels.service }}</p>
+              <p><strong>Summary:</strong> {{ .CommonAnnotations.summary }}</p>
+              <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
+              <p><strong>Status:</strong> {{ .Status }}</p>
+            </body>
+          </html>
+
+  - name: 'critical-receiver'
+    email_configs:
+      - to: 'oncall@cardealer.com, devops@cardealer.com'
+        headers:
+          Subject: '[CRITICAL] {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+    # Optional: Slack webhook
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     channel: '#alerts-critical'
+    #     title: '[CRITICAL] {{ .GroupLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+  - name: 'warning-receiver'
+    email_configs:
+      - to: 'devops@cardealer.com'
+        headers:
+          Subject: '[WARNING] {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+    # Optional: Slack webhook
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     channel: '#alerts-warning'
+    #     title: '[WARNING] {{ .GroupLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+# Inhibition rules - suppress certain alerts when others are firing
+inhibit_rules:
+  # Suppress warning alerts when critical alerts are firing for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['service', 'alertname']
+
+  # Suppress downstream errors when circuit breaker is open
+  - source_match:
+      alertname: '.*CircuitBreakerOpen'
+    target_match:
+      alertname: '.*ErrorRate'
+    equal: ['service']

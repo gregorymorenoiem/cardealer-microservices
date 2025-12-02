@@ -14,6 +14,10 @@ using HealthChecks.UI.Client;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using AuditService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +77,22 @@ builder.Services.AddCors(options =>
 
 // Add Infrastructure services (Database, Repositories, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ========== SERVICE DISCOVERY ==========
+
+// Consul Client
+builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+{
+    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
+}));
+
+// Service Discovery Services
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
+// ========================================
 
 // ========== ADVANCED FEATURES ==========
 
@@ -189,6 +209,9 @@ app.UseCors("CorsPolicy");
 
 app.UseRouting();
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 app.MapControllers();
 

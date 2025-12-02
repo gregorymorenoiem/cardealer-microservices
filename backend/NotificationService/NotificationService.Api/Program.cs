@@ -17,6 +17,10 @@ using NotificationService.Infrastructure.BackgroundServices;
 using NotificationService.Infrastructure.Metrics;
 using Polly;
 using Polly.CircuitBreaker;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using NotificationService.Api.Middleware;
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -41,6 +45,22 @@ builder.Services.AddHealthChecks();
 
 // ✅ USAR DEPENDENCY INJECTION DE INFRASTRUCTURE (INCLUYE RABBITMQ)
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ========== SERVICE DISCOVERY ==========
+
+// Consul Client
+builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+{
+    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
+}));
+
+// Service Discovery Services
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
+// ========================================
 
 // 🔧 Register Teams Provider
 builder.Services.AddHttpClient<ITeamsProvider, TeamsProvider>();
@@ -138,6 +158,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok("NotificationService is healthy"));

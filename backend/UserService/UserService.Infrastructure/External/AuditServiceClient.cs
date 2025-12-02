@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using UserService.Application.Interfaces;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace UserService.Infrastructure.External
 {
@@ -11,17 +12,34 @@ namespace UserService.Infrastructure.External
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AuditServiceClient> _logger;
+        private readonly IServiceDiscovery _serviceDiscovery;
 
-        public AuditServiceClient(HttpClient httpClient, ILogger<AuditServiceClient> logger)
+        public AuditServiceClient(HttpClient httpClient, ILogger<AuditServiceClient> logger, IServiceDiscovery serviceDiscovery)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _serviceDiscovery = serviceDiscovery;
+        }
+
+        private async Task<string> GetServiceUrlAsync()
+        {
+            try
+            {
+                var instance = await _serviceDiscovery.FindServiceInstanceAsync("AuditService");
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://auditservice:80";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error resolving AuditService from Consul, using fallback");
+                return "http://auditservice:80";
+            }
         }
 
         public async Task LogUserCreatedAsync(Guid userId, string email, string performedBy)
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "User",
@@ -32,7 +50,7 @@ namespace UserService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for user creation: {UserId}", userId);
@@ -48,6 +66,7 @@ namespace UserService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "User",
@@ -58,7 +77,7 @@ namespace UserService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for user update: {UserId}", userId);
@@ -73,6 +92,7 @@ namespace UserService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "User",
@@ -83,7 +103,7 @@ namespace UserService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for user deletion: {UserId}", userId);
@@ -98,6 +118,7 @@ namespace UserService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "UserRole",
@@ -108,7 +129,7 @@ namespace UserService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for role assignment: User {UserId}, Role {RoleId}", userId, roleId);
@@ -123,6 +144,7 @@ namespace UserService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "UserRole",
@@ -133,7 +155,7 @@ namespace UserService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for role revocation: User {UserId}, Role {RoleId}", userId, roleId);

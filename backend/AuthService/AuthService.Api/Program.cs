@@ -24,6 +24,10 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using AuthService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,6 +117,18 @@ builder.Services.AddCors(options =>
 // TODA LA CONFIGURACIÓN EN UN SOLO LUGAR
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Service Discovery Configuration
+builder.Services.AddSingleton<IConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+    return new ConsulClient(config => config.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
@@ -194,6 +210,9 @@ app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // Health Checks
 app.MapHealthChecks("/health");

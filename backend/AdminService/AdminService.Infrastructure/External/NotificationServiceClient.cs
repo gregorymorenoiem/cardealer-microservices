@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using AdminService.Application.Interfaces;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace AdminService.Infrastructure.External
 {
@@ -11,17 +12,34 @@ namespace AdminService.Infrastructure.External
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<NotificationServiceClient> _logger;
+        private readonly IServiceDiscovery _serviceDiscovery;
 
-        public NotificationServiceClient(HttpClient httpClient, ILogger<NotificationServiceClient> logger)
+        public NotificationServiceClient(HttpClient httpClient, ILogger<NotificationServiceClient> logger, IServiceDiscovery serviceDiscovery)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _serviceDiscovery = serviceDiscovery;
+        }
+
+        private async Task<string> GetServiceUrlAsync()
+        {
+            try
+            {
+                var instance = await _serviceDiscovery.FindServiceInstanceAsync("NotificationService");
+                return $"http://{instance.Host}:{instance.Port}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to discover NotificationService via Consul, using fallback URL");
+                return "http://notificationservice:80";
+            }
         }
 
         public async Task SendVehicleApprovedNotificationAsync(string ownerEmail, string vehicleTitle)
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var payload = new
                 {
                     To = ownerEmail,
@@ -30,7 +48,7 @@ namespace AdminService.Infrastructure.External
                     Type = "VehicleApproved"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", payload);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", payload);
                 response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Vehicle approved notification sent to {Email}", ownerEmail);
             }
@@ -44,6 +62,7 @@ namespace AdminService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var payload = new
                 {
                     To = ownerEmail,
@@ -52,7 +71,7 @@ namespace AdminService.Infrastructure.External
                     Type = "VehicleRejected"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", payload);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", payload);
                 response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Vehicle rejected notification sent to {Email}", ownerEmail);
             }
@@ -66,6 +85,7 @@ namespace AdminService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var payload = new
                 {
                     To = adminEmail,
@@ -75,7 +95,7 @@ namespace AdminService.Infrastructure.External
                     Priority = "High"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", payload);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", payload);
                 response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Admin alert sent to {Email}: {Subject}", adminEmail, subject);
             }
@@ -89,6 +109,7 @@ namespace AdminService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var payload = new
                 {
                     To = reporterEmail,
@@ -97,7 +118,7 @@ namespace AdminService.Infrastructure.External
                     Type = "ReportResolved"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/notifications/email", payload);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", payload);
                 response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Report resolved notification sent to {Email}", reporterEmail);
             }

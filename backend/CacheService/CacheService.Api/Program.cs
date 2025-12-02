@@ -1,6 +1,10 @@
 using StackExchange.Redis;
 using CacheService.Application.Interfaces;
 using CacheService.Infrastructure;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using CacheService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +31,18 @@ builder.Services.AddSwaggerGen(c =>
 
 // Add MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CacheService.Application.Commands.SetCacheCommand).Assembly));
+
+// Service Discovery Configuration
+builder.Services.AddSingleton<IConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+    return new ConsulClient(config => config.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
 // Add Redis
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
@@ -56,6 +72,9 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // Add Health Check endpoint
 app.MapGet("/health", async (IConnectionMultiplexer redis) =>

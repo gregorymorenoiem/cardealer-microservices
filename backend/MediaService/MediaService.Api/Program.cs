@@ -17,6 +17,10 @@ using MediaService.Infrastructure.BackgroundServices;
 using MediaService.Infrastructure.Metrics;
 using Polly;
 using Polly.CircuitBreaker;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using MediaService.Api.Middleware;
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -37,6 +41,22 @@ builder.Services.AddSwaggerGen();
 // Add application and infrastructure services
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ========== SERVICE DISCOVERY ==========
+
+// Consul Client
+builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+{
+    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
+}));
+
+// Service Discovery Services
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
+// ========================================
 
 // Dead Letter Queue
 builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>(sp =>
@@ -135,8 +155,8 @@ builder.Services.AddHostedService<RabbitMQMediaConsumer>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>("database", HealthStatus.Unhealthy)
-    .AddCheck<StorageHealthCheck>("storage", HealthStatus.Degraded);
+    .AddCheck<DatabaseHealthCheck>("database", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy)
+    .AddCheck<StorageHealthCheck>("storage", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
 
 var app = builder.Build();
 
@@ -153,6 +173,10 @@ app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
+
 app.MapControllers();
 
 // Map health checks
@@ -162,5 +186,3 @@ app.Run();
 
 // Expose Program class for integration testing
 public partial class Program { }
-
-app.Run();

@@ -22,7 +22,10 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using ErrorService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -142,6 +145,22 @@ builder.Services.AddAuthorization(options =>
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
+// ========== SERVICE DISCOVERY ==========
+
+// Consul Client
+builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+{
+    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
+}));
+
+// Service Discovery Services
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
+// ========================================
+
 // Application Services
 builder.Services.AddScoped<IErrorLogRepository, EfErrorLogRepository>();
 builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
@@ -255,6 +274,9 @@ app.UseHttpsRedirection();
 // Agregar autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // Middleware para capturar respuestas
 app.UseMiddleware<ResponseCaptureMiddleware>();

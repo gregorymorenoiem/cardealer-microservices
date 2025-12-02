@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RoleService.Application.Interfaces;
+using ServiceDiscovery.Application.Interfaces;
 
 namespace RoleService.Infrastructure.External
 {
@@ -11,17 +12,34 @@ namespace RoleService.Infrastructure.External
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AuditServiceClient> _logger;
+        private readonly IServiceDiscovery _serviceDiscovery;
 
-        public AuditServiceClient(HttpClient httpClient, ILogger<AuditServiceClient> logger)
+        public AuditServiceClient(HttpClient httpClient, ILogger<AuditServiceClient> logger, IServiceDiscovery serviceDiscovery)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _serviceDiscovery = serviceDiscovery;
+        }
+
+        private async Task<string> GetServiceUrlAsync()
+        {
+            try
+            {
+                var instance = await _serviceDiscovery.FindServiceInstanceAsync("AuditService");
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://auditservice:80";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error resolving AuditService from Consul, using fallback");
+                return "http://auditservice:80";
+            }
         }
 
         public async Task LogRoleCreatedAsync(Guid roleId, string roleName, string performedBy)
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "Role",
@@ -32,7 +50,7 @@ namespace RoleService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for role creation: {RoleId}", roleId);
@@ -47,6 +65,7 @@ namespace RoleService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "Role",
@@ -57,7 +76,7 @@ namespace RoleService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for role update: {RoleId}", roleId);
@@ -72,6 +91,7 @@ namespace RoleService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "Role",
@@ -82,7 +102,7 @@ namespace RoleService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for role deletion: {RoleId}", roleId);
@@ -97,6 +117,7 @@ namespace RoleService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "RolePermission",
@@ -107,7 +128,7 @@ namespace RoleService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for permission assignment");
@@ -122,6 +143,7 @@ namespace RoleService.Infrastructure.External
         {
             try
             {
+                var baseUrl = await GetServiceUrlAsync();
                 var auditLog = new
                 {
                     EntityType = "RolePermission",
@@ -132,7 +154,7 @@ namespace RoleService.Infrastructure.External
                     Timestamp = DateTime.UtcNow
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("/api/audit", auditLog);
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
                 response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Audit log sent for permission removal");

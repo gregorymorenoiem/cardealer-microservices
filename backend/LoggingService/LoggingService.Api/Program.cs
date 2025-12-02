@@ -1,6 +1,10 @@
 using LoggingService.Application;
 using LoggingService.Infrastructure;
 using Serilog;
+using Consul;
+using ServiceDiscovery.Application.Interfaces;
+using ServiceDiscovery.Infrastructure.Services;
+using LoggingService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Service Discovery Configuration
+builder.Services.AddSingleton<IConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+    return new ConsulClient(config => config.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+builder.Services.AddHttpClient("HealthCheck");
+builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -45,6 +61,10 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 app.UseSerilogRequestLogging();
 app.UseAuthorization();
+
+// Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
+
 app.MapControllers();
 
 try
