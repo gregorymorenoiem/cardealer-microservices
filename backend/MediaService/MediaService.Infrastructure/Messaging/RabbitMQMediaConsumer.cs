@@ -55,7 +55,7 @@ public class RabbitMQMediaConsumer : BackgroundService
         }
     }
 
-    private async Task InitializeConnectionAsync()
+    private Task InitializeConnectionAsync()
     {
         try
         {
@@ -79,6 +79,8 @@ public class RabbitMQMediaConsumer : BackgroundService
 
             // Configure quality of service
             _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {

@@ -55,7 +55,7 @@ public class AzureBlobStorageService : IMediaStorageService
         return response;
     }
 
-    public async Task<bool> ValidateFileAsync(string contentType, long fileSize)
+    public Task<bool> ValidateFileAsync(string contentType, long fileSize)
     {
         var allowedTypes = _options.AllowedContentTypes ?? new[] { "image/jpeg", "image/png", "video/mp4" };
         var maxSize = _options.MaxUploadSizeBytes;
@@ -63,10 +63,10 @@ public class AzureBlobStorageService : IMediaStorageService
         var isValidType = allowedTypes.Contains(contentType);
         var isValidSize = fileSize <= maxSize;
 
-        return isValidType && isValidSize;
+        return Task.FromResult(isValidType && isValidSize);
     }
 
-    public async Task<string> GenerateStorageKeyAsync(string ownerId, string? context, string fileName)
+    public Task<string> GenerateStorageKeyAsync(string ownerId, string? context, string fileName)
     {
         var safeFileName = Path.GetFileNameWithoutExtension(fileName)
             .Replace(" ", "_")
@@ -76,7 +76,7 @@ public class AzureBlobStorageService : IMediaStorageService
         var random = Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
 
         var key = $"{ownerId}/{context ?? "default"}/{timestamp}_{random}_{safeFileName}{extension}";
-        return key;
+        return Task.FromResult(key);
     }
 
     public async Task<bool> FileExistsAsync(string storageKey)
@@ -86,16 +86,16 @@ public class AzureBlobStorageService : IMediaStorageService
         return await blobClient.ExistsAsync();
     }
 
-    public async Task<string> GetFileUrlAsync(string storageKey)
+    public Task<string> GetFileUrlAsync(string storageKey)
     {
         if (!string.IsNullOrEmpty(_options.CdnBaseUrl))
         {
-            return $"{_options.CdnBaseUrl}/{storageKey}";
+            return Task.FromResult($"{_options.CdnBaseUrl}/{storageKey}");
         }
 
         var containerClient = _blobServiceClient.GetBlobContainerClient(_options.ContainerName);
         var blobClient = containerClient.GetBlobClient(storageKey);
-        return blobClient.Uri.ToString();
+        return Task.FromResult(blobClient.Uri.ToString());
     }
 
     public async Task UploadFileAsync(string storageKey, Stream fileStream, string contentType)

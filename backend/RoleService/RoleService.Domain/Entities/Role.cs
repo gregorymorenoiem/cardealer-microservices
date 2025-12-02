@@ -15,4 +15,11 @@ public class Role
 
     // Navigation properties
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+
+    // Legacy / test helpers: additional properties used by some test fixtures
+    public string ServiceName { get; set; } = string.Empty;
+    public string ExceptionType { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string? StackTrace { get; set; }
+    public DateTime OccurredAt { get; set; }
 }

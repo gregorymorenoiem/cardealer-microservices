@@ -112,18 +112,12 @@ public static class DatabaseExtensions
                 break;
 
             case DatabaseProvider.MySQL:
-                logger?.LogInformation("Configurando MySQL con Pomelo");
-                var serverVersion = ServerVersion.AutoDetect(connectionString);
-                options.UseMySql(connectionString, serverVersion, mySqlOptions =>
-                {
-                    mySqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: config.MaxRetryCount,
-                        maxRetryDelay: TimeSpan.FromSeconds(config.MaxRetryDelay),
-                        errorNumbersToAdd: null);
-                    mySqlOptions.CommandTimeout(config.CommandTimeout);
-                    mySqlOptions.MigrationsAssembly(GetMigrationsAssembly<TContext>());
-                });
-                break;
+                logger?.LogInformation("MySQL provider requested but not configured.");
+                throw new NotSupportedException(
+                    "MySQL provider is not configured in this build. " +
+                    "If you need MySQL support add a compatible MySQL EF Core provider (e.g. Pomelo) " +
+                    "and align package versions in Directory.Packages.props.");
+
 
             case DatabaseProvider.Oracle:
                 logger?.LogInformation("Configurando Oracle Database");

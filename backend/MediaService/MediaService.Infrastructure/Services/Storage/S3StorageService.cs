@@ -46,7 +46,7 @@ public class S3StorageService : IMediaStorageService
             StorageKey = storageKey
         };
 
-        return response;
+        return await Task.FromResult(response);
     }
 
     public Task<bool> ValidateFileAsync(string contentType, long fileSize)
@@ -103,7 +103,7 @@ public class S3StorageService : IMediaStorageService
             Expires = DateTime.UtcNow.AddHours(1)
         };
 
-        return _s3Client.GetPreSignedURL(request);
+        return await Task.FromResult(_s3Client.GetPreSignedURL(request));
     }
 
     public async Task UploadFileAsync(string storageKey, Stream fileStream, string contentType)

@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NotificationService.Shared\NotificationService.Shared.csproj" />
-    <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

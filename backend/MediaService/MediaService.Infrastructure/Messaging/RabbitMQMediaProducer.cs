@@ -116,7 +116,7 @@ public class RabbitMQMediaProducer : IRabbitMQMediaProducer, IDisposable
         }
     }
 
-    public async Task PublishDomainEventAsync(DomainEvent domainEvent)
+    public Task PublishDomainEventAsync(DomainEvent domainEvent)
     {
         if (!IsConnected)
         {
@@ -166,6 +166,8 @@ public class RabbitMQMediaProducer : IRabbitMQMediaProducer, IDisposable
 
             _logger.LogDebug("Published domain event {EventType} with ID {EventId} to {Exchange}/{RoutingKey}",
                 domainEvent.GetType().Name, domainEvent.EventId, exchange, routingKey);
+
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {
@@ -174,7 +176,7 @@ public class RabbitMQMediaProducer : IRabbitMQMediaProducer, IDisposable
         }
     }
 
-    public async Task PublishProcessMediaCommandAsync(string mediaId, string? processingType = null)
+    public Task PublishProcessMediaCommandAsync(string mediaId, string? processingType = null)
     {
         if (!IsConnected)
         {
@@ -212,6 +214,8 @@ public class RabbitMQMediaProducer : IRabbitMQMediaProducer, IDisposable
                 body: body);
 
             _logger.LogInformation("Published process media command for {MediaId}", mediaId);
+
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {

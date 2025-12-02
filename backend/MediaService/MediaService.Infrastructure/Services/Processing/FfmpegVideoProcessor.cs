@@ -12,7 +12,7 @@ public class FfmpegVideoProcessor : IVideoProcessor
         _logger = logger;
     }
 
-    public async Task<VideoProcessingResult> ProcessVideoAsync(Stream videoStream, string originalFileName, VideoProcessingConfig config)
+    public Task<VideoProcessingResult> ProcessVideoAsync(Stream videoStream, string originalFileName, VideoProcessingConfig config)
     {
         _logger.LogInformation("Processing video: {FileName}", originalFileName);
 
@@ -26,13 +26,13 @@ public class FfmpegVideoProcessor : IVideoProcessor
             ProcessingDuration = TimeSpan.Zero
         };
 
-        return await Task.FromResult(result);
+        return Task.FromResult(result);
     }
 
-    public async Task<VideoInfo> GetVideoInfoAsync(Stream videoStream)
+    public Task<VideoInfo> GetVideoInfoAsync(Stream videoStream)
     {
         // Implementación básica
-        return await Task.FromResult(new VideoInfo
+        return Task.FromResult(new VideoInfo
         {
             Width = 1920,
             Height = 1080,
@@ -42,13 +42,13 @@ public class FfmpegVideoProcessor : IVideoProcessor
         });
     }
 
-    public async Task<bool> ValidateVideoAsync(Stream videoStream, string contentType)
+    public Task<bool> ValidateVideoAsync(Stream videoStream, string contentType)
     {
         var allowedTypes = new[] { "video/mp4", "video/avi", "video/mov" };
-        return allowedTypes.Contains(contentType);
+        return Task.FromResult(allowedTypes.Contains(contentType));
     }
 
-    public async Task<List<Stream>> GenerateThumbnailsAsync(Stream videoStream, int count, int? width = null, int? height = null)
+    public Task<List<Stream>> GenerateThumbnailsAsync(Stream videoStream, int count, int? width = null, int? height = null)
     {
         // Implementación básica - generar thumbnails vacíos
         var thumbnails = new List<Stream>();
@@ -56,12 +56,12 @@ public class FfmpegVideoProcessor : IVideoProcessor
         {
             thumbnails.Add(new MemoryStream());
         }
-        return await Task.FromResult(thumbnails);
+        return Task.FromResult(thumbnails);
     }
 
-    public async Task<Stream> ExtractAudioAsync(Stream videoStream, string audioFormat)
+    public Task<Stream> ExtractAudioAsync(Stream videoStream, string audioFormat)
     {
         // Implementación básica
-        return await Task.FromResult(Stream.Null);
+        return Task.FromResult<Stream>(Stream.Null);
     }
 }

@@ -55,9 +55,10 @@ namespace RoleService.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            Assert.NotNull(okResult.Value);
-            Assert.NotNull(okResult.Value.Data);
-            Assert.Equal(logErrorResponse.ErrorId, okResult.Value.Data.ErrorId);
+            var response = okResult.Value;
+            Assert.NotNull(response);
+            Assert.NotNull(response!.Data);
+            Assert.Equal(logErrorResponse.ErrorId, response!.Data.ErrorId);
         }
 
         [Fact]
@@ -78,9 +79,10 @@ namespace RoleService.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            Assert.NotNull(okResult.Value);
-            Assert.True(okResult.Value.Success);
-            Assert.Equal(errorId, okResult.Value.Data.ErrorId);
+            var response = okResult.Value;
+            Assert.NotNull(response);
+            Assert.True(response!.Success);
+            Assert.Equal(errorId, response!.Data.ErrorId);
             mediatorMock.Verify(m => m.Send(It.IsAny<LogErrorCommand>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -101,8 +103,9 @@ namespace RoleService.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            Assert.NotNull(okResult.Value);
-            Assert.NotNull(okResult.Value.Data);
+            var response = okResult.Value;
+            Assert.NotNull(response);
+            Assert.NotNull(response!.Data);
         }
 
         [Fact]
@@ -122,8 +125,9 @@ namespace RoleService.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            Assert.NotNull(okResult.Value);
-            Assert.NotNull(okResult.Value.Data);
+            var response = okResult.Value;
+            Assert.NotNull(response);
+            Assert.NotNull(response!.Data);
         }
 
         [Fact]

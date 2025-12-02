@@ -10,6 +10,7 @@ namespace UserService.Infrastructure.Persistence
         // Entidades principales
         public DbSet<User> Users => Set<User>();
         public DbSet<UserRole> UserRoles => Set<UserRole>();
+        public DbSet<UserService.Domain.Entities.Role> Roles => Set<UserService.Domain.Entities.Role>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

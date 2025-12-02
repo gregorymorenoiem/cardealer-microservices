@@ -19,7 +19,7 @@ namespace RoleService.Tests.Application.UseCases.LogError
         {
             // Arrange
             var repoMock = new Mock<IRoleRepository>();
-            repoMock.Setup(r => r.AddAsync(It.IsAny<Role>()))
+            repoMock.Setup(r => r.AddAsync(It.IsAny<Role>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             var metricsMock = new Mock<RoleServiceMetrics>();
@@ -33,7 +33,7 @@ namespace RoleService.Tests.Application.UseCases.LogError
 
             // Assert
             Assert.NotEqual(Guid.Empty, response.ErrorId);
-            repoMock.Verify(r => r.AddAsync(It.IsAny<Role>()), Times.Once);
+            repoMock.Verify(r => r.AddAsync(It.IsAny<Role>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

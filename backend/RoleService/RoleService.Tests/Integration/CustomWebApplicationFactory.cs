@@ -21,7 +21,7 @@ namespace RoleService.Tests.Integration
                 // Override connection string to use correct PostgreSQL port
                 var connectionString = "Host=localhost;Port=25432;Database=RoleService;Username=postgres;Password=password;Pooling=true;";
 
-                config.AddInMemoryCollection(new Dictionary<string, string>
+                config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:DefaultConnection"] = connectionString,
 

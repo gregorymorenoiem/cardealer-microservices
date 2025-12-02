@@ -26,14 +26,14 @@ public class LocalStorageService : IMediaStorageService
         }
     }
 
-    public async Task<UploadUrlResponse> GenerateUploadUrlAsync(string storageKey, string contentType, TimeSpan? expiry = null)
+    public Task<UploadUrlResponse> GenerateUploadUrlAsync(string storageKey, string contentType, TimeSpan? expiry = null)
     {
         var uploadUrl = $"{_baseUrl.TrimEnd('/')}/{storageKey.TrimStart('/')}";
         var expiresAt = DateTime.UtcNow.Add(expiry ?? TimeSpan.FromHours(1));
 
         _logger.LogInformation("URL de subida generada: {Url}", uploadUrl);
 
-        return new UploadUrlResponse
+        var response = new UploadUrlResponse
         {
             UploadUrl = uploadUrl,
             ExpiresAt = expiresAt,
@@ -43,18 +43,20 @@ public class LocalStorageService : IMediaStorageService
             },
             StorageKey = storageKey
         };
+
+        return Task.FromResult(response);
     }
 
-    public async Task<bool> ValidateFileAsync(string contentType, long fileSize)
+    public Task<bool> ValidateFileAsync(string contentType, long fileSize)
     {
         // Lógica de validación básica
         var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "video/mp4", "application/pdf" };
         var maxSize = 100 * 1024 * 1024; // 100MB
 
-        return allowedTypes.Contains(contentType) && fileSize <= maxSize;
+        return Task.FromResult(allowedTypes.Contains(contentType) && fileSize <= maxSize);
     }
 
-    public async Task<string> GenerateStorageKeyAsync(string ownerId, string? context, string fileName)
+    public Task<string> GenerateStorageKeyAsync(string ownerId, string? context, string fileName)
     {
         var safeFileName = Path.GetFileNameWithoutExtension(fileName)
             .Replace(" ", "_")
@@ -64,16 +66,16 @@ public class LocalStorageService : IMediaStorageService
         var random = Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
 
         var key = $"{ownerId}/{context ?? "default"}/{timestamp}_{random}_{safeFileName}{extension}";
-        return key;
+        return Task.FromResult(key);
     }
 
-    public async Task<bool> FileExistsAsync(string storageKey)
+    public Task<bool> FileExistsAsync(string storageKey)
     {
         var fullPath = GetFullPath(storageKey);
-        return File.Exists(fullPath);
+        return Task.FromResult(File.Exists(fullPath));
     }
 
-    public async Task<Stream> DownloadFileAsync(string storageKey)
+    public Task<Stream> DownloadFileAsync(string storageKey)
     {
         var fullPath = GetFullPath(storageKey);
 
@@ -82,13 +84,13 @@ public class LocalStorageService : IMediaStorageService
             throw new FileNotFoundException($"Archivo no encontrado: {storageKey}");
         }
 
-        return File.OpenRead(fullPath);
+        return Task.FromResult<Stream>(File.OpenRead(fullPath));
     }
 
     public async Task UploadFileAsync(string storageKey, Stream fileStream, string contentType)
     {
         var fullPath = GetFullPath(storageKey);
-        var directory = Path.GetDirectoryName(fullPath);
+        var directory = Path.GetDirectoryName(fullPath) ?? _basePath;
 
         // Crear directorio si no existe
         if (!Directory.Exists(directory))
@@ -105,7 +107,7 @@ public class LocalStorageService : IMediaStorageService
         _logger.LogInformation("Archivo subido exitosamente: {StorageKey}", storageKey);
     }
 
-    public async Task DeleteFileAsync(string storageKey)
+    public Task DeleteFileAsync(string storageKey)
     {
         var fullPath = GetFullPath(storageKey);
 
@@ -114,18 +116,20 @@ public class LocalStorageService : IMediaStorageService
             File.Delete(fullPath);
             _logger.LogInformation("Archivo eliminado: {StorageKey}", storageKey);
         }
+
+        return Task.CompletedTask;
     }
 
-    public async Task<string> GetFileUrlAsync(string storageKey)
+    public Task<string> GetFileUrlAsync(string storageKey)
     {
-        return $"{_baseUrl.TrimEnd('/')}/{storageKey.TrimStart('/')}";
+        return Task.FromResult($"{_baseUrl.TrimEnd('/')}/{storageKey.TrimStart('/')}");
     }
 
-    public async Task CopyFileAsync(string sourceKey, string destinationKey)
+    public Task CopyFileAsync(string sourceKey, string destinationKey)
     {
         var sourceFullPath = GetFullPath(sourceKey);
         var destFullPath = GetFullPath(destinationKey);
-        var destDirectory = Path.GetDirectoryName(destFullPath);
+        var destDirectory = Path.GetDirectoryName(destFullPath) ?? _basePath;
 
         // Crear directorio de destino si no existe
         if (!Directory.Exists(destDirectory))
@@ -135,13 +139,15 @@ public class LocalStorageService : IMediaStorageService
 
         File.Copy(sourceFullPath, destFullPath, overwrite: true);
         _logger.LogInformation("Archivo copiado de {Source} a {Destination}", sourceKey, destinationKey);
+
+        return Task.CompletedTask;
     }
 
-    public async Task MoveFileAsync(string sourceKey, string destinationKey)
+    public Task MoveFileAsync(string sourceKey, string destinationKey)
     {
         var sourceFullPath = GetFullPath(sourceKey);
         var destFullPath = GetFullPath(destinationKey);
-        var destDirectory = Path.GetDirectoryName(destFullPath);
+        var destDirectory = Path.GetDirectoryName(destFullPath) ?? _basePath;
 
         // Crear directorio de destino si no existe
         if (!Directory.Exists(destDirectory))
@@ -151,6 +157,8 @@ public class LocalStorageService : IMediaStorageService
 
         File.Move(sourceFullPath, destFullPath);
         _logger.LogInformation("Archivo movido de {Source} a {Destination}", sourceKey, destinationKey);
+
+        return Task.CompletedTask;
     }
 
     public async Task<bool> IsHealthyAsync()
@@ -178,7 +186,7 @@ public class LocalStorageService : IMediaStorageService
         }
     }
 
-    public async Task<long> GetFileSizeAsync(string storageKey)
+    public Task<long> GetFileSizeAsync(string storageKey)
     {
         var fullPath = GetFullPath(storageKey);
 
@@ -188,7 +196,7 @@ public class LocalStorageService : IMediaStorageService
         }
 
         var fileInfo = new FileInfo(fullPath);
-        return fileInfo.Length;
+        return Task.FromResult(fileInfo.Length);
     }
 
     private string GetFullPath(string storageKey)
