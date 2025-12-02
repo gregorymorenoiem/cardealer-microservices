@@ -659,6 +659,57 @@ services:
       timeout: 5s
       retries: 5
 
+  # ------------------------
+  # SchedulerService Database
+  # ------------------------
+  schedulerservice-db:
+    image: postgres:16
+    container_name: schedulerservice-db
+    environment:
+      POSTGRES_DB: schedulerservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25440:5432"
+    volumes:
+      - schedulerservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # SchedulerService API
+  # ------------------------
+  schedulerservice:
+    build:
+      context: ./SchedulerService
+      dockerfile: Dockerfile
+    container_name: schedulerservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=schedulerservice-db;Database=schedulerservice;Username=postgres;Password=password"
+      Hangfire__ServerName: "SchedulerService-Docker"
+      Hangfire__WorkerCount: "5"
+      Hangfire__DashboardPath: "/hangfire"
+    ports:
+      - "15091:80"
+    depends_on:
+      schedulerservice-db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
   errorservice_data:
   authservice_data:
@@ -673,6 +724,7 @@ volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
+  schedulerservice_data:
 
 
 networks:
