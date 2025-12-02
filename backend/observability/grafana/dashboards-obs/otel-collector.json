@@ -1,177 +1,265 @@
 {
-  "dashboard": {
-    "id": null,
-    "uid": "otel-collector-overview",
-    "title": "OpenTelemetry Collector Overview",
-    "tags": ["opentelemetry", "collector", "observability"],
-    "timezone": "browser",
-    "schemaVersion": 16,
-    "version": 1,
-    "refresh": "10s",
-    "panels": [
-      {
-        "id": 1,
-        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 },
-        "type": "stat",
-        "title": "Collector Status",
-        "targets": [
-          {
-            "expr": "up{job=\"otel-collector\"}",
-            "legendFormat": "Collector Up",
-            "refId": "A"
-          }
+    "dashboard": {
+        "id": null,
+        "uid": "otel-collector-overview",
+        "title": "OpenTelemetry Collector Overview",
+        "tags": [
+            "opentelemetry",
+            "collector",
+            "observability"
         ],
-        "options": {
-          "colorMode": "background",
-          "graphMode": "none",
-          "textMode": "value"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                { "value": 0, "color": "red" },
-                { "value": 1, "color": "green" }
-              ]
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "panels": [
+            {
+                "id": 1,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 0,
+                    "y": 0
+                },
+                "type": "stat",
+                "title": "Collector Status",
+                "targets": [
+                    {
+                        "expr": "up{job=\"otel-collector\"}",
+                        "legendFormat": "Collector Up",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "value": 0,
+                                    "color": "red"
+                                },
+                                {
+                                    "value": 1,
+                                    "color": "green"
+                                }
+                            ]
+                        },
+                        "mappings": [
+                            {
+                                "type": "value",
+                                "value": "1",
+                                "text": "UP"
+                            },
+                            {
+                                "type": "value",
+                                "value": "0",
+                                "text": "DOWN"
+                            }
+                        ]
+                    }
+                }
             },
-            "mappings": [
-              { "type": "value", "value": "1", "text": "UP" },
-              { "type": "value", "value": "0", "text": "DOWN" }
-            ]
-          }
-        }
-      },
-      {
-        "id": 2,
-        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
-        "type": "stat",
-        "title": "Spans Received (rate/sec)",
-        "targets": [
-          {
-            "expr": "rate(otelcol_receiver_accepted_spans[5m])",
-            "legendFormat": "{{ receiver }}",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "reqps"
-          }
-        }
-      },
-      {
-        "id": 3,
-        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
-        "type": "graph",
-        "title": "Spans Received by Receiver",
-        "targets": [
-          {
-            "expr": "rate(otelcol_receiver_accepted_spans[5m])",
-            "legendFormat": "{{ receiver }}",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          { "format": "reqps", "label": "Spans/sec" },
-          { "format": "short" }
+            {
+                "id": 2,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 0
+                },
+                "type": "stat",
+                "title": "Spans Received (rate/sec)",
+                "targets": [
+                    {
+                        "expr": "rate(otelcol_receiver_accepted_spans[5m])",
+                        "legendFormat": "{{ receiver }}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "reqps"
+                    }
+                }
+            },
+            {
+                "id": 3,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 6
+                },
+                "type": "graph",
+                "title": "Spans Received by Receiver",
+                "targets": [
+                    {
+                        "expr": "rate(otelcol_receiver_accepted_spans[5m])",
+                        "legendFormat": "{{ receiver }}",
+                        "refId": "A"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "format": "reqps",
+                        "label": "Spans/sec"
+                    },
+                    {
+                        "format": "short"
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 6
+                },
+                "type": "graph",
+                "title": "Spans Dropped/Refused",
+                "targets": [
+                    {
+                        "expr": "rate(otelcol_receiver_refused_spans[5m])",
+                        "legendFormat": "Refused: {{ receiver }}",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "rate(otelcol_processor_dropped_spans[5m])",
+                        "legendFormat": "Dropped: {{ processor }}",
+                        "refId": "B"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "format": "reqps",
+                        "label": "Spans/sec"
+                    },
+                    {
+                        "format": "short"
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 14
+                },
+                "type": "graph",
+                "title": "Metrics Received by Receiver",
+                "targets": [
+                    {
+                        "expr": "rate(otelcol_receiver_accepted_metric_points[5m])",
+                        "legendFormat": "{{ receiver }}",
+                        "refId": "A"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "format": "reqps",
+                        "label": "Metrics/sec"
+                    },
+                    {
+                        "format": "short"
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 14
+                },
+                "type": "graph",
+                "title": "Exporter Queue Size",
+                "targets": [
+                    {
+                        "expr": "otelcol_exporter_queue_size",
+                        "legendFormat": "{{ exporter }}",
+                        "refId": "A"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "format": "short",
+                        "label": "Queue Size"
+                    },
+                    {
+                        "format": "short"
+                    }
+                ]
+            },
+            {
+                "id": 7,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 22
+                },
+                "type": "graph",
+                "title": "Memory Usage",
+                "targets": [
+                    {
+                        "expr": "process_runtime_go_mem_heap_alloc_bytes{job=\"otel-collector\"}",
+                        "legendFormat": "Heap Allocated",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "process_runtime_go_mem_heap_inuse_bytes{job=\"otel-collector\"}",
+                        "legendFormat": "Heap In Use",
+                        "refId": "B"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "format": "bytes",
+                        "label": "Memory"
+                    },
+                    {
+                        "format": "short"
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 22
+                },
+                "type": "graph",
+                "title": "CPU Usage",
+                "targets": [
+                    {
+                        "expr": "rate(process_cpu_seconds_total{job=\"otel-collector\"}[5m])",
+                        "legendFormat": "CPU Usage",
+                        "refId": "A"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "format": "percentunit",
+                        "label": "CPU %"
+                    },
+                    {
+                        "format": "short"
+                    }
+                ]
+            }
         ]
-      },
-      {
-        "id": 4,
-        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
-        "type": "graph",
-        "title": "Spans Dropped/Refused",
-        "targets": [
-          {
-            "expr": "rate(otelcol_receiver_refused_spans[5m])",
-            "legendFormat": "Refused: {{ receiver }}",
-            "refId": "A"
-          },
-          {
-            "expr": "rate(otelcol_processor_dropped_spans[5m])",
-            "legendFormat": "Dropped: {{ processor }}",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          { "format": "reqps", "label": "Spans/sec" },
-          { "format": "short" }
-        ]
-      },
-      {
-        "id": 5,
-        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
-        "type": "graph",
-        "title": "Metrics Received by Receiver",
-        "targets": [
-          {
-            "expr": "rate(otelcol_receiver_accepted_metric_points[5m])",
-            "legendFormat": "{{ receiver }}",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          { "format": "reqps", "label": "Metrics/sec" },
-          { "format": "short" }
-        ]
-      },
-      {
-        "id": 6,
-        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
-        "type": "graph",
-        "title": "Exporter Queue Size",
-        "targets": [
-          {
-            "expr": "otelcol_exporter_queue_size",
-            "legendFormat": "{{ exporter }}",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          { "format": "short", "label": "Queue Size" },
-          { "format": "short" }
-        ]
-      },
-      {
-        "id": 7,
-        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
-        "type": "graph",
-        "title": "Memory Usage",
-        "targets": [
-          {
-            "expr": "process_runtime_go_mem_heap_alloc_bytes{job=\"otel-collector\"}",
-            "legendFormat": "Heap Allocated",
-            "refId": "A"
-          },
-          {
-            "expr": "process_runtime_go_mem_heap_inuse_bytes{job=\"otel-collector\"}",
-            "legendFormat": "Heap In Use",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          { "format": "bytes", "label": "Memory" },
-          { "format": "short" }
-        ]
-      },
-      {
-        "id": 8,
-        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
-        "type": "graph",
-        "title": "CPU Usage",
-        "targets": [
-          {
-            "expr": "rate(process_cpu_seconds_total{job=\"otel-collector\"}[5m])",
-            "legendFormat": "CPU Usage",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          { "format": "percentunit", "label": "CPU %" },
-          { "format": "short" }
-        ]
-      }
-    ]
-  }
+    }
 }

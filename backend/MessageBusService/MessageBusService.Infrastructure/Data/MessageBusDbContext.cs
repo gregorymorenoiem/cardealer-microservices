@@ -29,7 +29,7 @@ public class MessageBusDbContext : DbContext
             entity.HasIndex(e => e.Topic);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
-            
+
             // Configure Headers as JSON instead of Hstore
             entity.Property(e => e.Headers)
                 .HasColumnType("jsonb")

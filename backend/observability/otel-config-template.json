@@ -1,31 +1,31 @@
 {
-  "OpenTelemetry": {
-    "ServiceName": "AuthService",
-    "Exporter": {
-      "Otlp": {
-        "Endpoint": "http://otel-collector:4318",
-        "Protocol": "HttpProtobuf"
-      }
-    },
-    "OtlpEndpoint": "http://otel-collector:4318",
-    "Tracing": {
-      "Enabled": true,
-      "SamplingRatio": 0.1,
-      "ExportIntervalMilliseconds": 5000,
-      "MaxQueueSize": 2048,
-      "MaxExportBatchSize": 512
-    },
-    "Metrics": {
-      "Enabled": true,
-      "ExportIntervalMilliseconds": 60000,
-      "MaxQueueSize": 2048,
-      "MaxExportBatchSize": 512
-    },
-    "Resources": {
-      "service.name": "AuthService",
-      "service.namespace": "cardealer",
-      "service.version": "1.0.0",
-      "deployment.environment": "development"
+    "OpenTelemetry": {
+        "ServiceName": "AuthService",
+        "Exporter": {
+            "Otlp": {
+                "Endpoint": "http://otel-collector:4318",
+                "Protocol": "HttpProtobuf"
+            }
+        },
+        "OtlpEndpoint": "http://otel-collector:4318",
+        "Tracing": {
+            "Enabled": true,
+            "SamplingRatio": 0.1,
+            "ExportIntervalMilliseconds": 5000,
+            "MaxQueueSize": 2048,
+            "MaxExportBatchSize": 512
+        },
+        "Metrics": {
+            "Enabled": true,
+            "ExportIntervalMilliseconds": 60000,
+            "MaxQueueSize": 2048,
+            "MaxExportBatchSize": 512
+        },
+        "Resources": {
+            "service.name": "AuthService",
+            "service.namespace": "cardealer",
+            "service.version": "1.0.0",
+            "deployment.environment": "development"
+        }
     }
-  }
 }
