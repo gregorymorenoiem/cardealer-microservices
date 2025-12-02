@@ -5,6 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UserService.Infrastructure.Persistence;
+using UserService.Domain.Interfaces;
+using UserService.Domain.Entities;
+using CarDealer.Contracts.Abstractions;
 
 namespace UserService.Tests.Integration
 {
@@ -21,7 +24,7 @@ namespace UserService.Tests.Integration
                 // Override connection string to use correct PostgreSQL port
                 var connectionString = "Host=localhost;Port=25432;Database=UserService;Username=postgres;Password=password;Pooling=true;";
 
-                config.AddInMemoryCollection(new Dictionary<string, string>
+                config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:DefaultConnection"] = connectionString,
 
@@ -77,7 +80,46 @@ namespace UserService.Tests.Integration
                     logger.LogError(ex, "❌ An error occurred while creating in-memory database for integration tests");
                     throw;
                 }
+
+                // Register test mocks for services that require external infrastructure
+                services.AddScoped<IRoleRepository, NoOpRoleRepository>();
+                services.AddScoped<IErrorReporter, NoOpErrorReporter>();
+                services.AddScoped<IEventPublisher, NoOpEventPublisher>();
             });
         }
     }
+
+    #region Test Mocks (No-Op implementations)
+
+    /// <summary>
+    /// No-op implementation of IRoleRepository for integration tests.
+    /// </summary>
+    internal class NoOpRoleRepository : IRoleRepository
+    {
+        public Task<Role?> GetByIdAsync(Guid id) => Task.FromResult<Role?>(null);
+        public Task<IEnumerable<Role>> GetAsync(ErrorQuery query) => Task.FromResult<IEnumerable<Role>>(Array.Empty<Role>());
+        public Task AddAsync(Role role) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id) => Task.CompletedTask;
+        public Task<IEnumerable<string>> GetServiceNamesAsync() => Task.FromResult<IEnumerable<string>>(Array.Empty<string>());
+        public Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null) => Task.FromResult(new ErrorStats());
+    }
+
+    /// <summary>
+    /// No-op implementation of IErrorReporter for integration tests.
+    /// </summary>
+    internal class NoOpErrorReporter : IErrorReporter
+    {
+        public Task<Guid> ReportErrorAsync(ErrorReport request) => Task.FromResult(Guid.NewGuid());
+    }
+
+    /// <summary>
+    /// No-op implementation of IEventPublisher for integration tests.
+    /// </summary>
+    internal class NoOpEventPublisher : IEventPublisher
+    {
+        public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+            where TEvent : IEvent => Task.CompletedTask;
+    }
+
+    #endregion
 }

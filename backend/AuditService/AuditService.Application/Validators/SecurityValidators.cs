@@ -39,11 +39,18 @@ public static class SecurityValidators
 
 public static class SqlInjectionValidator
 {
+    // Palabras clave SQL que deben detectarse con word boundaries
     private static readonly string[] SqlKeywords = new[]
     {
         "SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "ALTER", "EXEC", "EXECUTE",
-        "UNION", "WHERE", "OR", "AND", "--", "/*", "*/", "xp_", "sp_", "0x", "char(", "nchar(",
-        "varchar(", "nvarchar(", "syscolumns", "sysobjects", "information_schema"
+        "UNION", "WHERE", "syscolumns", "sysobjects", "information_schema"
+    };
+
+    // Patrones SQL que deben detectarse como prefijos o literales
+    private static readonly string[] SqlPrefixPatterns = new[]
+    {
+        "--", "/*", "*/", "xp_", "sp_", "0x", "char(", "nchar(",
+        "varchar(", "nvarchar("
     };
 
     public static bool ContainsSqlKeywords(string? value)
@@ -53,7 +60,7 @@ public static class SqlInjectionValidator
 
         var upperValue = value.ToUpperInvariant();
 
-        // Use word boundary matching to avoid false positives
+        // Check SQL keywords with word boundary matching to avoid false positives
         // e.g., "OR" should not match in "Normal", "AND" should not match in "command"
         foreach (var keyword in SqlKeywords)
         {
@@ -61,6 +68,23 @@ public static class SqlInjectionValidator
             if (System.Text.RegularExpressions.Regex.IsMatch(upperValue, pattern))
                 return true;
         }
+
+        // Check SQL prefix patterns as literal substring matches (no word boundaries)
+        foreach (var prefixPattern in SqlPrefixPatterns)
+        {
+            if (upperValue.Contains(prefixPattern.ToUpperInvariant()))
+                return true;
+        }
+
+        // Check for SQL comment patterns with single quote followed by double dash
+        if (System.Text.RegularExpressions.Regex.IsMatch(upperValue, @"'--"))
+            return true;
+
+        // Check for SQL injection patterns like '1'='1' or quoted OR/AND patterns
+        // Pattern: quote + optional space + OR/AND + optional space + quote
+        if (System.Text.RegularExpressions.Regex.IsMatch(upperValue, @"'\s*(OR|AND)\s*'",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            return true;
 
         return false;
     }

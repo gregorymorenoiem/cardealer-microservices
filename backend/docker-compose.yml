@@ -790,6 +790,59 @@ services:
       retries: 3
       start_period: 40s
 
+  # ------------------------
+  # FeatureToggleService Database
+  # ------------------------
+  featuretoggleservice-db:
+    image: postgres:16
+    container_name: featuretoggleservice-db
+    environment:
+      POSTGRES_DB: featuretoggleservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25441:5432"
+    volumes:
+      - featuretoggleservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # FeatureToggleService API
+  # ------------------------
+  featuretoggleservice:
+    build:
+      context: .
+      dockerfile: FeatureToggleService/FeatureToggleService.Api/Dockerfile
+    container_name: featuretoggleservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=featuretoggleservice-db;Database=featuretoggleservice;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+      FeatureToggle__CacheExpirationSeconds: "60"
+      FeatureToggle__EnableCaching: "true"
+    ports:
+      - "15094:80"
+    depends_on:
+      featuretoggleservice-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
   errorservice_data:
   authservice_data:
@@ -806,6 +859,7 @@ volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
+  featuretoggleservice_data:
 
 
 networks:

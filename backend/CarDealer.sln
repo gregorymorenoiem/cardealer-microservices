@@ -267,6 +267,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Shared", "_Shared\CarDealer.Shared\CarDealer.Shared.csproj", "{B2B2B4C8-22C0-42B8-9CC4-65488CB894F8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FeatureToggleService", "FeatureToggleService", "{53917D2F-1BC8-4907-A943-14C53E7AA52E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureToggleService.Domain", "FeatureToggleService\FeatureToggleService.Domain\FeatureToggleService.Domain.csproj", "{180CE498-65C5-4930-B1B4-8036FB5C05E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureToggleService.Application", "FeatureToggleService\FeatureToggleService.Application\FeatureToggleService.Application.csproj", "{2432086B-BB12-4B0F-A9BA-B8B97F48161B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureToggleService.Infrastructure", "FeatureToggleService\FeatureToggleService.Infrastructure\FeatureToggleService.Infrastructure.csproj", "{ED835616-B199-42B9-B0B1-3570BD04ADEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureToggleService.Api", "FeatureToggleService\FeatureToggleService.Api\FeatureToggleService.Api.csproj", "{DF16AD74-C94E-4C8E-89E1-06B0C5010B83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureToggleService.Tests", "FeatureToggleService\FeatureToggleService.Tests\FeatureToggleService.Tests.csproj", "{94578827-49F8-465B-B37C-5277210F02E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -716,6 +728,26 @@ Global
 		{B2B2B4C8-22C0-42B8-9CC4-65488CB894F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2B2B4C8-22C0-42B8-9CC4-65488CB894F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2B2B4C8-22C0-42B8-9CC4-65488CB894F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{180CE498-65C5-4930-B1B4-8036FB5C05E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{180CE498-65C5-4930-B1B4-8036FB5C05E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{180CE498-65C5-4930-B1B4-8036FB5C05E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{180CE498-65C5-4930-B1B4-8036FB5C05E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2432086B-BB12-4B0F-A9BA-B8B97F48161B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2432086B-BB12-4B0F-A9BA-B8B97F48161B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2432086B-BB12-4B0F-A9BA-B8B97F48161B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2432086B-BB12-4B0F-A9BA-B8B97F48161B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED835616-B199-42B9-B0B1-3570BD04ADEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED835616-B199-42B9-B0B1-3570BD04ADEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED835616-B199-42B9-B0B1-3570BD04ADEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED835616-B199-42B9-B0B1-3570BD04ADEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF16AD74-C94E-4C8E-89E1-06B0C5010B83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF16AD74-C94E-4C8E-89E1-06B0C5010B83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF16AD74-C94E-4C8E-89E1-06B0C5010B83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF16AD74-C94E-4C8E-89E1-06B0C5010B83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94578827-49F8-465B-B37C-5277210F02E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94578827-49F8-465B-B37C-5277210F02E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94578827-49F8-465B-B37C-5277210F02E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94578827-49F8-465B-B37C-5277210F02E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{55716BA2-E564-482B-A24F-E826F7EA77A8} = {1973B264-1E85-44D8-BD8C-F8896169C914}
@@ -829,5 +861,10 @@ Global
 		{53CD0B53-A95B-48FC-B406-BC2BF71F40DD} = {FDC95AB2-A440-4F14-95FC-714386F79526}
 		{EBF67121-832D-4E93-8F49-15CF4D52D7B8} = {FDC95AB2-A440-4F14-95FC-714386F79526}
 		{B2B2B4C8-22C0-42B8-9CC4-65488CB894F8} = {FDC95AB2-A440-4F14-95FC-714386F79526}
+		{180CE498-65C5-4930-B1B4-8036FB5C05E7} = {53917D2F-1BC8-4907-A943-14C53E7AA52E}
+		{2432086B-BB12-4B0F-A9BA-B8B97F48161B} = {53917D2F-1BC8-4907-A943-14C53E7AA52E}
+		{ED835616-B199-42B9-B0B1-3570BD04ADEF} = {53917D2F-1BC8-4907-A943-14C53E7AA52E}
+		{DF16AD74-C94E-4C8E-89E1-06B0C5010B83} = {53917D2F-1BC8-4907-A943-14C53E7AA52E}
+		{94578827-49F8-465B-B37C-5277210F02E3} = {53917D2F-1BC8-4907-A943-14C53E7AA52E}
 	EndGlobalSection
 EndGlobal

@@ -55,9 +55,9 @@ namespace ErrorService.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            Assert.NotNull(okResult.Value);
-            Assert.NotNull(okResult.Value.Data);
-            Assert.Equal(logErrorResponse.ErrorId, okResult.Value.Data.ErrorId);
+            var response = okResult.Value!;
+            var data = response.Data!;
+            Assert.Equal(logErrorResponse.ErrorId, data.ErrorId);
         }
 
         [Fact]
@@ -78,9 +78,10 @@ namespace ErrorService.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            Assert.NotNull(okResult.Value);
-            Assert.True(okResult.Value.Success);
-            Assert.Equal(errorId, okResult.Value.Data.ErrorId);
+            var response = okResult.Value!;
+            var data = response.Data!;
+            Assert.True(response.Success);
+            Assert.Equal(errorId, data.ErrorId);
             mediatorMock.Verify(m => m.Send(It.IsAny<LogErrorCommand>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 

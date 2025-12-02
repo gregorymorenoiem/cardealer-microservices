@@ -72,7 +72,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             Assert.True(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.BadRequest);
@@ -99,7 +99,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -126,7 +126,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -154,7 +154,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -182,7 +182,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             // Depending on policy configuration, this could be Forbidden or Unauthorized
@@ -229,7 +229,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -258,7 +258,7 @@ namespace UserService.Tests.Integration
             );
 
             // Act
-            var response = await client.PostAsJsonAsync("/api/errors", request);
+            var response = await client.PostAsJsonAsync("/api/errors/log", request);
 
             // Assert
             Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);

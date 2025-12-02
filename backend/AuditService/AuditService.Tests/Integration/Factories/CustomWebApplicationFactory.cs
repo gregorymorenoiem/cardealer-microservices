@@ -9,6 +9,7 @@ using AuditService.Infrastructure.Persistence.Repositories;
 using AuditService.Infrastructure.Repositories;
 using AuditService.Domain.Interfaces;
 using AuditService.Domain.Interfaces.Repositories;
+using AuditService.Application.Features.Audit.Commands.CreateAudit;
 using AuditService.Shared;
 using Xunit;
 using Moq;
@@ -20,6 +21,8 @@ namespace AuditService.Tests.Integration.Factories
     /// </summary>
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
+        private readonly string _databaseName = $"AuditServiceTestDb_{Guid.NewGuid()}";
+
         public Task InitializeAsync() => Task.CompletedTask;
 
         public new Task DisposeAsync() => Task.CompletedTask;
@@ -28,36 +31,26 @@ namespace AuditService.Tests.Integration.Factories
         {
             builder.ConfigureTestServices(services =>
             {
-                // Remove existing DbContextOptions
+                // Remove all existing DbContext registrations
                 services.RemoveAll(typeof(DbContextOptions<AuditDbContext>));
+                services.RemoveAll(typeof(AuditDbContext));
 
-                // Use InMemory database for testing
+                // Use InMemory database for testing with a fixed name per factory instance
                 services.AddDbContext<AuditDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase("AuditServiceTestDb_" + Guid.NewGuid());
+                    options.UseInMemoryDatabase(_databaseName);
                     options.EnableSensitiveDataLogging();
                     options.EnableDetailedErrors();
                 });
 
-                // Register MediatR from Application assembly
-                var applicationAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                    .FirstOrDefault(a => a.GetName().Name == "AuditService.Application");
-
-                if (applicationAssembly != null)
-                {
-                    services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(applicationAssembly));
-                }
+                // Register MediatR from Application assembly using a known type from that assembly
+                services.AddMediatR(cfg =>
+                    cfg.RegisterServicesFromAssemblyContaining<CreateAuditCommand>());
 
                 // Register repositories
                 services.AddScoped<IAuditLogRepository, AuditLogRepository>();
                 services.AddScoped<IAuditRepository, AuditRepository>();
                 services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-                // Ensure database is created
-                var sp = services.BuildServiceProvider();
-                using var scope = sp.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
-                db.Database.EnsureCreated();
             });
 
             builder.UseEnvironment("Testing");

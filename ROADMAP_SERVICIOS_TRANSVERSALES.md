@@ -65,7 +65,7 @@
 | # | Servicio | Tiempo Estimado | Justificación |
 |---|----------|-----------------|---------------|
 | 10 | ✅ Search Service (Elasticsearch) | 9h | Cuando aumente el volumen de datos |
-| 11 | Feature Toggle Service | 5h | Para CD/CI avanzado y A/B testing |
+| 11 | ✅ Feature Toggle Service | 5h | Para CD/CI avanzado y A/B testing |
 | 12 | API Documentation Aggregator | 4h | Developer experience |
 | 13 | Idempotency Service | 6h | Prevenir operaciones duplicadas críticas |
 | 14 | Rate Limiting Service (Distribuido) | 5h | Mejorar el actual con Redis |

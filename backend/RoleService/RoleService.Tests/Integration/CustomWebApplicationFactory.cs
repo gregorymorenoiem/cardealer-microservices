@@ -5,6 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RoleService.Infrastructure.Persistence;
+using RoleService.Domain.Interfaces;
+using RoleService.Domain.Entities;
+using CarDealer.Contracts.Abstractions;
 
 namespace RoleService.Tests.Integration
 {
@@ -77,7 +80,32 @@ namespace RoleService.Tests.Integration
                     logger.LogError(ex, "❌ An error occurred while creating in-memory database for integration tests");
                     throw;
                 }
+
+                // Register test mocks for services that require external infrastructure
+                services.AddScoped<IErrorReporter, NoOpErrorReporter>();
+                services.AddScoped<IEventPublisher, NoOpEventPublisher>();
             });
         }
     }
+
+    #region Test Mocks (No-Op implementations)
+
+    /// <summary>
+    /// No-op implementation of IErrorReporter for integration tests.
+    /// </summary>
+    internal class NoOpErrorReporter : IErrorReporter
+    {
+        public Task<Guid> ReportErrorAsync(ErrorReport request) => Task.FromResult(Guid.NewGuid());
+    }
+
+    /// <summary>
+    /// No-op implementation of IEventPublisher for integration tests.
+    /// </summary>
+    internal class NoOpEventPublisher : IEventPublisher
+    {
+        public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+            where TEvent : IEvent => Task.CompletedTask;
+    }
+
+    #endregion
 }

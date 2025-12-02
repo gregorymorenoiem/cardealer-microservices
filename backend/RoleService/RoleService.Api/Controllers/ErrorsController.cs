@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RoleService.Application.DTOs;
 using RoleService.Application.UseCases.LogError;
@@ -8,6 +9,7 @@ using RoleService.Shared.Models;
 namespace RoleService.Api.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ErrorsController : ControllerBase
     {

@@ -54,11 +54,10 @@ namespace RoleService.Tests.Controllers
             var result = await controller.LogError(request);
 
             // Assert
-            var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            var response = okResult.Value;
-            Assert.NotNull(response);
-            Assert.NotNull(response!.Data);
-            Assert.Equal(logErrorResponse.ErrorId, response!.Data.ErrorId);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<ApiResponse<LogErrorResponse>>(okResult.Value);
+            Assert.NotNull(response.Data);
+            Assert.Equal(logErrorResponse.ErrorId, response.Data.ErrorId);
         }
 
         [Fact]
@@ -78,11 +77,11 @@ namespace RoleService.Tests.Controllers
             var result = await controller.LogError(request);
 
             // Assert
-            var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            var response = okResult.Value;
-            Assert.NotNull(response);
-            Assert.True(response!.Success);
-            Assert.Equal(errorId, response!.Data.ErrorId);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<ApiResponse<LogErrorResponse>>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.NotNull(response.Data);
+            Assert.Equal(errorId, response.Data.ErrorId);
             mediatorMock.Verify(m => m.Send(It.IsAny<LogErrorCommand>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -102,10 +101,9 @@ namespace RoleService.Tests.Controllers
             var result = await controller.LogError(request);
 
             // Assert
-            var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            var response = okResult.Value;
-            Assert.NotNull(response);
-            Assert.NotNull(response!.Data);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<ApiResponse<LogErrorResponse>>(okResult.Value);
+            Assert.NotNull(response.Data);
         }
 
         [Fact]
@@ -124,10 +122,9 @@ namespace RoleService.Tests.Controllers
             var result = await controller.LogError(request);
 
             // Assert
-            var okResult = Assert.IsType<ActionResult<ApiResponse<LogErrorResponse>>>(result);
-            var response = okResult.Value;
-            Assert.NotNull(response);
-            Assert.NotNull(response!.Data);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<ApiResponse<LogErrorResponse>>(okResult.Value);
+            Assert.NotNull(response.Data);
         }
 
         [Fact]
