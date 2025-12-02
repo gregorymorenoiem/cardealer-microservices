@@ -68,7 +68,7 @@
 | 11 | ✅ Feature Toggle Service | 5h | Para CD/CI avanzado y A/B testing |
 | 12 | ✅ API Documentation Aggregator | 4h | Developer experience |
 | 13 | ✅ Idempotency Service | 6h | Prevenir operaciones duplicadas críticas |
-| 14 | Rate Limiting Service (Distribuido) | 5h | Mejorar el actual con Redis |
+| 14 | ✅ Rate Limiting Service (Distribuido) | 5h | Mejorar el actual con Redis |
 | 15 | Backup & DR Service | 10h | Disaster recovery automatizado |
 | 16 | File Storage Service (Mejorar MediaService) | 7h | CDN, virus scan, storage abstracto |
 | 17 | Circuit Breaker Service | 6h | Resilience patterns avanzados |

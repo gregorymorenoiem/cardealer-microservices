@@ -884,6 +884,9 @@ services:
       Services__9__Name: "IdempotencyService"
       Services__9__BaseUrl: "http://idempotencyservice"
       Services__9__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__10__Name: "RateLimitingService"
+      Services__10__BaseUrl: "http://ratelimitingservice"
+      Services__10__SwaggerEndpoint: "/swagger/v1/swagger.json"
     ports:
       - "15095:80"
     networks:
@@ -912,6 +915,39 @@ services:
       Idempotency__ValidateRequestHash: "true"
     ports:
       - "15096:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ------------------------
+  # RateLimitingService API
+  # ------------------------
+  ratelimitingservice:
+    build:
+      context: ./RateLimitingService
+      dockerfile: Dockerfile
+    container_name: ratelimitingservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__Redis: "redis:6379"
+      RateLimiting__Enabled: "true"
+      RateLimiting__DefaultLimit: "100"
+      RateLimiting__DefaultWindowSeconds: "60"
+      RateLimiting__KeyPrefix: "ratelimit:"
+      RateLimiting__ClientIdHeader: "X-API-Key"
+      RateLimiting__UserTierHeader: "X-User-Tier"
+      RateLimiting__IncludeHeaders: "true"
+    ports:
+      - "15097:80"
     depends_on:
       redis:
         condition: service_healthy
