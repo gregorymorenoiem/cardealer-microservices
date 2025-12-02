@@ -35,6 +35,6 @@ USER healthcheckservice
 COPY --from=publish --chown=healthcheckservice:healthcheckservice /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost/health || exit 1
 
 ENTRYPOINT ["dotnet", "HealthCheckService.Api.dll"]

@@ -25,7 +25,7 @@ public class HealthController : ControllerBase
     public async Task<IActionResult> GetSystemHealth(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting system health status");
-        
+
         var query = new GetSystemHealthQuery();
         var systemHealth = await _mediator.Send(query, cancellationToken);
 
@@ -48,7 +48,7 @@ public class HealthController : ControllerBase
     public async Task<IActionResult> GetServiceHealth(string serviceName, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting health status for service: {ServiceName}", serviceName);
-        
+
         var query = new GetServiceHealthQuery(serviceName);
         var serviceHealth = await _mediator.Send(query, cancellationToken);
 
@@ -74,7 +74,7 @@ public class HealthController : ControllerBase
     public async Task<IActionResult> GetRegisteredServices(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting registered services");
-        
+
         var query = new GetRegisteredServicesQuery();
         var services = await _mediator.Send(query, cancellationToken);
 
@@ -88,8 +88,8 @@ public class HealthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult HealthCheck()
     {
-        return Ok(new 
-        { 
+        return Ok(new
+        {
             status = "Healthy",
             service = "HealthCheckService",
             timestamp = DateTime.UtcNow

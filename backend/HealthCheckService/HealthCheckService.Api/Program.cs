@@ -8,8 +8,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { 
-        Title = "Health Check Aggregator API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "Health Check Aggregator API",
         Version = "v1",
         Description = "Centralized health monitoring for all microservices"
     });

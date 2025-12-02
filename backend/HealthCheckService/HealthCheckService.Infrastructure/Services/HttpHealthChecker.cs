@@ -41,14 +41,14 @@ public class HttpHealthChecker : IHealthChecker
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                
+
                 // Try to parse health check response
                 try
                 {
                     var healthData = JsonSerializer.Deserialize<Dictionary<string, object>>(content);
                     serviceHealth.Status = HealthStatus.Healthy;
                     serviceHealth.Description = "Service is healthy";
-                    
+
                     // Extract service name if available
                     if (healthData?.ContainsKey("name") == true)
                     {
