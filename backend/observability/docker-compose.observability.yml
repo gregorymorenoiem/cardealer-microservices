@@ -14,6 +14,7 @@ services:
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
       - otel-logs:/var/log/otel-collector
+    user: "root"
     ports:
       # OTLP gRPC receiver
       - "4317:4317"
@@ -29,16 +30,6 @@ services:
       - "1777:1777"
       # zPages debugging
       - "55679:55679"
-      # Jaeger gRPC
-      - "14250:14250"
-      # Jaeger thrift HTTP
-      - "14268:14268"
-      # Jaeger thrift compact
-      - "6831:6831/udp"
-      # Jaeger thrift binary
-      - "6832:6832/udp"
-      # Zipkin
-      - "9411:9411"
     environment:
       - OTEL_RESOURCE_ATTRIBUTES=service.name=otel-collector,environment=development
     networks:
@@ -71,10 +62,6 @@ services:
       - "6832:6832/udp"
       # Jaeger query HTTP
       - "16687:16687"
-      # OTLP gRPC
-      - "4317:4317"
-      # OTLP HTTP
-      - "4318:4318"
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
       - COLLECTOR_OTLP_ENABLED=true
@@ -85,7 +72,8 @@ services:
       - METRICS_STORAGE_TYPE=prometheus
       - PROMETHEUS_SERVER_URL=http://prometheus:9090
     volumes:
-      - jaeger-data:/badger
+      - jaeger-data:/badger:rw
+    user: "root"
     networks:
       - cardealer-network
     healthcheck:

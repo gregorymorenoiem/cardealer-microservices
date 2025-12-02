@@ -187,7 +187,7 @@ service:
         - attributes/traces
         - probabilistic_sampler
         - batch
-      exporters: [otlp/jaeger, zipkin, logging, file]
+      exporters: [otlp/jaeger, zipkin, logging]
 
     # Metrics pipeline
     metrics:
@@ -215,7 +215,6 @@ service:
       encoding: json
       output_paths:
         - stdout
-        - /var/log/otel-collector/collector.log
       error_output_paths:
         - stderr
     metrics:
