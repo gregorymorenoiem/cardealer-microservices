@@ -8,52 +8,52 @@ namespace FeatureToggleService.Domain.Entities;
 public class FeatureFlag
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    
+
     /// <summary>Unique key identifier for the flag (e.g., "new-checkout-flow")</summary>
     public string Key { get; set; } = string.Empty;
-    
+
     /// <summary>Human-readable name</summary>
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>Description of what the flag controls</summary>
     public string Description { get; set; } = string.Empty;
-    
+
     /// <summary>Current status of the flag</summary>
     public FlagStatus Status { get; set; } = FlagStatus.Draft;
-    
+
     /// <summary>Whether the flag is currently enabled</summary>
     public bool IsEnabled { get; set; } = false;
-    
+
     /// <summary>Environment where the flag applies</summary>
     public Enums.Environment Environment { get; set; } = Enums.Environment.All;
-    
+
     /// <summary>Tags for categorization and filtering</summary>
     public List<string> Tags { get; set; } = new();
-    
+
     /// <summary>Percentage of users to enable the flag for (0-100)</summary>
     public int RolloutPercentage { get; set; } = 0;
-    
+
     /// <summary>Target user IDs for explicit enablement</summary>
     public List<string> TargetUserIds { get; set; } = new();
-    
+
     /// <summary>Target groups for explicit enablement</summary>
     public List<string> TargetGroups { get; set; } = new();
-    
+
     /// <summary>JSON payload for complex flag values</summary>
     public string? JsonPayload { get; set; }
-    
+
     /// <summary>Owner or team responsible for this flag</summary>
     public string Owner { get; set; } = string.Empty;
-    
+
     /// <summary>Expiration date for temporary flags</summary>
     public DateTime? ExpiresAt { get; set; }
-    
+
     /// <summary>Whether this is a permanent flag (vs temporary)</summary>
     public bool IsPermanent { get; set; } = false;
-    
+
     /// <summary>Kill switch triggered - emergency disable</summary>
     public bool KillSwitchTriggered { get; set; } = false;
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
@@ -140,7 +140,7 @@ public class FeatureFlag
     {
         if (percentage < 0 || percentage > 100)
             throw new ArgumentOutOfRangeException(nameof(percentage), "Percentage must be between 0 and 100");
-        
+
         RolloutPercentage = percentage;
         UpdatedAt = DateTime.UtcNow;
         ModifiedBy = modifiedBy;

@@ -31,7 +31,7 @@ public class FeatureFlagEvaluator : IFeatureFlagEvaluator
     public async Task<bool> EvaluateAsync(string key, EvaluationContext? context = null, CancellationToken cancellationToken = default)
     {
         var flag = await GetFlagFromCacheAsync(key, cancellationToken);
-        
+
         if (flag == null)
         {
             _logger.LogDebug("Feature flag '{Key}' not found, returning false", key);
@@ -40,14 +40,14 @@ public class FeatureFlagEvaluator : IFeatureFlagEvaluator
 
         var result = EvaluateFlag(flag, context);
         _logger.LogDebug("Feature flag '{Key}' evaluated to {Result}", key, result);
-        
+
         return result;
     }
 
     public async Task<Dictionary<string, bool>> EvaluateMultipleAsync(IEnumerable<string> keys, EvaluationContext? context = null, CancellationToken cancellationToken = default)
     {
         var results = new Dictionary<string, bool>();
-        
+
         foreach (var key in keys)
         {
             results[key] = await EvaluateAsync(key, context, cancellationToken);
@@ -154,16 +154,16 @@ public class FeatureFlagEvaluator : IFeatureFlagEvaluator
     private async Task<FeatureFlag?> GetFlagFromCacheAsync(string key, CancellationToken cancellationToken)
     {
         var cacheKey = $"feature_flag_{key}";
-        
+
         if (!_cache.TryGetValue(cacheKey, out FeatureFlag? flag))
         {
             flag = await _repository.GetByKeyAsync(key, cancellationToken);
-            
+
             if (flag != null)
             {
                 var cacheOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(_cacheExpiration);
-                    
+
                 _cache.Set(cacheKey, flag, cacheOptions);
             }
         }

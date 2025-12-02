@@ -149,9 +149,9 @@ public class FeatureFlagTests
     public void IsExpired_ShouldReturnTrueWhenExpiresAtIsPast()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test", 
+        var flag = new FeatureFlag
+        {
+            Key = "test",
             Name = "Test",
             ExpiresAt = DateTime.UtcNow.AddDays(-1)
         };
@@ -164,9 +164,9 @@ public class FeatureFlagTests
     public void IsExpired_ShouldReturnFalseWhenExpiresAtIsFuture()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test", 
+        var flag = new FeatureFlag
+        {
+            Key = "test",
             Name = "Test",
             ExpiresAt = DateTime.UtcNow.AddDays(1)
         };

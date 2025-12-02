@@ -49,7 +49,7 @@ public class DocsController : ControllerBase
     public async Task<ActionResult<ServiceInfo>> GetService(string serviceName, CancellationToken cancellationToken)
     {
         var service = await _aggregatorService.GetServiceByNameAsync(serviceName, cancellationToken);
-        
+
         if (service == null)
             return NotFound(new { message = $"Service '{serviceName}' not found" });
 
@@ -99,7 +99,7 @@ public class DocsController : ControllerBase
     public async Task<ActionResult> GetOpenApiSpec(string serviceName, CancellationToken cancellationToken)
     {
         var spec = await _aggregatorService.GetOpenApiSpecAsync(serviceName, cancellationToken);
-        
+
         if (spec == null)
             return NotFound(new { message = $"OpenAPI spec for '{serviceName}' not found or unavailable" });
 
@@ -123,7 +123,7 @@ public class DocsController : ControllerBase
     [HttpGet("search")]
     [ProducesResponseType(typeof(List<ApiEndpointInfo>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ApiEndpointInfo>>> SearchEndpoints(
-        [FromQuery] string query, 
+        [FromQuery] string query,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(query))

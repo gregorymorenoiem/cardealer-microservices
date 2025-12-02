@@ -31,9 +31,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithEnabledFlag_ShouldReturnTrue()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Active,
             IsEnabled = true,
@@ -55,9 +55,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithDisabledFlag_ShouldReturnFalse()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Inactive,
             IsEnabled = false
@@ -94,9 +94,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithExpiredFlag_ShouldReturnFalse()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Active,
             IsEnabled = true,
@@ -118,9 +118,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithKillSwitchTriggered_ShouldReturnFalse()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Active,
             IsEnabled = true,
@@ -142,9 +142,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithTargetedUser_ShouldReturnTrue()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Active,
             IsEnabled = true,
@@ -166,9 +166,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithEnvironmentMismatch_ShouldReturnFalse()
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Active,
             IsEnabled = true,
@@ -190,17 +190,17 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateMultipleAsync_ShouldReturnDictionaryOfResults()
     {
         // Arrange
-        var flag1 = new FeatureFlag 
-        { 
-            Key = "feature-1", 
+        var flag1 = new FeatureFlag
+        {
+            Key = "feature-1",
             Name = "Feature 1",
             Status = FlagStatus.Active,
             IsEnabled = true,
             RolloutPercentage = 100
         };
-        var flag2 = new FeatureFlag 
-        { 
-            Key = "feature-2", 
+        var flag2 = new FeatureFlag
+        {
+            Key = "feature-2",
             Name = "Feature 2",
             Status = FlagStatus.Inactive,
             IsEnabled = false
@@ -229,9 +229,9 @@ public class FeatureFlagEvaluatorTests
     public async Task EvaluateAsync_WithRolloutPercentage_ShouldRespectPercentage(int percentage, bool expectedResult)
     {
         // Arrange
-        var flag = new FeatureFlag 
-        { 
-            Key = "test-feature", 
+        var flag = new FeatureFlag
+        {
+            Key = "test-feature",
             Name = "Test",
             Status = FlagStatus.Active,
             IsEnabled = true,

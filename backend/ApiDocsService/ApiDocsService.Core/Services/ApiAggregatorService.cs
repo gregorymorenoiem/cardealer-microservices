@@ -45,7 +45,7 @@ public class ApiAggregatorService : IApiAggregatorService
 
     public Task<ServiceInfo?> GetServiceByNameAsync(string serviceName, CancellationToken cancellationToken = default)
     {
-        var service = _services.FirstOrDefault(s => 
+        var service = _services.FirstOrDefault(s =>
             s.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(service);
     }
@@ -69,7 +69,7 @@ public class ApiAggregatorService : IApiAggregatorService
 
     public async Task<ServiceStatus> CheckServiceHealthAsync(string serviceName, CancellationToken cancellationToken = default)
     {
-        var service = _services.FirstOrDefault(s => 
+        var service = _services.FirstOrDefault(s =>
             s.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
 
         if (service == null)
@@ -83,7 +83,7 @@ public class ApiAggregatorService : IApiAggregatorService
         }
 
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             var healthUrl = $"{service.BaseUrl.TrimEnd('/')}/health";
@@ -109,7 +109,7 @@ public class ApiAggregatorService : IApiAggregatorService
         {
             stopwatch.Stop();
             _logger.LogWarning(ex, "Health check failed for {ServiceName}", serviceName);
-            
+
             service.IsHealthy = false;
             service.LastChecked = DateTime.UtcNow;
 
@@ -127,7 +127,7 @@ public class ApiAggregatorService : IApiAggregatorService
 
     public async Task<string?> GetOpenApiSpecAsync(string serviceName, CancellationToken cancellationToken = default)
     {
-        var service = _services.FirstOrDefault(s => 
+        var service = _services.FirstOrDefault(s =>
             s.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
 
         if (service == null)
@@ -139,13 +139,13 @@ public class ApiAggregatorService : IApiAggregatorService
         try
         {
             var response = await _httpClient.GetAsync(service.SwaggerUrl, cancellationToken);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsStringAsync(cancellationToken);
             }
 
-            _logger.LogWarning("Failed to get OpenAPI spec for {ServiceName}: {StatusCode}", 
+            _logger.LogWarning("Failed to get OpenAPI spec for {ServiceName}: {StatusCode}",
                 serviceName, response.StatusCode);
             return null;
         }
@@ -244,7 +244,7 @@ public class ApiAggregatorService : IApiAggregatorService
                 try
                 {
                     var spec = await GetOpenApiSpecAsync(service.Name, cancellationToken);
-                    
+
                     if (!string.IsNullOrEmpty(spec))
                     {
                         doc.OpenApiSpec = spec;
@@ -262,7 +262,7 @@ public class ApiAggregatorService : IApiAggregatorService
             });
 
             var results = await Task.WhenAll(tasks);
-            
+
             foreach (var doc in results)
             {
                 _cachedDocs[doc.ServiceName] = doc;

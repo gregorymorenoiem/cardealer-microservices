@@ -881,8 +881,40 @@ services:
       Services__8__Name: "FeatureToggleService"
       Services__8__BaseUrl: "http://featuretoggleservice"
       Services__8__SwaggerEndpoint: "/swagger/v1/swagger.json"
+      Services__9__Name: "IdempotencyService"
+      Services__9__BaseUrl: "http://idempotencyservice"
+      Services__9__SwaggerEndpoint: "/swagger/v1/swagger.json"
     ports:
       - "15095:80"
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ------------------------
+  # IdempotencyService API
+  # ------------------------
+  idempotencyservice:
+    build:
+      context: ./IdempotencyService
+      dockerfile: Dockerfile
+    container_name: idempotencyservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__Redis: "redis:6379"
+      Idempotency__DefaultTtlSeconds: "86400"
+      Idempotency__RequireIdempotencyKey: "false"
+      Idempotency__ValidateRequestHash: "true"
+    ports:
+      - "15096:80"
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - cargurus-net
     healthcheck:

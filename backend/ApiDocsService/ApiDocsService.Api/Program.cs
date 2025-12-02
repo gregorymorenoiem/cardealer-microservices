@@ -77,7 +77,7 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "API Docs Aggregator v1");
     options.DocumentTitle = "CarDealer API Documentation";
     options.RoutePrefix = "swagger";
-    
+
     // Custom Swagger UI settings
     options.EnableDeepLinking();
     options.DisplayRequestDuration();
@@ -103,7 +103,7 @@ app.MapGet("/portal", async (IApiAggregatorService aggregator) =>
 {
     var services = await aggregator.GetAllServicesAsync();
     var dashboard = await aggregator.GetDashboardAsync();
-    
+
     var html = GeneratePortalHtml(services, dashboard);
     return Results.Content(html, "text/html");
 });

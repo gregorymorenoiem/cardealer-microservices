@@ -8,46 +8,46 @@ namespace FeatureToggleService.Domain.Entities;
 public class RolloutStrategy
 {
     public Guid Id { get; set; }
-    
+
     /// <summary>Foreign key to FeatureFlag</summary>
     public Guid FeatureFlagId { get; set; }
-    
+
     /// <summary>Type of rollout strategy</summary>
     public RolloutType Type { get; set; } = RolloutType.Percentage;
-    
+
     /// <summary>Percentage of users to enable (0-100)</summary>
     public int Percentage { get; set; } = 0;
-    
+
     /// <summary>List of specific user IDs to include</summary>
     public List<string> TargetUserIds { get; set; } = new();
-    
+
     /// <summary>List of tenant/organization IDs to include</summary>
     public List<string> TargetTenants { get; set; } = new();
-    
+
     /// <summary>List of user groups/roles to include</summary>
     public List<string> TargetGroups { get; set; } = new();
-    
+
     /// <summary>List of regions to include</summary>
     public List<string> TargetRegions { get; set; } = new();
-    
+
     /// <summary>Custom attribute rules in JSON format</summary>
     public string? CustomRules { get; set; }
-    
+
     /// <summary>Start date for scheduled rollout</summary>
     public DateTime? StartDate { get; set; }
-    
+
     /// <summary>End date for scheduled rollout (when reaching 100%)</summary>
     public DateTime? EndDate { get; set; }
-    
+
     /// <summary>Whether to include/exclude beta users</summary>
     public bool IncludeBetaUsers { get; set; } = true;
-    
+
     /// <summary>Whether to include/exclude internal users</summary>
     public bool IncludeInternalUsers { get; set; } = true;
-    
+
     /// <summary>Seed for consistent hashing (optional)</summary>
     public string? HashSeed { get; set; }
-    
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
