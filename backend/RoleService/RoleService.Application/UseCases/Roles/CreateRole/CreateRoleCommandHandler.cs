@@ -12,15 +12,18 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Creat
     private readonly IRoleRepository _roleRepository;
     private readonly IAuditServiceClient _auditClient;
     private readonly INotificationServiceClient _notificationClient;
+    private readonly IUserContextService _userContext;
 
     public CreateRoleCommandHandler(
         IRoleRepository roleRepository,
         IAuditServiceClient auditClient,
-        INotificationServiceClient notificationClient)
+        INotificationServiceClient notificationClient,
+        IUserContextService userContext)
     {
         _roleRepository = roleRepository;
         _auditClient = auditClient;
         _notificationClient = notificationClient;
+        _userContext = userContext;
     }
 
     public async Task<CreateRoleResponse> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
@@ -41,13 +44,13 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Creat
             IsActive = true,
             IsSystemRole = request.Request.IsSystemRole,
             CreatedAt = DateTime.UtcNow,
-            CreatedBy = "system" // TODO: Get from JWT claims
+            CreatedBy = _userContext.GetCurrentUserId()
         };
 
         await _roleRepository.AddAsync(role, cancellationToken);
 
         // Auditoría
-        _ = _auditClient.LogRoleCreatedAsync(role.Id, role.Name, "system");
+        _ = _auditClient.LogRoleCreatedAsync(role.Id, role.Name, _userContext.GetCurrentUserId());
 
         // Notificación a admins
         _ = _notificationClient.SendRoleCreatedNotificationAsync(

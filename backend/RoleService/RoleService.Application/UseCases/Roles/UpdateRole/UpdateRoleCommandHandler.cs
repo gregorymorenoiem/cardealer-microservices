@@ -11,13 +11,16 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Updat
 {
     private readonly IRoleRepository _roleRepository;
     private readonly IAuditServiceClient _auditClient;
+    private readonly IUserContextService _userContext;
 
     public UpdateRoleCommandHandler(
         IRoleRepository roleRepository,
-        IAuditServiceClient auditClient)
+        IAuditServiceClient auditClient,
+        IUserContextService userContext)
     {
         _roleRepository = roleRepository;
         _auditClient = auditClient;
+        _userContext = userContext;
     }
 
     public async Task<UpdateRoleResponse> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
@@ -66,14 +69,14 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Updat
         }
 
         role.UpdatedAt = DateTime.UtcNow;
-        role.UpdatedBy = "system"; // TODO: Get from JWT claims
+        role.UpdatedBy = _userContext.GetCurrentUserId();
 
         await _roleRepository.UpdateAsync(role, cancellationToken);
 
         // Auditoría
         if (changes.Length > 0)
         {
-            _ = _auditClient.LogRoleUpdatedAsync(role.Id, changes.ToString(), "system");
+            _ = _auditClient.LogRoleUpdatedAsync(role.Id, changes.ToString(), _userContext.GetCurrentUserId());
         }
 
         return new UpdateRoleResponse(

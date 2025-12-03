@@ -11,17 +11,20 @@ public class AssignPermissionCommandHandler : IRequestHandler<AssignPermissionCo
     private readonly IPermissionRepository _permissionRepository;
     private readonly IRolePermissionRepository _rolePermissionRepository;
     private readonly IAuditServiceClient _auditClient;
+    private readonly IUserContextService _userContext;
 
     public AssignPermissionCommandHandler(
         IRoleRepository roleRepository,
         IPermissionRepository permissionRepository,
         IRolePermissionRepository rolePermissionRepository,
-        IAuditServiceClient auditClient)
+        IAuditServiceClient auditClient,
+        IUserContextService userContext)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
         _rolePermissionRepository = rolePermissionRepository;
         _auditClient = auditClient;
+        _userContext = userContext;
     }
 
     public async Task<bool> Handle(AssignPermissionCommand request, CancellationToken cancellationToken)
@@ -54,14 +57,14 @@ public class AssignPermissionCommandHandler : IRequestHandler<AssignPermissionCo
         await _rolePermissionRepository.AssignPermissionToRoleAsync(
             request.RoleId,
             request.PermissionId,
-            "system", // TODO: Get from JWT claims
+            _userContext.GetCurrentUserId(),
             cancellationToken);
 
         // Auditoría
         _ = _auditClient.LogPermissionAssignedAsync(
             request.RoleId,
             request.PermissionId,
-            "system");
+            _userContext.GetCurrentUserId());
 
         return true;
     }

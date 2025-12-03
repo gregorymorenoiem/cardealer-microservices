@@ -164,6 +164,10 @@ builder.Services.AddScoped<IPermissionRepository, RoleService.Infrastructure.Rep
 builder.Services.AddScoped<IRolePermissionRepository, RoleService.Infrastructure.Repositories.EfRolePermissionRepository>();
 builder.Services.AddScoped<IRoleLogRepository, RoleService.Infrastructure.Persistence.EfRoleLogRepository>();
 
+// User Context Service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<RoleService.Application.Interfaces.IUserContextService, RoleService.Infrastructure.Services.UserContextService>();
+
 // External Service Clients
 builder.Services.AddHttpClient<RoleService.Application.Interfaces.IAuditServiceClient, RoleService.Infrastructure.External.AuditServiceClient>(client =>
 {
