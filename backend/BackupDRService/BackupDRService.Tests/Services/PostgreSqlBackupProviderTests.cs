@@ -18,7 +18,7 @@ public class PostgreSqlBackupProviderTests
     public PostgreSqlBackupProviderTests()
     {
         _loggerMock = new Mock<ILogger<PostgreSqlBackupProvider>>();
-        
+
         _options = new BackupOptions
         {
             PgDumpPath = "pg_dump",

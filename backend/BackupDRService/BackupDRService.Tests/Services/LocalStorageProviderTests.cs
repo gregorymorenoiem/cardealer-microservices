@@ -19,7 +19,7 @@ public class LocalStorageProviderTests : IDisposable
     {
         _loggerMock = new Mock<ILogger<LocalStorageProvider>>();
         _testDirectory = Path.Combine(Path.GetTempPath(), $"BackupTests_{Guid.NewGuid()}");
-        
+
         _options = new BackupOptions
         {
             LocalStoragePath = _testDirectory

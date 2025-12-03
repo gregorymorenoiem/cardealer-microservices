@@ -24,7 +24,7 @@ public class RestoreServiceTests
         _databaseProviderMock = new Mock<IDatabaseBackupProvider>();
         _storageProviderMock = new Mock<IStorageProvider>();
         _backupServiceMock = new Mock<IBackupService>();
-        
+
         _options = new BackupOptions
         {
             LocalStoragePath = "C:\\Backups",
@@ -111,7 +111,7 @@ public class RestoreServiceTests
         // Arrange
         var backupResult1 = CreateBackupResult("job1", "backup1.bak");
         var backupResult2 = CreateBackupResult("job2", "backup2.bak");
-        
+
         await _service.CreateRestorePointAsync(backupResult1, "Point1");
         await _service.CreateRestorePointAsync(backupResult2, "Point2");
 
@@ -129,7 +129,7 @@ public class RestoreServiceTests
         var backupResult1 = CreateBackupResult("job1", "backup1.bak");
         var backupResult2 = CreateBackupResult("job1", "backup2.bak");
         var backupResult3 = CreateBackupResult("job2", "backup3.bak");
-        
+
         await _service.CreateRestorePointAsync(backupResult1, "Point1");
         await _service.CreateRestorePointAsync(backupResult2, "Point2");
         await _service.CreateRestorePointAsync(backupResult3, "Point3");
@@ -152,7 +152,7 @@ public class RestoreServiceTests
         // Arrange
         var backupResult1 = CreateBackupResult("job1", "backup1.bak");
         var backupResult2 = CreateBackupResult("job2", "backup2.bak");
-        
+
         await _service.CreateRestorePointAsync(backupResult1, "Point1");
         await _service.CreateRestorePointAsync(backupResult2, "Point2");
 

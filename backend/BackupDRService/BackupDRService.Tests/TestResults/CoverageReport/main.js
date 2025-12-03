@@ -232,24 +232,24 @@ var assemblies = [
       { "name": "BackupDRService.Core.Entities.BackupHistory", "rp": "BackupDRService.Core_BackupHistory.html", "cl": 0, "ucl": 23, "cal": 23, "tl": 33, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Entities.BackupSchedule", "rp": "BackupDRService.Core_BackupSchedule.html", "cl": 0, "ucl": 25, "cal": 25, "tl": 35, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Entities.RetentionPolicy", "rp": "BackupDRService.Core_RetentionPolicy.html", "cl": 0, "ucl": 22, "cal": 22, "tl": 41, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.DatabaseBackupRequest", "rp": "BackupDRService.Core_DatabaseBackupRequest.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.DatabaseBackupResult", "rp": "BackupDRService.Core_DatabaseBackupResult.html", "cl": 0, "ucl": 27, "cal": 27, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.DatabaseBackupRequest", "rp": "BackupDRService.Core_DatabaseBackupRequest.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.DatabaseBackupResult", "rp": "BackupDRService.Core_DatabaseBackupResult.html", "cl": 14, "ucl": 13, "cal": 27, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Interfaces.DatabaseInfo", "rp": "BackupDRService.Core_DatabaseInfo.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.DatabaseRestoreRequest", "rp": "BackupDRService.Core_DatabaseRestoreRequest.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.DatabaseRestoreResult", "rp": "BackupDRService.Core_DatabaseRestoreResult.html", "cl": 0, "ucl": 25, "cal": 25, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.RestoreOptions", "rp": "BackupDRService.Core_RestoreOptions.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 49, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.StorageDownloadResult", "rp": "BackupDRService.Core_StorageDownloadResult.html", "cl": 0, "ucl": 20, "cal": 20, "tl": 138, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.StorageFileInfo", "rp": "BackupDRService.Core_StorageFileInfo.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 138, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Interfaces.StorageUploadResult", "rp": "BackupDRService.Core_StorageUploadResult.html", "cl": 0, "ucl": 22, "cal": 22, "tl": 138, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.DatabaseRestoreRequest", "rp": "BackupDRService.Core_DatabaseRestoreRequest.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.DatabaseRestoreResult", "rp": "BackupDRService.Core_DatabaseRestoreResult.html", "cl": 14, "ucl": 11, "cal": 25, "tl": 150, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.RestoreOptions", "rp": "BackupDRService.Core_RestoreOptions.html", "cl": 8, "ucl": 0, "cal": 8, "tl": 49, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.StorageDownloadResult", "rp": "BackupDRService.Core_StorageDownloadResult.html", "cl": 20, "ucl": 0, "cal": 20, "tl": 138, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.StorageFileInfo", "rp": "BackupDRService.Core_StorageFileInfo.html", "cl": 7, "ucl": 1, "cal": 8, "tl": 138, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Interfaces.StorageUploadResult", "rp": "BackupDRService.Core_StorageUploadResult.html", "cl": 22, "ucl": 0, "cal": 22, "tl": 138, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Migrations.BackupDbContextModelSnapshot", "rp": "BackupDRService.Core_BackupDbContextModelSnapshot.html", "cl": 0, "ucl": 427, "cal": 427, "tl": 456, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Migrations.InitialBackupDb", "rp": "BackupDRService.Core_InitialBackupDb.html", "cl": 0, "ucl": 648, "cal": 648, "tl": 722, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Models.ActiveSchedule", "rp": "BackupDRService.Core_ActiveSchedule.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 39, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Models.BackupJob", "rp": "BackupDRService.Core_BackupJob.html", "cl": 50, "ucl": 1, "cal": 51, "tl": 102, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Models.BackupOptions", "rp": "BackupDRService.Core_BackupOptions.html", "cl": 19, "ucl": 2, "cal": 21, "tl": 114, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Models.BackupResult", "rp": "BackupDRService.Core_BackupResult.html", "cl": 57, "ucl": 1, "cal": 58, "tl": 84, "cb": 8, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Models.BackupResult", "rp": "BackupDRService.Core_BackupResult.html", "cl": 58, "ucl": 0, "cal": 58, "tl": 84, "cb": 8, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Models.BackupStatistics", "rp": "BackupDRService.Core_BackupStatistics.html", "cl": 79, "ucl": 4, "cal": 83, "tl": 105, "cb": 10, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Models.RestorePoint", "rp": "BackupDRService.Core_RestorePoint.html", "cl": 43, "ucl": 0, "cal": 43, "tl": 66, "cb": 9, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Models.RestoreResult", "rp": "BackupDRService.Core_RestoreResult.html", "cl": 52, "ucl": 2, "cal": 54, "tl": 88, "cb": 7, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Models.RestorePoint", "rp": "BackupDRService.Core_RestorePoint.html", "cl": 43, "ucl": 0, "cal": 43, "tl": 66, "cb": 10, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Models.RestoreResult", "rp": "BackupDRService.Core_RestoreResult.html", "cl": 54, "ucl": 0, "cal": 54, "tl": 88, "cb": 7, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Models.SchedulerHealthMetrics", "rp": "BackupDRService.Core_SchedulerHealthMetrics.html", "cl": 0, "ucl": 6, "cal": 6, "tl": 39, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Models.SchedulerStats", "rp": "BackupDRService.Core_SchedulerStats.html", "cl": 0, "ucl": 9, "cal": 9, "tl": 39, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Repositories.AuditLogRepository", "rp": "BackupDRService.Core_AuditLogRepository.html", "cl": 0, "ucl": 54, "cal": 54, "tl": 84, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -257,10 +257,10 @@ var assemblies = [
       { "name": "BackupDRService.Core.Repositories.BackupScheduleRepository", "rp": "BackupDRService.Core_BackupScheduleRepository.html", "cl": 0, "ucl": 89, "cal": 89, "tl": 124, "cb": 0, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Repositories.RetentionPolicyRepository", "rp": "BackupDRService.Core_RetentionPolicyRepository.html", "cl": 0, "ucl": 43, "cal": 43, "tl": 68, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Services.BackupHistoryService", "rp": "BackupDRService.Core_BackupHistoryService.html", "cl": 0, "ucl": 124, "cal": 124, "tl": 194, "cb": 0, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Services.BackupService", "rp": "BackupDRService.Core_BackupService.html", "cl": 99, "ucl": 153, "cal": 252, "tl": 386, "cb": 7, "tb": 46, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Services.LocalStorageProvider", "rp": "BackupDRService.Core_LocalStorageProvider.html", "cl": 0, "ucl": 162, "cal": 162, "tl": 252, "cb": 0, "tb": 30, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "rp": "BackupDRService.Core_PostgreSqlBackupProvider.html", "cl": 0, "ucl": 260, "cal": 260, "tl": 370, "cb": 0, "tb": 70, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "BackupDRService.Core.Services.RestoreService", "rp": "BackupDRService.Core_RestoreService.html", "cl": 0, "ucl": 218, "cal": 218, "tl": 338, "cb": 0, "tb": 68, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Services.BackupService", "rp": "BackupDRService.Core_BackupService.html", "cl": 165, "ucl": 87, "cal": 252, "tl": 386, "cb": 20, "tb": 46, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Services.LocalStorageProvider", "rp": "BackupDRService.Core_LocalStorageProvider.html", "cl": 85, "ucl": 77, "cal": 162, "tl": 252, "cb": 18, "tb": 30, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "rp": "BackupDRService.Core_PostgreSqlBackupProvider.html", "cl": 84, "ucl": 176, "cal": 260, "tl": 370, "cb": 12, "tb": 70, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "BackupDRService.Core.Services.RestoreService", "rp": "BackupDRService.Core_RestoreService.html", "cl": 102, "ucl": 116, "cal": 218, "tl": 338, "cb": 29, "tb": 68, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Services.RetentionCleanupResult", "rp": "BackupDRService.Core_RetentionCleanupResult.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 365, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Services.RetentionService", "rp": "BackupDRService.Core_RetentionService.html", "cl": 0, "ucl": 268, "cal": 268, "tl": 365, "cb": 0, "tb": 50, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "BackupDRService.Core.Services.SchedulerMonitoringService", "rp": "BackupDRService.Core_SchedulerMonitoringService.html", "cl": 0, "ucl": 143, "cal": 143, "tl": 211, "cb": 0, "tb": 50, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -279,12 +279,6 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.RestoreService", "reportPath": "BackupDRService.Core_RestoreService.html", "methodName": "RestoreFromPointAsync()", "methodShortName": "RestoreFromPointAsync()", "fileIndex": 0, "line": 99,
-    "metrics": [
-      { "value": 1640, "exceeded": true },
-      { "value": 40, "exceeded": true },
-    ]},
-  {
     "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.SchedulerMonitoringService", "reportPath": "BackupDRService.Core_SchedulerMonitoringService.html", "methodName": "GetHealthMetricsAsync()", "methodShortName": "GetHealthMetricsAsync()", "fileIndex": 0, "line": 32,
     "metrics": [
       { "value": 812, "exceeded": true },
@@ -292,18 +286,6 @@ var riskHotspots = [
     ]},
   {
     "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "reportPath": "BackupDRService.Core_PostgreSqlBackupProvider.html", "methodName": "GetDatabaseInfoAsync()", "methodShortName": "GetDatabaseInfoAsync()", "fileIndex": 0, "line": 225,
-    "metrics": [
-      { "value": 272, "exceeded": true },
-      { "value": 16, "exceeded": true },
-    ]},
-  {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "reportPath": "BackupDRService.Core_PostgreSqlBackupProvider.html", "methodName": "PrepareTargetDatabaseAsync()", "methodShortName": "PrepareTargetDatabaseAsync()", "fileIndex": 0, "line": 318,
-    "metrics": [
-      { "value": 272, "exceeded": true },
-      { "value": 16, "exceeded": true },
-    ]},
-  {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "reportPath": "BackupDRService.Core_PostgreSqlBackupProvider.html", "methodName": "RestoreAsync()", "methodShortName": "RestoreAsync()", "fileIndex": 0, "line": 122,
     "metrics": [
       { "value": 272, "exceeded": true },
       { "value": 16, "exceeded": true },
@@ -321,28 +303,34 @@ var riskHotspots = [
       { "value": 12, "exceeded": false },
     ]},
   {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.BackupService", "reportPath": "BackupDRService.Core_BackupService.html", "methodName": "ExecuteBackupAsync()", "methodShortName": "ExecuteBackupAsync()", "fileIndex": 0, "line": 138,
-    "metrics": [
-      { "value": 156, "exceeded": true },
-      { "value": 12, "exceeded": false },
-    ]},
-  {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "reportPath": "BackupDRService.Core_PostgreSqlBackupProvider.html", "methodName": "BackupAsync()", "methodShortName": "BackupAsync()", "fileIndex": 0, "line": 30,
-    "metrics": [
-      { "value": 156, "exceeded": true },
-      { "value": 12, "exceeded": false },
-    ]},
-  {
     "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.RetentionService", "reportPath": "BackupDRService.Core_RetentionService.html", "methodName": "GetBackupsToDeleteAsync()", "methodShortName": "GetBackupsToDeleteAsync()", "fileIndex": 0, "line": 149,
     "metrics": [
       { "value": 156, "exceeded": true },
       { "value": 12, "exceeded": false },
     ]},
   {
+    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "reportPath": "BackupDRService.Core_PostgreSqlBackupProvider.html", "methodName": "PrepareTargetDatabaseAsync()", "methodShortName": "PrepareTargetDatabaseAsync()", "fileIndex": 0, "line": 318,
+    "metrics": [
+      { "value": 150, "exceeded": true },
+      { "value": 16, "exceeded": true },
+    ]},
+  {
     "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.BackgroundServices.BackupSchedulerHostedService", "reportPath": "BackupDRService.Core_BackupSchedulerHostedService.html", "methodName": "ParseStorageType(System.String)", "methodShortName": "ParseStorageType(...)", "fileIndex": 0, "line": 326,
     "metrics": [
       { "value": 110, "exceeded": true },
       { "value": 10, "exceeded": false },
+    ]},
+  {
+    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.RestoreService", "reportPath": "BackupDRService.Core_RestoreService.html", "methodName": "RestoreFromPointAsync()", "methodShortName": "RestoreFromPointAsync()", "fileIndex": 0, "line": 99,
+    "metrics": [
+      { "value": 102, "exceeded": true },
+      { "value": 40, "exceeded": true },
+    ]},
+  {
+    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.PostgreSqlBackupProvider", "reportPath": "BackupDRService.Core_PostgreSqlBackupProvider.html", "methodName": "RestoreAsync()", "methodShortName": "RestoreAsync()", "fileIndex": 0, "line": 122,
+    "metrics": [
+      { "value": 92, "exceeded": true },
+      { "value": 16, "exceeded": true },
     ]},
   {
     "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.BackgroundServices.BackupSchedulerHostedService", "reportPath": "BackupDRService.Core_BackupSchedulerHostedService.html", "methodName": "CheckAndExecuteScheduledBackupsAsync()", "methodShortName": "CheckAndExecuteScheduledBackupsAsync()", "fileIndex": 0, "line": 86,
@@ -382,18 +370,6 @@ var riskHotspots = [
     ]},
   {
     "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.BackgroundServices.BackupSchedulerHostedService", "reportPath": "BackupDRService.Core_BackupSchedulerHostedService.html", "methodName": "ParseBackupType(System.String)", "methodShortName": "ParseBackupType(...)", "fileIndex": 0, "line": 315,
-    "metrics": [
-      { "value": 42, "exceeded": true },
-      { "value": 6, "exceeded": false },
-    ]},
-  {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.LocalStorageProvider", "reportPath": "BackupDRService.Core_LocalStorageProvider.html", "methodName": "DownloadAsync()", "methodShortName": "DownloadAsync()", "fileIndex": 0, "line": 62,
-    "metrics": [
-      { "value": 42, "exceeded": true },
-      { "value": 6, "exceeded": false },
-    ]},
-  {
-    "assembly": "BackupDRService.Core", "class": "BackupDRService.Core.Services.LocalStorageProvider", "reportPath": "BackupDRService.Core_LocalStorageProvider.html", "methodName": "UploadAsync()", "methodShortName": "UploadAsync()", "fileIndex": 0, "line": 28,
     "metrics": [
       { "value": 42, "exceeded": true },
       { "value": 6, "exceeded": false },
