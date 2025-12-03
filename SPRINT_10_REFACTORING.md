@@ -373,27 +373,41 @@ public class CheckUserPermissionQueryHandler : IRequestHandler<CheckUserPermissi
 - ✅ `Handle_MultipleRoles_NoneGrantPermission_ReturnsFalse` - Todos fallan
 - ✅ `Handle_NoRolesAssigned_CachesNegativeResult` - Cache de resultados negativos
 
-##### **Integration Tests Creados (4)** ⚠️
-- ⚠️ Tests fallan por issue de configuración Polly en RoleServiceClient (no es culpa de CheckPermission)
-- Error: "Sampling duration needs to be at least double of attempt timeout"
-- Solución: Ajustar `SamplingDuration` en RoleServiceClient config (issue externo)
+##### **Integration Tests Creados (4/4 passing)** ✅
+- ✅ `CheckPermission_UserWithPermission_HasPermissionTrue`
+- ✅ `CheckPermission_UserWithoutPermission_HasPermissionFalse`
+- ✅ `CheckPermission_NoRolesAssigned_HasPermissionFalse`
+- ✅ `CheckPermission_CachedResult_SecondCallReturnsSameResult`
 
-#### **Resultados:**
+##### **Polly Configuration Fix** ✅
+- **Issue encontrado:** "Sampling duration needs to be >= 2x attempt timeout"
+- **Configuración incorrecta:** SamplingDuration=10s, AttemptTimeout=10s (ratio 1:1)
+- **Corrección aplicada:** SamplingDuration=20s, AttemptTimeout=10s (ratio 2:1)
+- **Archivo modificado:** `Program.cs` línea 182
+- **Resultado:** All integration tests passing ✅
+
+#### **Resultados Finales:**
 - ✅ Cache IMemoryCache con TTL 5 min implementado
 - ✅ Cache key pattern: `permission:{userId}:{resource}:{action}`
-- ✅ 13 unit tests pasando (100%)
+- ✅ **55 unit tests pasando (100%)**
+- ✅ **4 integration tests pasando (100%)**
+- ✅ **Total: 59/59 tests passing (100%)**
 - ✅ Wildcards soportados: `*` (resource), `All` (action)
 - ✅ Cache de resultados positivos y negativos
 - ✅ Código limpio sin TODOs
-- ⚠️ Integration tests fallan por Polly config (issue conocido)
+- ✅ Polly configuration corregida
 
 #### **Files Modified:**
 1. `CheckPermissionQuery.cs` - Added IMemoryCache + cache logic
 2. `CheckPermissionQueryHandlerTests.cs` - 13 unit tests
 3. `CheckPermissionIntegrationTests.cs` - 4 integration tests
 4. `UserService.Tests.csproj` - Added FluentAssertions 6.12.0
+5. `Program.cs` - Fixed Polly SamplingDuration (10s → 20s)
 
 #### **Commits:**
+- `4107ac9` - feat(UserService): Add caching to CheckPermissionQueryHandler + 13 unit tests
+- `1c8a25b` - docs(Sprint10): Update US-10.3 as completed + Sprint progress 40%
+- `a294830` - fix(UserService): Fix Polly SamplingDuration for RoleServiceClient
 - `4107ac9` - feat(UserService): Add caching to CheckPermissionQueryHandler + 13 unit tests
 
 #### **Performance:**
