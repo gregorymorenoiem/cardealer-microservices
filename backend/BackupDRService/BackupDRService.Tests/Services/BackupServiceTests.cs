@@ -211,4 +211,154 @@ public class BackupServiceTests
         stats.EnabledJobs.Should().BeGreaterOrEqualTo(2);
         stats.TotalStorageUsedBytes.Should().Be(1024L * 1024L * 100);
     }
+
+    [Fact]
+    public async Task ExecuteBackupAsync_WithJobId_ShouldExecuteBackup_WhenJobExists()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test Backup",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost;Database=test",
+            Type = BackupType.Full
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true, FileSizeBytes = 1024 });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, FileSizeBytes = 1024, Checksum = "abc123" });
+
+        // Act
+        var result = await _service.ExecuteBackupAsync(job.Id);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Status.Should().Be(BackupExecutionStatus.Completed);
+    }
+
+    [Fact]
+    public async Task ExecuteBackupAsync_WithJob_ShouldMarkRunning()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost;Database=test"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "xyz" });
+
+        // Act
+        await _service.ExecuteBackupAsync(job);
+        var updatedJob = await _service.GetJobAsync(job.Id);
+
+        // Assert
+        updatedJob!.Status.Should().Be(BackupJobStatus.Idle); // Returns to Idle after completion
+    }
+
+    [Fact]
+    public async Task ExecuteBackupAsync_WhenDatabaseBackupFails_ShouldReturnFailure()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost;Database=test"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult
+            {
+                Success = false,
+                ErrorMessage = "Database connection failed"
+            });
+
+        // Act
+        var result = await _service.ExecuteBackupAsync(job);
+
+        // Assert
+        result.Status.Should().Be(BackupExecutionStatus.Failed);
+        result.ErrorMessage.Should().Contain("Database connection failed");
+    }
+
+    [Fact]
+    public async Task ExecuteBackupAsync_WhenStorageUploadFails_ShouldReturnFailure()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost;Database=test"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult
+            {
+                Success = false,
+                ErrorMessage = "Storage quota exceeded"
+            });
+
+        // Act
+        var result = await _service.ExecuteBackupAsync(job);
+
+        // Assert
+        result.Status.Should().Be(BackupExecutionStatus.Failed);
+        result.ErrorMessage.Should().Contain("Storage quota exceeded");
+    }
+
+    [Fact]
+    public async Task GetJobByNameAsync_ShouldReturnJob_WhenExists()
+    {
+        // Arrange
+        await _service.CreateJobAsync(new BackupJob { Name = "UniqueJobName" });
+
+        // Act
+        var result = await _service.GetJobByNameAsync("UniqueJobName");
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Name.Should().Be("UniqueJobName");
+    }
+
+    [Fact]
+    public async Task GetJobByNameAsync_ShouldReturnNull_WhenNotExists()
+    {
+        // Act
+        var result = await _service.GetJobByNameAsync("NonExistent");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task EnableJobAsync_ShouldReturnFalse_WhenJobNotFound()
+    {
+        // Act
+        var result = await _service.EnableJobAsync("non-existent");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DisableJobAsync_ShouldReturnFalse_WhenJobNotFound()
+    {
+        // Act
+        var result = await _service.DisableJobAsync("non-existent");
+
+        // Assert
+        result.Should().BeFalse();
+    }
 }

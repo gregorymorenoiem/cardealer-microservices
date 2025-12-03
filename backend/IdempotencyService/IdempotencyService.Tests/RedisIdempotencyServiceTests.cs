@@ -451,7 +451,7 @@ public class RedisIdempotencyServiceTests
         _cacheMock.Verify(x => x.SetAsync(
             It.IsAny<string>(),
             It.IsAny<byte[]>(),
-            It.Is<DistributedCacheEntryOptions>(opt => 
+            It.Is<DistributedCacheEntryOptions>(opt =>
                 opt.AbsoluteExpirationRelativeToNow.HasValue &&
                 opt.AbsoluteExpirationRelativeToNow.Value.TotalMinutes > 5),
             It.IsAny<CancellationToken>()),
