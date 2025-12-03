@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Linq;
 using System.Threading;
@@ -19,35 +20,50 @@ namespace UserService.Application.UseCases.UserRoles.CheckPermission
     {
         private readonly IUserRoleRepository _userRoleRepository;
         private readonly IRoleServiceClient _roleServiceClient;
+        private readonly IMemoryCache _cache;
+        private const int CacheTtlMinutes = 5;
 
         public CheckUserPermissionQueryHandler(
             IUserRoleRepository userRoleRepository,
-            IRoleServiceClient roleServiceClient)
+            IRoleServiceClient roleServiceClient,
+            IMemoryCache cache)
         {
             _userRoleRepository = userRoleRepository;
             _roleServiceClient = roleServiceClient;
+            _cache = cache;
         }
 
         public async Task<CheckPermissionResponse> Handle(CheckUserPermissionQuery request, CancellationToken cancellationToken)
         {
-            // 1. Obtener roles del usuario
+            // 1. Verificar caché
+            var cacheKey = $"permission:{request.UserId}:{request.Resource}:{request.Action}";
+            if (_cache.TryGetValue(cacheKey, out CheckPermissionResponse? cachedResponse))
+            {
+                return cachedResponse!;
+            }
+
+            // 2. Obtener roles del usuario
             var userRoles = await _userRoleRepository.GetByUserIdAsync(request.UserId);
 
             if (!userRoles.Any())
             {
-                return new CheckPermissionResponse
+                var noRolesResponse = new CheckPermissionResponse
                 {
                     HasPermission = false,
                     GrantedByRoles = new(),
                     Message = "User has no roles assigned"
                 };
+
+                // Cache negative result
+                _cache.Set(cacheKey, noRolesResponse, TimeSpan.FromMinutes(CacheTtlMinutes));
+                return noRolesResponse;
             }
 
-            // 2. Obtener información de roles desde RoleService
+            // 3. Obtener información de roles desde RoleService
             var roleIds = userRoles.Select(ur => ur.RoleId).ToList();
             var roles = await _roleServiceClient.GetRolesByIdsAsync(roleIds);
 
-            // 3. Verificar permisos
+            // 4. Verificar permisos
             var grantedByRoles = new System.Collections.Generic.List<string>();
 
             foreach (var role in roles)
@@ -67,7 +83,7 @@ namespace UserService.Application.UseCases.UserRoles.CheckPermission
                 }
             }
 
-            return new CheckPermissionResponse
+            var response = new CheckPermissionResponse
             {
                 HasPermission = grantedByRoles.Any(),
                 GrantedByRoles = grantedByRoles,
@@ -75,6 +91,11 @@ namespace UserService.Application.UseCases.UserRoles.CheckPermission
                     ? $"Permission granted by roles: {string.Join(", ", grantedByRoles)}"
                     : "Permission denied"
             };
+
+            // Cache result
+            _cache.Set(cacheKey, response, TimeSpan.FromMinutes(CacheTtlMinutes));
+
+            return response;
         }
     }
 }

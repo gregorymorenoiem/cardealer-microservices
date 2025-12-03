@@ -531,17 +531,76 @@ Completar tests unitarios y E2E de backup/restore para BackupDRService, alcanzan
 
 ---
 
-### **US-10.7: RoleServiceClient - Implementar**
+### ✅ **US-10.7: RoleServiceClient - Implementar**
 **Prioridad:** 🟡 ALTA  
-**Estimación:** 2.5 horas  
-**Asignado a:** [Developer]
+**Estimación:** 2.5 horas → **Real: 2.3h**  
+**Asignado a:** [Developer]  
+**Estado:** ✅ **COMPLETADO** (3-dic-2025)
 
 #### **Descripción:**
 Completar implementación de `RoleServiceClient`, eliminando `NotImplementedException` y agregando retry policy con Polly.
 
+#### **✅ Implementación Completada:**
+
+**Archivos Modificados:**
+- `UserService.Infrastructure/External/RoleServiceClient.cs`: Cache-first, parallel fetching, DTO mapping
+- `UserService.Api/Program.cs`: Polly 8.0 resilience configuration
+- `UserService.Infrastructure.csproj`: Microsoft.Extensions.Http.Polly 8.0.11
+- `UserService.Api.csproj`: Microsoft.Extensions.Http.Resilience 8.0.0
+
+**Archivos Creados:**
+- `UserService.Tests/Infrastructure/RoleServiceClientTests.cs`: 7 integration tests (7/7 passing)
+
+**Archivos Eliminados:**
+- `RoleService/UserService.RoleServiceClient.Example.cs`: NotImplementedException resuelto
+
+**Implementación:**
+
+1. **Cache-First Strategy con IMemoryCache (5-min TTL):**
+   - Cache key: `"role:{roleId}"`
+   - GetRoleByIdAsync: Check cache → HTTP GET → Parse ApiResponse → Map DTO → Cache → Return
+   - GetRolesByIdsAsync: Filter cached → Parallel fetch missing → Combine results
+
+2. **DTO Mapping Layer:**
+   - Internal DTOs: RoleServiceApiResponse, RoleServiceRoleDetailsDto, RoleServicePermissionDto
+   - Mapping method: MapToUserServiceDto() converts RoleService DTOs → UserService DTOs
+   - Permissions included: Full role+permissions fetching for CheckPermissionQuery
+
+3. **Polly 8.0 Resilience:**
+   ```csharp
+   .AddStandardResilienceHandler(options => {
+       options.Retry.MaxRetryAttempts = 3;
+       options.Retry.BackoffType = DelayBackoffType.Exponential;
+       options.Retry.UseJitter = true;
+       options.CircuitBreaker.FailureRatio = 0.5;
+       options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+       options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+       options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+   });
+   ```
+
+4. **Tests Created (7/7 passing):**
+   - RoleExistsAsync_RoleExists_ReturnsTrue
+   - RoleExistsAsync_RoleNotFound_ReturnsFalse
+   - GetRoleByIdAsync_WithValidRole_ReturnsRoleWithPermissions
+   - GetRoleByIdAsync_CachedRole_DoesNotCallService
+   - GetRolesByIdsAsync_MultipleRoles_ReturnsAllRoles
+   - GetRolesByIdsAsync_EmptyList_ReturnsEmptyList
+   - GetRolesByIdsAsync_WithCachedAndNonCached_FetchesOnlyMissing
+
+**Commit:** `feat(UserService): Implement RoleServiceClient with caching and resilience` (1e72f94)
+
+**Beneficios:**
+- ✅ Eliminado NotImplementedException
+- ✅ Cache reduces RoleService load (5-min TTL)
+- ✅ Parallel fetching improves latency for bulk requests
+- ✅ Retry + circuit breaker ensures resilience
+- ✅ Full permissions fetching enables CheckPermissionQuery
+- ✅ 7 comprehensive integration tests verify correctness
+
 #### **Tareas:**
 
-##### **Tarea 7.1: Implementar CheckPermissionAsync** ⏱️ 45 min
+##### ~~**Tarea 7.1: Implementar CheckPermissionAsync**~~ ✅ COMPLETADO
 ```csharp
 public class RoleServiceClient : IRoleServiceClient
 {
