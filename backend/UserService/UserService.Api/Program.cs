@@ -179,7 +179,7 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IRoleServiceCl
 
     // Circuit breaker: open after 5 failures, stay open for 30s
     options.CircuitBreaker.FailureRatio = 0.5;
-    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(20); // Must be >= 2x AttemptTimeout
     options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
     options.CircuitBreaker.MinimumThroughput = 5;
 
