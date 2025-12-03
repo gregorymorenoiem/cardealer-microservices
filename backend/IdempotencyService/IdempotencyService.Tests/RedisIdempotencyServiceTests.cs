@@ -266,4 +266,253 @@ public class RedisIdempotencyServiceTests
         result.Should().NotBeNull();
         result.DuplicateRequestsBlocked.Should().Be(5);
     }
+
+    [Fact]
+    public async Task GetStatsAsync_WhenNoData_ReturnsZero()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[]?)null);
+
+        // Act
+        var result = await _service.GetStatsAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.DuplicateRequestsBlocked.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CheckAsync_WhenCacheThrowsException_ReturnsNotFound()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Redis connection failed"));
+
+        // Act
+        var result = await _service.CheckAsync("test-key");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Exists.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task StartProcessingAsync_WhenCacheThrowsException_ReturnsFalse()
+    {
+        // Arrange
+        var record = new IdempotencyRecord { Key = "test-key" };
+        _cacheMock.Setup(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.IsAny<byte[]>(),
+            It.IsAny<DistributedCacheEntryOptions>(),
+            It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Redis connection failed"));
+
+        // Act
+        var result = await _service.StartProcessingAsync(record);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CompleteAsync_WhenRecordNotFound_ReturnsFalse()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[]?)null);
+
+        // Act
+        var result = await _service.CompleteAsync("nonexistent", 200, "{}");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CompleteAsync_WhenInvalidJson_ReturnsFalse()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Encoding.UTF8.GetBytes("invalid json"));
+
+        // Act
+        var result = await _service.CompleteAsync("test-key", 200, "{}");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FailAsync_WhenRecordNotFound_ReturnsFalse()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[]?)null);
+
+        // Act
+        var result = await _service.FailAsync("nonexistent", "error");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FailAsync_StoresErrorInMetadata()
+    {
+        // Arrange
+        var record = new IdempotencyRecord
+        {
+            Key = "test-key",
+            Status = IdempotencyStatus.Processing
+        };
+        var json = JsonSerializer.Serialize(record, _jsonOptions);
+        var bytes = Encoding.UTF8.GetBytes(json);
+
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(bytes);
+
+        // Act
+        var result = await _service.FailAsync("test-key", "Validation failed");
+
+        // Assert
+        result.Should().BeTrue();
+        _cacheMock.Verify(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.Is<byte[]>(b => Encoding.UTF8.GetString(b).Contains("Validation failed")),
+            It.IsAny<DistributedCacheEntryOptions>(),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenCacheThrowsException_ReturnsFalse()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Redis error"));
+
+        // Act
+        var result = await _service.DeleteAsync("test-key");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CheckAsync_WithValidRequestHash_ReturnsCompleted()
+    {
+        // Arrange
+        var record = new IdempotencyRecord
+        {
+            Key = "test-key",
+            Status = IdempotencyStatus.Completed,
+            RequestHash = "matching-hash",
+            ResponseStatusCode = 200
+        };
+        var json = JsonSerializer.Serialize(record, _jsonOptions);
+        var bytes = Encoding.UTF8.GetBytes(json);
+
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(bytes);
+
+        // Act
+        var result = await _service.CheckAsync("test-key", "matching-hash");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Exists.Should().BeTrue();
+        result.IsCompleted.Should().BeTrue();
+        result.RequestHashMatches.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CompleteAsync_PreservesRemainingTtl()
+    {
+        // Arrange
+        var record = new IdempotencyRecord
+        {
+            Key = "test-key",
+            Status = IdempotencyStatus.Processing,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(10)
+        };
+        var json = JsonSerializer.Serialize(record, _jsonOptions);
+        var bytes = Encoding.UTF8.GetBytes(json);
+
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(bytes);
+
+        // Act
+        var result = await _service.CompleteAsync("test-key", 200, "{\"success\":true}");
+
+        // Assert
+        result.Should().BeTrue();
+        _cacheMock.Verify(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.IsAny<byte[]>(),
+            It.Is<DistributedCacheEntryOptions>(opt => 
+                opt.AbsoluteExpirationRelativeToNow.HasValue &&
+                opt.AbsoluteExpirationRelativeToNow.Value.TotalMinutes > 5),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task StartProcessingAsync_SetsCorrectStatus()
+    {
+        // Arrange
+        var record = new IdempotencyRecord
+        {
+            Key = "test-key",
+            HttpMethod = "POST",
+            Path = "/api/test"
+        };
+
+        // Act
+        var result = await _service.StartProcessingAsync(record);
+
+        // Assert
+        result.Should().BeTrue();
+        record.Status.Should().Be(IdempotencyStatus.Processing);
+        record.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
+    public async Task CleanupExpiredAsync_ReturnsZero()
+    {
+        // Act
+        var result = await _service.CleanupExpiredAsync();
+
+        // Assert
+        result.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CheckAsync_WhenEmptyData_ReturnsNotFound()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Encoding.UTF8.GetBytes(""));
+
+        // Act
+        var result = await _service.CheckAsync("test-key");
+
+        // Assert
+        result.Exists.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetAsync_WhenInvalidJson_ReturnsNull()
+    {
+        // Arrange
+        _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Encoding.UTF8.GetBytes("not-json"));
+
+        // Act
+        var result = await _service.GetAsync("test-key");
+
+        // Assert
+        result.Should().BeNull();
+    }
 }
