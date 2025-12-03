@@ -10,11 +10,13 @@ using Serilog.Enrichers.Span;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
-using Gateway.Metrics;
 using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using Gateway.Api.Middleware;
+using Gateway.Domain.Interfaces;
+using Gateway.Infrastructure.Services;
+using Gateway.Application.UseCases;
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -39,8 +41,18 @@ builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: t
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Metrics
-builder.Services.AddSingleton<GatewayMetrics>();
+// Clean Architecture - Domain Services
+builder.Services.AddScoped<IRoutingService, RoutingService>();
+builder.Services.AddScoped<IMetricsService, MetricsService>();
+builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
+
+// Clean Architecture - Application Use Cases
+builder.Services.AddScoped<CheckRouteExistsUseCase>();
+builder.Services.AddScoped<ResolveDownstreamPathUseCase>();
+builder.Services.AddScoped<CheckServiceHealthUseCase>();
+builder.Services.AddScoped<GetServicesHealthUseCase>();
+builder.Services.AddScoped<RecordRequestMetricsUseCase>();
+builder.Services.AddScoped<RecordDownstreamCallMetricsUseCase>();
 
 // OpenTelemetry
 var serviceName = "Gateway";
