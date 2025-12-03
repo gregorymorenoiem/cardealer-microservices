@@ -2,7 +2,24 @@
 
 ## 📋 Descripción
 
-El **LoggingService** es un servicio centralizado de agregación y consulta de logs para la arquitectura de microservicios. Utiliza **Seq** como plataforma de almacenamiento y análisis de logs estructurados, y **Serilog** como biblioteca de logging.
+El **LoggingService** es un servicio centralizado de agregación, consulta, **análisis y alerting** de logs para la arquitectura de microservicios. Utiliza **Seq** como plataforma de almacenamiento y análisis de logs estructurados, y **Serilog** como biblioteca de logging.
+
+## ✨ Nuevas Características
+
+### Sistema de Análisis Avanzado
+- ✅ **Detección de patrones** automática (errores recurrentes, spikes, fallos de dependencias)
+- ✅ **Detección de anomalías** en tiempo real
+- ✅ **Métricas de salud** por servicio
+- ✅ **Recomendaciones automáticas** basadas en análisis
+- ✅ **Análisis de tendencias** y estadísticas avanzadas
+
+### Sistema de Alerting Completo
+- ✅ **Reglas de alertas** configurables con múltiples condiciones
+- ✅ **Evaluación automática** periódica de reglas
+- ✅ **Múltiples acciones** (Email, Webhook, Slack, Teams, PagerDuty, SMS)
+- ✅ **Gestión de alertas** (acknowledge, resolve, historial)
+- ✅ **Estadísticas de alertas** (MTTR, MTTA, alertas por regla)
+- ✅ **Cooldown period** para evitar spam de alertas
 
 ## 🏗️ Arquitectura
 
@@ -14,21 +31,34 @@ LoggingService/
 │   ├── LogEntry.cs                 # Entrada de log
 │   ├── LogFilter.cs                # Filtro de consulta
 │   ├── LogLevel.cs                 # Nivel de log
-│   └── LogStatistics.cs            # Estadísticas de logs
+│   ├── LogStatistics.cs            # Estadísticas de logs
+│   ├── LogPattern.cs               # ✨ Patrón detectado
+│   ├── LogAnomaly.cs               # ✨ Anomalía detectada
+│   ├── LogAnalysis.cs              # ✨ Resultado de análisis
+│   ├── AlertRule.cs                # ✨ Regla de alerta
+│   └── Alert.cs                    # ✨ Alerta disparada
 ├── LoggingService.Application/     # Lógica de aplicación (CQRS)
 │   ├── Interfaces/
-│   │   └── ILogAggregator.cs      # Interfaz de agregación
+│   │   ├── ILogAggregator.cs      # Interfaz de agregación
+│   │   ├── ILogAnalyzer.cs        # ✨ Interfaz de análisis
+│   │   └── IAlertingService.cs    # ✨ Interfaz de alerting
 │   ├── Queries/
 │   │   └── LogQueries.cs          # Queries de MediatR
 │   └── Handlers/
 │       └── LogQueryHandlers.cs    # Handlers de MediatR
 ├── LoggingService.Infrastructure/  # Implementación de infraestructura
 │   ├── Services/
-│   │   └── SeqLogAggregator.cs   # Cliente de Seq
+│   │   ├── SeqLogAggregator.cs   # Cliente de Seq
+│   │   ├── LogAnalyzer.cs        # ✨ Servicio de análisis
+│   │   └── InMemoryAlertingService.cs # ✨ Servicio de alerting
 │   └── DependencyInjection.cs
 ├── LoggingService.Api/             # API REST
-│   └── Controllers/
-│       └── LogsController.cs      # Controlador de logs
+│   ├── Controllers/
+│   │   ├── LogsController.cs      # Controlador de logs
+│   │   ├── AnalysisController.cs  # ✨ Controlador de análisis
+│   │   └── AlertsController.cs    # ✨ Controlador de alertas
+│   └── Services/
+│       └── AlertEvaluationBackgroundService.cs # ✨ Evaluación automática
 └── LoggingService.Tests/           # Tests unitarios
 ```
 
@@ -51,6 +81,73 @@ LoggingService/
 - ✅ **Búsqueda por texto** en mensajes de log
 - ✅ **Filtrado por nivel** de severidad
 - ✅ **Paginación** de resultados
+
+### ✨ Análisis Avanzado
+
+- ✅ **Detección automática de patrones**
+  - Errores recurrentes
+  - Spikes de errores
+  - Fallos de dependencias
+  - Problemas de configuración
+  
+- ✅ **Detección de anomalías**
+  - Tasa de error anormal
+  - Patrones de error inusuales
+  - Servicios no disponibles
+  - Anomalías de recursos
+
+- ✅ **Métricas de salud por servicio**
+  - Estado de salud (Healthy, Degraded, Unhealthy, Critical)
+  - Tasa de errores
+  - Conteo de requests
+  - Porcentaje de disponibilidad
+  - Problemas actuales
+
+- ✅ **Recomendaciones automáticas**
+  - Basadas en patrones detectados
+  - Prioridad (Low, Medium, High, Critical)
+  - Acciones sugeridas
+  - Enlaces a documentación
+
+### ✨ Sistema de Alerting
+
+- ✅ **Reglas de alerta configurables**
+  - Múltiples tipos de condiciones
+  - Umbrales personalizables
+  - Ventanas de evaluación
+  - Períodos de cooldown
+
+- ✅ **Tipos de condiciones**
+  - Error count (conteo de errores)
+  - Error rate (porcentaje de errores)
+  - Specific error (error específico)
+  - Service down (servicio caído)
+  - Performance degradation
+  - Anomaly detected
+  - Pattern match
+
+- ✅ **Acciones múltiples**
+  - Email notifications
+  - Webhooks
+  - Slack messages
+  - Microsoft Teams
+  - PagerDuty incidents
+  - SMS
+  - Ticket creation
+  - Auto-scaling triggers
+
+- ✅ **Gestión de alertas**
+  - Acknowledge (reconocer)
+  - Resolve (resolver)
+  - Historial completo
+  - Estados (Open, Acknowledged, Resolved)
+
+- ✅ **Estadísticas de alerting**
+  - MTTA (Mean Time To Acknowledge)
+  - MTTR (Mean Time To Resolve)
+  - Alertas por regla
+  - Alertas por severidad
+  - Reglas más disparadas
 
 ### Log Levels
 
@@ -76,7 +173,9 @@ El servicio soporta tres tipos de IDs de correlación para rastreo distribuido:
 
 ## 📡 API Endpoints
 
-### GET /api/logs
+### Log Management
+
+#### GET /api/logs
 
 Obtener logs con filtros opcionales.
 
@@ -93,71 +192,496 @@ Obtener logs con filtros opcionales.
 - `pageNumber` (int): Número de página (default: 1)
 - `pageSize` (int): Tamaño de página (default: 100, max: 1000)
 
+#### GET /api/logs/{id}
+
+Obtener un log específico por ID.
+
+#### GET /api/logs/statistics
+
+Obtener estadísticas de logs.
+
+---
+
+### ✨ Analysis Endpoints
+
+#### POST /api/analysis/analyze
+
+Analizar logs dentro de un rango de tiempo.
+
+**Query Parameters:**
+- `startTime` (DateTime?): Fecha de inicio (default: last 24h)
+- `endTime` (DateTime?): Fecha de fin (default: now)
+
+**Response:**
+```json
+{
+  "id": "analysis-123",
+  "startTime": "2024-01-01T00:00:00Z",
+  "endTime": "2024-01-02T00:00:00Z",
+  "statistics": { /* LogStatistics */ },
+  "detectedPatterns": [ /* LogPattern[] */ ],
+  "detectedAnomalies": [ /* LogAnomaly[] */ ],
+  "serviceHealth": {
+    "AuthService": {
+      "serviceName": "AuthService",
+      "status": "Healthy",
+      "errorRate": 2.5,
+      "requestCount": 1000,
+      "errorCount": 25
+    }
+  },
+  "recommendations": [ /* Recommendation[] */ ],
+  "summary": {
+    "totalLogsAnalyzed": 50000,
+    "criticalIssuesFound": 2,
+    "warningsFound": 100,
+    "patternsDetected": 5,
+    "anomaliesDetected": 3,
+    "overallSystemHealth": 85.5
+  }
+}
+```
+
+#### GET /api/analysis/patterns
+
+Obtener patrones detectados.
+
 **Response:**
 ```json
 [
   {
-    "id": "abc123",
-    "timestamp": "2024-11-28T10:30:00Z",
-    "level": "Error",
-    "message": "Database connection failed",
-    "serviceName": "AuthService",
-    "requestId": "req-123",
-    "traceId": "trace-456",
-    "spanId": "span-789",
-    "userId": "user-001",
-    "exception": "System.Data.SqlClient.SqlException: Connection timeout",
-    "properties": {
-      "MachineName": "server-01",
-      "Environment": "Production"
-    }
+    "id": "pattern-123",
+    "name": "Recurring Error: Database timeout",
+    "pattern": "Database connection timeout",
+    "type": "RecurringError",
+    "occurrenceCount": 50,
+    "firstSeen": "2024-01-01T10:00:00Z",
+    "lastSeen": "2024-01-01T18:00:00Z",
+    "affectedServices": ["AuthService", "MediaService"]
   }
 ]
 ```
 
-### GET /api/logs/{id}
+#### GET /api/analysis/anomalies
 
-Obtener un log específico por ID.
+Obtener anomalías detectadas.
 
 **Response:**
 ```json
+[
+  {
+    "id": "anomaly-123",
+    "title": "High Error Rate Detected",
+    "description": "Error rate is 15.5%, which exceeds threshold",
+    "type": "ErrorRateSpike",
+    "severity": "High",
+    "confidence": 95,
+    "serviceName": "AuthService",
+    "detectedAt": "2024-01-01T12:00:00Z",
+    "isResolved": false
+  }
+]
+```
+
+#### GET /api/analysis/service-health
+
+Obtener métricas de salud de servicios.
+
+#### GET /api/analysis/recommendations
+
+Obtener recomendaciones basadas en análisis.
+
+#### GET /api/analysis/summary
+
+Obtener resumen de análisis.
+
+---
+
+### ✨ Alerting Endpoints
+
+#### Alert Rules Management
+
+##### POST /api/alerts/rules
+
+Crear una nueva regla de alerta.
+
+**Request Body:**
+```json
 {
-  "id": "abc123",
-  "timestamp": "2024-11-28T10:30:00Z",
-  "level": "Error",
-  "message": "Database connection failed",
-  "serviceName": "AuthService",
-  ...
+  "name": "High Error Rate Alert",
+  "description": "Alert when error rate exceeds 10%",
+  "isEnabled": true,
+  "condition": {
+    "type": "ErrorRate",
+    "serviceName": "AuthService",
+    "minLevel": "Error",
+    "errorRateThreshold": 10.0
+  },
+  "actions": [
+    {
+      "type": "Email",
+      "priority": 5,
+      "configuration": {
+        "Recipients": "ops@company.com",
+        "Subject": "High Error Rate Detected"
+      }
+    },
+    {
+      "type": "Slack",
+      "priority": 4,
+      "configuration": {
+        "Channel": "#alerts",
+        "WebhookUrl": "https://hooks.slack.com/..."
+      }
+    }
+  ],
+  "evaluationWindow": "00:05:00",
+  "cooldownPeriod": "00:15:00"
 }
 ```
 
-### GET /api/logs/statistics
+##### GET /api/alerts/rules
 
-Obtener estadísticas de logs.
+Obtener todas las reglas de alerta.
+
+##### GET /api/alerts/rules/{id}
+
+Obtener una regla específica.
+
+##### PUT /api/alerts/rules/{id}
+
+Actualizar una regla.
+
+##### DELETE /api/alerts/rules/{id}
+
+Eliminar una regla.
+
+##### POST /api/alerts/rules/{id}/enable
+
+Habilitar una regla.
+
+##### POST /api/alerts/rules/{id}/disable
+
+Deshabilitar una regla.
+
+##### POST /api/alerts/rules/{id}/evaluate
+
+Evaluar una regla manualmente.
+
+##### POST /api/alerts/evaluate-all
+
+Evaluar todas las reglas (útil para testing).
+
+#### Alert Management
+
+##### GET /api/alerts
+
+Obtener alertas con filtros opcionales.
 
 **Query Parameters:**
-- `startDate` (DateTime?): Fecha de inicio
-- `endDate` (DateTime?): Fecha de fin
+- `status` (AlertStatus?): Open, Acknowledged, Resolved
+- `since` (DateTime?): Alertas desde esta fecha
+
+##### GET /api/alerts/{id}
+
+Obtener una alerta específica.
+
+##### POST /api/alerts/{id}/acknowledge
+
+Reconocer una alerta.
+
+**Request Body:**
+```json
+{
+  "userId": "user-123"
+}
+```
+
+##### POST /api/alerts/{id}/resolve
+
+Resolver una alerta.
+
+**Request Body:**
+```json
+{
+  "userId": "user-123",
+  "notes": "Fixed by restarting the service"
+}
+```
+
+##### GET /api/alerts/statistics
+
+Obtener estadísticas de alertas.
 
 **Response:**
 ```json
 {
-  "totalLogs": 15000,
-  "traceCount": 500,
-  "debugCount": 2000,
-  "informationCount": 10000,
-  "warningCount": 2000,
-  "errorCount": 450,
-  "criticalCount": 50,
-  "logsByService": {
-    "AuthService": 5000,
-    "MediaService": 3000,
-    "ErrorService": 7000
+  "totalAlerts": 150,
+  "openAlerts": 10,
+  "acknowledgedAlerts": 20,
+  "resolvedAlerts": 120,
+  "alertsByRule": {
+    "High Error Rate Alert": 50,
+    "Service Down Alert": 30
   },
-  "oldestLog": "2024-11-28T00:00:00Z",
-  "newestLog": "2024-11-28T23:59:59Z"
+  "alertsBySeverity": {
+    "Critical": 10,
+    "Error": 40,
+    "Warning": 80,
+    "Info": 20
+  },
+  "averageTimeToAcknowledge": 5.2,
+  "averageTimeToResolve": 25.8,
+  "mostTriggeredRules": [
+    "High Error Rate Alert",
+    "Service Down Alert"
+  ]
 }
 ```
+
+---
+
+## 💡 Ejemplos de Uso
+
+### Análisis de Logs
+
+```csharp
+// Análisis completo del último día
+var analysis = await _logAnalyzer.AnalyzeLogsAsync(
+    DateTime.UtcNow.AddDays(-1),
+    DateTime.UtcNow
+);
+
+Console.WriteLine($"Logs analizados: {analysis.Summary.TotalLogsAnalyzed}");
+Console.WriteLine($"Salud del sistema: {analysis.Summary.OverallSystemHealth}%");
+Console.WriteLine($"Patrones detectados: {analysis.DetectedPatterns.Count}");
+Console.WriteLine($"Anomalías detectadas: {analysis.DetectedAnomalies.Count}");
+
+// Revisar servicios no saludables
+foreach (var (serviceName, health) in analysis.ServiceHealth)
+{
+    if (health.Status != HealthStatus.Healthy)
+    {
+        Console.WriteLine($"⚠️ {serviceName}: {health.Status}");
+        Console.WriteLine($"   Error Rate: {health.ErrorRate}%");
+        Console.WriteLine($"   Issues: {string.Join(", ", health.CurrentIssues)}");
+    }
+}
+
+// Revisar patrones críticos
+var criticalPatterns = analysis.DetectedPatterns
+    .Where(p => p.Type == PatternType.ErrorSpike || p.Type == PatternType.RecurringError)
+    .ToList();
+
+foreach (var pattern in criticalPatterns)
+{
+    Console.WriteLine($"🔍 {pattern.Name}");
+    Console.WriteLine($"   Ocurrencias: {pattern.OccurrenceCount}");
+    Console.WriteLine($"   Frecuencia: {pattern.GetFrequencyPerHour()}/hora");
+}
+
+// Aplicar recomendaciones
+foreach (var rec in analysis.Recommendations.Where(r => r.Priority >= RecommendationPriority.High))
+{
+    Console.WriteLine($"💡 {rec.Title} [{rec.Priority}]");
+    Console.WriteLine($"   {rec.Description}");
+    foreach (var action in rec.ActionItems)
+    {
+        Console.WriteLine($"   - {action}");
+    }
+}
+```
+
+### Gestión de Reglas de Alerta
+
+```csharp
+// 1. Regla para alta tasa de errores
+var highErrorRateRule = new AlertRule
+{
+    Name = "High Error Rate - AuthService",
+    Description = "Alert when AuthService error rate exceeds 10%",
+    IsEnabled = true,
+    Condition = new RuleCondition
+    {
+        Type = ConditionType.ErrorRate,
+        ServiceName = "AuthService",
+        MinLevel = LogLevel.Error,
+        ErrorRateThreshold = 10.0
+    },
+    Actions = new List<AlertAction>
+    {
+        new()
+        {
+            Type = ActionType.Email,
+            Priority = 5,
+            Configuration = new Dictionary<string, string>
+            {
+                ["Recipients"] = "ops-team@company.com",
+                ["Subject"] = "🚨 High Error Rate in AuthService"
+            }
+        },
+        new()
+        {
+            Type = ActionType.Slack,
+            Priority = 4,
+            Configuration = new Dictionary<string, string>
+            {
+                ["Channel"] = "#alerts-critical",
+                ["WebhookUrl"] = "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+            }
+        }
+    },
+    EvaluationWindow = TimeSpan.FromMinutes(5),
+    CooldownPeriod = TimeSpan.FromMinutes(15)
+};
+
+await _alertingService.CreateRuleAsync(highErrorRateRule);
+
+// 2. Regla para servicio caído
+var serviceDownRule = new AlertRule
+{
+    Name = "Service Down - MediaService",
+    Description = "Alert when MediaService stops responding",
+    IsEnabled = true,
+    Condition = new RuleCondition
+    {
+        Type = ConditionType.ServiceDown,
+        ServiceName = "MediaService"
+    },
+    Actions = new List<AlertAction>
+    {
+        new()
+        {
+            Type = ActionType.PagerDuty,
+            Priority = 5,
+            Configuration = new Dictionary<string, string>
+            {
+                ["ServiceKey"] = "your-pagerduty-service-key",
+                ["IncidentKey"] = "mediaservice-down"
+            }
+        }
+    },
+    EvaluationWindow = TimeSpan.FromMinutes(2),
+    CooldownPeriod = TimeSpan.FromMinutes(10)
+};
+
+await _alertingService.CreateRuleAsync(serviceDownRule);
+
+// 3. Regla para error específico
+var specificErrorRule = new AlertRule
+{
+    Name = "Database Connection Timeout",
+    Description = "Alert on database connection timeouts",
+    IsEnabled = true,
+    Condition = new RuleCondition
+    {
+        Type = ConditionType.SpecificError,
+        MessagePattern = "database.*connection.*timeout",
+        MinLevel = LogLevel.Error,
+        ErrorCountThreshold = 5
+    },
+    Actions = new List<AlertAction>
+    {
+        new()
+        {
+            Type = ActionType.Teams,
+            Priority = 3,
+            Configuration = new Dictionary<string, string>
+            {
+                ["WebhookUrl"] = "https://outlook.office.com/webhook/YOUR/WEBHOOK/URL",
+                ["Title"] = "Database Connection Issues"
+            }
+        }
+    },
+    EvaluationWindow = TimeSpan.FromMinutes(5),
+    CooldownPeriod = TimeSpan.FromMinutes(20)
+};
+
+await _alertingService.CreateRuleAsync(specificErrorRule);
+```
+
+### Gestión de Alertas
+
+```csharp
+// Obtener alertas abiertas
+var openAlerts = await _alertingService.GetAlertsAsync(AlertStatus.Open);
+
+foreach (var alert in openAlerts)
+{
+    Console.WriteLine($"Alert: {alert.Title} [{alert.Severity}]");
+    Console.WriteLine($"  Message: {alert.Message}");
+    Console.WriteLine($"  Triggered: {alert.TriggeredAt}");
+    Console.WriteLine($"  Age: {alert.GetAge().TotalMinutes:F1} minutes");
+}
+
+// Reconocer una alerta
+await _alertingService.AcknowledgeAlertAsync(alert.Id, "ops-user-123");
+
+// Resolver una alerta
+await _alertingService.ResolveAlertAsync(
+    alert.Id,
+    "ops-user-123",
+    "Issue resolved by restarting the service"
+);
+
+// Obtener estadísticas
+var stats = await _alertingService.GetAlertStatisticsAsync();
+Console.WriteLine($"Total Alerts: {stats.TotalAlerts}");
+Console.WriteLine($"Open: {stats.OpenAlerts}");
+Console.WriteLine($"MTTA: {stats.AverageTimeToAcknowledge:F1} minutes");
+Console.WriteLine($"MTTR: {stats.AverageTimeToResolve:F1} minutes");
+Console.WriteLine($"Most Triggered: {string.Join(", ", stats.MostTriggeredRules)}");
+```
+
+### Uso de la API REST
+
+```bash
+# Análisis completo
+curl -X POST "http://localhost:5000/api/analysis/analyze?startTime=2024-01-01T00:00:00Z&endTime=2024-01-02T00:00:00Z"
+
+# Obtener patrones detectados
+curl "http://localhost:5000/api/analysis/patterns?startTime=2024-01-01T00:00:00Z"
+
+# Obtener anomalías
+curl "http://localhost:5000/api/analysis/anomalies"
+
+# Obtener salud de servicios
+curl "http://localhost:5000/api/analysis/service-health"
+
+# Crear regla de alerta
+curl -X POST "http://localhost:5000/api/alerts/rules" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "High Error Rate",
+    "isEnabled": true,
+    "condition": {
+      "type": "ErrorRate",
+      "errorRateThreshold": 10.0
+    },
+    "actions": [{
+      "type": "Email",
+      "priority": 5,
+      "configuration": {
+        "Recipients": "ops@company.com"
+      }
+    }],
+    "evaluationWindow": "00:05:00",
+    "cooldownPeriod": "00:15:00"
+  }'
+
+# Obtener todas las alertas
+curl "http://localhost:5000/api/alerts"
+
+# Reconocer una alerta
+curl -X POST "http://localhost:5000/api/alerts/{alertId}/acknowledge" \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "user-123"}'
+
+# Obtener estadísticas
+curl "http://localhost:5000/api/alerts/statistics"
+```
+
+---
 
 ## 🔧 Configuración
 
@@ -176,9 +700,17 @@ Obtener estadísticas de logs.
         "System": "Warning"
       }
     }
+  },
+  "Alerting": {
+    "EvaluationIntervalMinutes": 5
   }
 }
 ```
+
+### Variables de Entorno
+
+- `SEQ_URL`: URL del servidor Seq (default: http://localhost:5341)
+- `ALERTING_EVALUATION_INTERVAL`: Intervalo de evaluación de reglas en minutos (default: 5)
 
 ### Docker Compose
 
@@ -200,6 +732,7 @@ loggingservice:
     dockerfile: Dockerfile
   environment:
     Seq__Url: "http://seq:80"
+    Alerting__EvaluationIntervalMinutes: "5"
   ports:
     - "5096:80"
   depends_on:

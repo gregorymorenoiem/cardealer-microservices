@@ -7,8 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.33" />
@@ -17,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RateLimitingService.Core\RateLimitingService.Core.csproj" />
+    <ProjectReference Include="..\RateLimitingService.Infrastructure\RateLimitingService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

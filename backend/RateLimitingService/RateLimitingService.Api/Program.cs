@@ -1,7 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using RateLimitingService.Api.Middleware;
 using RateLimitingService.Core.Interfaces;
 using RateLimitingService.Core.Models;
 using RateLimitingService.Core.Services;
+using RateLimitingService.Infrastructure.Data;
+using RateLimitingService.Infrastructure.Repositories;
 using Serilog;
 using StackExchange.Redis;
 
@@ -30,7 +33,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configure Rate Limiting Options
+// Configure Rate Limiting
 builder.Services.Configure<RateLimitOptions>(
     builder.Configuration.GetSection(RateLimitOptions.SectionName));
 
@@ -45,12 +48,32 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     return ConnectionMultiplexer.Connect(configuration);
 });
 
+// Configure PostgreSQL
+var postgresConnection = builder.Configuration.GetConnectionString("PostgreSQL") ??
+    "Host=localhost;Port=5432;Database=ratelimiting;Username=postgres;Password=postgres";
+builder.Services.AddDbContext<RateLimitDbContext>(options =>
+    options.UseNpgsql(postgresConnection));
+
+// Register storage
+builder.Services.AddSingleton<IRateLimitStorage, RedisRateLimitStorage>();
+
+// Register repositories
+builder.Services.AddScoped<IRateLimitViolationRepository, RateLimitViolationRepository>();
+
+// Register algorithms
+builder.Services.AddSingleton<TokenBucketRateLimiter>();
+builder.Services.AddSingleton<SlidingWindowRateLimiter>();
+builder.Services.AddSingleton<FixedWindowRateLimiter>();
+builder.Services.AddSingleton<LeakyBucketRateLimiter>();
+
 // Register services
-builder.Services.AddScoped<IRateLimitingService, RedisRateLimitingService>();
+builder.Services.AddSingleton<IRateLimitRuleService, RateLimitRuleService>();
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
-    .AddRedis(redisConnection, name: "redis", tags: new[] { "db", "redis" });
+    .AddRedis(redisConnection, name: "redis", tags: new[] { "db", "redis" })
+    .AddNpgSql(postgresConnection, name: "postgresql", tags: new[] { "db", "postgresql" });
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -79,8 +102,8 @@ app.UseSerilogRequestLogging();
 
 app.UseCors();
 
-// Note: Rate limiting middleware is available but not applied to this service's own endpoints
-// Use app.UseRateLimiting() in other services that want to use this service's policies
+// Apply rate limiting middleware
+app.UseRateLimiting();
 
 app.MapControllers();
 

@@ -49,6 +49,14 @@ builder.Services.AddScoped<IMessagePublisher, RabbitMQPublisher>();
 builder.Services.AddScoped<IMessageSubscriber, RabbitMQSubscriber>();
 builder.Services.AddScoped<IDeadLetterManager, DeadLetterManager>();
 
+// Register Saga Services
+builder.Services.AddScoped<MessageBusService.Application.Interfaces.ISagaRepository, MessageBusService.Infrastructure.Repositories.SagaRepository>();
+builder.Services.AddScoped<MessageBusService.Application.Interfaces.ISagaOrchestrator, MessageBusService.Infrastructure.Services.SagaOrchestrator>();
+
+// Register Saga Step Executors
+builder.Services.AddScoped<MessageBusService.Application.Interfaces.ISagaStepExecutor, MessageBusService.Infrastructure.Services.RabbitMQSagaStepExecutor>();
+builder.Services.AddScoped<MessageBusService.Application.Interfaces.ISagaStepExecutor, MessageBusService.Infrastructure.Services.HttpSagaStepExecutor>();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {

@@ -1,5 +1,6 @@
 using LoggingService.Application;
 using LoggingService.Infrastructure;
+using LoggingService.Api.Services;
 using Serilog;
 using Consul;
 using ServiceDiscovery.Application.Interfaces;
@@ -27,6 +28,9 @@ builder.Services.AddSwaggerGen();
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Add Background Services
+builder.Services.AddHostedService<AlertEvaluationBackgroundService>();
 
 // Service Discovery Configuration
 builder.Services.AddSingleton<IConsulClient>(sp =>

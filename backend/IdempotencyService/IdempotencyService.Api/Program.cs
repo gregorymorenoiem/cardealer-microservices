@@ -1,6 +1,5 @@
+using IdempotencyService.Api.Extensions;
 using IdempotencyService.Api.Middleware;
-using IdempotencyService.Core.Interfaces;
-using IdempotencyService.Core.Models;
 using IdempotencyService.Core.Services;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -17,8 +16,10 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Add services to the container
-builder.Services.AddControllers();
+// Add idempotency services with automatic filter
+builder.Services.AddIdempotency(builder.Configuration);
+
+// Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -26,28 +27,17 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Idempotency Service API",
         Version = "v1",
-        Description = "Service for managing request idempotency with Redis-based storage",
+        Description = "Service for managing request idempotency with automatic middleware and attribute-based control",
         Contact = new OpenApiContact
         {
             Name = "CarDealer Team",
             Email = "dev@cardealer.com"
         }
     });
+
+    // Add idempotency header to Swagger
+    c.OperationFilter<IdempotencyHeaderOperationFilter>();
 });
-
-// Configure idempotency options
-builder.Services.Configure<IdempotencyOptions>(
-    builder.Configuration.GetSection(IdempotencyOptions.SectionName));
-
-// Add Redis distributed cache
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
-    options.InstanceName = "idempotency:";
-});
-
-// Register idempotency service
-builder.Services.AddScoped<IIdempotencyService, RedisIdempotencyService>();
 
 // Health checks
 builder.Services.AddHealthChecks()
@@ -80,22 +70,13 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 app.UseCors();
 
-// Use idempotency middleware for external consumers
-// Note: This service exposes the middleware for other services to use
-// app.UseIdempotency();
+// Optional: Use idempotency middleware for all requests
+// By default, we use attribute-based idempotency (IdempotentAttribute)
+// Uncomment to enable middleware for ALL requests:
+// app.UseIdempotencyMiddleware(options => options.UseMiddleware = true);
 
 app.MapControllers();
 app.MapHealthChecks("/health");
-
-// Simple test endpoint to demonstrate idempotency
-app.MapPost("/api/test/order", async (HttpContext context, IIdempotencyService idempotencyService) =>
-{
-    // This endpoint demonstrates how idempotency works
-    var orderId = Guid.NewGuid().ToString();
-    return Results.Created($"/api/test/order/{orderId}", new { orderId, createdAt = DateTime.UtcNow });
-})
-.WithName("CreateTestOrder")
-.WithOpenApi();
 
 Log.Information("IdempotencyService starting...");
 

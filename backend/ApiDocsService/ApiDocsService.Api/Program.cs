@@ -23,9 +23,15 @@ builder.Services.AddHttpClient<IApiAggregatorService, ApiAggregatorService>(clie
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
+// Configure HttpClientFactory for testing controller
+builder.Services.AddHttpClient();
+
 // Configure services from appsettings
 builder.Services.Configure<ServicesConfiguration>(
     builder.Configuration.GetSection("Services"));
+
+// Register services
+builder.Services.AddScoped<IVersionService, VersionService>();
 
 // Health checks
 builder.Services.AddHealthChecks();
@@ -107,6 +113,9 @@ app.MapGet("/portal", async (IApiAggregatorService aggregator) =>
     var html = GeneratePortalHtml(services, dashboard);
     return Results.Content(html, "text/html");
 });
+
+// Testing UI endpoint
+app.MapGet("/testing", () => Results.Redirect("/testing.html"));
 
 Log.Information("API Documentation Aggregator starting on {Urls}", builder.Configuration["ASPNETCORE_URLS"]);
 

@@ -26,14 +26,22 @@ RUN dotnet build "MessageBusService.Api.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "MessageBusService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# Runtime stage - Alpine para menor superficie de ataque
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Create non-root user (Alpine uses addgroup/adduser)
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    chown -R appuser:appuser /app
 
-COPY --from=publish /app/publish .
+USER appuser
+
+COPY --from=publish --chown=appuser:appuser /app/publish .
 
 EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD dotnet /app/MessageBusService.Api.dll --help > /dev/null 2>&1 || exit 1
+
 ENTRYPOINT ["dotnet", "MessageBusService.Api.dll"]

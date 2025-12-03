@@ -3,9 +3,11 @@ using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SchedulerService.Application.Interfaces;
 using SchedulerService.Domain.Interfaces;
 using SchedulerService.Infrastructure.Data;
+using SchedulerService.Infrastructure.Executors;
 using SchedulerService.Infrastructure.Jobs;
 using SchedulerService.Infrastructure.Repositories;
 using SchedulerService.Infrastructure.Services;
@@ -45,6 +47,25 @@ public static class DependencyInjection
 
         // Services
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
+
+        // Execution Engine
+        services.AddSingleton(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<JobExecutionEngine>>();
+            var jobRepo = sp.GetRequiredService<IJobRepository>();
+            var execRepo = sp.GetRequiredService<IJobExecutionRepository>();
+            var executors = sp.GetServices<IJobExecutor>();
+            var maxConcurrent = configuration.GetValue<int>("ExecutionEngine:MaxConcurrentJobs", 10);
+
+            return new JobExecutionEngine(logger, jobRepo, execRepo, executors, maxConcurrent);
+        });
+
+        // Executors
+        services.AddScoped<IJobExecutor, InternalJobExecutor>();
+        services.AddScoped<IJobExecutor, HttpJobExecutor>();
+
+        // HTTP Client for HttpJobExecutor
+        services.AddHttpClient();
 
         // Jobs
         services.AddScoped<CleanupOldExecutionsJob>();

@@ -31,6 +31,22 @@ builder.Services.AddSingleton<IVirusScanService, VirusScanService>();
 builder.Services.AddSingleton<IPresignedUrlService, PresignedUrlService>();
 builder.Services.AddSingleton<IFileStorageService, FileStorageServiceImpl>();
 
+// Multimedia processing services
+builder.Services.AddSingleton(sp =>
+{
+    var config = builder.Configuration.GetSection("FFmpeg");
+    return new FFmpegOptions
+    {
+        FFmpegPath = config.GetValue<string>("FFmpegPath") ?? "ffmpeg",
+        FFprobePath = config.GetValue<string>("FFprobePath") ?? "ffprobe",
+        WorkingDirectory = config.GetValue<string>("WorkingDirectory") ?? Path.GetTempPath(),
+        TimeoutSeconds = config.GetValue<int>("TimeoutSeconds", 300),
+        UseHardwareAcceleration = config.GetValue<bool>("UseHardwareAcceleration", false)
+    };
+});
+builder.Services.AddSingleton<IVideoProcessingService, VideoProcessingService>();
+builder.Services.AddSingleton<IAudioProcessingService, AudioProcessingService>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

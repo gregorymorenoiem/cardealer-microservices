@@ -1,6 +1,10 @@
+using BackupDRService.Core.BackgroundServices;
+using BackupDRService.Core.Data;
 using BackupDRService.Core.Interfaces;
 using BackupDRService.Core.Models;
+using BackupDRService.Core.Repositories;
 using BackupDRService.Core.Services;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,18 +32,40 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Configure PostgreSQL DbContext
+var connectionString = builder.Configuration.GetConnectionString("BackupDb");
+builder.Services.AddDbContext<BackupDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Register repositories
+builder.Services.AddScoped<IBackupHistoryRepository, BackupHistoryRepository>();
+builder.Services.AddScoped<IBackupScheduleRepository, BackupScheduleRepository>();
+builder.Services.AddScoped<IRetentionPolicyRepository, RetentionPolicyRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+
+// Register domain services
+builder.Services.AddScoped<BackupHistoryService>();
+builder.Services.AddScoped<SchedulerService>();
+builder.Services.AddScoped<RetentionService>();
+builder.Services.AddScoped<SchedulerMonitoringService>();
+
 // Configure BackupOptions
 builder.Services.Configure<BackupOptions>(
     builder.Configuration.GetSection(BackupOptions.SectionName));
 
-// Register services
+// Register backup services
 builder.Services.AddSingleton<IStorageProvider, LocalStorageProvider>();
 builder.Services.AddSingleton<IDatabaseBackupProvider, PostgreSqlBackupProvider>();
-builder.Services.AddSingleton<IBackupService, BackupService>();
-builder.Services.AddSingleton<IRestoreService, RestoreService>();
+builder.Services.AddScoped<IBackupService, BackupService>();
+builder.Services.AddScoped<IRestoreService, RestoreService>();
+
+// Register background services
+builder.Services.AddHostedService<BackupSchedulerHostedService>();
+builder.Services.AddHostedService<RetentionCleanupHostedService>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString ?? string.Empty, name: "postgres")
     .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
 var app = builder.Build();

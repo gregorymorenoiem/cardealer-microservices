@@ -8,13 +8,16 @@ public class HangfireJobScheduler : IJobScheduler
 {
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly IBackgroundJobClient _backgroundJobClient;
+    private readonly JobExecutionEngine _executionEngine;
 
     public HangfireJobScheduler(
         IRecurringJobManager recurringJobManager,
-        IBackgroundJobClient backgroundJobClient)
+        IBackgroundJobClient backgroundJobClient,
+        JobExecutionEngine executionEngine)
     {
         _recurringJobManager = recurringJobManager;
         _backgroundJobClient = backgroundJobClient;
+        _executionEngine = executionEngine;
     }
 
     public string ScheduleRecurringJob(Job job)
@@ -66,11 +69,15 @@ public class HangfireJobScheduler : IJobScheduler
         return true;
     }
 
-    [AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [AutomaticRetry(Attempts = 0)] // Disable Hangfire retry, we handle it in the engine
     public async Task ExecuteJob(Guid jobId, string jobType, Dictionary<string, string> parameters)
     {
-        // This method will be overridden by actual job implementations
-        // For now, it's a placeholder that Hangfire will call
-        await Task.CompletedTask;
+        // Execute job through the execution engine
+        var result = await _executionEngine.ExecuteJobAsync(jobId, parameters);
+
+        if (!result.Success)
+        {
+            throw new Exception($"Job execution failed: {result.ErrorMessage}");
+        }
     }
 }

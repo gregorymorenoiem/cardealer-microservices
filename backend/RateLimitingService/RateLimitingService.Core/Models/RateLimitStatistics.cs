@@ -44,6 +44,11 @@ public class RateLimitStatistics
     /// Block rate percentage
     /// </summary>
     public double BlockRate => TotalRequests > 0 ? (double)BlockedRequests / TotalRequests * 100 : 0;
+
+    // Helper properties for compatibility
+    public long TotalAllowed => AllowedRequests;
+    public long TotalBlocked => BlockedRequests;
+    public long UniqueClients => ClientStats.Count;
 }
 
 /// <summary>

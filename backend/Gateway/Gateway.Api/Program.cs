@@ -142,3 +142,6 @@ app.MapGet("/health", () => Results.Ok("Gateway is healthy"));
 await app.UseOcelot();
 
 app.Run();
+
+// Make Program class accessible for testing
+public partial class Program { }

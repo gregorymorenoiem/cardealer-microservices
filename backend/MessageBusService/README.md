@@ -1,8 +1,31 @@
-# MessageBusService - RabbitMQ Message Bus with Dead Letter Queue
+# MessageBusService - RabbitMQ Message Bus with Saga Orchestration
 
 ## 📋 Resumen
 
-Message Bus Service es un servicio de mensajería empresarial basado en RabbitMQ que implementa el patrón Publisher/Subscriber con soporte completo para dead letter queue, reintentos y priorización de mensajes. Construido con Clean Architecture en ASP.NET Core 8.0.
+Message Bus Service es un servicio de mensajería empresarial basado en RabbitMQ que implementa:
+- **Publisher/Subscriber pattern** con Dead Letter Queue
+- **Saga Orchestration pattern** para transacciones distribuidas
+- **Compensating transactions** para rollback automático
+- Construido con Clean Architecture en ASP.NET Core 8.0
+
+## 🎯 **NUEVO: Saga Orchestration Pattern**
+
+Implementación completa del patrón Saga para coordinar transacciones distribuidas entre microservicios con:
+
+### ✅ Features Implementadas
+- ✅ **Orchestration-based Saga**: Coordinador centralizado
+- ✅ **Compensating Transactions**: Rollback automático en fallos
+- ✅ **State Machine**: Gestión de estados del saga (Created, Running, Completed, Compensating, Compensated, Failed, Aborted)
+- ✅ **Step Execution**: Ejecución secuencial de pasos
+- ✅ **Retry Logic**: Reintentos automáticos por paso
+- ✅ **Timeout Management**: Control de timeouts por saga y por paso
+- ✅ **HTTP Step Executor**: Invocación de APIs REST
+- ✅ **RabbitMQ Step Executor**: Publicación de mensajes
+- ✅ **Saga Persistence**: Almacenamiento en PostgreSQL
+- ✅ **REST API**: CRUD completo para gestión de sagas
+
+### 📖 Ver Ejemplos de Uso
+**[SAGA_ORCHESTRATION_EXAMPLES.md](SAGA_ORCHESTRATION_EXAMPLES.md)** - Ejemplos prácticos de uso
 
 ## 🏗️ Arquitectura
 
@@ -15,41 +38,69 @@ MessageBusService/
 │   │   ├── Message.cs
 │   │   ├── MessageBatch.cs
 │   │   ├── Subscription.cs
-│   │   └── DeadLetterMessage.cs
+│   │   ├── DeadLetterMessage.cs
+│   │   ├── Saga.cs                    # ⭐ NEW: Saga entity
+│   │   └── SagaStep.cs                # ⭐ NEW: Saga step entity
 │   └── Enums/
 │       ├── MessageStatus.cs
-│       └── MessagePriority.cs
+│       ├── MessagePriority.cs
+│       ├── SagaStatus.cs              # ⭐ NEW: Saga status enum
+│       ├── SagaStepStatus.cs          # ⭐ NEW: Step status enum
+│       └── SagaType.cs                # ⭐ NEW: Orchestration vs Choreography
 │
 ├── MessageBusService.Application/     # Lógica de negocio (CQRS con MediatR)
 │   ├── Interfaces/
 │   │   ├── IMessagePublisher.cs
 │   │   ├── IMessageSubscriber.cs
-│   │   └── IDeadLetterManager.cs
+│   │   ├── IDeadLetterManager.cs
+│   │   ├── ISagaOrchestrator.cs       # ⭐ NEW: Saga orchestrator
+│   │   ├── ISagaRepository.cs         # ⭐ NEW: Saga persistence
+│   │   └── ISagaStepExecutor.cs       # ⭐ NEW: Step executor interface
 │   ├── Commands/
 │   │   ├── PublishMessageCommand.cs
 │   │   ├── SubscribeToTopicCommand.cs
-│   │   └── RetryDeadLetterCommand.cs
+│   │   ├── RetryDeadLetterCommand.cs
+│   │   ├── StartSagaCommand.cs        # ⭐ NEW: Start saga
+│   │   ├── CompensateSagaCommand.cs   # ⭐ NEW: Compensate saga
+│   │   ├── AbortSagaCommand.cs        # ⭐ NEW: Abort saga
+│   │   └── RetrySagaStepCommand.cs    # ⭐ NEW: Retry step
 │   └── Queries/
 │       ├── GetMessageHistoryQuery.cs
-│       └── GetDeadLettersQuery.cs
+│       ├── GetDeadLettersQuery.cs
+│       ├── GetSagaByIdQuery.cs        # ⭐ NEW: Get saga
+│       └── GetSagasByStatusQuery.cs   # ⭐ NEW: Query sagas
 │
 ├── MessageBusService.Infrastructure/  # Implementación (RabbitMQ + PostgreSQL)
 │   ├── Data/
-│   │   └── MessageBusDbContext.cs
+│   │   └── MessageBusDbContext.cs     # Updated with Saga tables
+│   ├── Repositories/
+│   │   └── SagaRepository.cs          # ⭐ NEW: Saga repository
 │   └── Services/
 │       ├── RabbitMQPublisher.cs
 │       ├── RabbitMQSubscriber.cs
-│       └── DeadLetterManager.cs
+│       ├── DeadLetterManager.cs
+│       ├── SagaOrchestrator.cs        # ⭐ NEW: Saga orchestration logic
+│       ├── RabbitMQSagaStepExecutor.cs # ⭐ NEW: RabbitMQ executor
+│       └── HttpSagaStepExecutor.cs    # ⭐ NEW: HTTP executor
 │
 ├── MessageBusService.Api/             # REST API (Controllers)
 │   ├── Controllers/
 │   │   ├── MessagesController.cs
 │   │   ├── SubscriptionsController.cs
-│   │   └── DeadLetterController.cs
-│   └── Program.cs
+│   │   ├── DeadLetterController.cs
+│   │   └── SagaController.cs          # ⭐ NEW: Saga management API
+│   └── Program.cs                     # Updated with Saga services
 │
-├── MessageBusService.Tests/           # Unit Tests (10 tests)
-└── MessageBusService.IntegrationTests/ # API Tests (12 tests - requieren Docker)
+├── MessageBusService.Tests/           # Unit Tests (37 tests) ⭐ +27 new tests
+│   ├── Commands/
+│   │   └── StartSagaCommandHandlerTests.cs # ⭐ NEW
+│   └── Entities/
+│       ├── SagaTests.cs               # ⭐ NEW
+│       └── SagaStepTests.cs           # ⭐ NEW
+│
+├── MessageBusService.IntegrationTests/ # API Tests (12 tests - requieren Docker)
+├── SAGA_ORCHESTRATION_EXAMPLES.md     # ⭐ NEW: Usage examples
+└── README.md                          # Updated
 ```
 
 ## 🚀 Tecnologías
@@ -89,6 +140,39 @@ MessageBusService/
 | `POST` | `/api/messages` | Publicar un mensaje |
 | `POST` | `/api/messages/batch` | Publicar lote de mensajes |
 | `GET` | `/api/messages/{messageId}` | Obtener estado de mensaje |
+
+### **⭐ Saga Controller (NEW)**
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `POST` | `/api/saga/start` | Iniciar un saga |
+| `GET` | `/api/saga/{id}` | Obtener estado del saga |
+| `POST` | `/api/saga/{id}/compensate` | Compensar saga (rollback) |
+| `POST` | `/api/saga/{id}/abort` | Abortar saga manualmente |
+| `POST` | `/api/saga/{sagaId}/steps/{stepId}/retry` | Reintentar paso fallido |
+| `GET` | `/api/saga/status/{status}` | Listar sagas por estado |
+
+**Saga Example**:
+```json
+POST /api/saga/start
+{
+  "name": "CreateOrderSaga",
+  "type": "Orchestration",
+  "correlationId": "order-12345",
+  "timeout": "00:05:00",
+  "steps": [
+    {
+      "name": "ValidateInventory",
+      "serviceName": "InventoryService",
+      "actionType": "http.post.inventory",
+      "actionPayload": "{\"url\":\"http://inventory/api/validate\",\"body\":\"{}\"}",
+      "compensationActionType": "http.post.inventory",
+      "compensationPayload": "{\"url\":\"http://inventory/api/release\",\"body\":\"{}\"}",
+      "maxRetries": 3
+    }
+  ]
+}
+```
 
 **Request Example**:
 ```json
@@ -350,6 +434,11 @@ Swagger UI: `https://localhost:5001/swagger`
 
 ## 📈 Próximos Pasos (Roadmap)
 
+- [x] **✅ COMPLETADO: Saga Orchestration Pattern** - Transacciones distribuidas
+- [x] **✅ COMPLETADO: Compensating Transactions** - Rollback automático
+- [x] **✅ COMPLETADO: HTTP & RabbitMQ Step Executors** - Integraciones
+- [ ] **Choreography-based Saga**: Eventos distribuidos sin coordinador
+- [ ] **Saga Timeout Worker**: Background service para timeouts
 - [ ] **Autenticación/Autorización**: JWT + OAuth2
 - [ ] **Rate Limiting**: Throttling por consumer
 - [ ] **Métricas**: Prometheus + Grafana dashboards
@@ -373,9 +462,10 @@ Swagger UI: `https://localhost:5001/swagger`
 
 ### **Tests Unitarios**
 ```
-✅ 10/10 PASSED
-- Duration: 11 ms
-- Coverage: Handlers + Controllers
+✅ 37/37 PASSED
+- Duration: 425 ms
+- Coverage: Handlers + Controllers + Saga Entities
+- NEW: 27 Saga tests added
 ```
 
 ### **Git Status**

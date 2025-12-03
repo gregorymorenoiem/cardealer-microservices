@@ -23,25 +23,34 @@ services:
   errorservice:
     build:
       context: .
-      dockerfile: ErrorService/ErrorService.Api/Dockerfile.dev
+      dockerfile: ErrorService/Dockerfile
     container_name: errorservice
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    cpus: 0.50
+    mem_limit: 512m
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
     ports:
-      - "15083:80" # Cambiado
-      - "24022:4022" # Cambiado
+      - "15083:80"
+      - "24022:4022"
     depends_on:
       errorservice-db:
         condition: service_healthy
     networks:
       - cargurus-net
-    volumes:
-      - ./ErrorService:/app/ErrorService
-      - ./ErrorService/ErrorService.Shared:/app/ErrorService.Shared
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      test: [ "CMD-SHELL", "dotnet /app/ErrorService.Api.dll --help > /dev/null 2>&1 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -74,8 +83,20 @@ services:
   authservice:
     build:
       context: .
-      dockerfile: AuthService/AuthService.Api/Dockerfile.dev
+      dockerfile: AuthService/Dockerfile
     container_name: authservice
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    cpus: 0.50
+    mem_limit: 512m
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
@@ -95,8 +116,8 @@ services:
       AuthService__SmsQueueName: "notification-sms-queue"
       AuthService__PushQueueName: "notification-push-queue"
     ports:
-      - "15085:80" # Cambiado
-      - "24023:4022" # Cambiado
+      - "15085:80"
+      - "24023:4022"
     depends_on:
       authservice-db:
         condition: service_healthy
@@ -108,11 +129,8 @@ services:
         condition: service_healthy
     networks:
       - cargurus-net
-    volumes:
-      - ./AuthService:/app/AuthService
-      - ./AuthService/AuthService.Shared:/app/AuthService.Shared
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      test: [ "CMD-SHELL", "dotnet /app/AuthService.Api.dll --help > /dev/null 2>&1 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -168,9 +186,19 @@ services:
   notificationservice:
     build:
       context: .
-      dockerfile: NotificationService/NotificationService.Api/Dockerfile.dev
+      dockerfile: NotificationService/Dockerfile
     container_name: notificationservice
     restart: always
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     cpus: 0.75
     mem_limit: 1g
     environment:
@@ -204,8 +232,8 @@ services:
       NotificationSettings__Firebase__ProjectId: "cargurus-dev"
       NotificationSettings__TemplatesPath: "/app/Templates"
     ports:
-      - "15084:80" # Cambiado
-      - "24026:4022" # Cambiado
+      - "15084:80"
+      - "24026:4022"
     depends_on:
       notificationservice-db:
         condition: service_healthy
@@ -214,12 +242,10 @@ services:
     networks:
       - cargurus-net
     volumes:
-      - ./NotificationService:/app/NotificationService
-      - ./NotificationService/NotificationService.Shared:/app/NotificationService.Shared
-      - ./NotificationService/NotificationService.Infrastructure/Templates:/app/Templates
-      - ./firebase-dev-key.json:/app/firebase-service-account.json
+      - ./NotificationService/NotificationService.Infrastructure/Templates:/app/Templates:ro
+      - ./firebase-dev-key.json:/app/firebase-service-account.json:ro
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      test: [ "CMD-SHELL", "dotnet /app/NotificationService.Api.dll --help > /dev/null 2>&1 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -295,9 +321,19 @@ services:
   gateway:
     build:
       context: .
-      dockerfile: Gateway/Gateway.Api/Dockerfile.dev
+      dockerfile: Gateway/Dockerfile
     container_name: gateway-service
     restart: always
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     cpus: 0.50
     mem_limit: 512m
     depends_on:
@@ -309,13 +345,16 @@ services:
       ASPNETCORE_URLS: "http://+:80"
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
       DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
-    volumes:
-      - ./:/app
     ports:
-      - "18443:80" # Cambiado
-      - "24024:4022" # Cambiado
+      - "18443:80"
+      - "24024:4022"
     networks:
       - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "dotnet /app/Gateway.Api.dll --help > /dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   auditservice-db:
     image: postgres:15
@@ -384,6 +423,18 @@ services:
       context: .
       dockerfile: MessageBusService/Dockerfile
     container_name: messagebusservice
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    cpus: 0.30
+    mem_limit: 256m
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
@@ -409,7 +460,7 @@ services:
     networks:
       - cargurus-net
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      test: [ "CMD-SHELL", "dotnet /app/MessageBusService.Api.dll --help > /dev/null 2>&1 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -441,6 +492,18 @@ services:
       context: .
       dockerfile: ConfigurationService/ConfigurationService.Api/Dockerfile
     container_name: configurationservice
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    cpus: 0.30
+    mem_limit: 256m
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
@@ -461,7 +524,7 @@ services:
     networks:
       - cargurus-net
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      test: [ "CMD-SHELL", "dotnet /app/ConfigurationService.Api.dll --help > /dev/null 2>&1 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3

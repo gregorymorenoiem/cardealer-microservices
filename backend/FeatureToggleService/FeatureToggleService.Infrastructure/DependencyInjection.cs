@@ -28,9 +28,13 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped<IFeatureFlagRepository, FeatureFlagRepository>();
         services.AddScoped<IFeatureFlagHistoryRepository, FeatureFlagHistoryRepository>();
+        services.AddScoped<IABExperimentRepository, ABExperimentRepository>();
+        services.AddScoped<IExperimentAssignmentRepository, ExperimentAssignmentRepository>();
+        services.AddScoped<IExperimentMetricRepository, ExperimentMetricRepository>();
 
         // Services
         services.AddScoped<IFeatureFlagEvaluator, FeatureFlagEvaluator>();
+        services.AddScoped<IABTestingService, ABTestingService>();
 
         return services;
     }

@@ -64,11 +64,44 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions())
             );
 
+        // ✅ New fields
+        builder.Property(t => t.Version)
+            .HasColumnName("version")
+            .IsRequired()
+            .HasDefaultValue(1);
+
+        builder.Property(t => t.PreviousVersionId)
+            .HasColumnName("previous_version_id");
+
+        builder.Property(t => t.Tags)
+            .HasColumnName("tags")
+            .HasMaxLength(500);
+
+        builder.Property(t => t.ValidationRules)
+            .HasColumnName("validation_rules")
+            .HasColumnType("jsonb");
+
+        builder.Property(t => t.PreviewData)
+            .HasColumnName("preview_data")
+            .HasColumnType("jsonb");
+
+        builder.Property(t => t.CreatedBy)
+            .HasColumnName("created_by")
+            .IsRequired()
+            .HasMaxLength(100)
+            .HasDefaultValue("System");
+
+        builder.Property(t => t.UpdatedBy)
+            .HasColumnName("updated_by")
+            .HasMaxLength(100);
+
         builder.HasIndex(t => t.Name)
             .IsUnique();
 
         builder.HasIndex(t => t.Type);
         builder.HasIndex(t => t.IsActive);
         builder.HasIndex(t => t.Category);
+        builder.HasIndex(t => t.Version);
+        builder.HasIndex(t => t.PreviousVersionId);
     }
 }

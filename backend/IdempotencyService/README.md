@@ -1,6 +1,6 @@
 # 🔑 IdempotencyService
 
-Servicio de idempotencia para prevenir operaciones duplicadas en requests críticos utilizando Redis como almacenamiento distribuido.
+Servicio de idempotencia para prevenir operaciones duplicadas en requests críticos utilizando Redis como almacenamiento distribuido. Ahora con **middleware automático basado en atributos**.
 
 ## 📋 Descripción
 
@@ -10,11 +10,70 @@ IdempotencyService proporciona una capa de protección contra requests duplicado
 - Registro de usuarios
 - Cualquier operación POST/PUT/PATCH que no deba ejecutarse múltiples veces
 
+## ✨ Características Nuevas
+
+### Middleware Automático Basado en Atributos
+
+Ahora puedes controlar la idempotencia de forma **declarativa** usando atributos:
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class OrdersController : ControllerBase
+{
+    // ✅ Idempotente - Requiere clave, 1 hora de cache
+    [HttpPost]
+    [Idempotent(RequireKey = true, TtlSeconds = 3600)]
+    public ActionResult<Order> CreateOrder([FromBody] CreateOrderRequest request)
+    {
+        // Tu lógica de negocio
+    }
+
+    // ✅ No idempotente - Operación de lectura
+    [HttpGet("{id}")]
+    [SkipIdempotency]
+    public ActionResult<Order> GetOrder(string id)
+    {
+        // GET no necesita idempotencia
+    }
+
+    // ✅ Idempotente con prefijo personalizado
+    [HttpPut("{id}")]
+    [Idempotent(RequireKey = true, KeyPrefix = "order-update")]
+    public ActionResult<Order> UpdateOrder(string id, [FromBody] UpdateOrderRequest request)
+    {
+        // Actualización idempotente
+    }
+}
+```
+
+### Características del Sistema de Atributos
+
+1. **`[Idempotent]`** - Marca endpoints como idempotentes
+   - `RequireKey` - Si es obligatorio el header de idempotencia
+   - `TtlSeconds` - Duración del cache (override del default)
+   - `HeaderName` - Header personalizado (default: X-Idempotency-Key)
+   - `IncludeBodyInHash` - Incluir body en hash de validación
+   - `IncludeQueryInHash` - Incluir query params en hash
+   - `KeyPrefix` - Prefijo para namespace de keys
+
+2. **`[SkipIdempotency]`** - Excluye endpoints específicos
+   - Útil para GET, HEAD, OPTIONS
+   - Previene overhead innecesario
+
+3. **Swagger Integration** - Documentación automática
+   - Headers documentados en OpenAPI
+   - Ejemplos de uso
+   - Indicadores visuales (🔒 requerido, 🔓 opcional)
+
 ## 🏗️ Arquitectura
 
 ```
 IdempotencyService/
 ├── IdempotencyService.Core/         # Lógica de negocio
+│   ├── Attributes/                  # ✨ NUEVO
+│   │   ├── IdempotentAttribute.cs   # Atributo para marcar endpoints
+│   │   └── SkipIdempotencyAttribute.cs
 │   ├── Models/                      # Modelos de dominio
 │   │   ├── IdempotencyRecord.cs     # Registro de idempotencia
 │   │   ├── IdempotencyCheckResult.cs # Resultado de verificación
@@ -25,14 +84,141 @@ IdempotencyService/
 │       └── RedisIdempotencyService.cs
 ├── IdempotencyService.Api/          # API REST
 │   ├── Controllers/
-│   │   └── IdempotencyController.cs # Endpoints de gestión
+│   │   ├── IdempotencyController.cs # Endpoints de gestión
+│   │   └── OrdersController.cs      # ✨ NUEVO - Ejemplo de uso
+│   ├── Extensions/                  # ✨ NUEVO
+│   │   └── IdempotencyServiceExtensions.cs # Setup fluido
+│   ├── Filters/                     # ✨ NUEVO
+│   │   ├── IdempotencyActionFilter.cs # Action filter automático
+│   │   └── IdempotencyHeaderOperationFilter.cs # Swagger docs
 │   ├── Middleware/
-│   │   └── IdempotencyMiddleware.cs # Middleware automático
+│   │   └── IdempotencyMiddleware.cs # Middleware original (legacy)
 │   └── Program.cs                   # Configuración
 └── IdempotencyService.Tests/        # Tests unitarios
 ```
 
-## 🚀 Endpoints
+## 🚀 Inicio Rápido
+
+### 1. Configurar el Servicio (Setup de Una Línea)
+
+```csharp
+// Program.cs
+var builder = WebApplication.CreateBuilder(args);
+
+// ✨ Agregar idempotencia completa con una línea
+builder.Services.AddIdempotency(builder.Configuration);
+
+// Configurar Swagger
+builder.Services.AddSwaggerGen(options =>
+{
+    // ✨ Agregar documentación automática de headers
+    options.OperationFilter<IdempotencyHeaderOperationFilter>();
+});
+
+var app = builder.Build();
+
+// Opcional: Activar middleware legacy
+// app.UseIdempotencyMiddleware(options => options.UseMiddleware = true);
+
+app.MapControllers();
+app.Run();
+```
+
+### 2. Usar en Controladores
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class PaymentsController : ControllerBase
+{
+    [HttpPost]
+    [Idempotent(
+        RequireKey = true,           // ❌ Error si falta header
+        TtlSeconds = 7200,           // Cache 2 horas
+        IncludeQueryInHash = true,   // Validar query params
+        KeyPrefix = "payment"        // Namespace: payment:key
+    )]
+    public async Task<ActionResult<PaymentResult>> ProcessPayment(
+        [FromQuery] string orderId,
+        [FromBody] PaymentRequest request)
+    {
+        // Lógica de pago
+        return Ok(new PaymentResult { TransactionId = Guid.NewGuid() });
+    }
+}
+```
+
+### 3. Cliente HTTP
+
+```bash
+# Primera solicitud
+curl -X POST http://localhost:15096/api/payments \
+  -H "Content-Type: application/json" \
+  -H "X-Idempotency-Key: payment-abc-123" \
+  -d '{"amount": 100, "currency": "USD"}'
+
+# ✅ Respuesta: {"transactionId": "xyz789"}
+
+# Solicitud duplicada (misma key)
+curl -X POST http://localhost:15096/api/payments \
+  -H "Content-Type: application/json" \
+  -H "X-Idempotency-Key: payment-abc-123" \
+  -d '{"amount": 100, "currency": "USD"}'
+
+# ✅ Respuesta: {"transactionId": "xyz789"}
+# ✅ Header: X-Idempotency-Replayed: true
+```
+
+## 🔧 Uso Avanzado
+
+### Configuración Granular
+
+```csharp
+[HttpPost("process")]
+[Idempotent(
+    RequireKey = true,              // Header obligatorio
+    HeaderName = "X-Request-ID",    // Header personalizado
+    TtlSeconds = 3600,              // 1 hora
+    IncludeBodyInHash = true,       // Validar body completo
+    IncludeQueryInHash = true,      // Validar query string
+    KeyPrefix = "payment-process"   // Prefix: payment-process:key
+)]
+public ActionResult ProcessComplexPayment(...)
+```
+
+### Skip Idempotencia
+
+```csharp
+[HttpGet]
+[SkipIdempotency]  // No aplicar idempotencia a GET
+public ActionResult<List<Order>> GetOrders()
+{
+    // Operaciones de lectura no necesitan idempotencia
+}
+```
+
+### Cliente .NET (Biblioteca Helper)
+
+```csharp
+// Crear cliente idempotente
+var httpClient = new HttpClient();
+var idempotentClient = httpClient.AsIdempotent();
+
+// POST con clave generada automáticamente
+var response = await idempotentClient.PostAsync(
+    "/api/orders",
+    JsonContent.Create(order),
+    idempotencyKey: "order-123"
+);
+
+// Verificar si es respuesta cacheada
+if (response.IsReplayed())
+{
+    Console.WriteLine("Esta es una respuesta duplicada");
+}
+```
+
+## 📊 Endpoints de Gestión
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -44,73 +230,6 @@ IdempotencyService/
 | POST | `/api/idempotency/cleanup` | Limpieza manual |
 | GET | `/health` | Health check |
 
-## 🔧 Uso
-
-### 1. Como Cliente (Header)
-
-Envía el header `X-Idempotency-Key` en tus requests POST/PUT/PATCH:
-
-```bash
-curl -X POST http://localhost:15096/api/orders \
-  -H "Content-Type: application/json" \
-  -H "X-Idempotency-Key: unique-request-id-123" \
-  -d '{"product": "Car", "quantity": 1}'
-```
-
-### 2. Respuestas Posibles
-
-**Primera ejecución:**
-```json
-{
-  "orderId": "abc123",
-  "status": "created"
-}
-```
-
-**Ejecución duplicada (respuesta cacheada):**
-```json
-{
-  "orderId": "abc123",
-  "status": "created"
-}
-// Header: X-Idempotency-Replayed: true
-```
-
-**Conflicto (diferente body, misma key):**
-```json
-{
-  "error": "Idempotency key conflict",
-  "message": "Request body differs from the original request"
-}
-// Status: 409 Conflict
-```
-
-**Request en proceso:**
-```json
-{
-  "error": "Request in progress",
-  "message": "A request with this idempotency key is currently being processed"
-}
-// Status: 409 Conflict
-```
-
-### 3. Integrar el Middleware en Otros Servicios
-
-```csharp
-// Program.cs de otro servicio
-builder.Services.Configure<IdempotencyOptions>(
-    builder.Configuration.GetSection("Idempotency"));
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = "redis:6379";
-});
-builder.Services.AddScoped<IIdempotencyService, RedisIdempotencyService>();
-
-// ...
-
-app.UseIdempotency(); // Agregar middleware
-```
-
 ## ⚙️ Configuración
 
 ### appsettings.json
@@ -121,22 +240,56 @@ app.UseIdempotency(); // Agregar middleware
     "Redis": "redis:6379"
   },
   "Idempotency": {
-    "DefaultTtlSeconds": 86400,      // 24 horas
-    "MinTtlSeconds": 60,              // 1 minuto
-    "MaxTtlSeconds": 604800,          // 7 días
+    "DefaultTtlSeconds": 86400,      // 24 horas (default)
+    "MinTtlSeconds": 60,              // 1 minuto mínimo
+    "MaxTtlSeconds": 604800,          // 7 días máximo
     "HeaderName": "X-Idempotency-Key",
-    "RequireIdempotencyKey": false,   // true para forzar
-    "ExcludedPaths": [
+    "RequireIdempotencyKey": false,   // false = opcional, true = obligatorio
+    "ExcludedPaths": [                // Paths excluidos del middleware
       "/health",
       "/swagger",
       "/api/idempotency"
     ],
     "IdempotentMethods": ["POST", "PUT", "PATCH"],
     "KeyPrefix": "idempotency:",
-    "ValidateRequestHash": true,      // Detectar conflictos
+    "ValidateRequestHash": true,      // Detectar conflictos de body
     "ProcessingTimeoutSeconds": 30
   }
 }
+```
+
+## 🎯 Casos de Uso
+
+### 1. Pagos (Critical)
+
+```csharp
+[HttpPost("charge")]
+[Idempotent(RequireKey = true, TtlSeconds = 86400, KeyPrefix = "payment")]
+public ActionResult ChargeCard(PaymentRequest request) { }
+```
+
+### 2. Registro de Usuarios
+
+```csharp
+[HttpPost("register")]
+[Idempotent(RequireKey = true, TtlSeconds = 3600, IncludeBodyInHash = true)]
+public ActionResult RegisterUser(RegisterRequest request) { }
+```
+
+### 3. Creación de Órdenes
+
+```csharp
+[HttpPost]
+[Idempotent(RequireKey = false, TtlSeconds = 7200, KeyPrefix = "order")]
+public ActionResult CreateOrder(OrderRequest request) { }
+```
+
+### 4. Notificaciones (Evitar duplicados)
+
+```csharp
+[HttpPost("send")]
+[Idempotent(RequireKey = true, TtlSeconds = 300, IncludeBodyInHash = false)]
+public ActionResult SendNotification(NotificationRequest request) { }
 ```
 
 ## 🐳 Docker
@@ -179,7 +332,7 @@ public class IdempotencyRecord
     public string Key { get; set; }           // Clave única
     public string HttpMethod { get; set; }    // POST, PUT, etc.
     public string Path { get; set; }          // /api/orders
-    public string RequestHash { get; set; }   // Hash del body
+    public string RequestHash { get; set; }   // SHA-256 del body
     public int ResponseStatusCode { get; set; }
     public string ResponseBody { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -207,18 +360,40 @@ dotnet test
 **Cobertura:**
 - `RedisIdempotencyServiceTests` - 12 tests
 - `IdempotencyControllerTests` - 11 tests
+- `IdempotencyActionFilterTests` - (TODO)
 
 ## 🔒 Mejores Prácticas
 
 1. **Generar claves únicas**: Usa UUIDs o combina user_id + timestamp
+   ```
+   payment-{userId}-{timestamp}
+   order-{orderId}-{attemptNumber}
+   ```
+
 2. **No reutilizar claves**: Cada operación debe tener una clave única
-3. **TTL apropiado**: Configura el TTL según el caso de uso
-4. **Manejo de errores**: Si falla el cache, permitir la operación
-5. **Logging**: Loguea duplicados para debugging
 
-## 📈 Métricas
+3. **TTL apropiado**:
+   - Pagos: 24-48 horas
+   - Registros: 1-2 horas
+   - Notificaciones: 5-30 minutos
 
-El servicio expone estadísticas de uso:
+4. **RequireKey en operaciones críticas**:
+   ```csharp
+   [Idempotent(RequireKey = true)]  // ❌ Error si falta header
+   ```
+
+5. **IncludeBodyInHash para validación estricta**:
+   ```csharp
+   [Idempotent(IncludeBodyInHash = true)]  // Detecta cambios en body
+   ```
+
+6. **KeyPrefix para namespacing**:
+   ```csharp
+   [Idempotent(KeyPrefix = "payment")]  // payment:abc-123
+   [Idempotent(KeyPrefix = "order")]    // order:abc-123
+   ```
+
+## 📈 Métricas y Monitoreo
 
 ```bash
 GET /api/idempotency/stats
@@ -227,43 +402,84 @@ GET /api/idempotency/stats
 Respuesta:
 ```json
 {
-  "duplicateRequestsBlocked": 150,
   "totalRecords": 1000,
   "processingRecords": 5,
   "completedRecords": 980,
-  "failedRecords": 15
+  "failedRecords": 15,
+  "duplicateRequestsBlocked": 150,
+  "lastUpdated": "2024-01-15T10:30:00Z"
 }
 ```
 
 ## 🔗 Integración con Otros Servicios
 
-### AuthService
+### Como Biblioteca
+
 ```bash
-POST /api/auth/register
-X-Idempotency-Key: register-user@email.com-1234567890
+# Instalar desde NuGet (cuando se publique)
+dotnet add package IdempotencyService.Core
 ```
 
-### NotificationService
-```bash
-POST /api/notifications/send
-X-Idempotency-Key: notification-email-abc123
+```csharp
+// Program.cs del servicio consumidor
+builder.Services.AddIdempotency(builder.Configuration);
+
+// Usar en controladores
+[Idempotent(RequireKey = true)]
+public ActionResult CreateResource(...) { }
 ```
 
-### PaymentService (futuro)
+### Como Servicio HTTP
+
 ```bash
-POST /api/payments/process
-X-Idempotency-Key: payment-order-789-attempt-1
+# Verificar estado de key
+POST http://idempotencyservice:15096/api/idempotency/check
+{
+  "key": "payment-abc-123",
+  "requestHash": "sha256hash..."
+}
 ```
 
-## 📝 Notas
+## 🆚 Middleware vs Atributos
 
-- Redis maneja automáticamente la expiración de claves
-- El middleware es thread-safe y async
-- Soporta múltiples instancias del servicio (escalabilidad horizontal)
-- Compatible con cualquier cliente HTTP que pueda enviar headers custom
+| Feature | Middleware Legacy | Atributos (Nuevo) |
+|---------|------------------|-------------------|
+| Control granular | ❌ | ✅ |
+| Configuración por endpoint | ❌ | ✅ |
+| Skip específico | ❌ ExcludedPaths | ✅ [SkipIdempotency] |
+| TTL personalizado | ❌ | ✅ |
+| Documentación Swagger | ❌ | ✅ |
+| Performance | ⚠️ Procesa todos | ✅ Solo marcados |
+| Uso recomendado | Legacy | ✅ **Recomendado** |
+
+## 📝 Ejemplos Completos
+
+Ver `OrdersController.cs` para ejemplos de:
+- ✅ POST con idempotencia requerida
+- ✅ PUT con prefijo personalizado
+- ✅ PATCH con query hash
+- ✅ GET con skip
+- ✅ DELETE con validación de body desactivada
 
 ---
 
 **Puerto:** 15096  
 **Stack:** ASP.NET Core 8.0, Redis, StackExchange.Redis  
-**Tests:** 23 unit tests
+**Tests:** 23+ unit tests
+
+## 🎉 Changelog
+
+### v2.0 - Middleware Automático
+- ✨ Sistema de atributos declarativo
+- ✨ `[Idempotent]` y `[SkipIdempotency]`
+- ✨ Action filter automático
+- ✨ Integración con Swagger
+- ✨ Extension methods para setup fluido
+- ✨ Biblioteca cliente HTTP
+- ✨ Documentación completa
+
+### v1.0 - Versión Inicial
+- ✅ Middleware manual
+- ✅ Redis storage
+- ✅ REST API
+- ✅ Tests unitarios
