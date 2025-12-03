@@ -169,6 +169,25 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IRoleServiceCl
     client.BaseAddress = new Uri(roleServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
+})
+.AddStandardResilienceHandler(options =>
+{
+    // Retry 3 times with exponential backoff
+    options.Retry.MaxRetryAttempts = 3;
+    options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
+    options.Retry.UseJitter = true;
+
+    // Circuit breaker: open after 5 failures, stay open for 30s
+    options.CircuitBreaker.FailureRatio = 0.5;
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
+    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+    options.CircuitBreaker.MinimumThroughput = 5;
+
+    // Timeout of 10 seconds per attempt
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+
+    // Total timeout of 30 seconds
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
 });
 
 builder.Services.AddHttpClient<UserService.Application.Interfaces.IAuditServiceClient, UserService.Infrastructure.External.AuditServiceClient>(client =>
