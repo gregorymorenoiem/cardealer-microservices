@@ -128,17 +128,26 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 var app = builder.Build();
 
 // 7. Middleware pipeline
-app.UseCors();
-app.UseSwagger();
-app.UseSwaggerForOcelotUI();
+// CORS debe ir primero antes de cualquier otro middleware
+app.UseCors("ReactPolicy");
+
+// 8. Health check middleware BEFORE Ocelot to intercept /health requests
+app.UseHealthCheckMiddleware();
+
+// 9. Use routing for other endpoints
+app.UseRouting();
+
+// Solo usar Swagger si no estamos en Testing
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseSwagger();
+    app.UseSwaggerForOcelotUI();
+}
 
 // Service Discovery Registration
 app.UseMiddleware<ServiceRegistrationMiddleware>();
 
-// 8. Agregar endpoint de salud para el Gateway
-app.MapGet("/health", () => Results.Ok("Gateway is healthy"));
-
-// 9. Ocelot como último middleware
+// 10. Ocelot como último middleware
 await app.UseOcelot();
 
 app.Run();
