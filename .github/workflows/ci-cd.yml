@@ -105,6 +105,7 @@ jobs:
     strategy:
       matrix:
         service:
+          # Core Services
           - name: gateway
             dockerfile: Gateway/Dockerfile
             context: backend
@@ -117,6 +118,20 @@ jobs:
           - name: notificationservice
             dockerfile: NotificationService/Dockerfile
             context: backend
+          # Business Services
+          - name: adminservice
+            dockerfile: AdminService/Dockerfile
+            context: backend
+          - name: userservice
+            dockerfile: UserService/Dockerfile
+            context: backend
+          - name: roleservice
+            dockerfile: RoleService/Dockerfile
+            context: backend
+          - name: contactservice
+            dockerfile: ContactService/Dockerfile
+            context: backend
+          # Infrastructure Services
           - name: auditservice
             dockerfile: AuditService/AuditService.Api/Dockerfile
             context: backend
@@ -149,6 +164,26 @@ jobs:
             context: backend/CacheService
           - name: messagebusservice
             dockerfile: MessageBusService/Dockerfile
+            context: backend
+          # Observability & Documentation Services
+          - name: loggingservice
+            dockerfile: LoggingService/Dockerfile
+            context: backend/LoggingService
+          - name: tracingservice
+            dockerfile: TracingService/Dockerfile
+            context: backend/TracingService
+          - name: servicediscovery
+            dockerfile: ServiceDiscovery/Dockerfile
+            context: backend/ServiceDiscovery
+          - name: apidocsservice
+            dockerfile: ApiDocsService/Dockerfile
+            context: backend
+          # Media & Storage Services
+          - name: mediaservice
+            dockerfile: MediaService/Dockerfile
+            context: backend
+          - name: filestorageservice
+            dockerfile: FileStorageService/Dockerfile
             context: backend
 
     steps:
