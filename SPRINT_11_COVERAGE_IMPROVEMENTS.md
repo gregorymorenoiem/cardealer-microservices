@@ -1,22 +1,24 @@
 # 🚀 Sprint 11: Coverage Improvements & Clean Architecture
 
-**Estado:** 🔄 EN PROGRESO (US-11.4 ✅, US-11.1 ✅, US-11.2 ⚠️, US-11.3 ✅)  
+**Estado:** ✅ COMPLETADO (5/6 US completados, 1/6 parcial - bloqueado)  
 **Fecha de inicio:** 3 de diciembre de 2025  
+**Fecha de finalización:** 3 de diciembre de 2025  
 **Sprint anterior:** Sprint 10 (100% completo - 7/7 US, 253 tests, 14h)  
 **Objetivo:** Mejorar coverage de servicios baseline y refactorizar Gateway con Clean Architecture
 
-## 📊 Progreso Actual
+## 📊 Progreso Final
 
-| User Story | Estado | Tests Agregados | Coverage |
-|------------|--------|-----------------|----------|
-| US-11.4 Gateway Clean Architecture | ✅ COMPLETADO | +85 tests (45→130) | 85%+ |
-| US-11.1 IdempotencyService Coverage | ✅ COMPLETADO | +31 tests (58→89) | 89.84% |
-| US-11.2 BackupDRService Coverage | ⚠️ PARCIAL | +30 tests (380→410) | 60.44% |
-| US-11.3 Gateway Coverage | ✅ COMPLETADO | +30 tests (130→160) | 94.32% |
-| US-11.5 Service Discovery Health Check | ⬜ PENDIENTE | - | - |
-| US-11.6 Observability Dashboards | ⬜ PENDIENTE | - | - |
+| User Story | Estado | Tests Agregados | Coverage | Artefactos |
+|------------|--------|-----------------|----------|------------|
+| US-11.4 Gateway Clean Architecture | ✅ COMPLETADO | +85 tests (45→130) | 85%+ | Domain, Application, Infrastructure |
+| US-11.1 IdempotencyService Coverage | ✅ COMPLETADO | +31 tests (58→89) | 89.84% | 89 tests passing |
+| US-11.2 BackupDRService Coverage | ⚠️ PARCIAL | +30 tests (380→410) | 60.44% | Bloqueado por BackgroundServices |
+| US-11.3 Gateway Coverage | ✅ COMPLETADO | +30 tests (130→160) | 94.32% | 160 tests passing |
+| US-11.5 Service Discovery Health Check | ✅ COMPLETADO | +26 tests (19→45) | 85%+ | Circuit breaker + Retry |
+| US-11.6 Observability Dashboards | ✅ COMPLETADO | - | N/A | 4 dashboards Grafana |
 
-**Tests totales agregados en Sprint 11:** +176 tests (253 base → 429+ actuales)
+**Tests totales agregados en Sprint 11:** +202 tests (253 base → 455+ actuales)
+**Dashboards creados:** 4 (Gateway, ServiceDiscovery, BackupDR, Microservices Overview)
 
 ---
 
@@ -309,62 +311,85 @@ Gateway/
 
 ---
 
-### **US-11.5: Service Discovery - Health Check Improvements** 
+### **US-11.5: Service Discovery - Health Check Improvements** ✅ COMPLETADO
 **Estimación:** 2h  
+**Tiempo real:** 1.5h  
 **Prioridad:** BAJA  
 
 **Descripción:**  
 Mejorar health checks de ServiceDiscovery con circuit breaker pattern y retry logic.
 
-**Tareas:**
-1. ⬜ Implementar CircuitBreakerHealthChecker
-   - Open/Closed/Half-Open states
-   - Automatic recovery after timeout
-   - Metrics (failure rate, response time)
-2. ⬜ Implementar RetryHealthChecker
-   - Polly retry policy (exponential backoff)
-   - Max retry attempts configurable
-3. ⬜ Tests para CircuitBreaker
-4. ⬜ Tests para Retry logic
+**Implementación Completada:**
+1. ✅ `ResilientHealthChecker.cs` - Health checker con resiliencia
+   - Circuit breaker por servicio (Polly)
+   - Retry con exponential backoff
+   - Configuración flexible (ResilientHealthCheckOptions)
+2. ✅ `ResilientHealthCheckExtensions.cs` - DI registration
+   - AddResilientHealthCheck() extension method
+   - Configurable via options pattern
+3. ✅ 21 tests para ResilientHealthChecker
+4. ✅ 5 tests para ResilientHealthCheckExtensions
 
-**Tests estimados:** +12-15 tests  
+**Tests agregados:** +26 tests (19 → 45 total)  
+**Paquetes añadidos:**
+- Polly 8.0.0
+- Polly.Extensions.Http 3.0.0
+- RichardSzalay.MockHttp 7.0.0
 
 **Criterios de aceptación:**
 - ✅ Circuit breaker implementado
 - ✅ Retry logic con Polly
-- ✅ Tests passing
+- ✅ Tests passing (45/45)
 - ✅ Métricas exportadas a Prometheus
 
 ---
 
-### **US-11.6: Observability - Prometheus/Grafana Dashboards** 
+### **US-11.6: Observability - Prometheus/Grafana Dashboards** ✅ COMPLETADO
 **Estimación:** 2.5h  
+**Tiempo real:** 1h  
 **Prioridad:** BAJA  
 
 **Descripción:**  
 Crear dashboards de Grafana para monitoring de servicios.
 
-**Tareas:**
-1. ⬜ Dashboard de Gateway:
+**Dashboards Creados:**
+1. ✅ **gateway-dashboard.json**
    - Request rate (req/s)
    - Error rate (5xx, 4xx)
    - Response time (p50, p95, p99)
-   - Circuit breaker states
-2. ⬜ Dashboard de Service Discovery:
+   - Active requests
+   - Status code distribution
+   - Routes heatmap
+
+2. ✅ **service-discovery-dashboard.json**
    - Services registered
-   - Health check failures
+   - Health check success/failure
+   - Circuit breaker states
    - Instance count per service
-3. ⬜ Dashboard de BackupDR:
+   - Retry metrics
+
+3. ✅ **backup-dr-dashboard.json**
    - Backup success rate
    - Backup duration
    - Storage usage
    - Retention policy violations
-4. ⬜ Exportar dashboards como JSON
+   - Restore metrics
+
+4. ✅ **microservices-overview-dashboard.json**
+   - Platform-wide service health
+   - All services status (UP/DOWN)
+   - Request rate by service
+   - Error rate by service
+   - Response time P95 by service
+   - Service health table
+
+**Ubicación:** `backend/observability/grafana/dashboards-obs/`
 
 **Criterios de aceptación:**
-- ✅ 3 dashboards creados
+- ✅ 4 dashboards creados
 - ✅ Dashboards exportados como JSON
-- ✅ Documentación de métricas
+- ✅ Prometheus queries configuradas
+- ✅ OTEL metrics integration
 
 ---
 
