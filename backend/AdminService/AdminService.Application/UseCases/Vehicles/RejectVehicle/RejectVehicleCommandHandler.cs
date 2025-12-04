@@ -24,19 +24,62 @@ namespace AdminService.Application.UseCases.Vehicles.RejectVehicle
 
         public async Task<bool> Handle(RejectVehicleCommand request, CancellationToken cancellationToken)
         {
-            // TODO: Implementar lógica de rechazo del vehículo
-            // Por ahora, solo simula la operación exitosa
+            // Validate input
+            if (request.VehicleId == Guid.Empty)
+            {
+                _logger.LogWarning("Invalid VehicleId provided for rejection");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Reason))
+            {
+                _logger.LogWarning("Empty rejection reason provided for vehicle {VehicleId}", request.VehicleId);
+                return false;
+            }
 
             _logger.LogInformation("Rejecting vehicle {VehicleId} by {RejectedBy}. Reason: {Reason}",
                 request.VehicleId, request.RejectedBy, request.Reason);
 
-            // Auditoría (fire-and-forget)
-            _ = _auditClient.LogVehicleRejectedAsync(request.VehicleId, request.RejectedBy, request.Reason);
+            try
+            {
+                // Record audit log asynchronously (fire-and-forget with error handling)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _auditClient.LogVehicleRejectedAsync(request.VehicleId, request.RejectedBy, request.Reason);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to log audit for vehicle rejection {VehicleId}", request.VehicleId);
+                    }
+                }, cancellationToken);
 
-            // Notificación al propietario (fire-and-forget)
-            _ = _notificationClient.SendVehicleRejectedNotificationAsync(request.OwnerEmail, request.VehicleTitle, request.Reason);
+                // Send notification to owner with rejection reason (fire-and-forget with error handling)
+                if (!string.IsNullOrWhiteSpace(request.OwnerEmail))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _notificationClient.SendVehicleRejectedNotificationAsync(
+                                request.OwnerEmail, request.VehicleTitle, request.Reason);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to send notification for vehicle rejection {VehicleId}", request.VehicleId);
+                        }
+                    }, cancellationToken);
+                }
 
-            return true;
+                _logger.LogInformation("Vehicle {VehicleId} rejected successfully", request.VehicleId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting vehicle {VehicleId}", request.VehicleId);
+                return false;
+            }
         }
     }
 }

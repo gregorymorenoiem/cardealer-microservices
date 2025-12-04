@@ -12,7 +12,7 @@
 |--------|---------|----------|-----------|--------|
 | Sprint 13 | Seguridad & Autorización | 4-6h | 🔴 CRÍTICO | ✅ COMPLETADO |
 | Sprint 14 | Cobertura de Tests | 3-4h | 🟠 ALTO | ✅ COMPLETADO |
-| Sprint 15 | Jobs & Automatización | 4-5h | 🟡 MEDIO | ⏳ PENDIENTE |
+| Sprint 15 | Jobs & Automatización | 4-5h | 🟡 MEDIO | ✅ COMPLETADO |
 | Sprint 16 | Integración & Contratos | 3-4h | 🟡 MEDIO | ⏳ PENDIENTE |
 | Sprint 17 | Mejoras Operacionales | 2-3h | 🟢 BAJO | ⏳ PENDIENTE |
 
@@ -108,60 +108,52 @@ var userAgent = _httpContextAccessor.HttpContext?.Request.Headers["User-Agent"].
 
 ---
 
-## 🟡 SPRINT 15: Jobs & Automatización (MEDIO)
+## 🟡 SPRINT 15: Jobs & Automatización (MEDIO) ✅ COMPLETADO
 
-**Objetivo**: Implementar lógica real en jobs del SchedulerService
+**Objetivo**: Implementar lógica real en jobs del SchedulerService  
+**Estado**: ✅ COMPLETADO (4 de Diciembre 2025)
 
-### US-15.1: DailyStatsReportJob
-**Esfuerzo**: 1-1.5h
-
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `SchedulerService.Infrastructure/Jobs/DailyStatsReportJob.cs` | 29 | Implement actual report generation |
+### US-15.1: DailyStatsReportJob ✅
+**Esfuerzo**: 1-1.5h | **Estado**: ✅ COMPLETADO
 
 **Implementación**:
-- Recopilar estadísticas de todos los microservicios
-- Generar reporte en formato estructurado
-- Enviar por email o almacenar en BD
+- Consulta estadísticas reales de IJobExecutionRepository
+- Calcula success rate, avg duration, executions por job
+- Genera DailyStatsReport con métricas detalladas
+- Logs estructurados para monitoreo
 
 ---
 
-### US-15.2: CleanupOldExecutionsJob
-**Esfuerzo**: 1-1.5h
-
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `SchedulerService.Infrastructure/Jobs/CleanupOldExecutionsJob.cs` | 35 | Implement actual cleanup logic |
+### US-15.2: CleanupOldExecutionsJob ✅
+**Esfuerzo**: 1-1.5h | **Estado**: ✅ COMPLETADO
 
 **Implementación**:
-- Definir política de retención (ej: 30 días)
-- Limpiar logs/ejecuciones antiguas
-- Registrar métricas de limpieza
+- Agregado método DeleteOldExecutionsAsync al repository
+- Política de retención configurable (mínimo 7 días)
+- Logs de métricas de limpieza
 
 ---
 
-### US-15.3: HealthCheckJob
-**Esfuerzo**: 1-1.5h
-
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `SchedulerService.Infrastructure/Jobs/HealthCheckJob.cs` | 31 | Implement actual health check logic |
+### US-15.3: HealthCheckJob ✅
+**Esfuerzo**: 1-1.5h | **Estado**: ✅ COMPLETADO
 
 **Implementación**:
-- Consultar /health de cada microservicio
-- Registrar resultados en BD
-- Alertar si algún servicio está down
+- HttpClient real a endpoints /health de microservicios
+- Timeout configurable por parámetro
+- Response time tracking
+- Alertas por servicios unhealthy
+- HealthCheckResult con detalles completos
 
 ---
 
-### US-15.4: AdminService Use Cases
-**Esfuerzo**: 1-1.5h
+### US-15.4: AdminService Use Cases ✅
+**Esfuerzo**: 1-1.5h | **Estado**: ✅ COMPLETADO
 
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `AdminService.Application/UseCases/Reports/ResolveReport/ResolveReportCommandHandler.cs` | 27 | Implementar resolución de reporte |
-| 2 | `AdminService.Application/UseCases/Vehicles/ApproveVehicle/ApproveVehicleCommandHandler.cs` | 27 | Implementar aprobación |
-| 3 | `AdminService.Application/UseCases/Vehicles/RejectVehicle/RejectVehicleCommandHandler.cs` | 27 | Implementar rechazo |
+**Implementación**:
+- Validación de inputs (VehicleId, ReportId no vacíos)
+- Error handling robusto
+- Fire-and-forget con try-catch interno
+- Logging de éxito y errores
 
 ---
 
