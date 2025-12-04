@@ -11,14 +11,9 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
+using CarDealer.Contracts.Events.Notification;
 
 namespace NotificationService.Infrastructure.Messaging;
-
-// TODO: Replace AuthService.Shared.NotificationMessages events with CarDealer.Contracts events
-// Temporary DTOs for deserialization (should be in CarDealer.Contracts)
-public record EmailNotificationEvent(string To, string Subject, string Body, bool IsHtml, Dictionary<string, string>? Data);
-public record SmsNotificationEvent(string To, string Body, Dictionary<string, string>? Data);
-public record NotificationEvent(string Type, Dictionary<string, string>? Data);
 
 public class RabbitMQNotificationConsumer : BackgroundService
 {
@@ -211,17 +206,16 @@ public class RabbitMQNotificationConsumer : BackgroundService
 
     private async Task ProcessEmailMessage(string message, IServiceScope scope)
     {
-        var emailEvent = JsonSerializer.Deserialize<EmailNotificationEvent>(message, _jsonOptions);
+        // Using CarDealer.Contracts event type
+        var emailEvent = JsonSerializer.Deserialize<EmailNotificationRequestedEvent>(message, _jsonOptions);
         if (emailEvent == null)
         {
             _logger.LogWarning("Failed to deserialize email message");
             return;
         }
 
-        // Usar los comandos EXISTENTES de tu aplicación
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        // Crear el request usando tu DTO existente
         var request = new SendEmailNotificationRequest(
             To: emailEvent.To,
             Subject: emailEvent.Subject,
@@ -230,7 +224,6 @@ public class RabbitMQNotificationConsumer : BackgroundService
             Metadata: emailEvent.Data?.ToDictionary(k => k.Key, k => (object)k.Value)
         );
 
-        // Usar el comando EXISTENTE de tu aplicación
         var command = new SendEmailNotificationCommand(request);
         var result = await mediator.Send(command);
 
@@ -247,24 +240,22 @@ public class RabbitMQNotificationConsumer : BackgroundService
 
     private async Task ProcessSmsMessage(string message, IServiceScope scope)
     {
-        var smsEvent = JsonSerializer.Deserialize<SmsNotificationEvent>(message, _jsonOptions);
+        // Using CarDealer.Contracts event type
+        var smsEvent = JsonSerializer.Deserialize<SmsNotificationRequestedEvent>(message, _jsonOptions);
         if (smsEvent == null)
         {
             _logger.LogWarning("Failed to deserialize SMS message");
             return;
         }
 
-        // Usar los comandos EXISTENTES de tu aplicación
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        // Crear el request usando tu DTO existente
         var request = new SendSmsNotificationRequest(
             To: smsEvent.To,
-            Message: smsEvent.Body,
+            Message: smsEvent.Message,
             Metadata: smsEvent.Data?.ToDictionary(k => k.Key, k => (object)k.Value)
         );
 
-        // Usar el comando EXISTENTE de tu aplicación
         var command = new SendSmsNotificationCommand(request);
         var result = await mediator.Send(command);
 
@@ -281,26 +272,75 @@ public class RabbitMQNotificationConsumer : BackgroundService
 
     private async Task ProcessGeneralMessage(string message, IServiceScope scope)
     {
-        var notificationEvent = JsonSerializer.Deserialize<NotificationEvent>(message, _jsonOptions);
-        if (notificationEvent == null)
+        // Try to determine message type from JSON structure
+        using var doc = JsonDocument.Parse(message);
+        var root = doc.RootElement;
+
+        // Check for eventType property from CarDealer.Contracts.EventBase
+        if (root.TryGetProperty("eventType", out var eventTypeElement))
         {
-            _logger.LogWarning("Failed to deserialize general notification message");
+            var eventType = eventTypeElement.GetString()?.ToLower() ?? "";
+
+            if (eventType.Contains("email"))
+            {
+                await ProcessEmailMessage(message, scope);
+                return;
+            }
+            if (eventType.Contains("sms"))
+            {
+                await ProcessSmsMessage(message, scope);
+                return;
+            }
+            if (eventType.Contains("push"))
+            {
+                await ProcessPushMessage(message, scope);
+                return;
+            }
+        }
+
+        // Fallback: check for Type property (legacy format)
+        if (root.TryGetProperty("type", out var typeElement))
+        {
+            var type = typeElement.GetString()?.ToLower() ?? "";
+            switch (type)
+            {
+                case "email":
+                    await ProcessEmailMessage(message, scope);
+                    break;
+                case "sms":
+                    await ProcessSmsMessage(message, scope);
+                    break;
+                case "push":
+                    await ProcessPushMessage(message, scope);
+                    break;
+                default:
+                    _logger.LogWarning("Unsupported notification type in general queue: {Type}", type);
+                    break;
+            }
+        }
+        else
+        {
+            _logger.LogWarning("Unable to determine notification type from message");
+        }
+    }
+
+    private async Task ProcessPushMessage(string message, IServiceScope scope)
+    {
+        var pushEvent = JsonSerializer.Deserialize<PushNotificationRequestedEvent>(message, _jsonOptions);
+        if (pushEvent == null)
+        {
+            _logger.LogWarning("Failed to deserialize push notification message");
             return;
         }
 
-        // Determinar el tipo basado en el campo Type
-        switch (notificationEvent.Type.ToLower())
-        {
-            case "email":
-                await ProcessEmailMessage(message, scope);
-                break;
-            case "sms":
-                await ProcessSmsMessage(message, scope);
-                break;
-            default:
-                _logger.LogWarning("Unsupported notification type in general queue: {Type}", notificationEvent.Type);
-                break;
-        }
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        // Note: SendPushNotificationCommand would need to be implemented
+        _logger.LogInformation("Push notification requested for device {DeviceToken}: {Title}",
+            pushEvent.DeviceToken, pushEvent.Title);
+
+        // TODO: Implement when SendPushNotificationRequest is available
+        await Task.CompletedTask;
     }
 
     public override void Dispose()

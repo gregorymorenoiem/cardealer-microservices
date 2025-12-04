@@ -1,4 +1,6 @@
 using System.Diagnostics.Metrics;
+using AuditService.Domain.Interfaces.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AuditService.Infrastructure.Metrics;
 
@@ -8,7 +10,9 @@ namespace AuditService.Infrastructure.Metrics;
 public class AuditServiceMetrics
 {
     private readonly Meter _meter;
-    
+    private readonly IServiceProvider _serviceProvider;
+    private int _activeSessions;
+
     // Counters
     private readonly Counter<long> _auditLogsCreatedCounter;
     private readonly Counter<long> _auditLogsQueriedCounter;
@@ -16,17 +20,18 @@ public class AuditServiceMetrics
     private readonly Counter<long> _auditLogsByEntityCounter;
     private readonly Counter<long> _securityEventsCounter;
     private readonly Counter<long> _complianceEventsCounter;
-    
+
     // Histograms
     private readonly Histogram<double> _queryDurationHistogram;
     private readonly Histogram<double> _eventProcessingDurationHistogram;
-    
+
     // Observable Gauges
     private readonly ObservableGauge<int> _activeAuditSessionsGauge;
     private readonly ObservableGauge<long> _totalAuditLogsGauge;
 
-    public AuditServiceMetrics()
+    public AuditServiceMetrics(IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
         _meter = new Meter("AuditService", "1.0.0");
 
         // Counters - Incrementan con cada operación
@@ -81,61 +86,93 @@ public class AuditServiceMetrics
 
     public void RecordAuditLogCreated(string action, string entityType, string serviceName)
     {
-        _auditLogsCreatedCounter.Add(1, 
+        _auditLogsCreatedCounter.Add(1,
             new KeyValuePair<string, object?>("action", action),
             new KeyValuePair<string, object?>("entity_type", entityType),
             new KeyValuePair<string, object?>("service", serviceName));
 
-        _auditLogsByActionCounter.Add(1, 
+        _auditLogsByActionCounter.Add(1,
             new KeyValuePair<string, object?>("action", action));
 
-        _auditLogsByEntityCounter.Add(1, 
+        _auditLogsByEntityCounter.Add(1,
             new KeyValuePair<string, object?>("entity_type", entityType));
     }
 
     public void RecordAuditLogQueried(string queryType, bool success)
     {
-        _auditLogsQueriedCounter.Add(1, 
+        _auditLogsQueriedCounter.Add(1,
             new KeyValuePair<string, object?>("query_type", queryType),
             new KeyValuePair<string, object?>("success", success.ToString()));
     }
 
     public void RecordSecurityEvent(string eventType, string severity)
     {
-        _securityEventsCounter.Add(1, 
+        _securityEventsCounter.Add(1,
             new KeyValuePair<string, object?>("event_type", eventType),
             new KeyValuePair<string, object?>("severity", severity));
     }
 
     public void RecordComplianceEvent(string complianceType, string regulation)
     {
-        _complianceEventsCounter.Add(1, 
+        _complianceEventsCounter.Add(1,
             new KeyValuePair<string, object?>("compliance_type", complianceType),
             new KeyValuePair<string, object?>("regulation", regulation));
     }
 
     public void RecordQueryDuration(double durationMs, string queryType)
     {
-        _queryDurationHistogram.Record(durationMs, 
+        _queryDurationHistogram.Record(durationMs,
             new KeyValuePair<string, object?>("query_type", queryType));
     }
 
     public void RecordEventProcessingDuration(double durationMs, string eventType)
     {
-        _eventProcessingDurationHistogram.Record(durationMs, 
+        _eventProcessingDurationHistogram.Record(durationMs,
             new KeyValuePair<string, object?>("event_type", eventType));
     }
 
     // Métodos auxiliares para gauges observables
     private int GetActiveAuditSessions()
     {
-        // TODO: Implementar lógica real para obtener sesiones activas
-        return 0;
+        // Return the current count of active sessions
+        // This is incremented/decremented when sessions start/end
+        return _activeSessions;
     }
 
     private long GetTotalAuditLogs()
     {
-        // TODO: Implementar lógica real para obtener total de logs
-        return 0;
+        try
+        {
+            // Create a scope to get the repository
+            using var scope = _serviceProvider.CreateScope();
+            var repository = scope.ServiceProvider.GetService<IAuditLogRepository>();
+
+            if (repository == null)
+                return 0;
+
+            // Get total count from repository (synchronously for the gauge callback)
+            return repository.GetTotalCountAsync().GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // Return 0 if unable to query (e.g., during startup)
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Increment active sessions count
+    /// </summary>
+    public void IncrementActiveSessions()
+    {
+        Interlocked.Increment(ref _activeSessions);
+    }
+
+    /// <summary>
+    /// Decrement active sessions count
+    /// </summary>
+    public void DecrementActiveSessions()
+    {
+        Interlocked.Decrement(ref _activeSessions);
     }
 }
