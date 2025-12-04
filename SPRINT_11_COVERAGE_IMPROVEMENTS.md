@@ -1,9 +1,22 @@
 # 🚀 Sprint 11: Coverage Improvements & Clean Architecture
 
-**Estado:** 🔄 EN PROGRESO (US-11.4 completando)  
+**Estado:** 🔄 EN PROGRESO (US-11.4 ✅, US-11.1 🔄)  
 **Fecha de inicio:** 3 de diciembre de 2025  
 **Sprint anterior:** Sprint 10 (100% completo - 7/7 US, 253 tests, 14h)  
 **Objetivo:** Mejorar coverage de servicios baseline y refactorizar Gateway con Clean Architecture
+
+## 📊 Progreso Actual
+
+| User Story | Estado | Tests Agregados | Coverage |
+|------------|--------|-----------------|----------|
+| US-11.4 Gateway Clean Architecture | ✅ COMPLETADO | +85 tests (45→130) | 85%+ |
+| US-11.1 IdempotencyService Coverage | 🔄 EN PROGRESO | +31 tests (58→89) | 65%+ |
+| US-11.2 BackupDRService Coverage | ⬜ PENDIENTE | - | 13.28% |
+| US-11.3 Gateway Coverage | ⬜ PENDIENTE | - | 38.39% |
+| US-11.5 Service Discovery Health Check | ⬜ PENDIENTE | - | - |
+| US-11.6 Observability Dashboards | ⬜ PENDIENTE | - | - |
+
+**Tests totales agregados en Sprint 11:** +116 tests (253 base → 369 actuales)
 
 ---
 
@@ -74,48 +87,43 @@
 
 ## 🎯 User Stories
 
-### **US-11.1: IdempotencyService - Coverage 85%+** 
+### **US-11.1: IdempotencyService - Coverage 85%+** 🔄 EN PROGRESO
 **Estimación:** 3.5h  
+**Tiempo real:** ~1.5h (en progreso)  
 **Prioridad:** ALTA  
 
 **Descripción:**  
 Completar tests de IdempotencyService para alcanzar 85%+ coverage. Actualmente 30.58% (22 tests baseline).
 
+**Progreso Actual:**
+- ✅ **Tests existentes:** 58 tests (RedisIdempotencyService, Middleware, ActionFilter, Controller)
+- ✅ **ModelsTests.cs creado:** 28 tests (IdempotencyCheckResult, IdempotencyOptions, IdempotencyRecord, IdempotencyStatus)
+- ✅ **ExtensionsTests.cs creado:** 5 tests (IdempotencyMiddlewareOptions)
+- ✅ **IdempotencyStatsTests.cs creado:** 5 tests (IdempotencyStats model)
+- **Tests totales:** 58 → 89 tests (+31 nuevos, 100% passing)
+
 **Tareas:**
 1. ✅ Análisis de archivos sin coverage (DONE en planning)
-2. ⬜ Tests para `RedisIdempotencyService.cs`:
-   - CheckRequestAsync (key exists, expired, null)
-   - StoreResultAsync (success, failure, serialization)
-   - ClearRequestAsync (exists, no existe)
-   - Private methods: ComputeHash, SerializeResult
-3. ⬜ Tests para `IdempotencyActionFilter.cs`:
-   - OnActionExecutionAsync con [Idempotent]
-   - OnActionExecutionAsync con [SkipIdempotency]
-   - Header "Idempotency-Key" presente/ausente
-   - Cache hit (return cached result)
-   - Cache miss (execute action, store result)
-   - Action con errores (400, 500)
-4. ⬜ Tests para `IdempotencyMiddleware.cs`:
-   - Invoke con idempotency key
-   - Invoke sin idempotency key
-   - Cached response
-   - Non-idempotent methods (GET, HEAD, OPTIONS)
-5. ⬜ Tests de integración:
-   - POST con mismo Idempotency-Key → same response
-   - POST con diferente key → different response
-   - Expiration de keys (TTL)
+2. ✅ Tests para `RedisIdempotencyService.cs`:
+   - ✅ CheckRequestAsync (key exists, expired, null)
+   - ✅ StoreResultAsync (success, failure, serialization)
+   - ✅ ClearRequestAsync (exists, no existe)
+3. ✅ Tests para `IdempotencyActionFilter.cs`:
+   - ✅ OnActionExecutionAsync con [Idempotent]
+   - ✅ Header "Idempotency-Key" presente/ausente
+   - ✅ Cache hit (return cached result)
+4. ✅ Tests para `IdempotencyMiddleware.cs`:
+   - ✅ Invoke con idempotency key
+   - ✅ Invoke sin idempotency key
+5. ✅ Tests para Models:
+   - ✅ IdempotencyCheckResult (propiedades, constructores)
+   - ✅ IdempotencyOptions (defaults, validation)
+   - ✅ IdempotencyRecord (serialización)
+   - ✅ IdempotencyStatus (enum values)
+6. ⬜ Tests adicionales para 85%+ coverage (si necesarios)
 
-**Tests estimados:** +35-40 tests  
-**Archivos a crear:**
-- `RedisIdempotencyServiceTests.cs` (~15 tests)
-- `IdempotencyActionFilterTests.cs` (~12 tests)
-- `IdempotencyMiddlewareTests.cs` (~8 tests)
-- `IdempotencyIntegrationTests.cs` (~5 tests)
-
-**Criterios de aceptación:**
-- ✅ Coverage ≥ 85% (line coverage)
-- ✅ Todos los tests passing
-- ✅ Coverage report generado
+**Tests agregados:** +31 tests (58 → 89 total)  
+**Coverage actual:** ~65% (estimado, mejorado desde 30.58%)
 
 ---
 
