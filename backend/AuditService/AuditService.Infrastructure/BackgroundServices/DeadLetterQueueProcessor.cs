@@ -80,7 +80,7 @@ public class DeadLetterQueueProcessor : BackgroundService
             try
             {
                 var nextRetry = failedEvent.RetryCount + 1;
-                
+
                 _logger.LogInformation(
                     "🔄 Procesando evento: {EventType} | Intento: {RetryCount}/{MaxRetries} | ID: {EventId}",
                     failedEvent.EventType, nextRetry, MaxRetries, failedEvent.Id);
@@ -91,7 +91,7 @@ public class DeadLetterQueueProcessor : BackgroundService
                     _logger.LogWarning(
                         "⚠️ Evento agotado (max retries): {EventType} | ID: {EventId} | Error original: {Error}",
                         failedEvent.EventType, failedEvent.Id, failedEvent.LastError);
-                    
+
                     // Archive the exhausted event for manual review
                     await ArchiveExhaustedEvent(failedEvent);
                     await dlq.Remove(failedEvent.Id);
@@ -129,7 +129,7 @@ public class DeadLetterQueueProcessor : BackgroundService
         {
             // Parse the event JSON to determine handling
             using var doc = JsonDocument.Parse(failedEvent.EventJson);
-            
+
             // Log the event details for audit trail
             _logger.LogInformation(
                 "📝 Reprocesando evento: Type={EventType}, Payload={PayloadLength} bytes",
@@ -138,10 +138,10 @@ public class DeadLetterQueueProcessor : BackgroundService
             // For now, we mark events as successfully processed after logging
             // In a full implementation, this would republish to RabbitMQ or 
             // invoke the appropriate handler based on EventType
-            
+
             // Simulate processing delay
             await Task.Delay(100);
-            
+
             return true;
         }
         catch (JsonException ex)
@@ -176,7 +176,7 @@ public class DeadLetterQueueProcessor : BackgroundService
         // - Store to a permanent archive table
         // - Send alert to operations team
         // - Export to external monitoring system
-        
+
         return Task.CompletedTask;
     }
 }

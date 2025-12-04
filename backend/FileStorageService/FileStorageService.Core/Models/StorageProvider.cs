@@ -98,6 +98,22 @@ public class StorageProviderConfig
     public bool EnableVirusScan { get; set; } = true;
 
     /// <summary>
+    /// ClamAV server hostname (default: localhost)
+    /// </summary>
+    public string? ClamAvHost { get; set; } = "localhost";
+
+    /// <summary>
+    /// ClamAV server port (default: 3310)
+    /// </summary>
+    public int ClamAvPort { get; set; } = 3310;
+
+    /// <summary>
+    /// If true, allow file upload when ClamAV scan fails (fail open)
+    /// If false, reject file upload when ClamAV scan fails (fail closed - more secure)
+    /// </summary>
+    public bool FailOpenOnScanError { get; set; } = false;
+
+    /// <summary>
     /// Enable metadata extraction
     /// </summary>
     public bool EnableMetadataExtraction { get; set; } = true;

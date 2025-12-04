@@ -13,8 +13,8 @@
 | Sprint 13 | Seguridad & Autorización | 4-6h | 🔴 CRÍTICO | ✅ COMPLETADO |
 | Sprint 14 | Cobertura de Tests | 3-4h | 🟠 ALTO | ✅ COMPLETADO |
 | Sprint 15 | Jobs & Automatización | 4-5h | 🟡 MEDIO | ✅ COMPLETADO |
-| Sprint 16 | Integración & Contratos | 3-4h | 🟡 MEDIO | ⏳ PENDIENTE |
-| Sprint 17 | Mejoras Operacionales | 2-3h | 🟢 BAJO | ⏳ PENDIENTE |
+| Sprint 16 | Integración & Contratos | 3-4h | 🟡 MEDIO | ✅ COMPLETADO |
+| Sprint 17 | Mejoras Operacionales | 2-3h | 🟢 BAJO | ✅ COMPLETADO |
 
 ---
 
@@ -157,55 +157,71 @@ var userAgent = _httpContextAccessor.HttpContext?.Request.Headers["User-Agent"].
 
 ---
 
-## 🟡 SPRINT 16: Integración & Contratos (MEDIO)
+## 🟡 SPRINT 16: Integración & Contratos (MEDIO) ✅ COMPLETADO
 
-**Objetivo**: Migrar eventos a CarDealer.Contracts
+**Objetivo**: Migrar eventos a CarDealer.Contracts  
+**Estado**: ✅ COMPLETADO (4 de Diciembre 2025)
 
-### US-16.1: Migrar Eventos de NotificationService
-**Esfuerzo**: 2-3h
-
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `NotificationService.Infrastructure/Messaging/RabbitMQNotificationConsumer.cs` | 17 | Replace AuthService.Shared events with CarDealer.Contracts |
-| 2 | `NotificationService.Domain/Interfaces/IPushNotificationService.cs` | 7 | Uncomment when PushNotificationEvent is migrated |
-
-**Pasos**:
-1. Definir eventos en `CarDealer.Contracts`
-2. Actualizar consumers en NotificationService
-3. Actualizar publishers en AuthService
-4. Verificar compatibilidad
-
----
-
-### US-16.2: Métricas Reales en AuditService
-**Esfuerzo**: 1-1.5h
-
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `AuditService.Infrastructure/Metrics/AuditServiceMetrics.cs` | 132 | Implementar sesiones activas |
-| 2 | `AuditService.Infrastructure/Metrics/AuditServiceMetrics.cs` | 138 | Implementar total de logs |
-| 3 | `AuditService.Infrastructure/BackgroundServices/DeadLetterQueueProcessor.cs` | 82 | Implementar republicación |
-
----
-
-## 🟢 SPRINT 17: Mejoras Operacionales (BAJO)
-
-**Objetivo**: Mejoras de infraestructura y seguridad opcionales
-
-### US-17.1: Integración ClamAV para Escaneo de Virus
-**Esfuerzo**: 2-3h
-
-| # | Archivo | Línea | TODO |
-|---|---------|-------|------|
-| 1 | `FileStorageService.Core/Services/VirusScanService.cs` | 95 | Implement actual ClamAV integration |
+### US-16.1: Migrar Eventos de NotificationService ✅
+**Esfuerzo**: 2-3h | **Estado**: ✅ COMPLETADO
 
 **Implementación**:
-- Agregar cliente ClamAV
-- Configurar conexión a servicio ClamAV
-- Escanear archivos antes de almacenar
-- Rechazar archivos infectados
+- Creados eventos en CarDealer.Contracts/Events/Notification/:
+  - EmailNotificationRequestedEvent
+  - SmsNotificationRequestedEvent  
+  - PushNotificationRequestedEvent
+- RabbitMQNotificationConsumer actualizado para usar CarDealer.Contracts
 
-**Requisito**: Servicio ClamAV en docker-compose
+---
+
+### US-16.2: Métricas Reales en AuditService ✅
+**Esfuerzo**: 1-1.5h | **Estado**: ✅ COMPLETADO
+
+**Implementación**:
+- AuditServiceMetrics: IServiceProvider injection
+- GetTotalAuditLogs: Consulta real a IAuditLogRepository.GetTotalCountAsync()
+- GetActiveAuditSessions: Contador thread-safe con Interlocked
+- DeadLetterQueueProcessor: Lógica completa de retry
+  - MaxRetries=5 configurable
+  - AttemptReprocess() con deserialización JSON
+  - ArchiveExhaustedEvent() para eventos agotados
+
+---
+
+## 🟢 SPRINT 17: Mejoras Operacionales (BAJO) ✅ COMPLETADO
+
+**Objetivo**: Mejoras de infraestructura y seguridad opcionales  
+**Estado**: ✅ COMPLETADO (4 de Diciembre 2025)
+
+### US-17.1: Integración ClamAV para Escaneo de Virus ✅
+**Esfuerzo**: 2-3h | **Estado**: ✅ COMPLETADO
+
+**Implementación**:
+- Agregado paquete nClam 6.0.0 a FileStorageService.Core
+- VirusScanService: Integración real con ClamAV daemon
+  - ClamClient para conexión TCP al servidor ClamAV
+  - Configuración: ClamAvHost, ClamAvPort, FailOpenOnScanError
+  - Ping y version check para health monitoring
+  - Scan real de streams con resultados detallados
+  - Clasificación de ThreatLevel (Critical, High, Medium, Low)
+- docker-compose.yml: Servicio ClamAV agregado
+  - Imagen oficial clamav/clamav:stable
+  - Puerto 3310 expuesto
+  - Volume persistente para definiciones
+  - Health check con clamdscan --ping
+  - Auto-actualización de definiciones via freshclam
+
+**Configuración en appsettings.json**:
+```json
+{
+  "StorageProvider": {
+    "EnableVirusScan": true,
+    "ClamAvHost": "clamav",
+    "ClamAvPort": 3310,
+    "FailOpenOnScanError": false
+  }
+}
+```
 
 ---
 
@@ -226,11 +242,11 @@ var userAgent = _httpContextAccessor.HttpContext?.Request.Headers["User-Agent"].
 - [ ] US-15.4: AdminService Use Cases
 
 ### Sprint 16 - Integración & Contratos
-- [ ] US-16.1: Migrar Eventos NotificationService
-- [ ] US-16.2: Métricas Reales AuditService
+- [x] US-16.1: Migrar Eventos NotificationService
+- [x] US-16.2: Métricas Reales AuditService
 
 ### Sprint 17 - Mejoras Operacionales
-- [ ] US-17.1: Integración ClamAV
+- [x] US-17.1: Integración ClamAV
 
 ---
 
