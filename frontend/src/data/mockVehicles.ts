@@ -89,7 +89,7 @@ export const mockVehicles: Vehicle[] = [
     location: 'Miami, FL',
     images: [
       'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1617531653520-bd788419ce59?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop',
     ],
     isFeatured: true,
@@ -170,8 +170,8 @@ export const mockVehicles: Vehicle[] = [
     mileage: 8500,
     location: 'Dallas, TX',
     images: [
-      'https://images.unsplash.com/photo-1584345604476-8ec5f5c4c728?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1589922944975-1095f7bef789?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1547744152-14d985cb937f?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop',
       'https://images.unsplash.com/photo-1612825173281-9a193378527e?w=800&h=600&fit=crop',
     ],
     isFeatured: true,
@@ -250,7 +250,7 @@ export const mockVehicles: Vehicle[] = [
     location: 'New York, NY',
     images: [
       'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1614162692292-7ac56d7f1f2e?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&h=600&fit=crop',
     ],
     isFeatured: true,
     transmission: 'Automatic',
@@ -404,7 +404,7 @@ export const mockVehicles: Vehicle[] = [
     mileage: 18000,
     location: 'Austin, TX',
     images: [
-      'https://images.unsplash.com/photo-1622577575264-44c8a39b6258?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop',
     ],
     transmission: 'Automatic',
     fuelType: 'Gasoline',
@@ -450,6 +450,9 @@ export const filterVehicles = (
     fuelType?: string;
     bodyType?: string;
     condition?: string;
+    features?: string[];
+    minHorsepower?: number;
+    drivetrain?: string;
   }
 ) => {
   return vehicles.filter((vehicle) => {
@@ -465,6 +468,14 @@ export const filterVehicles = (
     if (filters.fuelType && vehicle.fuelType !== filters.fuelType) return false;
     if (filters.bodyType && vehicle.bodyType !== filters.bodyType) return false;
     if (filters.condition && vehicle.condition !== filters.condition) return false;
+    if (filters.minHorsepower && vehicle.horsepower < filters.minHorsepower) return false;
+    if (filters.drivetrain && vehicle.drivetrain !== filters.drivetrain) return false;
+    if (filters.features && filters.features.length > 0) {
+      const hasAllFeatures = filters.features.every(feature => 
+        vehicle.features.some(vf => vf.toLowerCase().includes(feature.toLowerCase()))
+      );
+      if (!hasAllFeatures) return false;
+    }
     return true;
   });
 };
@@ -472,7 +483,7 @@ export const filterVehicles = (
 // Helper function to sort vehicles
 export const sortVehicles = (
   vehicles: Vehicle[],
-  sortBy: 'price-asc' | 'price-desc' | 'year-desc' | 'year-asc' | 'mileage-asc' | 'mileage-desc'
+  sortBy: 'price-asc' | 'price-desc' | 'year-desc' | 'year-asc' | 'mileage-asc' | 'mileage-desc' | 'horsepower-desc'
 ) => {
   const sorted = [...vehicles];
   switch (sortBy) {
@@ -488,6 +499,8 @@ export const sortVehicles = (
       return sorted.sort((a, b) => a.mileage - b.mileage);
     case 'mileage-desc':
       return sorted.sort((a, b) => b.mileage - a.mileage);
+    case 'horsepower-desc':
+      return sorted.sort((a, b) => b.horsepower - a.horsepower);
     default:
       return sorted;
   }

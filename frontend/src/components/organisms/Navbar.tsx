@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useCompare } from '@/hooks/useCompare';
 import Button from '@/components/atoms/Button';
-import { FiMenu, FiX, FiUser, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiLogOut, FiSettings, FiBarChart2 } from 'react-icons/fi';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { count: compareCount } = useCompare();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -36,6 +38,17 @@ export default function Navbar() {
             </Link>
             <Link to="/sell" className="text-gray-700 hover:text-primary transition-colors font-medium">
               Sell Your Car
+            </Link>
+            <Link to="/compare" className="text-gray-700 hover:text-primary transition-colors font-medium relative">
+              <div className="flex items-center gap-2">
+                <FiBarChart2 size={18} />
+                <span>Compare</span>
+                {compareCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {compareCount}
+                  </span>
+                )}
+              </div>
             </Link>
           </div>
 

@@ -133,7 +133,7 @@ export default function ContactSellerForm({ vehicleName, sellerName, sellerPhone
           variant="primary"
           size="lg"
           className="w-full"
-          loading={isSubmitting}
+          isLoading={isSubmitting}
         >
           Send Message
         </Button>

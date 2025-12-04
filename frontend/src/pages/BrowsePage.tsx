@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/layouts/MainLayout';
 import VehicleCard from '@/components/organisms/VehicleCard';
-import FilterSidebar, { type VehicleFilters, type SortOption } from '@/components/organisms/FilterSidebar';
+import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
+import EmptyState from '@/components/organisms/EmptyState';
+import AdvancedFilters, { type VehicleFilters, type SortOption } from '@/components/organisms/AdvancedFilters';
 import Pagination from '@/components/molecules/Pagination';
 import { mockVehicles, filterVehicles, sortVehicles } from '@/data/mockVehicles';
+import { vehicleService } from '@/services/endpoints/vehicleService';
 import { FiGrid, FiList } from 'react-icons/fi';
 
 const ITEMS_PER_PAGE = 12;
@@ -36,37 +40,38 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'year-desc');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [useMockData] = useState(true); // Toggle between mock and real API
 
-  // Filter and sort vehicles
+  // Fetch vehicles with React Query (commented out until API is ready)
+  // const { data, isLoading, isError, refetch } = useQuery({
+  //   queryKey: ['vehicles', filters, sortBy, currentPage],
+  //   queryFn: () => vehicleService.searchVehicles({
+  //     ...filters,
+  //     sort: sortBy,
+  //     page: currentPage,
+  //     limit: ITEMS_PER_PAGE,
+  //   }),
+  //   staleTime: 5 * 60 * 1000, // 5 minutes
+  // });
+
+  // Mock data fallback (remove when API is ready)
+  const isLoading = false;
+  const isError = false;
   const filteredVehicles = filterVehicles(mockVehicles, filters);
   const sortedVehicles = sortVehicles(filteredVehicles, sortBy);
-
-  // Pagination
   const totalPages = Math.ceil(sortedVehicles.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedVehicles = sortedVehicles.slice(startIndex, endIndex);
+  const totalItems = sortedVehicles.length;
+
+  // When using real API, use this instead:
+  // const vehicles = data?.data.items || [];
+  // const totalItems = data?.data.total || 0;
+  // const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
   // Update URL params when filters change
-  const handleFilterChange = (newFilters: VehicleFilters) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
-    updateURLParams(newFilters, sortBy, 1);
-  };
-
-  const handleSortChange = (newSort: SortOption) => {
-    setSortBy(newSort);
-    setCurrentPage(1);
-    updateURLParams(filters, newSort, 1);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    updateURLParams(filters, sortBy, page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const updateURLParams = (filters: VehicleFilters, sort: SortOption, page: number) => {
+  const updateURLParams = useCallback((filters: VehicleFilters, sort: SortOption, page: number) => {
     const params = new URLSearchParams();
     if (filters.make) params.set('make', filters.make);
     if (filters.model) params.set('model', filters.model);
@@ -83,7 +88,25 @@ export default function BrowsePage() {
     params.set('sort', sort);
     if (page > 1) params.set('page', page.toString());
     setSearchParams(params);
-  };
+  }, [setSearchParams]);
+
+  const handleFilterChange = useCallback((newFilters: VehicleFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+    updateURLParams(newFilters, sortBy, 1);
+  }, [sortBy, updateURLParams]);
+
+  const handleSortChange = useCallback((newSort: SortOption) => {
+    setSortBy(newSort);
+    setCurrentPage(1);
+    updateURLParams(filters, newSort, 1);
+  }, [filters, updateURLParams]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    updateURLParams(filters, sortBy, page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [filters, sortBy, updateURLParams]);
 
   return (
     <MainLayout>
@@ -102,7 +125,7 @@ export default function BrowsePage() {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Filters Sidebar */}
             <aside className="lg:w-80 flex-shrink-0">
-              <FilterSidebar
+              <AdvancedFilters
                 onFilterChange={handleFilterChange}
                 onSortChange={handleSortChange}
                 currentFilters={filters}
@@ -153,7 +176,26 @@ export default function BrowsePage() {
               </div>
 
               {/* Vehicle Grid/List */}
-              {paginatedVehicles.length > 0 ? (
+              {isLoading ? (
+                <div
+                  className={`
+                    ${viewMode === 'grid'
+                      ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+                      : 'flex flex-col gap-6'
+                    }
+                    mb-8
+                  `}
+                >
+                  {Array.from({ length: 9 }).map((_, index) => (
+                    <VehicleCardSkeleton key={index} />
+                  ))}
+                </div>
+              ) : isError ? (
+                <EmptyState
+                  type="error"
+                  onAction={() => window.location.reload()}
+                />
+              ) : paginatedVehicles.length > 0 ? (
                 <>
                   <div
                     className={`
@@ -187,27 +229,16 @@ export default function BrowsePage() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    totalItems={sortedVehicles.length}
+                    totalItems={totalItems}
                     itemsPerPage={ITEMS_PER_PAGE}
                     onPageChange={handlePageChange}
                   />
                 </>
               ) : (
-                <div className="bg-white rounded-xl shadow-card p-12 text-center">
-                  <div className="text-6xl mb-4">🚗</div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    No vehicles found
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Try adjusting your filters to see more results
-                  </p>
-                  <button
-                    onClick={() => handleFilterChange({})}
-                    className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 font-medium"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
+                <EmptyState
+                  type="no-results"
+                  onAction={() => handleFilterChange({})}
+                />
               )}
             </main>
           </div>

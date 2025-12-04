@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import { FiMail, FiLock, FiUser, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
@@ -80,14 +81,21 @@ export default function RegisterPage() {
     try {
       setApiError(null);
       
-      // Call register API (mock for now)
-      // await authService.register(data);
+      // Parse name from username
+      const nameParts = data.username.split(' ');
+      const firstName = nameParts[0] || data.username;
+      const lastName = nameParts.slice(1).join(' ') || '';
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call mock register service
+      const response = await authService.register({
+        email: data.email,
+        password: data.password,
+        firstName,
+        lastName,
+      });
       
-      // Auto-login after successful registration
-      await login(data.email, data.password);
+      // Update auth store
+      login(response.user, response.accessToken, response.refreshToken);
       
       // Show success message and redirect
       navigate('/dashboard', { 

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { FiMapPin, FiActivity, FiHeart } from 'react-icons/fi';
+import { FiMapPin, FiActivity, FiHeart, FiBarChart2 } from 'react-icons/fi';
 import { formatPrice, formatMileage } from '@/utils/formatters';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useCompare } from '@/hooks/useCompare';
 
 export interface VehicleCardProps {
   id: string;
@@ -32,6 +34,10 @@ export default function VehicleCard({
   fuelType,
 }: VehicleCardProps) {
   const defaultImage = 'https://via.placeholder.com/400x300?text=No+Image';
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isInCompare, addToCompare, removeFromCompare } = useCompare();
+  const isLiked = isFavorite(id);
+  const inCompare = isInCompare(id);
 
   return (
     <div className="card overflow-hidden group">
@@ -59,13 +65,39 @@ export default function VehicleCard({
 
         {/* Favorite Button */}
         <button
-          className="absolute top-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-colors shadow-sm"
+          className={`
+            absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm
+            ${isLiked ? 'bg-red-500 hover:bg-red-600' : 'bg-white/90 hover:bg-white'}
+          `}
           onClick={(e) => {
             e.preventDefault();
-            // TODO: Add to favorites
+            toggleFavorite(id);
           }}
+          title={isLiked ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <FiHeart className="text-gray-700" size={18} />
+          <FiHeart 
+            className={isLiked ? 'text-white fill-white' : 'text-gray-700'} 
+            size={18} 
+          />
+        </button>
+
+        {/* Compare Button */}
+        <button
+          className={`
+            absolute top-3 right-14 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm
+            ${inCompare ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/90 hover:bg-white text-gray-700'}
+          `}
+          onClick={(e) => {
+            e.preventDefault();
+            if (inCompare) {
+              removeFromCompare(id);
+            } else {
+              addToCompare(id);
+            }
+          }}
+          title={inCompare ? 'Remove from comparison' : 'Add to comparison'}
+        >
+          <FiBarChart2 size={18} />
         </button>
       </div>
 

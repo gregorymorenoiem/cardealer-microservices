@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
@@ -37,7 +38,16 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setApiError(null);
-      await login({ email: data.email, password: data.password, rememberMe: data.rememberMe || false });
+      
+      // Call mock auth service
+      const response = await authService.login({
+        email: data.email,
+        password: data.password,
+        rememberMe: data.rememberMe,
+      });
+      
+      // Update auth store
+      login(response.user, response.accessToken, response.refreshToken);
       
       // Redirect to the page they tried to visit or dashboard
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
@@ -129,6 +139,15 @@ export default function LoginPage() {
           Sign In
         </Button>
       </form>
+
+      {/* Demo Credentials */}
+      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm font-semibold text-blue-900 mb-2">Demo Credentials:</p>
+        <div className="space-y-1 text-xs text-blue-800">
+          <p><strong>User:</strong> demo@cardealer.com / demo123</p>
+          <p><strong>Admin:</strong> admin@cardealer.com / admin123</p>
+        </div>
+      </div>
 
       {/* Divider */}
       <div className="relative my-8">
