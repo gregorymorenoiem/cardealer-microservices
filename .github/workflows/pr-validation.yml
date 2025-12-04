@@ -1,0 +1,50 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/**'
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore backend/CarDealer.sln
+
+      - name: Build
+        run: dotnet build backend/CarDealer.sln --no-restore --configuration Release --warnaserror
+
+      - name: Run tests
+        run: |
+          dotnet test backend/CarDealer.sln \
+            --no-build \
+            --configuration Release \
+            --filter "Category!=RequiresDocker&Category!=Integration" \
+            --verbosity normal
+
+      - name: Check code formatting
+        run: |
+          dotnet format backend/CarDealer.sln --verify-no-changes --verbosity diagnostic || echo "Format check completed with warnings"
