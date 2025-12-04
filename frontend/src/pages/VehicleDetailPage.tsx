@@ -118,7 +118,7 @@ export default function VehicleDetailPage() {
             {/* Right Column - Seller Info & Contact */}
             <div className="space-y-6">
               {/* Seller Info */}
-              <div className="bg-white rounded-xl shadow-card p-6 sticky top-24">
+              <div className="bg-white rounded-xl shadow-card p-6">
                 <h3 className="text-xl font-bold font-heading text-gray-900 mb-4">
                   Seller Information
                 </h3>

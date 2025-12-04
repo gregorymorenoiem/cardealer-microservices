@@ -37,7 +37,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setApiError(null);
-      await login(data.email, data.password);
+      await login({ email: data.email, password: data.password, rememberMe: data.rememberMe || false });
       
       // Redirect to the page they tried to visit or dashboard
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import VehicleCard from '@/components/organisms/VehicleCard';
-import FilterSidebar, { VehicleFilters, SortOption } from '@/components/organisms/FilterSidebar';
+import FilterSidebar, { type VehicleFilters, type SortOption } from '@/components/organisms/FilterSidebar';
 import Pagination from '@/components/molecules/Pagination';
 import { mockVehicles, filterVehicles, sortVehicles } from '@/data/mockVehicles';
 import { FiGrid, FiList } from 'react-icons/fi';
@@ -11,13 +11,9 @@ const ITEMS_PER_PAGE = 12;
 
 export default function BrowsePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<VehicleFilters>({});
-  const [sortBy, setSortBy] = useState<SortOption>('year-desc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
+  
   // Initialize filters from URL params
-  useEffect(() => {
+  const getInitialFilters = (): VehicleFilters => {
     const urlFilters: VehicleFilters = {};
     const make = searchParams.get('make');
     const model = searchParams.get('model');
@@ -25,8 +21,6 @@ export default function BrowsePage() {
     const maxYear = searchParams.get('maxYear');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
-    const sort = searchParams.get('sort') as SortOption;
-    const page = searchParams.get('page');
 
     if (make) urlFilters.make = make;
     if (model) urlFilters.model = model;
@@ -35,10 +29,13 @@ export default function BrowsePage() {
     if (minPrice) urlFilters.minPrice = Number(minPrice);
     if (maxPrice) urlFilters.maxPrice = Number(maxPrice);
 
-    setFilters(urlFilters);
-    if (sort) setSortBy(sort);
-    if (page) setCurrentPage(Number(page));
-  }, [searchParams]);
+    return urlFilters;
+  };
+
+  const [filters, setFilters] = useState<VehicleFilters>(getInitialFilters);
+  const [sortBy, setSortBy] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'year-desc');
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Filter and sort vehicles
   const filteredVehicles = filterVehicles(mockVehicles, filters);

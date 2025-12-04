@@ -235,7 +235,7 @@ export default function ProfilePage() {
             <div>
               <p className="text-sm text-gray-600 mb-1">Member Since</p>
               <p className="text-lg font-semibold text-gray-900">
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                N/A
               </p>
             </div>
             <div>
