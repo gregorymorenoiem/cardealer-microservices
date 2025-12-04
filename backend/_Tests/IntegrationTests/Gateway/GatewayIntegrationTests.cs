@@ -68,14 +68,22 @@ public class GatewayInfrastructureTests : IAsyncLifetime
     {
         // Arrange
         var testKey = "test:gateway:key";
-        var testValue = new { Name = "Test", Value = 123 };
+        var testValue = new TestData { Name = "Test", Value = 123 };
 
         // Act
         await _fixture.Redis.SetAsync(testKey, testValue, TimeSpan.FromMinutes(5));
-        var result = await _fixture.Redis.GetAsync<dynamic>(testKey);
+        var result = await _fixture.Redis.GetAsync<TestData>(testKey);
 
         // Assert
         result.Should().NotBeNull();
+        result!.Name.Should().Be("Test");
+        result.Value.Should().Be(123);
+    }
+
+    private class TestData
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Value { get; set; }
     }
 
     [Fact]
