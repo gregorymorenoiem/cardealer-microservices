@@ -8,13 +8,13 @@
 
 ## 📊 RESUMEN EJECUTIVO
 
-| Sprint | Enfoque | Esfuerzo | Prioridad |
-|--------|---------|----------|-----------|
-| Sprint 13 | Seguridad & Autorización | 4-6h | 🔴 CRÍTICO |
-| Sprint 14 | Cobertura de Tests | 3-4h | 🟠 ALTO |
-| Sprint 15 | Jobs & Automatización | 4-5h | 🟡 MEDIO |
-| Sprint 16 | Integración & Contratos | 3-4h | 🟡 MEDIO |
-| Sprint 17 | Mejoras Operacionales | 2-3h | 🟢 BAJO |
+| Sprint | Enfoque | Esfuerzo | Prioridad | Estado |
+|--------|---------|----------|-----------|--------|
+| Sprint 13 | Seguridad & Autorización | 4-6h | 🔴 CRÍTICO | ✅ COMPLETADO |
+| Sprint 14 | Cobertura de Tests | 3-4h | 🟠 ALTO | ✅ COMPLETADO |
+| Sprint 15 | Jobs & Automatización | 4-5h | 🟡 MEDIO | ⏳ PENDIENTE |
+| Sprint 16 | Integración & Contratos | 3-4h | 🟡 MEDIO | ⏳ PENDIENTE |
+| Sprint 17 | Mejoras Operacionales | 2-3h | 🟢 BAJO | ⏳ PENDIENTE |
 
 ---
 
@@ -77,33 +77,34 @@ var userAgent = _httpContextAccessor.HttpContext?.Request.Headers["User-Agent"].
 
 ---
 
-## 🟠 SPRINT 14: Cobertura de Tests (ALTO)
+## 🟠 SPRINT 14: Cobertura de Tests (ALTO) ✅ COMPLETADO
 
-**Objetivo**: Aumentar tests en servicios con baja cobertura
+**Objetivo**: Aumentar tests en servicios con baja cobertura  
+**Estado**: ✅ COMPLETADO (4 de Diciembre 2025)
 
-### US-14.1: Tests para MediaService
-**Esfuerzo**: 1.5-2h | **Estado Actual**: 2 tests
+### US-14.1: Tests para MediaService ✅
+**Esfuerzo**: 1.5-2h | **Estado**: ✅ COMPLETADO
 
-| Área | Tests a Agregar |
-|------|-----------------|
-| Controllers | Upload, Download, Delete, GetMetadata |
-| Services | ImageProcessingService, ThumbnailGenerator |
-| Validators | FileTypeValidator, FileSizeValidator |
+| Área | Tests Agregados | Estado |
+|------|-----------------|--------|
+| InitUploadCommandHandler | 7 tests (image/video/document types) | ✅ |
+| GetMediaQueryHandler | 6 tests (retrieval, filtering) | ✅ |
+| DeleteMediaCommandHandler | 5 tests (deletion, variants) | ✅ |
 
-**Meta**: Mínimo 15-20 tests
+**Resultado**: 21 tests unitarios pasando (+ fix bug ImageMedia width/height)
 
 ---
 
-### US-14.2: Tests para NotificationService  
-**Esfuerzo**: 1.5-2h | **Estado Actual**: 2 tests
+### US-14.2: Tests para NotificationService ✅
+**Esfuerzo**: 1.5-2h | **Estado**: ✅ COMPLETADO
 
-| Área | Tests a Agregar |
-|------|-----------------|
-| Controllers | Send, GetHistory, MarkAsRead |
-| Services | EmailService, PushService, SMSService |
-| Consumers | RabbitMQ message handling |
+| Área | Tests Agregados | Estado |
+|------|-----------------|--------|
+| SendEmailNotificationCommandHandler | 7 tests (send, failures, metadata) | ✅ |
+| GetNotificationsQueryHandler | 8 tests (filtering, pagination) | ✅ |
+| SendPushNotificationCommandHandler | 7 tests (send, data payload) | ✅ |
 
-**Meta**: Mínimo 15-20 tests
+**Resultado**: 22 tests unitarios pasando
 
 ---
 

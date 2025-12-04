@@ -33,9 +33,11 @@ public class InitUploadCommandHandler : IRequestHandler<InitUploadCommand, ApiRe
 
             MediaAsset mediaAsset = mediaType switch
             {
+                // Note: Width and Height are set to 1 as placeholder values.
+                // They will be updated when the image is actually processed after upload.
                 Domain.Enums.MediaType.Image => new ImageMedia(
                     request.OwnerId, request.Context, request.FileName,
-                    request.ContentType, request.FileSize, storageKey, 0, 0),
+                    request.ContentType, request.FileSize, storageKey, 1, 1),
                 Domain.Enums.MediaType.Video => new VideoMedia(
                     request.OwnerId, request.Context, request.FileName,
                     request.ContentType, request.FileSize, storageKey),
