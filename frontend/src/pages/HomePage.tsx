@@ -4,12 +4,16 @@ import Button from '@/components/atoms/Button';
 import MainLayout from '@/layouts/MainLayout';
 import SearchBar from '@/components/molecules/SearchBar';
 import VehicleCard from '@/components/organisms/VehicleCard';
+import { mockVehicles } from '@/data/mockVehicles';
 
 function HomePage() {
   const handleSearch = (filters: unknown) => {
     console.log('Search filters:', filters);
     // TODO: Navigate to browse page with filters
   };
+
+  // Get featured vehicles for display
+  const featuredVehicles = mockVehicles.filter(v => v.isFeatured).slice(0, 8);
 
   return (
     <MainLayout>
@@ -151,9 +155,22 @@ function HomePage() {
 
           {/* Vehicle Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* Mock Data - Will be replaced with real data */}
-            {mockVehicles.map((vehicle) => (
-              <VehicleCard key={vehicle.id} {...vehicle} />
+            {featuredVehicles.map((vehicle) => (
+              <VehicleCard
+                key={vehicle.id}
+                id={vehicle.id}
+                make={vehicle.make}
+                model={vehicle.model}
+                year={vehicle.year}
+                price={vehicle.price}
+                mileage={vehicle.mileage}
+                location={vehicle.location}
+                imageUrl={vehicle.images[0]}
+                isFeatured={vehicle.isFeatured}
+                isNew={vehicle.isNew}
+                transmission={vehicle.transmission}
+                fuelType={vehicle.fuelType}
+              />
             ))}
           </div>
 
@@ -186,111 +203,5 @@ function HomePage() {
     </MainLayout>
   );
 }
-
-// Mock data for featured vehicles
-const mockVehicles = [
-  {
-    id: '1',
-    make: 'Tesla',
-    model: 'Model 3',
-    year: 2023,
-    price: 42990,
-    mileage: 5200,
-    location: 'Los Angeles, CA',
-    imageUrl: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=400&h=300&fit=crop',
-    isFeatured: true,
-    isNew: true,
-    transmission: 'Automatic',
-    fuelType: 'Electric',
-  },
-  {
-    id: '2',
-    make: 'BMW',
-    model: '3 Series',
-    year: 2022,
-    price: 38500,
-    mileage: 12000,
-    location: 'Miami, FL',
-    imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop',
-    isFeatured: true,
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '3',
-    make: 'Toyota',
-    model: 'Camry',
-    year: 2021,
-    price: 24900,
-    mileage: 28000,
-    location: 'Houston, TX',
-    imageUrl: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=300&fit=crop',
-    transmission: 'Automatic',
-    fuelType: 'Hybrid',
-  },
-  {
-    id: '4',
-    make: 'Ford',
-    model: 'Mustang',
-    year: 2023,
-    price: 35990,
-    mileage: 8500,
-    location: 'Dallas, TX',
-    imageUrl: 'https://images.unsplash.com/photo-1584345604476-8ec5f5c4c728?w=400&h=300&fit=crop',
-    isFeatured: true,
-    transmission: 'Manual',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '5',
-    make: 'Honda',
-    model: 'Accord',
-    year: 2022,
-    price: 27500,
-    mileage: 15000,
-    location: 'Chicago, IL',
-    imageUrl: 'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=400&h=300&fit=crop',
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '6',
-    make: 'Audi',
-    model: 'A4',
-    year: 2023,
-    price: 41200,
-    mileage: 6800,
-    location: 'New York, NY',
-    imageUrl: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=300&fit=crop',
-    isFeatured: true,
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '7',
-    make: 'Mercedes-Benz',
-    model: 'C-Class',
-    year: 2022,
-    price: 43900,
-    mileage: 11000,
-    location: 'Seattle, WA',
-    imageUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&h=300&fit=crop',
-    isFeatured: true,
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
-  },
-  {
-    id: '8',
-    make: 'Chevrolet',
-    model: 'Silverado',
-    year: 2021,
-    price: 39500,
-    mileage: 22000,
-    location: 'Denver, CO',
-    imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop',
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
-  },
-];
 
 export default HomePage;
