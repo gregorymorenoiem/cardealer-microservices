@@ -19,12 +19,12 @@ public class ResilientHealthChecker : IHealthChecker
     private readonly HttpClient _httpClient;
     private readonly ILogger<ResilientHealthChecker> _logger;
     private readonly ResilientHealthCheckerOptions _options;
-    
+
     // Per-service circuit breakers
     private readonly ConcurrentDictionary<string, ResiliencePipeline<HealthCheckResult>> _servicePipelines = new();
-    
+
     public ResilientHealthChecker(
-        IServiceDiscovery discovery, 
+        IServiceDiscovery discovery,
         IHttpClientFactory httpClientFactory,
         ILogger<ResilientHealthChecker> logger,
         ResilientHealthCheckerOptions? options = null)
@@ -34,7 +34,7 @@ public class ResilientHealthChecker : IHealthChecker
         _logger = logger;
         _options = options ?? new ResilientHealthCheckerOptions();
     }
-    
+
     /// <summary>
     /// Gets or creates a resilience pipeline for a specific service
     /// </summary>
@@ -42,7 +42,7 @@ public class ResilientHealthChecker : IHealthChecker
     {
         return _servicePipelines.GetOrAdd(serviceId, id => CreateResiliencePipeline(id));
     }
-    
+
     /// <summary>
     /// Creates a resilience pipeline with retry, circuit breaker, and timeout
     /// </summary>
@@ -55,7 +55,7 @@ public class ResilientHealthChecker : IHealthChecker
                 Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds),
                 OnTimeout = args =>
                 {
-                    _logger.LogWarning("Health check timeout for service {ServiceId} after {Timeout}s", 
+                    _logger.LogWarning("Health check timeout for service {ServiceId} after {Timeout}s",
                         serviceId, _options.TimeoutSeconds);
                     return default;
                 }
@@ -73,7 +73,7 @@ public class ResilientHealthChecker : IHealthChecker
                     .HandleResult(r => r.Status == Domain.Enums.HealthStatus.Unhealthy),
                 OnRetry = args =>
                 {
-                    _logger.LogDebug("Retry attempt {Attempt} for service {ServiceId}", 
+                    _logger.LogDebug("Retry attempt {Attempt} for service {ServiceId}",
                         args.AttemptNumber, serviceId);
                     return default;
                 }
@@ -91,7 +91,7 @@ public class ResilientHealthChecker : IHealthChecker
                     .HandleResult(r => r.Status == Domain.Enums.HealthStatus.Unhealthy),
                 OnOpened = args =>
                 {
-                    _logger.LogWarning("Circuit breaker OPENED for service {ServiceId}. Break duration: {Duration}s", 
+                    _logger.LogWarning("Circuit breaker OPENED for service {ServiceId}. Break duration: {Duration}s",
                         serviceId, _options.CircuitBreakerBreakDurationSeconds);
                     return default;
                 },
@@ -108,19 +108,19 @@ public class ResilientHealthChecker : IHealthChecker
             })
             .Build();
     }
-    
+
     public async Task<HealthCheckResult> CheckHealthAsync(ServiceInstance instance, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(instance.HealthCheckUrl))
         {
             return HealthCheckResult.Degraded(instance.Id, "No health check URL configured");
         }
-        
+
         var pipeline = GetOrCreatePipeline(instance.Id);
-        
+
         try
         {
-            return await pipeline.ExecuteAsync(async token => 
+            return await pipeline.ExecuteAsync(async token =>
             {
                 return await PerformHealthCheckAsync(instance, token);
             }, cancellationToken);
@@ -141,7 +141,7 @@ public class ResilientHealthChecker : IHealthChecker
             return HealthCheckResult.Unhealthy(instance.Id, $"Unexpected error: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// Performs the actual HTTP health check
     /// </summary>
@@ -149,27 +149,27 @@ public class ResilientHealthChecker : IHealthChecker
     {
         var healthCheckUrl = BuildHealthCheckUrl(instance);
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             var response = await _httpClient.GetAsync(healthCheckUrl, cancellationToken);
             stopwatch.Stop();
-            
+
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("Health check successful for {ServiceId} in {Duration}ms", 
+                _logger.LogDebug("Health check successful for {ServiceId} in {Duration}ms",
                     instance.Id, stopwatch.ElapsedMilliseconds);
                 return HealthCheckResult.Healthy(instance.Id, stopwatch.ElapsedMilliseconds, (int)response.StatusCode);
             }
-            
-            _logger.LogWarning("Health check failed for {ServiceId}: {StatusCode}", 
+
+            _logger.LogWarning("Health check failed for {ServiceId}: {StatusCode}",
                 instance.Id, response.StatusCode);
             return HealthCheckResult.Unhealthy(instance.Id, $"Health check returned {response.StatusCode}");
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             stopwatch.Stop();
-            _logger.LogWarning("Health check timed out for {ServiceId} after {Duration}ms", 
+            _logger.LogWarning("Health check timed out for {ServiceId} after {Duration}ms",
                 instance.Id, stopwatch.ElapsedMilliseconds);
             throw; // Rethrow for retry policy to handle
         }
@@ -180,36 +180,36 @@ public class ResilientHealthChecker : IHealthChecker
             throw; // Rethrow for retry policy to handle
         }
     }
-    
+
     private static string BuildHealthCheckUrl(ServiceInstance instance)
     {
         var scheme = instance.Port == 443 ? "https" : "http";
         var path = instance.HealthCheckUrl?.TrimStart('/') ?? "health";
         return $"{scheme}://{instance.Host}:{instance.Port}/{path}";
     }
-    
+
     public async Task<List<HealthCheckResult>> CheckServiceHealthAsync(string serviceName, CancellationToken cancellationToken = default)
     {
         var instances = await _discovery.GetServiceInstancesAsync(serviceName, cancellationToken);
         var tasks = instances.Select(instance => CheckHealthAsync(instance, cancellationToken));
-        
+
         return (await Task.WhenAll(tasks)).ToList();
     }
-    
+
     public async Task<List<HealthCheckResult>> CheckAllServicesHealthAsync(CancellationToken cancellationToken = default)
     {
         var serviceNames = await _discovery.GetServiceNamesAsync(cancellationToken);
         var allResults = new List<HealthCheckResult>();
-        
+
         foreach (var serviceName in serviceNames)
         {
             var results = await CheckServiceHealthAsync(serviceName, cancellationToken);
             allResults.AddRange(results);
         }
-        
+
         return allResults;
     }
-    
+
     /// <summary>
     /// Gets the current state of the circuit breaker for a specific service
     /// </summary>
@@ -219,12 +219,12 @@ public class ResilientHealthChecker : IHealthChecker
         {
             return CircuitBreakerState.Unknown;
         }
-        
+
         // Note: Polly v8 doesn't expose circuit state directly like v7
         // This would need custom implementation to track state
         return CircuitBreakerState.Closed;
     }
-    
+
     /// <summary>
     /// Resets the circuit breaker for a specific service
     /// </summary>
@@ -235,7 +235,7 @@ public class ResilientHealthChecker : IHealthChecker
             _logger.LogInformation("Circuit breaker reset for service {ServiceId}", serviceId);
         }
     }
-    
+
     /// <summary>
     /// Resets all circuit breakers
     /// </summary>
@@ -266,32 +266,32 @@ public class ResilientHealthCheckerOptions
     /// Maximum number of retry attempts (default: 3)
     /// </summary>
     public int MaxRetryAttempts { get; set; } = 3;
-    
+
     /// <summary>
     /// Initial delay between retries in milliseconds (default: 200)
     /// </summary>
     public int RetryDelayMilliseconds { get; set; } = 200;
-    
+
     /// <summary>
     /// Timeout for health check in seconds (default: 10)
     /// </summary>
     public int TimeoutSeconds { get; set; } = 10;
-    
+
     /// <summary>
     /// Failure ratio threshold to open circuit breaker (default: 0.5 = 50%)
     /// </summary>
     public double CircuitBreakerFailureRatio { get; set; } = 0.5;
-    
+
     /// <summary>
     /// Sampling duration for circuit breaker in seconds (default: 30)
     /// </summary>
     public int CircuitBreakerSamplingDurationSeconds { get; set; } = 30;
-    
+
     /// <summary>
     /// Minimum throughput before circuit breaker can open (default: 3)
     /// </summary>
     public int CircuitBreakerMinimumThroughput { get; set; } = 3;
-    
+
     /// <summary>
     /// Duration circuit breaker stays open in seconds (default: 30)
     /// </summary>

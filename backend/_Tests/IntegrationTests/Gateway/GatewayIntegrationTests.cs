@@ -7,42 +7,26 @@ namespace IntegrationTests.Gateway;
 
 /// <summary>
 /// Integration tests for Gateway API routing and health checks
+/// These tests require Docker to be running
 /// </summary>
 [Collection("Infrastructure")]
-public class GatewayIntegrationTests : IAsyncLifetime
+[Trait("Category", "RequiresDocker")]
+public class GatewayInfrastructureTests : IAsyncLifetime
 {
     private readonly InfrastructureFixture _fixture;
-    private HttpClient? _client;
-    private TestServer? _server;
 
-    public GatewayIntegrationTests(InfrastructureFixture fixture)
+    public GatewayInfrastructureTests(InfrastructureFixture fixture)
     {
         _fixture = fixture;
     }
 
     public async Task InitializeAsync()
     {
-        // Build test configuration
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.Test.json")
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionStrings:DefaultConnection"] = _fixture.Postgres.ConnectionString,
-                ["Redis:ConnectionString"] = _fixture.Redis.ConnectionString,
-                ["RabbitMQ:HostName"] = _fixture.RabbitMQ.Host,
-                ["RabbitMQ:Port"] = _fixture.RabbitMQ.Port.ToString()
-            })
-            .Build();
-
-        // Note: Full Gateway integration would require WebApplicationFactory
-        // For now, we test the fixtures work
         await Task.CompletedTask;
     }
 
     public async Task DisposeAsync()
     {
-        _client?.Dispose();
-        _server?.Dispose();
         await Task.CompletedTask;
     }
 
@@ -118,7 +102,7 @@ public class GatewayIntegrationTests : IAsyncLifetime
 
         // Assert
         result.Should().NotBeNull();
-        System.Text.Encoding.UTF8.GetString(result.Body.ToArray()).Should().Contain("test");
+        System.Text.Encoding.UTF8.GetString(result!.Body.ToArray()).Should().Contain("test");
     }
 
     [Fact]

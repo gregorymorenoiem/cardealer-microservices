@@ -59,12 +59,12 @@ public class RetentionCleanupHostedServiceTests
 
         // Act & Assert - Should not throw
         await service.StartAsync(cts.Token);
-        
+
         // Give it a moment to start
         await Task.Delay(100);
-        
+
         cts.Cancel();
-        
+
         // Wait for graceful shutdown
         try
         {
@@ -107,13 +107,13 @@ public class RetentionCleanupHostedServiceTests
             _mockLogger.Object);
 
         var cts = new CancellationTokenSource();
-        
+
         // Act - Start the service
         var executeTask = service.StartAsync(cts.Token);
-        
+
         // Wait for startup delay to begin
         await Task.Delay(50);
-        
+
         // Cancel immediately
         cts.Cancel();
 
@@ -147,10 +147,10 @@ public class RetentionCleanupHostedServiceTests
 
         // Act
         await service.StartAsync(cts.Token);
-        
+
         // Give it a moment to log
         await Task.Delay(100);
-        
+
         cts.Cancel();
         await service.StopAsync(CancellationToken.None);
 

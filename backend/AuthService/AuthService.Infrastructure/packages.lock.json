@@ -1022,6 +1022,9 @@
         "dependencies": {
           "Consul": "[1.7.14.3, )",
           "Microsoft.Extensions.Http": "[8.0.0, )",
+          "Microsoft.Extensions.Http.Polly": "[8.0.0, )",
+          "Polly": "[8.4.2, )",
+          "Polly.Extensions.Http": "[3.0.0, )",
           "ServiceDiscovery.Application": "[1.0.0, )",
           "ServiceDiscovery.Domain": "[1.0.0, )"
         }

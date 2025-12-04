@@ -20,9 +20,9 @@ public static class ResilientHealthCheckExtensions
     {
         var options = new ResilientHealthCheckerOptions();
         configureOptions?.Invoke(options);
-        
+
         services.AddSingleton(options);
-        
+
         // Register HttpClient with Polly policies for external calls
         services.AddHttpClient("HealthCheck")
             .ConfigureHttpClient(client =>
@@ -31,13 +31,13 @@ public static class ResilientHealthCheckExtensions
             })
             .AddPolicyHandler(GetRetryPolicy(options))
             .AddPolicyHandler(GetCircuitBreakerPolicy(options));
-        
+
         // Register resilient health checker
         services.AddSingleton<IHealthChecker, ResilientHealthChecker>();
-        
+
         return services;
     }
-    
+
     /// <summary>
     /// Adds resilient health check services with default options
     /// </summary>
@@ -45,7 +45,7 @@ public static class ResilientHealthCheckExtensions
     {
         return services.AddResilientHealthCheck(null);
     }
-    
+
     private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(ResilientHealthCheckerOptions options)
     {
         return HttpPolicyExtensions
@@ -55,7 +55,7 @@ public static class ResilientHealthCheckExtensions
                 retryAttempt => TimeSpan.FromMilliseconds(
                     options.RetryDelayMilliseconds * Math.Pow(2, retryAttempt - 1)));
     }
-    
+
     private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy(ResilientHealthCheckerOptions options)
     {
         return HttpPolicyExtensions
