@@ -1,0 +1,508 @@
+{
+    "dashboard": {
+        "id": null,
+        "uid": "cardealer-microservices-overview",
+        "title": "CarDealer Microservices Overview",
+        "tags": [
+            "cardealer",
+            "microservices",
+            "overview",
+            "sre"
+        ],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "annotations": {
+            "list": []
+        },
+        "panels": [
+            {
+                "id": 1,
+                "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+                "type": "text",
+                "title": "",
+                "options": {
+                    "mode": "markdown",
+                    "content": "# 🚗 CarDealer Microservices Platform\n**Real-time monitoring of all microservices** | [Gateway](/d/gateway-overview) | [Service Discovery](/d/service-discovery-overview) | [Backup & DR](/d/backup-dr-overview) | [OTEL Collector](/d/otel-collector-overview)"
+                }
+            },
+            {
+                "id": 2,
+                "gridPos": { "h": 4, "w": 3, "x": 0, "y": 3 },
+                "type": "stat",
+                "title": "Gateway",
+                "targets": [
+                    {
+                        "expr": "up{job=\"gateway\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 3,
+                "gridPos": { "h": 4, "w": 3, "x": 3, "y": 3 },
+                "type": "stat",
+                "title": "Auth Service",
+                "targets": [
+                    {
+                        "expr": "up{job=\"auth-service\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 4,
+                "gridPos": { "h": 4, "w": 3, "x": 6, "y": 3 },
+                "type": "stat",
+                "title": "Service Discovery",
+                "targets": [
+                    {
+                        "expr": "up{job=\"service-discovery\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 5,
+                "gridPos": { "h": 4, "w": 3, "x": 9, "y": 3 },
+                "type": "stat",
+                "title": "Backup DR",
+                "targets": [
+                    {
+                        "expr": "up{job=\"backup-dr-service\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 6,
+                "gridPos": { "h": 4, "w": 3, "x": 12, "y": 3 },
+                "type": "stat",
+                "title": "Notification",
+                "targets": [
+                    {
+                        "expr": "up{job=\"notification-service\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 7,
+                "gridPos": { "h": 4, "w": 3, "x": 15, "y": 3 },
+                "type": "stat",
+                "title": "Idempotency",
+                "targets": [
+                    {
+                        "expr": "up{job=\"idempotency-service\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 8,
+                "gridPos": { "h": 4, "w": 3, "x": 18, "y": 3 },
+                "type": "stat",
+                "title": "Error Service",
+                "targets": [
+                    {
+                        "expr": "up{job=\"error-service\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 9,
+                "gridPos": { "h": 4, "w": 3, "x": 21, "y": 3 },
+                "type": "stat",
+                "title": "OTEL Collector",
+                "targets": [
+                    {
+                        "expr": "up{job=\"otel-collector\"}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "✅ UP" } } },
+                            { "type": "value", "options": { "0": { "text": "❌ DOWN" } } }
+                        ],
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 10,
+                "gridPos": { "h": 8, "w": 8, "x": 0, "y": 7 },
+                "type": "timeseries",
+                "title": "Request Rate by Service",
+                "targets": [
+                    {
+                        "expr": "sum(rate(http_server_request_duration_seconds_count[5m])) by (service_name)",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "reqps",
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2,
+                            "fillOpacity": 20
+                        }
+                    }
+                }
+            },
+            {
+                "id": 11,
+                "gridPos": { "h": 8, "w": 8, "x": 8, "y": 7 },
+                "type": "timeseries",
+                "title": "Error Rate by Service",
+                "targets": [
+                    {
+                        "expr": "sum(rate(http_server_request_duration_seconds_count{http_status_code=~\"5..\"}[5m])) by (service_name) / sum(rate(http_server_request_duration_seconds_count[5m])) by (service_name) * 100",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percent",
+                        "min": 0,
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 1, "color": "yellow" },
+                                { "value": 5, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 12,
+                "gridPos": { "h": 8, "w": 8, "x": 16, "y": 7 },
+                "type": "timeseries",
+                "title": "Response Time P95 by Service",
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le, service_name))",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "s",
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        }
+                    }
+                }
+            },
+            {
+                "id": 13,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+                "type": "heatmap",
+                "title": "Request Duration Heatmap",
+                "targets": [
+                    {
+                        "expr": "sum(increase(http_server_request_duration_seconds_bucket[1m])) by (le)",
+                        "legendFormat": "{{le}}",
+                        "refId": "A",
+                        "format": "heatmap"
+                    }
+                ],
+                "options": {
+                    "calculate": false,
+                    "cellGap": 1,
+                    "color": {
+                        "scheme": "Oranges"
+                    }
+                }
+            },
+            {
+                "id": 14,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+                "type": "table",
+                "title": "Service Health Summary",
+                "targets": [
+                    {
+                        "expr": "up",
+                        "refId": "A",
+                        "format": "table",
+                        "instant": true
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "displayMode": "color-background"
+                        },
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        },
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "Healthy" } } },
+                            { "type": "value", "options": { "0": { "text": "Unhealthy" } } }
+                        ]
+                    }
+                },
+                "options": {
+                    "showHeader": true
+                },
+                "transformations": [
+                    {
+                        "id": "organize",
+                        "options": {
+                            "excludeByName": { "Time": true, "__name__": true },
+                            "renameByName": { "job": "Service", "Value": "Status", "instance": "Instance" }
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 15,
+                "gridPos": { "h": 6, "w": 6, "x": 0, "y": 23 },
+                "type": "stat",
+                "title": "Total Requests (1h)",
+                "targets": [
+                    {
+                        "expr": "sum(increase(http_server_request_duration_seconds_count[1h]))",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "palette-classic" }
+                    }
+                }
+            },
+            {
+                "id": 16,
+                "gridPos": { "h": 6, "w": 6, "x": 6, "y": 23 },
+                "type": "stat",
+                "title": "Total Errors (1h)",
+                "targets": [
+                    {
+                        "expr": "sum(increase(http_server_request_duration_seconds_count{http_status_code=~\"5..\"}[1h]))",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 10, "color": "yellow" },
+                                { "value": 100, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 17,
+                "gridPos": { "h": 6, "w": 6, "x": 12, "y": 23 },
+                "type": "stat",
+                "title": "Avg Response Time",
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le))",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "s",
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 0.5, "color": "yellow" },
+                                { "value": 1, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 18,
+                "gridPos": { "h": 6, "w": 6, "x": 18, "y": 23 },
+                "type": "stat",
+                "title": "Services Online",
+                "targets": [
+                    {
+                        "expr": "count(up == 1)",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 5, "color": "yellow" },
+                                { "value": 8, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "folderId": 0,
+    "overwrite": true
+}

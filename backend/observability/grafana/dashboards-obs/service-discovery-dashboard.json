@@ -1,0 +1,403 @@
+{
+    "dashboard": {
+        "id": null,
+        "uid": "service-discovery-overview",
+        "title": "Service Discovery Dashboard",
+        "tags": [
+            "service-discovery",
+            "consul",
+            "health-checks",
+            "cardealer"
+        ],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "annotations": {
+            "list": []
+        },
+        "templating": {
+            "list": [
+                {
+                    "name": "service",
+                    "type": "query",
+                    "datasource": "Prometheus",
+                    "query": "label_values(service_discovery_instances_total, service_name)",
+                    "refresh": 2,
+                    "multi": true,
+                    "includeAll": true
+                }
+            ]
+        },
+        "panels": [
+            {
+                "id": 1,
+                "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+                "type": "stat",
+                "title": "Service Discovery Status",
+                "targets": [
+                    {
+                        "expr": "up{job=\"service-discovery\"}",
+                        "legendFormat": "ServiceDiscovery",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        },
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "UP", "color": "green" } } },
+                            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" } } }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": 2,
+                "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+                "type": "stat",
+                "title": "Total Services Registered",
+                "targets": [
+                    {
+                        "expr": "count(count by (service_name) (service_discovery_instances_total))",
+                        "legendFormat": "Services",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "blue" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 3,
+                "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+                "type": "stat",
+                "title": "Total Instances",
+                "targets": [
+                    {
+                        "expr": "sum(service_discovery_instances_total)",
+                        "legendFormat": "Instances",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 4,
+                "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+                "type": "stat",
+                "title": "Healthy Instances",
+                "targets": [
+                    {
+                        "expr": "sum(service_discovery_healthy_instances_total)",
+                        "legendFormat": "Healthy",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 5,
+                "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+                "type": "stat",
+                "title": "Unhealthy Instances",
+                "targets": [
+                    {
+                        "expr": "sum(service_discovery_unhealthy_instances_total)",
+                        "legendFormat": "Unhealthy",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 1, "color": "yellow" },
+                                { "value": 3, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 6,
+                "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+                "type": "stat",
+                "title": "Circuit Breakers Open",
+                "targets": [
+                    {
+                        "expr": "sum(service_discovery_circuit_breaker_open_total)",
+                        "legendFormat": "Open",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 1, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 7,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+                "type": "timeseries",
+                "title": "Instances by Service",
+                "targets": [
+                    {
+                        "expr": "service_discovery_instances_total",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2,
+                            "fillOpacity": 20
+                        }
+                    }
+                }
+            },
+            {
+                "id": 8,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+                "type": "timeseries",
+                "title": "Health Check Success Rate",
+                "targets": [
+                    {
+                        "expr": "sum(rate(service_discovery_health_check_success_total[5m])) by (service_name) / sum(rate(service_discovery_health_check_total[5m])) by (service_name) * 100",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percent",
+                        "min": 0,
+                        "max": 100,
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2,
+                            "fillOpacity": 10
+                        },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 80, "color": "yellow" },
+                                { "value": 95, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 9,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+                "type": "timeseries",
+                "title": "Health Check Duration (p95)",
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.95, sum(rate(service_discovery_health_check_duration_seconds_bucket[5m])) by (le, service_name))",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "s",
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        }
+                    }
+                }
+            },
+            {
+                "id": 10,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+                "type": "timeseries",
+                "title": "Circuit Breaker State Changes",
+                "targets": [
+                    {
+                        "expr": "rate(service_discovery_circuit_breaker_state_changes_total[5m])",
+                        "legendFormat": "{{service_name}} - {{state}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "bars",
+                            "fillOpacity": 80
+                        }
+                    }
+                }
+            },
+            {
+                "id": 11,
+                "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+                "type": "piechart",
+                "title": "Service Distribution",
+                "targets": [
+                    {
+                        "expr": "service_discovery_instances_total",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A",
+                        "instant": true
+                    }
+                ],
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "right"
+                    },
+                    "pieType": "donut"
+                }
+            },
+            {
+                "id": 12,
+                "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 },
+                "type": "timeseries",
+                "title": "Service Registrations/Deregistrations",
+                "targets": [
+                    {
+                        "expr": "rate(service_discovery_registrations_total[5m])",
+                        "legendFormat": "Registrations",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "rate(service_discovery_deregistrations_total[5m])",
+                        "legendFormat": "Deregistrations",
+                        "refId": "B"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        }
+                    }
+                }
+            },
+            {
+                "id": 13,
+                "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+                "type": "table",
+                "title": "Service Health Status",
+                "targets": [
+                    {
+                        "expr": "service_discovery_healthy_instances_total / service_discovery_instances_total * 100",
+                        "legendFormat": "{{service_name}}",
+                        "refId": "A",
+                        "format": "table",
+                        "instant": true
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percent",
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 80, "color": "yellow" },
+                                { "value": 100, "color": "green" }
+                            ]
+                        }
+                    }
+                },
+                "options": {
+                    "showHeader": true
+                },
+                "transformations": [
+                    {
+                        "id": "organize",
+                        "options": {
+                            "excludeByName": { "Time": true },
+                            "renameByName": { "Value": "Health %", "service_name": "Service" }
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 14,
+                "gridPos": { "h": 6, "w": 24, "x": 0, "y": 28 },
+                "type": "timeseries",
+                "title": "Retry Attempts by Service",
+                "targets": [
+                    {
+                        "expr": "rate(service_discovery_retry_attempts_total[5m])",
+                        "legendFormat": "{{service_name}} - Attempt {{attempt}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "bars",
+                            "fillOpacity": 60
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "folderId": 0,
+    "overwrite": true
+}

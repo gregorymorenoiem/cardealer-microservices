@@ -1,0 +1,569 @@
+{
+    "dashboard": {
+        "id": null,
+        "uid": "backup-dr-overview",
+        "title": "Backup & Disaster Recovery Dashboard",
+        "tags": [
+            "backup",
+            "disaster-recovery",
+            "storage",
+            "cardealer"
+        ],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "30s",
+        "time": {
+            "from": "now-24h",
+            "to": "now"
+        },
+        "annotations": {
+            "list": [
+                {
+                    "datasource": "Prometheus",
+                    "enable": true,
+                    "expr": "backup_job_completed_total",
+                    "name": "Backup Completed",
+                    "iconColor": "green",
+                    "tagKeys": "backup_type,database_type"
+                },
+                {
+                    "datasource": "Prometheus",
+                    "enable": true,
+                    "expr": "backup_job_failed_total",
+                    "name": "Backup Failed",
+                    "iconColor": "red",
+                    "tagKeys": "backup_type,database_type"
+                }
+            ]
+        },
+        "templating": {
+            "list": [
+                {
+                    "name": "database",
+                    "type": "query",
+                    "datasource": "Prometheus",
+                    "query": "label_values(backup_job_total, database_type)",
+                    "refresh": 2,
+                    "multi": true,
+                    "includeAll": true
+                },
+                {
+                    "name": "backup_type",
+                    "type": "query",
+                    "datasource": "Prometheus",
+                    "query": "label_values(backup_job_total, backup_type)",
+                    "refresh": 2,
+                    "multi": true,
+                    "includeAll": true
+                }
+            ]
+        },
+        "panels": [
+            {
+                "id": 1,
+                "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+                "type": "stat",
+                "title": "BackupDR Service Status",
+                "targets": [
+                    {
+                        "expr": "up{job=\"backup-dr-service\"}",
+                        "legendFormat": "BackupDR",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "textMode": "value"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        },
+                        "mappings": [
+                            { "type": "value", "options": { "1": { "text": "UP", "color": "green" } } },
+                            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" } } }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": 2,
+                "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+                "type": "stat",
+                "title": "Backups Today",
+                "targets": [
+                    {
+                        "expr": "sum(increase(backup_job_completed_total[24h]))",
+                        "legendFormat": "Completed",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 3,
+                "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+                "type": "stat",
+                "title": "Failed Backups (24h)",
+                "targets": [
+                    {
+                        "expr": "sum(increase(backup_job_failed_total[24h]))",
+                        "legendFormat": "Failed",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 1, "color": "yellow" },
+                                { "value": 3, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 4,
+                "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+                "type": "stat",
+                "title": "Success Rate (24h)",
+                "targets": [
+                    {
+                        "expr": "sum(increase(backup_job_completed_total[24h])) / (sum(increase(backup_job_completed_total[24h])) + sum(increase(backup_job_failed_total[24h]))) * 100",
+                        "legendFormat": "Success %",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percent",
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 90, "color": "yellow" },
+                                { "value": 99, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 5,
+                "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+                "type": "stat",
+                "title": "Total Storage Used",
+                "targets": [
+                    {
+                        "expr": "sum(backup_storage_used_bytes)",
+                        "legendFormat": "Storage",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "bytes",
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 107374182400, "color": "yellow" },
+                                { "value": 536870912000, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 6,
+                "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+                "type": "stat",
+                "title": "Backups Pending Retention",
+                "targets": [
+                    {
+                        "expr": "sum(backup_retention_pending_total)",
+                        "legendFormat": "Pending",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 10, "color": "yellow" },
+                                { "value": 50, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 7,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+                "type": "timeseries",
+                "title": "Backup Jobs Over Time",
+                "targets": [
+                    {
+                        "expr": "sum(rate(backup_job_completed_total[1h])) by (database_type)",
+                        "legendFormat": "{{database_type}} - Completed",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(rate(backup_job_failed_total[1h])) by (database_type)",
+                        "legendFormat": "{{database_type}} - Failed",
+                        "refId": "B"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2,
+                            "fillOpacity": 20
+                        }
+                    },
+                    "overrides": [
+                        {
+                            "matcher": { "id": "byRegexp", "options": ".*Failed.*" },
+                            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+                        }
+                    ]
+                }
+            },
+            {
+                "id": 8,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+                "type": "timeseries",
+                "title": "Backup Duration by Database Type",
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.95, sum(rate(backup_duration_seconds_bucket[1h])) by (le, database_type))",
+                        "legendFormat": "{{database_type}} p95",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.50, sum(rate(backup_duration_seconds_bucket[1h])) by (le, database_type))",
+                        "legendFormat": "{{database_type}} p50",
+                        "refId": "B"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "s",
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        }
+                    }
+                }
+            },
+            {
+                "id": 9,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+                "type": "timeseries",
+                "title": "Storage Usage Over Time",
+                "targets": [
+                    {
+                        "expr": "sum(backup_storage_used_bytes) by (database_type)",
+                        "legendFormat": "{{database_type}}",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "bytes",
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2,
+                            "fillOpacity": 30,
+                            "stacking": { "mode": "normal" }
+                        }
+                    }
+                }
+            },
+            {
+                "id": 10,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+                "type": "timeseries",
+                "title": "Backup Size Distribution",
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.95, sum(rate(backup_size_bytes_bucket[1h])) by (le, database_type))",
+                        "legendFormat": "{{database_type}} p95",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.50, sum(rate(backup_size_bytes_bucket[1h])) by (le, database_type))",
+                        "legendFormat": "{{database_type}} p50",
+                        "refId": "B"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "bytes",
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        }
+                    }
+                }
+            },
+            {
+                "id": 11,
+                "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+                "type": "piechart",
+                "title": "Backups by Database Type (24h)",
+                "targets": [
+                    {
+                        "expr": "sum(increase(backup_job_completed_total[24h])) by (database_type)",
+                        "legendFormat": "{{database_type}}",
+                        "refId": "A",
+                        "instant": true
+                    }
+                ],
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "right"
+                    },
+                    "pieType": "donut"
+                }
+            },
+            {
+                "id": 12,
+                "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 },
+                "type": "piechart",
+                "title": "Backups by Type (Full/Incremental)",
+                "targets": [
+                    {
+                        "expr": "sum(increase(backup_job_completed_total[24h])) by (backup_type)",
+                        "legendFormat": "{{backup_type}}",
+                        "refId": "A",
+                        "instant": true
+                    }
+                ],
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "right"
+                    },
+                    "pieType": "donut"
+                }
+            },
+            {
+                "id": 13,
+                "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+                "type": "gauge",
+                "title": "Storage Capacity Used",
+                "targets": [
+                    {
+                        "expr": "sum(backup_storage_used_bytes) / sum(backup_storage_total_bytes) * 100",
+                        "legendFormat": "Usage %",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percent",
+                        "min": 0,
+                        "max": 100,
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "green" },
+                                { "value": 70, "color": "yellow" },
+                                { "value": 90, "color": "red" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 14,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+                "type": "timeseries",
+                "title": "Restore Operations",
+                "targets": [
+                    {
+                        "expr": "sum(rate(restore_job_completed_total[1h])) by (database_type)",
+                        "legendFormat": "{{database_type}} - Completed",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(rate(restore_job_failed_total[1h])) by (database_type)",
+                        "legendFormat": "{{database_type}} - Failed",
+                        "refId": "B"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "bars",
+                            "fillOpacity": 80
+                        }
+                    },
+                    "overrides": [
+                        {
+                            "matcher": { "id": "byRegexp", "options": ".*Failed.*" },
+                            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+                        }
+                    ]
+                }
+            },
+            {
+                "id": 15,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+                "type": "timeseries",
+                "title": "Retention Policy Executions",
+                "targets": [
+                    {
+                        "expr": "rate(backup_retention_executed_total[1h])",
+                        "legendFormat": "Executions",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "rate(backup_retention_deleted_total[1h])",
+                        "legendFormat": "Backups Deleted",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "rate(backup_retention_bytes_freed[1h])",
+                        "legendFormat": "Bytes Freed",
+                        "refId": "C"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "drawStyle": "line",
+                            "lineWidth": 2
+                        }
+                    }
+                }
+            },
+            {
+                "id": 16,
+                "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
+                "type": "table",
+                "title": "Recent Backup Jobs",
+                "targets": [
+                    {
+                        "expr": "backup_job_last_success_timestamp_seconds",
+                        "legendFormat": "{{database_name}}",
+                        "refId": "A",
+                        "format": "table",
+                        "instant": true
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "displayMode": "color-text"
+                        }
+                    },
+                    "overrides": [
+                        {
+                            "matcher": { "id": "byName", "options": "Value" },
+                            "properties": [
+                                { "id": "unit", "value": "dateTimeFromNow" },
+                                { "id": "displayName", "value": "Last Success" }
+                            ]
+                        }
+                    ]
+                },
+                "options": {
+                    "showHeader": true
+                },
+                "transformations": [
+                    {
+                        "id": "organize",
+                        "options": {
+                            "excludeByName": { "Time": true },
+                            "renameByName": { "database_name": "Database", "database_type": "Type" }
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 17,
+                "gridPos": { "h": 6, "w": 12, "x": 0, "y": 44 },
+                "type": "stat",
+                "title": "Encryption Status",
+                "targets": [
+                    {
+                        "expr": "sum(backup_encryption_enabled)",
+                        "legendFormat": "Encrypted Backups",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "yellow" },
+                                { "value": 1, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 18,
+                "gridPos": { "h": 6, "w": 12, "x": 12, "y": 44 },
+                "type": "stat",
+                "title": "Compression Ratio (avg)",
+                "targets": [
+                    {
+                        "expr": "avg(backup_compression_ratio)",
+                        "legendFormat": "Ratio",
+                        "refId": "A"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percentunit",
+                        "color": { "mode": "thresholds" },
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                { "value": 0, "color": "red" },
+                                { "value": 0.3, "color": "yellow" },
+                                { "value": 0.5, "color": "green" }
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "folderId": 0,
+    "overwrite": true
+}
