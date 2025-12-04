@@ -1,6 +1,6 @@
 # 🚀 Sprint 11: Coverage Improvements & Clean Architecture
 
-**Estado:** 🔄 EN PROGRESO (US-11.4 ✅, US-11.1 🔄)  
+**Estado:** 🔄 EN PROGRESO (US-11.4 ✅, US-11.1 ✅, US-11.2 ⚠️, US-11.3 ✅)  
 **Fecha de inicio:** 3 de diciembre de 2025  
 **Sprint anterior:** Sprint 10 (100% completo - 7/7 US, 253 tests, 14h)  
 **Objetivo:** Mejorar coverage de servicios baseline y refactorizar Gateway con Clean Architecture
@@ -10,13 +10,13 @@
 | User Story | Estado | Tests Agregados | Coverage |
 |------------|--------|-----------------|----------|
 | US-11.4 Gateway Clean Architecture | ✅ COMPLETADO | +85 tests (45→130) | 85%+ |
-| US-11.1 IdempotencyService Coverage | 🔄 EN PROGRESO | +31 tests (58→89) | 65%+ |
-| US-11.2 BackupDRService Coverage | ⬜ PENDIENTE | - | 13.28% |
-| US-11.3 Gateway Coverage | ⬜ PENDIENTE | - | 38.39% |
+| US-11.1 IdempotencyService Coverage | ✅ COMPLETADO | +31 tests (58→89) | 89.84% |
+| US-11.2 BackupDRService Coverage | ⚠️ PARCIAL | +30 tests (380→410) | 60.44% |
+| US-11.3 Gateway Coverage | ✅ COMPLETADO | +30 tests (130→160) | 94.32% |
 | US-11.5 Service Discovery Health Check | ⬜ PENDIENTE | - | - |
 | US-11.6 Observability Dashboards | ⬜ PENDIENTE | - | - |
 
-**Tests totales agregados en Sprint 11:** +116 tests (253 base → 369 actuales)
+**Tests totales agregados en Sprint 11:** +176 tests (253 base → 429+ actuales)
 
 ---
 
