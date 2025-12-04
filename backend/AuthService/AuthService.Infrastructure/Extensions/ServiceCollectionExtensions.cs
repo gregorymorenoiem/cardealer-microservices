@@ -22,6 +22,8 @@ using StackExchange.Redis;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;
 using Polly;
 using Polly.Extensions.Http;
+using AuthService.Application.Common.Interfaces;
+using AuthService.Infrastructure.Services;
 
 namespace AuthService.Infrastructure.Extensions;
 
@@ -124,6 +126,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPasswordResetTokenService, PasswordResetTokenService>();
         services.AddScoped<IAuthNotificationService, AuthNotificationService>();
         services.AddScoped<ITokenService, TokenService>();
+
+        // Request Context (for IP/UserAgent tracking)
+        services.AddHttpContextAccessor();
+        services.AddScoped<IRequestContext, HttpRequestContext>();
 
         // Servicios 2FA
         services.AddScoped<ITwoFactorService, TwoFactorService>();

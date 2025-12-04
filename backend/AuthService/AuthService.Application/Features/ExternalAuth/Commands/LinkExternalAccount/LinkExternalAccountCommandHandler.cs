@@ -6,6 +6,7 @@ using AuthService.Domain.Interfaces.Services;
 using AuthService.Shared.Exceptions;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using AuthService.Application.Common.Interfaces;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.LinkExternalAccount;
 
@@ -16,19 +17,22 @@ public class LinkExternalAccountCommandHandler : IRequestHandler<LinkExternalAcc
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ILogger<LinkExternalAccountCommandHandler> _logger;
+    private readonly IRequestContext _requestContext;
 
     public LinkExternalAccountCommandHandler(
         IExternalAuthService externalAuthService,
         IUserRepository userRepository,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        ILogger<LinkExternalAccountCommandHandler> logger)
+        ILogger<LinkExternalAccountCommandHandler> logger,
+        IRequestContext requestContext)
     {
         _externalAuthService = externalAuthService;
         _userRepository = userRepository;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
+        _requestContext = requestContext;
     }
 
     public async Task<ExternalAuthResponse> Handle(LinkExternalAccountCommand request, CancellationToken cancellationToken)
@@ -65,7 +69,7 @@ public class LinkExternalAccountCommandHandler : IRequestHandler<LinkExternalAcc
                 user.Id,
                 refreshTokenValue,
                 DateTime.UtcNow.AddDays(7),
-                "127.0.0.1" // TODO: Get actual IP from context
+                _requestContext.IpAddress
             );
 
             await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);

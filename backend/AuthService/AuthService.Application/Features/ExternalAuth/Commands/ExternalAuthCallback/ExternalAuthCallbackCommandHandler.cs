@@ -1,23 +1,33 @@
 using AuthService.Application.DTOs.ExternalAuth;
 using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Services;
+using AuthService.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;
+using AuthService.Application.Common.Interfaces;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.ExternalAuthCallback;
 
 public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCallbackCommand, ExternalAuthResponse>
 {
     private readonly IExternalAuthService _externalAuthService;
+    private readonly IJwtGenerator _jwtGenerator;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ILogger<ExternalAuthCallbackCommandHandler> _logger;
+    private readonly IRequestContext _requestContext;
 
     public ExternalAuthCallbackCommandHandler(
         IExternalAuthService externalAuthService,
-        ILogger<ExternalAuthCallbackCommandHandler> logger)
+        IJwtGenerator jwtGenerator,
+        IRefreshTokenRepository refreshTokenRepository,
+        ILogger<ExternalAuthCallbackCommandHandler> logger,
+        IRequestContext requestContext)
     {
         _externalAuthService = externalAuthService;
+        _jwtGenerator = jwtGenerator;
+        _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
+        _requestContext = requestContext;
     }
 
     public async Task<ExternalAuthResponse> Handle(ExternalAuthCallbackCommand request, CancellationToken cancellationToken)
@@ -44,25 +54,33 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
                 throw new ArgumentException("Either Code or IdToken must be provided");
             }
 
-            // Use the existing ExternalAuthCommand flow
-            var authCommand = new ExternalAuthCommand(
-                request.Provider, idToken);
-
-            // Since we can't directly call another handler, we'll simulate the flow
-            // In a real scenario, you might refactor to use a shared service
+            // Authenticate with external provider
             var (user, isNewUser) = await _externalAuthService.AuthenticateAsync(provider, idToken);
 
-            _logger.LogInformation("External auth callback processed successfully for user {UserId}",
-                user.Id);
+            // Generate tokens
+            var accessToken = _jwtGenerator.GenerateToken(user);
+            var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
+            var expiresAt = DateTime.UtcNow.AddMinutes(60);
 
-            // Return a response (you would generate actual tokens here)
+            var refreshTokenEntity = new Domain.Entities.RefreshToken(
+                user.Id,
+                refreshTokenValue,
+                DateTime.UtcNow.AddDays(7),
+                _requestContext.IpAddress
+            );
+
+            await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
+
+            _logger.LogInformation("External auth callback processed successfully for user {UserId} from IP {IpAddress}",
+                user.Id, _requestContext.IpAddress);
+
             return new ExternalAuthResponse(
                 user.Id,
                 user.UserName!,
                 user.Email!,
-                "access_token_placeholder", // Generate actual token
-                "refresh_token_placeholder", // Generate actual token
-                DateTime.UtcNow.AddHours(1),
+                accessToken,
+                refreshTokenValue,
+                expiresAt,
                 isNewUser
             );
         }
@@ -76,14 +94,14 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
 
     private async Task<string> ExchangeCodeForIdToken(ExternalAuthProvider provider, string code, string? redirectUri)
     {
-        // Implement OAuth code exchange logic here
         // This would make a server-side call to the provider's token endpoint
-        // For now, return a placeholder
+        // The actual implementation depends on the OAuth provider configuration
         _logger.LogInformation("Exchanging code for ID token for provider {Provider}", provider);
 
-        // TODO: Implement actual OAuth code exchange
-        await Task.Delay(100); // Simulate async work
-
-        return $"id_token_placeholder_for_{provider}";
+        // For now, throw not implemented - this should be configured per provider
+        await Task.CompletedTask;
+        throw new NotImplementedException(
+            $"OAuth code exchange for provider {provider} requires provider-specific configuration. " +
+            "Please implement the token exchange logic for your OAuth provider.");
     }
 }

@@ -5,6 +5,7 @@ using MediatR;
 using AuthService.Application.DTOs.ExternalAuth;
 using AuthService.Shared.Exceptions;
 using Microsoft.Extensions.Logging;
+using AuthService.Application.Common.Interfaces;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;
 
@@ -14,17 +15,20 @@ public class ExternalAuthCommandHandler : IRequestHandler<ExternalAuthCommand, E
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ILogger<ExternalAuthCommandHandler> _logger;
+    private readonly IRequestContext _requestContext;
 
     public ExternalAuthCommandHandler(
         IExternalAuthService externalAuthService,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        ILogger<ExternalAuthCommandHandler> logger)
+        ILogger<ExternalAuthCommandHandler> logger,
+        IRequestContext requestContext)
     {
         _externalAuthService = externalAuthService;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
+        _requestContext = requestContext;
     }
 
     public async Task<ExternalAuthResponse> Handle(ExternalAuthCommand request, CancellationToken cancellationToken)
@@ -48,7 +52,7 @@ public class ExternalAuthCommandHandler : IRequestHandler<ExternalAuthCommand, E
             user.Id,
             refreshTokenValue,
             DateTime.UtcNow.AddDays(7),
-            "127.0.0.1" // TODO: Get actual IP from context
+            _requestContext.IpAddress
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);

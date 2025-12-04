@@ -4,6 +4,7 @@ using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
 using MediatR;
 using AuthService.Application.DTOs.Auth;
+using AuthService.Application.Common.Interfaces;
 
 namespace AuthService.Application.Features.Auth.Commands.RefreshToken;
 
@@ -12,15 +13,18 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUserRepository _userRepository;
     private readonly IJwtGenerator _jwtGenerator;
+    private readonly IRequestContext _requestContext;
 
     public RefreshTokenCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IUserRepository userRepository,
-        IJwtGenerator jwtGenerator)
+        IJwtGenerator jwtGenerator,
+        IRequestContext requestContext)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _userRepository = userRepository;
         _jwtGenerator = jwtGenerator;
+        _requestContext = requestContext;
     }
 
     public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
@@ -58,7 +62,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             user.Id,
             newRefreshTokenValue,
             DateTime.UtcNow.AddDays(7),
-            "127.0.0.1" // TODO: Get actual IP from context
+            _requestContext.IpAddress
         );
 
         await _refreshTokenRepository.UpdateAsync(storedToken, cancellationToken);

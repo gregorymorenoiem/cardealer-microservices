@@ -7,6 +7,7 @@ using MediatR;
 using AuthService.Application.DTOs.Auth;
 using AuthService.Domain.Interfaces;
 using CarDealer.Contracts.Events.Auth;
+using AuthService.Application.Common.Interfaces;
 
 namespace AuthService.Application.Features.Auth.Commands.Login;
 
@@ -17,19 +18,22 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IEventPublisher _eventPublisher;
+    private readonly IRequestContext _requestContext;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        IEventPublisher eventPublisher)
+        IEventPublisher eventPublisher,
+        IRequestContext requestContext)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _eventPublisher = eventPublisher;
+        _requestContext = requestContext;
     }
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -76,7 +80,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             user.Id,
             refreshTokenValue,
             DateTime.UtcNow.AddDays(7),
-            "127.0.0.1"
+            _requestContext.IpAddress
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
@@ -89,8 +93,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             UserId = Guid.Parse(user.Id),
             Email = user.Email!,
             LoggedInAt = DateTime.UtcNow,
-            IpAddress = "127.0.0.1", // TODO: Get actual IP from context
-            UserAgent = null // TODO: Get actual UserAgent from context
+            IpAddress = _requestContext.IpAddress,
+            UserAgent = _requestContext.UserAgent
         };
         await _eventPublisher.PublishAsync(userLoggedInEvent, cancellationToken);
 

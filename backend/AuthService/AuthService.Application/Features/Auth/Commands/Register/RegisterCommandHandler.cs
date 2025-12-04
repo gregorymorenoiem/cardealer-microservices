@@ -9,6 +9,7 @@ using AuthService.Domain.Enums;
 using AuthService.Application.DTOs.Auth;
 using AuthService.Domain.Interfaces;
 using CarDealer.Contracts.Events.Auth;
+using AuthService.Application.Common.Interfaces;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
@@ -21,6 +22,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
     private readonly IVerificationTokenRepository _verificationTokenRepository;
     private readonly IAuthNotificationService _notificationService;
     private readonly IEventPublisher _eventPublisher;
+    private readonly IRequestContext _requestContext;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
@@ -29,7 +31,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         IRefreshTokenRepository refreshTokenRepository,
         IVerificationTokenRepository verificationTokenRepository,
         IAuthNotificationService notificationService,
-        IEventPublisher eventPublisher)
+        IEventPublisher eventPublisher,
+        IRequestContext requestContext)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -38,6 +41,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         _verificationTokenRepository = verificationTokenRepository;
         _notificationService = notificationService;
         _eventPublisher = eventPublisher;
+        _requestContext = requestContext;
     }
 
     public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -64,7 +68,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
             user.Id,
             refreshTokenValue,
             DateTime.UtcNow.AddDays(7),
-            "127.0.0.1" // TODO: Get actual IP from context
+            _requestContext.IpAddress
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
