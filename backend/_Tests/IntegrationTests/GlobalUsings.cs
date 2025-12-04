@@ -1,0 +1,10 @@
+global using Xunit;
+global using FluentAssertions;
+global using Moq;
+global using System.Net;
+global using System.Net.Http.Json;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.Extensions.DependencyInjection;
+global using Testcontainers.PostgreSql;
+global using Testcontainers.RabbitMq;
+global using Testcontainers.Redis;
