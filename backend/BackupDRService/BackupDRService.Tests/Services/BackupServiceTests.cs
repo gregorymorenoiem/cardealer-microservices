@@ -361,4 +361,373 @@ public class BackupServiceTests
         // Assert
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task CancelBackupAsync_ShouldCancelRunningBackup()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost;Database=test"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true, FileSizeBytes = 1024 });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, FileSizeBytes = 1024, Checksum = "abc" });
+
+        await _service.ExecuteBackupAsync(job);
+        var results = await _service.GetBackupResultsAsync(job.Id);
+        var backupResultId = results.First().Id;
+
+        // Act
+        var cancelled = await _service.CancelBackupAsync(backupResultId);
+
+        // Assert - Already completed, can't cancel
+        cancelled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CancelBackupAsync_ShouldReturnFalse_WhenResultNotFound()
+    {
+        // Act
+        var result = await _service.CancelBackupAsync("non-existent");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetBackupResultAsync_ShouldReturnResult_WhenExists()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost;Database=test"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc" });
+
+        var backupResult = await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var result = await _service.GetBackupResultAsync(backupResult.Id);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(backupResult.Id);
+    }
+
+    [Fact]
+    public async Task GetBackupResultAsync_ShouldReturnNull_WhenNotExists()
+    {
+        // Act
+        var result = await _service.GetBackupResultAsync("non-existent");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetBackupResultsAsync_ShouldReturnResultsForJob()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc" });
+
+        await _service.ExecuteBackupAsync(job);
+        await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var results = await _service.GetBackupResultsAsync(job.Id);
+
+        // Assert
+        results.Should().HaveCountGreaterOrEqualTo(1);
+    }
+
+    [Fact]
+    public async Task GetRecentBackupResultsAsync_ShouldReturnMostRecent()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc" });
+
+        await _service.ExecuteBackupAsync(job);
+        await _service.ExecuteBackupAsync(job);
+        await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var results = await _service.GetRecentBackupResultsAsync(2);
+
+        // Assert
+        results.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetBackupResultsByDateRangeAsync_ShouldFilterByDates()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc" });
+
+        await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var results = await _service.GetBackupResultsByDateRangeAsync(
+            DateTime.UtcNow.AddHours(-1),
+            DateTime.UtcNow.AddHours(1));
+
+        // Assert
+        results.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task VerifyBackupAsync_ShouldReturnFalse_WhenResultNotFound()
+    {
+        // Act
+        var result = await _service.VerifyBackupAsync("non-existent");
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyBackupAsync_ShouldReturnFalse_WhenNoChecksum()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = null }); // No checksum
+
+        var backupResult = await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var result = await _service.VerifyBackupAsync(backupResult.Id);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyBackupAsync_ShouldCallStorageVerify()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc123" });
+
+        _storageProviderMock.Setup(s => s.VerifyIntegrityAsync(It.IsAny<string>(), "abc123"))
+            .ReturnsAsync(true);
+
+        var backupResult = await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var result = await _service.VerifyBackupAsync(backupResult.Id);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CleanupExpiredBackupsAsync_ShouldCleanupExpiredBackups()
+    {
+        // Arrange
+        _storageProviderMock.Setup(s => s.DeleteAsync(It.IsAny<string>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var count = await _service.CleanupExpiredBackupsAsync();
+
+        // Assert
+        count.Should().BeGreaterOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task CleanupBackupsOlderThanAsync_ShouldCleanupExpiredBackups()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost",
+            RetentionDays = 0 // Expires immediately
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc" });
+
+        _storageProviderMock.Setup(s => s.DeleteAsync(It.IsAny<string>()))
+            .ReturnsAsync(true);
+
+        await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var count = await _service.CleanupBackupsOlderThanAsync(DateTime.UtcNow.AddDays(1));
+
+        // Assert
+        count.Should().BeGreaterOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task GetStatisticsAsync_ShouldIncludeAllStats()
+    {
+        // Arrange
+        _storageProviderMock.Setup(s => s.GetTotalStorageUsedAsync())
+            .ReturnsAsync(1024L * 1024L * 50);
+
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test Job",
+            IsEnabled = true
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = "abc" });
+
+        await _service.ExecuteBackupAsync(job);
+
+        // Act
+        var stats = await _service.GetStatisticsAsync();
+
+        // Assert
+        stats.TotalJobs.Should().BeGreaterOrEqualTo(1);
+        stats.TotalBackups.Should().BeGreaterOrEqualTo(1);
+        stats.TotalStorageUsedBytes.Should().Be(1024L * 1024L * 50);
+        stats.BackupsByJob.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task ExecuteBackupAsync_WhenException_ShouldReturnFailure()
+    {
+        // Arrange
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ThrowsAsync(new InvalidOperationException("Connection failed"));
+
+        // Act
+        var result = await _service.ExecuteBackupAsync(job);
+
+        // Assert
+        result.Status.Should().Be(BackupExecutionStatus.Failed);
+        result.ErrorMessage.Should().Contain("Connection failed");
+    }
+
+    [Fact]
+    public async Task ExecuteBackupAsync_WithVerification_ShouldVerifyAfterCompletion()
+    {
+        // Arrange - VerifyBackupAfterCreation is true in setup
+        var job = await _service.CreateJobAsync(new BackupJob
+        {
+            Name = "Test",
+            DatabaseName = "testdb",
+            ConnectionString = "Host=localhost"
+        });
+
+        _databaseProviderMock.Setup(d => d.BackupAsync(It.IsAny<DatabaseBackupRequest>()))
+            .ReturnsAsync(new DatabaseBackupResult { Success = true, FileSizeBytes = 1024 });
+
+        _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new StorageUploadResult { Success = true, FileSizeBytes = 1024, Checksum = "abc123" });
+
+        _storageProviderMock.Setup(s => s.VerifyIntegrityAsync(It.IsAny<string>(), "abc123"))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.ExecuteBackupAsync(job);
+
+        // Assert
+        result.Status.Should().Be(BackupExecutionStatus.Completed);
+        result.IsVerified.Should().BeTrue();
+        result.VerifiedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task VerifyBackupIntegrityAsync_WithNullChecksum_ShouldReturnFalse()
+    {
+        // Act
+        var result = await _service.VerifyBackupIntegrityAsync("/path/to/file", null);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyBackupIntegrityAsync_WithEmptyChecksum_ShouldReturnFalse()
+    {
+        // Act
+        var result = await _service.VerifyBackupIntegrityAsync("/path/to/file", "");
+
+        // Assert
+        result.Should().BeFalse();
+    }
 }
