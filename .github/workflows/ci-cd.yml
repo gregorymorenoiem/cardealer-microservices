@@ -1,10 +1,30 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline - Full Solution
 
 on:
   push:
-    branches: [main, develop, 'feature/**']
-  pull_request:
     branches: [main, develop]
+    paths:
+      - 'backend/_Shared/**'
+      - 'backend/CarDealer.sln'
+      - 'backend/Directory.Packages.props'
+      - '.github/workflows/ci-cd.yml'
+  schedule:
+    - cron: '0 2 * * 1'  # Lunes 2 AM - Weekly full build
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to environment'
+        required: false
+        type: choice
+        options:
+          - none
+          - staging
+          - production
+      run_security_scan:
+        description: 'Run security scan'
+        required: false
+        type: boolean
+        default: true
 
 env:
   DOTNET_VERSION: '8.0.x'
@@ -71,6 +91,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     needs: build-and-test
+    if: github.event.inputs.run_security_scan != 'false'
     
     steps:
       - name: Checkout code
@@ -100,7 +121,12 @@ jobs:
   build-images:
     runs-on: ubuntu-latest
     needs: [build-and-test, security-scan]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    if: |
+      always() &&
+      needs.build-and-test.result == 'success' &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     
     strategy:
       matrix:
@@ -227,7 +253,9 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: build-images
-    if: github.ref == 'refs/heads/develop'
+    if: |
+      github.ref == 'refs/heads/develop' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'staging')
     environment: staging
     
     steps:
@@ -246,7 +274,9 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     needs: build-images
-    if: github.ref == 'refs/heads/main'
+    if: |
+      github.ref == 'refs/heads/main' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'production')
     environment: production
     
     steps:

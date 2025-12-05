@@ -1,0 +1,37 @@
+# ==============================================================================
+# PRODUCTSERVICE CI/CD
+# ==============================================================================
+# Pipeline específico para ProductService que usa el workflow reutilizable
+# ==============================================================================
+
+name: ProductService CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/ProductService/**'
+      - '.github/workflows/productservice.yml'
+      - '.github/workflows/_reusable-dotnet-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/ProductService/**'
+  workflow_dispatch:
+
+jobs:
+  # Llama al workflow reutilizable con la configuración específica de ProductService
+  ci-cd:
+    name: 🚀 ProductService Pipeline
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: productservice
+      service-path: backend/ProductService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+      dockerfile-path: Dockerfile
+      solution-file: ProductService.sln
+    permissions:
+      contents: read
+      packages: write

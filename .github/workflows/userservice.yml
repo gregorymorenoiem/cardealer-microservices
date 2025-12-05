@@ -1,0 +1,28 @@
+name: UserService CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/UserService/**'
+      - '.github/workflows/userservice.yml'
+      - '.github/workflows/_reusable-dotnet-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/UserService/**'
+  workflow_dispatch:
+
+jobs:
+  ci-cd:
+    name: 👤 UserService Pipeline
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: userservice
+      service-path: backend/UserService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write

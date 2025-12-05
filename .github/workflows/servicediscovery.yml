@@ -1,0 +1,28 @@
+name: ServiceDiscovery CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/ServiceDiscovery/**'
+      - '.github/workflows/servicediscovery.yml'
+      - '.github/workflows/_reusable-dotnet-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/ServiceDiscovery/**'
+  workflow_dispatch:
+
+jobs:
+  ci-cd:
+    name: 🗺️ ServiceDiscovery Pipeline
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: servicediscovery
+      service-path: backend/ServiceDiscovery
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write

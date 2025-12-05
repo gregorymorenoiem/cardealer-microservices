@@ -1,0 +1,148 @@
+name: Monorepo CI/CD
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  # ========================================
+  # DETECT CHANGED SERVICES
+  # ========================================
+  detect-changes:
+    name: 🔍 Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+      product-service: ${{ steps.filter.outputs.product-service }}
+      auth-service: ${{ steps.filter.outputs.auth-service }}
+      notification-service: ${{ steps.filter.outputs.notification-service }}
+      shared: ${{ steps.filter.outputs.shared }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔍 Detect service changes
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          product-service:
+            - 'backend/ProductService/**'
+          auth-service:
+            - 'backend/AuthService/**'
+          notification-service:
+            - 'backend/NotificationService/**'
+          shared:
+            - 'backend/_Shared/**'
+            
+    - name: 📊 Changed services summary
+      run: |
+        echo "### 🔄 Changed Services" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.filter.outputs.product-service }}" == "true" ]; then
+          echo "- ✅ ProductService" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ "${{ steps.filter.outputs.auth-service }}" == "true" ]; then
+          echo "- ✅ AuthService" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ "${{ steps.filter.outputs.notification-service }}" == "true" ]; then
+          echo "- ✅ NotificationService" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ "${{ steps.filter.outputs.shared }}" == "true" ]; then
+          echo "- ⚠️  Shared libraries (affects all services)" >> $GITHUB_STEP_SUMMARY
+        fi
+  
+  # ========================================
+  # PRODUCTSERVICE PIPELINE
+  # ========================================
+  product-service:
+    name: 🛍️  ProductService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.product-service == 'true' || needs.detect-changes.outputs.shared == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: productservice
+      service-path: backend/ProductService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write
+      
+  # ========================================
+  # AUTHSERVICE PIPELINE
+  # ========================================
+  auth-service:
+    name: 🔐 AuthService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.auth-service == 'true' || needs.detect-changes.outputs.shared == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: authservice
+      service-path: backend/AuthService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write
+      
+  # ========================================
+  # NOTIFICATIONSERVICE PIPELINE
+  # ========================================
+  notification-service:
+    name: 📧 NotificationService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.notification-service == 'true' || needs.detect-changes.outputs.shared == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: notificationservice
+      service-path: backend/NotificationService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write
+  
+  # ========================================
+  # AGREGAR MÁS SERVICIOS AQUÍ
+  # ========================================
+  # Simplemente copia el bloque anterior y ajusta los valores
+  
+  # ========================================
+  # FINAL STATUS
+  # ========================================
+  pipeline-status:
+    name: 📊 Pipeline Status
+    runs-on: ubuntu-latest
+    needs: [detect-changes, product-service, auth-service, notification-service]
+    if: always()
+    
+    steps:
+    - name: 📊 Generate summary
+      run: |
+        echo "## 🎯 Pipeline Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| ProductService | ${{ needs.product-service.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| AuthService | ${{ needs.auth-service.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| NotificationService | ${{ needs.notification-service.result }} |" >> $GITHUB_STEP_SUMMARY
+        
+    - name: ❌ Fail if any service failed
+      if: |
+        needs.product-service.result == 'failure' ||
+        needs.auth-service.result == 'failure' ||
+        needs.notification-service.result == 'failure'
+      run: |
+        echo "❌ One or more services failed"
+        exit 1

@@ -1,0 +1,28 @@
+name: LoggingService CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/LoggingService/**'
+      - '.github/workflows/loggingservice.yml'
+      - '.github/workflows/_reusable-dotnet-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/LoggingService/**'
+  workflow_dispatch:
+
+jobs:
+  ci-cd:
+    name: 📋 LoggingService Pipeline
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: loggingservice
+      service-path: backend/LoggingService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write

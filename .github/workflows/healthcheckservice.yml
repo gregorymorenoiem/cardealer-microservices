@@ -1,0 +1,28 @@
+name: HealthCheckService CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/HealthCheckService/**'
+      - '.github/workflows/healthcheckservice.yml'
+      - '.github/workflows/_reusable-dotnet-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/HealthCheckService/**'
+  workflow_dispatch:
+
+jobs:
+  ci-cd:
+    name: 💊 HealthCheckService Pipeline
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: healthcheckservice
+      service-path: backend/HealthCheckService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write

@@ -1,0 +1,28 @@
+name: FeatureToggleService CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/FeatureToggleService/**'
+      - '.github/workflows/featuretoggleservice.yml'
+      - '.github/workflows/_reusable-dotnet-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/FeatureToggleService/**'
+  workflow_dispatch:
+
+jobs:
+  ci-cd:
+    name: 🎚️ FeatureToggleService Pipeline
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: featuretoggleservice
+      service-path: backend/FeatureToggleService
+      dotnet-version: '8.0.x'
+      run-docker-build: true
+      run-docker-push: true
+    permissions:
+      contents: read
+      packages: write
