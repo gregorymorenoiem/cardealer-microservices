@@ -8,7 +8,7 @@
 
 ## 📊 Resumen Ejecutivo
 
-### **Servicios Migrados: 27/27** ✅
+### **Servicios Migrados: 26/26** ✅
 
 Se han migrado exitosamente **TODOS** los microservicios de la plataforma a la nueva arquitectura de workflows reutilizables.
 
@@ -16,9 +16,8 @@ Se han migrado exitosamente **TODOS** los microservicios de la plataforma a la n
 
 ## 🎯 Servicios Completados
 
-### **Core Services** (5 servicios)
+### **Core Services** (4 servicios)
 - ✅ **ProductService** - 🛍️ Gestión de productos
-- ✅ **VehicleService** - 🚗 Gestión de vehículos
 - ✅ **UserService** - 👤 Gestión de usuarios
 - ✅ **AuthService** - 🔐 Autenticación y autorización
 - ✅ **RoleService** - 🔑 Gestión de roles

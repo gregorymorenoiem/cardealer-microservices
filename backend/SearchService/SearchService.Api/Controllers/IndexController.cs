@@ -19,6 +19,37 @@ public class IndexController : ControllerBase
     }
 
     /// <summary>
+    /// Inicializa el índice de propiedades inmobiliarias con mappings optimizados
+    /// </summary>
+    [HttpPost("initialize/properties")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> InitializePropertiesIndex()
+    {
+        try
+        {
+            var success = await _mediator.Send(new InitializePropertyIndexCommand());
+
+            if (success)
+            {
+                return CreatedAtAction(
+                    nameof(StatsController.GetIndexMetadata),
+                    "Stats",
+                    new { indexName = "properties" },
+                    new { indexName = "properties", initialized = true });
+            }
+
+            return StatusCode(500, new { error = "Failed to initialize properties index" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error initializing properties index");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Indexa un nuevo documento
     /// </summary>
     [HttpPost("{indexName}/document")]
@@ -29,13 +60,13 @@ public class IndexController : ControllerBase
         try
         {
             var documentId = Guid.NewGuid().ToString();
-            
+
             var id = await _mediator.Send(new IndexDocumentCommand(indexName, documentId, document));
-            
+
             return CreatedAtAction(
-                nameof(SearchController.GetDocument), 
-                "Search", 
-                new { indexName, documentId = id }, 
+                nameof(SearchController.GetDocument),
+                "Search",
+                new { indexName, documentId = id },
                 new { id, indexName });
         }
         catch (Exception ex)
@@ -56,7 +87,7 @@ public class IndexController : ControllerBase
         try
         {
             var id = await _mediator.Send(new IndexDocumentCommand(indexName, documentId, document));
-            
+
             return Ok(new { id, indexName });
         }
         catch (Exception ex)
@@ -77,7 +108,7 @@ public class IndexController : ControllerBase
         try
         {
             var success = await _mediator.Send(new UpdateDocumentCommand(indexName, documentId, document));
-            
+
             if (!success)
             {
                 return NotFound(new { error = $"Document '{documentId}' not found" });
@@ -103,7 +134,7 @@ public class IndexController : ControllerBase
         try
         {
             var success = await _mediator.Send(new DeleteDocumentCommand(indexName, documentId));
-            
+
             if (!success)
             {
                 return NotFound(new { error = $"Document '{documentId}' not found" });
@@ -128,18 +159,18 @@ public class IndexController : ControllerBase
     {
         try
         {
-            var documentsToIndex = documents.Select(d => 
+            var documentsToIndex = documents.Select(d =>
                 (d.Id ?? Guid.NewGuid().ToString(), (object)d.Document)
             ).ToList();
 
             var (successful, failed) = await _mediator.Send(new BulkIndexCommand(indexName, documentsToIndex));
-            
-            return Ok(new 
-            { 
-                indexName, 
-                successful, 
-                failed, 
-                total = successful + failed 
+
+            return Ok(new
+            {
+                indexName,
+                successful,
+                failed,
+                total = successful + failed
             });
         }
         catch (Exception ex)
@@ -160,19 +191,19 @@ public class IndexController : ControllerBase
         try
         {
             var success = await _mediator.Send(new CreateIndexCommand(
-                indexName, 
-                request?.Mappings, 
+                indexName,
+                request?.Mappings,
                 request?.Settings));
-            
+
             if (!success)
             {
                 return BadRequest(new { error = "Failed to create index" });
             }
 
             return CreatedAtAction(
-                nameof(StatsController.GetIndexMetadata), 
-                "Stats", 
-                new { indexName }, 
+                nameof(StatsController.GetIndexMetadata),
+                "Stats",
+                new { indexName },
                 new { indexName, created = true });
         }
         catch (InvalidOperationException ex)
@@ -197,7 +228,7 @@ public class IndexController : ControllerBase
         try
         {
             var success = await _mediator.Send(new DeleteIndexCommand(indexName));
-            
+
             if (!success)
             {
                 return NotFound(new { error = $"Index '{indexName}' not found" });

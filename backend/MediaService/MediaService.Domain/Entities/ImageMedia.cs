@@ -12,6 +12,7 @@ public class ImageMedia : MediaAsset
     public string? AltText { get; private set; }
 
     public ImageMedia(
+        Guid dealerId,
         string ownerId,
         string? context,
         string originalFileName,
@@ -20,7 +21,7 @@ public class ImageMedia : MediaAsset
         string storageKey,
         int width,
         int height)
-        : base(ownerId, context, Enums.MediaType.Image, originalFileName, contentType, sizeBytes, storageKey)
+        : base(dealerId, ownerId, context, Enums.MediaType.Image, originalFileName, contentType, sizeBytes, storageKey)
     {
         Width = width > 0 ? width : throw new ArgumentException("Width must be greater than 0", nameof(width));
         Height = height > 0 ? height : throw new ArgumentException("Height must be greater than 0", nameof(height));

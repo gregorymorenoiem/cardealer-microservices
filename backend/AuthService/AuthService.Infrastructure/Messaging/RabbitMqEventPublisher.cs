@@ -136,8 +136,8 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                     "Published event {EventType} with EventId={EventId} to exchange={Exchange}, routingKey={RoutingKey}",
                     @event.EventType, @event.EventId, _exchangeName, routingKey);
 
-                return ValueTask.CompletedTask;
-            }, cancellationToken);
+                await Task.CompletedTask;
+            });
         }
         catch (BrokenCircuitException ex)
         {

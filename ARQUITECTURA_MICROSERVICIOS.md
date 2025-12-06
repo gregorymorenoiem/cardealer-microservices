@@ -72,8 +72,8 @@ AuthService.Api
          │                   │                   │
          ▼                   ▼                   ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│  AuthService    │  │ VehicleService  │  │ MediaService    │
-│  - Login        │  │ - CRUD Vehicles │  │ - Upload Files  │
+│  AuthService    │  │ ProductService  │  │ MediaService    │
+│  - Login        │  │ - CRUD Products │  │ - Upload Files  │
 │  - Register     │  │ - Search        │  │ - Processing    │
 └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
          │                    │                    │
@@ -113,13 +113,13 @@ AuthService.Api
 
 **Ejemplo:**
 ```
-Cliente → GET /api/vehicles → Gateway → VehicleService
+Cliente → GET /api/products → Gateway → ProductService
 Cliente → POST /api/auth/login → Gateway → AuthService
 ```
 
 **Nunca:**
 - ❌ Servicio → Servicio directamente
-- ❌ VehicleService → AuthService via HTTP
+- ❌ ProductService → AuthService via HTTP
 - ❌ MediaService → NotificationService via HTTP
 
 ---
@@ -157,16 +157,16 @@ Routing Keys:
   - auth.user.deleted
 ```
 
-##### **VehicleService** (Publisher)
+##### **ProductService** (Publisher)
 ```csharp
 // Eventos que PUBLICA
 Events:
-  - VehicleCreated
-  - VehicleUpdated
-  - VehicleDeleted
-  - VehicleSold
+  - ProductCreated
+  - ProductUpdated
+  - ProductDeleted
+  - ProductSold
   
-Exchange: "vehicle.events"
+Exchange: "product.events"
 Routing Keys:
   - vehicle.created
   - vehicle.updated
@@ -317,12 +317,12 @@ CarDealer.Contracts/
 ### Ejemplo 2: **Error Crítico Detectado**
 
 ```
-1. VehicleService:
-   ❌ Error 500 al crear vehículo
+1. ProductService:
+   ❌ Error 500 al crear producto
    ❌ Catch exception
-   ✅ Publica evento: VehicleErrorEvent
+   ✅ Publica evento: ProductErrorEvent
       Exchange: "error.events"
-      Routing Key: "vehicle.error.critical"
+      Routing Key: "product.error.critical"
       Payload: { ErrorId, ServiceName, Message, StackTrace, StatusCode: 500 }
 
 2. ErrorService:
@@ -337,7 +337,7 @@ CarDealer.Contracts/
 3. NotificationService:
    📧 Escucha "error.critical"
    📧 Envía alerta a Microsoft Teams ⭐
-      - Título: "🔴 Error Crítico en VehicleService"
+      - Título: "🔴 Error Crítico en ProductService"
       - Detalles del error
       - Link al dashboard
 ```
@@ -379,7 +379,7 @@ CarDealer.Contracts/
 ```csharp
 // Cada servicio declara sus propios exchanges
 AuthService → Exchange: "auth.events" (type: topic)
-VehicleService → Exchange: "vehicle.events" (type: topic)
+ProductService → Exchange: "product.events" (type: topic)
 MediaService → Exchange: "media.events" (type: topic)
 ErrorService → Exchange: "error.events" (type: topic)
 NotificationService → Exchange: "notification.events" (type: topic)
@@ -511,12 +511,12 @@ public class ErrorCriticalEventConsumer : BackgroundService
 
 ### 3. **Implementar Event Publishers**
 - AuthService publica eventos auth.*
-- VehicleService publica eventos vehicle.*
+- ProductService publica eventos product.*
 - MediaService publica eventos media.*
 - ErrorService publica eventos error.*
 
 ### 4. **Implementar Event Subscribers**
-- NotificationService escucha: auth.user.*, error.critical, vehicle.sold
+- NotificationService escucha: auth.user.*, error.critical, product.sold
 - ErrorService escucha: *.error.*
 - AuditService escucha: *.*
 
@@ -572,7 +572,7 @@ public class ErrorCriticalEventConsumer : BackgroundService
 3. Testing
 
 ### Fase 5: Otros Servicios (3-4 días)
-1. VehicleService publishers
+1. ProductService publishers
 2. MediaService publishers
 3. AuditService consumers
 4. Testing integración

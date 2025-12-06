@@ -4,6 +4,44 @@ using System.Collections.Generic;
 namespace UserService.Domain.Entities
 {
     /// <summary>
+    /// Tipos de cuenta en la plataforma
+    /// </summary>
+    public enum AccountType
+    {
+        Guest,
+        Individual,
+        Dealer,
+        DealerEmployee,
+        Admin,
+        PlatformEmployee
+    }
+
+    /// <summary>
+    /// Roles para empleados de dealers
+    /// </summary>
+    public enum DealerRole
+    {
+        Owner,
+        Manager,
+        SalesManager,
+        InventoryManager,
+        Salesperson,
+        Viewer
+    }
+
+    /// <summary>
+    /// Roles para empleados de plataforma
+    /// </summary>
+    public enum PlatformRole
+    {
+        SuperAdmin,
+        Admin,
+        Moderator,
+        Support,
+        Analyst
+    }
+
+    /// <summary>
     /// Entidad de dominio User
     /// </summary>
     public class User
@@ -20,7 +58,23 @@ namespace UserService.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
 
-        // Navegación a roles
+        // Account type system
+        public AccountType AccountType { get; set; } = AccountType.Individual;
+
+        // Platform-level (if admin or platform employee)
+        public PlatformRole? PlatformRole { get; set; }
+        public string? PlatformPermissions { get; set; } // JSON array of permissions
+
+        // Dealer-level (if dealer or dealer employee)
+        public Guid? DealerId { get; set; }
+        public DealerRole? DealerRole { get; set; }
+        public string? DealerPermissions { get; set; } // JSON array of permissions
+
+        // Employee metadata
+        public Guid? EmployerUserId { get; set; } // ID del que lo contrató
+        public Guid? CreatedBy { get; set; }
+
+        // Navegación a roles (legacy - mantener para compatibilidad)
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
         // Propiedades calculadas

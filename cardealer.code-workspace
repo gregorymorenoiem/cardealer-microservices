@@ -31,10 +31,6 @@
     {
       "name": "Service: NotificationService",
       "path": "backend/NotificationService"
-    },
-    {
-      "name": "Service: VehicleService",
-      "path": "backend/VehicleService"
     }
   ],
   "settings": {

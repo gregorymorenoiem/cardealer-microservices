@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using CarDealer.Shared.Database;
+using CarDealer.Shared.MultiTenancy;
 
 namespace MediaService.Infrastructure.Extensions;
 
@@ -19,6 +20,12 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // HttpContextAccessor (required for TenantContext)
+        services.AddHttpContextAccessor();
+
+        // Multi-tenant context
+        services.AddScoped<ITenantContext, TenantContext>();
+
         // Database Context (multi-provider configuration)
         services.AddDatabaseProvider<ApplicationDbContext>(configuration);
 

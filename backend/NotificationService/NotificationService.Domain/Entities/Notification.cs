@@ -1,11 +1,24 @@
+using CarDealer.Shared.MultiTenancy;
 using NotificationService.Domain.Enums;
 using System.Text.Json;
 
 namespace NotificationService.Domain.Entities;
 
-public class Notification
+/// <summary>
+/// Notification entity with optional multi-tenant support.
+/// When DealerId is null, the notification is global/system-wide.
+/// When DealerId has a value, the notification belongs to a specific dealer.
+/// </summary>
+public class Notification : IOptionalTenantEntity
 {
     public Guid Id { get; set; }
+
+    /// <summary>
+    /// Optional dealer ID for tenant-specific notifications.
+    /// Null = system/global notification, Value = dealer-specific notification.
+    /// </summary>
+    public Guid? DealerId { get; set; }
+
     public NotificationType Type { get; set; }
     public string Recipient { get; set; } = string.Empty;
     public string Subject { get; set; } = string.Empty;
@@ -32,10 +45,11 @@ public class Notification
     }
 
     // Factory methods
-    public static Notification CreateEmailNotification(string to, string subject, string body, 
-        NotificationProvider provider = NotificationProvider.SendGrid, 
+    public static Notification CreateEmailNotification(string to, string subject, string body,
+        NotificationProvider provider = NotificationProvider.SendGrid,
         PriorityLevel priority = PriorityLevel.Medium,
-        Dictionary<string, object>? metadata = null)
+        Dictionary<string, object>? metadata = null,
+        Guid? dealerId = null)
     {
         return new Notification
         {
@@ -45,14 +59,16 @@ public class Notification
             Content = body,
             Provider = provider,
             Priority = priority,
-            Metadata = metadata ?? new Dictionary<string, object>()
+            Metadata = metadata ?? new Dictionary<string, object>(),
+            DealerId = dealerId
         };
     }
 
     public static Notification CreateSmsNotification(string to, string message,
         NotificationProvider provider = NotificationProvider.Twilio,
         PriorityLevel priority = PriorityLevel.Medium,
-        Dictionary<string, object>? metadata = null)
+        Dictionary<string, object>? metadata = null,
+        Guid? dealerId = null)
     {
         return new Notification
         {
@@ -61,14 +77,16 @@ public class Notification
             Content = message,
             Provider = provider,
             Priority = priority,
-            Metadata = metadata ?? new Dictionary<string, object>()
+            Metadata = metadata ?? new Dictionary<string, object>(),
+            DealerId = dealerId
         };
     }
 
     public static Notification CreatePushNotification(string deviceToken, string title, string body,
         NotificationProvider provider = NotificationProvider.Firebase,
         PriorityLevel priority = PriorityLevel.Medium,
-        Dictionary<string, object>? metadata = null)
+        Dictionary<string, object>? metadata = null,
+        Guid? dealerId = null)
     {
         return new Notification
         {
@@ -78,7 +96,8 @@ public class Notification
             Content = body,
             Provider = provider,
             Priority = priority,
-            Metadata = metadata ?? new Dictionary<string, object>()
+            Metadata = metadata ?? new Dictionary<string, object>(),
+            DealerId = dealerId
         };
     }
 

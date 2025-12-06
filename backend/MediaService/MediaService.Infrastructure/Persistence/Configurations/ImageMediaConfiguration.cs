@@ -8,7 +8,7 @@ public class ImageMediaConfiguration : IEntityTypeConfiguration<ImageMedia>
 {
     public void Configure(EntityTypeBuilder<ImageMedia> builder)
     {
-        builder.ToTable("image_media");
+        // TPH: No configurar ToTable para tipos derivados - todos van en media_assets
 
         builder.Property(x => x.Width)
             .IsRequired();

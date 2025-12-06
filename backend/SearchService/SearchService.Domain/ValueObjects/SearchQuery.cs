@@ -78,6 +78,13 @@ public class SearchQuery
     public int TimeoutMs { get; set; } = 5000;
 
     /// <summary>
+    /// ID del dealer para filtrar resultados (multi-tenant).
+    /// Si es null, se incluyen todos los documentos.
+    /// Si tiene valor, se incluyen documentos del dealer + documentos globales (DealerId = null).
+    /// </summary>
+    public Guid? DealerId { get; set; }
+
+    /// <summary>
     /// Valida que la query sea válida
     /// </summary>
     public bool IsValid()

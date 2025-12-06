@@ -194,6 +194,24 @@ Crea un nuevo índice con configuración opcional.
 }
 ```
 
+#### `POST /api/index/initialize/properties`
+Inicializa el índice de **propiedades inmobiliarias** con mappings optimizados.
+
+Este endpoint crea el índice `properties` con:
+- Campos de texto con analyzer español para título, descripción, dirección
+- Campos numéricos para precio, área, recámaras, baños
+- Campos booleanos para amenidades (alberca, jardín, gimnasio, etc.)
+- Campo `geo_point` para búsqueda por ubicación geográfica
+- Multi-tenant con `dealerId`
+
+**Response**:
+```json
+{
+  "indexName": "properties",
+  "initialized": true
+}
+```
+
 #### `DELETE /api/index/{indexName}`
 Elimina un índice completo.
 
@@ -488,6 +506,94 @@ curl http://localhost:15093/health
 # Health check de Elasticsearch
 curl http://localhost:9200/_cluster/health
 ```
+
+---
+
+## 🏠 Índice de Propiedades (Real Estate)
+
+### Inicialización
+
+El índice `properties` está optimizado para búsqueda de bienes raíces con mappings específicos:
+
+```bash
+# Inicializar índice de propiedades
+POST /api/index/initialize/properties
+```
+
+### Estructura del Documento
+
+```json
+{
+  "id": "prop-123",
+  "dealerId": "dealer-uuid",
+  "title": "Casa en Polanco con Jardín",
+  "description": "Hermosa casa de 200m² con 4 recámaras...",
+  "propertyType": "house",
+  "listingType": "sale",
+  "status": "active",
+  "price": 5000000,
+  "currency": "MXN",
+  "pricePerSqMeter": 25000,
+  "totalArea": 200,
+  "bedrooms": 4,
+  "bathrooms": 3,
+  "parkingSpaces": 2,
+  "hasPool": true,
+  "hasGarden": true,
+  "hasGym": false,
+  "hasSecurity": true,
+  "amenities": ["pool", "garden", "rooftop"],
+  "location": {
+    "address": "Calle Horacio 123",
+    "city": "Ciudad de México",
+    "state": "CDMX",
+    "neighborhood": "Polanco",
+    "coordinates": { "lat": 19.4326, "lon": -99.1332 }
+  },
+  "seller": {
+    "id": "seller-123",
+    "name": "Inmobiliaria ABC",
+    "isVerified": true,
+    "isDealership": true
+  },
+  "isFeatured": true,
+  "createdAt": "2025-12-06T10:00:00Z"
+}
+```
+
+### Búsqueda de Propiedades
+
+```json
+POST /api/search/query
+{
+  "queryText": "casa polanco 4 recamaras",
+  "indexName": "properties",
+  "searchType": 0,
+  "fields": ["title", "description", "location.neighborhood"],
+  "filters": {
+    "propertyType": "house",
+    "bedrooms": 4,
+    "hasPool": true
+  },
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+### Campos Indexados
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `title` | text (spanish) | Título con análisis full-text |
+| `description` | text (spanish) | Descripción con análisis full-text |
+| `propertyType` | keyword | house, apartment, condo, land, commercial |
+| `listingType` | keyword | sale, rent, sale-or-rent |
+| `price` | double | Para rangos de precio |
+| `bedrooms` | integer | Número de recámaras |
+| `bathrooms` | integer | Número de baños |
+| `totalArea` | double | Superficie en m² |
+| `hasPool`, `hasGarden`, etc. | boolean | Filtros de amenidades |
+| `location.coordinates` | geo_point | Búsqueda por ubicación |
 
 ---
 

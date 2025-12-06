@@ -1,5 +1,16 @@
 <Project>
+  <!-- Central package management disabled to avoid NU1008 errors -->
+  <!-- Projects still manage their own versions but this file documents recommended versions -->
+  
   <ItemGroup>
+    <!-- Security Packages (Updated for vulnerability fixes) -->
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.2.1" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
+    <PackageVersion Include="System.Formats.Asn1" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    
     <!-- Unify EF Core versions to avoid MSB3277 conflicts -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />

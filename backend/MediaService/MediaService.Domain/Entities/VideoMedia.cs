@@ -17,13 +17,14 @@ public class VideoMedia : MediaAsset
     public bool HasHlsStream { get; private set; }
 
     public VideoMedia(
+        Guid dealerId,
         string ownerId,
         string? context,
         string originalFileName,
         string contentType,
         long sizeBytes,
         string storageKey)
-        : base(ownerId, context, Enums.MediaType.Video, originalFileName, contentType, sizeBytes, storageKey)
+        : base(dealerId, ownerId, context, Enums.MediaType.Video, originalFileName, contentType, sizeBytes, storageKey)
     {
         StorageKeyInput = storageKey;
     }

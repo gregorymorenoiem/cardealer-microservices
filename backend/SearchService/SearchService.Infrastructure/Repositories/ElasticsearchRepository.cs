@@ -209,7 +209,7 @@ public class ElasticsearchRepository : ISearchRepository
     {
         try
         {
-            var response = await _client.CountAsync<object>(c => 
+            var response = await _client.CountAsync<object>(c =>
             {
                 c.Index(GetFullIndexName(indexName));
                 if (filters != null && filters.Any())
@@ -289,12 +289,33 @@ public class ElasticsearchRepository : ISearchRepository
             _ => BuildFullTextQuery(q, query)
         };
 
-        // Aplicar filtros adicionales
+        // Construir lista de filtros
+        var filters = new List<Func<QueryContainerDescriptor<object>, QueryContainer>>();
+
+        // Aplicar filtro de dealer (multi-tenant)
+        // Si hay DealerId, mostrar documentos del dealer O documentos globales (DealerId = null)
+        if (query.DealerId.HasValue)
+        {
+            filters.Add(f => f.Bool(bf => bf
+                .Should(
+                    s => s.Term("dealerId", query.DealerId.Value.ToString()),
+                    s => s.Bool(nb => nb.MustNot(mn => mn.Exists(e => e.Field("dealerId"))))
+                )
+                .MinimumShouldMatch(1)));
+        }
+
+        // Aplicar filtros adicionales del query
         if (query.Filters.Any())
+        {
+            filters.Add(f => BuildFiltersQuery(f, query.Filters));
+        }
+
+        // Combinar query principal con filtros si existen
+        if (filters.Any())
         {
             mainQuery = q.Bool(b => b
                 .Must(mainQuery)
-                .Filter(f => BuildFiltersQuery(f, query.Filters)));
+                .Filter(filters.ToArray()));
         }
 
         return mainQuery;
@@ -382,16 +403,30 @@ public class ElasticsearchRepository : ISearchRepository
 
     private SearchResult MapToSearchResult(ISearchResponse<object> response, SearchQuery query, long executionTimeMs)
     {
-        var documents = response.Hits.Select(hit => new SearchDocument
+        var documents = response.Hits.Select(hit =>
         {
-            Id = hit.Id,
-            IndexName = query.IndexName,
-            Content = System.Text.Json.JsonSerializer.Serialize(hit.Source),
-            Score = hit.Score,
-            Highlights = hit.Highlight?.ToDictionary(
-                h => h.Key,
-                h => h.Value.ToList()
-            ) ?? new Dictionary<string, List<string>>()
+            var doc = new SearchDocument
+            {
+                Id = hit.Id,
+                IndexName = query.IndexName,
+                Content = System.Text.Json.JsonSerializer.Serialize(hit.Source),
+                Score = hit.Score,
+                Highlights = hit.Highlight?.ToDictionary(
+                    h => h.Key,
+                    h => h.Value.ToList()
+                ) ?? new Dictionary<string, List<string>>()
+            };
+
+            // Try to extract DealerId from the source document
+            if (hit.Source is IDictionary<string, object> sourceDict &&
+                sourceDict.TryGetValue("dealerId", out var dealerIdObj) &&
+                dealerIdObj != null &&
+                Guid.TryParse(dealerIdObj.ToString(), out var dealerId))
+            {
+                doc.DealerId = dealerId;
+            }
+
+            return doc;
         }).ToList();
 
         return new SearchResult

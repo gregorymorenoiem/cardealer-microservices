@@ -138,6 +138,7 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
                     body: body);
 
                 _logger.LogInformation("Notification event published: {Type} to {To}", notification.Type, notification.To);
+                await Task.CompletedTask;
                 return ValueTask.CompletedTask;
             }, CancellationToken.None);
         }

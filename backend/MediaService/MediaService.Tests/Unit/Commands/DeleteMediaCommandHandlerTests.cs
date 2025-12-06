@@ -11,6 +11,7 @@ namespace MediaService.Tests.Unit.Commands;
 
 public class DeleteMediaCommandHandlerTests
 {
+    private static readonly Guid TestDealerId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private readonly Mock<IMediaRepository> _mediaRepositoryMock;
     private readonly Mock<IMediaVariantRepository> _variantRepositoryMock;
     private readonly Mock<IMediaStorageService> _storageServiceMock;
@@ -37,6 +38,7 @@ public class DeleteMediaCommandHandlerTests
         var mediaId = Guid.NewGuid().ToString();
         var storageKey = "users/user-123/avatar.jpg";
         var mediaAsset = new ImageMedia(
+            dealerId: TestDealerId,
             ownerId: "user-123",
             context: "profile",
             originalFileName: "avatar.jpg",
@@ -103,6 +105,7 @@ public class DeleteMediaCommandHandlerTests
         var mediaId = Guid.NewGuid().ToString();
         var storageKey = "users/user-123/avatar.jpg";
         var mediaAsset = new ImageMedia(
+            dealerId: TestDealerId,
             ownerId: "user-123",
             context: "profile",
             originalFileName: "avatar.jpg",
@@ -166,6 +169,7 @@ public class DeleteMediaCommandHandlerTests
         var mediaId = Guid.NewGuid().ToString();
         var storageKey = "users/user-123/avatar.jpg";
         var mediaAsset = new ImageMedia(
+            dealerId: TestDealerId,
             ownerId: "user-123",
             context: "profile",
             originalFileName: "avatar.jpg",

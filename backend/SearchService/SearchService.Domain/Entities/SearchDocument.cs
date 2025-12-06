@@ -13,6 +13,12 @@ public class SearchDocument
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
+    /// ID del dealer al que pertenece este documento (multi-tenant).
+    /// Si es null, el documento es global/del sistema.
+    /// </summary>
+    public Guid? DealerId { get; set; }
+
+    /// <summary>
     /// Nombre del índice donde está almacenado
     /// </summary>
     public string IndexName { get; set; } = string.Empty;

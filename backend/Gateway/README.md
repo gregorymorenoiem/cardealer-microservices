@@ -38,7 +38,6 @@ Gateway centralizado que gestiona el enrutamiento, autenticación, rate limiting
        ├──→ MediaService (5004)
        ├──→ AuthService (5006)
        ├──→ ContactService (5007)
-       ├──→ VehicleService (5009)
        ├──→ AdminService (5010)
        └──→ ... otros servicios
 ```
@@ -102,7 +101,6 @@ GET /swagger
 - `/api/media/**` → MediaService
 - `/api/auth/**` → AuthService
 - `/api/contacts/**` → ContactService
-- `/api/vehicles/**` → VehicleService
 - `/api/admin/**` → AdminService
 
 ## 🧪 Testing

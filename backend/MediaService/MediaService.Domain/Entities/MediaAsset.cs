@@ -1,13 +1,15 @@
 using MediaService.Domain.Common;
 using MediaService.Domain.Events;
+using CarDealer.Shared.MultiTenancy;
 
 namespace MediaService.Domain.Entities;
 
 /// <summary>
 /// Represents a media asset (image, video, document, audio)
 /// </summary>
-public class MediaAsset : EntityBase, IAggregateRoot
+public class MediaAsset : EntityBase, IAggregateRoot, ITenantEntity
 {
+    public Guid DealerId { get; set; } // Multi-tenant support
     public string OwnerId { get; private set; } = string.Empty;
     public string? Context { get; private set; }
     public Enums.MediaType Type { get; private set; }
@@ -27,6 +29,7 @@ public class MediaAsset : EntityBase, IAggregateRoot
     protected MediaAsset() { }
 
     public MediaAsset(
+        Guid dealerId,
         string ownerId,
         string? context,
         Enums.MediaType type,
@@ -36,6 +39,7 @@ public class MediaAsset : EntityBase, IAggregateRoot
         string storageKey)
     {
         Id = GenerateMediaId(type);
+        DealerId = dealerId;
         OwnerId = ownerId ?? throw new ArgumentNullException(nameof(ownerId));
         Context = context;
         Type = type;

@@ -222,3 +222,111 @@ public class IndexMetadataTests
         Assert.True(needsReindexing);
     }
 }
+
+public class PropertySearchDocumentTests
+{
+    [Fact]
+    public void PropertySearchDocument_DefaultValues_AreCorrect()
+    {
+        // Arrange & Act
+        var doc = new SearchService.Application.DTOs.PropertySearchDocument();
+
+        // Assert
+        Assert.Equal(string.Empty, doc.Id);
+        Assert.Equal(string.Empty, doc.Title);
+        Assert.Equal(string.Empty, doc.Description);
+        Assert.Equal("active", doc.Status);
+        Assert.Equal("MXN", doc.Currency);
+        Assert.Equal("sqm", doc.AreaUnit);
+        Assert.False(doc.IsFeatured);
+        Assert.NotNull(doc.Amenities);
+        Assert.Empty(doc.Amenities);
+        Assert.NotNull(doc.Location);
+        Assert.NotNull(doc.Seller);
+    }
+
+    [Fact]
+    public void PropertySearchDocument_CanSetAllProperties()
+    {
+        // Arrange
+        var doc = new SearchService.Application.DTOs.PropertySearchDocument
+        {
+            Id = "prop-123",
+            DealerId = Guid.NewGuid(),
+            Title = "Casa en Polanco",
+            Description = "Hermosa casa con jardín",
+            PropertyType = "house",
+            ListingType = "sale",
+            Status = "active",
+            Price = 5000000,
+            Currency = "MXN",
+            PricePerSqMeter = 25000,
+            TotalArea = 200,
+            Bedrooms = 4,
+            Bathrooms = 3,
+            ParkingSpaces = 2,
+            HasPool = true,
+            HasGarden = true,
+            HasSecurity = true,
+            IsFeatured = true,
+            Amenities = new List<string> { "pool", "garden", "gym" },
+            Location = new SearchService.Application.DTOs.PropertyLocationDocument
+            {
+                City = "Ciudad de México",
+                State = "CDMX",
+                Neighborhood = "Polanco",
+                Coordinates = new SearchService.Application.DTOs.GeoPoint { Lat = 19.4326, Lon = -99.1332 }
+            }
+        };
+
+        // Assert
+        Assert.Equal("prop-123", doc.Id);
+        Assert.Equal("Casa en Polanco", doc.Title);
+        Assert.Equal("house", doc.PropertyType);
+        Assert.Equal(5000000, doc.Price);
+        Assert.Equal(4, doc.Bedrooms);
+        Assert.True(doc.HasPool);
+        Assert.True(doc.IsFeatured);
+        Assert.Contains("pool", doc.Amenities);
+        Assert.Equal("Polanco", doc.Location.Neighborhood);
+        Assert.Equal(19.4326, doc.Location.Coordinates!.Lat);
+    }
+
+    [Fact]
+    public void PropertyLocationDocument_DefaultCountry_IsMexico()
+    {
+        // Arrange & Act
+        var location = new SearchService.Application.DTOs.PropertyLocationDocument();
+
+        // Assert
+        Assert.Equal("México", location.Country);
+    }
+
+    [Fact]
+    public void GeoPoint_StoresCoordinates()
+    {
+        // Arrange
+        var point = new SearchService.Application.DTOs.GeoPoint
+        {
+            Lat = 19.4326,
+            Lon = -99.1332
+        };
+
+        // Assert
+        Assert.Equal(19.4326, point.Lat);
+        Assert.Equal(-99.1332, point.Lon);
+    }
+
+    [Fact]
+    public void PropertySellerDocument_DefaultValues()
+    {
+        // Arrange & Act
+        var seller = new SearchService.Application.DTOs.PropertySellerDocument();
+
+        // Assert
+        Assert.Equal(string.Empty, seller.Id);
+        Assert.Equal(string.Empty, seller.Name);
+        Assert.False(seller.IsVerified);
+        Assert.False(seller.IsDealership);
+    }
+}

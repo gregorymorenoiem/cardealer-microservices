@@ -11,6 +11,7 @@ namespace MediaService.Tests.Unit.Commands;
 
 public class InitUploadCommandHandlerTests
 {
+    private static readonly Guid TestDealerId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private readonly Mock<IMediaRepository> _mediaRepositoryMock;
     private readonly Mock<IMediaStorageService> _storageServiceMock;
     private readonly Mock<ILogger<InitUploadCommandHandler>> _loggerMock;
@@ -32,6 +33,7 @@ public class InitUploadCommandHandlerTests
     {
         // Arrange
         var command = new InitUploadCommand(
+            dealerId: TestDealerId,
             ownerId: "user-123",
             context: "profile",
             fileName: "avatar.jpg",
@@ -76,6 +78,7 @@ public class InitUploadCommandHandlerTests
     {
         // Arrange
         var command = new InitUploadCommand(
+            dealerId: TestDealerId,
             ownerId: "user-456",
             context: "vehicle",
             fileName: "car-tour.mp4",
@@ -110,6 +113,7 @@ public class InitUploadCommandHandlerTests
     {
         // Arrange
         var command = new InitUploadCommand(
+            dealerId: TestDealerId,
             ownerId: "user-789",
             context: "documents",
             fileName: "contract.pdf",
@@ -144,6 +148,7 @@ public class InitUploadCommandHandlerTests
     {
         // Arrange
         var command = new InitUploadCommand(
+            dealerId: TestDealerId,
             ownerId: "user-123",
             context: "profile",
             fileName: "avatar.jpg",
@@ -170,7 +175,7 @@ public class InitUploadCommandHandlerTests
     public async Task Handle_ImageContentTypes_CreatesImageMedia(string contentType)
     {
         // Arrange
-        var command = new InitUploadCommand("user-123", "test", "file.img", contentType, 1024);
+        var command = new InitUploadCommand(TestDealerId, "user-123", "test", "file.img", contentType, 1024);
 
         _storageServiceMock
             .Setup(x => x.GenerateStorageKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -200,7 +205,7 @@ public class InitUploadCommandHandlerTests
     public async Task Handle_VideoContentTypes_CreatesVideoMedia(string contentType)
     {
         // Arrange
-        var command = new InitUploadCommand("user-123", "test", "file.vid", contentType, 1024);
+        var command = new InitUploadCommand(TestDealerId, "user-123", "test", "file.vid", contentType, 1024);
 
         _storageServiceMock
             .Setup(x => x.GenerateStorageKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))

@@ -1,0 +1,56 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy shared project
+COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj _Shared/CarDealer.Shared/
+# Copy service projects
+COPY BillingService/BillingService.Domain/BillingService.Domain.csproj BillingService/BillingService.Domain/
+COPY BillingService/BillingService.Application/BillingService.Application.csproj BillingService/BillingService.Application/
+COPY BillingService/BillingService.Infrastructure/BillingService.Infrastructure.csproj BillingService/BillingService.Infrastructure/
+COPY BillingService/BillingService.Api/BillingService.Api.csproj BillingService/BillingService.Api/
+
+# Restore dependencies
+WORKDIR /src/BillingService/BillingService.Api
+RUN dotnet restore
+
+# Copy all source code
+WORKDIR /src
+COPY _Shared/CarDealer.Shared/ _Shared/CarDealer.Shared/
+COPY BillingService/ BillingService/
+
+# Build the application
+WORKDIR /src/BillingService/BillingService.Api
+RUN dotnet build -c Release -o /app/build
+
+# Publish stage
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+# Create non-root user for security
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# Copy published files
+COPY --from=publish /app/publish .
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Change ownership and switch to non-root user
+RUN chown -R appuser:appgroup /app
+USER appuser
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
+# Entry point
+ENTRYPOINT ["dotnet", "BillingService.Api.dll"]

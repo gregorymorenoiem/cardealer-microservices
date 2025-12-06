@@ -138,7 +138,7 @@ public class RabbitMQErrorProducer : IErrorEventProducer, IDisposable
                     body: body);
 
                 _logger.LogInformation("Error event published to RabbitMQ: {ErrorCode}", errorEvent.ErrorCode);
-                return ValueTask.CompletedTask;
+                await Task.CompletedTask;
             }, CancellationToken.None);
         }
         catch (BrokenCircuitException ex)

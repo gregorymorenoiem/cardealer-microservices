@@ -149,7 +149,7 @@ public class GatewayMetricsTests
         {
             metrics.RecordDownstreamCall("AuthService", 0.05, true);
             metrics.RecordDownstreamCall("UserService", 0.08, true);
-            metrics.RecordDownstreamCall("VehicleService", 0.12, true);
+            metrics.RecordDownstreamCall("ContactService", 0.12, true);
             metrics.RecordDownstreamCall("MediaService", 0.5, false);
         };
 

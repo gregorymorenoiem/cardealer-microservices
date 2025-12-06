@@ -13,13 +13,14 @@ public class DocumentMedia : MediaAsset
     public string? Language { get; private set; }
 
     public DocumentMedia(
+        Guid dealerId,
         string ownerId,
         string? context,
         string originalFileName,
         string contentType,
         long sizeBytes,
         string storageKey)
-        : base(ownerId, context, Enums.MediaType.Document, originalFileName, contentType, sizeBytes, storageKey)
+        : base(dealerId, ownerId, context, Enums.MediaType.Document, originalFileName, contentType, sizeBytes, storageKey)
     {
     }
 

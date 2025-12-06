@@ -1077,6 +1077,67 @@ services:
       CLAMAV_NO_FRESHCLAMD: "false" # Enable automatic updates
       FRESHCLAM_CHECKS: "1" # Check for updates once per day
 
+  # ------------------------
+  # ProductService Database
+  # ------------------------
+  productservice-db:
+    image: postgres:16
+    container_name: productservice-db
+    environment:
+      POSTGRES_DB: productservice_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "25446:5432"
+    volumes:
+      - productservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # ProductService API
+  # ------------------------
+  productservice:
+    build:
+      context: .
+      dockerfile: ProductService/Dockerfile
+    container_name: productservice
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    cpus: 0.50
+    mem_limit: 512m
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=productservice-db;Database=productservice_db;Username=postgres;Password=password"
+      DB_PASSWORD: "password"
+    ports:
+      - "15006:80"
+      - "24006:4006"
+    depends_on:
+      productservice-db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: [ "CMD-SHELL", "dotnet /app/ProductService.Api.dll --help > /dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   backupdr_data:
   clamav_data:
@@ -1096,6 +1157,7 @@ volumes:
   grafana_data:
   alertmanager_data:
   featuretoggleservice_data:
+  productservice_data:
 
 
 networks:

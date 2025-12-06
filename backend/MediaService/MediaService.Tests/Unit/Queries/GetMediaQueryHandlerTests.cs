@@ -11,6 +11,7 @@ namespace MediaService.Tests.Unit.Queries;
 
 public class GetMediaQueryHandlerTests
 {
+    private static readonly Guid TestDealerId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private readonly Mock<IMediaRepository> _mediaRepositoryMock;
     private readonly Mock<ILogger<GetMediaQueryHandler>> _loggerMock;
     private readonly GetMediaQueryHandler _handler;
@@ -30,6 +31,7 @@ public class GetMediaQueryHandlerTests
         // Arrange
         var mediaId = Guid.NewGuid().ToString();
         var mediaAsset = new ImageMedia(
+            dealerId: TestDealerId,
             ownerId: "user-123",
             context: "profile",
             originalFileName: "avatar.jpg",
@@ -101,6 +103,7 @@ public class GetMediaQueryHandlerTests
         // Arrange
         var mediaId = Guid.NewGuid().ToString();
         var videoMedia = new VideoMedia(
+            dealerId: TestDealerId,
             ownerId: "user-456",
             context: "vehicle",
             originalFileName: "car-tour.mp4",
@@ -128,6 +131,7 @@ public class GetMediaQueryHandlerTests
         // Arrange
         var mediaId = Guid.NewGuid().ToString();
         var docMedia = new DocumentMedia(
+            dealerId: TestDealerId,
             ownerId: "user-789",
             context: "contracts",
             originalFileName: "agreement.pdf",

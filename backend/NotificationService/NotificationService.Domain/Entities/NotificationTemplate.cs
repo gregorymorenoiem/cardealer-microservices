@@ -1,11 +1,24 @@
+using CarDealer.Shared.MultiTenancy;
 using NotificationService.Domain.Enums;
 using System.Text.Json;
 
 namespace NotificationService.Domain.Entities;
 
-public class NotificationTemplate
+/// <summary>
+/// Notification template with optional multi-tenant support.
+/// When DealerId is null, the template is global/system-wide and available to all dealers.
+/// When DealerId has a value, the template belongs to a specific dealer.
+/// </summary>
+public class NotificationTemplate : IOptionalTenantEntity
 {
     public Guid Id { get; set; }
+
+    /// <summary>
+    /// Optional dealer ID for tenant-specific templates.
+    /// Null = system/global template, Value = dealer-specific template.
+    /// </summary>
+    public Guid? DealerId { get; set; }
+
     public string Name { get; set; } = string.Empty;
     public string Subject { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
@@ -41,7 +54,7 @@ public class NotificationTemplate
 
     // Factory method
     public static NotificationTemplate Create(string name, string subject, string body,
-        NotificationType type, string? description = null, string? category = null, string? createdBy = null)
+        NotificationType type, string? description = null, string? category = null, string? createdBy = null, Guid? dealerId = null)
     {
         return new NotificationTemplate
         {
@@ -51,7 +64,8 @@ public class NotificationTemplate
             Type = type,
             Description = description,
             Category = category,
-            CreatedBy = createdBy ?? "System"
+            CreatedBy = createdBy ?? "System",
+            DealerId = dealerId
         };
     }
 

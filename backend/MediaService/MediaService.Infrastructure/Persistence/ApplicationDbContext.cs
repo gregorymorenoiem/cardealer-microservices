@@ -2,12 +2,16 @@
 using MediaService.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using CarDealer.Shared.MultiTenancy;
 
 namespace MediaService.Infrastructure.Persistence
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : MultiTenantDbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        public ApplicationDbContext(
+            DbContextOptions<ApplicationDbContext> options,
+            ITenantContext tenantContext)
+            : base(options, tenantContext)
         {
         }
 
@@ -30,6 +34,7 @@ namespace MediaService.Infrastructure.Persistence
             {
                 entity.ToTable("media_assets");
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.DealerId); // Multi-tenant index
                 entity.HasIndex(e => e.CreatedAt);
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.ContentType);
@@ -58,22 +63,21 @@ namespace MediaService.Infrastructure.Persistence
                 entity.HasIndex(e => e.Quality);
             });
 
+            // TPH: Todas las entidades de herencia en la misma tabla (media_assets)
+            // No configurar ToTable para tipos derivados en TPH
             modelBuilder.Entity<ImageMedia>(entity =>
             {
                 entity.HasBaseType<MediaAsset>();
-                entity.ToTable("image_media");
             });
 
             modelBuilder.Entity<VideoMedia>(entity =>
             {
                 entity.HasBaseType<MediaAsset>();
-                entity.ToTable("video_media");
             });
 
             modelBuilder.Entity<DocumentMedia>(entity =>
             {
                 entity.HasBaseType<MediaAsset>();
-                entity.ToTable("document_media");
             });
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

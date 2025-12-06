@@ -34,6 +34,9 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
     public void ClearDomainEvents() => _domainEvents.Clear();
     public void MarkAsUpdated() => UpdatedAt = DateTime.UtcNow;
 
+    // Multi-tenancy: DealerId
+    public string? DealerId { get; set; }
+
     // Nuevas propiedades para autenticación externa
     public ExternalAuthProvider? ExternalAuthProvider { get; private set; }
     public string? ExternalUserId { get; private set; }

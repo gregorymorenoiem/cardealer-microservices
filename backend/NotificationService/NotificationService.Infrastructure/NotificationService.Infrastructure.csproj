@@ -54,5 +54,6 @@
     <ProjectReference Include="..\NotificationService.Domain\NotificationService.Domain.csproj" />
     <ProjectReference Include="..\NotificationService.Shared\NotificationService.Shared.csproj" />
     <ProjectReference Include="..\..\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 </Project>

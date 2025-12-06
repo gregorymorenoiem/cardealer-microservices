@@ -1,4 +1,5 @@
 // NotificationService.Infrastructure\DependencyInjection.cs
+using CarDealer.Shared.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // Multi-tenancy support
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantContext, TenantContext>();
+
         // Database Context
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<ApplicationDbContext>(options =>
