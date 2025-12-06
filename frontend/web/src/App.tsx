@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HomePage from './pages/HomePage';
+// OKLA Premium Pages
+import OklaPremiumPage from './pages/OklaPremiumPage';
 // Vehicle module pages
 import { 
   VehicleBrowsePage, 
@@ -93,6 +95,9 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
+          
+          {/* OKLA Premium Routes */}
+          <Route path="/okla" element={<OklaPremiumPage />} />
           
           {/* Vehicle Module Routes */}
           <Route path="/vehicles" element={<VehicleBrowsePage />} />

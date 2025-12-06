@@ -1,12 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* ==========================================
    OKLA Design System Imports
+   Must be first (except @tailwind directives)
    ========================================== */
 @import './styles/okla-theme.css';
 @import './styles/okla-typography.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ==========================================
    Custom Styles
