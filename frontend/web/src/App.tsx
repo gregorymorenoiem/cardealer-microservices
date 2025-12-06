@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HomePage from './pages/HomePage';
 // OKLA Premium Pages
 import OklaPremiumPage from './pages/OklaPremiumPage';
+import OklaBrowsePage from './pages/OklaBrowsePage';
 // Vehicle module pages
 import { 
   VehicleBrowsePage, 
@@ -98,6 +99,7 @@ function App() {
           
           {/* OKLA Premium Routes */}
           <Route path="/okla" element={<OklaPremiumPage />} />
+          <Route path="/okla/browse" element={<OklaBrowsePage />} />
           
           {/* Vehicle Module Routes */}
           <Route path="/vehicles" element={<VehicleBrowsePage />} />
