@@ -155,20 +155,18 @@ export default function FeaturedListingCard({
               </span>
             </div>
 
-            {/* Dealer Info */}
-            {vehicle.seller.type === 'Dealer' && (
-              <div className="pt-2 sm:pt-3 border-t border-gray-100">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <span className="text-gray-700 font-medium truncate mr-2">
-                    {vehicle.seller.name}
-                  </span>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="text-yellow-500">★</span>
-                    <span className="text-gray-600">{vehicle.seller.rating.toFixed(1)}</span>
-                  </div>
+            {/* Seller Info with Rating */}
+            <div className="pt-2 sm:pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-gray-700 font-medium truncate mr-2">
+                  {vehicle.seller.name}
+                </span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="text-yellow-500">★</span>
+                  <span className="text-gray-600">{vehicle.seller.rating.toFixed(1)}</span>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </Link>
       </div>
