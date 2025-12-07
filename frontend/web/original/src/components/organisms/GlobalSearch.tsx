@@ -160,10 +160,20 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('vehicles');
-  const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  
+  // Dynamic placeholder based on selected category
+  const getCategoryPlaceholder = () => {
+    const placeholders: Record<CategoryType, string> = {
+      vehicles: 'Buscar vehículos: marca, modelo, año...',
+      'vehicle-rental': 'Buscar rentas: SUV, sedán, deportivo...',
+      properties: 'Buscar propiedades: casa, apartamento...',
+      lodging: 'Buscar hospedaje: hotel, cabaña, villa...',
+    };
+    return placeholders[selectedCategory];
+  };
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -263,74 +273,47 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
       ref={containerRef}
       className={`relative ${showOnMobile ? '' : 'hidden md:block'} ${className}`}
     >
-      {/* Search Input with Category Filter */}
-      <div className="relative flex items-center gap-2">
-        {/* Category Selector (only in expanded mode) */}
-        {!compact && (
-          <div className="flex gap-1 border-r pr-2">
-            {searchCategories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedCategory === cat.id
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden lg:inline">{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+      {/* Search Input with Integrated Category Selector */}
+      <div className="relative">
+        {/* Category Icon (shows current category) */}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {(() => {
+            const CategoryIcon = searchCategories.find(c => c.id === selectedCategory)?.icon || FaCar;
+            return <CategoryIcon className="w-4 h-4 text-blue-600" />;
+          })()}
+          <div className="h-5 w-px bg-gray-300" />
+        </div>
         
-        <div className="relative flex-1">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setIsOpen(true)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="w-full pl-10 pr-20 py-2.5 bg-gray-100 border border-transparent focus:border-primary focus:bg-white rounded-xl text-gray-900 placeholder-gray-500 outline-none transition-all"
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {/* Filter Toggle (compact mode) */}
-            {compact && (
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  showFilters ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'
-                }`}
-                title="Filtros"
-              >
-                <FiFilter className="w-4 h-4" />
-              </button>
-            )}
-            {query && (
-              <button
-                onClick={clearSearch}
-                className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <FiX className="w-4 h-4 text-gray-500" />
-              </button>
-            )}
-            {isLoading && (
-              <FiLoader className="w-5 h-5 text-gray-400 animate-spin" />
-            )}
-          </div>
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder || getCategoryPlaceholder()}
+          className="w-full pl-14 pr-10 py-2.5 bg-gray-100 border border-transparent focus:border-primary focus:bg-white rounded-xl text-gray-900 placeholder-gray-500 outline-none transition-all"
+        />
+        
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {query && (
+            <button
+              onClick={clearSearch}
+              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+              aria-label="Limpiar búsqueda"
+            >
+              <FiX className="w-4 h-4 text-gray-500" />
+            </button>
+          )}
+          {isLoading && (
+            <FiLoader className="w-5 h-5 text-gray-400 animate-spin" />
+          )}
         </div>
       </div>
 
       {/* Dropdown Results */}
       <AnimatePresence>
-        {isOpen && (query.length >= 2 || recentSearches.length > 0 || showFilters) && (
+        {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -338,19 +321,37 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             transition={{ duration: 0.15 }}
             className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 max-h-[70vh] overflow-y-auto"
           >
-            {/* Quick Filters (in compact mode when filters shown) */}
-            {compact && showFilters && selectedCategory !== 'all' && (
-              <div className="p-4 border-b border-gray-100 bg-gray-50">
-                <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  <FiFilter className="w-3 h-3" />
-                  Filtros rápidos
-                </div>
-                <div className="flex flex-wrap gap-2">
+            {/* Category Tabs - Always visible at top */}
+            <div className="flex border-b border-gray-100 bg-gray-50">
+              {searchCategories.map((cat) => {
+                const Icon = cat.icon;
+                const isActive = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                      isActive
+                        ? 'border-blue-600 bg-white text-blue-600'
+                        : 'border-transparent text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Quick Filters - Always visible below tabs */}
+            {quickFilters[selectedCategory] && (
+              <div className="p-3 bg-white border-b border-gray-100">
+                <div className="flex items-center gap-2 flex-wrap">
                   {quickFilters[selectedCategory]?.map((filter) => (
                     <button
                       key={filter}
                       onClick={() => handleQuickFilter(filter)}
-                      className="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg hover:border-blue-500 hover:text-blue-600 transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-colors"
                     >
                       {filter}
                     </button>
@@ -359,37 +360,15 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
               </div>
             )}
             
-            {/* Category Tabs (compact mode) */}
-            {compact && (query.length >= 2 || showFilters) && (
-              <div className="flex gap-1 p-2 border-b border-gray-100 overflow-x-auto">
-                {searchCategories.map((cat) => {
-                  const Icon = cat.icon;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                        selectedCategory === cat.id
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {/* Recent Searches (when no query) */}
+            {/* Recent Searches - Only when no query */}
             {query.length < 2 && recentSearches.length > 0 && (
               <div className="p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                   <FiClock className="w-3 h-3" />
-                  Búsquedas recientes
+                  Recientes
                 </div>
                 <div className="space-y-1">
-                  {recentSearches.map((search, index) => (
+                  {recentSearches.slice(0, 5).map((search, index) => (
                     <button
                       key={index}
                       onClick={() => {
@@ -399,16 +378,18 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                       className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <FiSearch className="w-4 h-4 text-gray-400" />
-                      {search}
+                      <span className="flex-1 truncate">{search}</span>
+                      <FiArrowRight className="w-3 h-3 text-gray-400" />
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Search Results */}
+            {/* Search Results - Only show when user has typed something */}
             {query.length >= 2 && (
               <>
+                {/* Results by type */}
                 {/* Vehicle Rentals Section */}
                 {rentalResults.length > 0 && (
                   <div className="p-4 border-b border-gray-100">
