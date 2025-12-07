@@ -12,7 +12,6 @@ import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
 
 // Search categories for the hero
 const searchCategories = [
-  { id: 'all', label: 'Todas las Categorías' },
   { id: 'vehicles', label: 'Vehículos' },
   { id: 'vehicle-rental', label: 'Renta de Vehículos' },
   { id: 'properties', label: 'Propiedades' },
@@ -592,20 +591,81 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('vehicles');
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+
+  // Vehicle search states
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+
+  // Vehicle rental states
+  const [vehicleType, setVehicleType] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [location, setLocation] = useState('');
+
+  // Property states
+  const [propertyType, setPropertyType] = useState('');
+  const [propertyLocation, setPropertyLocation] = useState('');
+  const [propertyPriceMin, setPropertyPriceMin] = useState('');
+  const [propertyPriceMax, setPropertyPriceMax] = useState('');
+  const [bedrooms, setBedrooms] = useState('');
+
+  // Lodging states
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState('');
+  const [lodgingLocation, setLodgingLocation] = useState('');
+
+  const vehicleMakes = ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'BMW', 'Mercedes-Benz', 'Audi', 'Tesla', 'Nissan', 'Mazda'];
+  const vehicleTypes = ['SUV', 'Sedán', 'Deportivo', 'Camioneta', 'Compacto', 'Convertible'];
+  const propertyTypes = ['Casa', 'Apartamento', 'Villa', 'Condominio', 'Terreno'];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (searchQuery) params.set('q', searchQuery);
-    if (selectedCategory !== 'all') params.set('category', selectedCategory);
-    navigate(`/browse?${params.toString()}`);
+    
+    switch (selectedCategory) {
+      case 'vehicles':
+        if (make) params.set('make', make);
+        if (model) params.set('model', model);
+        if (priceMin) params.set('priceMin', priceMin);
+        if (priceMax) params.set('priceMax', priceMax);
+        navigate(`/vehicles?${params.toString()}`);
+        break;
+      
+      case 'vehicle-rental':
+        if (vehicleType) params.set('type', vehicleType);
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
+        if (location) params.set('location', location);
+        navigate(`/vehicle-rental?${params.toString()}`);
+        break;
+      
+      case 'properties':
+        if (propertyType) params.set('type', propertyType);
+        if (propertyLocation) params.set('location', propertyLocation);
+        if (propertyPriceMin) params.set('priceMin', propertyPriceMin);
+        if (propertyPriceMax) params.set('priceMax', propertyPriceMax);
+        if (bedrooms) params.set('bedrooms', bedrooms);
+        navigate(`/properties?${params.toString()}`);
+        break;
+      
+      case 'lodging':
+        if (checkIn) params.set('checkIn', checkIn);
+        if (checkOut) params.set('checkOut', checkOut);
+        if (guests) params.set('guests', guests);
+        if (lodgingLocation) params.set('location', lodgingLocation);
+        navigate(`/lodging?${params.toString()}`);
+        break;
+    }
   };
 
   return (
     <MainLayout>
       {/* Hero Section with Background Image */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[70vh] flex items-center">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
@@ -617,11 +677,11 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-2xl">
+          <div className="max-w-4xl mx-auto mb-8">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 text-center"
             >
               Descubre lo{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
@@ -632,23 +692,25 @@ const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-gray-200 mb-8"
+              className="text-xl text-gray-200 text-center"
             >
               El marketplace donde la calidad se encuentra con la confianza
             </motion.p>
+          </div>
 
-            {/* Search Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-col md:flex-row gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2"
-            >
+          {/* Search Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="max-w-5xl mx-auto"
+          >
+              <div className="flex flex-col md:flex-row gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 relative z-50">
               {/* Category Selector */}
-              <div className="relative">
+              <div className="relative z-50 md:w-48 flex-shrink-0">
                 <button
                   onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                  className="w-full md:w-56 px-4 py-3 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
+                  className="w-full md:w-48 px-4 py-3 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
                 >
                   <span className="whitespace-nowrap">{searchCategories.find((c) => c.id === selectedCategory)?.label}</span>
                   <FiChevronDown
@@ -661,7 +723,7 @@ const HomePage: React.FC = () => {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-20"
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50"
                     >
                       {searchCategories.map((category) => (
                         <button
@@ -684,26 +746,173 @@ const HomePage: React.FC = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Search Input */}
-              <div className="flex-1 relative">
-                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="¿Qué estás buscando?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-12 pr-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              {/* Dynamic Search Fields based on Category */}
+              {selectedCategory === 'vehicles' && (
+                <>
+                  <select
+                    value={make}
+                    onChange={(e) => setMake(e.target.value)}
+                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Marca</option>
+                    {vehicleMakes.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Modelo"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Precio Min"
+                    value={priceMin}
+                    onChange={(e) => setPriceMin(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Precio Max"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </>
+              )}
+
+              {selectedCategory === 'vehicle-rental' && (
+                <>
+                  <select
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Tipo</option>
+                    {vehicleTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="date"
+                    placeholder="Fecha Inicio"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="date"
+                    placeholder="Fecha Fin"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Ubicación"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </>
+              )}
+
+              {selectedCategory === 'properties' && (
+                <>
+                  <select
+                    value={propertyType}
+                    onChange={(e) => setPropertyType(e.target.value)}
+                    className="md:w-36 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Tipo</option>
+                    {propertyTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Ubicación"
+                    value={propertyLocation}
+                    onChange={(e) => setPropertyLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Precio Min"
+                    value={propertyPriceMin}
+                    onChange={(e) => setPropertyPriceMin(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="md:w-28 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Precio Max"
+                    value={propertyPriceMax}
+                    onChange={(e) => setPropertyPriceMax(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="md:w-28 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Hab."
+                    value={bedrooms}
+                    onChange={(e) => setBedrooms(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="md:w-20 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </>
+              )}
+
+              {selectedCategory === 'lodging' && (
+                <>
+                  <input
+                    type="date"
+                    placeholder="Check-in"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="date"
+                    placeholder="Check-out"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Huéspedes"
+                    value={guests}
+                    onChange={(e) => setGuests(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Ubicación"
+                    value={lodgingLocation}
+                    onChange={(e) => setLodgingLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </>
+              )}
+
               <button 
                 onClick={handleSearch}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+                className="md:w-32 flex-shrink-0 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
               >
                 Buscar
               </button>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 

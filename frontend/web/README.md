@@ -12,14 +12,17 @@ frontend/web/
 │   ├── package.json
 │   └── README.md
 │
-├── original/                # Diseño clásico tradicional (puerto 5174)
+├── original/                # Diseño clásico multi-categoría (puerto 5174)
 │   ├── src/
 │   ├── public/
 │   ├── package.json
 │   └── README.md
 │
-└── cardealer/               # Diseño futuro personalizado (puerto 5175)
-    └── README.md           # Carpeta vacía, reservada para futuro
+└── cardealer/               # Diseño exclusivo para venta de autos (puerto 5175)
+    ├── src/
+    ├── public/
+    ├── package.json
+    └── README.md
 ```
 
 ## 🎨 Diseños Disponibles
@@ -32,6 +35,7 @@ frontend/web/
 - Animaciones con Framer Motion
 - Responsive design completo
 - Internacionalización (i18n)
+- **Multi-categoría**: Vehículos, Properties, Rental, Hospedaje
 
 ```bash
 cd okla
@@ -40,11 +44,12 @@ npm run dev
 ```
 
 ### 2. Original (Puerto 5174)
-**Estado**: ✅ Base implementada
+**Estado**: ✅ Implementado completamente
 - Diseño tradicional de compra/venta
 - Navegación estándar
 - Filtros básicos
 - Vista de listado clásica
+- **Multi-categoría**: Vehículos, Properties, Rental, Hospedaje
 
 ```bash
 cd original
@@ -53,13 +58,18 @@ npm run dev
 ```
 
 ### 3. CarDealer (Puerto 5175)
-**Estado**: 📝 Reservado para futuro
-- Carpeta vacía
-- Diseño personalizado futuro
+**Estado**: ✅ Implementado completamente
+- Diseño clásico profesional
+- **SOLO Vehículos** - Sin otras categorías
+- Home enfocado en compra/venta de autos
+- Catálogo, comparador, mapa
+- Paneles de usuario, dealer y admin
+- ❌ Sin properties, rental, ni hospedaje
 
 ```bash
 cd cardealer
-# Pendiente de implementación
+npm install
+npm run dev
 ```
 
 ## 📦 Independencia Total
@@ -98,7 +108,7 @@ cd okla && npm run dev
 # Terminal 2 - Original  
 cd original && npm run dev
 
-# Terminal 3 - CarDealer (futuro)
+# Terminal 3 - CarDealer
 cd cardealer && npm run dev
 ```
 
@@ -106,6 +116,20 @@ cd cardealer && npm run dev
 - **Okla**: http://localhost:5173
 - **Original**: http://localhost:5174  
 - **CarDealer**: http://localhost:5175
+
+## 🔑 Comparación de Diseños
+
+| Característica | Okla | Original | CarDealer |
+|---------------|------|----------|-----------|
+| **Estilo** | Moderno Premium | Marketplace Clásico | Dealer Profesional |
+| **Vehículos** | ✅ | ✅ | ✅ |
+| **Properties** | ✅ | ✅ | ❌ |
+| **Vehicle Rental** | ✅ | ✅ | ❌ |
+| **Hospedaje** | ✅ | ✅ | ❌ |
+| **Enfoque** | Multi-vertical | Multi-categoría | **Solo Autos** |
+| **Animaciones** | Framer Motion | Básicas | Moderadas |
+| **Puerto** | 5173 | 5174 | 5175 |
+| **Estado** | ✅ Completo | ✅ Completo | ✅ Completo |
 
 ## 📦 Independencia Total
 
@@ -115,7 +139,7 @@ Cada diseño es **completamente independiente**:
 ✅ **Propio src/** con todos los componentes
 ✅ **Propio public/** con assets
 ✅ **Propias configuraciones** (vite, tailwind, tsconfig, etc.)
-✅ **No comparten código** excepto autenticación
+✅ **No comparten NADA de código**
 
 ### Lo que NO se comparte
 ❌ Componentes UI
@@ -125,10 +149,15 @@ Cada diseño es **completamente independiente**:
 ❌ Assets
 ❌ Configuraciones
 ❌ Store/State
-❌ Servicios (excepto auth)
+❌ Servicios (incluido auth)
+❌ Hooks
+❌ Utils
+❌ Types
 
-### Lo que SÍ se comparte
-✅ **Solo autenticación** (`shared-auth/`)
+### Resultado
+✅ **Independencia 100%** - Tres aplicaciones completamente separadas
+✅ Cada diseño puede evolucionar independientemente
+✅ Cero acoplamiento entre diseños
 
 ## 🔄 Migración desde estructura anterior
 
@@ -159,6 +188,8 @@ Cada carpeta (okla, original, cardealer) es una **aplicación React completament
 - Estilos
 - Configuraciones
 
+**CarDealer** se diferencia al estar enfocado **exclusivamente en venta de vehículos**, sin categorías adicionales.
+
 ## 🎯 Ventajas de esta arquitectura
 
 1. **Independencia**: Cada diseño puede evolucionar sin afectar a los otros
@@ -173,8 +204,8 @@ Cada carpeta (okla, original, cardealer) es una **aplicación React completament
 1. ✅ Estructura de carpetas creada
 2. ✅ Código Okla migrado completamente
 3. ✅ Código Original migrado completamente
-4. ✅ Diseños funcionando independientemente
-5. ⏳ Implementar diseño CarDealer (futuro)
+4. ✅ Código CarDealer implementado (solo vehículos)
+5. ✅ Tres diseños funcionando independientemente
 6. ⏳ Testing individual de cada diseño
 
 ## 🐛 Troubleshooting

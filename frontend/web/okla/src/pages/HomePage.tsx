@@ -605,7 +605,7 @@ const HomePage: React.FC = () => {
   return (
     <MainLayout>
       {/* Hero Section with Background Image */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[70vh] flex items-center">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
@@ -617,11 +617,11 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-2xl">
+          <div className="max-w-4xl mx-auto">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 text-center"
             >
               Descubre lo{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
@@ -632,7 +632,7 @@ const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-gray-200 mb-8"
+              className="text-xl text-gray-200 mb-8 text-center"
             >
               El marketplace donde la calidad se encuentra con la confianza
             </motion.p>
@@ -642,10 +642,10 @@ const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex flex-col md:flex-row gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2"
+              className="flex flex-col md:flex-row gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 relative z-50"
             >
               {/* Category Selector */}
-              <div className="relative">
+              <div className="relative z-50">
                 <button
                   onClick={() => setIsCategoryOpen(!isCategoryOpen)}
                   className="w-full md:w-56 px-4 py-3 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
@@ -661,7 +661,7 @@ const HomePage: React.FC = () => {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-20"
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50"
                     >
                       {searchCategories.map((category) => (
                         <button
