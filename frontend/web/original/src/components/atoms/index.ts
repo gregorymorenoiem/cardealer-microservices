@@ -3,6 +3,12 @@ export { default as Input } from './Input';
 export { default as Label } from './Label';
 export { default as Spinner } from './Spinner';
 
+// Featured Listing Badges - Sprint 2
+export { default as DestacadoBadge } from './DestacadoBadge';
+export { default as PremiumBadge } from './PremiumBadge';
+export { default as CertificadoBadge } from './CertificadoBadge';
+export { default as TopDealerBadge } from './TopDealerBadge';
+
 export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';
 export type { LabelProps } from './Label';
