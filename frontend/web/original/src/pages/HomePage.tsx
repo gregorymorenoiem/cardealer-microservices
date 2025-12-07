@@ -714,6 +714,46 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Featured of the Week - Mixed from all categories */}
+      <FeaturedSection
+        title="Destacados de la Semana"
+        subtitle="Selección exclusiva de nuestros mejores anuncios"
+        listings={[
+          ...vehiculosListings.slice(0, 2),
+          ...propiedadesListings.slice(0, 2),
+          ...rentaVehiculosListings.slice(0, 1),
+          ...hospedajeListings.slice(0, 1),
+        ]}
+        viewAllHref="/browse"
+        accentColor="blue"
+      />
+
+      {/* Other Category Sections */}
+      
+      <FeaturedSection
+        title="Renta de Vehículos"
+        subtitle="Alquila el vehículo perfecto para cualquier ocasión"
+        listings={rentaVehiculosListings}
+        viewAllHref="/vehicle-rental"
+        accentColor="amber"
+      />
+
+      <FeaturedSection
+        title="Propiedades Destacadas"
+        subtitle="Encuentra tu próximo hogar o inversión"
+        listings={propiedadesListings}
+        viewAllHref="/properties"
+        accentColor="emerald"
+      />
+
+      <FeaturedSection
+        title="Hospedaje Destacado"
+        subtitle="Apartamentos, hoteles y alojamientos"
+        listings={hospedajeListings}
+        viewAllHref="/lodging"
+        accentColor="purple"
+      />
+
       {/* Categories Section */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -758,46 +798,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Featured of the Week - Mixed from all categories */}
-      <FeaturedSection
-        title="Destacados de la Semana"
-        subtitle="Selección exclusiva de nuestros mejores anuncios"
-        listings={[
-          ...vehiculosListings.slice(0, 2),
-          ...propiedadesListings.slice(0, 2),
-          ...rentaVehiculosListings.slice(0, 1),
-          ...hospedajeListings.slice(0, 1),
-        ]}
-        viewAllHref="/browse"
-        accentColor="blue"
-      />
-
-      {/* Other Category Sections */}
-      
-      <FeaturedSection
-        title="Renta de Vehículos"
-        subtitle="Alquila el vehículo perfecto para cualquier ocasión"
-        listings={rentaVehiculosListings}
-        viewAllHref="/vehicle-rental"
-        accentColor="amber"
-      />
-
-      <FeaturedSection
-        title="Propiedades Destacadas"
-        subtitle="Encuentra tu próximo hogar o inversión"
-        listings={propiedadesListings}
-        viewAllHref="/properties"
-        accentColor="emerald"
-      />
-
-      <FeaturedSection
-        title="Hospedaje Destacado"
-        subtitle="Apartamentos, hoteles y alojamientos"
-        listings={hospedajeListings}
-        viewAllHref="/lodging"
-        accentColor="purple"
-      />
 
       {/* Features Section */}
       <section className="py-12 bg-white">
