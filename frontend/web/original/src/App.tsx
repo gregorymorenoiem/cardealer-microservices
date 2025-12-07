@@ -97,20 +97,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          {/* Public Routes */}
+          {/* Public Routes - Original Design */}
           <Route path="/" element={<HomePage />} />
-          
-          {/* OKLA Premium Routes */}
-          <Route path="/okla" element={<OklaPremiumPage />} />
-          <Route path="/okla/browse" element={<OklaBrowsePage />} />
-          <Route path="/okla/listing/:id" element={<OklaDetailPage />} />
-          
-          {/* Vehicle Module Routes */}
-          <Route path="/vehicles" element={<VehicleBrowsePage />} />
-          <Route path="/vehicles/home" element={<VehiclesHomePage />} />
-          <Route path="/vehicles/map" element={<VehicleMapViewPage />} />
-          <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
-          <Route path="/vehicles/compare" element={<VehicleComparePage />} />
           <Route path="/browse" element={<VehicleBrowsePage />} />
           <Route path="/compare" element={<VehicleComparePage />} />
           <Route path="/sell-your-car" element={<SellYourCarPage />} />

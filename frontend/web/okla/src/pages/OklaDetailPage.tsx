@@ -159,7 +159,7 @@ export const OklaDetailPage = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 text-sm">
             <Link
-              to="/okla/browse"
+              to="/browse"
               className="flex items-center gap-1 text-okla-slate hover:text-okla-navy transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
