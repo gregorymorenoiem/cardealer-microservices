@@ -7,8 +7,26 @@ import type {
   FeaturedListing, 
   RankingFactors, 
   FeaturedConfig,
-  ListingTier 
+  ListingTier,
+  FeaturedPage
 } from '../types/listing';
+
+// Generic interface for rankable items (vehicles, properties, etc.)
+interface RankableItem {
+  id: string;
+  tier?: ListingTier;
+  qualityScore?: number;
+  engagementScore?: number;
+  dealerId?: string;
+  dealerTier?: 'basic' | 'premium' | 'enterprise';
+  dealerVerified?: boolean;
+  seller?: {
+    rating?: number;
+  };
+  createdAt?: Date;
+  year?: number; // For vehicles
+  featuredPages?: FeaturedPage[];
+}
 
 // ============================================
 // CONFIGURATION
@@ -34,7 +52,7 @@ function calculateTierBoost(tier: ListingTier, config: FeaturedConfig = DEFAULT_
   return config.boostMultiplier[tier];
 }
 
-function calculateDealerScore(listing: FeaturedListing): number {
+function calculateDealerScore(listing: RankableItem): number {
   let score = 0;
   
   if (listing.dealerTier === 'enterprise') score += 100;
@@ -42,14 +60,27 @@ function calculateDealerScore(listing: FeaturedListing): number {
   else if (listing.dealerTier === 'basic') score += 20;
   
   if (listing.dealerVerified) score += 40;
-  score += (listing.dealerRating / 5) * 60;
+  const rating = listing.seller?.rating || 0;
+  score += (rating / 5) * 60;
   
   return Math.min(score, 200);
 }
 
-function calculateFreshnessScore(createdAt: Date): number {
+function calculateFreshnessScore(item: RankableItem): number {
+  if (!item.createdAt && item.year) {
+    // For vehicles without createdAt, use year as proxy
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - item.year;
+    if (age === 0) return 100; // Current year
+    if (age === 1) return 80;
+    if (age === 2) return 60;
+    return Math.max(10, 50 - (age * 5));
+  }
+  
+  if (!item.createdAt) return 50; // Default score
+  
   const now = new Date();
-  const ageInDays = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+  const ageInDays = (now.getTime() - item.createdAt.getTime()) / (1000 * 60 * 60 * 24);
   
   if (ageInDays <= 7) return 100 - (ageInDays * 7);
   if (ageInDays <= 14) return 50 - ((ageInDays - 7) * 3.5);
@@ -90,7 +121,7 @@ export function calculateListingScore(
     qualityScore: listing.qualityScore,
     engagementScore: listing.engagementScore,
     dealerScore: calculateDealerScore(listing),
-    freshnessScore: calculateFreshnessScore(listing.createdAt),
+    freshnessScore: calculateFreshnessScore(listing),
     relevanceScore: calculateRelevanceScore(listing, searchQuery),
     finalScore: 0
   };
@@ -153,12 +184,50 @@ export function applyFairnessRules(
 // POSITION ASSIGNMENT
 // ============================================
 
+// Overload signatures for flexibility
+export function mixFeaturedAndOrganic<T extends RankableItem>(
+  items: T[],
+  pattern: 'home' | 'browse' | 'detail'
+): T[];
+
 export function mixFeaturedAndOrganic(
   featured: FeaturedListing[],
   organic: FeaturedListing[],
-  pattern: 'home' | 'browse' | 'detail' = 'home'
-): FeaturedListing[] {
-  const result: FeaturedListing[] = [];
+  pattern: 'home' | 'browse' | 'detail'
+): FeaturedListing[];
+
+// Implementation
+export function mixFeaturedAndOrganic<T extends RankableItem>(
+  itemsOrFeatured: T[] | FeaturedListing[],
+  organicOrPattern?: T[] | FeaturedListing[] | 'home' | 'browse' | 'detail',
+  patternArg?: 'home' | 'browse' | 'detail'
+): T[] | FeaturedListing[] {
+  // Single array signature
+  if (typeof organicOrPattern === 'string' || organicOrPattern === undefined) {
+    const items = itemsOrFeatured as T[];
+    const pattern = (organicOrPattern as 'home' | 'browse' | 'detail') || 'home';
+    
+    const featured = items.filter(item => item.tier && item.tier !== 'basic');
+    const organic = items.filter(item => !item.tier || item.tier === 'basic');
+    
+    return mixItems(featured, organic, pattern) as T[];
+  }
+  
+  // Two array signature
+  const featured = itemsOrFeatured as FeaturedListing[];
+  const organic = organicOrPattern as FeaturedListing[];
+  const pattern = patternArg || 'home';
+  
+  return mixItems(featured, organic, pattern);
+}
+
+// Helper function for actual mixing logic
+function mixItems<T>(
+  featured: T[],
+  organic: T[],
+  pattern: 'home' | 'browse' | 'detail'
+): T[] {
+  const result: T[] = [];
   
   switch (pattern) {
     case 'home':
