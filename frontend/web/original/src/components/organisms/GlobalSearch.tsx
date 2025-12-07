@@ -20,7 +20,7 @@ import {
 } from 'react-icons/fi';
 import { FaCar, FaBed, FaKey } from 'react-icons/fa';
 
-type CategoryType = 'all' | 'vehicles' | 'vehicle-rental' | 'properties' | 'lodging';
+type CategoryType = 'vehicles' | 'vehicle-rental' | 'properties' | 'lodging';
 
 interface SearchResult {
   id: string;
@@ -33,7 +33,6 @@ interface SearchResult {
 }
 
 const searchCategories = [
-  { id: 'all' as CategoryType, label: 'Todo', icon: FiSearch },
   { id: 'vehicles' as CategoryType, label: 'Vehículos', icon: FaCar },
   { id: 'vehicle-rental' as CategoryType, label: 'Renta', icon: FaKey },
   { id: 'properties' as CategoryType, label: 'Propiedades', icon: FiHome },
@@ -48,7 +47,7 @@ const quickFilters = {
 };
 
 // Mock search results - in production this would come from an API
-const mockSearch = async (query: string, category: CategoryType = 'all'): Promise<SearchResult[]> => {
+const mockSearch = async (query: string, category: CategoryType = 'vehicles'): Promise<SearchResult[]> => {
   await new Promise(resolve => setTimeout(resolve, 300));
   
   if (!query.trim()) return [];
@@ -58,7 +57,7 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
   const results: SearchResult[] = [];
   
   // Vehicle results (for sale)
-  if ((category === 'all' || category === 'vehicles') && 
+  if (category === 'vehicles' && 
       (q.includes('toyota') || q.includes('auto') || q.includes('sedan') || q.includes('camioneta') || q.includes('bmw') || q.includes('tesla'))) {
     results.push(
       { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
@@ -66,13 +65,13 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
     );
   }
   
-  if ((category === 'all' || category === 'vehicles') && (q.includes('honda') || q.includes('civic'))) {
+  if (category === 'vehicles' && (q.includes('honda') || q.includes('civic'))) {
     results.push(
       { id: 'v3', type: 'vehicle', title: 'Honda Civic 2024', subtitle: 'Sedán • Manual • Nuevo', price: 380000, url: '/vehicles/v3' },
     );
   }
   
-  if ((category === 'all' || category === 'vehicles') && (q.includes('bmw') || q.includes('tesla'))) {
+  if (category === 'vehicles' && (q.includes('bmw') || q.includes('tesla'))) {
     results.push(
       { id: 'v4', type: 'vehicle', title: 'BMW Serie 3 2024', subtitle: 'Sedán • Automático • 8,000 km', price: 720000, url: '/vehicles/v4' },
       { id: 'v5', type: 'vehicle', title: 'Tesla Model 3 2024', subtitle: 'Sedán • Eléctrico • Nuevo', price: 890000, url: '/vehicles/v5' },
@@ -80,7 +79,7 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
   }
   
   // Vehicle rental results
-  if ((category === 'all' || category === 'vehicle-rental') && 
+  if (category === 'vehicle-rental' && 
       (q.includes('renta') || q.includes('alquiler') || q.includes('suv') || q.includes('deportivo'))) {
     results.push(
       { id: 'vr1', type: 'vehicle-rental', title: 'BMW X5 - Renta Diaria', subtitle: 'SUV de lujo • Automático', price: 150, url: '/vehicle-rental/vr1' },
@@ -89,7 +88,7 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
   }
   
   // Property results
-  if ((category === 'all' || category === 'properties') && 
+  if (category === 'properties' && 
       (q.includes('casa') || q.includes('house') || q.includes('venta') || q.includes('apartamento'))) {
     results.push(
       { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
@@ -97,7 +96,7 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
     );
   }
   
-  if ((category === 'all' || category === 'properties') && (q.includes('depa') || q.includes('apartamento') || q.includes('renta'))) {
+  if (category === 'properties' && (q.includes('depa') || q.includes('apartamento') || q.includes('renta'))) {
     results.push(
       { id: 'p3', type: 'property', title: 'Departamento en Roma Norte', subtitle: '2 rec • 2 baños • 95 m²', price: 25000, url: '/properties/p3' },
       { id: 'p4', type: 'property', title: 'Penthouse en Santa Fe', subtitle: '3 rec • 3 baños • 180 m²', price: 45000, url: '/properties/p4' },
@@ -105,7 +104,7 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
   }
   
   // Lodging results
-  if ((category === 'all' || category === 'lodging') && 
+  if (category === 'lodging' && 
       (q.includes('hotel') || q.includes('hospedaje') || q.includes('cabaña') || q.includes('villa'))) {
     results.push(
       { id: 'l1', type: 'lodging', title: 'Villa en Tulum', subtitle: '4 habitaciones • Vista al mar', price: 450, url: '/lodging/l1' },
@@ -115,11 +114,27 @@ const mockSearch = async (query: string, category: CategoryType = 'all'): Promis
   
   // If no specific matches, show some generic results based on category
   if (results.length === 0 && q.length >= 2) {
-    if (category === 'all') {
-      results.push(
-        { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
-        { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
-      );
+    switch (category) {
+      case 'vehicles':
+        results.push(
+          { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
+        );
+        break;
+      case 'properties':
+        results.push(
+          { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
+        );
+        break;
+      case 'vehicle-rental':
+        results.push(
+          { id: 'vr1', type: 'vehicle-rental', title: 'BMW X5 - Renta Diaria', subtitle: 'SUV de lujo • Automático', price: 150, url: '/vehicle-rental/vr1' },
+        );
+        break;
+      case 'lodging':
+        results.push(
+          { id: 'l1', type: 'lodging', title: 'Villa en Tulum', subtitle: '4 habitaciones • Vista al mar', price: 450, url: '/lodging/l1' },
+        );
+        break;
     }
   }
   
@@ -144,7 +159,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('vehicles');
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
