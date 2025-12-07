@@ -45,7 +45,7 @@ export default function FeaturedListingGrid({
   };
 
   return (
-    <div className={`grid ${columnClasses[columns]} gap-6 ${className}`}>
+    <div className={`grid ${columnClasses[columns]} gap-4 ${className}`}>
       {rankedVehicles.map((vehicle, index) => (
         <FeaturedListingCard
           key={vehicle.id}
