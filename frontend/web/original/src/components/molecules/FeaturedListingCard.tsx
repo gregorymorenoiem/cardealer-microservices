@@ -62,7 +62,7 @@ export default function FeaturedListingCard({
 
   return (
     <div className={`${borderClass} ${className}`}>
-      <div className={hasBorder ? innerCardClass : 'bg-white rounded-lg overflow-hidden'}>
+      <div className={hasBorder ? innerCardClass : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden'}>
         <Link 
           to={`/vehicles/${vehicle.id}`}
           className="block group"
