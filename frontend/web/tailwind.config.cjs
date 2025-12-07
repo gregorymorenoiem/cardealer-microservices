@@ -8,17 +8,75 @@ module.exports = {
   theme: {
     extend: {
       /* ==========================================
-         COLORES OKLA
+         COLORES ORIGINALES (Tema Principal)
          ========================================== */
       colors: {
+        // Colores primarios - Azul profesional (ORIGINAL)
+        primary: {
+          DEFAULT: '#2563EB',
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#2563EB',
+          600: '#1D4ED8',
+          700: '#1E40AF',
+          800: '#1E3A8A',
+          900: '#1E3A5F',
+        },
+        // Secundario - Esmeralda (ORIGINAL)
+        secondary: {
+          DEFAULT: '#10B981',
+          50: '#ECFDF5',
+          100: '#D1FAE5',
+          200: '#A7F3D0',
+          300: '#6EE7B7',
+          400: '#34D399',
+          500: '#10B981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065F46',
+          900: '#064E3B',
+        },
+        // Acento - Slate (ORIGINAL)
+        accent: {
+          DEFAULT: '#64748B',
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B',
+          900: '#0F172A',
+        },
+        
+        /* ==========================================
+           COLORES OKLA (Solo para tema OKLA)
+           Usar con prefijo: okla-primary, gold-500, etc.
+           ========================================== */
         // Colores primarios OKLA
         okla: {
           primary: 'var(--okla-primary)',
           'primary-hover': 'var(--okla-primary-hover)',
           'primary-active': 'var(--okla-primary-active)',
+          // Colores semánticos OKLA
+          navy: '#1A1F2E',
+          'navy-light': '#2D3548',
+          charcoal: '#2C2C2C',
+          slate: '#4A5568',
+          cream: '#FAF8F5',
+          'cream-dark': '#F5F0E8',
+          ivory: '#FDFBF7',
+          gold: '#C9A962',
+          'gold-light': '#D4B978',
+          'gold-dark': '#B8944D',
         },
         
-        // Dorado Champagne - Acento principal
+        // Dorado Champagne - Acento principal OKLA
         gold: {
           DEFAULT: '#C9A962',
           light: '#D4B978',
@@ -35,59 +93,18 @@ module.exports = {
           900: '#524220',
         },
         
-        // Bronce Elegante
+        // Bronce Elegante OKLA
         bronze: {
           DEFAULT: '#8B7355',
           light: '#A08B6B',
           dark: '#6D5A43',
         },
         
-        // Fondos y superficies
+        // Fondos y superficies OKLA
         surface: {
           DEFAULT: 'var(--okla-surface)',
           elevated: 'var(--okla-surface-elevated)',
           hover: 'var(--okla-surface-hover)',
-        },
-        
-        // Colores primarios actualizados para OKLA
-        primary: {
-          DEFAULT: '#1A1A1A',
-          50: '#F5F5F5',
-          100: '#E0E0E0',
-          200: '#C0C0C0',
-          300: '#A0A0A0',
-          400: '#808080',
-          500: '#1A1A1A',
-          600: '#141414',
-          700: '#0F0F0F',
-          800: '#0A0A0A',
-          900: '#050505',
-        },
-        secondary: {
-          DEFAULT: '#C9A962',
-          50: '#FAF7F0',
-          100: '#F5EFE0',
-          200: '#EBE0C2',
-          300: '#E0D0A3',
-          400: '#D4BF84',
-          500: '#C9A962',
-          600: '#B8944D',
-          700: '#967838',
-          800: '#745D2C',
-          900: '#524220',
-        },
-        accent: {
-          DEFAULT: '#8B7355',
-          50: '#F7F5F3',
-          100: '#EDE9E5',
-          200: '#DDD6CE',
-          300: '#CCC2B6',
-          400: '#BBAD9E',
-          500: '#8B7355',
-          600: '#6D5A43',
-          700: '#554633',
-          800: '#3D3225',
-          900: '#251E17',
         },
       },
       

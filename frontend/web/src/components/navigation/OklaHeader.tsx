@@ -6,7 +6,6 @@ import {
   Search,
   Menu,
   X,
-  User,
   Heart,
   Bell,
   ChevronDown,
@@ -137,18 +136,17 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
                     'w-10 h-10 rounded-lg',
                     'bg-gradient-to-br from-gold-400 to-gold-600',
                     'flex items-center justify-center',
-                    'shadow-gold',
                     'transition-transform duration-200',
                     'hover:scale-105'
                   )}
                 >
-                  <span className="text-lg font-bold text-primary-900">O</span>
+                  <span className="text-lg font-bold text-gray-900">O</span>
                 </div>
               </div>
               <span 
                 className={clsx(
                   'text-2xl font-heading font-bold',
-                  'text-primary-500 dark:text-white',
+                  'text-gray-900 dark:text-white',
                   'tracking-tight'
                 )}
               >
@@ -168,7 +166,7 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
                         'px-4 py-2 rounded-lg',
                         'text-sm font-medium',
                         'text-gray-600 dark:text-gray-300',
-                        'hover:text-primary-500 dark:hover:text-white',
+                        'hover:text-gray-900 dark:hover:text-white',
                         'hover:bg-gray-100/50 dark:hover:bg-gray-800/50',
                         'transition-colors duration-200'
                       )}
@@ -190,7 +188,7 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
                         'transition-colors duration-200',
                         location.pathname === link.href
                           ? 'text-gold-600 dark:text-gold-400'
-                          : 'text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                       )}
                     >
                       {link.label}
@@ -223,7 +221,7 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
                                 'px-4 py-2.5',
                                 'text-sm font-medium',
                                 'text-gray-600 dark:text-gray-300',
-                                'hover:text-primary-500 dark:hover:text-white',
+                                'hover:text-gray-900 dark:hover:text-white',
                                 'hover:bg-gray-50 dark:hover:bg-gray-800',
                                 'transition-colors duration-150'
                               )}
@@ -255,7 +253,7 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
                     'text-sm',
                     'bg-gray-100 dark:bg-gray-800',
                     'border-0 rounded-full',
-                    'text-primary-500 dark:text-white',
+                    'text-gray-900 dark:text-white',
                     'placeholder:text-gray-400',
                     'focus:outline-none focus:ring-2 focus:ring-gold-500/30',
                     'transition-all duration-200'
@@ -561,7 +559,7 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
                   'text-base',
                   'bg-gray-100 dark:bg-gray-800',
                   'border-0 rounded-xl',
-                  'text-primary-500 dark:text-white',
+                  'text-gray-900 dark:text-white',
                   'placeholder:text-gray-400',
                   'focus:outline-none focus:ring-2 focus:ring-gold-500/30'
                 )}
@@ -604,7 +602,7 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-lg font-heading font-bold text-primary-500 dark:text-white">
+                <span className="text-lg font-heading font-bold text-gray-900 dark:text-white">
                   Menú
                 </span>
                 <button
@@ -748,3 +746,4 @@ export const OklaHeader: React.FC<OklaHeaderProps> = ({
 };
 
 export default OklaHeader;
+

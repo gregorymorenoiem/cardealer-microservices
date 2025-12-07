@@ -22,7 +22,7 @@ interface OklaCtaProps {
 
 export const OklaCta = ({
   title = '¿Listo para Comenzar?',
-  subtitle = 'Únete a miles de usuarios que ya confían en Okla para sus transacciones',
+  subtitle = 'Descubre una plataforma segura y profesional para tus operaciones',
   primaryAction = { label: 'Comenzar Ahora' },
   secondaryAction,
   variant = 'gradient',

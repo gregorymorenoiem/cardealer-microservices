@@ -1,50 +1,77 @@
 /* ==========================================
-   OKLA Design System Imports
-   Must be first (except @tailwind directives)
+   OKLA Design System (CSS Variables)
+   These are just CSS variables, safe to import first
    ========================================== */
 @import './styles/okla-theme.css';
 @import './styles/okla-typography.css';
 
+/* ==========================================
+   Tailwind Base
+   ========================================== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ==========================================
-   Custom Styles
+   Base Styles (Original Theme)
    ========================================== */
 @layer base {
   html {
     scroll-behavior: smooth;
   }
   
+  /* Default body - Original theme */
   body {
-    @apply antialiased;
+    @apply antialiased bg-gray-50 text-gray-900;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  /* OKLA Theme body override - only when inside .okla-theme */
+  .okla-theme {
     font-family: var(--okla-font-body);
     background-color: var(--okla-bg);
     color: var(--okla-text);
   }
   
-  /* Selection color */
+  /* Selection color - default */
   ::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+  }
+  
+  /* Selection color - OKLA */
+  .okla-theme ::selection {
     background-color: rgba(201, 169, 98, 0.3);
   }
   
-  /* Scrollbar styling */
+  /* Scrollbar styling - default */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   
   ::-webkit-scrollbar-track {
-    background: var(--okla-bg);
+    background: #f1f5f9;
   }
   
   ::-webkit-scrollbar-thumb {
-    background: var(--okla-border-strong);
+    background: #cbd5e1;
     border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  
+  /* Scrollbar styling - OKLA */
+  .okla-theme ::-webkit-scrollbar-track {
+    background: var(--okla-bg);
+  }
+  
+  .okla-theme ::-webkit-scrollbar-thumb {
+    background: var(--okla-border-strong);
+  }
+  
+  .okla-theme ::-webkit-scrollbar-thumb:hover {
     background: var(--okla-text-muted);
   }
 }

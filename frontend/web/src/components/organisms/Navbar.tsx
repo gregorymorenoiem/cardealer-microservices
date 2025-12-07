@@ -7,7 +7,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { useCompare } from '@/hooks/useCompare';
 import Button from '@/components/atoms/Button';
 import NotificationDropdown from './NotificationDropdown';
 import GlobalSearch from './GlobalSearch';
@@ -18,7 +17,6 @@ import {
   FiUser, 
   FiLogOut, 
   FiSettings, 
-  FiBarChart2, 
   FiMessageSquare, 
   FiShield,
   FiSearch,
@@ -26,12 +24,11 @@ import {
   FiGrid,
   FiHeart
 } from 'react-icons/fi';
-import { FaCar, FaHome } from 'react-icons/fa';
+import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
 
 export default function Navbar() {
   const { t } = useTranslation('common');
   const { isAuthenticated, user, logout } = useAuth();
-  const { count: compareCount } = useCompare();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
@@ -50,12 +47,28 @@ export default function Navbar() {
       color: 'blue',
     },
     {
+      id: 'vehicle-rental',
+      nameKey: 'nav.vehicleRental',
+      descKey: 'nav.vehicleRentalDesc',
+      icon: FaKey,
+      href: '/vehicle-rental',
+      color: 'amber',
+    },
+    {
       id: 'properties',
       nameKey: 'nav.properties',
       descKey: 'nav.propertiesDesc',
       icon: FaHome,
       href: '/properties',
       color: 'emerald',
+    },
+    {
+      id: 'lodging',
+      nameKey: 'nav.lodging',
+      descKey: 'nav.lodgingDesc',
+      icon: FaBed,
+      href: '/lodging',
+      color: 'purple',
     },
   ];
 
@@ -94,8 +107,8 @@ export default function Navbar() {
   const getCategoryStyles = (color: string) => {
     const styles: Record<string, { bg: string; text: string }> = {
       blue: { bg: 'bg-blue-50', text: 'text-blue-600' },
+      amber: { bg: 'bg-amber-50', text: 'text-amber-600' },
       emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
-      orange: { bg: 'bg-orange-50', text: 'text-orange-600' },
       purple: { bg: 'bg-purple-50', text: 'text-purple-600' },
     };
     return styles[color] || styles.blue;
@@ -108,10 +121,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">M</span>
+              <span className="text-white font-bold text-lg">O</span>
             </div>
             <div className="hidden sm:block">
-              <span className="text-xl font-bold text-gray-900">Marketplace</span>
+              <span className="text-xl font-bold text-gray-900">Okla</span>
             </div>
           </Link>
 
@@ -166,35 +179,10 @@ export default function Navbar() {
                         </Link>
                       );
                     })}
-                    <div className="border-t border-gray-100 mt-2 pt-2 px-4">
-                      <Link
-                        to="/browse"
-                        className="flex items-center gap-2 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                        onClick={() => setIsCategoryMenuOpen(false)}
-                      >
-                        <FiSearch className="w-4 h-4" />
-                        {t('nav.viewAllMarketplace')}
-                      </Link>
-                    </div>
                   </div>
                 </>
               )}
             </div>
-
-            {/* Quick Actions */}
-            <Link 
-              to="/compare" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors relative"
-              title={t('nav.compare')}
-            >
-              <FiBarChart2 className="w-5 h-5" />
-              <span className="hidden xl:inline text-sm font-medium">{t('nav.compare')}</span>
-              {compareCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {compareCount}
-                </span>
-              )}
-            </Link>
           </div>
 
           {/* Global Search (Desktop) - More space */}
@@ -394,30 +382,6 @@ export default function Navbar() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="px-2 mb-4">
-              <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                {t('nav.actions')}
-              </p>
-              <Link
-                to="/compare"
-                className="flex items-center justify-between px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <FiBarChart2 className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <span className="font-medium text-gray-900">{t('nav.compare')}</span>
-                </div>
-                {compareCount > 0 && (
-                  <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                    {compareCount}
-                  </span>
-                )}
-              </Link>
             </div>
 
             <hr className="my-3 border-gray-100" />

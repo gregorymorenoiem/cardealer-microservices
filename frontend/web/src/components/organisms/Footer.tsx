@@ -15,10 +15,10 @@ export default function Footer() {
           {/* About Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">M</span>
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">O</span>
               </div>
-              <span className="text-xl font-bold font-heading text-white">Marketplace</span>
+              <span className="text-xl font-bold font-heading text-white">Okla</span>
             </div>
             <p className="text-sm text-gray-400 mb-4">
               {t('footer.description')}

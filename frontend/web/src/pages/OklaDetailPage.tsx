@@ -22,7 +22,6 @@ import { OklaContactForm } from '../components/okla/detail/OklaContactForm';
 import { OklaListingActions } from '../components/okla/detail/OklaListingActions';
 import { OklaRelatedListings } from '../components/okla/detail/OklaRelatedListings';
 import { OklaBadge } from '../components/atoms/okla/OklaBadge';
-import { OklaButton } from '../components/atoms/okla/OklaButton';
 import { FadeIn } from '../components/okla/animations/FadeIn';
 
 // Mock data for the listing
@@ -145,7 +144,7 @@ const formatPrice = (price: number) => {
 };
 
 export const OklaDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: _id } = useParams<{ id: string }>();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'specs' | 'description'>('specs');

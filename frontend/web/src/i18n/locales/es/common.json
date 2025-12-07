@@ -40,7 +40,11 @@
     "searchPlaceholderShort": "Buscar...",
     "viewAllMarketplace": "Ver todo el marketplace",
     "vehiclesDesc": "Autos, SUVs, Pickups",
-    "propertiesDesc": "Casas, Deptos, Terrenos"
+    "vehicleRental": "Renta de Vehículos",
+    "vehicleRentalDesc": "Alquiler de autos y más",
+    "propertiesDesc": "Casas, Deptos, Terrenos",
+    "lodging": "Hospedaje",
+    "lodgingDesc": "Hoteles, Cabañas, Airbnb"
   },
   "buttons": {
     "search": "Buscar",

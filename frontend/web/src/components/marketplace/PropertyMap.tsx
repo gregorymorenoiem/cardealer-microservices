@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaSchool, FaHospital, FaShoppingCart, FaTree, FaDumbbell, FaUniversity } from 'react-icons/fa';
 
 interface PropertyMapProps {
   latitude?: number;
@@ -24,17 +25,38 @@ interface NearbyPOI {
   name: string;
   type: 'school' | 'hospital' | 'supermarket' | 'park' | 'restaurant' | 'gym' | 'bank' | 'pharmacy';
   distance: string;
-  icon: string;
+  icon: React.ReactNode;
 }
+
+// Icon mapping
+const getIconForPOI = (type: NearbyPOI['type']): React.ReactNode => {
+  const iconClass = "w-5 h-5";
+  switch (type) {
+    case 'school':
+      return <FaSchool className={iconClass} />;
+    case 'hospital':
+      return <FaHospital className={iconClass} />;
+    case 'supermarket':
+      return <FaShoppingCart className={iconClass} />;
+    case 'park':
+      return <FaTree className={iconClass} />;
+    case 'gym':
+      return <FaDumbbell className={iconClass} />;
+    case 'bank':
+      return <FaUniversity className={iconClass} />;
+    default:
+      return <FaTree className={iconClass} />;
+  }
+};
 
 // Mock POIs for demo - in production this would come from Google Places API or similar
 const generateMockPOIs = (_lat: number, _lng: number): NearbyPOI[] => [
-  { id: '1', name: 'Escuela Primaria Juárez', type: 'school', distance: '300m', icon: '🏫' },
-  { id: '2', name: 'Hospital General', type: 'hospital', distance: '1.2km', icon: '🏥' },
-  { id: '3', name: 'Superama', type: 'supermarket', distance: '450m', icon: '🛒' },
-  { id: '4', name: 'Parque Lincoln', type: 'park', distance: '600m', icon: '🌳' },
-  { id: '5', name: 'Sport City', type: 'gym', distance: '800m', icon: '💪' },
-  { id: '6', name: 'BBVA', type: 'bank', distance: '200m', icon: '🏦' },
+  { id: '1', name: 'Escuela Primaria Juárez', type: 'school', distance: '300m', icon: getIconForPOI('school') },
+  { id: '2', name: 'Hospital General', type: 'hospital', distance: '1.2km', icon: getIconForPOI('hospital') },
+  { id: '3', name: 'Superama', type: 'supermarket', distance: '450m', icon: getIconForPOI('supermarket') },
+  { id: '4', name: 'Parque Lincoln', type: 'park', distance: '600m', icon: getIconForPOI('park') },
+  { id: '5', name: 'Sport City', type: 'gym', distance: '800m', icon: getIconForPOI('gym') },
+  { id: '6', name: 'BBVA', type: 'bank', distance: '200m', icon: getIconForPOI('bank') },
 ];
 
 const PropertyMap: React.FC<PropertyMapProps> = ({
@@ -60,6 +82,10 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
   const nearbyPOIs = hasCoordinates ? generateMockPOIs(lat, lng) : [];
 
+  // Google Maps configuration
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyDKVgKqLUzWFaEMcXjkZUUTOFDNa4V0AFI';
+  const googleMapsEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${lat},${lng}&zoom=15&maptype=roadmap`;
+  
   // Google Maps link for directions
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -100,8 +126,10 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
               width="100%"
               height="100%"
               frameBorder="0"
-              scrolling="no"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.008},${lng + 0.01},${lat + 0.008}&layer=mapnik&marker=${lat},${lng}`}
+              style={{ border: 0 }}
+              referrerPolicy="no-referrer-when-downgrade"
+              src={googleMapsEmbedUrl}
+              allowFullScreen
               className="w-full h-full"
             />
           ) : (

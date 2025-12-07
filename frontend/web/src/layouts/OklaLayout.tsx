@@ -69,8 +69,10 @@ export const OklaLayout: React.FC<OklaLayoutProps> = ({ children }) => {
   return (
     <div 
       className={clsx(
+        'okla-theme', // Activate OKLA theme styles
         'min-h-screen flex flex-col',
-        'bg-white dark:bg-gray-950',
+        'bg-[var(--okla-bg)] dark:bg-[var(--okla-bg)]',
+        'text-[var(--okla-text)] dark:text-[var(--okla-text)]',
         'transition-colors duration-300'
       )}
     >

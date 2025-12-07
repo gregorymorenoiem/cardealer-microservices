@@ -4,12 +4,9 @@ import {
   SlidersHorizontal, 
   X, 
   ChevronDown,
-  MapPin,
-  DollarSign
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { OklaButton } from '../../atoms/okla/OklaButton';
-import { OklaInput } from '../../atoms/okla/OklaInput';
 
 interface FilterOption {
   id: string;

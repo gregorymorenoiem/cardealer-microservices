@@ -39,8 +39,7 @@ const variantStyles = {
   premium: clsx(
     'bg-gradient-to-br from-white to-gold-50',
     'dark:from-gray-900 dark:to-gray-800',
-    'border border-gold-200/50 dark:border-gold-700/30',
-    'shadow-gold'
+    'border border-gold-200/50 dark:border-gold-700/30'
   ),
 };
 
@@ -74,7 +73,6 @@ export const OklaCard: React.FC<OklaCardProps> = ({
     hover && [
       'hover:shadow-elegant-xl',
       'hover:-translate-y-0.5',
-      variant === 'premium' && 'hover:shadow-gold-lg',
     ],
     
     // Clickable
@@ -96,17 +94,18 @@ export const OklaCard: React.FC<OklaCardProps> = ({
     );
   }
 
+  const Comp = Component as React.ElementType;
   return (
-    <Component className={cardClasses} {...props}>
+    <Comp className={cardClasses} {...props}>
       {children}
-    </Component>
+    </Comp>
   );
 };
 
 /**
  * Card Header
  */
-export interface OklaCardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface OklaCardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
@@ -131,7 +130,7 @@ export const OklaCardHeader: React.FC<OklaCardHeaderProps> = ({
     >
       <div className="flex-1 min-w-0">
         {title && (
-          <h3 className="text-lg font-semibold text-primary-500 dark:text-white truncate">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
             {title}
           </h3>
         )}
@@ -260,7 +259,7 @@ export interface OklaProductCardProps {
 }
 
 const badgeColors = {
-  gold: 'bg-gold-500 text-primary-900',
+  gold: 'bg-gold-500 text-gray-900',
   green: 'bg-green-500 text-white',
   red: 'bg-red-500 text-white',
   blue: 'bg-blue-500 text-white',
@@ -357,7 +356,7 @@ export const OklaProductCard: React.FC<OklaProductCardProps> = ({
       
       {/* Content */}
       <div className="p-4">
-        <h3 className="text-base font-semibold text-primary-500 dark:text-white line-clamp-2 mb-2">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2">
           {title}
         </h3>
         
@@ -389,7 +388,7 @@ export const OklaProductCard: React.FC<OklaProductCardProps> = ({
         
         {/* Price */}
         <div className="flex items-baseline gap-2">
-          <span className="text-xl font-bold text-primary-500 dark:text-white">
+          <span className="text-xl font-bold text-gray-900 dark:text-white">
             {typeof price === 'number' ? `$${price.toLocaleString()}` : price}
           </span>
           {originalPrice && (
@@ -404,3 +403,4 @@ export const OklaProductCard: React.FC<OklaProductCardProps> = ({
 };
 
 export default OklaCard;
+

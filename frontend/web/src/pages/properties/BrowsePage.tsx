@@ -5,7 +5,7 @@ import MainLayout from '@/layouts/MainLayout';
 import { LocalizedContent } from '@/components/common';
 import Pagination from '@/components/molecules/Pagination';
 import { mockProperties } from '@/data/mockProperties';
-import { FiGrid, FiList, FiMapPin, FiHome, FiMaximize, FiChevronDown, FiX, FiSliders } from 'react-icons/fi';
+import { FiGrid, FiList, FiMapPin, FiHome, FiMaximize, FiChevronDown, FiX, FiSliders, FiBarChart2, FiMap } from 'react-icons/fi';
 import { IoBedOutline } from 'react-icons/io5';
 import { LuBath } from 'react-icons/lu';
 import { BiCar } from 'react-icons/bi';
@@ -607,7 +607,7 @@ export default function PropertyBrowsePage() {
   return (
     <MainLayout>
       <div className="bg-gray-50 min-h-screen py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900 mb-2">
@@ -618,9 +618,9 @@ export default function PropertyBrowsePage() {
             </p>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Filters Sidebar - Desktop */}
-            <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+            <aside className="hidden lg:block lg:w-72 flex-shrink-0">
               <PropertyFiltersPanel
                 filters={filters}
                 onFilterChange={handleFilterChange}
@@ -699,6 +699,24 @@ export default function PropertyBrowsePage() {
                       ))}
                     </select>
 
+                    {/* Compare Button */}
+                    <Link
+                      to="/properties/compare"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      <FiBarChart2 size={18} />
+                      <span className="hidden sm:inline">Comparar</span>
+                    </Link>
+
+                    {/* Map Button */}
+                    <Link
+                      to="/properties/map"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      <FiMap size={18} />
+                      <span className="hidden sm:inline">Mapa</span>
+                    </Link>
+
                     {/* View Mode Toggle */}
                     <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                       <button
@@ -734,8 +752,8 @@ export default function PropertyBrowsePage() {
                   <div
                     className={`${
                       viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                        : 'flex flex-col gap-6'
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'
+                        : 'flex flex-col gap-5'
                     } mb-8`}
                   >
                     {paginatedProperties.map((property) => (

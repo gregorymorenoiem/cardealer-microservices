@@ -42,117 +42,117 @@ export default function VehicleCard({
   const inCompare = isInCompare(id);
 
   return (
-    <div className="card overflow-hidden group">
+    <Link
+      to={`/vehicles/${id}`}
+      className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
+    >
       {/* Image Container */}
-      <div className="relative h-48 overflow-hidden bg-gray-200">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
         <img
           src={imageUrl || defaultImage}
           alt={`${year} ${make} ${model}`}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2">
           {isFeatured && (
-            <span className="px-3 py-1 bg-accent text-white text-xs font-semibold rounded-full">
+            <span className="px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
               {t('vehicles:card.featured')}
             </span>
           )}
           {isNew && (
-            <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+            <span className="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
               {t('vehicles:card.new')}
             </span>
           )}
         </div>
 
-        {/* Favorite Button */}
-        <button
-          className={`
-            absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm
-            ${isLiked ? 'bg-red-500 hover:bg-red-600' : 'bg-white/90 hover:bg-white'}
-          `}
-          onClick={(e) => {
-            e.preventDefault();
-            toggleFavorite(id);
-          }}
-          title={isLiked ? t('common:buttons.removeFromFavorites') : t('common:buttons.addToFavorites')}
-        >
-          <FiHeart 
-            className={isLiked ? 'text-white fill-white' : 'text-gray-700'} 
-            size={18} 
-          />
-        </button>
+        {/* Action Buttons */}
+        <div className="absolute top-3 right-3 flex gap-2">
+          {/* Compare Button */}
+          <button
+            className={`
+              w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm
+              ${inCompare ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/90 hover:bg-white text-gray-700'}
+            `}
+            onClick={(e) => {
+              e.preventDefault();
+              if (inCompare) {
+                removeFromCompare(id);
+              } else {
+                addToCompare(id);
+              }
+            }}
+            title={inCompare ? t('common:buttons.removeFromCompare') : t('common:buttons.addToCompare')}
+          >
+            <FiBarChart2 size={16} />
+          </button>
 
-        {/* Compare Button */}
-        <button
-          className={`
-            absolute top-3 right-14 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm
-            ${inCompare ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/90 hover:bg-white text-gray-700'}
-          `}
-          onClick={(e) => {
-            e.preventDefault();
-            if (inCompare) {
-              removeFromCompare(id);
-            } else {
-              addToCompare(id);
-            }
-          }}
-          title={inCompare ? t('common:buttons.removeFromCompare') : t('common:buttons.addToCompare')}
-        >
-          <FiBarChart2 size={18} />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        {/* Title */}
-        <Link to={`/vehicles/${id}`}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-primary transition-colors">
-            {year} {make} {model}
-          </h3>
-        </Link>
-
-        {/* Price */}
-        <p className="text-2xl font-bold text-primary mb-3">
-          {formatPrice(price)}
-        </p>
-
-        {/* Details */}
-        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-          <div className="flex items-center gap-1.5">
-            <FiActivity size={16} />
-            <span>{formatMileage(mileage)}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <FiMapPin size={16} />
-            <span>{location}</span>
-          </div>
+          {/* Favorite Button */}
+          <button
+            className={`
+              w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm
+              ${isLiked ? 'bg-red-500 hover:bg-red-600' : 'bg-white/90 hover:bg-white'}
+            `}
+            onClick={(e) => {
+              e.preventDefault();
+              toggleFavorite(id);
+            }}
+            title={isLiked ? t('common:buttons.removeFromFavorites') : t('common:buttons.addToFavorites')}
+          >
+            <FiHeart 
+              className={isLiked ? 'text-white fill-white' : 'text-gray-700'} 
+              size={16} 
+            />
+          </button>
         </div>
 
-        {/* Additional Info */}
+        {/* Vehicle Type Badge */}
         {(transmission || fuelType) && (
-          <div className="flex gap-2 mb-3">
+          <div className="absolute bottom-3 left-3 flex gap-2">
             {transmission && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+              <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded-full">
                 {transmission}
-              </span>
-            )}
-            {fuelType && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                {fuelType}
               </span>
             )}
           </div>
         )}
-
-        {/* View Details Link */}
-        <Link
-          to={`/vehicles/${id}`}
-          className="block text-center px-4 py-2 bg-gray-100 hover:bg-primary hover:text-white text-gray-900 rounded-lg transition-colors font-medium text-sm"
-        >
-          {t('common:buttons.viewDetails')}
-        </Link>
       </div>
-    </div>
+
+      {/* Content */}
+      <div className="p-4">
+        {/* Price */}
+        <div className="mb-2">
+          <span className="text-xl font-bold text-gray-900">
+            {formatPrice(price)}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+          {year} {make} {model}
+        </h3>
+
+        {/* Details */}
+        <div className="flex items-center gap-1 text-gray-500 text-sm mb-3">
+          <FiMapPin className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">{location}</span>
+        </div>
+
+        {/* Features */}
+        <div className="flex items-center gap-4 text-sm text-gray-600 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-1">
+            <FiActivity className="w-4 h-4" />
+            <span>{formatMileage(mileage)}</span>
+          </div>
+          {fuelType && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{fuelType}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
   );
 }

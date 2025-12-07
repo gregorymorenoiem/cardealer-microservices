@@ -16,12 +16,12 @@ interface OklaListingActionsProps {
 }
 
 export const OklaListingActions = ({
-  listingId,
+  listingId: _listingId,
   isFavorite = false,
   isSaved = false,
   onFavorite,
   onSave,
-  onShare,
+  onShare: _onShare,
   onPrint,
   onReport,
   variant = 'horizontal',

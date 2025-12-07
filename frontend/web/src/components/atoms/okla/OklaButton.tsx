@@ -20,40 +20,38 @@ export interface OklaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
 
 const variantStyles = {
   primary: clsx(
-    'bg-primary-500 text-white',
-    'hover:bg-primary-600 active:bg-primary-700',
-    'focus-visible:ring-primary-500/50',
+    'bg-gray-900 text-white',
+    'hover:bg-gray-800 active:bg-gray-700',
+    'focus-visible:ring-gray-500/50',
     'shadow-elegant hover:shadow-elegant-lg',
-    'dark:bg-white dark:text-primary-500',
+    'dark:bg-white dark:text-gray-900',
     'dark:hover:bg-gray-100'
   ),
   secondary: clsx(
-    'bg-gold-500 text-primary-900',
+    'bg-gold-500 text-gray-900',
     'hover:bg-gold-600 active:bg-gold-700',
-    'focus-visible:ring-gold-500/50',
-    'shadow-gold hover:shadow-gold-lg'
+    'focus-visible:ring-gold-500/50'
   ),
   outline: clsx(
-    'bg-transparent text-primary-500',
-    'border border-primary-500/20',
-    'hover:bg-primary-500/5 hover:border-primary-500/40',
-    'active:bg-primary-500/10',
-    'focus-visible:ring-primary-500/50',
+    'bg-transparent text-gray-900',
+    'border border-gray-900/20',
+    'hover:bg-gray-900/5 hover:border-gray-900/40',
+    'active:bg-gray-900/10',
+    'focus-visible:ring-gray-500/50',
     'dark:text-white dark:border-white/20',
     'dark:hover:bg-white/5 dark:hover:border-white/40'
   ),
   ghost: clsx(
-    'bg-transparent text-primary-500',
-    'hover:bg-primary-500/5',
-    'active:bg-primary-500/10',
-    'focus-visible:ring-primary-500/50',
+    'bg-transparent text-gray-900',
+    'hover:bg-gray-900/5',
+    'active:bg-gray-900/10',
+    'focus-visible:ring-gray-500/50',
     'dark:text-white dark:hover:bg-white/5'
   ),
   gold: clsx(
     'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600',
-    'text-primary-900 font-semibold',
+    'text-gray-900 font-semibold',
     'hover:from-gold-500 hover:via-gold-600 hover:to-gold-700',
-    'shadow-gold hover:shadow-gold-lg',
     'focus-visible:ring-gold-500/50'
   ),
   danger: clsx(

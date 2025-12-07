@@ -133,7 +133,7 @@ export const OklaSellerInfo = ({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <p className="font-display font-bold text-okla-navy">{seller.name}</p>
-              <OklaBadge variant={seller.type === 'certified' ? 'gold' : 'secondary'} size="sm">
+              <OklaBadge variant={seller.type === 'certified' ? 'solid' : 'outline'} size="sm">
                 {getSellerTypeLabel(seller.type)}
               </OklaBadge>
             </div>
@@ -199,7 +199,7 @@ export const OklaSellerInfo = ({
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-display font-bold text-xl text-okla-navy">{seller.name}</h3>
           </div>
-          <OklaBadge variant={seller.type === 'certified' ? 'gold' : 'secondary'}>
+          <OklaBadge variant={seller.type === 'certified' ? 'solid' : 'outline'}>
             {getSellerTypeLabel(seller.type)}
           </OklaBadge>
         </div>

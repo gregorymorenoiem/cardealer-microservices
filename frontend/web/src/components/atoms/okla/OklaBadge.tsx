@@ -306,7 +306,7 @@ export const OklaRatingBadge: React.FC<OklaRatingBadgeProps> = ({
       )}
     >
       <Star className={clsx(starSizeMap[size], 'text-gold-500 fill-gold-500')} />
-      <span className="font-semibold text-primary-500 dark:text-white">
+      <span className="font-semibold text-gray-900 dark:text-white">
         {rating.toFixed(1)}
       </span>
       {showReviews && reviews !== undefined && (
@@ -319,3 +319,4 @@ export const OklaRatingBadge: React.FC<OklaRatingBadgeProps> = ({
 };
 
 export default OklaBadge;
+

@@ -35,7 +35,7 @@ const formatPrice = (price: number, currency = 'USD') => {
 };
 
 export const OklaListingCard = ({
-  id,
+  id: _id,
   title,
   price,
   currency = 'USD',
@@ -84,12 +84,12 @@ export const OklaListingCard = ({
           />
           <div className="absolute top-3 left-3 flex gap-2">
             {featured && (
-              <OklaBadge variant="premium">
+              <OklaBadge variant="solid" color="gold">
                 <Star className="w-3 h-3 mr-1" fill="currentColor" />
                 Destacado
               </OklaBadge>
             )}
-            {isNew && <OklaBadge variant="success">Nuevo</OklaBadge>}
+            {isNew && <OklaBadge variant="solid" color="green">Nuevo</OklaBadge>}
           </div>
           <motion.button
             className="absolute top-3 right-3 p-2 bg-white/90 rounded-full shadow-md"
@@ -230,14 +230,14 @@ export const OklaListingCard = ({
         {/* Badges */}
         <div className="absolute top-4 left-4 flex gap-2">
           {featured && (
-            <OklaBadge variant="premium">
+            <OklaBadge variant="solid" color="gold">
               <Star className="w-3 h-3 mr-1" fill="currentColor" />
               Destacado
             </OklaBadge>
           )}
-          {isNew && <OklaBadge variant="success">Nuevo</OklaBadge>}
+          {isNew && <OklaBadge variant="solid" color="green">Nuevo</OklaBadge>}
           {verified && (
-            <OklaBadge variant="info">
+            <OklaBadge variant="solid" color="blue">
               <Check className="w-3 h-3 mr-1" />
               Verificado
             </OklaBadge>

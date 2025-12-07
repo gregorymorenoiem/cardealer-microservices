@@ -13,6 +13,7 @@ import {
   SellYourCarPage,
   VehiclesHomePage
 } from './pages/vehicles';
+import VehicleMapViewPage from './pages/vehicles/MapViewPage';
 // User pages
 import { 
   UserDashboardPage, 
@@ -50,6 +51,7 @@ import {
 } from './pages/common';
 // Properties pages
 import { PropertyBrowsePage, PropertyDetailPage } from './pages/properties';
+import PropertyMapViewPage from './pages/properties/MapViewPage';
 // Layouts and components
 import AuthLayout from './layouts/AuthLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -106,14 +108,18 @@ function App() {
           {/* Vehicle Module Routes */}
           <Route path="/vehicles" element={<VehicleBrowsePage />} />
           <Route path="/vehicles/home" element={<VehiclesHomePage />} />
+          <Route path="/vehicles/map" element={<VehicleMapViewPage />} />
           <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
+          <Route path="/vehicles/compare" element={<VehicleComparePage />} />
           <Route path="/browse" element={<VehicleBrowsePage />} />
           <Route path="/compare" element={<VehicleComparePage />} />
           <Route path="/sell-your-car" element={<SellYourCarPage />} />
           
           {/* Properties Module Routes */}
           <Route path="/properties" element={<PropertyBrowsePage />} />
+          <Route path="/properties/map" element={<PropertyMapViewPage />} />
           <Route path="/properties/:id" element={<PropertyDetailPage />} />
+          <Route path="/properties/compare" element={<VehicleComparePage />} />
           
           {/* User Routes */}
           <Route path="/wishlist" element={<WishlistPage />} />

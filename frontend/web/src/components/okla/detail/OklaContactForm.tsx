@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, User, MessageSquare, Send, Check } from 'lucide-react';
+import { MessageSquare, Send, Check } from 'lucide-react';
 import { OklaButton } from '../../atoms/okla/OklaButton';
 import { OklaInput } from '../../atoms/okla/OklaInput';
 
@@ -166,7 +166,6 @@ export const OklaContactForm = ({
             placeholder="Tu nombre"
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
-            icon={<User className="w-4 h-4" />}
             required
           />
           <OklaInput
@@ -174,8 +173,7 @@ export const OklaContactForm = ({
             type="email"
             placeholder="tu@email.com"
             value={formData.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            icon={<Mail className="w-4 h-4" />}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
         </div>
@@ -186,7 +184,6 @@ export const OklaContactForm = ({
           placeholder="(787) 000-0000"
           value={formData.phone}
           onChange={(e) => handleChange('phone', e.target.value)}
-          icon={<Phone className="w-4 h-4" />}
         />
 
         <div>

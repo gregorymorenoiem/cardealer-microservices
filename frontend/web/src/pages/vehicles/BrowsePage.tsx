@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/layouts/MainLayout';
@@ -10,13 +10,15 @@ import AdvancedFilters, { type VehicleFilters, type SortOption } from '@/compone
 import Pagination from '@/components/molecules/Pagination';
 import { mockVehicles, filterVehicles, sortVehicles } from '@/data/mockVehicles';
 import { vehicleService } from '@/services/endpoints/vehicleService';
-import { FiGrid, FiList } from 'react-icons/fi';
+import { useCompare } from '@/hooks/useCompare';
+import { FiGrid, FiList, FiBarChart2, FiMap } from 'react-icons/fi';
 
 const ITEMS_PER_PAGE = 12;
 
 export default function BrowsePage() {
   const { t } = useTranslation('vehicles');
   const [searchParams, setSearchParams] = useSearchParams();
+  const { count: compareCount } = useCompare();
   
   // Initialize filters from URL params
   const getInitialFilters = (): VehicleFilters => {
@@ -113,7 +115,7 @@ export default function BrowsePage() {
   return (
     <MainLayout>
       <div className="bg-gray-50 min-h-screen py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900 mb-2">
@@ -124,9 +126,9 @@ export default function BrowsePage() {
             </p>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Filters Sidebar */}
-            <aside className="lg:w-80 flex-shrink-0">
+            <aside className="lg:w-72 flex-shrink-0">
               <AdvancedFilters
                 onFilterChange={handleFilterChange}
                 onSortChange={handleSortChange}
@@ -151,8 +153,39 @@ export default function BrowsePage() {
                     )}
                   </div>
 
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  {/* Actions */}
+                  <div className="flex items-center gap-3">
+                    {/* Compare Button */}
+                    <Link
+                      to="/vehicles/compare"
+                      className={`
+                        flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+                        ${compareCount > 0 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }
+                      `}
+                    >
+                      <FiBarChart2 size={18} />
+                      <span className="hidden sm:inline">Comparar</span>
+                      {compareCount > 0 && (
+                        <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-sm">
+                          {compareCount}
+                        </span>
+                      )}
+                    </Link>
+
+                    {/* Map Button */}
+                    <Link
+                      to="/vehicles/map"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      <FiMap size={18} />
+                      <span className="hidden sm:inline">Mapa</span>
+                    </Link>
+
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                     <button
                       onClick={() => setViewMode('grid')}
                       className={`
@@ -173,6 +206,7 @@ export default function BrowsePage() {
                     >
                       <FiList size={20} />
                     </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -182,8 +216,8 @@ export default function BrowsePage() {
                 <div
                   className={`
                     ${viewMode === 'grid'
-                      ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                      : 'flex flex-col gap-6'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'
+                      : 'flex flex-col gap-5'
                     }
                     mb-8
                   `}
@@ -202,8 +236,8 @@ export default function BrowsePage() {
                   <div
                     className={`
                       ${viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                        : 'flex flex-col gap-6'
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'
+                        : 'flex flex-col gap-5'
                       }
                       mb-8
                     `}

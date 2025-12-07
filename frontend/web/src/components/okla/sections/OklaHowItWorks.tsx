@@ -24,7 +24,7 @@ export const OklaHowItWorks = ({
 }: OklaHowItWorksProps) => {
   if (variant === 'grid') {
     return (
-      <section className="py-20 px-6 bg-okla-cream">
+      <section className="py-12 px-6 bg-okla-cream">
         <div className="max-w-7xl mx-auto">
           <FadeIn>
             <div className="text-center mb-16">
@@ -60,7 +60,7 @@ export const OklaHowItWorks = ({
 
   if (variant === 'cards') {
     return (
-      <section className="py-20 px-6 bg-white">
+      <section className="py-12 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <FadeIn>
             <div className="text-center mb-16">
@@ -103,7 +103,7 @@ export const OklaHowItWorks = ({
 
   // Default: steps variant with connecting lines
   return (
-    <section className="py-20 px-6 bg-white overflow-hidden">
+    <section className="py-12 px-6 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-16">

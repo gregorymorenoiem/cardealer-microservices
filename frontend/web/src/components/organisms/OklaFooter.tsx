@@ -9,12 +9,9 @@ import {
   Linkedin,
   Mail,
   Phone,
-  MapPin,
-  CreditCard,
   Shield,
   Award,
 } from 'lucide-react';
-import { OklaInput } from '../atoms/okla/OklaInput';
 import { OklaButton } from '../atoms/okla/OklaButton';
 
 /**
@@ -111,7 +108,7 @@ export const OklaFooter: React.FC<OklaFooterProps> = ({ className }) => {
   return (
     <footer 
       className={clsx(
-        'bg-primary-500 text-white',
+        'bg-gray-900 text-white',
         'dark:bg-gray-950',
         className
       )}
@@ -127,11 +124,10 @@ export const OklaFooter: React.FC<OklaFooterProps> = ({ className }) => {
                 className={clsx(
                   'w-10 h-10 rounded-lg',
                   'bg-gradient-to-br from-gold-400 to-gold-600',
-                  'flex items-center justify-center',
-                  'shadow-gold'
+                  'flex items-center justify-center'
                 )}
               >
-                <span className="text-lg font-bold text-primary-900">O</span>
+                <span className="text-lg font-bold text-gray-900">O</span>
               </div>
               <span className="text-2xl font-heading font-bold">
                 OKLA
@@ -346,3 +342,4 @@ export const OklaFooter: React.FC<OklaFooterProps> = ({ className }) => {
 };
 
 export default OklaFooter;
+

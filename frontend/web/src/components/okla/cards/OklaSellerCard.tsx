@@ -22,7 +22,7 @@ interface OklaSellerCardProps {
 }
 
 export const OklaSellerCard = ({
-  id,
+  id: _id,
   name,
   avatar,
   coverImage,
@@ -98,7 +98,7 @@ export const OklaSellerCard = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           {premium && (
             <div className="absolute top-3 right-3">
-              <OklaBadge variant="premium">
+              <OklaBadge variant="solid" color="gold">
                 <Award className="w-3 h-3 mr-1" />
                 Premium
               </OklaBadge>

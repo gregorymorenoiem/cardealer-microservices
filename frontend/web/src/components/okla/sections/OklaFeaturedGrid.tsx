@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Heart, Eye } from 'lucide-react';
+import { ArrowRight, Star, Heart, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { FadeIn } from '../animations/FadeIn';
-import { StaggerContainer, StaggerItem } from '../animations/StaggerContainer';
 import { HoverLift } from '../animations/ScaleEffects';
 import { OklaButton } from '../../atoms/okla/OklaButton';
 import { OklaBadge } from '../../atoms/okla/OklaBadge';
@@ -46,11 +46,34 @@ export const OklaFeaturedGrid = ({
   onListingClick,
   onFavorite,
 }: OklaFeaturedGridProps) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 400;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+      setTimeout(checkScrollButtons, 300);
+    }
+  };
+
   return (
-    <section className="py-20 px-6 bg-okla-cream">
+    <section className="py-12 px-6 bg-okla-cream">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
           <FadeIn>
             <div>
               <span className="text-okla-gold font-medium tracking-wider text-sm uppercase">
@@ -63,27 +86,66 @@ export const OklaFeaturedGrid = ({
             </div>
           </FadeIn>
           <FadeIn delay={0.2}>
-            <OklaButton
-              variant="outline"
-              onClick={onViewAll}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-              className="mt-6 md:mt-0"
-            >
-              Ver Todos
-            </OklaButton>
+            <div className="flex items-center gap-4 mt-6 md:mt-0">
+              {/* Navigation Arrows */}
+              <div className="flex items-center gap-2">
+                <motion.button
+                  onClick={() => scroll('left')}
+                  disabled={!canScrollLeft}
+                  className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
+                    canScrollLeft
+                      ? 'border-gold-500 text-gold-600 hover:bg-gold-500 hover:text-white'
+                      : 'border-gray-300 text-gray-300 cursor-not-allowed'
+                  }`}
+                  whileHover={canScrollLeft ? { scale: 1.05 } : {}}
+                  whileTap={canScrollLeft ? { scale: 0.95 } : {}}
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </motion.button>
+                <motion.button
+                  onClick={() => scroll('right')}
+                  disabled={!canScrollRight}
+                  className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
+                    canScrollRight
+                      ? 'border-gold-500 text-gold-600 hover:bg-gold-500 hover:text-white'
+                      : 'border-gray-300 text-gray-300 cursor-not-allowed'
+                  }`}
+                  whileHover={canScrollRight ? { scale: 1.05 } : {}}
+                  whileTap={canScrollRight ? { scale: 0.95 } : {}}
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </motion.button>
+              </div>
+              <OklaButton
+                variant="outline"
+                onClick={onViewAll}
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
+                Ver Todos
+              </OklaButton>
+            </div>
           </FadeIn>
         </div>
 
-        {/* Listings Grid */}
-        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {listings.map((listing, index) => (
-            <StaggerItem key={listing.id}>
-              <HoverLift>
-                <motion.article
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg cursor-pointer group"
-                  onClick={() => onListingClick?.(listing.id)}
-                  whileHover={{ boxShadow: '0 20px 40px rgba(10, 25, 47, 0.15)' }}
-                >
+        {/* Listings Carousel */}
+        <div className="relative">
+
+          {/* Carousel Container */}
+          <div className="px-8">
+          <div 
+            ref={scrollContainerRef}
+            onScroll={checkScrollButtons}
+            className="flex gap-8 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {listings.map((listing) => (
+              <div key={listing.id} className="flex-shrink-0 w-[350px] snap-start">
+                <HoverLift>
+                  <motion.article
+                    className="bg-white rounded-2xl overflow-hidden shadow-lg cursor-pointer group h-full"
+                    onClick={() => onListingClick?.(listing.id)}
+                    whileHover={{ boxShadow: '0 20px 40px rgba(10, 25, 47, 0.15)' }}
+                  >
                   {/* Image Container */}
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <motion.img
@@ -100,13 +162,13 @@ export const OklaFeaturedGrid = ({
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex gap-2">
                       {listing.featured && (
-                        <OklaBadge variant="premium">
+                        <OklaBadge variant="solid" color="gold">
                           <Star className="w-3 h-3 mr-1" fill="currentColor" />
                           Destacado
                         </OklaBadge>
                       )}
                       {listing.isNew && (
-                        <OklaBadge variant="success">Nuevo</OklaBadge>
+                        <OklaBadge variant="solid" color="green">Nuevo</OklaBadge>
                       )}
                     </div>
 
@@ -164,9 +226,11 @@ export const OklaFeaturedGrid = ({
                   </div>
                 </motion.article>
               </HoverLift>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+              </div>
+            ))}
+          </div>
+          </div>
+        </div>
       </div>
     </section>
   );

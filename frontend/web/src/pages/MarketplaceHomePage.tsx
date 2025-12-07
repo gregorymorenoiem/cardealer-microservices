@@ -174,17 +174,17 @@ const MarketplaceHomePage: React.FC = () => {
               {
                 icon: '🔍',
                 title: 'Busca',
-                description: 'Explora miles de vehículos y propiedades verificadas con filtros avanzados',
+                description: 'Explora vehículos y propiedades con filtros avanzados para encontrar lo que buscas',
               },
               {
                 icon: '💬',
                 title: 'Contacta',
-                description: 'Comunícate directamente con vendedores verificados de forma segura',
+                description: 'Comunícate directamente con los anunciantes de forma segura',
               },
               {
                 icon: '✅',
                 title: 'Cierra el trato',
-                description: 'Completa tu transacción con la seguridad de nuestra plataforma',
+                description: 'Completa tu operación con la seguridad de nuestra plataforma',
               },
             ].map((step, i) => (
               <motion.div
@@ -210,36 +210,6 @@ const MarketplaceHomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 lg:py-20 bg-gradient-to-br from-blue-600 to-indigo-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: '15,000+', label: 'Listados activos' },
-              { value: '8,500+', label: 'Clientes satisfechos' },
-              { value: '250+', label: 'Dealers verificados' },
-              { value: '50+', label: 'Ciudades' },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <p className="text-4xl lg:text-5xl font-bold text-white mb-2">
-                  {stat.value}
-                </p>
-                <p className="text-blue-100">
-                  {stat.label}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,7 +218,7 @@ const MarketplaceHomePage: React.FC = () => {
               ¿Listo para vender?
             </h2>
             <p className="text-xl text-gray-500 mb-8 max-w-2xl mx-auto">
-              Publica tu vehículo o propiedad y llega a miles de compradores potenciales
+              Publica tu vehículo o propiedad en nuestra plataforma segura
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

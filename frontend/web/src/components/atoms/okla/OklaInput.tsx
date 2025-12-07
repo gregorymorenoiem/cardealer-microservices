@@ -138,7 +138,7 @@ export const OklaInput = forwardRef<HTMLInputElement, OklaInputProps>(
             className={clsx(
               'w-full',
               'font-body',
-              'text-primary-500 dark:text-white',
+              'text-gray-900 dark:text-white',
               'placeholder:text-gray-400',
               'transition-all duration-200 ease-elegant',
               'focus:outline-none',
@@ -335,7 +335,7 @@ export const OklaTextarea = forwardRef<HTMLTextAreaElement, OklaTextareaProps>(
             'w-full min-h-[120px]',
             'py-3 px-4',
             'font-body text-base',
-            'text-primary-500 dark:text-white',
+            'text-gray-900 dark:text-white',
             'placeholder:text-gray-400',
             'border border-gray-200 rounded-lg',
             'bg-white dark:bg-gray-900',
@@ -375,3 +375,4 @@ export const OklaTextarea = forwardRef<HTMLTextAreaElement, OklaTextareaProps>(
 OklaTextarea.displayName = 'OklaTextarea';
 
 export default OklaInput;
+

@@ -54,7 +54,7 @@ const AnimatedCounter = ({
 
 export const OklaStats = ({
   title = 'Números que Hablan',
-  subtitle = 'La confianza de miles de usuarios nos respalda',
+  subtitle = 'Nuestro compromiso con la seguridad y la calidad',
   stats,
   darkMode = false,
 }: OklaStatsProps) => {

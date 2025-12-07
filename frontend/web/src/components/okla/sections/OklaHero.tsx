@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Search, ChevronDown, Star, Shield, Award } from 'lucide-react';
+import { Search, ChevronDown, Shield, Award, Lock, Star } from 'lucide-react';
 import { useState } from 'react';
 import { FadeIn } from '../animations/FadeIn';
 import { TextReveal } from '../animations/TextAnimations';
@@ -17,8 +17,9 @@ interface OklaHeroProps {
 const categories = [
   { id: 'all', label: 'Todas las categorías' },
   { id: 'vehicles', label: 'Vehículos' },
+  { id: 'vehicle-rental', label: 'Renta de Vehículos' },
   { id: 'properties', label: 'Propiedades' },
-  { id: 'services', label: 'Servicios' },
+  { id: 'lodging', label: 'Hospedaje' },
 ];
 
 export const OklaHero = ({
@@ -110,11 +111,11 @@ export const OklaHero = ({
                 <div className="relative">
                   <button
                     onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                    className="w-full md:w-48 px-4 py-4 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
+                    className="w-full md:w-56 px-4 py-4 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
                   >
-                    <span>{categories.find((c) => c.id === selectedCategory)?.label}</span>
+                    <span className="whitespace-nowrap">{categories.find((c) => c.id === selectedCategory)?.label}</span>
                     <ChevronDown
-                      className={`w-5 h-5 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`}
+                      className={`w-5 h-5 transition-transform flex-shrink-0 ml-2 ${isCategoryOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
                   {isCategoryOpen && (
@@ -176,15 +177,15 @@ export const OklaHero = ({
             <div className="flex flex-wrap justify-center gap-8 mt-12">
               <div className="flex items-center gap-2 text-okla-cream/70">
                 <Shield className="w-5 h-5 text-okla-gold" />
-                <span className="text-sm">Transacciones Seguras</span>
+                <span className="text-sm">Sitio Web Seguro</span>
+              </div>
+              <div className="flex items-center gap-2 text-okla-cream/70">
+                <Lock className="w-5 h-5 text-okla-gold" />
+                <span className="text-sm">Transacciones Protegidas</span>
               </div>
               <div className="flex items-center gap-2 text-okla-cream/70">
                 <Award className="w-5 h-5 text-okla-gold" />
-                <span className="text-sm">Vendedores Verificados</span>
-              </div>
-              <div className="flex items-center gap-2 text-okla-cream/70">
-                <Star className="w-5 h-5 text-okla-gold" fill="currentColor" />
-                <span className="text-sm">+10,000 Clientes Satisfechos</span>
+                <span className="text-sm">Plataforma Confiable</span>
               </div>
             </div>
           </FadeIn>

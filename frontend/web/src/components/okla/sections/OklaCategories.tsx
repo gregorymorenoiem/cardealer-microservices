@@ -67,7 +67,7 @@ export const OklaCategories = ({
 
   if (variant === 'tiles') {
     return (
-      <section className="py-20 px-6 bg-okla-cream">
+      <section className="py-12 px-6 bg-okla-cream">
         <div className="max-w-7xl mx-auto">
           <FadeIn>
             <div className="text-center mb-12">
@@ -126,7 +126,7 @@ export const OklaCategories = ({
 
   // Default: cards variant
   return (
-    <section className="py-20 px-6 bg-white">
+    <section className="py-12 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
         <FadeIn>
           <div className="text-center mb-12">

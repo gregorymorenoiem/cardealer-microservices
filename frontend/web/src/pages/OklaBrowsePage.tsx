@@ -2,12 +2,15 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X } from 'lucide-react';
 import { OklaLayout } from '../layouts/OklaLayout';
-import { OklaSearchBar } from '../components/okla/search/OklaSearchBar';
-import { OklaFilterSidebar, FilterSection } from '../components/okla/search/OklaFilterSidebar';
-import { OklaResultsHeader } from '../components/okla/search/OklaResultsHeader';
-import { OklaPagination } from '../components/okla/search/OklaPagination';
-import { OklaActiveFilters } from '../components/okla/search/OklaActiveFilters';
-import { OklaNoResults } from '../components/okla/search/OklaNoResults';
+import { 
+  OklaSearchBar,
+  OklaFilterSidebar,
+  OklaResultsHeader,
+  OklaPagination,
+  OklaActiveFilters,
+  OklaNoResults
+} from '../components/okla/search';
+import type { FilterSection } from '../components/okla/search';
 import { OklaListingCard } from '../components/okla/cards/OklaListingCard';
 import { FadeIn } from '../components/okla/animations/FadeIn';
 import { StaggerContainer, StaggerItem } from '../components/okla/animations/StaggerContainer';
@@ -154,8 +157,6 @@ const filterSections: FilterSection[] = [
     ],
   },
 ];
-
-type SortOptionId = 'relevance' | 'price-low' | 'price-high' | 'newest' | 'oldest';
 
 const sortOptions = [
   { id: 'relevance', label: 'Más relevante' },

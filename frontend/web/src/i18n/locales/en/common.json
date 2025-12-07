@@ -40,7 +40,11 @@
     "searchPlaceholderShort": "Search...",
     "viewAllMarketplace": "View all marketplace",
     "vehiclesDesc": "Cars, SUVs, Pickups",
-    "propertiesDesc": "Houses, Apartments, Land"
+    "vehicleRental": "Vehicle Rental",
+    "vehicleRentalDesc": "Car rentals and more",
+    "propertiesDesc": "Houses, Apartments, Land",
+    "lodging": "Lodging",
+    "lodgingDesc": "Hotels, Cabins, Airbnb"
   },
   "buttons": {
     "search": "Search",
