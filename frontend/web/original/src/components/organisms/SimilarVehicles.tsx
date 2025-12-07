@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import VehicleCard from '@/components/organisms/VehicleCard';
 import FeaturedListingCard from '@/components/molecules/FeaturedListingCard';
 import { mockVehicles, type Vehicle } from '@/data/mockVehicles';
-import { mixFeaturedAndOrganic } from '@/utils/featuredListingsRanking';
+import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 import { FiArrowRight } from 'react-icons/fi';
 
 interface SimilarVehiclesProps {
