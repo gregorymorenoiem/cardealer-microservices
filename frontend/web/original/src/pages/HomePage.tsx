@@ -479,12 +479,12 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
   };
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-6 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{title}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{title}</h2>
             <p className="text-gray-600">{subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -525,7 +525,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
           style={{ scrollSnapType: 'x mandatory' }}
         >
           {listings.map((listing) => {
@@ -689,10 +689,10 @@ const HomePage: React.FC = () => {
       />
 
       {/* Featured Listings Grid - Sprint 5.2: Immediately After Hero */}
-      <section className="py-16 bg-gradient-to-b from-white to-gray-50">
+      <section className="py-6 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               Vehículos Destacados
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -702,7 +702,7 @@ const HomePage: React.FC = () => {
           
           <FeaturedListingGrid vehicles={gridVehicles} />
           
-          <div className="text-center mt-10">
+          <div className="text-center mt-6">
             <Link
               to="/vehicles"
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
@@ -755,10 +755,10 @@ const HomePage: React.FC = () => {
       />
 
       {/* Categories Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Explora por Categoría
             </h2>
             <p className="text-gray-600">
@@ -800,10 +800,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Todo lo que Necesitas
             </h2>
             <p className="text-gray-600">
@@ -811,7 +811,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -819,12 +819,12 @@ const HomePage: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center p-6 bg-gray-50 rounded-2xl"
+                className="text-center p-4 bg-gray-50 rounded-2xl"
               >
-                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-sm">
@@ -837,10 +837,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* How it Works */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-6 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Cómo Funciona
             </h2>
             <p className="text-gray-600">
@@ -848,7 +848,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
               { step: '1', title: 'Explora', desc: 'Navega por miles de anuncios en las categorías que te interesan.' },
               { step: '2', title: 'Conecta', desc: 'Contacta directamente con vendedores para resolver tus dudas.' },
@@ -866,10 +866,10 @@ const HomePage: React.FC = () => {
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-0.5 bg-gray-300" />
                 )}
                 
-                <div className="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-4">
+                <div className="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl font-bold text-blue-600">{item.step}</span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {item.title}
                 </h3>
                 <p className="text-gray-600 text-sm">
@@ -882,13 +882,13 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-3xl p-8 lg:p-12 text-center text-white">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-4">
+          <div className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-3xl p-6 lg:p-8 text-center text-white">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3">
               ¿Listo para empezar?
             </h2>
-            <p className="text-blue-100 mb-8 max-w-xl mx-auto">
+            <p className="text-blue-100 mb-6 max-w-xl mx-auto">
               Publica tu anuncio hoy y conecta con miles de compradores interesados
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
