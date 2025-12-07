@@ -2,6 +2,7 @@
  * HomePage - Main marketplace landing page
  * Multi-vertical marketplace with clean, scalable design
  * Sprint 5: Integrated Featured Listings with HeroCarousel
+ * Sprint 5.2: Removed SearchSection, moved to Navbar for space optimization
  */
 
 import React, { useRef, useState, useMemo } from 'react';
@@ -10,8 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin, FiChevronDown } from 'react-icons/fi';
 import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
-import { FeaturedHeroSection } from '@/components/organisms';
-import { HeroCarousel, SearchSection } from '@/components/organisms';
+import { HeroCarousel } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
 import { mockVehicles } from '@/data/mockVehicles';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
@@ -681,19 +681,38 @@ const HomePage: React.FC = () => {
 
   return (
     <MainLayout>
-      {/* Hero Carousel - Sprint 5.1: Separated from Search for 100% Ad Visibility */}
+      {/* Hero Carousel - Sprint 5.2: 100% Visible, No Search Overlay */}
       <HeroCarousel 
         vehicles={heroVehicles} 
         autoPlayInterval={5000}
-        showScrollHint={true}
+        showScrollHint={false}
       />
 
-      {/* Search Section - Sprint 5.1: Dedicated Section After Hero */}
-      <SearchSection 
-        title="¿Buscas algo específico?"
-        subtitle="Encuentra exactamente lo que necesitas con nuestro buscador avanzado"
-        defaultCategory="vehicles"
-      />
+      {/* Featured Listings Grid - Sprint 5.2: Immediately After Hero */}
+      <section className="py-16 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Vehículos Destacados
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Explora nuestra selección premium de vehículos cuidadosamente verificados
+            </p>
+          </div>
+          
+          <FeaturedListingGrid vehicles={gridVehicles} />
+          
+          <div className="text-center mt-10">
+            <Link
+              to="/vehicles"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            >
+              Ver Todos los Vehículos
+              <FiArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Categories Section */}
       <section className="py-12 bg-white">
@@ -754,56 +773,8 @@ const HomePage: React.FC = () => {
         accentColor="blue"
       />
 
-      {/* Featured Sections by Category */}
+      {/* Other Category Sections */}
       
-      {/* Featured Vehicles Grid - Sprint 5 Integration */}
-      <section className="py-12 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Vehículos Destacados
-              </h2>
-              <p className="text-gray-600">
-                Los mejores vehículos del mercado con ranking inteligente
-              </p>
-            </div>
-            <Link
-              to="/vehicles"
-              className="hidden sm:flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Ver todo
-              <FiArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          
-          <FeaturedListingGrid 
-            vehicles={gridVehicles} 
-            page="home"
-            columns={3}
-            maxItems={9}
-          />
-          
-          <div className="sm:hidden text-center mt-6">
-            <Link
-              to="/vehicles"
-              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Ver todo
-              <FiArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <FeaturedSection
-        title="Vehículos Destacados"
-        subtitle="Los mejores vehículos del mercado"
-        listings={vehiculosListings}
-        viewAllHref="/vehicles"
-        accentColor="blue"
-      />
-
       <FeaturedSection
         title="Renta de Vehículos"
         subtitle="Alquila el vehículo perfecto para cualquier ocasión"
