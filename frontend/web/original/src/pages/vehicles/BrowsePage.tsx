@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,9 @@ import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
 import EmptyState from '@/components/organisms/EmptyState';
 import AdvancedFilters, { type VehicleFilters, type SortOption } from '@/components/organisms/AdvancedFilters';
 import Pagination from '@/components/molecules/Pagination';
+import { FeaturedListingCard } from '@/components/molecules';
 import { mockVehicles, filterVehicles, sortVehicles } from '@/data/mockVehicles';
+import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 import { vehicleService } from '@/services/endpoints/vehicleService';
 import { useCompare } from '@/hooks/useCompare';
 import { FiGrid, FiList, FiBarChart2, FiMap } from 'react-icons/fi';
@@ -63,11 +65,29 @@ export default function BrowsePage() {
   const isError = false;
   const filteredVehicles = filterVehicles(mockVehicles, filters);
   const sortedVehicles = sortVehicles(filteredVehicles, sortBy);
-  const totalPages = Math.ceil(sortedVehicles.length / ITEMS_PER_PAGE);
+  
+  // Sprint 6: Apply featured listings ranking algorithm with 40% balance
+  const rankedVehicles = useMemo(() => {
+    return mixFeaturedAndOrganic(sortedVehicles, {
+      page: 'browse',
+      maxFeaturedRatio: 0.40, // Max 40% featured listings
+      minQualityScore: 60,
+      rotationInterval: 24,
+    });
+  }, [sortedVehicles]);
+  
+  const totalPages = Math.ceil(rankedVehicles.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedVehicles = sortedVehicles.slice(startIndex, endIndex);
-  const totalItems = sortedVehicles.length;
+  const paginatedVehicles = rankedVehicles.slice(startIndex, endIndex);
+  const totalItems = rankedVehicles.length;
+  
+  // Calculate featured stats for transparency
+  const featuredInPage = useMemo(() => {
+    const featured = paginatedVehicles.filter(v => v.tier && v.tier !== 'basic').length;
+    const total = paginatedVehicles.length;
+    return { count: featured, percentage: total > 0 ? (featured / total) * 100 : 0 };
+  }, [paginatedVehicles]);
 
   // When using real API, use this instead:
   // const vehicles = data?.data.items || [];
@@ -233,6 +253,16 @@ export default function BrowsePage() {
                 />
               ) : paginatedVehicles.length > 0 ? (
                 <>
+                  {/* Sprint 6: Featured Stats Badge */}
+                  {featuredInPage.count > 0 && (
+                    <div className="mb-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                      <span className="text-sm text-blue-700">
+                        <strong>{featuredInPage.count}</strong> destacados de <strong>{paginatedVehicles.length}</strong> ({featuredInPage.percentage.toFixed(0)}%)
+                      </span>
+                      <span className="text-xs text-blue-600">Posicionamiento inteligente aplicado</span>
+                    </div>
+                  )}
+                  
                   <div
                     className={`
                       ${viewMode === 'grid'
@@ -242,23 +272,37 @@ export default function BrowsePage() {
                       mb-8
                     `}
                   >
-                    {paginatedVehicles.map((vehicle) => (
-                      <VehicleCard
-                        key={vehicle.id}
-                        id={vehicle.id}
-                        make={vehicle.make}
-                        model={vehicle.model}
-                        year={vehicle.year}
-                        price={vehicle.price}
-                        mileage={vehicle.mileage}
-                        location={vehicle.location}
-                        imageUrl={vehicle.images[0]}
-                        isFeatured={vehicle.isFeatured}
-                        isNew={vehicle.isNew}
-                        transmission={vehicle.transmission}
-                        fuelType={vehicle.fuelType}
-                      />
-                    ))}
+                    {paginatedVehicles.map((vehicle) => {
+                      // Sprint 6: Use FeaturedListingCard for featured vehicles
+                      if (vehicle.tier && vehicle.tier !== 'basic') {
+                        return (
+                          <FeaturedListingCard
+                            key={vehicle.id}
+                            vehicle={vehicle}
+                            priority={false}
+                          />
+                        );
+                      }
+                      
+                      // Regular VehicleCard for non-featured
+                      return (
+                        <VehicleCard
+                          key={vehicle.id}
+                          id={vehicle.id}
+                          make={vehicle.make}
+                          model={vehicle.model}
+                          year={vehicle.year}
+                          price={vehicle.price}
+                          mileage={vehicle.mileage}
+                          location={vehicle.location}
+                          imageUrl={vehicle.images[0]}
+                          isFeatured={vehicle.isFeatured}
+                          isNew={vehicle.isNew}
+                          transmission={vehicle.transmission}
+                          fuelType={vehicle.fuelType}
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* Pagination */}
