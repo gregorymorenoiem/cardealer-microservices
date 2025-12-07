@@ -18,5 +18,8 @@ npm run dev
 El servidor de desarrollo se ejecutará en `http://localhost:5174`
 
 ## Independencia
-Este diseño es completamente independiente de los otros diseños (okla y cardealer).
-Solo comparte la autenticación/login con los demás.
+Este diseño es **100% independiente**:
+- ❌ No comparte código con otros diseños
+- ❌ No comparte autenticación
+- ❌ No comparte componentes
+- ✅ Aplicación React completamente autónoma

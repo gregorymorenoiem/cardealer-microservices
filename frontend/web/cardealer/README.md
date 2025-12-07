@@ -15,5 +15,8 @@ npm run dev
 El servidor de desarrollo se ejecutará en `http://localhost:5175`
 
 ## Independencia
-Este diseño será completamente independiente de los otros diseños (okla y original).
-Solo compartirá la autenticación/login con los demás.
+Este diseño será **100% independiente**:
+- ❌ No compartirá código con otros diseños
+- ❌ No compartirá autenticación
+- ❌ No compartirá componentes
+- ✅ Aplicación React completamente autónoma

@@ -18,15 +18,8 @@ frontend/web/
 │   ├── package.json
 │   └── README.md
 │
-├── cardealer/               # Diseño futuro personalizado (puerto 5175)
-│   └── README.md           # Carpeta vacía, reservada para futuro
-│
-└── shared-auth/             # Autenticación compartida entre diseños
-    ├── src/
-    │   ├── authService.ts
-    │   └── index.ts
-    ├── package.json
-    └── README.md
+└── cardealer/               # Diseño futuro personalizado (puerto 5175)
+    └── README.md           # Carpeta vacía, reservada para futuro
 ```
 
 ## 🎨 Diseños Disponibles
@@ -69,21 +62,31 @@ cd cardealer
 # Pendiente de implementación
 ```
 
-## 🔐 Autenticación Compartida
+## 📦 Independencia Total
 
-Los tres diseños comparten un único sistema de autenticación ubicado en `shared-auth/`:
+Cada diseño es **completamente independiente**:
 
-- **Login único**: Un usuario se autentica una vez
-- **Redirección automática**: El backend determina qué diseño mostrar basado en `user.theme`
-- **Token compartido**: El token JWT se almacena en localStorage y es accesible por todos los diseños
-- **Estado sincronizado**: El estado de autenticación se mantiene entre diseños
+✅ **Propio package.json** con sus dependencias
+✅ **Propio src/** con todos los componentes
+✅ **Propio public/** con assets
+✅ **Propias configuraciones** (vite, tailwind, tsconfig, etc.)
+✅ **No comparten código** - Cada diseño funciona de forma autónoma
 
-### Flujo de Autenticación
-1. Usuario ingresa credenciales en `/login`
-2. `sharedAuthService` valida con el backend
-3. Backend retorna `user` con campo `theme: 'okla' | 'original' | 'cardealer'`
-4. `sharedAuthService` redirige automáticamente al puerto correcto
-5. El diseño correspondiente carga con el usuario autenticado
+### Lo que NO se comparte
+❌ Componentes UI
+❌ Páginas
+❌ Layouts
+❌ Estilos
+❌ Assets
+❌ Configuraciones
+❌ Store/State
+❌ Servicios (incluido auth)
+❌ Hooks
+❌ Utils
+❌ Types
+
+### Resultado
+✅ **Independencia 100%** - Tres aplicaciones completamente separadas
 
 ## 🚀 Desarrollo
 
@@ -143,11 +146,18 @@ frontend/web/src/
 **Después**:
 ```
 frontend/web/
-├── okla/src/          # Todo el código de Okla
-├── original/src/      # Todo el código de Original  
-├── cardealer/         # Vacío para futuro
-└── shared-auth/       # Solo autenticación
+├── okla/src/          # Aplicación completa e independiente
+├── original/src/      # Aplicación completa e independiente  
+└── cardealer/         # Vacío para futuro
 ```
+
+Cada carpeta (okla, original, cardealer) es una **aplicación React completamente independiente** con su propio:
+- Sistema de autenticación
+- Routing
+- State management
+- Componentes
+- Estilos
+- Configuraciones
 
 ## 🎯 Ventajas de esta arquitectura
 
@@ -163,29 +173,20 @@ frontend/web/
 1. ✅ Estructura de carpetas creada
 2. ✅ Código Okla migrado completamente
 3. ✅ Código Original migrado completamente
-4. ✅ Sistema de autenticación compartida implementado
-5. ⏳ Actualizar imports en Okla para usar shared-auth
-6. ⏳ Actualizar imports en Original para usar shared-auth
-7. ⏳ Implementar diseño CarDealer (futuro)
-8. ⏳ Testing end-to-end del flujo de autenticación
+4. ✅ Diseños funcionando independientemente
+5. ⏳ Implementar diseño CarDealer (futuro)
+6. ⏳ Testing individual de cada diseño
 
 ## 🐛 Troubleshooting
-
-### Problema: "Module not found" al importar shared-auth
-**Solución**: Usar path relativo desde cada diseño
-```typescript
-// Desde okla/src/
-import { sharedAuthService } from '../../../shared-auth/src';
-
-// Desde original/src/
-import { sharedAuthService } from '../../../shared-auth/src';
-```
 
 ### Problema: Puertos ocupados
 **Solución**: Cambiar puerto en package.json de cada diseño
 ```json
 "dev": "vite --port XXXX"
 ```
+
+### Problema: Conflictos entre diseños
+**Solución**: No hay conflictos posibles - cada diseño es independiente
 
 ## 📄 License
 
