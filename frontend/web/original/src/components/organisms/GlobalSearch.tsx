@@ -263,6 +263,17 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     inputRef.current?.focus();
   };
 
+  const removeRecentSearch = (searchToRemove: string) => {
+    const updated = recentSearches.filter(s => s !== searchToRemove);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  const clearAllRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
+  };
+
   const vehicleResults = results.filter(r => r.type === 'vehicle');
   const rentalResults = results.filter(r => r.type === 'vehicle-rental');
   const propertyResults = results.filter(r => r.type === 'property');
@@ -363,24 +374,47 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             {/* Recent Searches - Only when no query */}
             {query.length < 2 && recentSearches.length > 0 && (
               <div className="p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  <FiClock className="w-3 h-3" />
-                  Recientes
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <FiClock className="w-3 h-3" />
+                    Recientes
+                  </div>
+                  <button
+                    onClick={clearAllRecentSearches}
+                    className="text-xs text-gray-500 hover:text-red-600 font-medium transition-colors"
+                    title="Limpiar todas"
+                  >
+                    Limpiar todo
+                  </button>
                 </div>
                 <div className="space-y-1">
                   {recentSearches.slice(0, 5).map((search, index) => (
-                    <button
+                    <div
                       key={index}
-                      onClick={() => {
-                        setQuery(search);
-                        inputRef.current?.focus();
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="group flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <FiSearch className="w-4 h-4 text-gray-400" />
-                      <span className="flex-1 truncate">{search}</span>
-                      <FiArrowRight className="w-3 h-3 text-gray-400" />
-                    </button>
+                      <FiSearch className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <button
+                        onClick={() => {
+                          setQuery(search);
+                          inputRef.current?.focus();
+                        }}
+                        className="flex-1 text-left text-gray-700 truncate"
+                      >
+                        {search}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecentSearch(search);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all flex-shrink-0"
+                        title="Eliminar"
+                        aria-label={`Eliminar búsqueda: ${search}`}
+                      >
+                        <FiX className="w-3.5 h-3.5 text-gray-500 hover:text-red-600" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
