@@ -1,3 +1,5 @@
+import type { ListingTier, FeaturedBadge, FeaturedPage, DealerTier } from '../types/listing';
+
 export interface Vehicle {
   id: string;
   make: string;
@@ -31,6 +33,18 @@ export interface Vehicle {
     rating: number;
     phone: string;
   };
+  
+  // Featured Listing fields (Sprint 1)
+  tier?: ListingTier;
+  featuredUntil?: Date;
+  featuredPosition?: number;
+  featuredPages?: FeaturedPage[];
+  featuredBadge?: FeaturedBadge;
+  qualityScore?: number;
+  engagementScore?: number;
+  dealerId?: string;
+  dealerTier?: DealerTier;
+  dealerVerified?: boolean;
 }
 
 export const mockVehicles: Vehicle[] = [
