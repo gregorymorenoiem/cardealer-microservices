@@ -92,6 +92,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.8,
       phone: '+1 (555) 123-4567',
     },
+    // Featured listing fields
+    tier: 'enterprise',
+    featuredBadge: 'top-dealer',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 95,
+    engagementScore: 850,
+    dealerId: 'dealer-001',
+    dealerTier: 'enterprise',
+    dealerVerified: true,
   },
   {
     id: '2',
@@ -134,6 +143,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.6,
       phone: '+1 (555) 234-5678',
     },
+    // Featured listing fields
+    tier: 'premium',
+    featuredBadge: 'premium',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 88,
+    engagementScore: 720,
+    dealerId: 'dealer-003',
+    dealerTier: 'premium',
+    dealerVerified: true,
   },
   {
     id: '3',
@@ -215,6 +233,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.7,
       phone: '+1 (555) 456-7890',
     },
+    // Featured listing fields
+    tier: 'featured',
+    featuredBadge: 'destacado',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 82,
+    engagementScore: 650,
+    dealerId: 'dealer-004',
+    dealerTier: 'premium',
+    dealerVerified: true,
   },
   {
     id: '5',

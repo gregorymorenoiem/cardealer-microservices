@@ -1,14 +1,19 @@
 /**
  * HomePage - Main marketplace landing page
  * Multi-vertical marketplace with clean, scalable design
+ * Sprint 5: Integrated Featured Listings with HeroCarousel
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin, FiChevronDown } from 'react-icons/fi';
 import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
+import { FeaturedHeroSection } from '@/components/organisms';
+import { FeaturedListingGrid } from '@/components/molecules';
+import { mockVehicles } from '@/data/mockVehicles';
+import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 
 // Search categories for the hero
 const searchCategories = [
@@ -594,6 +599,17 @@ const HomePage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('vehicles');
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
+  // Get featured vehicles for hero carousel (top 5 by ranking)
+  const heroVehicles = useMemo(() => {
+    return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
+  }, []);
+
+  // Get featured vehicles for homepage grid (exclude hero vehicles)
+  const gridVehicles = useMemo(() => {
+    const heroIds = new Set(heroVehicles.map(v => v.id));
+    return mockVehicles.filter(v => !heroIds.has(v.id));
+  }, [heroVehicles]);
+
   // Vehicle search states
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
@@ -664,257 +680,8 @@ const HomePage: React.FC = () => {
 
   return (
     <MainLayout>
-      {/* Hero Section with Background Image */}
-      <section className="relative min-h-[70vh] flex items-center">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
-            alt="Hero background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-gray-900/60 to-gray-900/40" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-4xl mx-auto mb-8">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 text-center"
-            >
-              Descubre lo{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                Extraordinario
-              </span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl text-gray-200 text-center"
-            >
-              El marketplace donde la calidad se encuentra con la confianza
-            </motion.p>
-          </div>
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="max-w-5xl mx-auto"
-          >
-              <div className="flex flex-col md:flex-row gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 relative z-50">
-              {/* Category Selector */}
-              <div className="relative z-50 md:w-48 flex-shrink-0">
-                <button
-                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                  className="w-full md:w-48 px-4 py-3 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
-                >
-                  <span className="whitespace-nowrap">{searchCategories.find((c) => c.id === selectedCategory)?.label}</span>
-                  <FiChevronDown
-                    className={`w-5 h-5 transition-transform flex-shrink-0 ml-2 ${isCategoryOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {isCategoryOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50"
-                    >
-                      {searchCategories.map((category) => (
-                        <button
-                          key={category.id}
-                          onClick={() => {
-                            setSelectedCategory(category.id);
-                            setIsCategoryOpen(false);
-                          }}
-                          className={`w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors ${
-                            selectedCategory === category.id
-                              ? 'bg-blue-50 text-blue-600 font-medium'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {category.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Dynamic Search Fields based on Category */}
-              {selectedCategory === 'vehicles' && (
-                <>
-                  <select
-                    value={make}
-                    onChange={(e) => setMake(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Marca</option>
-                    {vehicleMakes.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Modelo"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Min"
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Max"
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              {selectedCategory === 'vehicle-rental' && (
-                <>
-                  <select
-                    value={vehicleType}
-                    onChange={(e) => setVehicleType(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Tipo</option>
-                    {vehicleTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="date"
-                    placeholder="Fecha Inicio"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="date"
-                    placeholder="Fecha Fin"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Ubicación"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              {selectedCategory === 'properties' && (
-                <>
-                  <select
-                    value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
-                    className="md:w-36 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Tipo</option>
-                    {propertyTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Ubicación"
-                    value={propertyLocation}
-                    onChange={(e) => setPropertyLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Min"
-                    value={propertyPriceMin}
-                    onChange={(e) => setPropertyPriceMin(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-28 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Max"
-                    value={propertyPriceMax}
-                    onChange={(e) => setPropertyPriceMax(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-28 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Hab."
-                    value={bedrooms}
-                    onChange={(e) => setBedrooms(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-20 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              {selectedCategory === 'lodging' && (
-                <>
-                  <input
-                    type="date"
-                    placeholder="Check-in"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="date"
-                    placeholder="Check-out"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Huéspedes"
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Ubicación"
-                    value={lodgingLocation}
-                    onChange={(e) => setLodgingLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              <button 
-                onClick={handleSearch}
-                className="md:w-32 flex-shrink-0 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
-              >
-                Buscar
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* Hero Carousel with Featured Vehicles - Sprint 5 Integration */}
+      <FeaturedHeroSection vehicles={heroVehicles} autoPlayInterval={5000} />
 
       {/* Categories Section */}
       <section className="py-12 bg-white">
@@ -976,6 +743,47 @@ const HomePage: React.FC = () => {
       />
 
       {/* Featured Sections by Category */}
+      
+      {/* Featured Vehicles Grid - Sprint 5 Integration */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                Vehículos Destacados
+              </h2>
+              <p className="text-gray-600">
+                Los mejores vehículos del mercado con ranking inteligente
+              </p>
+            </div>
+            <Link
+              to="/vehicles"
+              className="hidden sm:flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Ver todo
+              <FiArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          
+          <FeaturedListingGrid 
+            vehicles={gridVehicles} 
+            page="home"
+            columns={3}
+            maxItems={9}
+          />
+          
+          <div className="sm:hidden text-center mt-6">
+            <Link
+              to="/vehicles"
+              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Ver todo
+              <FiArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <FeaturedSection
         title="Vehículos Destacados"
         subtitle="Los mejores vehículos del mercado"
