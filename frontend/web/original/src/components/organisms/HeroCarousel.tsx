@@ -1,27 +1,31 @@
 /**
  * HeroCarousel Component
- * Sprint 4: HeroCarousel Component
+ * Sprint 4: HeroCarousel Component (Sprint 5.1: Search Separation)
  * 
- * Premium carousel for hero section with featured listings
+ * Premium full-screen carousel for hero section
  * Auto-rotates enterprise/premium tier vehicles
+ * 100% visible - no search overlay for maximum ad visibility
  * Follows 40% UX balance - max 3 featured in 5-slide rotation
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, PlayCircle, PauseCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PlayCircle, PauseCircle, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import type { Vehicle } from '@/data/mockVehicles';
 import { DestacadoBadge, PremiumBadge, TopDealerBadge } from '@/components/atoms';
 
 interface HeroCarouselProps {
   vehicles: Vehicle[];
   autoPlayInterval?: number; // milliseconds
+  showScrollHint?: boolean; // Show scroll indicator
   className?: string;
 }
 
 export default function HeroCarousel({ 
   vehicles, 
   autoPlayInterval = 5000,
+  showScrollHint = true,
   className = '' 
 }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -223,6 +227,25 @@ export default function HeroCarousel({
             }}
           />
         </div>
+      )}
+
+      {/* Scroll Hint - Indicates more content below */}
+      {showScrollHint && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+        >
+          <div className="flex flex-col items-center gap-2 text-white/80">
+            <span className="text-sm font-medium">Buscar</span>
+            <ChevronDown size={24} />
+          </div>
+        </motion.div>
       )}
     </div>
   );

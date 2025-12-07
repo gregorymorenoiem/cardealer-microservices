@@ -11,6 +11,7 @@ import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin, FiChevronDown } from 'react-icons/fi';
 import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
 import { FeaturedHeroSection } from '@/components/organisms';
+import { HeroCarousel, SearchSection } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
 import { mockVehicles } from '@/data/mockVehicles';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
@@ -680,8 +681,19 @@ const HomePage: React.FC = () => {
 
   return (
     <MainLayout>
-      {/* Hero Carousel with Featured Vehicles - Sprint 5 Integration */}
-      <FeaturedHeroSection vehicles={heroVehicles} autoPlayInterval={5000} />
+      {/* Hero Carousel - Sprint 5.1: Separated from Search for 100% Ad Visibility */}
+      <HeroCarousel 
+        vehicles={heroVehicles} 
+        autoPlayInterval={5000}
+        showScrollHint={true}
+      />
+
+      {/* Search Section - Sprint 5.1: Dedicated Section After Hero */}
+      <SearchSection 
+        title="¿Buscas algo específico?"
+        subtitle="Encuentra exactamente lo que necesitas con nuestro buscador avanzado"
+        defaultCategory="vehicles"
+      />
 
       {/* Categories Section */}
       <section className="py-12 bg-white">
