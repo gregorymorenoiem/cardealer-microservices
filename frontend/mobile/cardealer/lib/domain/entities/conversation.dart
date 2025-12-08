@@ -39,7 +39,7 @@ class Conversation extends Equatable {
   /// Get last message preview text
   String get lastMessagePreview {
     if (lastMessage == null) return 'Sin mensajes';
-    
+
     switch (lastMessage!.type) {
       case MessageType.text:
         return lastMessage!.content;
@@ -59,7 +59,7 @@ class Conversation extends Equatable {
   /// Get formatted time for last message
   String get formattedTime {
     if (lastMessage == null) return '';
-    
+
     final now = DateTime.now();
     final messageDate = lastMessage!.createdAt;
     final difference = now.difference(messageDate);

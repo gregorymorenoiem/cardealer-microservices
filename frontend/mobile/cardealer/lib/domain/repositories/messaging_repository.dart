@@ -9,7 +9,8 @@ abstract class MessagingRepository {
   Future<Either<Failure, List<Conversation>>> getConversations();
 
   /// Get conversation by ID
-  Future<Either<Failure, Conversation>> getConversationById(String conversationId);
+  Future<Either<Failure, Conversation>> getConversationById(
+      String conversationId);
 
   /// Get or create conversation with specific user about a vehicle
   Future<Either<Failure, Conversation>> getOrCreateConversation({

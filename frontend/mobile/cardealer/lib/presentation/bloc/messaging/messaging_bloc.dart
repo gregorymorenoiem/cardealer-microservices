@@ -138,7 +138,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       (failure) => emit(MessageSendError(failure.message)),
       (message) {
         emit(MessageSent(message));
-        
+
         // Reload messages to show the new message
         add(LoadMessages(conversationId: event.conversationId));
       },
@@ -150,7 +150,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     Emitter<MessagingState> emit,
   ) async {
     await markConversationAsRead(event.conversationId);
-    
+
     // Refresh conversations to update unread count
     add(RefreshConversations());
   }
@@ -167,7 +167,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       (failure) => emit(ConversationsError(failure.message)),
       (_) {
         emit(ConversationDeleted(event.conversationId));
-        
+
         // Reload conversations
         add(LoadConversations());
       },
@@ -186,7 +186,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
         .listenToMessages(event.conversationId)
         .listen((message) {
       emit(MessageReceived(message));
-      
+
       // Reload messages to include the new one
       add(LoadMessages(conversationId: event.conversationId));
     });

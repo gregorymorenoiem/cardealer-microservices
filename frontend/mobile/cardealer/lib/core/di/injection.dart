@@ -62,7 +62,7 @@ Future<void> configureDependencies() async {
       networkInfo: getIt<NetworkInfo>(),
     ),
   );
-  
+
   // Register messaging repository (mock for now)
   getIt.registerLazySingleton<MessagingRepository>(
     () => MockMessagingRepository(),
@@ -105,7 +105,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<GetSearchHistory>(
     () => GetSearchHistory(getIt<SharedPreferences>()),
   );
-  
+
   // Messaging use cases
   getIt.registerLazySingleton<GetConversations>(
     () => GetConversations(getIt<MessagingRepository>()),
@@ -161,7 +161,7 @@ Future<void> configureDependencies() async {
       toggleFavorite: getIt<ToggleFavorite>(),
     ),
   );
-  
+
   // Messaging BLoC
   getIt.registerFactory<MessagingBloc>(
     () => MessagingBloc(

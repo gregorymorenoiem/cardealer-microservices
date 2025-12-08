@@ -190,7 +190,7 @@ class _ChatPageState extends State<ChatPage> {
                   ],
                 ),
               ),
-            
+
             // Messages list
             Expanded(
               child: BlocConsumer<MessagingBloc, MessagingState>(
@@ -247,10 +247,9 @@ class _ChatPageState extends State<ChatPage> {
                       itemCount: state.messages.length,
                       itemBuilder: (context, index) {
                         final message = state.messages[
-                            state.messages.length - 1 - index
-                        ]; // Reverse order
+                            state.messages.length - 1 - index]; // Reverse order
                         final isFromMe = message.isFromMe('current-user-id');
-                        
+
                         // Show date separator if day changes
                         final showDateSeparator = index == 0 ||
                             !_isSameDay(

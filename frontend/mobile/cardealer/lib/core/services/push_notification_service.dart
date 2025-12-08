@@ -1,12 +1,13 @@
 /// Service for handling push notifications
 /// TODO: Integrate with Firebase Cloud Messaging (FCM)
 class PushNotificationService {
-  static final PushNotificationService _instance = PushNotificationService._internal();
-  
+  static final PushNotificationService _instance =
+      PushNotificationService._internal();
+
   factory PushNotificationService() {
     return _instance;
   }
-  
+
   PushNotificationService._internal();
 
   /// Initialize FCM and request permissions
@@ -17,7 +18,7 @@ class PushNotificationService {
     // await _setupForegroundNotificationHandling();
     // await _setupBackgroundNotificationHandling();
     // await _getDeviceToken();
-    
+
     print('[PushNotificationService] Initialized (mock)');
   }
 
@@ -31,7 +32,7 @@ class PushNotificationService {
     //   sound: true,
     // );
     // return settings.authorizationStatus == AuthorizationStatus.authorized;
-    
+
     print('[PushNotificationService] Permission requested (mock)');
     return true;
   }
@@ -41,7 +42,7 @@ class PushNotificationService {
     // TODO: Get device token from Firebase Messaging
     // final messaging = FirebaseMessaging.instance;
     // return await messaging.getToken();
-    
+
     print('[PushNotificationService] Token retrieved (mock)');
     return 'mock-device-token-12345';
   }
@@ -51,7 +52,7 @@ class PushNotificationService {
     // TODO: Subscribe to FCM topic
     // final messaging = FirebaseMessaging.instance;
     // await messaging.subscribeToTopic(topic);
-    
+
     print('[PushNotificationService] Subscribed to topic: $topic (mock)');
   }
 
@@ -60,7 +61,7 @@ class PushNotificationService {
     // TODO: Unsubscribe from FCM topic
     // final messaging = FirebaseMessaging.instance;
     // await messaging.unsubscribeFromTopic(topic);
-    
+
     print('[PushNotificationService] Unsubscribed from topic: $topic (mock)');
   }
 
@@ -78,7 +79,7 @@ class PushNotificationService {
     //     onMessage(message.data);
     //   }
     // });
-    
+
     print('[PushNotificationService] Foreground handler setup (mock)');
   }
 
@@ -88,7 +89,7 @@ class PushNotificationService {
   }) {
     // TODO: Setup background message handler
     // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    
+
     print('[PushNotificationService] Background handler setup (mock)');
   }
 
@@ -108,7 +109,7 @@ class PushNotificationService {
     //     onNotificationTap(message.data);
     //   }
     // });
-    
+
     print('[PushNotificationService] Notification tap handler setup (mock)');
   }
 
@@ -136,15 +137,16 @@ class PushNotificationService {
     //   platformChannelSpecifics,
     //   payload: jsonEncode(data),
     // );
-    
-    print('[PushNotificationService] Local notification shown: $title - $body (mock)');
+
+    print(
+        '[PushNotificationService] Local notification shown: $title - $body (mock)');
   }
 
   /// Clear all notifications
   Future<void> clearAllNotifications() async {
     // TODO: Clear all notifications
     // await flutterLocalNotificationsPlugin.cancelAll();
-    
+
     print('[PushNotificationService] All notifications cleared (mock)');
   }
 
@@ -152,7 +154,7 @@ class PushNotificationService {
   Future<void> setBadgeCount(int count) async {
     // TODO: Set badge count on iOS
     // await FlutterAppBadger.updateBadgeCount(count);
-    
+
     print('[PushNotificationService] Badge count set to: $count (mock)');
   }
 
@@ -160,7 +162,7 @@ class PushNotificationService {
   Future<void> clearBadge() async {
     // TODO: Clear badge on iOS
     // await FlutterAppBadger.removeBadge();
-    
+
     print('[PushNotificationService] Badge cleared (mock)');
   }
 }

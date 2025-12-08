@@ -37,7 +37,7 @@ class MessageInput extends StatelessWidget {
               color: Colors.grey[600],
               onPressed: onAttachment,
             ),
-            
+
             // Text input
             Expanded(
               child: TextField(
@@ -65,9 +65,9 @@ class MessageInput extends StatelessWidget {
                 },
               ),
             ),
-            
+
             const SizedBox(width: 8),
-            
+
             // Send button
             CircleAvatar(
               backgroundColor: Theme.of(context).primaryColor,
