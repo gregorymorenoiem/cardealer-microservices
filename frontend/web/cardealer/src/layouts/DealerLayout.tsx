@@ -53,8 +53,8 @@ const DealerLayout = ({ children }: DealerLayoutProps) => {
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">C</span>
+              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">C</span>
               </div>
               <span className="text-xl font-bold text-gray-900">CarDealer</span>
             </Link>
