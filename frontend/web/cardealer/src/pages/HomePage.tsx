@@ -12,6 +12,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
@@ -21,28 +22,7 @@ import { mockVehicles } from '@/data/mockVehicles';
 import type { Vehicle } from '@/data/mockVehicles';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 
-const features = [
-  {
-    icon: FiSearch,
-    title: 'Encuentra tu Auto Ideal',
-    description: 'Filtros avanzados para encontrar exactamente lo que buscas.',
-  },
-  {
-    icon: FiZap,
-    title: 'Vende Rápido',
-    description: 'Publica en minutos y conecta con compradores verificados.',
-  },
-  {
-    icon: FiShield,
-    title: 'Compra con Confianza',
-    description: 'Todos los vehículos verificados con historial completo.',
-  },
-  {
-    icon: FiMessageCircle,
-    title: 'Contacto Directo',
-    description: 'Comunícate directamente con vendedores sin intermediarios.',
-  },
-];
+
 
 // Format price helper
 const formatPrice = (price: number, currency = 'USD') => {
@@ -204,6 +184,31 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, vehi
 };
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation('common');
+
+  const features = [
+    {
+      icon: FiSearch,
+      title: t('home.vehicleSections.features.findCar.title'),
+      description: t('home.vehicleSections.features.findCar.description'),
+    },
+    {
+      icon: FiZap,
+      title: t('home.vehicleSections.features.sellFast.title'),
+      description: t('home.vehicleSections.features.sellFast.description'),
+    },
+    {
+      icon: FiShield,
+      title: t('home.vehicleSections.features.buyConfident.title'),
+      description: t('home.vehicleSections.features.buyConfident.description'),
+    },
+    {
+      icon: FiMessageCircle,
+      title: t('home.vehicleSections.features.directContact.title'),
+      description: t('home.vehicleSections.features.directContact.description'),
+    },
+  ];
+
   // Get featured vehicles for hero carousel (top 5 by ranking)
   const heroVehicles = useMemo(() => {
     return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
@@ -271,10 +276,10 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Vehículos Destacados
+              {t('home.vehicleSections.featured.title')}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Explora nuestra selección premium de vehículos cuidadosamente verificados
+              {t('home.vehicleSections.featured.subtitle')}
             </p>
           </div>
           
@@ -284,40 +289,40 @@ const HomePage: React.FC = () => {
 
       {/* Destacados de la Semana - Scrollable Section with 10 vehicles */}
       <FeaturedSection
-        title="Destacados de la Semana"
-        subtitle="Selección especial de los mejores vehículos disponibles"
+        title={t('home.vehicleSections.weeklyFeatured.title')}
+        subtitle={t('home.vehicleSections.weeklyFeatured.subtitle')}
         vehicles={weeklyFeatured}
         viewAllHref="/vehicles"
       />
 
       {/* Ofertas del Día - Scrollable Section with 10 vehicles */}
       <FeaturedSection
-        title="Ofertas del Día"
-        subtitle="Aprovecha estas oportunidades especiales por tiempo limitado"
+        title={t('home.vehicleSections.dailyDeals.title')}
+        subtitle={t('home.vehicleSections.dailyDeals.subtitle')}
         vehicles={dailyDeals}
         viewAllHref="/vehicles?deals=daily"
       />
 
       {/* SUVs y Camionetas - Scrollable Section with 10 vehicles */}
       <FeaturedSection
-        title="SUVs y Camionetas"
-        subtitle="Vehículos ideales para familias y aventuras"
+        title={t('home.vehicleSections.suvTrucks.title')}
+        subtitle={t('home.vehicleSections.suvTrucks.subtitle')}
         vehicles={suvTrucks}
         viewAllHref="/vehicles?bodyType=suv,truck"
       />
 
       {/* Premium Vehicles Section - 10 vehicles scrollable */}
       <FeaturedSection
-        title="Vehículos Premium"
-        subtitle="Selección exclusiva de vehículos de alta gama"
+        title={t('home.vehicleSections.premium.title')}
+        subtitle={t('home.vehicleSections.premium.subtitle')}
         vehicles={premiumVehicles}
         viewAllHref="/vehicles?tier=premium"
       />
 
       {/* Eléctricos e Híbridos - Scrollable Section with 10 vehicles */}
       <FeaturedSection
-        title="Eléctricos e Híbridos"
-        subtitle="Vehículos eficientes y amigables con el medio ambiente"
+        title={t('home.vehicleSections.electricHybrid.title')}
+        subtitle={t('home.vehicleSections.electricHybrid.subtitle')}
         vehicles={electricHybrid}
         viewAllHref="/vehicles?fuelType=electric,hybrid"
       />
@@ -327,10 +332,10 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-4">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Por qué Elegirnos
+              {t('home.vehicleSections.whyChooseUs.title')}
             </h2>
             <p className="text-gray-600">
-              La mejor plataforma para comprar y vender vehículos
+              {t('home.vehicleSections.whyChooseUs.subtitle')}
             </p>
           </div>
 
@@ -364,18 +369,30 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-4">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Cómo Funciona
+              {t('home.vehicleSections.howItWorks.title')}
             </h2>
             <p className="text-gray-600">
-              Tres simples pasos para encontrar tu vehículo ideal
+              {t('home.vehicleSections.howItWorks.subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
-              { step: '1', title: 'Explora', desc: 'Navega por miles de vehículos en nuestro catálogo.' },
-              { step: '2', title: 'Conecta', desc: 'Contacta directamente con vendedores para resolver dudas.' },
-              { step: '3', title: 'Disfruta', desc: 'Cierra el trato y disfruta tu nuevo vehículo.' },
+              { 
+                step: '1', 
+                title: t('home.vehicleSections.howItWorks.explore.title'), 
+                desc: t('home.vehicleSections.howItWorks.explore.description') 
+              },
+              { 
+                step: '2', 
+                title: t('home.vehicleSections.howItWorks.connect.title'), 
+                desc: t('home.vehicleSections.howItWorks.connect.description') 
+              },
+              { 
+                step: '3', 
+                title: t('home.vehicleSections.howItWorks.enjoy.title'), 
+                desc: t('home.vehicleSections.howItWorks.enjoy.description') 
+              },
             ].map((item, index) => (
               <motion.div
                 key={index}
