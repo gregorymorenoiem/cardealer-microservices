@@ -246,7 +246,7 @@ const HomePage: React.FC = () => {
       ...dailyDeals.map(v => v.id)
     ]);
     return mockVehicles
-      .filter(v => !excludeIds.has(v.id) && (v.bodyType === 'SUV' || v.bodyType === 'Truck'))
+      .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
   }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals]);
 
@@ -260,7 +260,7 @@ const HomePage: React.FC = () => {
       ...suvTrucks.map(v => v.id)
     ]);
     return mockVehicles
-      .filter(v => !excludeIds.has(v.id) && (v.tier === 'enterprise' || v.tier === 'premium'))
+      .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
   }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks]);
 
@@ -275,25 +275,9 @@ const HomePage: React.FC = () => {
       ...premiumVehicles.map(v => v.id)
     ]);
     return mockVehicles
-      .filter(v => !excludeIds.has(v.id) && (v.fuelType === 'Electric' || v.fuelType === 'Hybrid' || v.fuelType === 'Plug-in Hybrid'))
-      .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles]);
-
-  // Get vehicles for "Recién Agregados" scrollable (10 vehicles, newest first)
-  const recentlyAdded = useMemo(() => {
-    const excludeIds = new Set([
-      ...heroVehicles.map(v => v.id),
-      ...topFeaturedGrid.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id),
-      ...dailyDeals.map(v => v.id),
-      ...suvTrucks.map(v => v.id),
-      ...premiumVehicles.map(v => v.id),
-      ...electricHybrid.map(v => v.id)
-    ]);
-    return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles, electricHybrid]);
+  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles]);
 
   return (
     <MainLayout>
@@ -337,41 +321,27 @@ const HomePage: React.FC = () => {
       />
 
       {/* SUVs y Camionetas - Scrollable Section with 10 vehicles */}
-      {suvTrucks.length > 0 && (
-        <FeaturedSection
-          title="SUVs y Camionetas"
-          subtitle="Vehículos ideales para familias y aventuras"
-          vehicles={suvTrucks}
-          viewAllHref="/vehicles?bodyType=suv,truck"
-        />
-      )}
+      <FeaturedSection
+        title="SUVs y Camionetas"
+        subtitle="Vehículos ideales para familias y aventuras"
+        vehicles={suvTrucks}
+        viewAllHref="/vehicles?bodyType=suv,truck"
+      />
 
       {/* Premium Vehicles Section - 10 vehicles scrollable */}
-      {premiumVehicles.length > 0 && (
-        <FeaturedSection
-          title="Vehículos Premium"
-          subtitle="Selección exclusiva de vehículos de alta gama"
-          vehicles={premiumVehicles}
-          viewAllHref="/vehicles?tier=premium"
-        />
-      )}
+      <FeaturedSection
+        title="Vehículos Premium"
+        subtitle="Selección exclusiva de vehículos de alta gama"
+        vehicles={premiumVehicles}
+        viewAllHref="/vehicles?tier=premium"
+      />
 
       {/* Eléctricos e Híbridos - Scrollable Section with 10 vehicles */}
-      {electricHybrid.length > 0 && (
-        <FeaturedSection
-          title="Eléctricos e Híbridos"
-          subtitle="Vehículos eficientes y amigables con el medio ambiente"
-          vehicles={electricHybrid}
-          viewAllHref="/vehicles?fuelType=electric,hybrid"
-        />
-      )}
-
-      {/* Recién Agregados - Scrollable Section with 10 vehicles */}
       <FeaturedSection
-        title="Recién Agregados"
-        subtitle="Los vehículos más recientes en nuestra plataforma"
-        vehicles={recentlyAdded}
-        viewAllHref="/vehicles?sort=newest"
+        title="Eléctricos e Híbridos"
+        subtitle="Vehículos eficientes y amigables con el medio ambiente"
+        vehicles={electricHybrid}
+        viewAllHref="/vehicles?fuelType=electric,hybrid"
       />
 
       {/* Features Section - Compact, Amazon-style spacing */}
