@@ -11,7 +11,7 @@ import '../lib/presentation/widgets/custom_text_field.dart';
 import '../lib/presentation/widgets/custom_app_bar.dart';
 import '../lib/presentation/widgets/loading_indicator.dart';
 import '../lib/presentation/widgets/empty_state_widget.dart';
-import '../lib/presentation/widgets/custom_error_widget.dart';
+// import '../lib/presentation/widgets/custom_error_widget.dart'; // TODO: Crear widget
 import '../lib/presentation/widgets/vehicle_card.dart';
 import '../lib/presentation/widgets/vehicle_card_horizontal.dart';
 import '../lib/presentation/widgets/vehicle_card_grid.dart';

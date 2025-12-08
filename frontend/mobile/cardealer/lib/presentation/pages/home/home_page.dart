@@ -19,7 +19,8 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt<VehiclesBloc>()..add(RefreshAllSectionsEvent()),
+      create: (context) =>
+          getIt<VehiclesBloc>()..add(RefreshAllSectionsEvent()),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('CarDealer'),
@@ -64,7 +65,9 @@ class HomePage extends StatelessWidget {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<VehiclesBloc>().add(RefreshAllSectionsEvent());
+                        context
+                            .read<VehiclesBloc>()
+                            .add(RefreshAllSectionsEvent());
                       },
                       child: const Text('Retry'),
                     ),
@@ -82,12 +85,12 @@ class HomePage extends StatelessWidget {
                   children: [
                     // Section 1: Hero Carousel (5 featured vehicles)
                     HeroCarouselSection(vehicles: state.heroCarousel),
-                    
+
                     const SizedBox(height: 24),
 
                     // Section 2: Featured Grid (6 vehicles, 2 columns)
                     FeaturedGridSection(vehicles: state.featuredGrid),
-                    
+
                     const SizedBox(height: 24),
 
                     // Section 3: Week's Featured (10 vehicles, horizontal scroll)
@@ -99,7 +102,7 @@ class HomePage extends StatelessWidget {
                         // TODO: Navigate to full list
                       },
                     ),
-                    
+
                     const SizedBox(height: 24),
 
                     // Section 4: Daily Deals (10 vehicles, horizontal scroll)
@@ -113,7 +116,7 @@ class HomePage extends StatelessWidget {
                       showBadge: true,
                       badgeText: 'DEAL',
                     ),
-                    
+
                     const SizedBox(height: 24),
 
                     // Section 5: SUVs & Trucks (10 vehicles, horizontal scroll)
@@ -125,7 +128,7 @@ class HomePage extends StatelessWidget {
                         // TODO: Navigate to SUVs page
                       },
                     ),
-                    
+
                     const SizedBox(height: 24),
 
                     // Section 6: Premium Vehicles (10 vehicles, horizontal scroll)
@@ -139,7 +142,7 @@ class HomePage extends StatelessWidget {
                       showBadge: true,
                       badgeText: 'PREMIUM',
                     ),
-                    
+
                     const SizedBox(height: 24),
 
                     // Section 7: Electric & Hybrid (10 vehicles, horizontal scroll)
@@ -153,22 +156,22 @@ class HomePage extends StatelessWidget {
                       showBadge: true,
                       badgeText: 'ECO',
                     ),
-                    
+
                     const SizedBox(height: 32),
 
                     // Features Section
                     const FeaturesSection(),
-                    
+
                     const SizedBox(height: 32),
 
                     // How It Works Section
                     const HowItWorksSection(),
-                    
+
                     const SizedBox(height: 32),
 
                     // CTA Section
                     const CTASection(),
-                    
+
                     const SizedBox(height: 32),
                   ],
                 ),

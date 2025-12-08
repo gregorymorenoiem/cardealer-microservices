@@ -3,7 +3,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
-import 'app_config.dart';
+import '../../app_config.dart';
 
 class FirebaseService {
   static FirebaseAnalytics? _analytics;
@@ -159,7 +159,7 @@ class FirebaseService {
           error,
           stackTrace,
           reason: reason,
-          information: information,
+          information: information?.entries.map((e) => '${e.key}: ${e.value}').toList() ?? [],
           fatal: false,
         );
       } catch (e) {

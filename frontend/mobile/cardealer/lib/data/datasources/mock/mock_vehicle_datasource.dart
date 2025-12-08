@@ -78,7 +78,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800',
         'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800',
       ],
-      description: 'Brand new Tesla Model S with Autopilot and premium interior',
+      description:
+          'Brand new Tesla Model S with Autopilot and premium interior',
       location: 'Los Angeles, CA',
       dealerName: 'Tesla Direct',
       isFeatured: true,
@@ -88,7 +89,12 @@ class MockVehicleDataSource {
       seats: 5,
       horsepower: 670,
       drivetrain: 'awd',
-      features: ['Autopilot', 'Premium Audio', 'Panoramic Roof', 'Heated Seats'],
+      features: [
+        'Autopilot',
+        'Premium Audio',
+        'Panoramic Roof',
+        'Heated Seats'
+      ],
     ),
     VehicleModel(
       id: '2',
@@ -116,7 +122,12 @@ class MockVehicleDataSource {
       engineSize: '3.0L',
       horsepower: 335,
       drivetrain: 'awd',
-      features: ['M Sport Package', 'Panoramic Sunroof', 'Navigation', 'Leather'],
+      features: [
+        'M Sport Package',
+        'Panoramic Sunroof',
+        'Navigation',
+        'Leather'
+      ],
     ),
     VehicleModel(
       id: '3',
@@ -172,7 +183,12 @@ class MockVehicleDataSource {
       engineSize: '3.0L',
       horsepower: 335,
       drivetrain: 'awd',
-      features: ['Sport Chrono', 'Air Suspension', 'Panoramic Roof', 'BOSE Audio'],
+      features: [
+        'Sport Chrono',
+        'Air Suspension',
+        'Panoramic Roof',
+        'BOSE Audio'
+      ],
     ),
     VehicleModel(
       id: '5',
@@ -199,7 +215,12 @@ class MockVehicleDataSource {
       seats: 4,
       horsepower: 637,
       drivetrain: 'awd',
-      features: ['Quattro AWD', 'Matrix LED', 'Virtual Cockpit', 'Bang & Olufsen'],
+      features: [
+        'Quattro AWD',
+        'Matrix LED',
+        'Virtual Cockpit',
+        'Bang & Olufsen'
+      ],
     ),
     VehicleModel(
       id: '6',
@@ -255,7 +276,12 @@ class MockVehicleDataSource {
       engineSize: '3.5L',
       horsepower: 295,
       drivetrain: 'awd',
-      features: ['Mark Levinson Audio', 'Panoramic View', 'Heated Seats', 'Navigation'],
+      features: [
+        'Mark Levinson Audio',
+        'Panoramic View',
+        'Heated Seats',
+        'Navigation'
+      ],
     ),
     VehicleModel(
       id: '8',
@@ -283,7 +309,12 @@ class MockVehicleDataSource {
       engineSize: '6.2L',
       horsepower: 495,
       drivetrain: 'rwd',
-      features: ['Z51 Performance', 'Magnetic Ride', 'Performance Exhaust', 'GT2 Seats'],
+      features: [
+        'Z51 Performance',
+        'Magnetic Ride',
+        'Performance Exhaust',
+        'GT2 Seats'
+      ],
     ),
     VehicleModel(
       id: '9',
@@ -339,7 +370,12 @@ class MockVehicleDataSource {
       engineSize: '2.0L',
       horsepower: 204,
       drivetrain: 'fwd',
-      features: ['Honda Sensing', 'Wireless CarPlay', 'Sunroof', 'Heated Seats'],
+      features: [
+        'Honda Sensing',
+        'Wireless CarPlay',
+        'Sunroof',
+        'Heated Seats'
+      ],
     ),
     VehicleModel(
       id: '11',
@@ -384,7 +420,9 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'sedan',
       color: 'Silver',
-      images: ['https://images.unsplash.com/photo-1617531653520-bd466e4337a9?w=800'],
+      images: [
+        'https://images.unsplash.com/photo-1617531653520-bd466e4337a9?w=800'
+      ],
       description: 'Affordable and reliable sedan',
       location: 'Phoenix, AZ',
       dealerName: 'Hyundai Phoenix',
@@ -404,7 +442,7 @@ class MockVehicleDataSource {
     // - Fuel types (gasoline, diesel, electric, hybrid)
     // - Conditions (new, used, certified)
     // - Locations (various US cities)
-    
+
     // For brevity, I'll add a few more key vehicles
     VehicleModel(
       id: '13',
@@ -418,7 +456,9 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'sedan',
       color: 'Gun Metallic',
-      images: ['https://images.unsplash.com/photo-1610647752706-3bb12232b37a?w=800'],
+      images: [
+        'https://images.unsplash.com/photo-1610647752706-3bb12232b37a?w=800'
+      ],
       description: 'Mid-size sedan with great value',
       location: 'Atlanta, GA',
       dealerName: 'Nissan Atlanta',
@@ -432,22 +472,39 @@ class MockVehicleDataSource {
       drivetrain: 'fwd',
       features: ['ProPILOT Assist', 'Remote Start', 'Heated Steering'],
     ),
-    
+
     // Generate 58 more vehicles to complete 71 total
     ..._generateAdditionalVehicles(),
   ];
-  
+
   /// Generate additional vehicles dynamically
   static List<VehicleModel> _generateAdditionalVehicles() {
     final vehicles = <VehicleModel>[];
-    final makes = ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'BMW', 'Mercedes-Benz', 'Audi', 'Lexus', 'Mazda', 'Volkswagen'];
+    final makes = [
+      'Toyota',
+      'Honda',
+      'Ford',
+      'Chevrolet',
+      'BMW',
+      'Mercedes-Benz',
+      'Audi',
+      'Lexus',
+      'Mazda',
+      'Volkswagen'
+    ];
     final models = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Truck', 'Van'];
     final colors = ['Black', 'White', 'Silver', 'Red', 'Blue', 'Gray'];
-    final cities = ['Chicago, IL', 'Denver, CO', 'Austin, TX', 'Phoenix, AZ', 'Seattle, WA'];
+    final cities = [
+      'Chicago, IL',
+      'Denver, CO',
+      'Austin, TX',
+      'Phoenix, AZ',
+      'Seattle, WA'
+    ];
     final bodyTypes = ['sedan', 'suv', 'coupe', 'truck', 'hatchback'];
     final fuelTypes = ['gasoline', 'diesel', 'hybrid', 'electric'];
     final conditions = ['new', 'used', 'certified'];
-    
+
     for (var i = 0; i < 58; i++) {
       final makeIndex = i % makes.length;
       final bodyTypeIndex = i % bodyTypes.length;
@@ -456,7 +513,7 @@ class MockVehicleDataSource {
       final isHybrid = fuelTypes[i % fuelTypes.length] == 'hybrid';
       final isSUV = bodyTypes[bodyTypeIndex] == 'suv';
       final price = 20000.0 + (i * 1500);
-      
+
       vehicles.add(VehicleModel(
         id: (14 + i).toString(),
         make: makes[makeIndex],
@@ -472,7 +529,8 @@ class MockVehicleDataSource {
         images: [
           'https://images.unsplash.com/photo-${1617531653520 + i}?w=800',
         ],
-        description: '${conditions[i % conditions.length].toUpperCase()} ${makes[makeIndex]} ${models[i % models.length]} with great features',
+        description:
+            '${conditions[i % conditions.length].toUpperCase()} ${makes[makeIndex]} ${models[i % models.length]} with great features',
         location: cities[i % cities.length],
         dealerName: '${makes[makeIndex]} Dealer ${i % 10}',
         isFeatured: isFeatured,
@@ -482,7 +540,8 @@ class MockVehicleDataSource {
         seats: bodyTypes[bodyTypeIndex] == 'truck' ? 2 : 5,
         engineSize: '${2.0 + (i % 3)}.0L',
         horsepower: 150 + (i * 5),
-        drivetrain: isSUV || bodyTypes[bodyTypeIndex] == 'truck' ? 'awd' : 'fwd',
+        drivetrain:
+            isSUV || bodyTypes[bodyTypeIndex] == 'truck' ? 'awd' : 'fwd',
         features: [
           'Bluetooth',
           'Backup Camera',
@@ -492,7 +551,7 @@ class MockVehicleDataSource {
         ],
       ));
     }
-    
+
     return vehicles;
   }
 }

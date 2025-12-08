@@ -23,17 +23,17 @@ class Vehicle extends Equatable {
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  
+
   // Additional specs
   final int? doors;
   final int? seats;
   final String? engineSize;
   final int? horsepower;
   final String? drivetrain; // 'fwd', 'rwd', 'awd', '4wd'
-  
+
   // Features
   final List<String> features;
-  
+
   const Vehicle({
     required this.id,
     required this.make,

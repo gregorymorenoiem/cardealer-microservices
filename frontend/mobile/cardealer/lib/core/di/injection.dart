@@ -16,13 +16,14 @@ final getIt = GetIt.instance;
 )
 Future<void> configureDependencies() async {
   await getIt.init();
-  
+
   // Register network info
   getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
-  
+
   // Register data sources
-  getIt.registerLazySingleton<MockVehicleDataSource>(() => MockVehicleDataSource());
-  
+  getIt.registerLazySingleton<MockVehicleDataSource>(
+      () => MockVehicleDataSource());
+
   // Register repositories
   getIt.registerLazySingleton<VehicleRepository>(
     () => VehicleRepositoryImpl(
@@ -30,7 +31,7 @@ Future<void> configureDependencies() async {
       networkInfo: getIt<NetworkInfo>(),
     ),
   );
-  
+
   // Register BLoCs
   getIt.registerFactory<VehiclesBloc>(
     () => VehiclesBloc(repository: getIt<VehicleRepository>()),

@@ -46,7 +46,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Right(user);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -90,7 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Right(user);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -108,7 +108,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Right(user);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -126,7 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Right(user);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -148,7 +148,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -164,7 +164,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = UserModel.fromJson(response);
       return Right(user);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -178,7 +178,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -204,7 +204,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -221,7 +221,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -253,7 +253,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = UserModel.fromJson(response);
       return Right(user);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -265,7 +265,7 @@ class AuthRepositoryImpl implements AuthRepository {
           : await _mockDataSource.checkEmailAvailability(email);
       return Right(isAvailable);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure( e.toString()));
     }
   }
 
@@ -275,7 +275,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final token = await _secureStorage.read(key: 'auth_token');
       return Right(token);
     } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
+      return Left(CacheFailure(e.toString()));
     }
   }
 
@@ -289,7 +289,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return Right(_mockDataSource.isAuthenticated());
       }
     } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
+      return Left(CacheFailure(e.toString()));
     }
   }
 }

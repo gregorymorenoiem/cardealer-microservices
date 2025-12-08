@@ -47,7 +47,8 @@ class VehicleModel extends Vehicle {
       bodyType: json['bodyType'] as String,
       color: json['color'] as String?,
       vin: json['vin'] as String?,
-      images: (json['images'] as List<dynamic>).map((e) => e as String).toList(),
+      images:
+          (json['images'] as List<dynamic>).map((e) => e as String).toList(),
       description: json['description'] as String,
       location: json['location'] as String,
       dealerId: json['dealerId'] as String?,

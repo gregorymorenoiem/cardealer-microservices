@@ -10,9 +10,6 @@ class VehicleRepositoryImpl implements VehicleRepository {
   final MockVehicleDataSource mockDataSource;
   final NetworkInfo networkInfo;
 
-  // Feature flag to switch between mock and real API
-  static const bool _useRealAPI = false;
-
   VehicleRepositoryImpl({
     required this.mockDataSource,
     required this.networkInfo,
