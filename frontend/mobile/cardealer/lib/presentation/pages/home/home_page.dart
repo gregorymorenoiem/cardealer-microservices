@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/responsive/responsive_utils.dart';
 import '../../bloc/vehicles/vehicles_bloc.dart';
 import '../../bloc/vehicles/vehicles_event.dart';
 import '../../bloc/vehicles/vehicles_state.dart';
@@ -86,12 +87,12 @@ class HomePage extends StatelessWidget {
                     // Section 1: Hero Carousel (5 featured vehicles)
                     HeroCarouselSection(vehicles: state.heroCarousel),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Section 2: Featured Grid (6 vehicles, 2 columns)
                     FeaturedGridSection(vehicles: state.featuredGrid),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Section 3: Week's Featured (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
@@ -103,7 +104,7 @@ class HomePage extends StatelessWidget {
                       },
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Section 4: Daily Deals (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
@@ -117,7 +118,7 @@ class HomePage extends StatelessWidget {
                       badgeText: 'DEAL',
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Section 5: SUVs & Trucks (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
@@ -129,7 +130,7 @@ class HomePage extends StatelessWidget {
                       },
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Section 6: Premium Vehicles (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
@@ -143,7 +144,7 @@ class HomePage extends StatelessWidget {
                       badgeText: 'PREMIUM',
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Section 7: Electric & Hybrid (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
@@ -157,22 +158,22 @@ class HomePage extends StatelessWidget {
                       badgeText: 'ECO',
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: context.spacing(2)),
 
                     // Features Section
                     const FeaturesSection(),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: context.spacing(2)),
 
                     // How It Works Section
                     const HowItWorksSection(),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: context.spacing(2)),
 
                     // CTA Section
                     const CTASection(),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: context.spacing(2)),
                   ],
                 ),
               );

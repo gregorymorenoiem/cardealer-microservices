@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/responsive/responsive_utils.dart';
 import '../../../domain/entities/vehicle.dart';
 
 /// Horizontal Vehicle Section - Sections 3-7
@@ -27,6 +28,10 @@ class HorizontalVehicleSection extends StatelessWidget {
     if (vehicles.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    // Card width based on screen size
+    final cardWidth = context.isMobile ? 220.0 : (context.isTablet ? 260.0 : 300.0);
+    final cardHeight = context.isMobile ? 280.0 : (context.isTablet ? 320.0 : 360.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +72,7 @@ class HorizontalVehicleSection extends StatelessWidget {
         const SizedBox(height: 12),
         // Horizontal List
         SizedBox(
-          height: 280,
+          height: cardHeight,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -81,6 +86,7 @@ class HorizontalVehicleSection extends StatelessWidget {
                   vehicle: vehicles[index],
                   showBadge: showBadge,
                   badgeText: badgeText,
+                  cardWidth: cardWidth,
                 ),
               );
             },
@@ -95,17 +101,19 @@ class _VehicleCard extends StatelessWidget {
   final Vehicle vehicle;
   final bool showBadge;
   final String badgeText;
+  final double cardWidth;
 
   const _VehicleCard({
     required this.vehicle,
     required this.showBadge,
     required this.badgeText,
+    required this.cardWidth,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220,
+      width: cardWidth,
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -9,11 +9,13 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/responsive/responsive_utils.dart';
+import '../../../core/responsive/responsive_padding.dart';
 import '../../../domain/entities/user.dart';
 import 'login_page.dart';
 import '../home/home_page.dart';
 
-/// Registration page with role selection
+/// Registration page with role selection - RESPONSIVE VERSION
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -97,13 +99,11 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // Navigate to home on success
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomePage()),
               (route) => false,
             );
           } else if (state is AuthError) {
-            // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -115,225 +115,117 @@ class _RegisterPageState extends State<RegisterPage> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
 
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header
-                    Text(
-                      'Create Account',
-                      style: AppTypography.h1.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Sign up to get started',
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Role Selection
-                    _buildRoleSelector(),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Personal Information
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextField(
-                            controller: _firstNameController,
-                            labelText: 'First Name',
-                            hintText: 'John',
-                            prefixIcon: const Icon(Icons.person_outline),
-                            validator: Validators.validateRequired,
-                            enabled: !isLoading,
-                            textInputAction: TextInputAction.next,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: CustomTextField(
-                            controller: _lastNameController,
-                            labelText: 'Last Name',
-                            hintText: 'Doe',
-                            validator: Validators.validateRequired,
-                            enabled: !isLoading,
-                            textInputAction: TextInputAction.next,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Email
-                    CustomTextField(
-                      controller: _emailController,
-                      labelText: 'Email',
-                      hintText: 'john.doe@example.com',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: Validators.validateEmail,
-                      enabled: !isLoading,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Phone
-                    CustomTextField(
-                      controller: _phoneController,
-                      labelText: 'Phone Number',
-                      hintText: '+1 234 567 8900',
-                      prefixIcon: const Icon(Icons.phone_outlined),
-                      keyboardType: TextInputType.phone,
-                      validator: Validators.validatePhone,
-                      enabled: !isLoading,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Dealership Name (only for dealers)
-                    if (_selectedRole == UserRole.dealer) ...[
-                      CustomTextField(
-                        controller: _dealershipNameController,
-                        labelText: 'Dealership Name',
-                        hintText: 'Your Dealership Name',
-                        prefixIcon: const Icon(Icons.business_outlined),
-                        validator: Validators.validateRequired,
-                        enabled: !isLoading,
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-
-                    // Password
-                    CustomTextField(
-                      controller: _passwordController,
-                      labelText: 'Password',
-                      hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password is required';
-                        }
-                        if (value.length < 8) {
-                          return 'Password must be at least 8 characters';
-                        }
-                        return null;
-                      },
-                      enabled: !isLoading,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Confirm Password
-                    CustomTextField(
-                      controller: _confirmPasswordController,
-                      labelText: 'Confirm Password',
-                      hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value != _passwordController.text) {
-                          return 'Passwords do not match';
-                        }
-                        return null;
-                      },
-                      enabled: !isLoading,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _handleRegister(),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Terms and Conditions
-                    _buildTermsCheckbox(),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Register Button
-                    CustomButton(
-                      text: 'Create Account',
-                      onPressed: isLoading ? null : _handleRegister,
-                      variant: ButtonVariant.primary,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Divider
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md),
-                          child: Text(
-                            'OR',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Social Login Buttons
-                    CustomButton(
-                      text: 'Continue with Google',
-                      onPressed: isLoading ? null : _handleGoogleRegister,
-                      variant: ButtonVariant.outline,
-                      icon: Icons.g_mobiledata,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    CustomButton(
-                      text: 'Continue with Apple',
-                      onPressed: isLoading ? null : _handleAppleRegister,
-                      variant: ButtonVariant.outline,
-                      icon: Icons.apple,
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Login Link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Already have an account? ',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => const LoginPage(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Sign In',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          return ResponsiveLayout(
+            mobile: _buildMobileLayout(isLoading),
+            tablet: _buildTabletLayout(isLoading),
+            desktop: _buildDesktopLayout(isLoading),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMobileLayout(bool isLoading) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(context.responsivePadding),
+        child: _buildForm(isLoading),
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout(bool isLoading) {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: ResponsiveContainer(
+            maxWidth: 700,
+            child: ResponsivePadding(
+              multiplier: 1.5,
+              child: _buildForm(isLoading),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isLoading) {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: ResponsiveContainer(
+            maxWidth: 800,
+            child: Card(
+              elevation: 4,
+              margin: EdgeInsets.all(context.responsivePadding),
+              child: Padding(
+                padding: EdgeInsets.all(context.spacing(3)),
+                child: _buildForm(isLoading),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm(bool isLoading) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(),
+          SizedBox(height: context.spacing(2)),
+          _buildRoleSelector(),
+          SizedBox(height: context.spacing(1.5)),
+          _buildNameFields(isLoading),
+          SizedBox(height: context.spacing(1)),
+          _buildEmailField(isLoading),
+          SizedBox(height: context.spacing(1)),
+          _buildPhoneField(isLoading),
+          if (_selectedRole == UserRole.dealer) ...[
+            SizedBox(height: context.spacing(1)),
+            _buildDealershipField(isLoading),
+          ],
+          SizedBox(height: context.spacing(1)),
+          _buildPasswordFields(isLoading),
+          SizedBox(height: context.spacing(1)),
+          _buildTermsCheckbox(),
+          SizedBox(height: context.spacing(1.5)),
+          _buildRegisterButton(isLoading),
+          SizedBox(height: context.spacing(1.5)),
+          _buildDivider(),
+          SizedBox(height: context.spacing(1.5)),
+          _buildSocialButtons(isLoading),
+          SizedBox(height: context.spacing(2)),
+          _buildLoginLink(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Create Account',
+          style: AppTypography.h1.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: ResponsiveUtils.responsiveFontSize(context, 32),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Sign up to get started',
+          style: AppTypography.bodyLarge.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: ResponsiveUtils.responsiveFontSize(context, 16),
+          ),
+        ),
+      ],
     );
   }
 
@@ -358,7 +250,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 subtitle: 'Buying for personal use',
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: context.spacing(0.75)),
             Expanded(
               child: _buildRoleCard(
                 role: UserRole.dealer,
@@ -380,14 +272,12 @@ class _RegisterPageState extends State<RegisterPage> {
     required String subtitle,
   }) {
     final isSelected = _selectedRole == role;
+    final iconSize = context.isMobile ? 32.0 : 40.0;
+    
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedRole = role;
-        });
-      },
+      onTap: () => setState(() => _selectedRole = role),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(context.spacing(0.75)),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.1)
@@ -402,7 +292,7 @@ class _RegisterPageState extends State<RegisterPage> {
           children: [
             Icon(
               icon,
-              size: 32,
+              size: iconSize,
               color: isSelected ? AppColors.primary : AppColors.textSecondary,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -426,6 +316,140 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  Widget _buildNameFields(bool isLoading) {
+    if (context.isMobile) {
+      return Column(
+        children: [
+          CustomTextField(
+            controller: _firstNameController,
+            labelText: 'First Name',
+            hintText: 'John',
+            prefixIcon: const Icon(Icons.person_outline),
+            validator: Validators.validateRequired,
+            enabled: !isLoading,
+            textInputAction: TextInputAction.next,
+          ),
+          SizedBox(height: context.spacing(1)),
+          CustomTextField(
+            controller: _lastNameController,
+            labelText: 'Last Name',
+            hintText: 'Doe',
+            validator: Validators.validateRequired,
+            enabled: !isLoading,
+            textInputAction: TextInputAction.next,
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: CustomTextField(
+            controller: _firstNameController,
+            labelText: 'First Name',
+            hintText: 'John',
+            prefixIcon: const Icon(Icons.person_outline),
+            validator: Validators.validateRequired,
+            enabled: !isLoading,
+            textInputAction: TextInputAction.next,
+          ),
+        ),
+        SizedBox(width: context.spacing(0.75)),
+        Expanded(
+          child: CustomTextField(
+            controller: _lastNameController,
+            labelText: 'Last Name',
+            hintText: 'Doe',
+            validator: Validators.validateRequired,
+            enabled: !isLoading,
+            textInputAction: TextInputAction.next,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField(bool isLoading) {
+    return CustomTextField(
+      controller: _emailController,
+      labelText: 'Email',
+      hintText: 'john.doe@example.com',
+      prefixIcon: const Icon(Icons.email_outlined),
+      keyboardType: TextInputType.emailAddress,
+      validator: Validators.validateEmail,
+      enabled: !isLoading,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  Widget _buildPhoneField(bool isLoading) {
+    return CustomTextField(
+      controller: _phoneController,
+      labelText: 'Phone Number',
+      hintText: '+1 234 567 8900',
+      prefixIcon: const Icon(Icons.phone_outlined),
+      keyboardType: TextInputType.phone,
+      validator: Validators.validatePhone,
+      enabled: !isLoading,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  Widget _buildDealershipField(bool isLoading) {
+    return CustomTextField(
+      controller: _dealershipNameController,
+      labelText: 'Dealership Name',
+      hintText: 'Your Dealership Name',
+      prefixIcon: const Icon(Icons.business_outlined),
+      validator: Validators.validateRequired,
+      enabled: !isLoading,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  Widget _buildPasswordFields(bool isLoading) {
+    return Column(
+      children: [
+        CustomTextField(
+          controller: _passwordController,
+          labelText: 'Password',
+          hintText: '••••••••',
+          prefixIcon: const Icon(Icons.lock_outline),
+          obscureText: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Password is required';
+            }
+            if (value.length < 8) {
+              return 'Password must be at least 8 characters';
+            }
+            return null;
+          },
+          enabled: !isLoading,
+          textInputAction: TextInputAction.next,
+        ),
+        SizedBox(height: context.spacing(1)),
+        CustomTextField(
+          controller: _confirmPasswordController,
+          labelText: 'Confirm Password',
+          hintText: '••••••••',
+          prefixIcon: const Icon(Icons.lock_outline),
+          obscureText: true,
+          validator: (value) {
+            if (value != _passwordController.text) {
+              return 'Passwords do not match';
+            }
+            return null;
+          },
+          enabled: !isLoading,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _handleRegister(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTermsCheckbox() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,22 +459,14 @@ class _RegisterPageState extends State<RegisterPage> {
           width: 24,
           child: Checkbox(
             value: _acceptTerms,
-            onChanged: (value) {
-              setState(() {
-                _acceptTerms = value ?? false;
-              });
-            },
+            onChanged: (value) => setState(() => _acceptTerms = value ?? false),
             activeColor: AppColors.primary,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _acceptTerms = !_acceptTerms;
-              });
-            },
+            onTap: () => setState(() => _acceptTerms = !_acceptTerms),
             child: Text.rich(
               TextSpan(
                 text: 'I agree to the ',
@@ -480,6 +496,105 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterButton(bool isLoading) {
+    return CustomButton(
+      text: 'Create Account',
+      onPressed: isLoading ? null : _handleRegister,
+      variant: ButtonVariant.primary,
+      size: ButtonSize.large,
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: context.spacing(0.75)),
+          child: Text(
+            'OR',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons(bool isLoading) {
+    if (context.isMobile) {
+      return Column(
+        children: [
+          CustomButton(
+            text: 'Continue with Google',
+            onPressed: isLoading ? null : _handleGoogleRegister,
+            variant: ButtonVariant.outline,
+            icon: Icons.g_mobiledata,
+          ),
+          SizedBox(height: context.spacing(0.75)),
+          CustomButton(
+            text: 'Continue with Apple',
+            onPressed: isLoading ? null : _handleAppleRegister,
+            variant: ButtonVariant.outline,
+            icon: Icons.apple,
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: CustomButton(
+            text: 'Google',
+            onPressed: isLoading ? null : _handleGoogleRegister,
+            variant: ButtonVariant.outline,
+            icon: Icons.g_mobiledata,
+          ),
+        ),
+        SizedBox(width: context.spacing(0.75)),
+        Expanded(
+          child: CustomButton(
+            text: 'Apple',
+            onPressed: isLoading ? null : _handleAppleRegister,
+            variant: ButtonVariant.outline,
+            icon: Icons.apple,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginLink() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Already have an account? ',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+            );
+          },
+          child: Text(
+            'Sign In',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),

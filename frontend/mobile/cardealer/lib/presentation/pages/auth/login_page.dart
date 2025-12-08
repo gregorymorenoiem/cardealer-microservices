@@ -9,11 +9,13 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/responsive/responsive_utils.dart';
+import '../../../core/responsive/responsive_padding.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 import '../home/home_page.dart';
 
-/// Login page with email/password and social login options
+/// Login page with email/password and social login options - RESPONSIVE VERSION
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -80,7 +82,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           } else if (state is AuthAuthenticated) {
-            // Navigate to home
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const HomePage()),
@@ -89,229 +90,366 @@ class _LoginPageState extends State<LoginPage> {
         },
         builder: (context, state) {
           if (state is AuthLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+          return ResponsiveLayout(
+            mobile: _buildMobileLayout(),
+            tablet: _buildTabletLayout(),
+            desktop: _buildDesktopLayout(),
+          );
+        },
+      ),
+    );
+  }
+
+  // Mobile layout - compact, optimized for small screens
+  Widget _buildMobileLayout() {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(context.responsivePadding),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: context.spacing(2)),
+              _buildLogo(80),
+              SizedBox(height: context.spacing(1)),
+              _buildTitle(32, 16),
+              SizedBox(height: context.spacing(2)),
+              _buildEmailField(),
+              const SizedBox(height: 16),
+              _buildPasswordField(),
+              SizedBox(height: context.spacing(0.5)),
+              _buildForgotPassword(),
+              SizedBox(height: context.spacing(2)),
+              _buildLoginButton(),
+              SizedBox(height: context.spacing(2)),
+              _buildDivider(),
+              SizedBox(height: context.spacing(2)),
+              _buildSocialButtonsStacked(), // Stack on mobile
+              SizedBox(height: context.spacing(2)),
+              _buildRegisterLink(),
+              SizedBox(height: context.spacing(1)),
+              _buildDemoAccountsHint(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Tablet layout - medium spacing, side-by-side social buttons
+  Widget _buildTabletLayout() {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: ResponsiveContainer(
+            maxWidth: 600,
+            child: ResponsivePadding(
+              multiplier: 1.5,
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: AppSpacing.xxl),
-
-                    // Logo
-                    const Center(
-                      child: Icon(
-                        Icons.directions_car,
-                        size: 80,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Title
-                    Text(
-                      'Bienvenido',
-                      style: AppTypography.h1.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-
-                    // Subtitle
-                    Text(
-                      'Inicia sesión para continuar',
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-
-                    // Email field
-                    CustomTextField(
-                      controller: _emailController,
-                      labelText: 'Correo electrónico',
-                      hintText: 'ejemplo@correo.com',
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      validator: Validators.validateEmail,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password field
-                    CustomTextField(
-                      controller: _passwordController,
-                      labelText: 'Contraseña',
-                      hintText: '••••••••',
-                      obscureText: true,
-                      prefixIcon: const Icon(Icons.lock_outlined),
-                      validator: Validators.validateRequired,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _handleLogin(),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _navigateToForgotPassword,
-                        child: Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Login button
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomButton(
-                        text: 'Iniciar Sesión',
-                        onPressed: _handleLogin,
-                        variant: ButtonVariant.primary,
-                        size: ButtonSize.large,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Divider
-                    Row(
-                      children: [
-                        Expanded(
-                            child:
-                                Divider(color: Theme.of(context).dividerColor)),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                          ),
-                          child: Text(
-                            'O continúa con',
-                          ),
-                        ),
-                        Expanded(
-                            child:
-                                Divider(color: Theme.of(context).dividerColor)),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Social login buttons
-                    Row(
-                      children: [
-                        // Google login
-                        Expanded(
-                          child: CustomButton(
-                            text: 'Google',
-                            onPressed: _handleGoogleLogin,
-                            variant: ButtonVariant.outline,
-                            size: ButtonSize.large,
-                            icon: Icons.g_mobiledata,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-
-                        // Apple login
-                        Expanded(
-                          child: CustomButton(
-                            text: 'Apple',
-                            onPressed: _handleAppleLogin,
-                            variant: ButtonVariant.outline,
-                            size: ButtonSize.large,
-                            icon: Icons.apple,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-
-                    // Register link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '¿No tienes cuenta? ',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: _navigateToRegister,
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Regístrate',
-                            style: AppTypography.labelLarge.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Demo accounts hint
-                    const SizedBox(height: AppSpacing.lg),
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: AppColors.info.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppColors.info.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '📝 Cuentas de prueba:',
-                            style: AppTypography.labelLarge.copyWith(
-                              color: AppColors.info,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            '👤 Usuario: demo@cardealer.com / Demo123!',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            '🏢 Dealer: dealer@cardealer.com / Dealer123!',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    SizedBox(height: context.spacing(2)),
+                    _buildLogo(100),
+                    SizedBox(height: context.spacing(1.5)),
+                    _buildTitle(36, 18),
+                    SizedBox(height: context.spacing(3)),
+                    _buildEmailField(),
+                    const SizedBox(height: 20),
+                    _buildPasswordField(),
+                    SizedBox(height: context.spacing(0.5)),
+                    _buildForgotPassword(),
+                    SizedBox(height: context.spacing(3)),
+                    _buildLoginButton(),
+                    SizedBox(height: context.spacing(3)),
+                    _buildDivider(),
+                    SizedBox(height: context.spacing(3)),
+                    _buildSocialButtonsRow(), // Side by side on tablet
+                    SizedBox(height: context.spacing(3)),
+                    _buildRegisterLink(),
+                    SizedBox(height: context.spacing(1.5)),
+                    _buildDemoAccountsHint(),
                   ],
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Desktop layout - card design with elevation, larger spacing
+  Widget _buildDesktopLayout() {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: ResponsiveContainer(
+            maxWidth: 500,
+            child: Card(
+              elevation: 4,
+              margin: EdgeInsets.all(context.responsivePadding),
+              child: Padding(
+                padding: EdgeInsets.all(context.spacing(3)),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: context.spacing(1)),
+                      _buildLogo(120),
+                      SizedBox(height: context.spacing(2)),
+                      _buildTitle(40, 20),
+                      SizedBox(height: context.spacing(3)),
+                      _buildEmailField(),
+                      const SizedBox(height: 24),
+                      _buildPasswordField(),
+                      SizedBox(height: context.spacing(0.5)),
+                      _buildForgotPassword(),
+                      SizedBox(height: context.spacing(3)),
+                      _buildLoginButton(),
+                      SizedBox(height: context.spacing(3)),
+                      _buildDivider(),
+                      SizedBox(height: context.spacing(3)),
+                      _buildSocialButtonsRow(), // Side by side on desktop
+                      SizedBox(height: context.spacing(3)),
+                      _buildRegisterLink(),
+                      SizedBox(height: context.spacing(2)),
+                      _buildDemoAccountsHint(),
+                      SizedBox(height: context.spacing(1)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo(double size) {
+    return Center(
+      child: Icon(
+        Icons.directions_car,
+        size: size,
+        color: AppColors.primary,
+      ),
+    );
+  }
+
+  Widget _buildTitle(double titleSize, double subtitleSize) {
+    return Column(
+      children: [
+        Text(
+          'Bienvenido',
+          style: AppTypography.h1.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: titleSize,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Inicia sesión para continuar',
+          style: AppTypography.bodyLarge.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: subtitleSize,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField() {
+    return CustomTextField(
+      controller: _emailController,
+      labelText: 'Correo electrónico',
+      hintText: 'ejemplo@correo.com',
+      keyboardType: TextInputType.emailAddress,
+      prefixIcon: const Icon(Icons.email_outlined),
+      validator: Validators.validateEmail,
+      textInputAction: TextInputAction.next,
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return CustomTextField(
+      controller: _passwordController,
+      labelText: 'Contraseña',
+      hintText: '••••••••',
+      obscureText: true,
+      prefixIcon: const Icon(Icons.lock_outlined),
+      validator: Validators.validateRequired,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _handleLogin(),
+    );
+  }
+
+  Widget _buildForgotPassword() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: _navigateToForgotPassword,
+        child: Text(
+          '¿Olvidaste tu contraseña?',
+          style: AppTypography.labelMedium.copyWith(
+            color: AppColors.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: CustomButton(
+        text: 'Iniciar Sesión',
+        onPressed: _handleLogin,
+        variant: ButtonVariant.primary,
+        size: ButtonSize.large,
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'O continúa con',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+      ],
+    );
+  }
+
+  // Social buttons side by side (tablet/desktop)
+  Widget _buildSocialButtonsRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: CustomButton(
+            text: 'Google',
+            onPressed: _handleGoogleLogin,
+            variant: ButtonVariant.outline,
+            size: ButtonSize.large,
+            icon: Icons.g_mobiledata,
+          ),
+        ),
+        SizedBox(width: context.spacing(0.75)),
+        Expanded(
+          child: CustomButton(
+            text: 'Apple',
+            onPressed: _handleAppleLogin,
+            variant: ButtonVariant.outline,
+            size: ButtonSize.large,
+            icon: Icons.apple,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Social buttons stacked (mobile)
+  Widget _buildSocialButtonsStacked() {
+    return Column(
+      children: [
+        CustomButton(
+          text: 'Continuar con Google',
+          onPressed: _handleGoogleLogin,
+          variant: ButtonVariant.outline,
+          size: ButtonSize.large,
+          icon: Icons.g_mobiledata,
+        ),
+        SizedBox(height: context.spacing(0.75)),
+        CustomButton(
+          text: 'Continuar con Apple',
+          onPressed: _handleAppleLogin,
+          variant: ButtonVariant.outline,
+          size: ButtonSize.large,
+          icon: Icons.apple,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterLink() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '¿No tienes cuenta? ',
+          style: AppTypography.bodyMedium.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        TextButton(
+          onPressed: _navigateToRegister,
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            'Regístrate',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDemoAccountsHint() {
+    return Container(
+      padding: EdgeInsets.all(context.spacing(0.75)),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppColors.info.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📝 Cuentas de prueba:',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.info,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            '👤 Usuario: demo@cardealer.com / Demo123!',
+            style: AppTypography.labelSmall.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            '🏢 Dealer: dealer@cardealer.com / Dealer123!',
+            style: AppTypography.labelSmall.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }

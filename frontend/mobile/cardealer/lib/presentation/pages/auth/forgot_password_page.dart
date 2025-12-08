@@ -5,8 +5,10 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/responsive/responsive_utils.dart';
+import '../../../core/responsive/responsive_padding.dart';
 
-/// Forgot Password page - request password reset
+/// Forgot Password page - request password reset - RESPONSIVE VERSION
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
@@ -28,9 +30,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   Future<void> _handleRequestReset() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
@@ -63,87 +63,159 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: SafeArea(
+      body: ResponsiveLayout(
+        mobile: _buildMobileLayout(),
+        tablet: _buildTabletLayout(),
+        desktop: _buildDesktopLayout(),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(context.responsivePadding),
+        child: _buildForm(),
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return SafeArea(
+      child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Text(
-                  'Forgot Password?',
-                  style: AppTypography.h1.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  _emailSent
-                      ? 'We\'ve sent you an email with instructions to reset your password.'
-                      : 'Enter your email address and we\'ll send you a link to reset your password.',
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-
-                if (!_emailSent) ...[
-                  // Email Field
-                  CustomTextField(
-                    controller: _emailController,
-                    labelText: 'Email',
-                    hintText: 'john.doe@example.com',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: Validators.validateEmail,
-                    enabled: !_isLoading,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _handleRequestReset(),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Request Reset Button
-                  CustomButton(
-                    text: 'Send Reset Link',
-                    onPressed: _isLoading ? null : _handleRequestReset,
-                    variant: ButtonVariant.primary,
-                  ),
-                ] else ...[
-                  // Success Icon
-                  const Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 80,
-                    color: AppColors.success,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Back to Login Button
-                  CustomButton(
-                    text: 'Back to Login',
-                    onPressed: () => Navigator.of(context).pop(),
-                    variant: ButtonVariant.primary,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Resend Email Button
-                  CustomButton(
-                    text: 'Resend Email',
-                    onPressed: () {
-                      setState(() {
-                        _emailSent = false;
-                      });
-                      _handleRequestReset();
-                    },
-                    variant: ButtonVariant.text,
-                  ),
-                ],
-              ],
+          child: ResponsiveContainer(
+            maxWidth: 500,
+            child: ResponsivePadding(
+              multiplier: 1.5,
+              child: _buildForm(),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: ResponsiveContainer(
+            maxWidth: 450,
+            child: Card(
+              elevation: 4,
+              margin: EdgeInsets.all(context.responsivePadding),
+              child: Padding(
+                padding: EdgeInsets.all(context.spacing(3)),
+                child: _buildForm(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(),
+          SizedBox(height: context.spacing(2)),
+          if (!_emailSent) ...[
+            _buildEmailField(),
+            SizedBox(height: context.spacing(2)),
+            _buildResetButton(),
+          ] else ...[
+            _buildSuccessIcon(),
+            SizedBox(height: context.spacing(2)),
+            _buildBackButton(),
+            SizedBox(height: context.spacing(1)),
+            _buildResendButton(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Forgot Password?',
+          style: AppTypography.h1.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: ResponsiveUtils.responsiveFontSize(context, 32),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          _emailSent
+              ? 'We\'ve sent you an email with instructions to reset your password.'
+              : 'Enter your email address and we\'ll send you a link to reset your password.',
+          style: AppTypography.bodyLarge.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: ResponsiveUtils.responsiveFontSize(context, 16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField() {
+    return CustomTextField(
+      controller: _emailController,
+      labelText: 'Email',
+      hintText: 'john.doe@example.com',
+      prefixIcon: const Icon(Icons.email_outlined),
+      keyboardType: TextInputType.emailAddress,
+      validator: Validators.validateEmail,
+      enabled: !_isLoading,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _handleRequestReset(),
+    );
+  }
+
+  Widget _buildResetButton() {
+    return CustomButton(
+      text: 'Send Reset Link',
+      onPressed: _isLoading ? null : _handleRequestReset,
+      variant: ButtonVariant.primary,
+      size: ButtonSize.large,
+    );
+  }
+
+  Widget _buildSuccessIcon() {
+    final iconSize = context.isMobile ? 80.0 : 100.0;
+    return Center(
+      child: Icon(
+        Icons.mark_email_read_outlined,
+        size: iconSize,
+        color: AppColors.success,
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return CustomButton(
+      text: 'Back to Login',
+      onPressed: () => Navigator.of(context).pop(),
+      variant: ButtonVariant.primary,
+      size: ButtonSize.large,
+    );
+  }
+
+  Widget _buildResendButton() {
+    return CustomButton(
+      text: 'Resend Email',
+      onPressed: () {
+        setState(() => _emailSent = false);
+        _handleRequestReset();
+      },
+      variant: ButtonVariant.text,
     );
   }
 }

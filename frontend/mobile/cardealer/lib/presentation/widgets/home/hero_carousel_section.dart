@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/responsive/responsive_utils.dart';
 import '../../../domain/entities/vehicle.dart';
 
 /// Hero Carousel Section - Section 1
@@ -45,10 +46,12 @@ class _HeroCarouselSectionState extends State<HeroCarouselSection> {
       return const SizedBox.shrink();
     }
 
+    final carouselHeight = context.isMobile ? 320.0 : (context.isTablet ? 380.0 : 440.0);
+
     return Column(
       children: [
         SizedBox(
-          height: 320,
+          height: carouselHeight,
           child: PageView.builder(
             controller: _pageController,
             itemCount: widget.vehicles.length,
