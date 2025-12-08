@@ -34,3 +34,8 @@ class AuthFailure extends Failure {
 class NetworkFailure extends Failure {
   const NetworkFailure({required super.message});
 }
+
+/// Not found failure (resource not found)
+class NotFoundFailure extends Failure {
+  const NotFoundFailure({required super.message});
+}

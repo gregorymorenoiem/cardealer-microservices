@@ -5,8 +5,10 @@ import 'injection.config.dart';
 import '../../data/datasources/mock/mock_vehicle_datasource.dart';
 import '../../data/repositories/vehicle_repository_impl.dart';
 import '../../data/repositories/mock_messaging_repository.dart';
+import '../../data/repositories/mock_dealer_repository.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../../domain/repositories/messaging_repository.dart';
+import '../../domain/repositories/dealer_repository.dart';
 import '../../domain/usecases/vehicles/search_vehicles.dart';
 import '../../domain/usecases/vehicles/filter_vehicles.dart';
 import '../../domain/usecases/vehicles/get_filter_suggestions.dart';
@@ -24,6 +26,11 @@ import '../../domain/usecases/messaging/get_messages.dart';
 import '../../domain/usecases/messaging/send_message.dart';
 import '../../domain/usecases/messaging/get_or_create_conversation.dart';
 import '../../domain/usecases/messaging/mark_conversation_as_read.dart';
+import '../../domain/usecases/dealer/get_dealer_stats.dart';
+import '../../domain/usecases/dealer/get_listings.dart';
+import '../../domain/usecases/dealer/get_leads.dart';
+import '../../domain/usecases/dealer/manage_listing.dart';
+import '../../domain/usecases/dealer/update_lead.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../presentation/bloc/vehicles/vehicles_bloc.dart';
 import '../../presentation/bloc/filter/filter_bloc.dart';
@@ -32,6 +39,7 @@ import '../../presentation/bloc/vehicle_detail/vehicle_detail_bloc.dart';
 import '../../presentation/bloc/profile/profile_bloc.dart';
 import '../../presentation/bloc/favorites/favorites_bloc.dart';
 import '../../presentation/bloc/messaging/messaging_bloc.dart';
+import '../../presentation/bloc/dealer/dealer_bloc.dart';
 import '../network/network_info.dart';
 
 final getIt = GetIt.instance;
@@ -66,6 +74,11 @@ Future<void> configureDependencies() async {
   // Register messaging repository (mock for now)
   getIt.registerLazySingleton<MessagingRepository>(
     () => MockMessagingRepository(),
+  );
+
+  // Register dealer repository (mock for now)
+  getIt.registerLazySingleton<DealerRepository>(
+    () => MockDealerRepository(),
   );
 
   // Register use cases
@@ -123,6 +136,38 @@ Future<void> configureDependencies() async {
     () => MarkConversationAsRead(getIt<MessagingRepository>()),
   );
 
+  // Dealer use cases
+  getIt.registerLazySingleton<GetDealerStats>(
+    () => GetDealerStats(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<GetListings>(
+    () => GetListings(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<GetLeads>(
+    () => GetLeads(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<CreateListing>(
+    () => CreateListing(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateListing>(
+    () => UpdateListing(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteListing>(
+    () => DeleteListing(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<PublishListing>(
+    () => PublishListing(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateLeadStatus>(
+    () => UpdateLeadStatus(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateLeadNotes>(
+    () => UpdateLeadNotes(getIt<DealerRepository>()),
+  );
+  getIt.registerLazySingleton<ScheduleFollowUp>(
+    () => ScheduleFollowUp(getIt<DealerRepository>()),
+  );
+
   // Register BLoCs
   getIt.registerFactory<VehiclesBloc>(
     () => VehiclesBloc(repository: getIt<VehicleRepository>()),
@@ -170,6 +215,23 @@ Future<void> configureDependencies() async {
       sendMessage: getIt<SendMessage>(),
       markConversationAsRead: getIt<MarkConversationAsRead>(),
       messagingRepository: getIt<MessagingRepository>(),
+    ),
+  );
+
+  // Dealer BLoC
+  getIt.registerFactory<DealerBloc>(
+    () => DealerBloc(
+      getDealerStats: getIt<GetDealerStats>(),
+      getListings: getIt<GetListings>(),
+      createListing: getIt<CreateListing>(),
+      updateListing: getIt<UpdateListing>(),
+      deleteListing: getIt<DeleteListing>(),
+      publishListing: getIt<PublishListing>(),
+      getLeads: getIt<GetLeads>(),
+      updateLeadStatus: getIt<UpdateLeadStatus>(),
+      updateLeadNotes: getIt<UpdateLeadNotes>(),
+      scheduleFollowUp: getIt<ScheduleFollowUp>(),
+      dealerRepository: getIt<DealerRepository>(),
     ),
   );
 }
