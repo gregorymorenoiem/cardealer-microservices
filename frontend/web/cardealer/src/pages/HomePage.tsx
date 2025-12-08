@@ -219,65 +219,43 @@ const HomePage: React.FC = () => {
 
   // Get vehicles for "Destacados de la Semana" scrollable (10 vehicles)
   const weeklyFeatured = useMemo(() => {
-    const excludeIds = new Set([...heroVehicles.map(v => v.id), ...topFeaturedGrid.map(v => v.id)]);
+    const excludeIds = new Set(topFeaturedGrid.map(v => v.id));
     return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid]);
+  }, [topFeaturedGrid]);
 
   // Get vehicles for "Ofertas del Día" scrollable (10 vehicles)
   const dailyDeals = useMemo(() => {
-    const excludeIds = new Set([
-      ...heroVehicles.map(v => v.id),
-      ...topFeaturedGrid.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id)
-    ]);
+    const excludeIds = new Set(weeklyFeatured.map(v => v.id));
     return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid, weeklyFeatured]);
+  }, [weeklyFeatured]);
 
   // Get vehicles for "SUVs y Camionetas" scrollable (10 vehicles)
   const suvTrucks = useMemo(() => {
-    const excludeIds = new Set([
-      ...heroVehicles.map(v => v.id),
-      ...topFeaturedGrid.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id),
-      ...dailyDeals.map(v => v.id)
-    ]);
+    const excludeIds = new Set(dailyDeals.map(v => v.id));
     return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals]);
+  }, [dailyDeals]);
 
   // Get premium vehicles for premium section (10 vehicles)
   const premiumVehicles = useMemo(() => {
-    const excludeIds = new Set([
-      ...heroVehicles.map(v => v.id),
-      ...topFeaturedGrid.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id),
-      ...dailyDeals.map(v => v.id),
-      ...suvTrucks.map(v => v.id)
-    ]);
+    const excludeIds = new Set(suvTrucks.map(v => v.id));
     return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks]);
+  }, [suvTrucks]);
 
   // Get vehicles for "Eléctricos e Híbridos" scrollable (10 vehicles)
   const electricHybrid = useMemo(() => {
-    const excludeIds = new Set([
-      ...heroVehicles.map(v => v.id),
-      ...topFeaturedGrid.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id),
-      ...dailyDeals.map(v => v.id),
-      ...suvTrucks.map(v => v.id),
-      ...premiumVehicles.map(v => v.id)
-    ]);
+    const excludeIds = new Set(premiumVehicles.map(v => v.id));
     return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles]);
+  }, [premiumVehicles]);
 
   return (
     <MainLayout>
