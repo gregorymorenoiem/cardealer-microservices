@@ -16,6 +16,7 @@ import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
+import { FeaturedListingGrid } from '@/components/molecules';
 import { mockVehicles } from '@/data/mockVehicles';
 import type { Vehicle } from '@/data/mockVehicles';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
@@ -208,33 +209,75 @@ const HomePage: React.FC = () => {
     return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
   }, []);
 
-  // Get featured vehicles for top scrollable section (10 vehicles, exclude hero)
-  const topFeatured = useMemo(() => {
+  // Get featured vehicles for top grid section (6 vehicles, exclude hero)
+  const topFeaturedGrid = useMemo(() => {
     const heroIds = new Set(heroVehicles.map(v => v.id));
     return mockVehicles
       .filter(v => !heroIds.has(v.id))
-      .slice(0, 10);
+      .slice(0, 6);
   }, [heroVehicles]);
 
-  // Get weekly featured vehicles for scrollable section (10 vehicles, exclude hero and top)
+  // Get vehicles for "Destacados de la Semana" scrollable (10 vehicles)
   const weeklyFeatured = useMemo(() => {
-    const excludeIds = new Set([...heroVehicles.map(v => v.id), ...topFeatured.map(v => v.id)]);
+    const excludeIds = new Set([...heroVehicles.map(v => v.id), ...topFeaturedGrid.map(v => v.id)]);
     return mockVehicles
       .filter(v => !excludeIds.has(v.id))
       .slice(0, 10);
-  }, [heroVehicles, topFeatured]);
+  }, [heroVehicles, topFeaturedGrid]);
 
-  // Get premium vehicles for premium section (10 vehicles, enterprise/premium tier only)
+  // Get vehicles for "Ofertas del Día" scrollable (10 vehicles)
+  const dailyDeals = useMemo(() => {
+    const excludeIds = new Set([
+      ...heroVehicles.map(v => v.id),
+      ...topFeaturedGrid.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id)
+    ]);
+    return mockVehicles
+      .filter(v => !excludeIds.has(v.id))
+      .slice(0, 10);
+  }, [heroVehicles, topFeaturedGrid, weeklyFeatured]);
+
+  // Get vehicles for "SUVs y Camionetas" scrollable (10 vehicles)
+  const suvTrucks = useMemo(() => {
+    const excludeIds = new Set([
+      ...heroVehicles.map(v => v.id),
+      ...topFeaturedGrid.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id),
+      ...dailyDeals.map(v => v.id)
+    ]);
+    return mockVehicles
+      .filter(v => !excludeIds.has(v.id) && (v.bodyType === 'SUV' || v.bodyType === 'Truck'))
+      .slice(0, 10);
+  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals]);
+
+  // Get premium vehicles for premium section (10 vehicles)
   const premiumVehicles = useMemo(() => {
     const excludeIds = new Set([
       ...heroVehicles.map(v => v.id),
-      ...topFeatured.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id)
+      ...topFeaturedGrid.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id),
+      ...dailyDeals.map(v => v.id),
+      ...suvTrucks.map(v => v.id)
     ]);
     return mockVehicles
       .filter(v => !excludeIds.has(v.id) && (v.tier === 'enterprise' || v.tier === 'premium'))
       .slice(0, 10);
-  }, [heroVehicles, topFeatured, weeklyFeatured]);
+  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks]);
+
+  // Get vehicles for "Eléctricos e Híbridos" scrollable (10 vehicles)
+  const electricHybrid = useMemo(() => {
+    const excludeIds = new Set([
+      ...heroVehicles.map(v => v.id),
+      ...topFeaturedGrid.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id),
+      ...dailyDeals.map(v => v.id),
+      ...suvTrucks.map(v => v.id),
+      ...premiumVehicles.map(v => v.id)
+    ]);
+    return mockVehicles
+      .filter(v => !excludeIds.has(v.id) && (v.fuelType === 'Electric' || v.fuelType === 'Hybrid' || v.fuelType === 'Plug-in Hybrid'))
+      .slice(0, 10);
+  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles]);
 
   return (
     <MainLayout>
@@ -245,13 +288,21 @@ const HomePage: React.FC = () => {
         showScrollHint={false}
       />
 
-      {/* Vehículos Destacados - Top 10 vehicles scrollable (eso es dinero!) */}
-      <FeaturedSection
-        title="Vehículos Destacados"
-        subtitle="Explora nuestra selección premium de vehículos cuidadosamente verificados"
-        vehicles={topFeatured}
-        viewAllHref="/vehicles"
-      />
+      {/* Vehículos Destacados - Top 6 vehicles in grid (eso es dinero!) */}
+      <section className="py-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Vehículos Destacados
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Explora nuestra selección premium de vehículos cuidadosamente verificados
+            </p>
+          </div>
+          
+          <FeaturedListingGrid vehicles={topFeaturedGrid} columns={3} />
+        </div>
+      </section>
 
       {/* Destacados de la Semana - Scrollable Section with 10 vehicles */}
       <FeaturedSection
@@ -261,6 +312,24 @@ const HomePage: React.FC = () => {
         viewAllHref="/vehicles"
       />
 
+      {/* Ofertas del Día - Scrollable Section with 10 vehicles */}
+      <FeaturedSection
+        title="Ofertas del Día"
+        subtitle="Aprovecha estas oportunidades especiales por tiempo limitado"
+        vehicles={dailyDeals}
+        viewAllHref="/vehicles?deals=daily"
+      />
+
+      {/* SUVs y Camionetas - Scrollable Section with 10 vehicles */}
+      {suvTrucks.length > 0 && (
+        <FeaturedSection
+          title="SUVs y Camionetas"
+          subtitle="Vehículos ideales para familias y aventuras"
+          vehicles={suvTrucks}
+          viewAllHref="/vehicles?bodyType=suv,truck"
+        />
+      )}
+
       {/* Premium Vehicles Section - 10 vehicles scrollable */}
       {premiumVehicles.length > 0 && (
         <FeaturedSection
@@ -268,6 +337,16 @@ const HomePage: React.FC = () => {
           subtitle="Selección exclusiva de vehículos de alta gama"
           vehicles={premiumVehicles}
           viewAllHref="/vehicles?tier=premium"
+        />
+      )}
+
+      {/* Eléctricos e Híbridos - Scrollable Section with 10 vehicles */}
+      {electricHybrid.length > 0 && (
+        <FeaturedSection
+          title="Eléctricos e Híbridos"
+          subtitle="Vehículos eficientes y amigables con el medio ambiente"
+          vehicles={electricHybrid}
+          viewAllHref="/vehicles?fuelType=electric,hybrid"
         />
       )}
 
