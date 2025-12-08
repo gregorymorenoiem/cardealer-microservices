@@ -74,7 +74,7 @@ class MockVehicleDataSource {
       fuelType: 'electric',
       bodyType: 'sedan',
       color: 'Pearl White',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800',
         'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800',
       ],
@@ -89,7 +89,7 @@ class MockVehicleDataSource {
       seats: 5,
       horsepower: 670,
       drivetrain: 'awd',
-      features: [
+      features: const [
         'Autopilot',
         'Premium Audio',
         'Panoramic Roof',
@@ -108,7 +108,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'suv',
       color: 'Black Sapphire',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800',
       ],
       description: 'Luxury SUV with M Sport package and premium features',
@@ -122,7 +122,7 @@ class MockVehicleDataSource {
       engineSize: '3.0L',
       horsepower: 335,
       drivetrain: 'awd',
-      features: [
+      features: const [
         'M Sport Package',
         'Panoramic Sunroof',
         'Navigation',
@@ -141,7 +141,7 @@ class MockVehicleDataSource {
       fuelType: 'hybrid',
       bodyType: 'sedan',
       color: 'Obsidian Black',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
       ],
       description: 'New Mercedes E-Class with hybrid technology',
@@ -155,7 +155,7 @@ class MockVehicleDataSource {
       engineSize: '2.0L',
       horsepower: 255,
       drivetrain: 'rwd',
-      features: ['Hybrid System', 'MBUX', 'Burmester Audio', 'AMG Line'],
+      features: const ['Hybrid System', 'MBUX', 'Burmester Audio', 'AMG Line'],
     ),
     VehicleModel(
       id: '4',
@@ -169,7 +169,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'suv',
       color: 'Carmine Red',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?w=800',
       ],
       description: 'Certified pre-owned Porsche Cayenne with full warranty',
@@ -183,7 +183,7 @@ class MockVehicleDataSource {
       engineSize: '3.0L',
       horsepower: 335,
       drivetrain: 'awd',
-      features: [
+      features: const [
         'Sport Chrono',
         'Air Suspension',
         'Panoramic Roof',
@@ -202,7 +202,7 @@ class MockVehicleDataSource {
       fuelType: 'electric',
       bodyType: 'sedan',
       color: 'Daytona Gray',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
       ],
       description: 'All-electric gran turismo with stunning performance',
@@ -215,7 +215,7 @@ class MockVehicleDataSource {
       seats: 4,
       horsepower: 637,
       drivetrain: 'awd',
-      features: [
+      features: const [
         'Quattro AWD',
         'Matrix LED',
         'Virtual Cockpit',
@@ -234,7 +234,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'truck',
       color: 'Oxford White',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800',
       ],
       description: 'Reliable F-150 with towing package',
@@ -248,7 +248,7 @@ class MockVehicleDataSource {
       engineSize: '5.0L',
       horsepower: 400,
       drivetrain: '4wd',
-      features: ['Towing Package', 'FX4 Off-Road', 'Leather', 'Navigation'],
+      features: const ['Towing Package', 'FX4 Off-Road', 'Leather', 'Navigation'],
     ),
     VehicleModel(
       id: '7',
@@ -262,7 +262,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'suv',
       color: 'Atomic Silver',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800',
       ],
       description: 'Luxury SUV with premium comfort',
@@ -276,7 +276,7 @@ class MockVehicleDataSource {
       engineSize: '3.5L',
       horsepower: 295,
       drivetrain: 'awd',
-      features: [
+      features: const [
         'Mark Levinson Audio',
         'Panoramic View',
         'Heated Seats',
@@ -295,7 +295,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'coupe',
       color: 'Torch Red',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800',
       ],
       description: 'American sports car icon with mid-engine layout',
@@ -309,7 +309,7 @@ class MockVehicleDataSource {
       engineSize: '6.2L',
       horsepower: 495,
       drivetrain: 'rwd',
-      features: [
+      features: const [
         'Z51 Performance',
         'Magnetic Ride',
         'Performance Exhaust',
@@ -328,7 +328,7 @@ class MockVehicleDataSource {
       fuelType: 'hybrid',
       bodyType: 'suv',
       color: 'Blueprint',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800',
       ],
       description: 'Efficient hybrid SUV with AWD',
@@ -342,7 +342,7 @@ class MockVehicleDataSource {
       engineSize: '2.5L',
       horsepower: 219,
       drivetrain: 'awd',
-      features: ['Hybrid System', 'Safety Sense', 'Apple CarPlay', 'Sunroof'],
+      features: const ['Hybrid System', 'Safety Sense', 'Apple CarPlay', 'Sunroof'],
     ),
     VehicleModel(
       id: '10',
@@ -356,7 +356,7 @@ class MockVehicleDataSource {
       fuelType: 'hybrid',
       bodyType: 'sedan',
       color: 'Platinum White',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800',
       ],
       description: 'New Accord Hybrid with advanced tech',
@@ -370,7 +370,7 @@ class MockVehicleDataSource {
       engineSize: '2.0L',
       horsepower: 204,
       drivetrain: 'fwd',
-      features: [
+      features: const [
         'Honda Sensing',
         'Wireless CarPlay',
         'Sunroof',
@@ -389,7 +389,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'suv',
       color: 'Soul Red',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800',
       ],
       description: 'Stylish compact SUV with premium feel',
@@ -403,7 +403,7 @@ class MockVehicleDataSource {
       engineSize: '2.5L',
       horsepower: 187,
       drivetrain: 'awd',
-      features: ['i-Activsense', 'Bose Audio', 'Leather', 'Heated Seats'],
+      features: const ['i-Activsense', 'Bose Audio', 'Leather', 'Heated Seats'],
     ),
 
     // Additional vehicles for other sections (60+ more)
@@ -420,7 +420,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'sedan',
       color: 'Silver',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1617531653520-bd466e4337a9?w=800'
       ],
       description: 'Affordable and reliable sedan',
@@ -434,7 +434,7 @@ class MockVehicleDataSource {
       engineSize: '2.0L',
       horsepower: 147,
       drivetrain: 'fwd',
-      features: ['Apple CarPlay', 'Rear Camera', 'Bluetooth'],
+      features: const ['Apple CarPlay', 'Rear Camera', 'Bluetooth'],
     ),
     // Add 60+ more vehicles here with variety in:
     // - Price ranges ($15k - $150k)
@@ -456,7 +456,7 @@ class MockVehicleDataSource {
       fuelType: 'gasoline',
       bodyType: 'sedan',
       color: 'Gun Metallic',
-      images: [
+      images: const [
         'https://images.unsplash.com/photo-1610647752706-3bb12232b37a?w=800'
       ],
       description: 'Mid-size sedan with great value',
@@ -470,7 +470,7 @@ class MockVehicleDataSource {
       engineSize: '2.5L',
       horsepower: 188,
       drivetrain: 'fwd',
-      features: ['ProPILOT Assist', 'Remote Start', 'Heated Steering'],
+      features: const ['ProPILOT Assist', 'Remote Start', 'Heated Steering'],
     ),
 
     // Generate 58 more vehicles to complete 71 total

@@ -13,19 +13,20 @@ class CreateListing implements UseCase<DealerListing, DealerListing> {
   Future<Either<Failure, DealerListing>> call(DealerListing listing) async {
     // Validation
     if (listing.title.trim().isEmpty) {
-      return Left(ValidationFailure(message: 'El título es requerido'));
+      return const Left(ValidationFailure(message: 'El título es requerido'));
     }
-    
+
     if (listing.description.trim().isEmpty) {
-      return Left(ValidationFailure(message: 'La descripción es requerida'));
+      return const Left(ValidationFailure(message: 'La descripción es requerida'));
     }
-    
+
     if (listing.images.isEmpty) {
-      return Left(ValidationFailure(message: 'Se requiere al menos una imagen'));
+      return const Left(
+          ValidationFailure(message: 'Se requiere al menos una imagen'));
     }
-    
+
     if (listing.price <= 0) {
-      return Left(ValidationFailure(message: 'El precio debe ser mayor a 0'));
+      return const Left(ValidationFailure(message: 'El precio debe ser mayor a 0'));
     }
 
     return await repository.createListing(listing);
@@ -41,19 +42,20 @@ class UpdateListing implements UseCase<DealerListing, DealerListing> {
   Future<Either<Failure, DealerListing>> call(DealerListing listing) async {
     // Validation
     if (listing.title.trim().isEmpty) {
-      return Left(ValidationFailure(message: 'El título es requerido'));
+      return const Left(ValidationFailure(message: 'El título es requerido'));
     }
-    
+
     if (listing.description.trim().isEmpty) {
-      return Left(ValidationFailure(message: 'La descripción es requerida'));
+      return const Left(ValidationFailure(message: 'La descripción es requerida'));
     }
-    
+
     if (listing.images.isEmpty) {
-      return Left(ValidationFailure(message: 'Se requiere al menos una imagen'));
+      return const Left(
+          ValidationFailure(message: 'Se requiere al menos una imagen'));
     }
-    
+
     if (listing.price <= 0) {
-      return Left(ValidationFailure(message: 'El precio debe ser mayor a 0'));
+      return const Left(ValidationFailure(message: 'El precio debe ser mayor a 0'));
     }
 
     return await repository.updateListing(listing);

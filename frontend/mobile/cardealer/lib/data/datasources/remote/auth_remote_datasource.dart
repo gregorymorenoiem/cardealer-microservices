@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 /// This will communicate with the real API
 /// Currently inactive - using mock data instead
 class AuthRemoteDataSource {
+  // ignore: unused_field
   final Dio _dio;
+  // ignore: unused_field
   final String _baseUrl;
 
   AuthRemoteDataSource({

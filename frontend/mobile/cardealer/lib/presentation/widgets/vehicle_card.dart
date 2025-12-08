@@ -100,7 +100,7 @@ class VehicleCard extends StatelessWidget {
                     top: AppSpacing.sm,
                     right: AppSpacing.sm,
                     child: Material(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       shape: const CircleBorder(),
                       child: InkWell(
                         onTap: onFavorite,
@@ -140,7 +140,7 @@ class VehicleCard extends StatelessWidget {
                   Row(
                     children: [
                       if (year != null) ...[
-                        Icon(
+                        const Icon(
                           Icons.calendar_today,
                           size: AppSpacing.iconXs,
                           color: AppColors.textSecondary,
@@ -155,7 +155,7 @@ class VehicleCard extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                       ],
                       if (mileage != null) ...[
-                        Icon(
+                        const Icon(
                           Icons.speed,
                           size: AppSpacing.iconXs,
                           color: AppColors.textSecondary,
@@ -174,7 +174,7 @@ class VehicleCard extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.location_on,
                           size: AppSpacing.iconXs,
                           color: AppColors.textSecondary,

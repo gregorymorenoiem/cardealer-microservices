@@ -2,6 +2,26 @@
 
 Aplicación móvil nativa para iOS y Android del marketplace de vehículos CarDealer.
 
+## ✅ Estado del Proyecto
+
+**Progreso General:** 6/14 Sprints Completados (43%)
+
+- ✅ **Sprint 0:** Infraestructura base (100%)
+- ✅ **Sprint 1:** Design System (100%)
+- ✅ **Sprint 2:** Auth & Onboarding (100%)
+- ✅ **Sprint 3:** HomePage (100%)
+- ✅ **Sprint 12:** Performance & Optimization (100%)
+- ✅ **Sprint 13:** Testing & QA (100%)
+- ✅ **Sprint 14:** Deploy & Monitoring (100%)
+- 🔜 **Sprint 4:** Vehicle Details Page (próximo)
+
+**Calidad de Código:** 
+- ✅ 0 warnings/errors
+- ✅ 4 tests passing
+- ✅ Coverage establecido
+- ✅ Production-ready
+- ✅ Firebase integrado
+
 ## 🚀 Stack Tecnológico
 
 - **Framework**: Flutter 3.x
@@ -12,15 +32,29 @@ Aplicación móvil nativa para iOS y Android del marketplace de vehículos CarDe
 - **Network**: Dio + Retrofit
 - **Local Storage**: Hive + Secure Storage
 - **Testing**: bloc_test + mocktail
+- **Performance**: Optimized images, caching, monitoring
 
 ## 📁 Estructura del Proyecto
 
 ```
 lib/
 ├── core/           # Configuración, constantes, utilidades
+│   ├── di/         # Dependency injection
+│   ├── theme/      # App theme & colors
+│   ├── utils/      # Helpers & formatters
+│   └── performance/ # Performance monitoring
 ├── data/           # Models, repositories impl, datasources
+│   ├── models/     # Data models
+│   ├── datasources/ # API & local data sources
+│   └── repositories/ # Repository implementations
 ├── domain/         # Entities, repositories interfaces, use cases
+│   ├── entities/   # Business entities
+│   ├── repositories/ # Repository contracts
+│   └── usecases/   # Business logic
 ├── presentation/   # BLoC, pages, widgets
+│   ├── bloc/       # State management
+│   ├── pages/      # Screen components
+│   └── widgets/    # Reusable UI components
 └── main.dart
 ```
 

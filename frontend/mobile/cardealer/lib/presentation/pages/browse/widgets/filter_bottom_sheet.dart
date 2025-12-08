@@ -35,7 +35,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               // Header
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: AppColors.border),
                   ),
@@ -258,7 +258,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),

@@ -9,9 +9,9 @@ class EditProfileDialog extends StatefulWidget {
   final User user;
 
   const EditProfileDialog({
-    Key? key,
+    super.key,
     required this.user,
-  }) : super(key: key);
+  });
 
   @override
   State<EditProfileDialog> createState() => _EditProfileDialogState();

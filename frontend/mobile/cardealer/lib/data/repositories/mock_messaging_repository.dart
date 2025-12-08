@@ -278,7 +278,7 @@ class MockMessagingRepository implements MessagingRepository {
 
       final now = DateTime.now();
       final newMessage = MessageModel(
-        id: 'msg-${conversationId}-${DateTime.now().millisecondsSinceEpoch}',
+        id: 'msg-$conversationId-${DateTime.now().millisecondsSinceEpoch}',
         conversationId: conversationId,
         senderId: _currentUserId,
         senderName: 'Tú',

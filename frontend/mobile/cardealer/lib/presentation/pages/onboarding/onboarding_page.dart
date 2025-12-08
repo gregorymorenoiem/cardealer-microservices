@@ -8,7 +8,7 @@ import '../auth/login_page.dart';
 
 /// Onboarding page with 3 screens
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({Key? key}) : super(key: key);
+  const OnboardingPage({super.key});
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -161,12 +161,12 @@ class OnboardingScreen extends StatelessWidget {
   final IconData icon;
 
   const OnboardingScreen({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     required this.imagePath,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +180,7 @@ class OnboardingScreen extends StatelessWidget {
             width: 200,
             height: 200,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

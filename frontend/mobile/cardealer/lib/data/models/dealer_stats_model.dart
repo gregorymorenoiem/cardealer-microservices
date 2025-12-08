@@ -34,7 +34,8 @@ class DealerStatsModel extends DealerStats {
       viewsByMonth: Map<String, int>.from(json['viewsByMonth'] as Map),
       leadsByMonth: Map<String, int>.from(json['leadsByMonth'] as Map),
       topPerformingVehicles: (json['topPerformingVehicles'] as List)
-          .map((v) => TopPerformingVehicleModel.fromJson(v as Map<String, dynamic>))
+          .map((v) =>
+              TopPerformingVehicleModel.fromJson(v as Map<String, dynamic>))
           .toList(),
     );
   }

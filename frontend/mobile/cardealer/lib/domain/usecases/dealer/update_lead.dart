@@ -40,7 +40,8 @@ class UpdateLeadNotes implements UseCase<Lead, UpdateLeadNotesParams> {
   @override
   Future<Either<Failure, Lead>> call(UpdateLeadNotesParams params) async {
     if (params.notes.trim().isEmpty) {
-      return Left(ValidationFailure(message: 'Las notas no pueden estar vacías'));
+      return const Left(
+          ValidationFailure(message: 'Las notas no pueden estar vacías'));
     }
 
     return await repository.updateLeadNotes(
@@ -71,7 +72,7 @@ class ScheduleFollowUp implements UseCase<Lead, ScheduleFollowUpParams> {
   @override
   Future<Either<Failure, Lead>> call(ScheduleFollowUpParams params) async {
     if (params.followUpDate.isBefore(DateTime.now())) {
-      return Left(ValidationFailure(
+      return const Left(ValidationFailure(
         message: 'La fecha de seguimiento debe ser futura',
       ));
     }

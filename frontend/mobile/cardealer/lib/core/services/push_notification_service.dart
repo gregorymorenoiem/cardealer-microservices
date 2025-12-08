@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 /// Service for handling push notifications
 /// TODO: Integrate with Firebase Cloud Messaging (FCM)
 class PushNotificationService {
@@ -19,7 +21,7 @@ class PushNotificationService {
     // await _setupBackgroundNotificationHandling();
     // await _getDeviceToken();
 
-    print('[PushNotificationService] Initialized (mock)');
+    developer.log('Initialized (mock)', name: 'PushNotificationService');
   }
 
   /// Request notification permissions
@@ -33,7 +35,8 @@ class PushNotificationService {
     // );
     // return settings.authorizationStatus == AuthorizationStatus.authorized;
 
-    print('[PushNotificationService] Permission requested (mock)');
+    developer.log('Permission requested (mock)',
+        name: 'PushNotificationService');
     return true;
   }
 
@@ -43,7 +46,7 @@ class PushNotificationService {
     // final messaging = FirebaseMessaging.instance;
     // return await messaging.getToken();
 
-    print('[PushNotificationService] Token retrieved (mock)');
+    developer.log('Token retrieved (mock)', name: 'PushNotificationService');
     return 'mock-device-token-12345';
   }
 
@@ -53,7 +56,8 @@ class PushNotificationService {
     // final messaging = FirebaseMessaging.instance;
     // await messaging.subscribeToTopic(topic);
 
-    print('[PushNotificationService] Subscribed to topic: $topic (mock)');
+    developer.log('Subscribed to topic: $topic (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Unsubscribe from topic
@@ -62,7 +66,8 @@ class PushNotificationService {
     // final messaging = FirebaseMessaging.instance;
     // await messaging.unsubscribeFromTopic(topic);
 
-    print('[PushNotificationService] Unsubscribed from topic: $topic (mock)');
+    developer.log('Unsubscribed from topic: $topic (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Handle foreground notifications
@@ -80,7 +85,8 @@ class PushNotificationService {
     //   }
     // });
 
-    print('[PushNotificationService] Foreground handler setup (mock)');
+    developer.log('Foreground handler setup (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Handle background notifications
@@ -90,7 +96,8 @@ class PushNotificationService {
     // TODO: Setup background message handler
     // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    print('[PushNotificationService] Background handler setup (mock)');
+    developer.log('Background handler setup (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Handle notification tap (when app is in background/terminated)
@@ -110,7 +117,8 @@ class PushNotificationService {
     //   }
     // });
 
-    print('[PushNotificationService] Notification tap handler setup (mock)');
+    developer.log('Notification tap handler setup (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Send local notification
@@ -138,8 +146,8 @@ class PushNotificationService {
     //   payload: jsonEncode(data),
     // );
 
-    print(
-        '[PushNotificationService] Local notification shown: $title - $body (mock)');
+    developer.log('Local notification shown: $title - $body (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Clear all notifications
@@ -147,7 +155,8 @@ class PushNotificationService {
     // TODO: Clear all notifications
     // await flutterLocalNotificationsPlugin.cancelAll();
 
-    print('[PushNotificationService] All notifications cleared (mock)');
+    developer.log('All notifications cleared (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Set notification badge count (iOS)
@@ -155,7 +164,8 @@ class PushNotificationService {
     // TODO: Set badge count on iOS
     // await FlutterAppBadger.updateBadgeCount(count);
 
-    print('[PushNotificationService] Badge count set to: $count (mock)');
+    developer.log('Badge count set to: $count (mock)',
+        name: 'PushNotificationService');
   }
 
   /// Clear notification badge (iOS)
@@ -163,7 +173,7 @@ class PushNotificationService {
     // TODO: Clear badge on iOS
     // await FlutterAppBadger.removeBadge();
 
-    print('[PushNotificationService] Badge cleared (mock)');
+    developer.log('Badge cleared (mock)', name: 'PushNotificationService');
   }
 }
 

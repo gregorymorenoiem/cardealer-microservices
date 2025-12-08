@@ -8,16 +8,12 @@ import '../lib/core/theme/app_theme.dart';
 // Import widgets
 import '../lib/presentation/widgets/custom_button.dart';
 import '../lib/presentation/widgets/custom_text_field.dart';
-import '../lib/presentation/widgets/custom_app_bar.dart';
 import '../lib/presentation/widgets/loading_indicator.dart';
 import '../lib/presentation/widgets/empty_state_widget.dart';
 // import '../lib/presentation/widgets/custom_error_widget.dart'; // TODO: Crear widget
 import '../lib/presentation/widgets/vehicle_card.dart';
 import '../lib/presentation/widgets/vehicle_card_horizontal.dart';
 import '../lib/presentation/widgets/vehicle_card_grid.dart';
-import '../lib/presentation/widgets/featured_badge.dart';
-import '../lib/presentation/widgets/custom_bottom_nav_bar.dart';
-import '../lib/presentation/widgets/custom_snackbar.dart';
 import '../lib/presentation/widgets/custom_chip.dart';
 import '../lib/presentation/widgets/custom_avatar.dart';
 import '../lib/presentation/widgets/price_tag.dart';

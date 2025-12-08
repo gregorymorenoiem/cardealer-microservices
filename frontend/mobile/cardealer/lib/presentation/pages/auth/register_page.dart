@@ -15,7 +15,7 @@ import '../home/home_page.dart';
 
 /// Registration page with role selection
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -390,7 +390,7 @@ class _RegisterPageState extends State<RegisterPage> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : AppColors.surface,
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,

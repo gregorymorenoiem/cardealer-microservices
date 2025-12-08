@@ -66,7 +66,7 @@ class ActiveFiltersChips extends StatelessWidget {
           label,
           style: const TextStyle(fontSize: 12),
         ),
-        backgroundColor: AppColors.primaryLight.withOpacity(0.1),
+        backgroundColor: AppColors.primaryLight.withValues(alpha: 0.1),
         deleteIconColor: AppColors.primary,
       ),
     );

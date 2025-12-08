@@ -22,13 +22,13 @@ class DealerListing extends Equatable {
   final String id;
   final String dealerId;
   final String vehicleId;
-  
+
   // Basic info
   final String title;
   final String description;
   final List<String> images;
   final String? videoUrl;
-  
+
   // Vehicle details
   final String brand;
   final String model;
@@ -37,38 +37,38 @@ class DealerListing extends Equatable {
   final int mileage;
   final VehicleCondition condition;
   final String? vin;
-  
+
   // Pricing
   final double price;
   final double? discountPrice;
   final String currency;
   final bool negotiable;
-  
+
   // Technical specs
   final String transmission;
   final String fuelType;
   final String? engineSize;
   final int? doors;
   final int? seats;
-  
+
   // Features
   final List<String> features;
   final List<String> safetyFeatures;
-  
+
   // Location
   final String location;
   final String? city;
   final String? state;
   final double? latitude;
   final double? longitude;
-  
+
   // Status and metrics
   final ListingStatus status;
   final int views;
   final int leads;
   final int favorites;
   final String? rejectionReason;
-  
+
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -170,38 +170,38 @@ class DealerListing extends Equatable {
   bool get isSold => status == ListingStatus.sold;
   bool get isExpired => status == ListingStatus.expired;
   bool get isRejected => status == ListingStatus.rejected;
-  
+
   bool get hasDiscount => discountPrice != null && discountPrice! < price;
-  
+
   double get finalPrice => hasDiscount ? discountPrice! : price;
-  
+
   double get discountPercentage {
     if (!hasDiscount) return 0.0;
     return ((price - discountPrice!) / price) * 100;
   }
-  
+
   String get priceFormatted => '\$$currency ${finalPrice.toStringAsFixed(0)}';
-  
+
   String get fullLocation {
     if (city != null && state != null) {
       return '$city, $state';
     }
     return location;
   }
-  
+
   bool get hasLocation => latitude != null && longitude != null;
-  
+
   int get daysActive {
     final startDate = publishedAt ?? createdAt;
     return DateTime.now().difference(startDate).inDays;
   }
-  
+
   bool get isExpiringSoon {
     if (expiresAt == null) return false;
     final daysUntilExpiry = expiresAt!.difference(DateTime.now()).inDays;
     return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
   }
-  
+
   double get conversionRate {
     if (views == 0) return 0.0;
     return (leads / views) * 100;

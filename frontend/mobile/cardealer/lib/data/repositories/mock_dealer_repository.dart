@@ -21,15 +21,16 @@ class MockDealerRepository implements DealerRepository {
   void _initializeMockData() {
     // Create 5 mock listings
     final now = DateTime.now();
-    
+
     _listings.addAll([
       DealerListingModel(
         id: 'listing-${_listingIdCounter++}',
         dealerId: 'dealer-1',
         vehicleId: 'vehicle-1',
         title: 'Toyota Corolla 2022 - Como Nuevo',
-        description: 'Excelente Toyota Corolla 2022 en perfectas condiciones. Unico dueño, mantenimiento al día en agencia oficial. Ideal para quien busca confiabilidad y economía.',
-        images: [
+        description:
+            'Excelente Toyota Corolla 2022 en perfectas condiciones. Unico dueño, mantenimiento al día en agencia oficial. Ideal para quien busca confiabilidad y economía.',
+        images: const [
           'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
           'https://images.unsplash.com/photo-1619405399517-d7fce0f13302',
         ],
@@ -50,14 +51,14 @@ class MockDealerRepository implements DealerRepository {
         engineSize: '1.8L',
         doors: 4,
         seats: 5,
-        features: [
+        features: const [
           'Aire Acondicionado',
           'Bluetooth',
           'Cámara Trasera',
           'Control Crucero',
           'Sensores de Estacionamiento',
         ],
-        safetyFeatures: ['Airbags', 'ABS', 'Control de Estabilidad'],
+        safetyFeatures: const ['Airbags', 'ABS', 'Control de Estabilidad'],
         location: 'Santo Domingo, República Dominicana',
         city: 'Santo Domingo',
         state: 'Distrito Nacional',
@@ -79,8 +80,9 @@ class MockDealerRepository implements DealerRepository {
         dealerId: 'dealer-1',
         vehicleId: 'vehicle-2',
         title: 'Honda CR-V 2023 - SUV Premium',
-        description: 'Honda CR-V 2023 modelo EX-L con todas las comodidades. Cuero, techo panorámico, sistema de sonido premium. Perfecto estado.',
-        images: [
+        description:
+            'Honda CR-V 2023 modelo EX-L con todas las comodidades. Cuero, techo panorámico, sistema de sonido premium. Perfecto estado.',
+        images: const [
           'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6',
           'https://images.unsplash.com/photo-1606664515666-7a86dc27ab93',
         ],
@@ -101,7 +103,7 @@ class MockDealerRepository implements DealerRepository {
         engineSize: '2.0L Turbo',
         doors: 5,
         seats: 5,
-        features: [
+        features: const [
           'Aire Acondicionado Dual',
           'Navegación GPS',
           'Techo Panorámico',
@@ -110,7 +112,7 @@ class MockDealerRepository implements DealerRepository {
           'Apple CarPlay',
           'Android Auto',
         ],
-        safetyFeatures: [
+        safetyFeatures: const [
           'Honda Sensing',
           '8 Airbags',
           'Asistente de Mantenimiento de Carril',
@@ -137,8 +139,9 @@ class MockDealerRepository implements DealerRepository {
         dealerId: 'dealer-1',
         vehicleId: 'vehicle-3',
         title: 'Nissan Sentra 2021 - Económico',
-        description: 'Nissan Sentra 2021 en excelentes condiciones. Bajo consumo de combustible, ideal para ciudad. Mantenimiento completo.',
-        images: [
+        description:
+            'Nissan Sentra 2021 en excelentes condiciones. Bajo consumo de combustible, ideal para ciudad. Mantenimiento completo.',
+        images: const [
           'https://images.unsplash.com/photo-1609521263047-f8f205293f24',
         ],
         videoUrl: null,
@@ -158,8 +161,8 @@ class MockDealerRepository implements DealerRepository {
         engineSize: '1.6L',
         doors: 4,
         seats: 5,
-        features: ['Aire Acondicionado', 'Radio AM/FM', 'Bluetooth'],
-        safetyFeatures: ['Airbags Frontales', 'ABS'],
+        features: const ['Aire Acondicionado', 'Radio AM/FM', 'Bluetooth'],
+        safetyFeatures: const ['Airbags Frontales', 'ABS'],
         location: 'La Romana, República Dominicana',
         city: 'La Romana',
         state: 'La Romana',
@@ -181,8 +184,9 @@ class MockDealerRepository implements DealerRepository {
         dealerId: 'dealer-1',
         vehicleId: 'vehicle-4',
         title: 'Mazda CX-5 2023 - VENDIDO',
-        description: 'Mazda CX-5 2023 Signature - VENDIDO. SUV premium con todas las opciones.',
-        images: [
+        description:
+            'Mazda CX-5 2023 Signature - VENDIDO. SUV premium con todas las opciones.',
+        images: const [
           'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6',
         ],
         videoUrl: null,
@@ -202,13 +206,13 @@ class MockDealerRepository implements DealerRepository {
         engineSize: '2.5L Turbo',
         doors: 5,
         seats: 5,
-        features: [
+        features: const [
           'Cuero Nappa',
           'Head-Up Display',
           'Sonido Bose',
           'Navegación',
         ],
-        safetyFeatures: ['i-Activsense', '6 Airbags'],
+        safetyFeatures: const ['i-Activsense', '6 Airbags'],
         location: 'Santo Domingo, República Dominicana',
         city: 'Santo Domingo',
         state: 'Distrito Nacional',
@@ -231,7 +235,7 @@ class MockDealerRepository implements DealerRepository {
         vehicleId: 'vehicle-5',
         title: 'Ford Explorer 2024 - Borrador',
         description: 'Nueva Ford Explorer 2024. Descripción pendiente...',
-        images: [],
+        images: const [],
         videoUrl: null,
         brand: 'Ford',
         model: 'Explorer',
@@ -249,8 +253,8 @@ class MockDealerRepository implements DealerRepository {
         engineSize: '3.0L V6',
         doors: 5,
         seats: 7,
-        features: [],
-        safetyFeatures: [],
+        features: const [],
+        safetyFeatures: const [],
         location: 'Santo Domingo',
         city: 'Santo Domingo',
         state: 'Distrito Nacional',
@@ -281,7 +285,8 @@ class MockDealerRepository implements DealerRepository {
         userPhone: '+1-809-555-0101',
         userAvatar: 'https://i.pravatar.cc/150?img=12',
         vehicleTitle: 'Toyota Corolla 2022',
-        vehicleImage: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
+        vehicleImage:
+            'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
         vehiclePrice: 18500,
         status: LeadStatus.negociacion,
         priority: LeadPriority.alta,
@@ -314,7 +319,8 @@ class MockDealerRepository implements DealerRepository {
         userPhone: '+1-809-555-0102',
         userAvatar: 'https://i.pravatar.cc/150?img=45',
         vehicleTitle: 'Honda CR-V 2023',
-        vehicleImage: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6',
+        vehicleImage:
+            'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6',
         vehiclePrice: 32500,
         status: LeadStatus.nuevo,
         priority: LeadPriority.media,
@@ -347,7 +353,8 @@ class MockDealerRepository implements DealerRepository {
         userPhone: '+1-809-555-0103',
         userAvatar: null,
         vehicleTitle: 'Toyota Corolla 2022',
-        vehicleImage: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
+        vehicleImage:
+            'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
         vehiclePrice: 18500,
         status: LeadStatus.contactado,
         priority: LeadPriority.urgente,
@@ -395,7 +402,7 @@ class MockDealerRepository implements DealerRepository {
         averageResponseTime: 2.5,
         revenue: 35000,
         monthlyRevenue: 12500,
-        viewsByMonth: {
+        viewsByMonth: const {
           'Ene': 145,
           'Feb': 189,
           'Mar': 234,
@@ -403,7 +410,7 @@ class MockDealerRepository implements DealerRepository {
           'May': 356,
           'Jun': 412,
         },
-        leadsByMonth: {
+        leadsByMonth: const {
           'Ene': 12,
           'Feb': 18,
           'Mar': 24,
@@ -411,19 +418,21 @@ class MockDealerRepository implements DealerRepository {
           'May': 42,
           'Jun': 56,
         },
-        topPerformingVehicles: [
-          const TopPerformingVehicleModel(
+        topPerformingVehicles: const [
+          TopPerformingVehicleModel(
             vehicleId: 'vehicle-2',
             title: 'Honda CR-V 2023',
-            imageUrl: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6',
+            imageUrl:
+                'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6',
             views: 567,
             leads: 23,
             conversionRate: 4.06,
           ),
-          const TopPerformingVehicleModel(
+          TopPerformingVehicleModel(
             vehicleId: 'vehicle-1',
             title: 'Toyota Corolla 2022',
-            imageUrl: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
+            imageUrl:
+                'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb',
             views: 324,
             leads: 12,
             conversionRate: 3.70,
@@ -489,7 +498,7 @@ class MockDealerRepository implements DealerRepository {
       final listing = _listings.firstWhere((l) => l.id == listingId);
       return Right(listing);
     } catch (e) {
-      return Left(NotFoundFailure(message: 'Listing not found'));
+      return const Left(NotFoundFailure(message: 'Listing not found'));
     }
   }
 
@@ -522,7 +531,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _listings.indexWhere((l) => l.id == listing.id);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Listing not found'));
+        return const Left(NotFoundFailure(message: 'Listing not found'));
       }
 
       final updated = DealerListingModel.fromEntity(listing).copyWith(
@@ -580,7 +589,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _listings.indexWhere((l) => l.id == listingId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Listing not found'));
+        return const Left(NotFoundFailure(message: 'Listing not found'));
       }
 
       final updated = _listings[index].copyWith(
@@ -607,7 +616,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _listings.indexWhere((l) => l.id == listingId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Listing not found'));
+        return const Left(NotFoundFailure(message: 'Listing not found'));
       }
 
       final updated = _listings[index].copyWith(
@@ -677,7 +686,7 @@ class MockDealerRepository implements DealerRepository {
       final lead = _leads.firstWhere((l) => l.id == leadId);
       return Right(lead);
     } catch (e) {
-      return Left(NotFoundFailure(message: 'Lead not found'));
+      return const Left(NotFoundFailure(message: 'Lead not found'));
     }
   }
 
@@ -691,7 +700,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _leads.indexWhere((l) => l.id == leadId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Lead not found'));
+        return const Left(NotFoundFailure(message: 'Lead not found'));
       }
 
       final updated = _leads[index].copyWith(
@@ -716,7 +725,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _leads.indexWhere((l) => l.id == leadId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Lead not found'));
+        return const Left(NotFoundFailure(message: 'Lead not found'));
       }
 
       final updated = _leads[index].copyWith(
@@ -741,7 +750,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _leads.indexWhere((l) => l.id == leadId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Lead not found'));
+        return const Left(NotFoundFailure(message: 'Lead not found'));
       }
 
       final updated = _leads[index].copyWith(
@@ -766,7 +775,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _leads.indexWhere((l) => l.id == leadId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Lead not found'));
+        return const Left(NotFoundFailure(message: 'Lead not found'));
       }
 
       final updated = _leads[index].copyWith(
@@ -791,7 +800,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _leads.indexWhere((l) => l.id == leadId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Lead not found'));
+        return const Left(NotFoundFailure(message: 'Lead not found'));
       }
 
       final updated = _leads[index].copyWith(
@@ -818,7 +827,7 @@ class MockDealerRepository implements DealerRepository {
     try {
       final index = _leads.indexWhere((l) => l.id == leadId);
       if (index == -1) {
-        return Left(NotFoundFailure(message: 'Lead not found'));
+        return const Left(NotFoundFailure(message: 'Lead not found'));
       }
 
       final updated = _leads[index].copyWith(

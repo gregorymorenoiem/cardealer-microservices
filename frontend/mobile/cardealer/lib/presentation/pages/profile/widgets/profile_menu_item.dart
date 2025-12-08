@@ -9,13 +9,13 @@ class ProfileMenuItem extends StatelessWidget {
   final bool showTrailing;
 
   const ProfileMenuItem({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
     this.showTrailing = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

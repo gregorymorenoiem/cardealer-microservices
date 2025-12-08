@@ -4,14 +4,13 @@ import '../../../core/di/injection.dart';
 import '../../bloc/profile/profile_bloc.dart';
 import '../../bloc/profile/profile_event.dart';
 import '../../bloc/profile/profile_state.dart';
-import '../../widgets/loading_indicator.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/edit_profile_dialog.dart';
 
 /// Profile page displaying user information and settings
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class ProfilePage extends StatelessWidget {
 }
 
 class _ProfilePageContent extends StatelessWidget {
-  const _ProfilePageContent({Key? key}) : super(key: key);
+  const _ProfilePageContent();
 
   @override
   Widget build(BuildContext context) {

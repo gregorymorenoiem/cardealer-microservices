@@ -23,7 +23,7 @@ class CustomAvatar extends StatelessWidget {
   final Widget? badge;
 
   const CustomAvatar({
-    Key? key,
+    super.key,
     this.imageUrl,
     this.name,
     this.size = AvatarSize.md,
@@ -33,7 +33,7 @@ class CustomAvatar extends StatelessWidget {
     this.showBadge = false,
     this.badgeColor,
     this.badge,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -228,13 +228,13 @@ class AvatarGroup extends StatelessWidget {
   final VoidCallback? onShowAll;
 
   const AvatarGroup({
-    Key? key,
+    super.key,
     required this.imageUrls,
     required this.names,
     this.size = AvatarSize.sm,
     this.maxVisible = 3,
     this.onShowAll,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

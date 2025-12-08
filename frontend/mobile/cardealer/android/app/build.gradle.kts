@@ -15,8 +15,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        jvmToolchain(17)
     }
 
     defaultConfig {
@@ -28,6 +28,9 @@ android {
         multiDexEnabled = true
     }
 
+    // Flavors temporarily commented for simple debug builds
+    // Uncomment when ready for multi-environment deployments
+    /*
     flavorDimensions += "environment"
     productFlavors {
         create("dev") {
@@ -47,6 +50,7 @@ android {
             resValue("string", "app_name", "CarDealer")
         }
     }
+    */
 
     buildTypes {
         debug {
@@ -64,7 +68,7 @@ android {
         }
     }
 
-    packagingOptions {
+    packaging {
         resources {
             excludes += setOf(
                 "META-INF/DEPENDENCIES",

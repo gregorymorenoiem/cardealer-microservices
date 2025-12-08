@@ -98,7 +98,7 @@ class VehicleCardGrid extends StatelessWidget {
                     top: AppSpacing.xs,
                     right: AppSpacing.xs,
                     child: Material(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       shape: const CircleBorder(),
                       child: InkWell(
                         onTap: onFavorite,

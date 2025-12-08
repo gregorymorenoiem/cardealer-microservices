@@ -27,7 +27,7 @@ class CustomSnackBar {
         content: Row(
           children: [
             Icon(icon, color: Colors.white, size: 20),
-            SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 message,
@@ -43,7 +43,7 @@ class CustomSnackBar {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        margin: EdgeInsets.all(AppSpacing.md),
+        margin: const EdgeInsets.all(AppSpacing.md),
         duration: duration,
         action: actionLabel != null
             ? SnackBarAction(
@@ -258,7 +258,7 @@ class _ToastWidgetState extends State<_ToastWidget>
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
                 ),
@@ -267,7 +267,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -281,7 +281,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                       color: Colors.white,
                       size: 20,
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     Flexible(
                       child: Text(
                         widget.message,

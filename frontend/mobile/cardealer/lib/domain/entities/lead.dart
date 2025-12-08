@@ -34,45 +34,45 @@ class Lead extends Equatable {
   final String id;
   final String dealerId;
   final String listingId;
-  
+
   // Customer info
   final String userId;
   final String userName;
   final String userEmail;
   final String? userPhone;
   final String? userAvatar;
-  
+
   // Listing info
   final String vehicleTitle;
   final String? vehicleImage;
   final double vehiclePrice;
-  
+
   // Lead details
   final LeadStatus status;
   final LeadPriority priority;
   final LeadSource source;
   final String? message;
   final String? notes;
-  
+
   // Financial info
   final double? budget;
   final bool? needsFinancing;
   final bool? hasTradeIn;
   final String? tradeInDetails;
-  
+
   // Engagement
   final int messageCount;
   final int callCount;
   final DateTime? lastContactedAt;
   final DateTime? nextFollowUpAt;
   final String? assignedTo;
-  
+
   // Conversion tracking
   final double? offeredPrice;
   final String? lostReason;
   final DateTime? convertedAt;
   final double? soldPrice;
-  
+
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -153,36 +153,37 @@ class Lead extends Equatable {
   bool get isNegociacion => status == LeadStatus.negociacion;
   bool get isGanado => status == LeadStatus.ganado;
   bool get isPerdido => status == LeadStatus.perdido;
-  
+
   bool get isActive => !isGanado && !isPerdido;
   bool get isClosed => isGanado || isPerdido;
-  
-  bool get isHighPriority => priority == LeadPriority.alta || priority == LeadPriority.urgente;
-  
+
+  bool get isHighPriority =>
+      priority == LeadPriority.alta || priority == LeadPriority.urgente;
+
   bool get needsFollowUp {
     if (nextFollowUpAt == null) return false;
-    return nextFollowUpAt!.isBefore(DateTime.now()) || 
-           nextFollowUpAt!.isAtSameMomentAs(DateTime.now());
+    return nextFollowUpAt!.isBefore(DateTime.now()) ||
+        nextFollowUpAt!.isAtSameMomentAs(DateTime.now());
   }
-  
+
   bool get isOverdue {
     if (nextFollowUpAt == null) return false;
     return nextFollowUpAt!.isBefore(DateTime.now());
   }
-  
+
   int get daysSinceLastContact {
     final lastContact = lastContactedAt ?? createdAt;
     return DateTime.now().difference(lastContact).inDays;
   }
-  
+
   int get daysOld {
     return DateTime.now().difference(createdAt).inDays;
   }
-  
+
   bool get isStale => daysSinceLastContact > 7 && isActive;
-  
+
   bool get hasEngagement => messageCount > 0 || callCount > 0;
-  
+
   String get statusText {
     switch (status) {
       case LeadStatus.nuevo:
@@ -199,7 +200,7 @@ class Lead extends Equatable {
         return 'Perdido';
     }
   }
-  
+
   String get priorityText {
     switch (priority) {
       case LeadPriority.baja:
@@ -212,7 +213,7 @@ class Lead extends Equatable {
         return 'Urgente';
     }
   }
-  
+
   String get sourceText {
     switch (source) {
       case LeadSource.web:

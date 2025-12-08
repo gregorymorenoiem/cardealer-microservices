@@ -26,11 +26,11 @@ class FeaturedBadge extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(_getBorderRadius()),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadowMedium,
             blurRadius: 4,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),

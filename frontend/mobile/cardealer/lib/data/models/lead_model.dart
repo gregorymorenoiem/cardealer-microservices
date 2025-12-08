@@ -59,9 +59,8 @@ class LeadModel extends Lead {
       ),
       message: json['message'] as String?,
       notes: json['notes'] as String?,
-      budget: json['budget'] != null
-          ? (json['budget'] as num).toDouble()
-          : null,
+      budget:
+          json['budget'] != null ? (json['budget'] as num).toDouble() : null,
       needsFinancing: json['needsFinancing'] as bool?,
       hasTradeIn: json['hasTradeIn'] as bool?,
       tradeInDetails: json['tradeInDetails'] as String?,

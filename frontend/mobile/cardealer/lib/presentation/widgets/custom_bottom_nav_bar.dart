@@ -22,11 +22,11 @@ class CustomBottomNavBar extends StatelessWidget {
   final List<BottomNavItem> items;
 
   const CustomBottomNavBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class CustomBottomNavBar extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -44,7 +44,7 @@ class CustomBottomNavBar extends StatelessWidget {
       child: SafeArea(
         child: Container(
           height: 60,
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.xs,
           ),
@@ -85,7 +85,7 @@ class _NavBarItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -105,7 +105,7 @@ class _NavBarItem extends StatelessWidget {
                       top: -4,
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: AppColors.error,
                           shape: BoxShape.circle,
                         ),
@@ -132,7 +132,7 @@ class _NavBarItem extends StatelessWidget {
                   color: color,
                   size: 24,
                 ),
-              SizedBox(height: AppSpacing.xs / 2),
+              const SizedBox(height: AppSpacing.xs / 2),
               Text(
                 item.label,
                 style: TextStyle(

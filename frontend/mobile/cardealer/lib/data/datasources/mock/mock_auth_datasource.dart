@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 /// Mock data source for authentication
 /// This simulates API calls with mock data
@@ -209,7 +210,8 @@ class MockAuthDataSource {
     }
 
     // Simulate email sent
-    print('Password reset email sent to: $email');
+    developer.log('Password reset email sent to: $email',
+        name: 'MockAuthDataSource');
   }
 
   /// Reset password with code

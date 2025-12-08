@@ -9,7 +9,7 @@ import 'widgets/favorites_grid.dart';
 
 /// Favorites page displaying user's saved vehicles
 class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({Key? key}) : super(key: key);
+  const FavoritesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class FavoritesPage extends StatelessWidget {
 }
 
 class _FavoritesPageContent extends StatelessWidget {
-  const _FavoritesPageContent({Key? key}) : super(key: key);
+  const _FavoritesPageContent();
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,7 @@ import '../../../core/utils/validators.dart';
 
 /// Forgot Password page - request password reset
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({Key? key}) : super(key: key);
+  const ForgotPasswordPage({super.key});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();

@@ -22,7 +22,7 @@ class PriceTag extends StatelessWidget {
   final String? period; // e.g., "/mes", "/día"
 
   const PriceTag({
-    Key? key,
+    super.key,
     required this.price,
     this.size = PriceSize.medium,
     this.showCurrency = true,
@@ -31,7 +31,7 @@ class PriceTag extends StatelessWidget {
     this.bold = false,
     this.originalPrice,
     this.period,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,11 +62,11 @@ class PriceTag extends StatelessWidget {
           ),
         ),
         if (period != null) ...[
-          SizedBox(width: AppSpacing.xs / 2),
+          const SizedBox(width: AppSpacing.xs / 2),
           Text(
             period!,
             style: _getPeriodTextStyle().copyWith(
-              color: priceColor.withOpacity(0.7),
+              color: priceColor.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -104,17 +104,17 @@ class PriceTag extends StatelessWidget {
               ),
             ),
             if (period != null) ...[
-              SizedBox(width: AppSpacing.xs / 2),
+              const SizedBox(width: AppSpacing.xs / 2),
               Text(
                 period!,
                 style: _getPeriodTextStyle().copyWith(
-                  color: AppColors.error.withOpacity(0.7),
+                  color: AppColors.error.withValues(alpha: 0.7),
                 ),
               ),
             ],
           ],
         ),
-        SizedBox(height: AppSpacing.xs / 2),
+        const SizedBox(height: AppSpacing.xs / 2),
         // Original price + discount badge
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -126,14 +126,14 @@ class PriceTag extends StatelessWidget {
                 decoration: TextDecoration.lineThrough,
               ),
             ),
-            SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.xs),
             Container(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.xs,
                 vertical: 2,
               ),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -199,13 +199,13 @@ class PriceRange extends StatelessWidget {
   final Color? color;
 
   const PriceRange({
-    Key? key,
+    super.key,
     required this.minPrice,
     required this.maxPrice,
     this.size = PriceSize.medium,
     this.currency,
     this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -252,14 +252,14 @@ class PriceLabelTag extends StatelessWidget {
   final Color? priceColor;
 
   const PriceLabelTag({
-    Key? key,
+    super.key,
     required this.label,
     required this.price,
     this.size = PriceSize.medium,
     this.currency,
     this.labelColor,
     this.priceColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -323,11 +323,11 @@ class ContactForPrice extends StatelessWidget {
   final VoidCallback? onTap;
 
   const ContactForPrice({
-    Key? key,
+    super.key,
     this.size = PriceSize.medium,
     this.color,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -343,7 +343,7 @@ class ContactForPrice extends StatelessWidget {
             size: _getIconSize(),
             color: textColor,
           ),
-          SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             'Consultar precio',
             style: _getTextStyle().copyWith(

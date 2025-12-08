@@ -13,10 +13,12 @@ class SellerInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: Get actual seller info from vehicle entity
-    final sellerName = 'Vendedor';
-    final isDealer = false;
-    final rating = 4.5;
-    final reviewCount = 23;
+    // For now using placeholder values
+    const sellerName = 'Vendedor';
+    const rating = 4.5;
+    const reviewCount = 23;
+    // Determine if seller is a dealer based on vehicle data
+    final isDealer = vehicle.dealerId != null;
 
     return Padding(
       padding: const EdgeInsets.all(16),

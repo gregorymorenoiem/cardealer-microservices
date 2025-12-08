@@ -11,8 +11,7 @@ class DealerDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt<DealerBloc>()
-        ..add(LoadDashboard('dealer-1')),
+      create: (context) => getIt<DealerBloc>()..add(LoadDashboard('dealer-1')),
       child: const _DealerDashboardContent(),
     );
   }

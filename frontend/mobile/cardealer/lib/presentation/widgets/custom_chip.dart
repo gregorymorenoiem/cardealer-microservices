@@ -26,7 +26,7 @@ class CustomChip extends StatelessWidget {
   final bool selected;
 
   const CustomChip({
-    Key? key,
+    super.key,
     required this.label,
     this.size = ChipSize.medium,
     this.variant = ChipVariant.filled,
@@ -35,12 +35,11 @@ class CustomChip extends StatelessWidget {
     this.onTap,
     this.onDelete,
     this.selected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final chipColor = color ?? AppColors.primary;
-    final isInteractive = onTap != null || onDelete != null;
 
     return GestureDetector(
       onTap: onTap,
@@ -56,7 +55,7 @@ class CustomChip extends StatelessWidget {
                 size: _getIconSize(),
                 color: _getContentColor(chipColor),
               ),
-              SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.xs),
             ],
             Text(
               label,
@@ -65,7 +64,7 @@ class CustomChip extends StatelessWidget {
               ),
             ),
             if (onDelete != null) ...[
-              SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.xs),
               GestureDetector(
                 onTap: onDelete,
                 child: Icon(
@@ -84,17 +83,17 @@ class CustomChip extends StatelessWidget {
   EdgeInsets _getPadding() {
     switch (size) {
       case ChipSize.small:
-        return EdgeInsets.symmetric(
+        return const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.xs / 2,
         );
       case ChipSize.medium:
-        return EdgeInsets.symmetric(
+        return const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,
         );
       case ChipSize.large:
-        return EdgeInsets.symmetric(
+        return const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.sm,
         );
@@ -127,12 +126,13 @@ class CustomChip extends StatelessWidget {
     switch (variant) {
       case ChipVariant.filled:
         return BoxDecoration(
-          color: selected ? chipColor : chipColor.withOpacity(0.9),
+          color: selected ? chipColor : chipColor.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(100),
         );
       case ChipVariant.outlined:
         return BoxDecoration(
-          color: selected ? chipColor.withOpacity(0.1) : Colors.transparent,
+          color:
+              selected ? chipColor.withValues(alpha: 0.1) : Colors.transparent,
           border: Border.all(
             color: chipColor,
             width: selected ? 2 : 1,
@@ -141,7 +141,7 @@ class CustomChip extends StatelessWidget {
         );
       case ChipVariant.soft:
         return BoxDecoration(
-          color: chipColor.withOpacity(0.15),
+          color: chipColor.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(100),
         );
     }
@@ -167,13 +167,13 @@ class CustomBadge extends StatelessWidget {
   final Widget? child;
 
   const CustomBadge({
-    Key? key,
+    super.key,
     this.label,
     this.count,
     this.color,
     this.size = BadgeSize.medium,
     this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -234,12 +234,12 @@ class CustomBadge extends StatelessWidget {
       case BadgeSize.small:
         return const EdgeInsets.all(2);
       case BadgeSize.medium:
-        return EdgeInsets.symmetric(
+        return const EdgeInsets.symmetric(
           horizontal: AppSpacing.xs,
           vertical: 2,
         );
       case BadgeSize.large:
-        return EdgeInsets.symmetric(
+        return const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.xs / 2,
         );
@@ -284,13 +284,13 @@ class CustomTag extends StatelessWidget {
   final VoidCallback? onRemove;
 
   const CustomTag({
-    Key? key,
+    super.key,
     required this.label,
     this.backgroundColor,
     this.textColor,
     this.removable = false,
     this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +298,7 @@ class CustomTag extends StatelessWidget {
     final txColor = textColor ?? AppColors.textPrimary;
 
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs / 2,
       ),
@@ -317,7 +317,7 @@ class CustomTag extends StatelessWidget {
             ),
           ),
           if (removable && onRemove != null) ...[
-            SizedBox(width: AppSpacing.xs / 2),
+            const SizedBox(width: AppSpacing.xs / 2),
             GestureDetector(
               onTap: onRemove,
               child: Icon(

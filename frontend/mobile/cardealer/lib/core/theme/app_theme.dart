@@ -28,11 +28,10 @@ class AppTheme {
         error: AppColors.error,
         onError: AppColors.textOnPrimary,
         errorContainer: AppColors.errorLight,
-        background: AppColors.background,
-        onBackground: AppColors.textPrimary,
-        surface: AppColors.surface,
-        onSurface: AppColors.textPrimary,
-        surfaceVariant: AppColors.surfaceVariant,
+        surface: AppColors.background, // Reemplaza 'background'
+        onSurface: AppColors.textPrimary, // Reemplaza 'onBackground'
+        surfaceContainerHighest:
+            AppColors.surfaceVariant, // Reemplaza 'surfaceVariant'
         onSurfaceVariant: AppColors.textSecondary,
         outline: AppColors.border,
         outlineVariant: AppColors.borderDark,
@@ -296,11 +295,10 @@ class AppTheme {
         error: AppColors.errorLight,
         onError: AppColors.textPrimary,
         errorContainer: AppColors.errorDark,
-        background: AppColors.backgroundDark,
-        onBackground: AppColors.textOnDark,
-        surface: AppColors.surfaceDark1,
-        onSurface: AppColors.textOnDark,
-        surfaceVariant: AppColors.surfaceDark2,
+        surface: AppColors.backgroundDark, // Reemplaza 'background'
+        onSurface: AppColors.textOnDark, // Reemplaza 'onBackground'
+        surfaceContainerHighest:
+            AppColors.surfaceDark2, // Reemplaza 'surfaceVariant'
         onSurfaceVariant: AppColors.textSecondary,
         outline: AppColors.borderDark,
       ),

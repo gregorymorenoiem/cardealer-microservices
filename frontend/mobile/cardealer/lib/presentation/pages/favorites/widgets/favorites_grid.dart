@@ -8,10 +8,10 @@ class FavoritesGrid extends StatelessWidget {
   final Function(String) onRemove;
 
   const FavoritesGrid({
-    Key? key,
+    super.key,
     required this.vehicles,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

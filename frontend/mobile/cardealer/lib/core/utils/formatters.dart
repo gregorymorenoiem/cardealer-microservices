@@ -53,10 +53,10 @@ class Formatters {
 
     if (difference.inDays > 365) {
       final years = (difference.inDays / 365).floor();
-      return 'hace ${years} año${years > 1 ? 's' : ''}';
+      return 'hace $years año${years > 1 ? 's' : ''}';
     } else if (difference.inDays > 30) {
       final months = (difference.inDays / 30).floor();
-      return 'hace ${months} mes${months > 1 ? 'es' : ''}';
+      return 'hace $months mes${months > 1 ? 'es' : ''}';
     } else if (difference.inDays > 0) {
       return 'hace ${difference.inDays} día${difference.inDays > 1 ? 's' : ''}';
     } else if (difference.inHours > 0) {

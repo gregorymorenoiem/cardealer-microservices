@@ -77,27 +77,39 @@ class CustomButton extends StatelessWidget {
     final EdgeInsets padding = _getPadding();
     final TextStyle textStyle = _getTextStyle();
 
-    Widget buttonChild =
-        child ??
-        Row(
-          mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(_getLoadingColor()),
-                ),
-              )
-            else if (icon != null)
-              Icon(icon, size: _getIconSize()),
-            if ((isLoading || icon != null) && text.isNotEmpty)
-              const SizedBox(width: AppSpacing.sm),
-            if (text.isNotEmpty) Text(text, style: textStyle),
-          ],
+    Widget buttonChild = child ??
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(_getLoadingColor()),
+                    ),
+                  )
+                else if (icon != null)
+                  Icon(icon, size: _getIconSize()),
+                if ((isLoading || icon != null) && text.isNotEmpty)
+                  SizedBox(width: AppSpacing.sm - 1),
+                if (text.isNotEmpty)
+                  Flexible(
+                    child: Text(
+                      text,
+                      style: textStyle,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+              ],
+            );
+          },
         );
 
     Widget button;
