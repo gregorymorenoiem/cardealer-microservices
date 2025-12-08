@@ -1,0 +1,44 @@
+import 'package:dartz/dartz.dart';
+import '../../core/error/failures.dart';
+import '../entities/vehicle.dart';
+
+/// Repository interface for vehicle operations
+abstract class VehicleRepository {
+  /// Get vehicles for hero carousel section
+  Future<Either<Failure, List<Vehicle>>> getHeroCarouselVehicles();
+
+  /// Get vehicles for featured grid section
+  Future<Either<Failure, List<Vehicle>>> getFeaturedGridVehicles();
+
+  /// Get week's featured vehicles
+  Future<Either<Failure, List<Vehicle>>> getWeekFeaturedVehicles();
+
+  /// Get daily deal vehicles
+  Future<Either<Failure, List<Vehicle>>> getDailyDeals();
+
+  /// Get SUVs and trucks
+  Future<Either<Failure, List<Vehicle>>> getSUVsAndTrucks();
+
+  /// Get premium vehicles
+  Future<Either<Failure, List<Vehicle>>> getPremiumVehicles();
+
+  /// Get electric and hybrid vehicles
+  Future<Either<Failure, List<Vehicle>>> getElectricAndHybrid();
+
+  /// Get all vehicles
+  Future<Either<Failure, List<Vehicle>>> getAllVehicles();
+
+  /// Get vehicle by ID
+  Future<Either<Failure, Vehicle>> getVehicleById(String id);
+
+  /// Search vehicles
+  Future<Either<Failure, List<Vehicle>>> searchVehicles({
+    String? make,
+    String? model,
+    double? minPrice,
+    double? maxPrice,
+    String? bodyType,
+    String? fuelType,
+    String? condition,
+  });
+}

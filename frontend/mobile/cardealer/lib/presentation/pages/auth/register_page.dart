@@ -269,8 +269,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         const Expanded(child: Divider()),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md),
                           child: Text(
                             'OR',
                             style: AppTypography.bodySmall.copyWith(
@@ -389,7 +389,9 @@ class _RegisterPageState extends State<RegisterPage> {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.1)
+              : AppColors.surface,
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
             width: 2,
