@@ -189,12 +189,12 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, vehi
   };
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-6 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{title}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{title}</h2>
             <p className="text-gray-600">{subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, vehi
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
           style={{ scrollSnapType: 'x mandatory' }}
         >
           {vehicles.map((vehicle) => (
@@ -327,7 +327,7 @@ const HomePage: React.FC = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+      <section className="relative h-[calc(100vh-4rem)] flex items-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
@@ -338,12 +338,12 @@ const HomePage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-gray-900/60 to-gray-900/40" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-          <div className="text-center mb-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+          <div className="text-center mb-6">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-2"
             >
               Encuentra el Auto{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
@@ -354,7 +354,7 @@ const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-gray-200 mb-8"
+              className="text-xl text-gray-200 mb-4"
             >
               Busca entre miles de vehículos nuevos y usados
             </motion.p>
@@ -430,7 +430,7 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-wrap justify-center gap-6 md:gap-8 mt-12 max-w-4xl mx-auto"
+            className="flex flex-wrap justify-center gap-4 md:gap-6 mt-8 max-w-4xl mx-auto"
           >
             <div className="flex items-center gap-2 text-white">
               <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -455,10 +455,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Vehicle Types Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Explora por Tipo
             </h2>
             <p className="text-gray-600">
@@ -466,7 +466,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {vehicleTypes.map((type) => (
               <Link
                 key={type.id}
@@ -505,10 +505,10 @@ const HomePage: React.FC = () => {
       />
 
       {/* Features Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               ¿Por Qué Elegirnos?
             </h2>
             <p className="text-gray-600">
@@ -516,7 +516,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -524,9 +524,9 @@ const HomePage: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center p-6 bg-gray-50 rounded-2xl"
+                className="text-center p-4 bg-gray-50 rounded-2xl"
               >
-                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -542,10 +542,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* How it Works */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-6 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Cómo Funciona
             </h2>
             <p className="text-gray-600">
@@ -553,7 +553,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
               { step: '1', title: 'Busca', desc: 'Explora miles de vehículos y filtra por tus preferencias.' },
               { step: '2', title: 'Compara', desc: 'Compara especificaciones, precios y características.' },
@@ -571,10 +571,10 @@ const HomePage: React.FC = () => {
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-0.5 bg-gray-300" />
                 )}
                 
-                <div className="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-4">
+                <div className="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl font-bold text-blue-600">{item.step}</span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {item.title}
                 </h3>
                 <p className="text-gray-600 text-sm">
@@ -587,13 +587,13 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-3xl p-8 lg:p-12 text-center text-white">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-4">
+          <div className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-3xl p-6 lg:p-8 text-center text-white">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3">
               ¿Tienes un auto para vender?
             </h2>
-            <p className="text-blue-100 mb-8 max-w-xl mx-auto">
+            <p className="text-blue-100 mb-6 max-w-xl mx-auto">
               Publica tu vehículo gratis y conecta con miles de compradores interesados
             </p>
             <Link
