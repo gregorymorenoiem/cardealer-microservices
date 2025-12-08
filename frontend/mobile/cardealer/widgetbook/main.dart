@@ -33,6 +33,11 @@ class WidgetbookApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Widgetbook.material(
+      appBuilder: (context, child) => MaterialApp(
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: child,
+      ),
       directories: [
         // Theme
         WidgetbookFolder(
@@ -224,8 +229,7 @@ class WidgetbookApp extends StatelessWidget {
                     id: '3',
                     title: 'Mazda CX-5 2023',
                     imageUrl: 'https://via.placeholder.com/400x300',
-                    model: 'CX-5',
-                    year: 2023,
+                    year: '2023',
                     price: 32000,
                     isFeatured: false,
                     onTap: () {},
@@ -244,8 +248,8 @@ class WidgetbookApp extends StatelessWidget {
                     icon: Icons.search_off,
                     title: 'No results found',
                     message: 'Try adjusting your search filters',
-                    buttonText: 'Clear Filters',
-                    onButtonPressed: () {},
+                    actionText: 'Clear Filters',
+                    onAction: () {},
                   ),
                 ),
               ],
@@ -253,23 +257,12 @@ class WidgetbookApp extends StatelessWidget {
           ],
         ),
       ],
-      appInfo: AppInfo(name: 'CarDealer Components'),
-      themes: [
-        WidgetbookTheme(
-          name: 'Light',
-          data: AppTheme.lightTheme,
-        ),
-        WidgetbookTheme(
-          name: 'Dark',
-          data: AppTheme.darkTheme,
-        ),
-      ],
     );
   }
 }
 
 class ColorPaletteWidget extends StatelessWidget {
-  const ColorPaletteWidget({Key? key}) : super(key: key);
+  const ColorPaletteWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

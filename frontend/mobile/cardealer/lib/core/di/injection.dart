@@ -12,10 +12,18 @@ import '../../domain/usecases/vehicles/get_vehicle_detail.dart';
 import '../../domain/usecases/vehicles/contact_seller.dart';
 import '../../domain/usecases/vehicles/get_similar_vehicles.dart';
 import '../../domain/usecases/favorites/toggle_favorite.dart';
+import '../../domain/usecases/profile/get_user_profile.dart';
+import '../../domain/usecases/profile/update_profile.dart';
+import '../../domain/usecases/favorites/get_favorites.dart';
+import '../../domain/usecases/favorites/remove_favorite.dart';
+import '../../domain/usecases/search/get_search_history.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../presentation/bloc/vehicles/vehicles_bloc.dart';
 import '../../presentation/bloc/filter/filter_bloc.dart';
 import '../../presentation/bloc/search/search_bloc.dart';
 import '../../presentation/bloc/vehicle_detail/vehicle_detail_bloc.dart';
+import '../../presentation/bloc/profile/profile_bloc.dart';
+import '../../presentation/bloc/favorites/favorites_bloc.dart';
 import '../network/network_info.dart';
 
 final getIt = GetIt.instance;
@@ -69,6 +77,21 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ToggleFavorite>(
     () => ToggleFavorite(),
   );
+  getIt.registerLazySingleton<GetUserProfile>(
+    () => GetUserProfile(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateProfile>(
+    () => UpdateProfile(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<GetFavorites>(
+    () => GetFavorites(getIt<VehicleRepository>(), getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<RemoveFavorite>(
+    () => RemoveFavorite(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<GetSearchHistory>(
+    () => GetSearchHistory(getIt<SharedPreferences>()),
+  );
 
   // Register BLoCs
   getIt.registerFactory<VehiclesBloc>(
@@ -93,6 +116,19 @@ Future<void> configureDependencies() async {
       getSimilarVehicles: getIt<GetSimilarVehicles>(),
       toggleFavorite: getIt<ToggleFavorite>(),
       sharedPreferences: getIt<SharedPreferences>(),
+    ),
+  );
+  getIt.registerFactory<ProfileBloc>(
+    () => ProfileBloc(
+      getUserProfile: getIt<GetUserProfile>(),
+      updateProfile: getIt<UpdateProfile>(),
+    ),
+  );
+  getIt.registerFactory<FavoritesBloc>(
+    () => FavoritesBloc(
+      getFavorites: getIt<GetFavorites>(),
+      removeFavorite: getIt<RemoveFavorite>(),
+      toggleFavorite: getIt<ToggleFavorite>(),
     ),
   );
 }
