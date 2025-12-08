@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { LanguageSwitcher } from '@/components/common';
 import { 
   FiMenu, 
   FiX, 
@@ -198,6 +199,9 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="minimal" className="hidden md:block ml-2" />
+
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -341,6 +345,11 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+
+            {/* Language Switcher - Mobile */}
+            <div className="border-t border-gray-200 pt-4 px-4">
+              <LanguageSwitcher variant="minimal" />
+            </div>
           </div>
         )}
       </div>
