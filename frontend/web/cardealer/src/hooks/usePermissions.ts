@@ -201,7 +201,7 @@ export interface UsePermissionsReturn {
 
 export function usePermissions(): UsePermissionsReturn {
   const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
   
   // Dealer features (si aplica)
   const subscription = user?.subscription;
@@ -301,7 +301,7 @@ export function usePermissions(): UsePermissionsReturn {
   
   return {
     // Estado
-    isAuthenticated: isAuthenticated(),
+    isAuthenticated,
     user,
     accountType,
     
