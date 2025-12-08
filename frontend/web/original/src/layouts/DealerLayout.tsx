@@ -86,6 +86,46 @@ const DealerLayout = ({ children }: DealerLayoutProps) => {
             <DealerSidebar />
           </div>
 
+          {/* Usage Stats */}
+          <div className="p-4 border-t border-gray-100">
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>Publicaciones</span>
+                  <span>{usage.listings}/{limits.maxListings === Infinity ? '∞' : limits.maxListings}</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${
+                      hasReachedLimit('listings') ? 'bg-red-500' :
+                      getUsagePercentage('listings') >= 80 ? 'bg-amber-500' : 'bg-blue-500'
+                    }`}
+                    style={{ 
+                      width: limits.maxListings === Infinity 
+                        ? '20%' 
+                        : `${getUsagePercentage('listings')}%` 
+                    }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>Destacados</span>
+                  <span>{usage.featuredListings}/{limits.maxFeaturedListings}</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${
+                      hasReachedLimit('featured') ? 'bg-red-500' :
+                      getUsagePercentage('featured') >= 80 ? 'bg-amber-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${getUsagePercentage('featured')}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Upgrade CTA */}
           {(dealerPlan === 'free' || dealerPlan === 'basic') && (
             <div className="p-4">
