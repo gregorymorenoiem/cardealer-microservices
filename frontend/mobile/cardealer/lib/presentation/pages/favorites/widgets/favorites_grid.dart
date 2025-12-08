@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/responsive/responsive_utils.dart';
 import '../../../../domain/entities/vehicle.dart';
 import '../../../widgets/vehicle_card_grid.dart';
 
@@ -17,8 +18,8 @@ class FavoritesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: context.gridColumns,
         childAspectRatio: 0.7,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,

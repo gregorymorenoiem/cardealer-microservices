@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/responsive/responsive_utils.dart';
 import '../../bloc/profile/profile_bloc.dart';
 import '../../bloc/profile/profile_event.dart';
 import '../../bloc/profile/profile_state.dart';
@@ -98,116 +99,123 @@ class _ProfilePageContent extends StatelessWidget {
 
             return Stack(
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // Profile Header
-                      ProfileHeader(
-                        user: user,
-                        onAvatarTap: () => _showAvatarPicker(context),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Personal Information Section
-                      _buildSectionTitle('Información Personal'),
-                      const SizedBox(height: 8),
-                      ProfileMenuItem(
-                        icon: Icons.person_outline,
-                        title: 'Nombre',
-                        subtitle: '${user.firstName} ${user.lastName}',
-                        onTap: () => _showEditProfileDialog(context),
-                      ),
-                      ProfileMenuItem(
-                        icon: Icons.email_outlined,
-                        title: 'Email',
-                        subtitle: user.email,
-                        onTap: () {}, // Email no editable
-                      ),
-                      ProfileMenuItem(
-                        icon: Icons.phone_outlined,
-                        title: 'Teléfono',
-                        subtitle: user.phoneNumber ?? 'No especificado',
-                        onTap: () => _showEditProfileDialog(context),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Account Settings Section
-                      _buildSectionTitle('Configuración de Cuenta'),
-                      const SizedBox(height: 8),
-                      ProfileMenuItem(
-                        icon: Icons.notifications_outlined,
-                        title: 'Notificaciones',
-                        subtitle: 'Gestionar preferencias',
-                        onTap: () {
-                          // TODO: Navigate to notifications settings
-                        },
-                      ),
-                      ProfileMenuItem(
-                        icon: Icons.security_outlined,
-                        title: 'Seguridad',
-                        subtitle: 'Cambiar contraseña',
-                        onTap: () {
-                          // TODO: Navigate to security settings
-                        },
-                      ),
-                      ProfileMenuItem(
-                        icon: Icons.language_outlined,
-                        title: 'Idioma',
-                        subtitle: 'Español',
-                        onTap: () {
-                          // TODO: Navigate to language settings
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Preferences Section
-                      _buildSectionTitle('Preferencias'),
-                      const SizedBox(height: 8),
-                      ProfileMenuItem(
-                        icon: Icons.favorite_outline,
-                        title: 'Favoritos',
-                        subtitle: 'Ver vehículos guardados',
-                        onTap: () {
-                          Navigator.of(context).pushNamed('/favorites');
-                        },
-                      ),
-                      ProfileMenuItem(
-                        icon: Icons.history_outlined,
-                        title: 'Historial de Búsquedas',
-                        subtitle: 'Ver búsquedas recientes',
-                        onTap: () {
-                          // TODO: Navigate to search history
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Logout Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Cerrar Sesión'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                            padding: const EdgeInsets.all(16),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: context.isMobile ? double.infinity : 800,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(context.responsivePadding),
+                      child: Column(
+                        children: [
+                          // Profile Header
+                          ProfileHeader(
+                            user: user,
+                            onAvatarTap: () => _showAvatarPicker(context),
                           ),
-                          onPressed: () => _showLogoutDialog(context),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                          SizedBox(height: context.spacing(2)),
 
-                      // Delete Account Button
-                      TextButton(
-                        onPressed: () => _showDeleteAccountDialog(context),
-                        child: const Text(
-                          'Eliminar Cuenta',
-                          style: TextStyle(color: Colors.red),
-                        ),
+                          // Personal Information Section
+                          _buildSectionTitle('Información Personal'),
+                          SizedBox(height: context.spacing(0.5)),
+                          ProfileMenuItem(
+                            icon: Icons.person_outline,
+                            title: 'Nombre',
+                            subtitle: '${user.firstName} ${user.lastName}',
+                            onTap: () => _showEditProfileDialog(context),
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.email_outlined,
+                            title: 'Email',
+                            subtitle: user.email,
+                            onTap: () {}, // Email no editable
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.phone_outlined,
+                            title: 'Teléfono',
+                            subtitle: user.phoneNumber ?? 'No especificado',
+                            onTap: () => _showEditProfileDialog(context),
+                          ),
+                          SizedBox(height: context.spacing(1.5)),
+
+                          // Account Settings Section
+                          _buildSectionTitle('Configuración de Cuenta'),
+                          SizedBox(height: context.spacing(0.5)),
+                          ProfileMenuItem(
+                            icon: Icons.notifications_outlined,
+                            title: 'Notificaciones',
+                            subtitle: 'Gestionar preferencias',
+                            onTap: () {
+                              // TODO: Navigate to notifications settings
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.security_outlined,
+                            title: 'Seguridad',
+                            subtitle: 'Cambiar contraseña',
+                            onTap: () {
+                              // TODO: Navigate to security settings
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.language_outlined,
+                            title: 'Idioma',
+                            subtitle: 'Español',
+                            onTap: () {
+                              // TODO: Navigate to language settings
+                            },
+                          ),
+                          SizedBox(height: context.spacing(1.5)),
+
+                          // Preferences Section
+                          _buildSectionTitle('Preferencias'),
+                          SizedBox(height: context.spacing(0.5)),
+                          ProfileMenuItem(
+                            icon: Icons.favorite_outline,
+                            title: 'Favoritos',
+                            subtitle: 'Ver vehículos guardados',
+                            onTap: () {
+                              Navigator.of(context).pushNamed('/favorites');
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.history_outlined,
+                            title: 'Historial de Búsquedas',
+                            subtitle: 'Ver búsquedas recientes',
+                            onTap: () {
+                              // TODO: Navigate to search history
+                            },
+                          ),
+                          SizedBox(height: context.spacing(1.5)),
+
+                          // Logout Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.logout),
+                              label: const Text('Cerrar Sesión'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.all(16),
+                              ),
+                              onPressed: () => _showLogoutDialog(context),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Delete Account Button
+                          TextButton(
+                            onPressed: () => _showDeleteAccountDialog(context),
+                            child: const Text(
+                              'Eliminar Cuenta',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          SizedBox(height: context.spacing(2)),
+                        ],
                       ),
-                      const SizedBox(height: 32),
-                    ],
+                    ),
                   ),
                 ),
                 if (isUpdating)

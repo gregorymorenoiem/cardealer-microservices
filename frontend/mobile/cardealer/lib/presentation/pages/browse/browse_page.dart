@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/responsive/responsive_utils.dart';
 import '../../bloc/filter/filter_bloc.dart';
 import '../../bloc/filter/filter_event.dart';
 import '../../bloc/filter/filter_state.dart';
@@ -255,27 +256,63 @@ class _BrowsePageState extends State<BrowsePage> {
   }
 
   Widget _buildResultsList(List<Vehicle> vehicles) {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16.0),
-      itemCount: vehicles.length,
-      itemBuilder: (context, index) {
-        final vehicle = vehicles[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: VehicleCard(
-            id: vehicle.id,
-            title: '${vehicle.make} ${vehicle.model} ${vehicle.year}',
-            imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : '',
-            price: vehicle.price,
-            year: vehicle.year.toString(),
-            mileage: '${vehicle.mileage} km',
-            location: vehicle.location,
-            isFeatured: vehicle.isFeatured,
-            onTap: () {
-              // TODO: Navegar a detalle
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use grid on tablet/desktop, list on mobile
+        if (context.isTablet || context.isDesktop) {
+          return GridView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: context.gridColumns,
+              childAspectRatio: 0.7,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: vehicles.length,
+            itemBuilder: (context, index) {
+              final vehicle = vehicles[index];
+              return VehicleCard(
+                id: vehicle.id,
+                title: '${vehicle.make} ${vehicle.model} ${vehicle.year}',
+                imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : '',
+                price: vehicle.price,
+                year: vehicle.year.toString(),
+                mileage: '${vehicle.mileage} km',
+                location: vehicle.location,
+                isFeatured: vehicle.isFeatured,
+                onTap: () {
+                  // TODO: Navegar a detalle
+                },
+              );
             },
-          ),
+          );
+        }
+
+        // List view for mobile
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(16.0),
+          itemCount: vehicles.length,
+          itemBuilder: (context, index) {
+            final vehicle = vehicles[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: VehicleCard(
+                id: vehicle.id,
+                title: '${vehicle.make} ${vehicle.model} ${vehicle.year}',
+                imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : '',
+                price: vehicle.price,
+                year: vehicle.year.toString(),
+                mileage: '${vehicle.mileage} km',
+                location: vehicle.location,
+                isFeatured: vehicle.isFeatured,
+                onTap: () {
+                  // TODO: Navegar a detalle
+                },
+              ),
+            );
+          },
         );
       },
     );
