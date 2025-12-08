@@ -230,14 +230,6 @@ const HomePage: React.FC = () => {
       .slice(0, 6);
   }, [heroVehicles]);
 
-  // Get latest vehicles (basic tier vehicles not in hero, showing variety)
-  const latestVehicles = useMemo(() => {
-    const heroIds = new Set(heroVehicles.map(v => v.id));
-    return mockVehicles
-      .filter(v => !heroIds.has(v.id) && (!v.tier || v.tier === 'basic' || v.tier === 'featured'))
-      .slice(0, 6);
-  }, [heroVehicles]);
-
   return (
     <MainLayout>
       {/* Hero Carousel - Full Screen, No Search Overlay */}
@@ -285,24 +277,6 @@ const HomePage: React.FC = () => {
             </div>
             
             <FeaturedListingGrid vehicles={premiumVehicles} columns={3} />
-          </div>
-        </section>
-      )}
-
-      {/* Latest Vehicles Section - Maximum vehicle display */}
-      {latestVehicles.length > 0 && (
-        <section className="py-6 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Recién Agregados
-              </h2>
-              <p className="text-gray-600">
-                Los vehículos más recientes en nuestra plataforma
-              </p>
-            </div>
-            
-            <FeaturedListingGrid vehicles={latestVehicles} columns={3} />
           </div>
         </section>
       )}
