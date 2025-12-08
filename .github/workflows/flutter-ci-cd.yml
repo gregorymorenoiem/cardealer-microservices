@@ -1,0 +1,212 @@
+name: Flutter CI/CD
+
+on:
+  push:
+    branches: [ main, develop, sprint-* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+
+jobs:
+  # Análisis de código y tests
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: Verificar versión de Flutter
+      run: flutter --version
+
+    - name: Instalar dependencias
+      run: flutter pub get
+
+    - name: Verificar formato de código
+      run: dart format --output=none --set-exit-if-changed .
+
+    - name: Analizar código
+      run: flutter analyze
+
+    - name: Ejecutar tests
+      run: flutter test --coverage
+
+    - name: Subir reporte de cobertura
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./mobile/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+  # Build Android
+  build-android:
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flavor: [dev, staging, prod]
+    defaults:
+      run:
+        working-directory: mobile
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        cache: 'gradle'
+
+    - name: Instalar dependencias
+      run: flutter pub get
+
+    # Configurar Firebase (requiere secrets)
+    # - name: Configurar Firebase
+    #   env:
+    #     FIREBASE_CONFIG_${{ matrix.flavor }}: ${{ secrets[format('FIREBASE_CONFIG_{0}', upper(matrix.flavor))] }}
+    #   run: |
+    #     echo "$FIREBASE_CONFIG_${{ matrix.flavor }}" > android/app/src/${{ matrix.flavor }}/google-services.json
+
+    - name: Build APK (${{ matrix.flavor }})
+      run: |
+        flutter build apk \
+          --flavor ${{ matrix.flavor }} \
+          -t lib/main_${{ matrix.flavor }}.dart \
+          --release
+
+    - name: Build App Bundle (${{ matrix.flavor }})
+      if: matrix.flavor == 'prod'
+      run: |
+        flutter build appbundle \
+          --flavor ${{ matrix.flavor }} \
+          -t lib/main_${{ matrix.flavor }}.dart \
+          --release
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-${{ matrix.flavor }}-release.apk
+        path: mobile/build/app/outputs/flutter-apk/app-${{ matrix.flavor }}-release.apk
+        retention-days: 30
+
+    - name: Upload App Bundle artifact
+      if: matrix.flavor == 'prod'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-${{ matrix.flavor }}-release.aab
+        path: mobile/build/app/outputs/bundle/${{ matrix.flavor }}Release/app-${{ matrix.flavor }}-release.aab
+        retention-days: 30
+
+  # Build iOS (requiere macOS)
+  build-ios:
+    needs: analyze-and-test
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        flavor: [dev, staging, prod]
+    defaults:
+      run:
+        working-directory: mobile
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: Instalar dependencias
+      run: flutter pub get
+
+    - name: Install CocoaPods
+      run: |
+        cd ios
+        pod install
+        cd ..
+
+    # Configurar Firebase iOS
+    # - name: Configurar Firebase iOS
+    #   env:
+    #     FIREBASE_CONFIG_IOS_${{ matrix.flavor }}: ${{ secrets[format('FIREBASE_CONFIG_IOS_{0}', upper(matrix.flavor))] }}
+    #   run: |
+    #     echo "$FIREBASE_CONFIG_IOS_${{ matrix.flavor }}" > ios/Runner/GoogleService-Info.plist
+
+    # Requiere certificados de firma de Apple
+    - name: Build iOS (${{ matrix.flavor }})
+      run: |
+        flutter build ios \
+          --flavor ${{ matrix.flavor }} \
+          -t lib/main_${{ matrix.flavor }}.dart \
+          --release \
+          --no-codesign
+
+    - name: Upload iOS build
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-${{ matrix.flavor }}-build
+        path: mobile/build/ios/iphoneos/
+        retention-days: 30
+
+  # Deploy a Firebase App Distribution (opcional)
+  deploy-firebase:
+    needs: [build-android]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Download APK artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: app-dev-release.apk
+        path: ./
+
+    # Requiere configurar Firebase App Distribution
+    # - name: Deploy a Firebase App Distribution
+    #   uses: wzieba/Firebase-Distribution-Github-Action@v1
+    #   with:
+    #     appId: ${{ secrets.FIREBASE_APP_ID }}
+    #     serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+    #     groups: testers
+    #     file: app-dev-release.apk
+
+  # Notificación de éxito
+  notify-success:
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: Notificar éxito
+      run: |
+        echo "✅ Build completado exitosamente"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
