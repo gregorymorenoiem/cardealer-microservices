@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../core/error/failures.dart';
 import '../../core/network/network_info.dart';
 import '../../domain/entities/vehicle.dart';
+import '../../domain/entities/filter_criteria.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/mock/mock_vehicle_datasource.dart';
 
@@ -155,6 +156,185 @@ class VehicleRepositoryImpl implements VehicleRepository {
       }
 
       return Right(vehicles);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Vehicle>>> searchVehiclesByQuery({
+    required String query,
+    int? limit,
+  }) async {
+    try {
+      final result = await mockDataSource.getAllVehicles();
+      
+      // Búsqueda por texto en múltiples campos
+      final searchQuery = query.toLowerCase();
+      var vehicles = result.where((v) {
+        return v.make.toLowerCase().contains(searchQuery) ||
+            v.model.toLowerCase().contains(searchQuery) ||
+            v.title.toLowerCase().contains(searchQuery) ||
+            v.description.toLowerCase().contains(searchQuery) ||
+            v.bodyType.toLowerCase().contains(searchQuery) ||
+            v.fuelType.toLowerCase().contains(searchQuery);
+      }).toList();
+
+      // Aplicar límite si se especifica
+      if (limit != null && vehicles.length > limit) {
+        vehicles = vehicles.take(limit).toList();
+      }
+
+      return Right(vehicles);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Vehicle>>> filterVehicles({
+    required FilterCriteria criteria,
+    SortOption? sortBy,
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      var vehicles = await mockDataSource.getAllVehicles();
+
+      // Aplicar filtros de precio
+      if (criteria.minPrice != null) {
+        vehicles = vehicles.where((v) => v.price >= criteria.minPrice!).toList();
+      }
+      if (criteria.maxPrice != null) {
+        vehicles = vehicles.where((v) => v.price <= criteria.maxPrice!).toList();
+      }
+
+      // Aplicar filtros de año
+      if (criteria.minYear != null) {
+        vehicles = vehicles.where((v) => v.year >= criteria.minYear!).toList();
+      }
+      if (criteria.maxYear != null) {
+        vehicles = vehicles.where((v) => v.year <= criteria.maxYear!).toList();
+      }
+
+      // Aplicar filtros de marca
+      if (criteria.makes != null && criteria.makes!.isNotEmpty) {
+        vehicles = vehicles.where((v) => criteria.makes!.contains(v.make)).toList();
+      }
+
+      // Aplicar filtros de modelo
+      if (criteria.models != null && criteria.models!.isNotEmpty) {
+        vehicles = vehicles.where((v) => criteria.models!.contains(v.model)).toList();
+      }
+
+      // Aplicar filtros de tipo de carrocería
+      if (criteria.bodyTypes != null && criteria.bodyTypes!.isNotEmpty) {
+        vehicles = vehicles.where((v) => criteria.bodyTypes!.contains(v.bodyType)).toList();
+      }
+
+      // Aplicar filtros de tipo de combustible
+      if (criteria.fuelTypes != null && criteria.fuelTypes!.isNotEmpty) {
+        vehicles = vehicles.where((v) => criteria.fuelTypes!.contains(v.fuelType)).toList();
+      }
+
+      // Aplicar filtros de transmisión
+      if (criteria.transmissions != null && criteria.transmissions!.isNotEmpty) {
+        vehicles = vehicles.where((v) => criteria.transmissions!.contains(v.transmission)).toList();
+      }
+
+      // Aplicar filtro de kilometraje
+      if (criteria.maxMileage != null) {
+        vehicles = vehicles.where((v) => v.mileage <= criteria.maxMileage!).toList();
+      }
+
+      // Aplicar filtro de condición
+      if (criteria.condition != null) {
+        vehicles = vehicles.where((v) => v.condition == criteria.condition).toList();
+      }
+
+      // Aplicar filtro de color
+      if (criteria.colors != null && criteria.colors!.isNotEmpty) {
+        vehicles = vehicles.where((v) => v.color != null && criteria.colors!.contains(v.color)).toList();
+      }
+
+      // Aplicar ordenamiento
+      if (sortBy != null) {
+        switch (sortBy) {
+          case SortOption.priceAsc:
+            vehicles.sort((a, b) => a.price.compareTo(b.price));
+            break;
+          case SortOption.priceDesc:
+            vehicles.sort((a, b) => b.price.compareTo(a.price));
+            break;
+          case SortOption.yearDesc:
+            vehicles.sort((a, b) => b.year.compareTo(a.year));
+            break;
+          case SortOption.yearAsc:
+            vehicles.sort((a, b) => a.year.compareTo(b.year));
+            break;
+          case SortOption.mileageAsc:
+            vehicles.sort((a, b) => a.mileage.compareTo(b.mileage));
+            break;
+          case SortOption.mileageDesc:
+            vehicles.sort((a, b) => b.mileage.compareTo(a.mileage));
+            break;
+          case SortOption.dateDesc:
+            vehicles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            break;
+          case SortOption.relevance:
+            // Ordenar por featured y luego por fecha
+            vehicles.sort((a, b) {
+              if (a.isFeatured != b.isFeatured) {
+                return b.isFeatured ? 1 : -1;
+              }
+              return b.createdAt.compareTo(a.createdAt);
+            });
+            break;
+        }
+      }
+
+      // Aplicar paginación
+      if (page != null && limit != null) {
+        final startIndex = page * limit;
+        if (startIndex < vehicles.length) {
+          final endIndex = (startIndex + limit).clamp(0, vehicles.length);
+          vehicles = vehicles.sublist(startIndex, endIndex);
+        } else {
+          vehicles = [];
+        }
+      } else if (limit != null) {
+        vehicles = vehicles.take(limit).toList();
+      }
+
+      return Right(vehicles);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, List<String>>>> getFilterSuggestions() async {
+    try {
+      final vehicles = await mockDataSource.getAllVehicles();
+
+      // Extraer valores únicos para cada categoría
+      final makes = vehicles.map((v) => v.make).toSet().toList()..sort();
+      final models = vehicles.map((v) => v.model).toSet().toList()..sort();
+      final bodyTypes = vehicles.map((v) => v.bodyType).toSet().toList()..sort();
+      final fuelTypes = vehicles.map((v) => v.fuelType).toSet().toList()..sort();
+      final transmissions = vehicles.map((v) => v.transmission).toSet().toList()..sort();
+      final colors = vehicles.map((v) => v.color).whereType<String>().toSet().toList()..sort();
+      final conditions = vehicles.map((v) => v.condition).toSet().toList()..sort();
+
+      return Right({
+        'makes': makes,
+        'models': models,
+        'bodyTypes': bodyTypes,
+        'fuelTypes': fuelTypes,
+        'transmissions': transmissions,
+        'colors': colors,
+        'conditions': conditions,
+      });
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

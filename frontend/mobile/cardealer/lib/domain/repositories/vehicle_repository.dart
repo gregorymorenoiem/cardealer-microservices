@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../core/error/failures.dart';
 import '../entities/vehicle.dart';
+import '../entities/filter_criteria.dart';
 
 /// Repository interface for vehicle operations
 abstract class VehicleRepository {
@@ -41,4 +42,21 @@ abstract class VehicleRepository {
     String? fuelType,
     String? condition,
   });
+
+  /// Search vehicles by query text
+  Future<Either<Failure, List<Vehicle>>> searchVehiclesByQuery({
+    required String query,
+    int? limit,
+  });
+
+  /// Filter vehicles with advanced criteria
+  Future<Either<Failure, List<Vehicle>>> filterVehicles({
+    required FilterCriteria criteria,
+    SortOption? sortBy,
+    int? page,
+    int? limit,
+  });
+
+  /// Get filter suggestions (makes, models, etc)
+  Future<Either<Failure, Map<String, List<String>>>> getFilterSuggestions();
 }
