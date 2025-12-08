@@ -8,6 +8,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { LanguageSwitcher } from '@/components/common';
+import GlobalSearch from './GlobalSearch';
 import { 
   FiMenu, 
   FiX, 
@@ -42,8 +43,6 @@ export default function Navbar() {
     { to: '/', label: t('nav.home') },
     { to: '/browse', label: t('nav.browse') + ' ' + t('nav.vehicles') },
     { to: '/sell-your-car', label: t('nav.sell') + ' mi Auto' },
-    { to: '/compare', label: t('nav.compare') },
-    { to: '/about', label: t('nav.about') },
   ];
 
   return (
@@ -75,6 +74,11 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+          </div>
+
+          {/* Global Search (Desktop) */}
+          <div className="hidden md:block flex-1 max-w-lg mx-6">
+            <GlobalSearch placeholder={t('nav.searchPlaceholder')} />
           </div>
 
           {/* Right Side Actions */}
