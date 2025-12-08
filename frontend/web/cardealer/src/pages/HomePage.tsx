@@ -7,84 +7,10 @@ import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
-import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
-
-// Mock data - Featured Vehicles
-const featuredVehicles = [
-  {
-    id: 'v1',
-    title: 'Mercedes-Benz Clase C AMG 2024',
-    price: 75000,
-    image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&h=600&fit=crop',
-    location: 'Miami, FL',
-    rating: 4.9,
-    reviews: 47,
-    year: 2024,
-    mileage: 0,
-    condition: 'Nuevo',
-  },
-  {
-    id: 'v2',
-    title: 'BMW Serie 7 Executive Package',
-    price: 95000,
-    image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop',
-    location: 'Los Angeles, CA',
-    rating: 4.8,
-    reviews: 62,
-    year: 2024,
-    mileage: 0,
-    condition: 'Nuevo',
-  },
-  {
-    id: 'v3',
-    title: 'Porsche 911 Carrera S',
-    price: 135000,
-    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop',
-    location: 'New York, NY',
-    rating: 4.9,
-    reviews: 89,
-    year: 2024,
-    mileage: 0,
-    condition: 'Nuevo',
-  },
-  {
-    id: 'v4',
-    title: 'Audi RS7 Sportback 2024',
-    price: 128000,
-    image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop',
-    location: 'Dallas, TX',
-    rating: 4.7,
-    reviews: 31,
-    year: 2024,
-    mileage: 0,
-    condition: 'Nuevo',
-  },
-  {
-    id: 'v5',
-    title: 'Tesla Model S Plaid',
-    price: 108000,
-    image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&h=600&fit=crop',
-    location: 'San Francisco, CA',
-    rating: 4.8,
-    reviews: 56,
-    year: 2024,
-    mileage: 0,
-    condition: 'Nuevo',
-  },
-  {
-    id: 'v6',
-    title: 'Range Rover Sport HSE',
-    price: 89000,
-    image: 'https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=800&h=600&fit=crop',
-    location: 'Phoenix, AZ',
-    rating: 4.6,
-    reviews: 28,
-    year: 2024,
-    mileage: 0,
-    condition: 'Nuevo',
-  },
-];
+import { mockVehicles } from '@/data/mockVehicles';
+import FeaturedListingCard from '@/components/molecules/FeaturedListingCard';
 
 // Popular vehicle types
 const vehicleTypes = [
@@ -137,30 +63,21 @@ const features = [
   },
 ];
 
-// Format price helper
-const formatPrice = (price: number, currency = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(price);
-};
-
 // Featured Section Component
 interface FeaturedSectionProps {
   title: string;
   subtitle: string;
   vehicles: Array<{
     id: string;
-    title: string;
-    price: number;
-    image: string;
-    location: string;
-    rating: number;
-    reviews: number;
     year: number;
+    make: string;
+    model: string;
+    price: number;
     mileage: number;
-    condition: string;
+    location: string;
+    images: string[];
+    tier?: 'basic' | 'featured' | 'premium' | 'enterprise';
+    [key: string]: any; // Allow other Vehicle properties
   }>;
   viewAllHref: string;
 }
@@ -231,7 +148,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, vehi
           </div>
         </div>
 
-        {/* Scrollable cards */}
+        {/* Scrollable cards - Using FeaturedListingCard */}
         <div
           ref={scrollRef}
           onScroll={checkScroll}
@@ -239,55 +156,17 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, vehi
           style={{ scrollSnapType: 'x mandatory' }}
         >
           {vehicles.map((vehicle) => (
-            <Link
+            <div 
               key={vehicle.id}
-              to={`/listing/${vehicle.id}`}
-              className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group"
+              className="flex-shrink-0 w-72"
               style={{ scrollSnapAlign: 'start' }}
             >
-              {/* Image */}
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={vehicle.image}
-                  alt={vehicle.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 left-3">
-                  <span className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full">
-                    {vehicle.condition}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {vehicle.title}
-                </h3>
-
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                  <FiMapPin className="w-4 h-4" />
-                  {vehicle.location}
-                </div>
-
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xl font-bold text-blue-600">
-                    {formatPrice(vehicle.price)}
-                  </p>
-                  <div className="flex items-center gap-1 text-sm">
-                    <FiStar className="w-4 h-4 text-amber-400 fill-current" />
-                    <span className="font-medium">{vehicle.rating}</span>
-                    <span className="text-gray-400">({vehicle.reviews})</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                  <span>{vehicle.year}</span>
-                  <span>•</span>
-                  <span>{vehicle.mileage.toLocaleString()} mi</span>
-                </div>
-              </div>
-            </Link>
+              <FeaturedListingCard 
+                vehicle={vehicle as any}
+                priority="normal"
+                context="grid"
+              />
+            </div>
           ))}
         </div>
 
@@ -500,7 +379,7 @@ const HomePage: React.FC = () => {
       <FeaturedSection
         title="Vehículos Destacados"
         subtitle="Los mejores autos seleccionados para ti"
-        vehicles={featuredVehicles}
+        vehicles={mockVehicles.slice(0, 6)}
         viewAllHref="/browse"
       />
 
