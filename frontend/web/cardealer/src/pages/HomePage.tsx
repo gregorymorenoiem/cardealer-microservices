@@ -279,6 +279,22 @@ const HomePage: React.FC = () => {
       .slice(0, 10);
   }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles]);
 
+  // Get vehicles for "Recién Agregados" scrollable (10 vehicles, newest first)
+  const recentlyAdded = useMemo(() => {
+    const excludeIds = new Set([
+      ...heroVehicles.map(v => v.id),
+      ...topFeaturedGrid.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id),
+      ...dailyDeals.map(v => v.id),
+      ...suvTrucks.map(v => v.id),
+      ...premiumVehicles.map(v => v.id),
+      ...electricHybrid.map(v => v.id)
+    ]);
+    return mockVehicles
+      .filter(v => !excludeIds.has(v.id))
+      .slice(0, 10);
+  }, [heroVehicles, topFeaturedGrid, weeklyFeatured, dailyDeals, suvTrucks, premiumVehicles, electricHybrid]);
+
   return (
     <MainLayout>
       {/* Hero Carousel - Full Screen, No Search Overlay */}
@@ -349,6 +365,14 @@ const HomePage: React.FC = () => {
           viewAllHref="/vehicles?fuelType=electric,hybrid"
         />
       )}
+
+      {/* Recién Agregados - Scrollable Section with 10 vehicles */}
+      <FeaturedSection
+        title="Recién Agregados"
+        subtitle="Los vehículos más recientes en nuestra plataforma"
+        vehicles={recentlyAdded}
+        viewAllHref="/vehicles?sort=newest"
+      />
 
       {/* Features Section - Compact, Amazon-style spacing */}
       <section className="py-6 bg-white">
