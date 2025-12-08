@@ -16,7 +16,6 @@ import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
-import { FeaturedListingGrid } from '@/components/molecules';
 import { mockVehicles } from '@/data/mockVehicles';
 import type { Vehicle } from '@/data/mockVehicles';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
@@ -209,26 +208,33 @@ const HomePage: React.FC = () => {
     return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
   }, []);
 
-  // Get weekly featured vehicles for scrollable section (10 vehicles)
-  const weeklyFeatured = useMemo(() => {
-    return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 10);
-  }, []);
-
-  // Get featured vehicles for top grid section (6 vehicles, exclude hero)
+  // Get featured vehicles for top scrollable section (10 vehicles, exclude hero)
   const topFeatured = useMemo(() => {
     const heroIds = new Set(heroVehicles.map(v => v.id));
     return mockVehicles
       .filter(v => !heroIds.has(v.id))
-      .slice(0, 6);
+      .slice(0, 10);
   }, [heroVehicles]);
 
-  // Get premium vehicles for premium section (top tier vehicles not in hero)
-  const premiumVehicles = useMemo(() => {
-    const heroIds = new Set(heroVehicles.map(v => v.id));
+  // Get weekly featured vehicles for scrollable section (10 vehicles, exclude hero and top)
+  const weeklyFeatured = useMemo(() => {
+    const excludeIds = new Set([...heroVehicles.map(v => v.id), ...topFeatured.map(v => v.id)]);
     return mockVehicles
-      .filter(v => !heroIds.has(v.id) && (v.tier === 'enterprise' || v.tier === 'premium'))
-      .slice(0, 6);
-  }, [heroVehicles]);
+      .filter(v => !excludeIds.has(v.id))
+      .slice(0, 10);
+  }, [heroVehicles, topFeatured]);
+
+  // Get premium vehicles for premium section (10 vehicles, enterprise/premium tier only)
+  const premiumVehicles = useMemo(() => {
+    const excludeIds = new Set([
+      ...heroVehicles.map(v => v.id),
+      ...topFeatured.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id)
+    ]);
+    return mockVehicles
+      .filter(v => !excludeIds.has(v.id) && (v.tier === 'enterprise' || v.tier === 'premium'))
+      .slice(0, 10);
+  }, [heroVehicles, topFeatured, weeklyFeatured]);
 
   return (
     <MainLayout>
@@ -239,21 +245,13 @@ const HomePage: React.FC = () => {
         showScrollHint={false}
       />
 
-      {/* Vehículos Destacados - Top 6 vehicles in grid (eso es dinero!) */}
-      <section className="py-6 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Vehículos Destacados
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Explora nuestra selección premium de vehículos cuidadosamente verificados
-            </p>
-          </div>
-          
-          <FeaturedListingGrid vehicles={topFeatured} columns={3} />
-        </div>
-      </section>
+      {/* Vehículos Destacados - Top 10 vehicles scrollable (eso es dinero!) */}
+      <FeaturedSection
+        title="Vehículos Destacados"
+        subtitle="Explora nuestra selección premium de vehículos cuidadosamente verificados"
+        vehicles={topFeatured}
+        viewAllHref="/vehicles"
+      />
 
       {/* Destacados de la Semana - Scrollable Section with 10 vehicles */}
       <FeaturedSection
@@ -263,22 +261,14 @@ const HomePage: React.FC = () => {
         viewAllHref="/vehicles"
       />
 
-      {/* Premium Vehicles Section - More vehicles = more money */}
+      {/* Premium Vehicles Section - 10 vehicles scrollable */}
       {premiumVehicles.length > 0 && (
-        <section className="py-6 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Vehículos Premium
-              </h2>
-              <p className="text-gray-600">
-                Selección exclusiva de vehículos de alta gama
-              </p>
-            </div>
-            
-            <FeaturedListingGrid vehicles={premiumVehicles} columns={3} />
-          </div>
-        </section>
+        <FeaturedSection
+          title="Vehículos Premium"
+          subtitle="Selección exclusiva de vehículos de alta gama"
+          vehicles={premiumVehicles}
+          viewAllHref="/vehicles?tier=premium"
+        />
       )}
 
       {/* Features Section - Compact, Amazon-style spacing */}
