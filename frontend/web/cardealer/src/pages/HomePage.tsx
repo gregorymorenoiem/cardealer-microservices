@@ -222,16 +222,6 @@ const HomePage: React.FC = () => {
       .slice(0, 6);
   }, [heroVehicles]);
 
-  // Get featured vehicles for main grid (exclude hero, top featured, and weekly)
-  const gridVehicles = useMemo(() => {
-    const excludeIds = new Set([
-      ...heroVehicles.map(v => v.id),
-      ...topFeatured.map(v => v.id),
-      ...weeklyFeatured.map(v => v.id)
-    ]);
-    return mockVehicles.filter(v => !excludeIds.has(v.id));
-  }, [heroVehicles, topFeatured, weeklyFeatured]);
-
   // Get premium vehicles for premium section (top tier vehicles not in hero)
   const premiumVehicles = useMemo(() => {
     const heroIds = new Set(heroVehicles.map(v => v.id));
@@ -280,22 +270,6 @@ const HomePage: React.FC = () => {
         vehicles={weeklyFeatured}
         viewAllHref="/vehicles"
       />
-
-      {/* More Featured Vehicles Grid - Additional inventory */}
-      <section className="py-6 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Más Vehículos Disponibles
-            </h2>
-            <p className="text-gray-600">
-              Continúa explorando nuestra amplia selección
-            </p>
-          </div>
-          
-          <FeaturedListingGrid vehicles={gridVehicles} />
-        </div>
-      </section>
 
       {/* Premium Vehicles Section - More vehicles = more money */}
       {premiumVehicles.length > 0 && (
