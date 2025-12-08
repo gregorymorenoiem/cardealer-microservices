@@ -402,6 +402,11 @@
           "title": "Enjoy",
           "description": "Close the deal and enjoy your new vehicle."
         }
+      },
+      "cta": {
+        "title": "Ready to Sell Your Vehicle?",
+        "subtitle": "List your ad today and connect with thousands of interested buyers",
+        "button": "List My Vehicle"
       }
     }
   },

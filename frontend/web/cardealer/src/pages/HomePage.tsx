@@ -426,17 +426,17 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 lg:p-8 text-center text-white">
             <h2 className="text-2xl lg:text-3xl font-bold mb-3">
-              ¿Listo para Vender tu Vehículo?
+              {t('home.vehicleSections.cta.title')}
             </h2>
             <p className="text-blue-100 mb-6 max-w-xl mx-auto">
-              Publica tu anuncio hoy y conecta con miles de compradores interesados
+              {t('home.vehicleSections.cta.subtitle')}
             </p>
             <Link
               to="/vehicles/sell"
               className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-blue-600 hover:bg-gray-100 font-medium rounded-xl transition-colors"
             >
               <FaCar className="w-5 h-5" />
-              Publicar mi Vehículo
+              {t('home.vehicleSections.cta.button')}
               <FiArrowRight className="w-5 h-5" />
             </Link>
           </div>

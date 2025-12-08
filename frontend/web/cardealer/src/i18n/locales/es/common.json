@@ -402,6 +402,11 @@
           "title": "Disfruta",
           "description": "Cierra el trato y disfruta tu nuevo vehículo."
         }
+      },
+      "cta": {
+        "title": "¿Listo para Vender tu Vehículo?",
+        "subtitle": "Publica tu anuncio hoy y conecta con miles de compradores interesados",
+        "button": "Publicar mi Vehículo"
       }
     }
   },
