@@ -33,8 +33,8 @@ class SimilarVehiclesSection extends StatelessWidget {
             child: Text(
               'Vehículos similares',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
           const SizedBox(height: 16),
@@ -55,7 +55,8 @@ class SimilarVehiclesSection extends StatelessWidget {
                     child: VehicleCard(
                       id: vehicle.id,
                       title: '${vehicle.make} ${vehicle.model}',
-                      imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : '',
+                      imageUrl:
+                          vehicle.images.isNotEmpty ? vehicle.images[0] : '',
                       price: vehicle.price,
                       year: vehicle.year.toString(),
                       mileage: vehicle.mileage.toString(),
@@ -81,8 +82,8 @@ class SimilarVehiclesSection extends StatelessWidget {
           Text(
             'Vehículos similares',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 16),
           const Center(

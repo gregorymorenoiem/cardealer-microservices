@@ -34,8 +34,8 @@ class _VehicleDescriptionState extends State<VehicleDescription> {
           Text(
             'Descripción',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 12),
           AnimatedCrossFade(

@@ -25,8 +25,8 @@ class VehicleDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => context.read<VehicleDetailBloc>()
-        ..add(LoadVehicleDetail(vehicleId)),
+      create: (context) =>
+          context.read<VehicleDetailBloc>()..add(LoadVehicleDetail(vehicleId)),
       child: Scaffold(
         body: BlocConsumer<VehicleDetailBloc, VehicleDetailState>(
           listener: (context, state) {
@@ -85,8 +85,8 @@ class VehicleDetailPage extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () {
                         context.read<VehicleDetailBloc>().add(
-                          LoadVehicleDetail(vehicleId),
-                        );
+                              LoadVehicleDetail(vehicleId),
+                            );
                       },
                       icon: const Icon(Icons.refresh),
                       label: const Text('Reintentar'),
@@ -132,12 +132,12 @@ class VehicleDetailPage extends StatelessWidget {
                               final isFavorite = state is VehicleDetailLoaded
                                   ? state.isFavorite
                                   : false;
-                              
+
                               return IconButton(
                                 onPressed: () {
                                   context.read<VehicleDetailBloc>().add(
-                                    ToggleVehicleFavorite(vehicle.id),
-                                  );
+                                        ToggleVehicleFavorite(vehicle.id),
+                                      );
                                 },
                                 icon: Icon(
                                   isFavorite
@@ -152,11 +152,12 @@ class VehicleDetailPage extends StatelessWidget {
                           IconButton(
                             onPressed: () {
                               context.read<VehicleDetailBloc>().add(
-                                ShareVehicle(
-                                  vehicleId: vehicle.id,
-                                  title: '${vehicle.make} ${vehicle.model} ${vehicle.year}',
-                                ),
-                              );
+                                    ShareVehicle(
+                                      vehicleId: vehicle.id,
+                                      title:
+                                          '${vehicle.make} ${vehicle.model} ${vehicle.year}',
+                                    ),
+                                  );
                             },
                             icon: const Icon(Icons.share),
                           ),
@@ -276,15 +277,16 @@ class VehicleDetailPage extends StatelessWidget {
             onPressed: () {
               // TODO: Get message from TextField
               const message = 'Estoy interesado en este vehículo';
-              
+
               context.read<VehicleDetailBloc>().add(
-                ContactSellerEvent(
-                  vehicleId: vehicle.id,
-                  sellerId: 'seller_${vehicle.id}', // TODO: Add sellerId to Vehicle entity
-                  message: message,
-                ),
-              );
-              
+                    ContactSellerEvent(
+                      vehicleId: vehicle.id,
+                      sellerId:
+                          'seller_${vehicle.id}', // TODO: Add sellerId to Vehicle entity
+                      message: message,
+                    ),
+                  );
+
               Navigator.of(dialogContext).pop();
             },
             child: const Text('Enviar'),

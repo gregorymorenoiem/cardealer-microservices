@@ -28,9 +28,9 @@ class VehicleInfoHeader extends StatelessWidget {
           Text(
             formatter.format(vehicle.price),
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
 
@@ -38,8 +38,8 @@ class VehicleInfoHeader extends StatelessWidget {
           Text(
             '${vehicle.make} ${vehicle.model} ${vehicle.year}',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 4),
 
@@ -51,8 +51,8 @@ class VehicleInfoHeader extends StatelessWidget {
               Text(
                 vehicle.location,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
               const SizedBox(width: 16),
               const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
@@ -60,8 +60,8 @@ class VehicleInfoHeader extends StatelessWidget {
               Text(
                 _formatDate(vehicle.createdAt),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
             ],
           ),

@@ -94,16 +94,17 @@ class WidgetbookApp extends StatelessWidget {
                 WidgetbookUseCase(
                   name: 'Default',
                   builder: (context) => CustomTextField(
-                    label: context.knobs
+                    labelText: context.knobs
                         .string(label: 'Label', initialValue: 'Email'),
-                    hint: 'example@email.com',
+                    hintText: 'example@email.com',
                   ),
                 ),
                 WidgetbookUseCase(
                   name: 'Password',
-                  builder: (context) => const CustomTextField(
-                    label: 'Password',
-                    isPassword: true,
+                  builder: (context) => CustomTextField(
+                    labelText: context.knobs
+                        .string(label: 'Label', initialValue: 'Password'),
+                    obscureText: true,
                   ),
                 ),
               ],
@@ -114,16 +115,8 @@ class WidgetbookApp extends StatelessWidget {
               name: 'LoadingIndicator',
               useCases: [
                 WidgetbookUseCase(
-                  name: 'Circular',
-                  builder: (context) => const LoadingIndicator(
-                    type: LoadingType.circular,
-                  ),
-                ),
-                WidgetbookUseCase(
-                  name: 'Shimmer',
-                  builder: (context) => const LoadingIndicator(
-                    type: LoadingType.shimmer,
-                  ),
+                  name: 'Default',
+                  builder: (context) => const LoadingIndicator(),
                 ),
               ],
             ),
@@ -203,12 +196,11 @@ class WidgetbookApp extends StatelessWidget {
                 WidgetbookUseCase(
                   name: 'List Card',
                   builder: (context) => VehicleCard(
+                    id: '1',
+                    title: 'Toyota Corolla 2023',
                     imageUrl: 'https://via.placeholder.com/400x300',
-                    make: 'Toyota',
-                    model: 'Corolla',
-                    year: 2023,
                     price: 25000,
-                    mileage: 15000,
+                    mileage: '15000',
                     location: 'Ciudad de México',
                     isFeatured: context.knobs
                         .boolean(label: 'Featured', initialValue: true),
@@ -218,10 +210,9 @@ class WidgetbookApp extends StatelessWidget {
                 WidgetbookUseCase(
                   name: 'Horizontal Card',
                   builder: (context) => VehicleCardHorizontal(
+                    id: '2',
+                    title: 'Honda Civic 2023',
                     imageUrl: 'https://via.placeholder.com/400x300',
-                    make: 'Honda',
-                    model: 'Civic',
-                    year: 2023,
                     price: 28000,
                     isFeatured: true,
                     onTap: () {},
@@ -230,8 +221,9 @@ class WidgetbookApp extends StatelessWidget {
                 WidgetbookUseCase(
                   name: 'Grid Card',
                   builder: (context) => VehicleCardGrid(
+                    id: '3',
+                    title: 'Mazda CX-5 2023',
                     imageUrl: 'https://via.placeholder.com/400x300',
-                    make: 'Mazda',
                     model: 'CX-5',
                     year: 2023,
                     price: 32000,
@@ -252,8 +244,8 @@ class WidgetbookApp extends StatelessWidget {
                     icon: Icons.search_off,
                     title: 'No results found',
                     message: 'Try adjusting your search filters',
-                    actionLabel: 'Clear Filters',
-                    onAction: () {},
+                    buttonText: 'Clear Filters',
+                    onButtonPressed: () {},
                   ),
                 ),
               ],

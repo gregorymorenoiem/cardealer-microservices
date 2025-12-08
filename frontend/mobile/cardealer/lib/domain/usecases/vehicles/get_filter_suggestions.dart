@@ -9,7 +9,7 @@ class GetFilterSuggestions {
   GetFilterSuggestions(this.repository);
 
   /// Obtiene sugerencias para filtros (marcas, modelos, tipos de carrocería, etc)
-  /// 
+  ///
   /// Retorna un mapa con claves como 'makes', 'models', 'bodyTypes', etc
   /// y valores como listas de strings con las opciones disponibles
   Future<Either<Failure, Map<String, List<String>>>> call() async {

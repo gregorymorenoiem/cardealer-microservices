@@ -66,10 +66,10 @@ class VehicleDetailBloc extends Bloc<VehicleDetailEvent, VehicleDetailState> {
   ) async {
     if (state is VehicleDetailLoaded) {
       final currentState = state as VehicleDetailLoaded;
-      
+
       // Toggle favorite
       final newFavoriteStatus = !currentState.isFavorite;
-      
+
       // Update SharedPreferences
       final favorites = sharedPreferences.getStringList(_favoritesKey) ?? [];
       if (newFavoriteStatus) {
@@ -80,7 +80,7 @@ class VehicleDetailBloc extends Bloc<VehicleDetailEvent, VehicleDetailState> {
         favorites.remove(event.vehicleId);
       }
       await sharedPreferences.setStringList(_favoritesKey, favorites);
-      
+
       // Emit updated state
       emit(currentState.copyWith(isFavorite: newFavoriteStatus));
     }
@@ -92,7 +92,7 @@ class VehicleDetailBloc extends Bloc<VehicleDetailEvent, VehicleDetailState> {
   ) async {
     if (state is VehicleDetailLoaded) {
       final currentState = state as VehicleDetailLoaded;
-      
+
       emit(ContactingSellerState(currentState.vehicle));
 
       final result = await contactSeller(
@@ -120,7 +120,7 @@ class VehicleDetailBloc extends Bloc<VehicleDetailEvent, VehicleDetailState> {
   ) async {
     if (state is VehicleDetailLoaded) {
       final currentState = state as VehicleDetailLoaded;
-      
+
       // Show loading indicator
       emit(currentState.copyWith(isLoadingSimilar: true));
 
@@ -157,11 +157,11 @@ class VehicleDetailBloc extends Bloc<VehicleDetailEvent, VehicleDetailState> {
   ) async {
     if (state is VehicleDetailLoaded) {
       final currentState = state as VehicleDetailLoaded;
-      
+
       // TODO: Implement share functionality using share_plus package
       // For now, just emit success
       emit(ShareVehicleSuccess(currentState.vehicle));
-      
+
       // Return to loaded state after brief delay
       await Future.delayed(const Duration(milliseconds: 500));
       emit(currentState);

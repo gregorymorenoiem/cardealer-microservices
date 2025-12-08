@@ -54,7 +54,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       children: [
                         TextButton(
                           onPressed: () {
-                            context.read<FilterBloc>().add(const ClearFilters());
+                            context
+                                .read<FilterBloc>()
+                                .add(const ClearFilters());
                           },
                           child: const Text('Limpiar'),
                         ),

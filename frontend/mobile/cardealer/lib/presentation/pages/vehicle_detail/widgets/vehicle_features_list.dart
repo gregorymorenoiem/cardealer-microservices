@@ -14,7 +14,7 @@ class VehicleFeaturesList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Build features list from vehicle properties
     final features = <String>[];
-    
+
     // TODO: Add more features from vehicle entity when available
     // For now, add some common features based on condition and type
     features.addAll([
@@ -38,8 +38,8 @@ class VehicleFeaturesList extends StatelessWidget {
           Text(
             'Características',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 16),
           Wrap(

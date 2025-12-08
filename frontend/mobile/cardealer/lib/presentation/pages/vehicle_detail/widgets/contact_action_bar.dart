@@ -46,7 +46,7 @@ class ContactActionBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            
+
             // WhatsApp button
             Expanded(
               child: OutlinedButton.icon(
@@ -61,7 +61,7 @@ class ContactActionBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            
+
             // Message button
             Expanded(
               child: ElevatedButton.icon(

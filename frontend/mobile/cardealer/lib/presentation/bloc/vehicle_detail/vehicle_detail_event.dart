@@ -61,7 +61,8 @@ class LoadSimilarVehicles extends VehicleDetailEvent {
   });
 
   @override
-  List<Object?> get props => [currentVehicleId, make, model, priceMin, priceMax];
+  List<Object?> get props =>
+      [currentVehicleId, make, model, priceMin, priceMax];
 }
 
 /// Share vehicle

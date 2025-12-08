@@ -11,7 +11,7 @@ class FilterVehicles {
   FilterVehicles(this.repository);
 
   /// Ejecuta el filtrado
-  /// 
+  ///
   /// [criteria] - Criterios de filtrado
   /// [sortBy] - Opción de ordenamiento (opcional)
   /// [page] - Número de página para paginación (opcional)

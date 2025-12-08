@@ -60,27 +60,26 @@ class AppTheme {
       ),
 
       // Text theme
-      textTheme:
-          const TextTheme(
-            displayLarge: AppTypography.h1,
-            displayMedium: AppTypography.h2,
-            displaySmall: AppTypography.h3,
-            headlineLarge: AppTypography.h3,
-            headlineMedium: AppTypography.h4,
-            headlineSmall: AppTypography.h5,
-            titleLarge: AppTypography.h4,
-            titleMedium: AppTypography.h5,
-            titleSmall: AppTypography.h6,
-            bodyLarge: AppTypography.bodyLarge,
-            bodyMedium: AppTypography.bodyMedium,
-            bodySmall: AppTypography.bodySmall,
-            labelLarge: AppTypography.labelLarge,
-            labelMedium: AppTypography.labelMedium,
-            labelSmall: AppTypography.labelSmall,
-          ).apply(
-            bodyColor: AppColors.textPrimary,
-            displayColor: AppColors.textPrimary,
-          ),
+      textTheme: const TextTheme(
+        displayLarge: AppTypography.h1,
+        displayMedium: AppTypography.h2,
+        displaySmall: AppTypography.h3,
+        headlineLarge: AppTypography.h3,
+        headlineMedium: AppTypography.h4,
+        headlineSmall: AppTypography.h5,
+        titleLarge: AppTypography.h4,
+        titleMedium: AppTypography.h5,
+        titleSmall: AppTypography.h6,
+        bodyLarge: AppTypography.bodyLarge,
+        bodyMedium: AppTypography.bodyMedium,
+        bodySmall: AppTypography.bodySmall,
+        labelLarge: AppTypography.labelLarge,
+        labelMedium: AppTypography.labelMedium,
+        labelSmall: AppTypography.labelSmall,
+      ).apply(
+        bodyColor: AppColors.textPrimary,
+        displayColor: AppColors.textPrimary,
+      ),
 
       // Button themes
       elevatedButtonTheme: ElevatedButtonThemeData(

@@ -159,7 +159,10 @@ class FirebaseService {
           error,
           stackTrace,
           reason: reason,
-          information: information?.entries.map((e) => '${e.key}: ${e.value}').toList() ?? [],
+          information: information?.entries
+                  .map((e) => '${e.key}: ${e.value}')
+                  .toList() ??
+              [],
           fatal: false,
         );
       } catch (e) {

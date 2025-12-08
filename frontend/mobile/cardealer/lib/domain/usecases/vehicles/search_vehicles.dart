@@ -10,7 +10,7 @@ class SearchVehicles {
   SearchVehicles(this.repository);
 
   /// Ejecuta la búsqueda
-  /// 
+  ///
   /// [query] - Texto de búsqueda
   /// [limit] - Límite de resultados (opcional)
   Future<Either<Failure, List<Vehicle>>> call({

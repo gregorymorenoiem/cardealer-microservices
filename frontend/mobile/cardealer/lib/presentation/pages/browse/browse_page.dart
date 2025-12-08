@@ -240,7 +240,8 @@ class _BrowsePageState extends State<BrowsePage> {
                       return const EmptyStateWidget(
                         icon: Icons.search,
                         title: 'Explora vehículos',
-                        message: 'Usa los filtros para encontrar tu vehículo ideal',
+                        message:
+                            'Usa los filtros para encontrar tu vehículo ideal',
                       );
                     },
                   );

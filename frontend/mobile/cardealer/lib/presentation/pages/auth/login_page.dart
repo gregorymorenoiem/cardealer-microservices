@@ -91,11 +91,7 @@ class _LoginPageState extends State<LoginPage> {
         builder: (context, state) {
           if (state is AuthLoading) {
             return const Center(
-              child: CustomLoadingIndicator(
-                type: LoadingType.circular,
-                size: LoadingSize.large,
-                message: 'Iniciando sesión...',
-              ),
+              child: CircularProgressIndicator(),
             );
           }
 
@@ -123,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       'Bienvenido',
                       style: AppTypography.h1.copyWith(
-                        color: AppColors.neutral900,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -133,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       'Inicia sesión para continuar',
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.neutral600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -142,25 +138,25 @@ class _LoginPageState extends State<LoginPage> {
                     // Email field
                     CustomTextField(
                       controller: _emailController,
-                      label: 'Correo electrónico',
+                      labelText: 'Correo electrónico',
                       hintText: 'ejemplo@correo.com',
                       keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
+                      prefixIcon: const Icon(Icons.email_outlined),
                       validator: Validators.validateEmail,
                       textInputAction: TextInputAction.next,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: 16),
 
                     // Password field
                     CustomTextField(
                       controller: _passwordController,
-                      label: 'Contraseña',
+                      labelText: 'Contraseña',
                       hintText: '••••••••',
                       obscureText: true,
-                      prefixIcon: Icons.lock_outlined,
+                      prefixIcon: const Icon(Icons.lock_outlined),
                       validator: Validators.validateRequired,
                       textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _handleLogin(),
+                      onSubmitted: (_) => _handleLogin(),
                     ),
                     SizedBox(height: AppSpacing.sm),
 
@@ -177,37 +173,40 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: 32),
 
                     // Login button
-                    CustomButton(
-                      text: 'Iniciar Sesión',
-                      onPressed: _handleLogin,
-                      variant: ButtonVariant.filled,
-                      size: ButtonSize.large,
-                      fullWidth: true,
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomButton(
+                        text: 'Iniciar Sesión',
+                        onPressed: _handleLogin,
+                        variant: ButtonVariant.primary,
+                        size: ButtonSize.large,
+                      ),
                     ),
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: 32),
 
                     // Divider
                     Row(
                       children: [
-                        Expanded(child: Divider(color: AppColors.neutral300)),
-                        Padding(
+                        Expanded(
+                            child:
+                                Divider(color: Theme.of(context).dividerColor)),
+                        const Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
+                            horizontal: 16,
                           ),
                           child: Text(
                             'O continúa con',
-                            style: AppTypography.labelMedium.copyWith(
-                              color: AppColors.neutral600,
-                            ),
                           ),
                         ),
-                        Expanded(child: Divider(color: AppColors.neutral300)),
+                        Expanded(
+                            child:
+                                Divider(color: Theme.of(context).dividerColor)),
                       ],
                     ),
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: 32),
 
                     // Social login buttons
                     Row(
@@ -217,7 +216,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: CustomButton(
                             text: 'Google',
                             onPressed: _handleGoogleLogin,
-                            variant: ButtonVariant.outlined,
+                            variant: ButtonVariant.outline,
                             size: ButtonSize.large,
                             icon: Icons.g_mobiledata,
                           ),
@@ -229,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: CustomButton(
                             text: 'Apple',
                             onPressed: _handleAppleLogin,
-                            variant: ButtonVariant.outlined,
+                            variant: ButtonVariant.outline,
                             size: ButtonSize.large,
                             icon: Icons.apple,
                           ),
@@ -245,7 +244,8 @@ class _LoginPageState extends State<LoginPage> {
                         Text(
                           '¿No tienes cuenta? ',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.neutral600,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         TextButton(
@@ -291,13 +291,17 @@ class _LoginPageState extends State<LoginPage> {
                           Text(
                             '👤 Usuario: demo@cardealer.com / Demo123!',
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.neutral700,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                           Text(
                             '🏢 Dealer: dealer@cardealer.com / Dealer123!',
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.neutral700,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ],

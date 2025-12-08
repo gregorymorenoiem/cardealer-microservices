@@ -112,7 +112,8 @@ class FilterBloc extends Bloc<FilterEvent, FilterState> {
     UpdateTransmissions event,
     Emitter<FilterState> emit,
   ) {
-    _currentCriteria = _currentCriteria.copyWith(transmissions: event.transmissions);
+    _currentCriteria =
+        _currentCriteria.copyWith(transmissions: event.transmissions);
     _emitLoadedState(emit);
   }
 

@@ -30,7 +30,8 @@ class VehicleDetailLoaded extends VehicleDetailState {
   });
 
   @override
-  List<Object?> get props => [vehicle, isFavorite, similarVehicles, isLoadingSimilar];
+  List<Object?> get props =>
+      [vehicle, isFavorite, similarVehicles, isLoadingSimilar];
 
   VehicleDetailLoaded copyWith({
     Vehicle? vehicle,

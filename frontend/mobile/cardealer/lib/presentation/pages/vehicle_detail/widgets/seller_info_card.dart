@@ -26,8 +26,8 @@ class SellerInfoCard extends StatelessWidget {
           Text(
             'Vendedor',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 16),
           Container(
@@ -52,7 +52,7 @@ class SellerInfoCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Info
                 Expanded(
                   child: Column(
@@ -62,9 +62,12 @@ class SellerInfoCard extends StatelessWidget {
                         children: [
                           Text(
                             sellerName,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                           if (isDealer) ...[
                             const SizedBox(width: 8),
@@ -100,22 +103,28 @@ class SellerInfoCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '$rating',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                           Text(
                             ' ($reviewCount reseñas)',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Colors.grey[600],
+                                ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                
+
                 // View profile button
                 IconButton(
                   onPressed: () {

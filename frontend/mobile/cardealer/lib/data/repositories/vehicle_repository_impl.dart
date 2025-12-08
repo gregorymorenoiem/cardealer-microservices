@@ -168,7 +168,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }) async {
     try {
       final result = await mockDataSource.getAllVehicles();
-      
+
       // Búsqueda por texto en múltiples campos
       final searchQuery = query.toLowerCase();
       var vehicles = result.where((v) {
@@ -203,10 +203,12 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
       // Aplicar filtros de precio
       if (criteria.minPrice != null) {
-        vehicles = vehicles.where((v) => v.price >= criteria.minPrice!).toList();
+        vehicles =
+            vehicles.where((v) => v.price >= criteria.minPrice!).toList();
       }
       if (criteria.maxPrice != null) {
-        vehicles = vehicles.where((v) => v.price <= criteria.maxPrice!).toList();
+        vehicles =
+            vehicles.where((v) => v.price <= criteria.maxPrice!).toList();
       }
 
       // Aplicar filtros de año
@@ -219,42 +221,55 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
       // Aplicar filtros de marca
       if (criteria.makes != null && criteria.makes!.isNotEmpty) {
-        vehicles = vehicles.where((v) => criteria.makes!.contains(v.make)).toList();
+        vehicles =
+            vehicles.where((v) => criteria.makes!.contains(v.make)).toList();
       }
 
       // Aplicar filtros de modelo
       if (criteria.models != null && criteria.models!.isNotEmpty) {
-        vehicles = vehicles.where((v) => criteria.models!.contains(v.model)).toList();
+        vehicles =
+            vehicles.where((v) => criteria.models!.contains(v.model)).toList();
       }
 
       // Aplicar filtros de tipo de carrocería
       if (criteria.bodyTypes != null && criteria.bodyTypes!.isNotEmpty) {
-        vehicles = vehicles.where((v) => criteria.bodyTypes!.contains(v.bodyType)).toList();
+        vehicles = vehicles
+            .where((v) => criteria.bodyTypes!.contains(v.bodyType))
+            .toList();
       }
 
       // Aplicar filtros de tipo de combustible
       if (criteria.fuelTypes != null && criteria.fuelTypes!.isNotEmpty) {
-        vehicles = vehicles.where((v) => criteria.fuelTypes!.contains(v.fuelType)).toList();
+        vehicles = vehicles
+            .where((v) => criteria.fuelTypes!.contains(v.fuelType))
+            .toList();
       }
 
       // Aplicar filtros de transmisión
-      if (criteria.transmissions != null && criteria.transmissions!.isNotEmpty) {
-        vehicles = vehicles.where((v) => criteria.transmissions!.contains(v.transmission)).toList();
+      if (criteria.transmissions != null &&
+          criteria.transmissions!.isNotEmpty) {
+        vehicles = vehicles
+            .where((v) => criteria.transmissions!.contains(v.transmission))
+            .toList();
       }
 
       // Aplicar filtro de kilometraje
       if (criteria.maxMileage != null) {
-        vehicles = vehicles.where((v) => v.mileage <= criteria.maxMileage!).toList();
+        vehicles =
+            vehicles.where((v) => v.mileage <= criteria.maxMileage!).toList();
       }
 
       // Aplicar filtro de condición
       if (criteria.condition != null) {
-        vehicles = vehicles.where((v) => v.condition == criteria.condition).toList();
+        vehicles =
+            vehicles.where((v) => v.condition == criteria.condition).toList();
       }
 
       // Aplicar filtro de color
       if (criteria.colors != null && criteria.colors!.isNotEmpty) {
-        vehicles = vehicles.where((v) => v.color != null && criteria.colors!.contains(v.color)).toList();
+        vehicles = vehicles
+            .where((v) => v.color != null && criteria.colors!.contains(v.color))
+            .toList();
       }
 
       // Aplicar ordenamiento
@@ -313,18 +328,28 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, List<String>>>> getFilterSuggestions() async {
+  Future<Either<Failure, Map<String, List<String>>>>
+      getFilterSuggestions() async {
     try {
       final vehicles = await mockDataSource.getAllVehicles();
 
       // Extraer valores únicos para cada categoría
       final makes = vehicles.map((v) => v.make).toSet().toList()..sort();
       final models = vehicles.map((v) => v.model).toSet().toList()..sort();
-      final bodyTypes = vehicles.map((v) => v.bodyType).toSet().toList()..sort();
-      final fuelTypes = vehicles.map((v) => v.fuelType).toSet().toList()..sort();
-      final transmissions = vehicles.map((v) => v.transmission).toSet().toList()..sort();
-      final colors = vehicles.map((v) => v.color).whereType<String>().toSet().toList()..sort();
-      final conditions = vehicles.map((v) => v.condition).toSet().toList()..sort();
+      final bodyTypes = vehicles.map((v) => v.bodyType).toSet().toList()
+        ..sort();
+      final fuelTypes = vehicles.map((v) => v.fuelType).toSet().toList()
+        ..sort();
+      final transmissions = vehicles.map((v) => v.transmission).toSet().toList()
+        ..sort();
+      final colors = vehicles
+          .map((v) => v.color)
+          .whereType<String>()
+          .toSet()
+          .toList()
+        ..sort();
+      final conditions = vehicles.map((v) => v.condition).toSet().toList()
+        ..sort();
 
       return Right({
         'makes': makes,
@@ -350,7 +375,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
       // TODO: Implement API call to create conversation/message
       // For now, simulate success
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Return conversation/message ID
       return Right('conversation_${DateTime.now().millisecondsSinceEpoch}');
     } catch (e) {
@@ -369,23 +394,28 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }) async {
     try {
       final result = await getAllVehicles();
-      
+
       return result.fold(
         (failure) => Left(failure),
         (vehicles) {
           // Filter out current vehicle
-          var similar = vehicles.where((v) => v.id != currentVehicleId).toList();
-          
+          var similar =
+              vehicles.where((v) => v.id != currentVehicleId).toList();
+
           // Filter by make if provided
           if (make != null && make.isNotEmpty) {
-            similar = similar.where((v) => v.make.toLowerCase() == make.toLowerCase()).toList();
+            similar = similar
+                .where((v) => v.make.toLowerCase() == make.toLowerCase())
+                .toList();
           }
-          
+
           // Filter by model if provided
           if (model != null && model.isNotEmpty) {
-            similar = similar.where((v) => v.model.toLowerCase() == model.toLowerCase()).toList();
+            similar = similar
+                .where((v) => v.model.toLowerCase() == model.toLowerCase())
+                .toList();
           }
-          
+
           // Filter by price range if provided
           if (priceMin != null) {
             similar = similar.where((v) => v.price >= priceMin).toList();
@@ -393,20 +423,20 @@ class VehicleRepositoryImpl implements VehicleRepository {
           if (priceMax != null) {
             similar = similar.where((v) => v.price <= priceMax).toList();
           }
-          
+
           // Sort by relevance: featured first, then by price similarity
           similar.sort((a, b) {
             // Featured vehicles first
             if (a.isFeatured && !b.isFeatured) return -1;
             if (!a.isFeatured && b.isFeatured) return 1;
-            
+
             // Then by date (newest first)
             return b.createdAt.compareTo(a.createdAt);
           });
-          
+
           // Limit results
           final limited = similar.take(limit).toList();
-          
+
           return Right(limited);
         },
       );
@@ -415,4 +445,3 @@ class VehicleRepositoryImpl implements VehicleRepository {
     }
   }
 }
-
