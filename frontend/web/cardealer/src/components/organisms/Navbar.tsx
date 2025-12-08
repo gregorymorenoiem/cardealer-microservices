@@ -39,6 +39,7 @@ export default function Navbar() {
   };
 
   const navLinks = [
+    { to: '/', label: t('nav.home') },
     { to: '/browse', label: t('nav.browse') + ' ' + t('nav.vehicles') },
     { to: '/sell-your-car', label: t('nav.sell') + ' mi Auto' },
     { to: '/compare', label: t('nav.compare') },
