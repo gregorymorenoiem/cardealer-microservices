@@ -9,15 +9,16 @@
  * - 40% featured ratio enforced by rankingAlgorithm
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
-import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
 import { mockVehicles } from '@/data/mockVehicles';
+import type { Vehicle } from '@/data/mockVehicles';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 
 const features = [
@@ -43,17 +44,181 @@ const features = [
   },
 ];
 
+// Format price helper
+const formatPrice = (price: number, currency = 'USD') => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+// Featured Section Component - Scrollable Horizontal Carousel
+interface FeaturedSectionProps {
+  title: string;
+  subtitle: string;
+  vehicles: Vehicle[];
+  viewAllHref: string;
+}
+
+const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, vehicles, viewAllHref }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -350 : 350,
+        behavior: 'smooth',
+      });
+      setTimeout(checkScroll, 300);
+    }
+  };
+
+  return (
+    <section className="py-6 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{title}</h2>
+            <p className="text-gray-600">{subtitle}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Navigation arrows */}
+            <button
+              onClick={() => scroll('left')}
+              disabled={!canScrollLeft}
+              className={`p-2 rounded-full border-2 transition-all ${
+                canScrollLeft
+                  ? 'border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                  : 'border-gray-200 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              <FiChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              disabled={!canScrollRight}
+              className={`p-2 rounded-full border-2 transition-all ${
+                canScrollRight
+                  ? 'border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                  : 'border-gray-200 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              <FiChevronRight className="w-5 h-5" />
+            </button>
+            <Link
+              to={viewAllHref}
+              className="hidden sm:flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Ver todo
+              <FiArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Scrollable cards */}
+        <div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
+          style={{ scrollSnapType: 'x mandatory' }}
+        >
+          {vehicles.map((vehicle) => (
+            <Link
+              key={vehicle.id}
+              to={`/vehicles/${vehicle.id}`}
+              className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group"
+              style={{ scrollSnapAlign: 'start' }}
+            >
+              {/* Image */}
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={vehicle.images[0]}
+                  alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {vehicle.tier && (
+                  <div className="absolute top-3 left-3">
+                    <span className={`px-3 py-1 ${
+                      vehicle.tier === 'enterprise' ? 'bg-purple-500' :
+                      vehicle.tier === 'premium' ? 'bg-blue-500' :
+                      vehicle.tier === 'featured' ? 'bg-amber-500' :
+                      'bg-gray-500'
+                    } text-white text-xs font-medium rounded-full`}>
+                      {vehicle.featuredBadge || vehicle.tier}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="p-4">
+                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {vehicle.year} {vehicle.make} {vehicle.model}
+                </h3>
+
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                  <FiMapPin className="w-4 h-4" />
+                  {vehicle.location}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xl font-bold text-blue-600">
+                    {formatPrice(vehicle.price)}
+                  </p>
+                  <div className="flex items-center gap-1 text-sm">
+                    <FiStar className="w-4 h-4 text-amber-400 fill-current" />
+                    <span className="font-medium">{vehicle.seller.rating}</span>
+                    <span className="text-gray-400">({Math.floor(Math.random() * 50) + 10})</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile view all link */}
+        <div className="sm:hidden text-center mt-4">
+          <Link
+            to={viewAllHref}
+            className="inline-flex items-center gap-1 text-blue-600 font-medium"
+          >
+            Ver todo
+            <FiArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const HomePage: React.FC = () => {
   // Get featured vehicles for hero carousel (top 5 by ranking)
   const heroVehicles = useMemo(() => {
     return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
   }, []);
 
-  // Get featured vehicles for homepage grid (exclude hero vehicles)
+  // Get weekly featured vehicles for scrollable section (10 vehicles)
+  const weeklyFeatured = useMemo(() => {
+    return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 10);
+  }, []);
+
+  // Get featured vehicles for homepage grid (exclude hero and weekly)
   const gridVehicles = useMemo(() => {
-    const heroIds = new Set(heroVehicles.map(v => v.id));
-    return mockVehicles.filter(v => !heroIds.has(v.id));
-  }, [heroVehicles]);
+    const excludeIds = new Set([...heroVehicles.map(v => v.id), ...weeklyFeatured.map(v => v.id)]);
+    return mockVehicles.filter(v => !excludeIds.has(v.id));
+  }, [heroVehicles, weeklyFeatured]);
 
   // Get premium vehicles for premium section (top tier vehicles not in hero)
   const premiumVehicles = useMemo(() => {
@@ -78,6 +243,14 @@ const HomePage: React.FC = () => {
         vehicles={heroVehicles} 
         autoPlayInterval={5000}
         showScrollHint={false}
+      />
+
+      {/* Destacados de la Semana - Scrollable Section with 10 vehicles */}
+      <FeaturedSection
+        title="Destacados de la Semana"
+        subtitle="Selección especial de los mejores vehículos disponibles"
+        vehicles={weeklyFeatured}
+        viewAllHref="/vehicles"
       />
 
       {/* Featured Listings Grid - Immediately After Hero (eso es dinero!) */}
