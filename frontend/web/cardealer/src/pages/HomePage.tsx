@@ -214,11 +214,23 @@ const HomePage: React.FC = () => {
     return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 10);
   }, []);
 
-  // Get featured vehicles for homepage grid (exclude hero and weekly)
+  // Get featured vehicles for top grid section (6 vehicles, exclude hero)
+  const topFeatured = useMemo(() => {
+    const heroIds = new Set(heroVehicles.map(v => v.id));
+    return mockVehicles
+      .filter(v => !heroIds.has(v.id))
+      .slice(0, 6);
+  }, [heroVehicles]);
+
+  // Get featured vehicles for main grid (exclude hero, top featured, and weekly)
   const gridVehicles = useMemo(() => {
-    const excludeIds = new Set([...heroVehicles.map(v => v.id), ...weeklyFeatured.map(v => v.id)]);
+    const excludeIds = new Set([
+      ...heroVehicles.map(v => v.id),
+      ...topFeatured.map(v => v.id),
+      ...weeklyFeatured.map(v => v.id)
+    ]);
     return mockVehicles.filter(v => !excludeIds.has(v.id));
-  }, [heroVehicles, weeklyFeatured]);
+  }, [heroVehicles, topFeatured, weeklyFeatured]);
 
   // Get premium vehicles for premium section (top tier vehicles not in hero)
   const premiumVehicles = useMemo(() => {
@@ -245,15 +257,7 @@ const HomePage: React.FC = () => {
         showScrollHint={false}
       />
 
-      {/* Destacados de la Semana - Scrollable Section with 10 vehicles */}
-      <FeaturedSection
-        title="Destacados de la Semana"
-        subtitle="Selección especial de los mejores vehículos disponibles"
-        vehicles={weeklyFeatured}
-        viewAllHref="/vehicles"
-      />
-
-      {/* Featured Listings Grid - Immediately After Hero (eso es dinero!) */}
+      {/* Vehículos Destacados - Top 6 vehicles in grid (eso es dinero!) */}
       <section className="py-6 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
@@ -262,6 +266,30 @@ const HomePage: React.FC = () => {
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Explora nuestra selección premium de vehículos cuidadosamente verificados
+            </p>
+          </div>
+          
+          <FeaturedListingGrid vehicles={topFeatured} columns={3} />
+        </div>
+      </section>
+
+      {/* Destacados de la Semana - Scrollable Section with 10 vehicles */}
+      <FeaturedSection
+        title="Destacados de la Semana"
+        subtitle="Selección especial de los mejores vehículos disponibles"
+        vehicles={weeklyFeatured}
+        viewAllHref="/vehicles"
+      />
+
+      {/* More Featured Vehicles Grid - Additional inventory */}
+      <section className="py-6 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Más Vehículos Disponibles
+            </h2>
+            <p className="text-gray-600">
+              Continúa explorando nuestra amplia selección
             </p>
           </div>
           
