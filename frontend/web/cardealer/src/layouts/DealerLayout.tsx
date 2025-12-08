@@ -81,7 +81,7 @@ const DealerLayout = ({ children }: DealerLayoutProps) => {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-72 bg-white border-r border-gray-200 h-[calc(100vh-73px)] flex flex-col">
+        <aside className="w-72 bg-white border-r border-gray-200 h-[calc(100vh-65px)] flex flex-col">
           <div className="p-4 flex-1 overflow-y-auto">
             <DealerSidebar />
           </div>
