@@ -292,7 +292,7 @@ const DealerSidebar = () => {
   };
 
   return (
-    <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-200px)] pr-2">
+    <nav className="space-y-1 overflow-y-auto h-full pr-2">
       {menuItems.map(item => renderMenuItem(item))}
     </nav>
   );
