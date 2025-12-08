@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'injection.config.dart';
 import '../../data/datasources/mock/mock_vehicle_datasource.dart';
 import '../../data/repositories/vehicle_repository_impl.dart';
+import '../../data/repositories/mock_messaging_repository.dart';
 import '../../domain/repositories/vehicle_repository.dart';
+import '../../domain/repositories/messaging_repository.dart';
 import '../../domain/usecases/vehicles/search_vehicles.dart';
 import '../../domain/usecases/vehicles/filter_vehicles.dart';
 import '../../domain/usecases/vehicles/get_filter_suggestions.dart';
@@ -17,6 +19,11 @@ import '../../domain/usecases/profile/update_profile.dart';
 import '../../domain/usecases/favorites/get_favorites.dart';
 import '../../domain/usecases/favorites/remove_favorite.dart';
 import '../../domain/usecases/search/get_search_history.dart';
+import '../../domain/usecases/messaging/get_conversations.dart';
+import '../../domain/usecases/messaging/get_messages.dart';
+import '../../domain/usecases/messaging/send_message.dart';
+import '../../domain/usecases/messaging/get_or_create_conversation.dart';
+import '../../domain/usecases/messaging/mark_conversation_as_read.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../presentation/bloc/vehicles/vehicles_bloc.dart';
 import '../../presentation/bloc/filter/filter_bloc.dart';
@@ -24,6 +31,7 @@ import '../../presentation/bloc/search/search_bloc.dart';
 import '../../presentation/bloc/vehicle_detail/vehicle_detail_bloc.dart';
 import '../../presentation/bloc/profile/profile_bloc.dart';
 import '../../presentation/bloc/favorites/favorites_bloc.dart';
+import '../../presentation/bloc/messaging/messaging_bloc.dart';
 import '../network/network_info.dart';
 
 final getIt = GetIt.instance;
@@ -53,6 +61,11 @@ Future<void> configureDependencies() async {
       mockDataSource: getIt<MockVehicleDataSource>(),
       networkInfo: getIt<NetworkInfo>(),
     ),
+  );
+  
+  // Register messaging repository (mock for now)
+  getIt.registerLazySingleton<MessagingRepository>(
+    () => MockMessagingRepository(),
   );
 
   // Register use cases
@@ -92,6 +105,23 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<GetSearchHistory>(
     () => GetSearchHistory(getIt<SharedPreferences>()),
   );
+  
+  // Messaging use cases
+  getIt.registerLazySingleton<GetConversations>(
+    () => GetConversations(getIt<MessagingRepository>()),
+  );
+  getIt.registerLazySingleton<GetMessages>(
+    () => GetMessages(getIt<MessagingRepository>()),
+  );
+  getIt.registerLazySingleton<SendMessage>(
+    () => SendMessage(getIt<MessagingRepository>()),
+  );
+  getIt.registerLazySingleton<GetOrCreateConversation>(
+    () => GetOrCreateConversation(getIt<MessagingRepository>()),
+  );
+  getIt.registerLazySingleton<MarkConversationAsRead>(
+    () => MarkConversationAsRead(getIt<MessagingRepository>()),
+  );
 
   // Register BLoCs
   getIt.registerFactory<VehiclesBloc>(
@@ -129,6 +159,17 @@ Future<void> configureDependencies() async {
       getFavorites: getIt<GetFavorites>(),
       removeFavorite: getIt<RemoveFavorite>(),
       toggleFavorite: getIt<ToggleFavorite>(),
+    ),
+  );
+  
+  // Messaging BLoC
+  getIt.registerFactory<MessagingBloc>(
+    () => MessagingBloc(
+      getConversations: getIt<GetConversations>(),
+      getMessages: getIt<GetMessages>(),
+      sendMessage: getIt<SendMessage>(),
+      markConversationAsRead: getIt<MarkConversationAsRead>(),
+      messagingRepository: getIt<MessagingRepository>(),
     ),
   );
 }
