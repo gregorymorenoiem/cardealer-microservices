@@ -1,3 +1,5 @@
+import type { ListingTier, FeaturedBadge, FeaturedPage, DealerTier } from '../types/listing';
+
 export interface Vehicle {
   id: string;
   make: string;
@@ -31,6 +33,18 @@ export interface Vehicle {
     rating: number;
     phone: string;
   };
+  
+  // Featured Listing fields (Sprint 1)
+  tier?: ListingTier;
+  featuredUntil?: Date;
+  featuredPosition?: number;
+  featuredPages?: FeaturedPage[];
+  featuredBadge?: FeaturedBadge;
+  qualityScore?: number;
+  engagementScore?: number;
+  dealerId?: string;
+  dealerTier?: DealerTier;
+  dealerVerified?: boolean;
 }
 
 export const mockVehicles: Vehicle[] = [
@@ -78,6 +92,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.8,
       phone: '+1 (555) 123-4567',
     },
+    // Featured listing fields
+    tier: 'enterprise',
+    featuredBadge: 'top-dealer',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 95,
+    engagementScore: 850,
+    dealerId: 'dealer-001',
+    dealerTier: 'enterprise',
+    dealerVerified: true,
   },
   {
     id: '2',
@@ -120,6 +143,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.6,
       phone: '+1 (555) 234-5678',
     },
+    // Featured listing fields
+    tier: 'premium',
+    featuredBadge: 'premium',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 88,
+    engagementScore: 720,
+    dealerId: 'dealer-002',
+    dealerTier: 'premium',
+    dealerVerified: true,
   },
   {
     id: '3',
@@ -160,6 +192,12 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.9,
       phone: '+1 (555) 345-6789',
     },
+    // Featured listing fields
+    tier: 'featured',
+    featuredBadge: 'destacado',
+    featuredPages: ['home'],
+    qualityScore: 82,
+    engagementScore: 620,
   },
   {
     id: '4',
