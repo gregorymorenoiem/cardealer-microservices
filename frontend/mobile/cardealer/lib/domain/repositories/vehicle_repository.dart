@@ -59,4 +59,21 @@ abstract class VehicleRepository {
 
   /// Get filter suggestions (makes, models, etc)
   Future<Either<Failure, Map<String, List<String>>>> getFilterSuggestions();
+
+  /// Contact seller about a vehicle
+  Future<Either<Failure, String>> contactSeller({
+    required String vehicleId,
+    required String sellerId,
+    required String message,
+  });
+
+  /// Get similar vehicles based on criteria
+  Future<Either<Failure, List<Vehicle>>> getSimilarVehicles({
+    required String currentVehicleId,
+    String? make,
+    String? model,
+    double? priceMin,
+    double? priceMax,
+    int limit = 10,
+  });
 }

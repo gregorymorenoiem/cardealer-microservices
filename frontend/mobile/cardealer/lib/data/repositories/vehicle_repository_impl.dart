@@ -339,4 +339,80 @@ class VehicleRepositoryImpl implements VehicleRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> contactSeller({
+    required String vehicleId,
+    required String sellerId,
+    required String message,
+  }) async {
+    try {
+      // TODO: Implement API call to create conversation/message
+      // For now, simulate success
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Return conversation/message ID
+      return Right('conversation_${DateTime.now().millisecondsSinceEpoch}');
+    } catch (e) {
+      return Left(ServerFailure(message: 'Failed to contact seller: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Vehicle>>> getSimilarVehicles({
+    required String currentVehicleId,
+    String? make,
+    String? model,
+    double? priceMin,
+    double? priceMax,
+    int limit = 10,
+  }) async {
+    try {
+      final result = await getAllVehicles();
+      
+      return result.fold(
+        (failure) => Left(failure),
+        (vehicles) {
+          // Filter out current vehicle
+          var similar = vehicles.where((v) => v.id != currentVehicleId).toList();
+          
+          // Filter by make if provided
+          if (make != null && make.isNotEmpty) {
+            similar = similar.where((v) => v.make.toLowerCase() == make.toLowerCase()).toList();
+          }
+          
+          // Filter by model if provided
+          if (model != null && model.isNotEmpty) {
+            similar = similar.where((v) => v.model.toLowerCase() == model.toLowerCase()).toList();
+          }
+          
+          // Filter by price range if provided
+          if (priceMin != null) {
+            similar = similar.where((v) => v.price >= priceMin).toList();
+          }
+          if (priceMax != null) {
+            similar = similar.where((v) => v.price <= priceMax).toList();
+          }
+          
+          // Sort by relevance: featured first, then by price similarity
+          similar.sort((a, b) {
+            // Featured vehicles first
+            if (a.isFeatured && !b.isFeatured) return -1;
+            if (!a.isFeatured && b.isFeatured) return 1;
+            
+            // Then by date (newest first)
+            return b.createdAt.compareTo(a.createdAt);
+          });
+          
+          // Limit results
+          final limited = similar.take(limit).toList();
+          
+          return Right(limited);
+        },
+      );
+    } catch (e) {
+      return Left(ServerFailure(message: 'Failed to get similar vehicles: $e'));
+    }
+  }
 }
+

@@ -8,9 +8,14 @@ import '../../domain/repositories/vehicle_repository.dart';
 import '../../domain/usecases/vehicles/search_vehicles.dart';
 import '../../domain/usecases/vehicles/filter_vehicles.dart';
 import '../../domain/usecases/vehicles/get_filter_suggestions.dart';
+import '../../domain/usecases/vehicles/get_vehicle_detail.dart';
+import '../../domain/usecases/vehicles/contact_seller.dart';
+import '../../domain/usecases/vehicles/get_similar_vehicles.dart';
+import '../../domain/usecases/favorites/toggle_favorite.dart';
 import '../../presentation/bloc/vehicles/vehicles_bloc.dart';
 import '../../presentation/bloc/filter/filter_bloc.dart';
 import '../../presentation/bloc/search/search_bloc.dart';
+import '../../presentation/bloc/vehicle_detail/vehicle_detail_bloc.dart';
 import '../network/network_info.dart';
 
 final getIt = GetIt.instance;
@@ -52,6 +57,18 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<GetFilterSuggestions>(
     () => GetFilterSuggestions(getIt<VehicleRepository>()),
   );
+  getIt.registerLazySingleton<GetVehicleDetail>(
+    () => GetVehicleDetail(getIt<VehicleRepository>()),
+  );
+  getIt.registerLazySingleton<ContactSeller>(
+    () => ContactSeller(getIt<VehicleRepository>()),
+  );
+  getIt.registerLazySingleton<GetSimilarVehicles>(
+    () => GetSimilarVehicles(getIt<VehicleRepository>()),
+  );
+  getIt.registerLazySingleton<ToggleFavorite>(
+    () => ToggleFavorite(),
+  );
 
   // Register BLoCs
   getIt.registerFactory<VehiclesBloc>(
@@ -66,6 +83,15 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<SearchBloc>(
     () => SearchBloc(
       searchVehicles: getIt<SearchVehicles>(),
+      sharedPreferences: getIt<SharedPreferences>(),
+    ),
+  );
+  getIt.registerFactory<VehicleDetailBloc>(
+    () => VehicleDetailBloc(
+      getVehicleDetail: getIt<GetVehicleDetail>(),
+      contactSeller: getIt<ContactSeller>(),
+      getSimilarVehicles: getIt<GetSimilarVehicles>(),
+      toggleFavorite: getIt<ToggleFavorite>(),
       sharedPreferences: getIt<SharedPreferences>(),
     ),
   );
