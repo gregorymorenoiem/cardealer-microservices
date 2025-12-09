@@ -103,6 +103,7 @@ dev_dependencies:
   widgetbook: ^3.8.0
   widgetbook_annotation: ^3.2.0
   widgetbook_generator: ^3.8.0
+  image: ^4.5.4
 
 flutter:
   uses-material-design: true
@@ -135,13 +136,13 @@ flutter_intl:
   output_dir: lib/generated
 
 # App Icon Configuration
+# Para iconos adaptativos Android, el foreground necesita safe zone del 66%
+# El logo debe ocupar solo el centro (con padding del 17% en cada lado)
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icons/app_icon.png"
   min_sdk_android: 21
   remove_alpha_ios: true
-  background_color: "#001F54"
-  theme_color: "#001F54"
-  adaptive_icon_background: "#001F54"
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
