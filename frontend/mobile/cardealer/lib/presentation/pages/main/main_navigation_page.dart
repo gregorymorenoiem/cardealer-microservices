@@ -3,10 +3,10 @@ import '../home/home_page.dart';
 import '../favorites/favorites_page_premium.dart';
 import '../messages/conversations_list_page.dart';
 import '../profile/profile_page.dart';
-import '../../../core/theme/colors.dart';
+import '../../widgets/navigation/adaptive_navigation.dart';
 
-/// MainNavigationPage - Bottom navigation container
-/// Manages the main app navigation between Home, Favorites, Messages, and Profile
+/// MainNavigationPage - Adaptive navigation container
+/// Uses BottomNav on mobile, NavigationRail on tablet, extended rail on desktop
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
@@ -32,41 +32,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _onItemTapped,
-        elevation: 8,
-        height: 70,
-        backgroundColor: Colors.white,
-        indicatorColor: AppColors.primary.withValues(alpha: 0.1),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_outline),
-            selectedIcon: Icon(Icons.favorite),
-            label: 'Favoritos',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'Mensajes',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+    return AdaptiveScaffold(
+      selectedIndex: _selectedIndex,
+      onDestinationSelected: _onItemTapped,
+      pages: _pages,
     );
   }
 }

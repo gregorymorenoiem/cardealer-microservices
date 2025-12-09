@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screen_size.dart';
+import 'breakpoints.dart';
 
 /// Helper class for responsive design calculations
 class ResponsiveHelper {
@@ -12,6 +13,56 @@ class ResponsiveHelper {
 
   /// Current screen height in logical pixels
   double get screenHeight => MediaQuery.of(context).size.height;
+
+  // === Device Type Checks ===
+
+  /// Check if current device is mobile (< 600dp)
+  bool get isMobile => screenWidth < Breakpoints.lg;
+
+  /// Check if current device is tablet (600-1023dp)
+  bool get isTablet =>
+      screenWidth >= Breakpoints.lg && screenWidth < Breakpoints.xxl;
+
+  /// Check if current device is desktop/large tablet (>= 1024dp)
+  bool get isDesktop => screenWidth >= Breakpoints.xxl;
+
+  /// Check if should use NavigationRail (600-1023dp)
+  bool get shouldUseNavRail =>
+      screenWidth >= Breakpoints.navigationRailThreshold &&
+      screenWidth < Breakpoints.navigationDrawerThreshold;
+
+  /// Check if should use NavigationDrawer (>= 1024dp)
+  bool get shouldUseNavDrawer =>
+      screenWidth >= Breakpoints.navigationDrawerThreshold;
+
+  // === Orientation Checks ===
+
+  /// Check if device is in portrait orientation
+  bool get isPortrait =>
+      MediaQuery.of(context).orientation == Orientation.portrait;
+
+  /// Check if device is in landscape orientation
+  bool get isLandscape =>
+      MediaQuery.of(context).orientation == Orientation.landscape;
+
+  // === Grid Columns ===
+
+  /// Get recommended number of columns for grids
+  int get gridColumns {
+    if (screenWidth >= Breakpoints.xxl) return 4;
+    if (screenWidth >= Breakpoints.xl) return 3;
+    if (screenWidth >= Breakpoints.lg) return 2;
+    return 1;
+  }
+
+  /// Get recommended number of columns for card grids
+  int get cardGridColumns {
+    if (screenWidth >= Breakpoints.xxl) return 4;
+    if (screenWidth >= Breakpoints.xl) return 3;
+    if (screenWidth >= Breakpoints.lg) return 2;
+    if (screenWidth >= Breakpoints.md) return 2;
+    return 1;
+  }
 
   /// Current screen size category
   ScreenSize get screenType {
@@ -216,9 +267,82 @@ class ResponsiveHelper {
         return tabletLarge;
     }
   }
+
+  /// Get a simplified responsive value (mobile/tablet/desktop)
+  T adaptive<T>({
+    required T mobile,
+    T? tablet,
+    T? desktop,
+  }) {
+    if (isDesktop) return desktop ?? tablet ?? mobile;
+    if (isTablet) return tablet ?? mobile;
+    return mobile;
+  }
+
+  /// Get section height for horizontal scrolling sections
+  double get sectionHeight {
+    switch (screenType) {
+      case ScreenSize.mobileSmall:
+        return 200;
+      case ScreenSize.mobile:
+        return 220;
+      case ScreenSize.mobileLarge:
+        return 240;
+      case ScreenSize.tabletSmall:
+        return 280;
+      case ScreenSize.tablet:
+        return 300;
+      case ScreenSize.tabletLarge:
+        return 320;
+    }
+  }
+
+  /// Get AppBar height
+  double get appBarHeight {
+    if (isMobile) return kToolbarHeight;
+    if (isTablet) return kToolbarHeight + 8;
+    return kToolbarHeight + 16;
+  }
+
+  /// Get navigation rail width
+  double get navRailWidth {
+    if (isDesktop) return 256; // Extended rail
+    return 72; // Compact rail
+  }
+
+  /// Get bottom navigation height
+  double get bottomNavHeight {
+    switch (screenType) {
+      case ScreenSize.mobileSmall:
+        return 60;
+      case ScreenSize.mobile:
+        return 70;
+      case ScreenSize.mobileLarge:
+        return 70;
+      default:
+        return 0; // No bottom nav on tablet+
+    }
+  }
 }
 
 /// Extension to easily access ResponsiveHelper from BuildContext
 extension ResponsiveContext on BuildContext {
   ResponsiveHelper get responsive => ResponsiveHelper(this);
+
+  /// Quick check if device is mobile
+  bool get isMobileDevice => responsive.isMobile;
+
+  /// Quick check if device is tablet
+  bool get isTabletDevice => responsive.isTablet;
+
+  /// Quick check if device is desktop
+  bool get isDesktopDevice => responsive.isDesktop;
+
+  /// Get simplified adaptive value
+  T adaptive<T>({
+    required T mobile,
+    T? tablet,
+    T? desktop,
+  }) =>
+      responsive.adaptive(mobile: mobile, tablet: tablet, desktop: desktop);
 }
