@@ -13,6 +13,7 @@ import '../../widgets/home/premium_featured_grid.dart';
 import '../../widgets/home/horizontal_vehicle_section.dart';
 import '../../widgets/home/daily_deals_section.dart';
 import '../../widgets/home/recently_viewed_section.dart';
+import '../../widgets/home/sponsored_listings_section.dart';
 import '../../widgets/home/premium_refresh_indicator.dart';
 import '../search/search_page.dart';
 
@@ -108,7 +109,7 @@ class HomePage extends StatelessWidget {
                       },
                     ),
 
-                    SizedBox(height: context.spacing(2)),
+                    SizedBox(height: context.spacing(1.5)),
 
                     // Sell Your Car CTA
                     SellYourCarCTA(
@@ -117,9 +118,19 @@ class HomePage extends StatelessWidget {
                       },
                     ),
 
+                    SizedBox(height: context.spacing(2)),
+
+                    // Section 2: Sponsored Listings (Premium paid placement)
+                    SponsoredListingsSection(
+                      vehicles: state.featuredGrid.take(4).toList(),
+                      onSeeAllTap: () {
+                        // TODO: Navigate to sponsored vehicles
+                      },
+                    ),
+
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 2: Premium Featured Grid (6 vehicles, glassmorphism)
+                    // Section 3: Premium Featured Grid (6 vehicles, horizontal scroll)
                     PremiumFeaturedGrid(
                       vehicles: state.featuredGrid,
                       onSeeAllTap: () {
@@ -129,7 +140,7 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 3: Week's Featured (10 vehicles, horizontal scroll)
+                    // Section 4: Week's Featured (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
                       title: "This Week's Featured",
                       subtitle: 'Hand-picked vehicles for you',
@@ -143,7 +154,7 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 4: Daily Deals Section with countdown timers
+                    // Section 5: Daily Deals Section with countdown timers
                     DailyDealsSection(
                       vehicles: state.dailyDeals,
                       onSeeAllTap: () {
@@ -153,7 +164,7 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 5: SUVs & Trucks (10 vehicles, horizontal scroll)
+                    // Section 6: SUVs & Trucks (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
                       title: 'SUVs & Trucks',
                       subtitle: 'Power and space combined',
@@ -167,7 +178,7 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 6: Premium Vehicles (10 vehicles, horizontal scroll)
+                    // Section 7: Premium Collection (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
                       title: 'Premium Collection',
                       subtitle: 'Luxury at its finest',
@@ -181,7 +192,7 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 7: Electric & Hybrid (10 vehicles, horizontal scroll)
+                    // Section 8: Electric & Hybrid (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
                       title: 'Electric & Hybrid',
                       subtitle: 'The future of driving',
@@ -195,7 +206,7 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(2)),
 
-                    // Section 8: Recently Viewed
+                    // Section 9: Recently Viewed
                     RecentlyViewedSection(
                       vehicles: state.weekFeatured.take(5).toList(),
                       onSeeAllTap: () {
