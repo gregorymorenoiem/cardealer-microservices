@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/responsive/responsive_helper.dart';
 import '../../../domain/entities/vehicle.dart';
 import '../../pages/vehicle_detail/vehicle_detail_page.dart';
 import '../vehicles/compact_vehicle_card.dart';
@@ -73,6 +74,8 @@ class _HorizontalVehicleSectionState extends State<HorizontalVehicleSection>
       return const SizedBox.shrink();
     }
 
+    final responsive = context.responsive;
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
@@ -118,10 +121,10 @@ class _HorizontalVehicleSectionState extends State<HorizontalVehicleSection>
             const SizedBox(height: 12),
             // Horizontal List - Using Compact Cards for better density
             SizedBox(
-              height: 180, // Fixed height for CompactVehicleCard
+              height: responsive.cardHeight,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
                 itemCount: widget.vehicles.length,
                 itemBuilder: (context, index) {
                   return HorizontalCompactVehicleCard(

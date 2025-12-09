@@ -1,9 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../core/responsive/responsive_helper.dart';
 import '../../../domain/entities/vehicle.dart';
 import '../../pages/vehicle_detail/vehicle_detail_page.dart';
 import '../vehicles/compact_vehicle_card.dart';
 
+/// Premium Featured Section - Horizontal scroll of featured vehicles
+/// Converted from grid to horizontal for better mobile UX
 class PremiumFeaturedGrid extends StatelessWidget {
   final List<Vehicle> vehicles;
   final String title;
@@ -20,6 +22,8 @@ class PremiumFeaturedGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
@@ -92,37 +96,39 @@ class PremiumFeaturedGrid extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Grid
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.78, // Optimized for 180dp compact cards
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-              ),
+          // Horizontal Scroll (changed from grid to horizontal)
+          SizedBox(
+            height: responsive.cardHeight,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
               itemCount: vehicles.length,
               itemBuilder: (context, index) {
                 final vehicle = vehicles[index];
-                return CompactVehicleCard(
-                  vehicle: vehicle,
-                  isFeatured: true,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VehicleDetailPage(
-                          vehicleId: vehicle.id,
-                        ),
-                      ),
-                    );
-                  },
-                  onFavorite: () {
-                    // TODO: Handle favorite toggle
-                  },
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index < vehicles.length - 1 ? responsive.cardSpacing : 0,
+                  ),
+                  child: SizedBox(
+                    width: responsive.cardWidth,
+                    child: CompactVehicleCard(
+                      vehicle: vehicle,
+                      isFeatured: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VehicleDetailPage(
+                              vehicleId: vehicle.id,
+                            ),
+                          ),
+                        );
+                      },
+                      onFavorite: () {
+                        // TODO: Handle favorite toggle
+                      },
+                    ),
+                  ),
                 );
               },
             ),

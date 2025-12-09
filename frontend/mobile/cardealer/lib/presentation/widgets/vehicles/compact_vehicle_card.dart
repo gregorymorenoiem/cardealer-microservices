@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
+import '../../../core/responsive/responsive_helper.dart';
 import '../../../domain/entities/vehicle.dart';
 
 /// Compact Vehicle Card - Optimized for monetization
@@ -38,12 +39,14 @@ class CompactVehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 180, // Fixed height for consistency
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+        height: responsive.cardHeight, // Responsive height
+        margin: EdgeInsets.symmetric(
+          horizontal: responsive.horizontalPadding,
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
@@ -59,15 +62,15 @@ class CompactVehicleCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Photo Section: 126dp (70%)
+            // Photo Section: 70%
             Expanded(
               flex: 7,
-              child: _buildPhotoSection(context),
+              child: _buildPhotoSection(context, responsive),
             ),
-            // Info Section: 54dp (30%)
+            // Info Section: 30%
             Expanded(
               flex: 3,
-              child: _buildInfoSection(context),
+              child: _buildInfoSection(context, responsive),
             ),
           ],
         ),
@@ -75,12 +78,13 @@ class CompactVehicleCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPhotoSection(BuildContext context) {
+  Widget _buildPhotoSection(BuildContext context, ResponsiveHelper responsive) {
     return Stack(
       children: [
         // Main Photo
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          borderRadius: BorderRadius.vertical(
+              top: Radius.circular(responsive.borderRadius)),
           child: CachedNetworkImage(
             imageUrl: vehicle.images.isNotEmpty
                 ? vehicle.images.first
@@ -144,16 +148,16 @@ class CompactVehicleCard extends StatelessWidget {
         // Badge Overlay (Top-Left)
         if (badgeText != null || isSponsored || isFeatured)
           Positioned(
-            top: 8,
-            left: 8,
+            top: responsive.horizontalPadding * 0.5,
+            left: responsive.horizontalPadding * 0.5,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
+              padding: EdgeInsets.symmetric(
+                horizontal: responsive.horizontalPadding * 0.5,
                 vertical: 4,
               ),
               decoration: BoxDecoration(
                 color: _getBadgeColor(),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(responsive.borderRadius * 0.33),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),
@@ -244,9 +248,9 @@ class CompactVehicleCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection(BuildContext context) {
+  Widget _buildInfoSection(BuildContext context, ResponsiveHelper responsive) {
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: EdgeInsets.all(responsive.horizontalPadding * 0.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -256,40 +260,43 @@ class CompactVehicleCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Price (Large, Bold)
-              Text(
-                '\$${_formatPrice(vehicle.price)}',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+              Flexible(
+                child: Text(
+                  '\$${_formatPrice(vehicle.price)}',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: responsive.titleFontSize + 6,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               // Quick Chat CTA
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.horizontalPadding * 0.5,
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(responsive.borderRadius * 0.6),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.chat_bubble_outline,
-                      size: 14,
+                      size: responsive.iconSize * 0.875,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'Chat',
                       style: TextStyle(
                         color: AppColors.primary,
-                        fontSize: 11,
+                        fontSize: responsive.smallFontSize,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -299,20 +306,20 @@ class CompactVehicleCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
 
           // Row 2: Title (Year + Make + Model)
           Text(
             '${vehicle.year} ${vehicle.make} ${vehicle.model}',
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: responsive.titleFontSize,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
 
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
 
           // Row 3: Metadata (Mileage + Distance)
           Row(
@@ -320,31 +327,31 @@ class CompactVehicleCard extends StatelessWidget {
               // Mileage
               Icon(
                 Icons.speed,
-                size: 14,
+                size: responsive.iconSize * 0.875,
                 color: AppColors.textSecondary,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Text(
                 _formatMileage(vehicle.mileage),
                 style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: 12,
+                  fontSize: responsive.bodyFontSize,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               // Distance
               Icon(
                 Icons.location_on,
-                size: 14,
+                size: responsive.iconSize * 0.875,
                 color: AppColors.textSecondary,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  vehicle.location ?? 'Location unknown',
+                  vehicle.location,
                   style: TextStyle(
                     color: AppColors.textSecondary,
-                    fontSize: 12,
+                    fontSize: responsive.bodyFontSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

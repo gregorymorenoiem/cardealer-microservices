@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/responsive/responsive_helper.dart';
 import '../../../domain/entities/vehicle.dart';
 import '../../pages/vehicle_detail/vehicle_detail_page.dart';
 import '../vehicles/compact_vehicle_card.dart';
@@ -20,6 +21,8 @@ class DailyDealsSection extends StatelessWidget {
     if (vehicles.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final responsive = context.responsive;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,18 +88,18 @@ class DailyDealsSection extends StatelessWidget {
         const SizedBox(height: 16),
         // Horizontal Scroll with CompactVehicleCard
         SizedBox(
-          height: 180,
+          height: responsive.cardHeight,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
             itemCount: vehicles.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: EdgeInsets.only(
-                  right: index < vehicles.length - 1 ? 12 : 0,
+                  right: index < vehicles.length - 1 ? responsive.cardSpacing : 0,
                 ),
                 child: SizedBox(
-                  width: 280,
+                  width: responsive.cardWidth,
                   child: CompactVehicleCard(
                     vehicle: vehicles[index],
                     isFeatured: true,
