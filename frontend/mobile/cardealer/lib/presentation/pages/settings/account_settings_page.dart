@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/responsive/responsive_helper.dart';
 
 /// PE-002: Account Settings (Sprint 11)
 /// Configuración de cuenta con edición de información personal y contraseña
@@ -69,7 +70,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(context.responsive.horizontalPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

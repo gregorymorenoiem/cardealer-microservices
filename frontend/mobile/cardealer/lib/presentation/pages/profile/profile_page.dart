@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/responsive/responsive_helper.dart';
 
 /// PE-001: Profile Page Redesign (Sprint 11)
 /// Perfil de usuario rediseñado con cover photo, avatar, stats y tabs
@@ -270,8 +271,10 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildStatsSection(ThemeData theme) {
+    final responsive = context.responsive;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
