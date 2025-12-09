@@ -7,7 +7,8 @@ class AppSpacing {
   // Base unit (8px)
   static const double unit = 8.0;
 
-  // Spacing scale
+  // Spacing scale (8pt grid system)
+  static const double xxs = unit * 0.25; // 2px - for very tight spacing
   static const double xs = unit * 0.5; // 4px
   static const double sm = unit; // 8px
   static const double md = unit * 2; // 16px

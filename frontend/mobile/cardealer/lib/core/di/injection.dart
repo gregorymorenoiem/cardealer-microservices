@@ -49,7 +49,6 @@ import '../../domain/usecases/auth/login_with_apple_usecase.dart';
 import '../../domain/usecases/auth/logout_usecase.dart';
 import '../../domain/usecases/auth/get_current_user_usecase.dart';
 import '../../domain/usecases/auth/check_auth_status_usecase.dart';
-import '../../domain/repositories/auth_repository.dart';
 import '../../presentation/bloc/vehicles/vehicles_bloc.dart';
 import '../../presentation/bloc/filter/filter_bloc.dart';
 import '../../presentation/bloc/search/search_bloc.dart';

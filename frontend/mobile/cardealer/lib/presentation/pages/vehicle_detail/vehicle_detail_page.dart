@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/di/injection.dart';
 import '../../bloc/vehicle_detail/vehicle_detail_bloc.dart';
 import '../../bloc/vehicle_detail/vehicle_detail_event.dart';
 import '../../bloc/vehicle_detail/vehicle_detail_state.dart';
@@ -26,7 +27,7 @@ class VehicleDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          context.read<VehicleDetailBloc>()..add(LoadVehicleDetail(vehicleId)),
+          getIt<VehicleDetailBloc>()..add(LoadVehicleDetail(vehicleId)),
       child: Scaffold(
         body: BlocConsumer<VehicleDetailBloc, VehicleDetailState>(
           listener: (context, state) {

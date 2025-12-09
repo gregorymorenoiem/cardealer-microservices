@@ -46,7 +46,8 @@ class _HeroCarouselSectionState extends State<HeroCarouselSection> {
       return const SizedBox.shrink();
     }
 
-    final carouselHeight = context.isMobile ? 320.0 : (context.isTablet ? 380.0 : 440.0);
+    final carouselHeight =
+        context.isMobile ? 320.0 : (context.isTablet ? 380.0 : 440.0);
 
     return Column(
       children: [
@@ -97,15 +98,15 @@ class _HeroCard extends StatelessWidget {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          // Image - Flexible to take remaining space
+          Expanded(
+            flex: 3,
             child: CachedNetworkImage(
               imageUrl: vehicle.mainImage,
-              height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
@@ -118,53 +119,52 @@ class _HeroCard extends StatelessWidget {
               ),
             ),
           ),
-          // Info
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    vehicle.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  // Price
-                  Text(
-                    vehicle.formattedPrice,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const Spacer(),
-                  // Quick Stats
-                  Row(
-                    children: [
-                      _StatChip(
-                        icon: Icons.speed,
-                        label: vehicle.formattedMileage,
+          // Info - Fixed space at bottom
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title
+                Text(
+                  vehicle.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 8),
-                      _StatChip(
-                        icon: Icons.local_gas_station,
-                        label: vehicle.fuelType,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                // Price
+                Text(
+                  vehicle.formattedPrice,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 8),
-                      _StatChip(
-                        icon: Icons.location_on,
-                        label: vehicle.location,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 8),
+                // Quick Stats
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _StatChip(
+                      icon: Icons.speed,
+                      label: vehicle.formattedMileage,
+                    ),
+                    _StatChip(
+                      icon: Icons.local_gas_station,
+                      label: vehicle.fuelType,
+                    ),
+                    _StatChip(
+                      icon: Icons.location_on,
+                      label: vehicle.location,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

@@ -1,178 +1,181 @@
 import 'package:flutter/material.dart';
 
-/// App typography system
-/// Using Inter font family (similar to web)
+/// App typography system - Premium redesign
+/// Using Poppins for headlines and Inter for body text
 class AppTypography {
   // Private constructor
   AppTypography._();
 
-  static const String fontFamily = 'Inter';
+  // Font families
+  static const String headlineFamily = 'Poppins'; // For headlines
+  static const String bodyFamily = 'Inter'; // For body text
 
-  // Headings
+  // Headings (using Poppins for impact)
   static const h1 = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 32,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w700, // Bold
     height: 1.2,
     letterSpacing: -0.5,
   );
 
   static const h2 = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 24,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.3,
+    letterSpacing: -0.3,
   );
 
   static const h3 = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 20,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.4,
   );
 
   static const h4 = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 18,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.4,
   );
 
   static const h5 = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 16,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.5,
   );
 
   static const h6 = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.5,
   );
 
-  // Body text
+  // Body text (using Inter for readability)
   static const bodyLarge = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 16,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400, // Regular
     height: 1.5,
   );
 
   static const bodyMedium = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400, // Regular
     height: 1.5,
   );
 
   static const bodySmall = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400, // Regular
     height: 1.5,
   );
 
-  // Labels
+  // Labels (using Inter for consistency)
   static const labelLarge = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w500, // Medium
     height: 1.4,
   );
 
   static const labelMedium = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w500, // Medium
     height: 1.4,
   );
 
   static const labelSmall = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 10,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w500, // Medium
     height: 1.4,
   );
 
   // Caption
   static const caption = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400, // Regular
     height: 1.4,
     letterSpacing: 0.4,
   );
 
   // Overline (for small uppercase labels)
   static const overline = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 10,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.5,
     letterSpacing: 1.5,
   );
 
-  // Button text
+  // Button text (using Poppins for CTAs)
   static const button = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.2,
     letterSpacing: 0.4,
   );
 
   static const buttonLarge = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 16,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.2,
     letterSpacing: 0.4,
   );
 
   static const buttonSmall = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.2,
     letterSpacing: 0.4,
   );
 
   // Special styles
   static const price = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 24,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w700, // Bold
     height: 1.2,
   );
 
   static const priceLarge = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 32,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w700, // Bold
     height: 1.2,
   );
 
   static const priceSmall = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 18,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w700, // Bold
     height: 1.2,
   );
 
   // Card title
   static const cardTitle = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: headlineFamily,
     fontSize: 16,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w600, // SemiBold
     height: 1.3,
   );
 
   static const cardSubtitle = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: bodyFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400, // Regular
     height: 1.4,
   );
 }

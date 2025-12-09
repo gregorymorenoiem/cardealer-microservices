@@ -47,7 +47,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontFamily: AppTypography.fontFamily,
+          fontFamily: AppTypography.headlineFamily,
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,

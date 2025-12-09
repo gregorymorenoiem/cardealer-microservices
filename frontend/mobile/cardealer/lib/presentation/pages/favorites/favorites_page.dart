@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/injection.dart';
-import '../../../core/responsive/responsive_utils.dart';
 import '../../bloc/favorites/favorites_bloc.dart';
 import '../../bloc/favorites/favorites_event.dart';
 import '../../bloc/favorites/favorites_state.dart';

@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/injection.dart';
 import 'presentation/pages/splash/splash_page.dart';
+import 'presentation/pages/dealer/plans_page.dart';
+import 'presentation/pages/dealer/payment_methods_page.dart';
+import 'presentation/pages/dealer/billing_dashboard_page.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize date formatting
+  await initializeDateFormatting('es', null);
 
   // Setup dependency injection
   await configureDependencies();
@@ -45,6 +52,11 @@ class CarDealerApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.light,
         home: const SplashPage(),
+        routes: {
+          '/plans': (context) => const PlansPage(),
+          '/payment-methods': (context) => const PaymentMethodsPage(),
+          '/billing': (context) => const BillingDashboardPage(),
+        },
       ),
     );
   }

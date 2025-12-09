@@ -65,6 +65,7 @@ class _PaymentMethodsPageContent extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'payment_fab',
         onPressed: () => _showAddCardSheet(context),
         icon: const Icon(Icons.add),
         label: const Text('Add Card'),

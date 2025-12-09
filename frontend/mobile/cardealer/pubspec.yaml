@@ -37,6 +37,11 @@ dependencies:
   shimmer: ^3.0.0
   smooth_page_indicator: ^1.1.0
   pull_to_refresh: ^2.0.0
+  lottie: ^3.1.2
+  
+  # Sprint 10 - Dealer Power dependencies
+  fl_chart: ^0.68.0
+  table_calendar: ^3.1.2
   
   # Utils
   intl: ^0.20.2
@@ -47,6 +52,8 @@ dependencies:
   connectivity_plus: ^5.0.2
   rxdart: ^0.27.7
   path_provider: ^2.1.2
+  speech_to_text: ^7.0.0
+  permission_handler: ^11.3.0
   crypto: ^3.0.3
   
   # Payment
@@ -61,6 +68,15 @@ dependencies:
   firebase_crashlytics: ^3.4.9
   firebase_remote_config: ^4.3.8
   firebase_messaging: ^14.7.10
+  photo_view: ^0.15.0
+  video_player: ^2.10.1
+  chewie: ^1.13.0
+  timeline_tile: ^2.0.0
+  share_plus: ^12.0.1
+  confetti: ^0.8.0
+  local_auth: ^3.0.0
+  google_maps_flutter: ^2.14.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +91,9 @@ dev_dependencies:
   
   # Linting
   flutter_lints: ^3.0.1
+  
+  # Icon Generation
+  flutter_launcher_icons: ^0.13.1
   
   # Testing
   bloc_test: ^9.1.5
@@ -93,6 +112,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/logos/
+    - assets/animations/
 
   # Fonts commented out until actual font files are added
   # fonts:
@@ -113,3 +133,15 @@ flutter_intl:
   main_locale: es
   arb_dir: lib/l10n
   output_dir: lib/generated
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  background_color: "#001F54"
+  theme_color: "#001F54"
+  adaptive_icon_background: "#001F54"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"

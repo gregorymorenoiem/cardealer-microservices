@@ -13,7 +13,7 @@ import '../../../core/responsive/responsive_utils.dart';
 import '../../../core/responsive/responsive_padding.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
-import '../home/home_page.dart';
+import '../main/main_navigation_page.dart';
 
 /// Login page with email/password and social login options - RESPONSIVE VERSION
 class LoginPage extends StatefulWidget {
@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
           } else if (state is AuthAuthenticated) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const HomePage()),
+              MaterialPageRoute(builder: (_) => const MainNavigationPage()),
             );
           }
         },

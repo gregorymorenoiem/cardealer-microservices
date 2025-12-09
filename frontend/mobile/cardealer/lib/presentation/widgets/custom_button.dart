@@ -97,7 +97,7 @@ class CustomButton extends StatelessWidget {
                 else if (icon != null)
                   Icon(icon, size: _getIconSize()),
                 if ((isLoading || icon != null) && text.isNotEmpty)
-                  SizedBox(width: AppSpacing.sm - 1),
+                  const SizedBox(width: AppSpacing.sm - 1),
                 if (text.isNotEmpty)
                   Flexible(
                     child: Text(

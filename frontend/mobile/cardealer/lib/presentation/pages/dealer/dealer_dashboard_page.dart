@@ -4,6 +4,7 @@ import '../../../core/di/injection.dart';
 import '../../bloc/dealer/dealer_bloc.dart';
 import '../../bloc/dealer/dealer_event.dart';
 import '../../bloc/dealer/dealer_state.dart';
+import '../../widgets/dealer/analytics_charts_widget.dart';
 
 class DealerDashboardPage extends StatelessWidget {
   const DealerDashboardPage({super.key});
@@ -17,8 +18,16 @@ class DealerDashboardPage extends StatelessWidget {
   }
 }
 
-class _DealerDashboardContent extends StatelessWidget {
+class _DealerDashboardContent extends StatefulWidget {
   const _DealerDashboardContent();
+
+  @override
+  State<_DealerDashboardContent> createState() =>
+      _DealerDashboardContentState();
+}
+
+class _DealerDashboardContentState extends State<_DealerDashboardContent> {
+  String _selectedDateRange = '7d';
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +35,29 @@ class _DealerDashboardContent extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Panel del Dealer'),
         actions: [
+          // Date range selector
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: DropdownButton<String>(
+              value: _selectedDateRange,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.arrow_drop_down),
+              items: const [
+                DropdownMenuItem(value: 'today', child: Text('Hoy')),
+                DropdownMenuItem(value: '7d', child: Text('7 días')),
+                DropdownMenuItem(value: '30d', child: Text('30 días')),
+                DropdownMenuItem(value: '1y', child: Text('1 año')),
+                DropdownMenuItem(value: 'custom', child: Text('Personalizado')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedDateRange = value;
+                  });
+                }
+              },
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -82,6 +114,14 @@ class _DealerDashboardContent extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // KPIs Overview
+                  _buildKPIsSection(context, stats),
+                  const SizedBox(height: 16),
+
+                  // Analytics Charts
+                  const AnalyticsChartsWidget(),
+                  const SizedBox(height: 24),
+
                   // Summary Cards
                   _buildSummarySection(context, stats),
                   const SizedBox(height: 24),
@@ -96,6 +136,10 @@ class _DealerDashboardContent extends StatelessWidget {
 
                   // Top Performing Vehicles
                   _buildTopVehiclesSection(context, stats),
+                  const SizedBox(height: 24),
+
+                  // Recent Activity Feed
+                  _buildRecentActivitySection(context),
                 ],
               ),
             );
@@ -103,6 +147,123 @@ class _DealerDashboardContent extends StatelessWidget {
 
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  Widget _buildKPIsSection(BuildContext context, stats) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'KPIs Principales',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.trending_up,
+                          size: 16, color: Colors.green.shade700),
+                      const SizedBox(width: 4),
+                      Text(
+                        '+12.5%',
+                        style: TextStyle(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Expanded(
+                  child: _KPICard(
+                    title: 'Conversión',
+                    value: '2.8%',
+                    icon: Icons.swap_horiz,
+                    trend: '+0.3%',
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: _KPICard(
+                    title: 'Tiempo Promedio',
+                    value: '18d',
+                    icon: Icons.access_time,
+                    trend: '-2d',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentActivitySection(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Actividad Reciente',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            const _ActivityItem(
+              icon: Icons.shopping_cart,
+              title: 'Nuevo lead generado',
+              subtitle: 'Toyota Camry 2023',
+              time: 'Hace 5 min',
+              color: Colors.green,
+            ),
+            const _ActivityItem(
+              icon: Icons.visibility,
+              title: 'Publicación vista',
+              subtitle: 'Honda Civic 2022',
+              time: 'Hace 15 min',
+              color: Colors.blue,
+            ),
+            const _ActivityItem(
+              icon: Icons.edit,
+              title: 'Publicación actualizada',
+              subtitle: 'BMW X5 2024',
+              time: 'Hace 1 hora',
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: () {},
+                child: const Text('Ver todas las actividades'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -441,6 +602,128 @@ class _MetricRow extends StatelessWidget {
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KPICard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final String trend;
+
+  const _KPICard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.trend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isPositive = trend.startsWith('+');
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, size: 20),
+              Text(
+                trend,
+                style: TextStyle(
+                  color: isPositive ? Colors.green : Colors.red,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String time;
+  final Color color;
+
+  const _ActivityItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withAlpha(25),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
             ),
           ),
         ],

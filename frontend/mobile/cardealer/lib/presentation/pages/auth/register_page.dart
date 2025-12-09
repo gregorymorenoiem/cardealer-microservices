@@ -13,7 +13,7 @@ import '../../../core/responsive/responsive_utils.dart';
 import '../../../core/responsive/responsive_padding.dart';
 import '../../../domain/entities/user.dart';
 import 'login_page.dart';
-import '../home/home_page.dart';
+import '../main/main_navigation_page.dart';
 
 /// Registration page with role selection - RESPONSIVE VERSION
 class RegisterPage extends StatefulWidget {
@@ -100,7 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const HomePage()),
+              MaterialPageRoute(builder: (_) => const MainNavigationPage()),
               (route) => false,
             );
           } else if (state is AuthError) {
@@ -273,7 +273,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }) {
     final isSelected = _selectedRole == role;
     final iconSize = context.isMobile ? 32.0 : 40.0;
-    
+
     return GestureDetector(
       onTap: () => setState(() => _selectedRole = role),
       child: Container(
