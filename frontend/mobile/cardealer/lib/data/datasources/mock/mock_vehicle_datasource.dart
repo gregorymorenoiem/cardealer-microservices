@@ -79,7 +79,7 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800',
       ],
       description: 'Tesla Model S nuevo con Autopilot e interior premium',
-      location: 'Santo Domingo, DN',
+      location: 'Santo Domingo',
       dealerName: 'Tesla RD',
       isFeatured: true,
       isVerified: true,
@@ -111,8 +111,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800',
       ],
       description: 'SUV de lujo con paquete M Sport y características premium',
-      location: 'Punta Cana, La Altagracia',
-      dealerName: 'BMW Premium Motors RD',
+      location: 'Punta Cana',
+      dealerName: 'BMW Premium RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -144,8 +144,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
       ],
       description: 'Mercedes E-Class nuevo con tecnología híbrida',
-      location: 'Santiago de los Caballeros',
-      dealerName: 'Mercedes-Benz Santiago',
+      location: 'Santiago',
+      dealerName: 'Mercedes RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 3)),
@@ -173,7 +173,7 @@ class MockVehicleDataSource {
       ],
       description: 'Porsche Cayenne certificado con garantía completa',
       location: 'La Romana',
-      dealerName: 'Porsche Casa de Campo',
+      dealerName: 'Porsche RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 4)),
@@ -206,8 +206,8 @@ class MockVehicleDataSource {
       ],
       description:
           'Gran turismo totalmente eléctrico con rendimiento impresionante',
-      location: 'Zona Colonial, Santo Domingo',
-      dealerName: 'Audi Dominicana',
+      location: 'Santo Domingo',
+      dealerName: 'Audi RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -239,7 +239,7 @@ class MockVehicleDataSource {
       ],
       description: 'F-150 confiable con paquete de remolque',
       location: 'Puerto Plata',
-      dealerName: 'Ford Dominicana',
+      dealerName: 'Ford RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 6)),
@@ -271,8 +271,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800',
       ],
       description: 'SUV de lujo con confort premium',
-      location: 'San Pedro de Macorís',
-      dealerName: 'Lexus Caribe',
+      location: 'San Pedro',
+      dealerName: 'Lexus RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 7)),
@@ -304,8 +304,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800',
       ],
       description: 'Ícono deportivo americano con motor central',
-      location: 'Bávaro, La Altagracia',
-      dealerName: 'Chevrolet Performance RD',
+      location: 'Bávaro',
+      dealerName: 'Chevy Performance',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 8)),
@@ -338,7 +338,7 @@ class MockVehicleDataSource {
       ],
       description: 'SUV híbrido eficiente con AWD',
       location: 'Barahona',
-      dealerName: 'Toyota Dominicana',
+      dealerName: 'Toyota RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 9)),
@@ -370,8 +370,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800',
       ],
       description: 'Accord Híbrido nuevo con tecnología avanzada',
-      location: 'Naco, Santo Domingo',
-      dealerName: 'Honda Dominicana',
+      location: 'Naco',
+      dealerName: 'Honda RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 10)),
@@ -403,8 +403,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800',
       ],
       description: 'SUV compacto elegante con sensación premium',
-      location: 'Gascüe, Santo Domingo',
-      dealerName: 'Mazda Dominicana',
+      location: 'Gascüe',
+      dealerName: 'Mazda RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 11)),
@@ -434,8 +434,8 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1617531653520-bd466e4337a9?w=800'
       ],
       description: 'Sedán económico y confiable',
-      location: 'Higüey, La Altagracia',
-      dealerName: 'Hyundai Dominicana',
+      location: 'Higüey',
+      dealerName: 'Hyundai RD',
       isFeatured: false,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 12)),
@@ -471,7 +471,7 @@ class MockVehicleDataSource {
       ],
       description: 'Sedán mediano con excelente relación calidad-precio',
       location: 'La Vega',
-      dealerName: 'Nissan Dominicana',
+      dealerName: 'Nissan RD',
       isFeatured: false,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 13)),
@@ -505,9 +505,9 @@ class MockVehicleDataSource {
     final models = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Truck', 'Van'];
     final colors = ['Negro', 'Blanco', 'Plateado', 'Rojo', 'Azul', 'Gris'];
     final cities = [
-      'Santo Domingo, DN',
-      'Santiago de los Caballeros',
-      'Punta Cana, La Altagracia',
+      'Santo Domingo',
+      'Santiago',
+      'Punta Cana',
       'Puerto Plata',
       'La Romana',
       'San Cristóbal',
@@ -517,19 +517,6 @@ class MockVehicleDataSource {
     final bodyTypes = ['sedan', 'suv', 'coupe', 'truck', 'hatchback'];
     final fuelTypes = ['gasoline', 'diesel', 'hybrid', 'electric'];
     final conditions = ['new', 'used', 'certified'];
-
-    String getConditionSpanish(String condition) {
-      switch (condition) {
-        case 'new':
-          return 'NUEVO';
-        case 'used':
-          return 'USADO';
-        case 'certified':
-          return 'CERTIFICADO';
-        default:
-          return condition.toUpperCase();
-      }
-    }
 
     for (var i = 0; i < 58; i++) {
       final makeIndex = i % makes.length;
@@ -556,9 +543,9 @@ class MockVehicleDataSource {
           'https://images.unsplash.com/photo-${1617531653520 + i}?w=800',
         ],
         description:
-            '${getConditionSpanish(conditions[i % conditions.length])} ${makes[makeIndex]} ${models[i % models.length]} con excelentes características',
+            '${makes[makeIndex]} ${models[i % models.length]} en excelente estado',
         location: cities[i % cities.length],
-        dealerName: '${makes[makeIndex]} Dealer ${i % 10}',
+        dealerName: '${makes[makeIndex]} RD',
         isFeatured: isFeatured,
         isVerified: i % 3 == 0,
         createdAt: DateTime.now().subtract(Duration(days: 14 + i)),

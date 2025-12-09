@@ -51,7 +51,7 @@ class DailyDealsSection extends StatelessWidget {
                               colors: [Colors.red, Colors.orange],
                             ).createShader(bounds),
                             child: Text(
-                              'Ofertas del Día',
+                              'Ofertas',
                               style: Theme.of(context)
                                   .textTheme
                                   .titleLarge
@@ -67,7 +67,7 @@ class DailyDealsSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '¡Ofertas por tiempo limitado!',
+                      'Por tiempo limitado',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey.shade600,
                           ),

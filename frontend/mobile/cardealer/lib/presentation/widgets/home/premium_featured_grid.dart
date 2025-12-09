@@ -15,8 +15,8 @@ class PremiumFeaturedGrid extends StatelessWidget {
   const PremiumFeaturedGrid({
     super.key,
     required this.vehicles,
-    this.title = 'Vehículos Premium Destacados',
-    this.subtitle = 'Vehículos de lujo y alto rendimiento seleccionados',
+    this.title = 'Destacados',
+    this.subtitle = 'Selección premium',
     this.onSeeAllTap,
   });
 

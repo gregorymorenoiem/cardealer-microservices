@@ -142,14 +142,14 @@ class HomePage extends StatelessWidget {
 
                     // Section 4: Week's Featured (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'Destacados de la Semana',
-                      subtitle: 'Vehículos seleccionados para ti',
+                      title: 'Destacados',
+                      subtitle: 'Esta semana',
                       vehicles: state.weekFeatured,
                       onSeeAllTap: () {
                         // TODO: Navigate to full list
                       },
                       showBadge: true,
-                      badgeText: 'DESTACADO',
+                      badgeText: 'HOT',
                     ),
 
                     SizedBox(height: context.spacing(1.5)),
@@ -166,42 +166,42 @@ class HomePage extends StatelessWidget {
 
                     // Section 6: SUVs & Camionetas (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'SUVs y Camionetas',
-                      subtitle: 'Potencia y espacio combinados',
+                      title: 'SUVs',
+                      subtitle: 'Potencia y espacio',
                       vehicles: state.suvsAndTrucks,
                       onSeeAllTap: () {
                         // TODO: Navigate to SUVs page
                       },
                       showBadge: true,
-                      badgeText: 'POTENCIA',
+                      badgeText: '4x4',
                     ),
 
                     SizedBox(height: context.spacing(1.5)),
 
                     // Section 7: Colección Premium (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'Colección Premium',
-                      subtitle: 'Lujo en su máxima expresión',
+                      title: 'Premium',
+                      subtitle: 'Lujo y exclusividad',
                       vehicles: state.premium,
                       onSeeAllTap: () {
                         // TODO: Navigate to premium page
                       },
                       showBadge: true,
-                      badgeText: 'PREMIUM',
+                      badgeText: 'VIP',
                     ),
 
                     SizedBox(height: context.spacing(1.5)),
 
                     // Section 8: Eléctricos e Híbridos (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'Eléctricos e Híbridos',
-                      subtitle: 'El futuro de conducir',
+                      title: 'Eléctricos',
+                      subtitle: 'Zero emisiones',
                       vehicles: state.electricAndHybrid,
                       onSeeAllTap: () {
                         // TODO: Navigate to electric page
                       },
                       showBadge: true,
-                      badgeText: 'ECO',
+                      badgeText: 'EV',
                     ),
 
                     SizedBox(height: context.spacing(2)),

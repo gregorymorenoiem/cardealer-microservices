@@ -152,7 +152,7 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                           children: [
                             Flexible(
                               child: Text(
-                                'Anuncios Patrocinados',
+                                'Patrocinados',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   fontSize: responsive.titleFontSize,
@@ -192,7 +192,7 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                         ),
                         SizedBox(height: responsive.cardSpacing * 0.2),
                         Text(
-                          'Vehículos premium destacados',
+                          'Destacados premium',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: responsive.bodyFontSize,
                             color: Colors.white.withValues(alpha: 0.9),
