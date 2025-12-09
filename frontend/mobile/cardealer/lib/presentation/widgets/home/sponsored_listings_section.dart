@@ -241,122 +241,157 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
 
             SizedBox(height: responsive.cardSpacing * 1.5),
 
-            // Horizontal scrollable list of sponsored vehicles
-            SizedBox(
-              height: responsive.cardHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(
-                  horizontal: responsive.horizontalPadding,
-                ),
-                itemCount: widget.vehicles.length,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  final vehicle = widget.vehicles[index];
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      right: index < widget.vehicles.length - 1
-                          ? responsive.cardSpacing
-                          : 0,
-                    ),
-                    child: Container(
-                      width: responsive.cardWidth,
-                      decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(responsive.borderRadius),
-                        border: Border.all(
-                          color: Colors.amber.shade600,
-                          width: 2.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(responsive.borderRadius),
-                        child: Stack(
-                          children: [
-                            // Main card content
-                            CompactVehicleCard(
-                              vehicle: vehicle,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => VehicleDetailPage(
-                                      vehicleId: vehicle.id,
-                                    ),
-                                  ),
-                                );
-                              },
-                              onFavorite: () {
-                                // TODO: Toggle favorite
-                              },
-                              isFeatured: true,
-                            ),
+            // Mobile: Horizontal scroll, Tablet: Grid layout
+            responsive.isMobile
+                ? _buildHorizontalList(context, responsive)
+                : _buildGridLayout(context, responsive),
+          ],
+        ),
+      ),
+    );
+  }
 
-                            // Sponsored badge overlay (top-right)
-                            Positioned(
-                              top: responsive.cardSpacing * 0.8,
-                              right: responsive.cardSpacing * 0.8,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: responsive.cardSpacing * 0.8,
-                                  vertical: responsive.cardSpacing * 0.4,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.amber.shade700,
-                                      Colors.amber.shade500,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                      responsive.borderRadius * 0.5),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      color: Colors.white,
-                                      size: responsive.iconSize * 0.6,
-                                    ),
-                                    SizedBox(
-                                        width: responsive.cardSpacing * 0.3),
-                                    Text(
-                                      'SPONSORED',
-                                      style: TextStyle(
-                                        fontSize:
-                                            responsive.smallFontSize * 0.85,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+  Widget _buildHorizontalList(
+      BuildContext context, ResponsiveHelper responsive) {
+    return SizedBox(
+      height: responsive.cardHeight,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.horizontalPadding,
+        ),
+        itemCount: widget.vehicles.length,
+        physics: const BouncingScrollPhysics(),
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(
+              right: index < widget.vehicles.length - 1
+                  ? responsive.cardSpacing
+                  : 0,
+            ),
+            child: _buildSponsoredCard(
+                context, responsive, widget.vehicles[index]),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGridLayout(BuildContext context, ResponsiveHelper responsive) {
+    final columns = responsive.cardGridColumns;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = responsive.horizontalPadding;
+    final spacing = responsive.cardSpacing;
+    final availableWidth =
+        screenWidth - (padding * 2) - (spacing * (columns - 1));
+    final cardWidth = availableWidth / columns;
+    final cardHeight = cardWidth * 0.85; // Aspect ratio for cards
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: widget.vehicles.take(columns * 2).map((vehicle) {
+          return SizedBox(
+            width: cardWidth,
+            height: cardHeight,
+            child: _buildSponsoredCard(context, responsive, vehicle,
+                customWidth: cardWidth),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSponsoredCard(
+      BuildContext context, ResponsiveHelper responsive, Vehicle vehicle,
+      {double? customWidth}) {
+    return Container(
+      width: customWidth ?? responsive.cardWidth,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(responsive.borderRadius),
+        border: Border.all(
+          color: Colors.amber.shade600,
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(responsive.borderRadius),
+        child: Stack(
+          children: [
+            // Main card content
+            CompactVehicleCard(
+              vehicle: vehicle,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VehicleDetailPage(
+                      vehicleId: vehicle.id,
+                    ),
+                  ),
+                );
+              },
+              onFavorite: () {
+                // TODO: Toggle favorite
+              },
+              isFeatured: true,
+            ),
+
+            // Sponsored badge overlay (top-right)
+            Positioned(
+              top: responsive.cardSpacing * 0.8,
+              right: responsive.cardSpacing * 0.8,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.cardSpacing * 0.8,
+                  vertical: responsive.cardSpacing * 0.4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.amber.shade700,
+                      Colors.amber.shade500,
+                    ],
+                  ),
+                  borderRadius:
+                      BorderRadius.circular(responsive.borderRadius * 0.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.star_rounded,
+                      color: Colors.white,
+                      size: responsive.iconSize * 0.6,
+                    ),
+                    SizedBox(width: responsive.cardSpacing * 0.3),
+                    Text(
+                      'SPONSORED',
+                      style: TextStyle(
+                        fontSize: responsive.smallFontSize * 0.85,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
             ),
           ],

@@ -14,23 +14,23 @@ class AdaptiveNavigation extends StatelessWidget {
     required this.body,
     this.destinations = appNavDestinations,
   });
-  
+
   /// Currently selected navigation index
   final int selectedIndex;
-  
+
   /// Callback when a destination is selected
   final ValueChanged<int> onDestinationSelected;
-  
+
   /// The main content body
   final Widget body;
-  
+
   /// Navigation destinations
   final List<NavDestination> destinations;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    
+
     // Desktop: Use NavigationDrawer
     if (width >= Breakpoints.xxl) {
       return _DesktopLayout(
@@ -40,7 +40,7 @@ class AdaptiveNavigation extends StatelessWidget {
         body: body,
       );
     }
-    
+
     // Tablet: Use NavigationRail
     if (width >= Breakpoints.lg) {
       return _TabletLayout(
@@ -50,7 +50,7 @@ class AdaptiveNavigation extends StatelessWidget {
         body: body,
       );
     }
-    
+
     // Mobile: Use BottomNavigationBar
     return _MobileLayout(
       selectedIndex: selectedIndex,
@@ -69,7 +69,7 @@ class _MobileLayout extends StatelessWidget {
     required this.destinations,
     required this.body,
   });
-  
+
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final List<NavDestination> destinations;
@@ -96,7 +96,7 @@ class _TabletLayout extends StatelessWidget {
     required this.destinations,
     required this.body,
   });
-  
+
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final List<NavDestination> destinations;
@@ -129,7 +129,7 @@ class _DesktopLayout extends StatelessWidget {
     required this.destinations,
     required this.body,
   });
-  
+
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final List<NavDestination> destinations;
@@ -165,16 +165,16 @@ class AdaptiveScaffold extends StatelessWidget {
     required this.pages,
     this.destinations = appNavDestinations,
   });
-  
+
   /// Currently selected page index
   final int selectedIndex;
-  
+
   /// Callback when a destination is selected
   final ValueChanged<int> onDestinationSelected;
-  
+
   /// List of pages to display (corresponds to destinations)
   final List<Widget> pages;
-  
+
   /// Navigation destinations
   final List<NavDestination> destinations;
 
@@ -184,7 +184,7 @@ class AdaptiveScaffold extends StatelessWidget {
       pages.length == destinations.length,
       'Number of pages must match number of destinations',
     );
-    
+
     return AdaptiveNavigation(
       selectedIndex: selectedIndex,
       onDestinationSelected: onDestinationSelected,

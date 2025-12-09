@@ -119,37 +119,98 @@ class _HorizontalVehicleSectionState extends State<HorizontalVehicleSection>
               ),
             ),
             const SizedBox(height: 12),
-            // Horizontal List - Using Compact Cards for better density
-            SizedBox(
-              height: responsive.cardHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(
-                    horizontal: responsive.horizontalPadding),
-                itemCount: widget.vehicles.length,
-                itemBuilder: (context, index) {
-                  return HorizontalCompactVehicleCard(
-                    vehicle: widget.vehicles[index],
-                    badgeText: widget.showBadge ? widget.badgeText : null,
-                    isFeatured: widget.showBadge,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => VehicleDetailPage(
-                            vehicleId: widget.vehicles[index].id,
-                          ),
-                        ),
-                      );
-                    },
-                    onFavorite: () {
-                      // TODO: Implement favorite toggle
-                    },
+            // Mobile: Horizontal scroll, Tablet: Grid
+            responsive.isMobile
+                ? _buildHorizontalList(context, responsive)
+                : _buildGrid(context, responsive),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Horizontal scroll list for mobile
+  Widget _buildHorizontalList(
+      BuildContext context, ResponsiveHelper responsive) {
+    return SizedBox(
+      height: responsive.cardHeight,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
+        itemCount: widget.vehicles.length,
+        itemBuilder: (context, index) {
+          return HorizontalCompactVehicleCard(
+            vehicle: widget.vehicles[index],
+            badgeText: widget.showBadge ? widget.badgeText : null,
+            isFeatured: widget.showBadge,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => VehicleDetailPage(
+                    vehicleId: widget.vehicles[index].id,
+                  ),
+                ),
+              );
+            },
+            onFavorite: () {
+              // TODO: Implement favorite toggle
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  /// Grid layout for tablets
+  Widget _buildGrid(BuildContext context, ResponsiveHelper responsive) {
+    final columns = responsive.cardGridColumns;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = responsive.horizontalPadding;
+    final spacing = responsive.cardSpacing;
+    final availableWidth =
+        screenWidth - (padding * 2) - (spacing * (columns - 1));
+    final cardWidth = availableWidth / columns;
+    final cardHeight = cardWidth * 0.75; // 4:3 aspect ratio
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: widget.vehicles.take(columns * 2).map((vehicle) {
+          return SizedBox(
+            width: cardWidth,
+            height: cardHeight,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => VehicleDetailPage(
+                      vehicleId: vehicle.id,
+                    ),
+                  ),
+                );
+              },
+              child: HorizontalCompactVehicleCard(
+                vehicle: vehicle,
+                badgeText: widget.showBadge ? widget.badgeText : null,
+                isFeatured: widget.showBadge,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => VehicleDetailPage(
+                        vehicleId: vehicle.id,
+                      ),
+                    ),
                   );
+                },
+                onFavorite: () {
+                  // TODO: Implement favorite toggle
                 },
               ),
             ),
-          ],
-        ),
+          );
+        }).toList(),
       ),
     );
   }

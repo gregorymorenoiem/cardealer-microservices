@@ -32,6 +32,7 @@ class _PremiumHeroCarouselState extends State<PremiumHeroCarousel>
   int _currentPage = 0;
   double _currentPageValue = 0.0;
   bool _isPaused = false;
+  double _lastViewportFraction = 0.92;
 
   @override
   void initState() {
@@ -45,6 +46,42 @@ class _PremiumHeroCarouselState extends State<PremiumHeroCarousel>
 
     if (widget.autoPlay && widget.vehicles.length > 1) {
       _startAutoPlay();
+    }
+  }
+
+  /// Calculate viewportFraction based on screen width
+  /// Mobile: Show 1 card (0.92)
+  /// Tablet: Show 2 cards (0.48)
+  /// Desktop: Show 3 cards (0.33)
+  double _calculateViewportFraction(double width) {
+    if (width >= 1024) {
+      return 0.33; // Show 3 cards on desktop
+    } else if (width >= 768) {
+      return 0.45; // Show ~2.2 cards on large tablets
+    } else if (width >= 600) {
+      return 0.48; // Show 2 cards on tablets
+    } else {
+      return 0.92; // Show 1 card on mobile
+    }
+  }
+
+  void _updatePageControllerIfNeeded(double width) {
+    final newViewportFraction = _calculateViewportFraction(width);
+    if (newViewportFraction != _lastViewportFraction) {
+      _lastViewportFraction = newViewportFraction;
+      final currentPage = _currentPage;
+      _pageController.dispose();
+      _pageController = PageController(
+        viewportFraction: newViewportFraction,
+        initialPage: currentPage,
+      );
+      _pageController.addListener(() {
+        if (mounted) {
+          setState(() {
+            _currentPageValue = _pageController.page ?? 0.0;
+          });
+        }
+      });
     }
   }
 
@@ -92,8 +129,12 @@ class _PremiumHeroCarouselState extends State<PremiumHeroCarousel>
       return const SizedBox.shrink();
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
     final carouselHeight =
         context.isMobile ? 360.0 : (context.isTablet ? 420.0 : 480.0);
+
+    // Update page controller if viewport fraction changed
+    _updatePageControllerIfNeeded(screenWidth);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -86,45 +86,92 @@ class DailyDealsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        // Horizontal Scroll with CompactVehicleCard
-        SizedBox(
-          height: responsive.cardHeight,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding:
-                EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
-            itemCount: vehicles.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  right:
-                      index < vehicles.length - 1 ? responsive.cardSpacing : 0,
-                ),
-                child: SizedBox(
-                  width: responsive.cardWidth,
-                  child: CompactVehicleCard(
-                    vehicle: vehicles[index],
-                    isFeatured: true,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VehicleDetailPage(
-                            vehicleId: vehicles[index].id,
-                          ),
-                        ),
-                      );
-                    },
-                    onFavorite: () {
-                      // TODO: Handle favorite toggle
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        // Mobile: Horizontal Scroll, Tablet: Grid
+        responsive.isMobile
+            ? _buildHorizontalList(context, responsive)
+            : _buildGridLayout(context, responsive),
       ],
+    );
+  }
+
+  Widget _buildHorizontalList(
+      BuildContext context, ResponsiveHelper responsive) {
+    return SizedBox(
+      height: responsive.cardHeight,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
+        itemCount: vehicles.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(
+              right: index < vehicles.length - 1 ? responsive.cardSpacing : 0,
+            ),
+            child: SizedBox(
+              width: responsive.cardWidth,
+              child: CompactVehicleCard(
+                vehicle: vehicles[index],
+                isFeatured: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VehicleDetailPage(
+                        vehicleId: vehicles[index].id,
+                      ),
+                    ),
+                  );
+                },
+                onFavorite: () {
+                  // TODO: Handle favorite toggle
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGridLayout(BuildContext context, ResponsiveHelper responsive) {
+    final columns = responsive.cardGridColumns;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = responsive.horizontalPadding;
+    final spacing = responsive.cardSpacing;
+    final availableWidth =
+        screenWidth - (padding * 2) - (spacing * (columns - 1));
+    final cardWidth = availableWidth / columns;
+    final cardHeight = cardWidth * 0.85; // Aspect ratio for cards
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: vehicles.take(columns * 2).map((vehicle) {
+          return SizedBox(
+            width: cardWidth,
+            height: cardHeight,
+            child: CompactVehicleCard(
+              vehicle: vehicle,
+              isFeatured: true,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VehicleDetailPage(
+                      vehicleId: vehicle.id,
+                    ),
+                  ),
+                );
+              },
+              onFavorite: () {
+                // TODO: Handle favorite toggle
+              },
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
+import '../../../core/responsive/responsive_utils.dart';
 
 /// Category data model
 class VehicleCategory {
@@ -48,6 +49,8 @@ class _CategoriesSectionState extends State<CategoriesSection> {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = !context.isMobile;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -79,33 +82,76 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        SizedBox(
-          height: 110,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            itemCount: widget.categories.length,
-            itemBuilder: (context, index) {
-              final category = widget.categories[index];
-              final isSelected = _selectedId == category.id;
-
-              return Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.md),
-                child: _CategoryCard(
-                  category: category,
-                  isSelected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      _selectedId = isSelected ? null : category.id;
-                    });
-                    widget.onCategoryTap?.call(category);
-                  },
-                ),
-              );
-            },
-          ),
-        ),
+        // Mobile: Horizontal scroll, Tablet: Grid/Wrap
+        if (isTablet)
+          _buildGridLayout(context)
+        else
+          _buildHorizontalScroll(context),
       ],
+    );
+  }
+
+  /// Horizontal scroll layout for mobile
+  Widget _buildHorizontalScroll(BuildContext context) {
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        itemCount: widget.categories.length,
+        itemBuilder: (context, index) {
+          final category = widget.categories[index];
+          final isSelected = _selectedId == category.id;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md),
+            child: _CategoryCard(
+              category: category,
+              isSelected: isSelected,
+              onTap: () {
+                setState(() {
+                  _selectedId = isSelected ? null : category.id;
+                });
+                widget.onCategoryTap?.call(category);
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Grid/Wrap layout for tablets
+  Widget _buildGridLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Calculate columns: 4 on small tablet, 5 on tablet, 6 on desktop
+    final columns = screenWidth >= 1024 ? 6 : (screenWidth >= 768 ? 5 : 4);
+    final cardWidth =
+        (screenWidth - (AppSpacing.md * 2) - (AppSpacing.sm * (columns - 1))) /
+            columns;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: widget.categories.map((category) {
+          final isSelected = _selectedId == category.id;
+          return SizedBox(
+            width: cardWidth,
+            child: _CategoryCard(
+              category: category,
+              isSelected: isSelected,
+              onTap: () {
+                setState(() {
+                  _selectedId = isSelected ? null : category.id;
+                });
+                widget.onCategoryTap?.call(category);
+              },
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
