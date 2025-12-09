@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../domain/entities/vehicle.dart';
-import '../../../widgets/vehicle_card.dart';
+import '../../../../core/responsive/responsive_helper.dart';
+import '../../../widgets/vehicles/compact_vehicle_card.dart';
+import '../vehicle_detail_page.dart';
 
 /// Similar vehicles horizontal section
 class SimilarVehiclesSection extends StatelessWidget {
@@ -23,45 +25,54 @@ class SimilarVehiclesSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final responsive = context.responsive;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
             child: Text(
               'Vehículos similares',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w600,
+                    fontSize: responsive.titleFontSize + 2,
                   ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: responsive.cardSpacing),
           SizedBox(
-            height: 280,
+            height: responsive.cardHeight,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
               itemCount: vehicles.length,
               itemBuilder: (context, index) {
                 final vehicle = vehicles[index];
                 return Padding(
                   padding: EdgeInsets.only(
-                    right: index < vehicles.length - 1 ? 16 : 0,
+                    right: index < vehicles.length - 1 ? responsive.cardSpacing : 0,
                   ),
                   child: SizedBox(
-                    width: 200,
-                    child: VehicleCard(
-                      id: vehicle.id,
-                      title: '${vehicle.make} ${vehicle.model}',
-                      imageUrl:
-                          vehicle.images.isNotEmpty ? vehicle.images[0] : '',
-                      price: vehicle.price,
-                      year: vehicle.year.toString(),
-                      mileage: vehicle.mileage.toString(),
-                      location: vehicle.location,
+                    width: responsive.cardWidth,
+                    child: CompactVehicleCard(
+                      vehicle: vehicle,
                       isFeatured: vehicle.isFeatured,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VehicleDetailPage(
+                              vehicleId: vehicle.id,
+                            ),
+                          ),
+                        );
+                      },
+                      onFavorite: () {
+                        // TODO: Toggle favorite
+                      },
                     ),
                   ),
                 );
@@ -74,8 +85,10 @@ class SimilarVehiclesSection extends StatelessWidget {
   }
 
   Widget _buildLoading(BuildContext context) {
+    final responsive = context.responsive;
+    
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -83,9 +96,10 @@ class SimilarVehiclesSection extends StatelessWidget {
             'Vehículos similares',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
+                  fontSize: responsive.titleFontSize + 2,
                 ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: responsive.cardSpacing),
           const Center(
             child: CircularProgressIndicator(),
           ),

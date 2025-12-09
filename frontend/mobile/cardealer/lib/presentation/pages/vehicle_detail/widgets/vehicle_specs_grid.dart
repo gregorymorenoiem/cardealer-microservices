@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../domain/entities/vehicle.dart';
 
 /// Grid showing vehicle specifications
@@ -58,8 +59,11 @@ class VehicleSpecsGrid extends StatelessWidget {
         ),
     ];
 
+    final responsive = context.responsive;
+    final columns = responsive.isMobile ? 2 : 3;
+    
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -67,17 +71,18 @@ class VehicleSpecsGrid extends StatelessWidget {
             'Especificaciones',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
+                  fontSize: responsive.titleFontSize + 2,
                 ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: responsive.cardSpacing),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
               childAspectRatio: 2.5,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: responsive.cardSpacing,
+              mainAxisSpacing: responsive.cardSpacing,
             ),
             itemCount: specs.length,
             itemBuilder: (context, index) {
@@ -91,20 +96,25 @@ class VehicleSpecsGrid extends StatelessWidget {
   }
 
   Widget _buildSpecItem(BuildContext context, _SpecItem spec) {
+    final responsive = context.responsive;
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.cardSpacing * 0.8,
+        vertical: responsive.cardSpacing * 0.6,
+      ),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(responsive.borderRadius * 0.67),
       ),
       child: Row(
         children: [
           Icon(
             spec.icon,
-            size: 20,
+            size: responsive.iconSize,
             color: Theme.of(context).colorScheme.primary,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: responsive.cardSpacing * 0.6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

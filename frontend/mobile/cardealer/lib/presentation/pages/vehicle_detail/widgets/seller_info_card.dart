@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../domain/entities/vehicle.dart';
 
 /// Seller information card
@@ -19,9 +20,10 @@ class SellerInfoCard extends StatelessWidget {
     const reviewCount = 23;
     // Determine if seller is a dealer based on vehicle data
     final isDealer = vehicle.dealerId != null;
+    final responsive = context.responsive;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -29,14 +31,15 @@ class SellerInfoCard extends StatelessWidget {
             'Vendedor',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
+                  fontSize: responsive.titleFontSize + 2,
                 ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: responsive.cardSpacing),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(responsive.cardSpacing),
             decoration: BoxDecoration(
               color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(responsive.borderRadius),
             ),
             child: Row(
               children: [

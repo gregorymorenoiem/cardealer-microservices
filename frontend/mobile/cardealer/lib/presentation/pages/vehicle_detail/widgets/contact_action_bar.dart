@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../domain/entities/vehicle.dart';
 
 /// Sticky bottom action bar with contact buttons
@@ -18,6 +19,8 @@ class ContactActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -29,7 +32,7 @@ class ContactActionBar extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       child: SafeArea(
         top: false,
         child: Row(
@@ -38,38 +41,38 @@ class ContactActionBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onCall,
-                icon: const Icon(Icons.phone),
-                label: const Text('Llamar'),
+                icon: Icon(Icons.phone, size: responsive.iconSize),
+                label: Text('Llamar', style: TextStyle(fontSize: responsive.bodyFontSize)),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: responsive.cardSpacing * 0.6),
 
             // WhatsApp button
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onWhatsApp,
-                icon: const Icon(Icons.chat),
-                label: const Text('WhatsApp'),
+                icon: Icon(Icons.chat, size: responsive.iconSize),
+                label: Text('WhatsApp', style: TextStyle(fontSize: responsive.bodyFontSize)),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
                   foregroundColor: Colors.green,
                   side: const BorderSide(color: Colors.green),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: responsive.cardSpacing * 0.6),
 
             // Message button
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: onMessage,
-                icon: const Icon(Icons.message),
-                label: const Text('Mensaje'),
+                icon: Icon(Icons.message, size: responsive.iconSize),
+                label: Text('Mensaje', style: TextStyle(fontSize: responsive.bodyFontSize)),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
                 ),
               ),
             ),

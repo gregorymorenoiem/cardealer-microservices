@@ -387,7 +387,7 @@ class HorizontalCompactVehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    
+
     return Container(
       width: responsive.cardWidth, // Responsive width for horizontal scroll
       margin: EdgeInsets.only(right: responsive.cardSpacing),

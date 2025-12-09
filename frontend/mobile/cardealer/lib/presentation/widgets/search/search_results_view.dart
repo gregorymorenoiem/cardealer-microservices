@@ -170,8 +170,9 @@ class _GridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    final columns = responsive.gridColumns; // 2 for mobile, 3 for tablet, 4 for desktop
-    
+    final columns =
+        responsive.gridColumns; // 2 for mobile, 3 for tablet, 4 for desktop
+
     return GridView.builder(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -196,7 +197,7 @@ class _ListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    
+
     return ListView.builder(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       itemCount: vehicles.length,
@@ -215,7 +216,7 @@ class _GridVehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -316,7 +317,7 @@ class _ListVehicleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final responsive = context.responsive;
     final imageSize = responsive.isMobile ? 100.0 : 120.0;
-    
+
     return Card(
       margin: EdgeInsets.only(bottom: responsive.cardSpacing),
       elevation: 2,
@@ -330,7 +331,8 @@ class _ListVehicleCard extends StatelessWidget {
           children: [
             // Image
             ClipRRect(
-              borderRadius: BorderRadius.circular(responsive.borderRadius * 0.67),
+              borderRadius:
+                  BorderRadius.circular(responsive.borderRadius * 0.67),
               child: Stack(
                 children: [
                   CachedNetworkImage(
@@ -403,7 +405,9 @@ class _ListVehicleCard extends StatelessWidget {
                   SizedBox(height: responsive.cardSpacing * 0.5),
                   Row(
                     children: [
-                      Icon(Icons.speed, size: responsive.iconSize * 0.7, color: Colors.grey.shade600),
+                      Icon(Icons.speed,
+                          size: responsive.iconSize * 0.7,
+                          color: Colors.grey.shade600),
                       SizedBox(width: responsive.cardSpacing * 0.25),
                       Text(
                         vehicle.formattedMileage,
@@ -413,7 +417,9 @@ class _ListVehicleCard extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: responsive.cardSpacing),
-                      Icon(Icons.location_on, size: responsive.iconSize * 0.7, color: Colors.grey.shade600),
+                      Icon(Icons.location_on,
+                          size: responsive.iconSize * 0.7,
+                          color: Colors.grey.shade600),
                       SizedBox(width: responsive.cardSpacing * 0.25),
                       Expanded(
                         child: Text(

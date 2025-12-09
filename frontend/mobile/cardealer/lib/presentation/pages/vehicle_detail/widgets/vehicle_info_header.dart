@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../domain/entities/vehicle.dart';
 
 /// Vehicle price and title header
@@ -19,8 +20,10 @@ class VehicleInfoHeader extends StatelessWidget {
       decimalDigits: 0,
     );
 
+    final responsive = context.responsive;
+    
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -30,37 +33,44 @@ class VehicleInfoHeader extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,
+                  fontSize: responsive.titleFontSize + 8,
                 ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: responsive.cardSpacing * 0.6),
 
           // Title
           Text(
             '${vehicle.make} ${vehicle.model} ${vehicle.year}',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
+                  fontSize: responsive.titleFontSize + 2,
                 ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: responsive.cardSpacing * 0.3),
 
           // Location and date
           Row(
             children: [
-              const Icon(Icons.location_on, size: 16, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                vehicle.location,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+              Icon(Icons.location_on, size: responsive.iconSize * 0.8, color: Colors.grey),
+              SizedBox(width: responsive.cardSpacing * 0.3),
+              Flexible(
+                child: Text(
+                  vehicle.location,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                        fontSize: responsive.bodyFontSize,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const SizedBox(width: 16),
-              const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-              const SizedBox(width: 4),
+              SizedBox(width: responsive.cardSpacing),
+              Icon(Icons.calendar_today, size: responsive.iconSize * 0.8, color: Colors.grey),
+              SizedBox(width: responsive.cardSpacing * 0.3),
               Text(
                 _formatDate(vehicle.createdAt),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
+                      fontSize: responsive.bodyFontSize,
                     ),
               ),
             ],
@@ -69,26 +79,26 @@ class VehicleInfoHeader extends StatelessWidget {
           // Featured badge
           if (vehicle.isFeatured)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: responsive.cardSpacing * 0.6),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.cardSpacing * 0.6,
+                  vertical: responsive.cardSpacing * 0.3,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(responsive.borderRadius * 0.33),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star, size: 16, color: Colors.orange),
-                    SizedBox(width: 4),
+                    Icon(Icons.star, size: responsive.iconSize * 0.8, color: Colors.orange),
+                    SizedBox(width: responsive.cardSpacing * 0.3),
                     Text(
                       'Destacado',
                       style: TextStyle(
                         color: Colors.orange,
-                        fontSize: 12,
+                        fontSize: responsive.smallFontSize,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
