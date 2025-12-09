@@ -13,14 +13,13 @@ import '../../widgets/home/premium_featured_grid.dart';
 import '../../widgets/home/horizontal_vehicle_section.dart';
 import '../../widgets/home/daily_deals_section.dart';
 import '../../widgets/home/recently_viewed_section.dart';
-import '../../widgets/home/testimonials_carousel.dart';
-import '../../widgets/home/stats_section.dart';
-import '../../widgets/home/bottom_cta_section.dart';
 import '../../widgets/home/premium_refresh_indicator.dart';
 import '../search/search_page.dart';
 
 /// HomePage - Main landing page with premium design
-/// Sprint 3: Home Redesign with new premium components
+/// Sprint 3: Home Reorganization - Revenue-optimized layout
+/// Removed non-monetizable sections: Testimonials, Stats, Bottom CTA
+/// Focus on vehicle listings with high engagement potential
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -204,32 +203,7 @@ class HomePage extends StatelessWidget {
                       },
                     ),
 
-                    SizedBox(height: context.spacing(2)),
-
-                    // Section 9: Testimonials Carousel
-                    const TestimonialsCarousel(
-                      testimonials: [],
-                      onSeeAllReviews: null,
-                    ),
-
-                    SizedBox(height: context.spacing(2)),
-
-                    // Section 10: Stats Section
-                    const StatsSection(),
-
-                    SizedBox(height: context.spacing(2)),
-
-                    // Section 11: Bottom CTA
-                    BottomCTASection(
-                      onBrowseCars: () {
-                        // TODO: Navigate to search/browse
-                      },
-                      onSellCar: () {
-                        // TODO: Navigate to sell flow
-                      },
-                    ),
-
-                    SizedBox(height: context.spacing(2)),
+                    SizedBox(height: context.spacing(3)),
                   ],
                 ),
               );

@@ -157,7 +157,8 @@ class CompactVehicleCard extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: _getBadgeColor(),
-                borderRadius: BorderRadius.circular(responsive.borderRadius * 0.33),
+                borderRadius:
+                    BorderRadius.circular(responsive.borderRadius * 0.33),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),

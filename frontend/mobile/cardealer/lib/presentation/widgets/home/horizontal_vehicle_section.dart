@@ -124,7 +124,8 @@ class _HorizontalVehicleSectionState extends State<HorizontalVehicleSection>
               height: responsive.cardHeight,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
+                padding: EdgeInsets.symmetric(
+                    horizontal: responsive.horizontalPadding),
                 itemCount: widget.vehicles.length,
                 itemBuilder: (context, index) {
                   return HorizontalCompactVehicleCard(

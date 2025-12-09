@@ -72,12 +72,14 @@ class RecentlyViewedSection extends StatelessWidget {
           height: responsive.cardHeight,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
+            padding:
+                EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
             itemCount: vehicles.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: EdgeInsets.only(
-                  right: index < vehicles.length - 1 ? responsive.cardSpacing : 0,
+                  right:
+                      index < vehicles.length - 1 ? responsive.cardSpacing : 0,
                 ),
                 child: SizedBox(
                   width: responsive.cardWidth,
