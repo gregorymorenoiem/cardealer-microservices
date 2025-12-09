@@ -61,14 +61,14 @@ class CompactVehicleCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Photo Section: 60%
+            // Photo Section: 55%
             Expanded(
-              flex: 60,
+              flex: 55,
               child: _buildPhotoSection(context, responsive),
             ),
-            // Info Section: 40%
+            // Info Section: 45%
             Expanded(
-              flex: 40,
+              flex: 45,
               child: _buildInfoSection(context, responsive),
             ),
           ],
@@ -252,80 +252,79 @@ class CompactVehicleCard extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: responsive.horizontalPadding * 0.375,
-        vertical: responsive.horizontalPadding * 0.25,
+        vertical: 2, // Minimal vertical padding to prevent overflow
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisSize: MainAxisSize.max,
         children: [
           // Row 1: Price
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Price (Large, Bold)
-              Flexible(
-                child: Text(
-                  '\$${_formatPrice(vehicle.price)}',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: responsive.titleFontSize + 4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+          Flexible(
+            child: Text(
+              '\$${_formatPrice(vehicle.price)}',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: responsive.titleFontSize + 2,
               ),
-            ],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
 
           // Row 2: Title (Year + Make + Model)
-          Text(
-            '${vehicle.year} ${vehicle.make} ${vehicle.model}',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: responsive.titleFontSize,
+          Flexible(
+            child: Text(
+              '${vehicle.year} ${vehicle.make} ${vehicle.model}',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: responsive.bodyFontSize,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
 
           // Row 3: Metadata (Mileage + Distance)
-          Row(
-            children: [
-              // Mileage
-              Icon(
-                Icons.speed,
-                size: responsive.iconSize * 0.875,
-                color: AppColors.textSecondary,
-              ),
-              SizedBox(width: 4),
-              Text(
-                _formatMileage(vehicle.mileage),
-                style: TextStyle(
+          Flexible(
+            child: Row(
+              children: [
+                // Mileage
+                Icon(
+                  Icons.speed,
+                  size: responsive.iconSize * 0.7,
                   color: AppColors.textSecondary,
-                  fontSize: responsive.bodyFontSize,
                 ),
-              ),
-              SizedBox(width: 12),
-              // Distance
-              Icon(
-                Icons.location_on,
-                size: responsive.iconSize * 0.875,
-                color: AppColors.textSecondary,
-              ),
-              SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  vehicle.location,
+                SizedBox(width: 2),
+                Text(
+                  _formatMileage(vehicle.mileage),
                   style: TextStyle(
                     color: AppColors.textSecondary,
-                    fontSize: responsive.bodyFontSize,
+                    fontSize: responsive.smallFontSize,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                SizedBox(width: 8),
+                // Distance
+                Icon(
+                  Icons.location_on,
+                  size: responsive.iconSize * 0.7,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(width: 2),
+                Expanded(
+                  child: Text(
+                    vehicle.location,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: responsive.smallFontSize,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
