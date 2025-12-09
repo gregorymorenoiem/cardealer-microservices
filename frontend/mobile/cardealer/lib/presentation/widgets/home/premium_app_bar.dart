@@ -4,24 +4,30 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
 
 /// Premium AppBar with gradient background for Home page
+/// Optimized for monetization - compact design with prominent search
 class PremiumHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onLocationTap;
   final int notificationCount;
   final bool showNotificationBadge;
+  final String currentLocation;
 
   const PremiumHomeAppBar({
     super.key,
     this.onSearchTap,
     this.onNotificationsTap,
     this.onProfileTap,
+    this.onLocationTap,
     this.notificationCount = 0,
     this.showNotificationBadge = false,
+    this.currentLocation = 'Miami, FL',
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize =>
+      const Size.fromHeight(56); // Reduced from 56 to 56 (standard)
 
   @override
   Widget build(BuildContext context) {
@@ -39,43 +45,68 @@ class PremiumHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: false,
+        titleSpacing: 12,
         title: Row(
           children: [
-            // Premium logo with car icon
+            // Compact logo
             Container(
-              padding: const EdgeInsets.all(AppSpacing.xs),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: const Icon(
                 Icons.directions_car,
                 color: AppColors.gold,
-                size: 24,
+                size: 20,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            // App name
-            Text(
-              'CarDealer',
-              style: AppTypography.h3.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 8),
+            // Prominent Search Button (replaces hero search section)
+            Expanded(
+              child: GestureDetector(
+                onTap: onSearchTap,
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.search,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Search cars...',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const Spacer(),
+                      // Voice search indicator
+                      Icon(
+                        Icons.mic,
+                        color: Colors.white.withValues(alpha: 0.7),
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          // Search icon with animation
-          IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Colors.white,
-            ),
-            tooltip: 'Buscar',
-            onPressed: onSearchTap,
-          ),
-
           // Notifications icon with badge
           Stack(
             children: [

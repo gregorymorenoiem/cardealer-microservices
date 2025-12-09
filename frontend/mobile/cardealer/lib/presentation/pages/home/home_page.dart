@@ -6,7 +6,6 @@ import '../../bloc/vehicles/vehicles_bloc.dart';
 import '../../bloc/vehicles/vehicles_event.dart';
 import '../../bloc/vehicles/vehicles_state.dart';
 import '../../widgets/home/premium_app_bar.dart';
-import '../../widgets/home/hero_search_section.dart';
 import '../../widgets/home/categories_section.dart';
 import '../../widgets/home/premium_hero_carousel.dart';
 import '../../widgets/home/sell_car_cta.dart';
@@ -18,6 +17,7 @@ import '../../widgets/home/testimonials_carousel.dart';
 import '../../widgets/home/stats_section.dart';
 import '../../widgets/home/bottom_cta_section.dart';
 import '../../widgets/home/premium_refresh_indicator.dart';
+import '../search/search_page.dart';
 
 /// HomePage - Main landing page with premium design
 /// Sprint 3: Home Redesign with new premium components
@@ -32,7 +32,11 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         appBar: PremiumHomeAppBar(
           onSearchTap: () {
-            // TODO: Navigate to search page
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SearchPage(),
+              ),
+            );
           },
           onNotificationsTap: () {
             // TODO: Navigate to notifications
@@ -87,28 +91,7 @@ class HomePage extends StatelessWidget {
                 },
                 child: ListView(
                   children: [
-                    // Hero Search Section
-                    HeroSearchSection(
-                      onSearchTap: () {
-                        // TODO: Navigate to search page
-                      },
-                      onVoiceSearchTap: () {
-                        // TODO: Activate voice search
-                      },
-                      onSearchSubmitted: (query) {
-                        // TODO: Execute search
-                      },
-                      quickSuggestions: const [
-                        'Toyota Camry',
-                        'SUVs 2024',
-                        'Híbridos',
-                        'Menos de \$20,000',
-                      ],
-                    ),
-
-                    SizedBox(height: context.spacing(1)),
-
-                    // Categories Section
+                    // Quick Filter Chips (below AppBar search)
                     CategoriesSection(
                       categories: getDefaultCategories(),
                       onCategoryTap: (category) {
@@ -116,7 +99,7 @@ class HomePage extends StatelessWidget {
                       },
                     ),
 
-                    SizedBox(height: context.spacing(1.5)),
+                    SizedBox(height: context.spacing(1)),
 
                     // Premium Hero Carousel (5 featured vehicles with parallax)
                     PremiumHeroCarousel(
