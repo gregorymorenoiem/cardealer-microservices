@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/entities/vehicle.dart';
+import '../../../core/responsive/responsive_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 enum ViewMode { grid, list }
@@ -168,12 +169,15 @@ class _GridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final columns = responsive.gridColumns; // 2 for mobile, 3 for tablet, 4 for desktop
+    
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+      padding: EdgeInsets.all(responsive.horizontalPadding),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: responsive.cardSpacing,
+        mainAxisSpacing: responsive.cardSpacing,
         childAspectRatio: 0.75,
       ),
       itemCount: vehicles.length,
@@ -191,8 +195,10 @@ class _ListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       itemCount: vehicles.length,
       itemBuilder: (context, index) {
         return _ListVehicleCard(vehicle: vehicles[index]);
@@ -208,15 +214,21 @@ class _GridVehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(responsive.borderRadius),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(responsive.borderRadius),
+            ),
             child: Stack(
               children: [
                 CachedNetworkImage(
@@ -255,14 +267,14 @@ class _GridVehicleCard extends StatelessWidget {
           ),
           // Info
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: EdgeInsets.all(responsive.cardSpacing),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '${vehicle.year} ${vehicle.make}',
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: responsive.bodyFontSize,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
@@ -271,17 +283,17 @@ class _GridVehicleCard extends StatelessWidget {
                 Text(
                   vehicle.model,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: responsive.smallFontSize,
                     color: Colors.grey.shade600,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: responsive.cardSpacing * 0.5),
                 Text(
                   vehicle.formattedPrice,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: responsive.titleFontSize,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).primaryColor,
                   ),
@@ -302,24 +314,29 @@ class _ListVehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final imageSize = responsive.isMobile ? 100.0 : 120.0;
+    
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: responsive.cardSpacing),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(responsive.borderRadius),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(responsive.cardSpacing),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(responsive.borderRadius * 0.67),
               child: Stack(
                 children: [
                   CachedNetworkImage(
                     imageUrl: vehicle.mainImage,
-                    width: 100,
-                    height: 100,
+                    width: imageSize,
+                    height: imageSize,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       color: Colors.grey.shade200,
@@ -350,7 +367,7 @@ class _ListVehicleCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: responsive.cardSpacing),
             // Info
             Expanded(
               child: Column(
@@ -358,8 +375,8 @@ class _ListVehicleCard extends StatelessWidget {
                 children: [
                   Text(
                     '${vehicle.year} ${vehicle.make}',
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: TextStyle(
+                      fontSize: responsive.bodyFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -368,42 +385,41 @@ class _ListVehicleCard extends StatelessWidget {
                   Text(
                     vehicle.model,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: responsive.bodyFontSize,
                       color: Colors.grey.shade600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.cardSpacing * 0.5),
                   Text(
                     vehicle.formattedPrice,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: responsive.titleFontSize,
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.cardSpacing * 0.5),
                   Row(
                     children: [
-                      Icon(Icons.speed, size: 14, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
+                      Icon(Icons.speed, size: responsive.iconSize * 0.7, color: Colors.grey.shade600),
+                      SizedBox(width: responsive.cardSpacing * 0.25),
                       Text(
                         vehicle.formattedMileage,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: responsive.smallFontSize,
                           color: Colors.grey.shade600,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Icon(Icons.location_on,
-                          size: 14, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
+                      SizedBox(width: responsive.cardSpacing),
+                      Icon(Icons.location_on, size: responsive.iconSize * 0.7, color: Colors.grey.shade600),
+                      SizedBox(width: responsive.cardSpacing * 0.25),
                       Expanded(
                         child: Text(
                           vehicle.location.split(',').first,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: responsive.smallFontSize,
                             color: Colors.grey.shade600,
                           ),
                           maxLines: 1,

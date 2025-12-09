@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/colors.dart';
-import '../../../core/theme/spacing.dart';
 import '../../../core/responsive/responsive_helper.dart';
 import '../../../domain/entities/vehicle.dart';
 
@@ -47,7 +46,7 @@ class CompactVehicleCard extends StatelessWidget {
         height: responsive.cardHeight, // Responsive height
         margin: EdgeInsets.symmetric(
           horizontal: responsive.horizontalPadding,
-          vertical: AppSpacing.xs,
+          vertical: responsive.cardSpacing * 0.25,
         ),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -387,9 +386,11 @@ class HorizontalCompactVehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    
     return Container(
-      width: 280, // Fixed width for horizontal scroll
-      margin: const EdgeInsets.only(right: AppSpacing.md),
+      width: responsive.cardWidth, // Responsive width for horizontal scroll
+      margin: EdgeInsets.only(right: responsive.cardSpacing),
       child: CompactVehicleCard(
         vehicle: vehicle,
         onTap: onTap,
