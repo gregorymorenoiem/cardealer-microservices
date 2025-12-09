@@ -92,8 +92,11 @@ class AppNavigationRail extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.directions_car,
-                      color: AppColors.primary, size: 32),
+                  Image.asset(
+                    'assets/logos/icon.png',
+                    width: 32,
+                    height: 32,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'CarDealer',
@@ -108,8 +111,11 @@ class AppNavigationRail extends StatelessWidget {
             )
           : Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Icon(Icons.directions_car,
-                  color: AppColors.primary, size: 32),
+              child: Image.asset(
+                'assets/logos/icon.png',
+                width: 32,
+                height: 32,
+              ),
             ),
       destinations: destinations.map((dest) {
         return NavigationRailDestination(
@@ -151,7 +157,11 @@ class AppNavigationDrawer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Row(
             children: [
-              Icon(Icons.directions_car, color: AppColors.primary, size: 36),
+              Image.asset(
+                'assets/logos/icon.png',
+                width: 36,
+                height: 36,
+              ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -133,10 +133,14 @@ class _SplashPageState extends State<SplashPage>
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.directions_car,
-                            size: 90,
-                            color: AppColors.primary,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(28),
+                            child: Image.asset(
+                              'assets/logos/icon.png',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 32),

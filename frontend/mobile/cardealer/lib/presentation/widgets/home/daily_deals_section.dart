@@ -33,43 +33,48 @@ class DailyDealsSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.local_fire_department,
-                        color: Colors.red,
-                        size: 28,
-                      ),
-                      const SizedBox(width: 8),
-                      ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [Colors.red, Colors.orange],
-                        ).createShader(bounds),
-                        child: Text(
-                          'Ofertas del Día',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.local_fire_department,
+                          color: Colors.red,
+                          size: 24,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '¡Ofertas por tiempo limitado - Aprovecha!',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                          fontSize: 13,
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Colors.red, Colors.orange],
+                            ).createShader(bounds),
+                            child: Text(
+                              'Ofertas del Día',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '¡Ofertas por tiempo limitado!',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
               if (onSeeAllTap != null)
                 TextButton(
