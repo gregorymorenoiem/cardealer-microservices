@@ -20,7 +20,7 @@ class ContactActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -42,9 +42,11 @@ class ContactActionBar extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onCall,
                 icon: Icon(Icons.phone, size: responsive.iconSize),
-                label: Text('Llamar', style: TextStyle(fontSize: responsive.bodyFontSize)),
+                label: Text('Llamar',
+                    style: TextStyle(fontSize: responsive.bodyFontSize)),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
+                  padding:
+                      EdgeInsets.symmetric(vertical: responsive.cardSpacing),
                 ),
               ),
             ),
@@ -55,9 +57,11 @@ class ContactActionBar extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onWhatsApp,
                 icon: Icon(Icons.chat, size: responsive.iconSize),
-                label: Text('WhatsApp', style: TextStyle(fontSize: responsive.bodyFontSize)),
+                label: Text('WhatsApp',
+                    style: TextStyle(fontSize: responsive.bodyFontSize)),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
+                  padding:
+                      EdgeInsets.symmetric(vertical: responsive.cardSpacing),
                   foregroundColor: Colors.green,
                   side: const BorderSide(color: Colors.green),
                 ),
@@ -70,9 +74,11 @@ class ContactActionBar extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onMessage,
                 icon: Icon(Icons.message, size: responsive.iconSize),
-                label: Text('Mensaje', style: TextStyle(fontSize: responsive.bodyFontSize)),
+                label: Text('Mensaje',
+                    style: TextStyle(fontSize: responsive.bodyFontSize)),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: responsive.cardSpacing),
+                  padding:
+                      EdgeInsets.symmetric(vertical: responsive.cardSpacing),
                 ),
               ),
             ),

@@ -33,7 +33,8 @@ class SimilarVehiclesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
+            padding:
+                EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
             child: Text(
               'Vehículos similares',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -47,13 +48,16 @@ class SimilarVehiclesSection extends StatelessWidget {
             height: responsive.cardHeight,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
+              padding: EdgeInsets.symmetric(
+                  horizontal: responsive.horizontalPadding),
               itemCount: vehicles.length,
               itemBuilder: (context, index) {
                 final vehicle = vehicles[index];
                 return Padding(
                   padding: EdgeInsets.only(
-                    right: index < vehicles.length - 1 ? responsive.cardSpacing : 0,
+                    right: index < vehicles.length - 1
+                        ? responsive.cardSpacing
+                        : 0,
                   ),
                   child: SizedBox(
                     width: responsive.cardWidth,
@@ -86,7 +90,7 @@ class SimilarVehiclesSection extends StatelessWidget {
 
   Widget _buildLoading(BuildContext context) {
     final responsive = context.responsive;
-    
+
     return Padding(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(

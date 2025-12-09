@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/responsive/responsive_utils.dart';
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../domain/entities/vehicle.dart';
-import '../../../widgets/vehicle_card_grid.dart';
+import '../../../widgets/vehicles/compact_vehicle_card.dart';
+import '../../vehicle_detail/vehicle_detail_page.dart';
 
 /// Grid view for displaying favorite vehicles
 class FavoritesGrid extends StatelessWidget {
@@ -16,31 +17,32 @@ class FavoritesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.horizontalPadding),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: context.gridColumns,
+        crossAxisCount: responsive.gridColumns,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisSpacing: responsive.cardSpacing,
+        mainAxisSpacing: responsive.cardSpacing,
       ),
       itemCount: vehicles.length,
       itemBuilder: (context, index) {
         final vehicle = vehicles[index];
         return GestureDetector(
           onLongPress: () => _showRemoveDialog(context, vehicle),
-          child: VehicleCardGrid(
-            id: vehicle.id,
-            title: '${vehicle.make} ${vehicle.model}',
-            imageUrl: vehicle.images.isNotEmpty ? vehicle.images.first : '',
-            price: vehicle.price,
-            year: vehicle.year.toString(),
+          child: CompactVehicleCard(
+            vehicle: vehicle,
+            isFavorite: true,
             isFeatured: vehicle.isFeatured,
-            isFavorited: true,
             onTap: () {
-              Navigator.of(context).pushNamed(
-                '/vehicle-detail',
-                arguments: vehicle.id,
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => VehicleDetailPage(
+                    vehicleId: vehicle.id,
+                  ),
+                ),
               );
             },
             onFavorite: () {

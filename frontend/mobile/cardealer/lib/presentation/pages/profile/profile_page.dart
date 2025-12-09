@@ -272,7 +272,7 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget _buildStatsSection(ThemeData theme) {
     final responsive = context.responsive;
-    
+
     return Container(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Row(

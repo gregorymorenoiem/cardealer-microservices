@@ -21,7 +21,7 @@ class VehicleInfoHeader extends StatelessWidget {
     );
 
     final responsive = context.responsive;
-    
+
     return Padding(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(
@@ -51,7 +51,8 @@ class VehicleInfoHeader extends StatelessWidget {
           // Location and date
           Row(
             children: [
-              Icon(Icons.location_on, size: responsive.iconSize * 0.8, color: Colors.grey),
+              Icon(Icons.location_on,
+                  size: responsive.iconSize * 0.8, color: Colors.grey),
               SizedBox(width: responsive.cardSpacing * 0.3),
               Flexible(
                 child: Text(
@@ -64,7 +65,8 @@ class VehicleInfoHeader extends StatelessWidget {
                 ),
               ),
               SizedBox(width: responsive.cardSpacing),
-              Icon(Icons.calendar_today, size: responsive.iconSize * 0.8, color: Colors.grey),
+              Icon(Icons.calendar_today,
+                  size: responsive.iconSize * 0.8, color: Colors.grey),
               SizedBox(width: responsive.cardSpacing * 0.3),
               Text(
                 _formatDate(vehicle.createdAt),
@@ -87,12 +89,14 @@ class VehicleInfoHeader extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(responsive.borderRadius * 0.33),
+                  borderRadius:
+                      BorderRadius.circular(responsive.borderRadius * 0.33),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star, size: responsive.iconSize * 0.8, color: Colors.orange),
+                    Icon(Icons.star,
+                        size: responsive.iconSize * 0.8, color: Colors.orange),
                     SizedBox(width: responsive.cardSpacing * 0.3),
                     Text(
                       'Destacado',

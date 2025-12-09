@@ -61,7 +61,7 @@ class VehicleSpecsGrid extends StatelessWidget {
 
     final responsive = context.responsive;
     final columns = responsive.isMobile ? 2 : 3;
-    
+
     return Padding(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       child: Column(
@@ -97,7 +97,7 @@ class VehicleSpecsGrid extends StatelessWidget {
 
   Widget _buildSpecItem(BuildContext context, _SpecItem spec) {
     final responsive = context.responsive;
-    
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: responsive.cardSpacing * 0.8,
