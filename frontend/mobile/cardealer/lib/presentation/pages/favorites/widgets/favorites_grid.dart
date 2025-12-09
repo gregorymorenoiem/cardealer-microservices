@@ -18,7 +18,7 @@ class FavoritesGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    
+
     return GridView.builder(
       padding: EdgeInsets.all(responsive.horizontalPadding),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

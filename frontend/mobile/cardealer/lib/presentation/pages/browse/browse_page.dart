@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/responsive/responsive_utils.dart';
+import '../../../core/responsive/responsive_helper.dart';
 import '../../bloc/filter/filter_bloc.dart';
 import '../../bloc/filter/filter_event.dart';
 import '../../bloc/filter/filter_state.dart';
@@ -8,8 +8,9 @@ import '../../bloc/search/search_bloc.dart';
 import '../../bloc/search/search_event.dart';
 import '../../bloc/search/search_state.dart';
 import '../../../domain/entities/vehicle.dart';
-import '../../widgets/vehicle_card.dart';
+import '../../widgets/vehicles/compact_vehicle_card.dart';
 import '../../widgets/empty_state_widget.dart';
+import '../vehicle_detail/vehicle_detail_page.dart';
 import 'widgets/filter_bottom_sheet.dart';
 import 'widgets/browse_search_bar.dart';
 import 'widgets/sort_dropdown.dart';
@@ -258,31 +259,37 @@ class _BrowsePageState extends State<BrowsePage> {
   Widget _buildResultsList(List<Vehicle> vehicles) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final responsive = context.responsive;
+
         // Use grid on tablet/desktop, list on mobile
-        if (context.isTablet || context.isDesktop) {
+        if (responsive.isTablet || responsive.isDesktop) {
           return GridView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(responsive.horizontalPadding),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: context.gridColumns,
+              crossAxisCount: responsive.gridColumns,
               childAspectRatio: 0.7,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: responsive.cardSpacing,
+              mainAxisSpacing: responsive.cardSpacing,
             ),
             itemCount: vehicles.length,
             itemBuilder: (context, index) {
               final vehicle = vehicles[index];
-              return VehicleCard(
-                id: vehicle.id,
-                title: '${vehicle.make} ${vehicle.model} ${vehicle.year}',
-                imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : '',
-                price: vehicle.price,
-                year: vehicle.year.toString(),
-                mileage: '${vehicle.mileage} km',
-                location: vehicle.location,
+              return CompactVehicleCard(
+                vehicle: vehicle,
                 isFeatured: vehicle.isFeatured,
                 onTap: () {
-                  // TODO: Navegar a detalle
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VehicleDetailPage(
+                        vehicleId: vehicle.id,
+                      ),
+                    ),
+                  );
+                },
+                onFavorite: () {
+                  // TODO: Toggle favorite
                 },
               );
             },
@@ -292,23 +299,27 @@ class _BrowsePageState extends State<BrowsePage> {
         // List view for mobile
         return ListView.builder(
           controller: _scrollController,
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(responsive.horizontalPadding),
           itemCount: vehicles.length,
           itemBuilder: (context, index) {
             final vehicle = vehicles[index];
             return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: VehicleCard(
-                id: vehicle.id,
-                title: '${vehicle.make} ${vehicle.model} ${vehicle.year}',
-                imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : '',
-                price: vehicle.price,
-                year: vehicle.year.toString(),
-                mileage: '${vehicle.mileage} km',
-                location: vehicle.location,
+              padding: EdgeInsets.only(bottom: responsive.cardSpacing),
+              child: CompactVehicleCard(
+                vehicle: vehicle,
                 isFeatured: vehicle.isFeatured,
                 onTap: () {
-                  // TODO: Navegar a detalle
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VehicleDetailPage(
+                        vehicleId: vehicle.id,
+                      ),
+                    ),
+                  );
+                },
+                onFavorite: () {
+                  // TODO: Toggle favorite
                 },
               ),
             );
