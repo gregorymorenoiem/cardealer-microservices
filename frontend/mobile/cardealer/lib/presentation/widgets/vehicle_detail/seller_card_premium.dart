@@ -190,7 +190,7 @@ class SellerCardPremium extends StatelessWidget {
                 child: _buildStatCard(
                   icon: Icons.inventory_2_outlined,
                   value: activeListings.toString(),
-                  label: 'Active Listings',
+                  label: 'Anuncios Activos',
                 ),
               ),
               const SizedBox(width: 12),
@@ -198,7 +198,7 @@ class SellerCardPremium extends StatelessWidget {
                 child: _buildStatCard(
                   icon: Icons.check_circle_outline,
                   value: totalSales.toString(),
-                  label: 'Total Sales',
+                  label: 'Ventas Totales',
                 ),
               ),
             ],
@@ -224,7 +224,7 @@ class SellerCardPremium extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'View Profile',
+                    'Ver Perfil',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -251,7 +251,7 @@ class SellerCardPremium extends StatelessWidget {
                       Icon(Icons.message, size: 18),
                       SizedBox(width: 6),
                       Text(
-                        'Message',
+                        'Mensaje',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

@@ -333,8 +333,8 @@ class CompactVehicleCard extends StatelessWidget {
 
   String _getBadgeText() {
     if (badgeText != null) return badgeText!;
-    if (isSponsored) return 'SPONSORED';
-    if (isFeatured) return 'FEATURED';
+    if (isSponsored) return 'PATROCINADO';
+    if (isFeatured) return 'DESTACADO';
     return '';
   }
 
@@ -356,9 +356,9 @@ class CompactVehicleCard extends StatelessWidget {
 
   String _formatMileage(int mileage) {
     if (mileage >= 1000) {
-      return '${(mileage / 1000).toStringAsFixed(1)}k mi';
+      return '${(mileage / 1000).toStringAsFixed(1)}k km';
     }
-    return '$mileage mi';
+    return '$mileage km';
   }
 }
 

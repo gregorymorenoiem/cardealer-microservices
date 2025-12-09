@@ -187,7 +187,7 @@ class PlanCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      plan.isCurrentPlan ? 'Current Plan' : 'Select Plan',
+                      plan.isCurrentPlan ? 'Plan Actual' : 'Seleccionar Plan',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

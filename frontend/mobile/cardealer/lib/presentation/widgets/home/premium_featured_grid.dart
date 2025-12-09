@@ -15,8 +15,8 @@ class PremiumFeaturedGrid extends StatelessWidget {
   const PremiumFeaturedGrid({
     super.key,
     required this.vehicles,
-    this.title = 'Featured Premium Vehicles',
-    this.subtitle = 'Hand-picked luxury and high-performance vehicles',
+    this.title = 'Vehículos Premium Destacados',
+    this.subtitle = 'Vehículos de lujo y alto rendimiento seleccionados',
     this.onSeeAllTap,
   });
 
@@ -77,7 +77,7 @@ class PremiumFeaturedGrid extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          'See All',
+                          'Ver Todo',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                           ),

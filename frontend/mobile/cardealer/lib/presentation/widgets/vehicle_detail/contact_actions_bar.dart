@@ -60,7 +60,7 @@ class ContactActionsBar extends StatelessWidget {
               // Call Button
               _ActionButton(
                 icon: Icons.phone,
-                label: 'Call',
+                label: 'Llamar',
                 color: const Color(0xFF10B981),
                 onPressed: _makePhoneCall,
               ),
@@ -83,7 +83,7 @@ class ContactActionsBar extends StatelessWidget {
               // Schedule Visit
               _ActionButton(
                 icon: Icons.calendar_today,
-                label: 'Visit',
+                label: 'Visitar',
                 color: const Color(0xFF6366F1),
                 onPressed: onScheduleVisit,
               ),

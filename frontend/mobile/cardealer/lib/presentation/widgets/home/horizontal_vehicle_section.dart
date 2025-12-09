@@ -113,7 +113,7 @@ class _HorizontalVehicleSectionState extends State<HorizontalVehicleSection>
                   ),
                   TextButton(
                     onPressed: widget.onSeeAllTap,
-                    child: const Text('See All'),
+                    child: const Text('Ver Todos'),
                   ),
                 ],
               ),

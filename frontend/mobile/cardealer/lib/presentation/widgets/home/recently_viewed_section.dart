@@ -37,14 +37,14 @@ class RecentlyViewedSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Recently Viewed',
+                    'Vistos Recientemente',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Continue where you left off',
+                    'Continúa donde lo dejaste',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey.shade600,
                           fontSize: 13,
@@ -57,7 +57,7 @@ class RecentlyViewedSection extends StatelessWidget {
                   onPressed: onSeeAllTap,
                   child: const Row(
                     children: [
-                      Text('Clear'),
+                      Text('Limpiar'),
                       SizedBox(width: 4),
                       Icon(Icons.clear_all, size: 16),
                     ],

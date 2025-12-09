@@ -78,10 +78,9 @@ class MockVehicleDataSource {
         'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800',
         'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800',
       ],
-      description:
-          'Brand new Tesla Model S with Autopilot and premium interior',
-      location: 'Los Angeles, CA',
-      dealerName: 'Tesla Direct',
+      description: 'Tesla Model S nuevo con Autopilot e interior premium',
+      location: 'Santo Domingo, DN',
+      dealerName: 'Tesla RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 1)),
@@ -111,9 +110,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800',
       ],
-      description: 'Luxury SUV with M Sport package and premium features',
-      location: 'Miami, FL',
-      dealerName: 'BMW Premium Motors',
+      description: 'SUV de lujo con paquete M Sport y características premium',
+      location: 'Punta Cana, La Altagracia',
+      dealerName: 'BMW Premium Motors RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -144,9 +143,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
       ],
-      description: 'New Mercedes E-Class with hybrid technology',
-      location: 'New York, NY',
-      dealerName: 'Mercedes Manhattan',
+      description: 'Mercedes E-Class nuevo con tecnología híbrida',
+      location: 'Santiago de los Caballeros',
+      dealerName: 'Mercedes-Benz Santiago',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 3)),
@@ -172,9 +171,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?w=800',
       ],
-      description: 'Certified pre-owned Porsche Cayenne with full warranty',
-      location: 'Dallas, TX',
-      dealerName: 'Porsche of Dallas',
+      description: 'Porsche Cayenne certificado con garantía completa',
+      location: 'La Romana',
+      dealerName: 'Porsche Casa de Campo',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 4)),
@@ -205,9 +204,10 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
       ],
-      description: 'All-electric gran turismo with stunning performance',
-      location: 'San Francisco, CA',
-      dealerName: 'Audi San Francisco',
+      description:
+          'Gran turismo totalmente eléctrico con rendimiento impresionante',
+      location: 'Zona Colonial, Santo Domingo',
+      dealerName: 'Audi Dominicana',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -237,9 +237,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800',
       ],
-      description: 'Reliable F-150 with towing package',
-      location: 'Houston, TX',
-      dealerName: 'Houston Ford',
+      description: 'F-150 confiable con paquete de remolque',
+      location: 'Puerto Plata',
+      dealerName: 'Ford Dominicana',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 6)),
@@ -248,7 +248,12 @@ class MockVehicleDataSource {
       engineSize: '5.0L',
       horsepower: 400,
       drivetrain: '4wd',
-      features: const ['Towing Package', 'FX4 Off-Road', 'Leather', 'Navigation'],
+      features: const [
+        'Towing Package',
+        'FX4 Off-Road',
+        'Leather',
+        'Navigation'
+      ],
     ),
     VehicleModel(
       id: '7',
@@ -265,9 +270,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800',
       ],
-      description: 'Luxury SUV with premium comfort',
-      location: 'Seattle, WA',
-      dealerName: 'Lexus of Seattle',
+      description: 'SUV de lujo con confort premium',
+      location: 'San Pedro de Macorís',
+      dealerName: 'Lexus Caribe',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 7)),
@@ -298,9 +303,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800',
       ],
-      description: 'American sports car icon with mid-engine layout',
-      location: 'Detroit, MI',
-      dealerName: 'Chevrolet Performance',
+      description: 'Ícono deportivo americano con motor central',
+      location: 'Bávaro, La Altagracia',
+      dealerName: 'Chevrolet Performance RD',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 8)),
@@ -331,9 +336,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800',
       ],
-      description: 'Efficient hybrid SUV with AWD',
-      location: 'Portland, OR',
-      dealerName: 'Toyota of Portland',
+      description: 'SUV híbrido eficiente con AWD',
+      location: 'Barahona',
+      dealerName: 'Toyota Dominicana',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 9)),
@@ -342,7 +347,12 @@ class MockVehicleDataSource {
       engineSize: '2.5L',
       horsepower: 219,
       drivetrain: 'awd',
-      features: const ['Hybrid System', 'Safety Sense', 'Apple CarPlay', 'Sunroof'],
+      features: const [
+        'Hybrid System',
+        'Safety Sense',
+        'Apple CarPlay',
+        'Sunroof'
+      ],
     ),
     VehicleModel(
       id: '10',
@@ -359,9 +369,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800',
       ],
-      description: 'New Accord Hybrid with advanced tech',
-      location: 'Chicago, IL',
-      dealerName: 'Honda Chicago',
+      description: 'Accord Híbrido nuevo con tecnología avanzada',
+      location: 'Naco, Santo Domingo',
+      dealerName: 'Honda Dominicana',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 10)),
@@ -392,9 +402,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800',
       ],
-      description: 'Stylish compact SUV with premium feel',
-      location: 'Boston, MA',
-      dealerName: 'Mazda of Boston',
+      description: 'SUV compacto elegante con sensación premium',
+      location: 'Gascüe, Santo Domingo',
+      dealerName: 'Mazda Dominicana',
       isFeatured: true,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 11)),
@@ -423,9 +433,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1617531653520-bd466e4337a9?w=800'
       ],
-      description: 'Affordable and reliable sedan',
-      location: 'Phoenix, AZ',
-      dealerName: 'Hyundai Phoenix',
+      description: 'Sedán económico y confiable',
+      location: 'Higüey, La Altagracia',
+      dealerName: 'Hyundai Dominicana',
       isFeatured: false,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 12)),
@@ -459,9 +469,9 @@ class MockVehicleDataSource {
       images: const [
         'https://images.unsplash.com/photo-1610647752706-3bb12232b37a?w=800'
       ],
-      description: 'Mid-size sedan with great value',
-      location: 'Atlanta, GA',
-      dealerName: 'Nissan Atlanta',
+      description: 'Sedán mediano con excelente relación calidad-precio',
+      location: 'La Vega',
+      dealerName: 'Nissan Dominicana',
       isFeatured: false,
       isVerified: true,
       createdAt: DateTime.now().subtract(const Duration(days: 13)),
@@ -493,17 +503,33 @@ class MockVehicleDataSource {
       'Volkswagen'
     ];
     final models = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Truck', 'Van'];
-    final colors = ['Black', 'White', 'Silver', 'Red', 'Blue', 'Gray'];
+    final colors = ['Negro', 'Blanco', 'Plateado', 'Rojo', 'Azul', 'Gris'];
     final cities = [
-      'Chicago, IL',
-      'Denver, CO',
-      'Austin, TX',
-      'Phoenix, AZ',
-      'Seattle, WA'
+      'Santo Domingo, DN',
+      'Santiago de los Caballeros',
+      'Punta Cana, La Altagracia',
+      'Puerto Plata',
+      'La Romana',
+      'San Cristóbal',
+      'Bonao',
+      'Moca',
     ];
     final bodyTypes = ['sedan', 'suv', 'coupe', 'truck', 'hatchback'];
     final fuelTypes = ['gasoline', 'diesel', 'hybrid', 'electric'];
     final conditions = ['new', 'used', 'certified'];
+
+    String getConditionSpanish(String condition) {
+      switch (condition) {
+        case 'new':
+          return 'NUEVO';
+        case 'used':
+          return 'USADO';
+        case 'certified':
+          return 'CERTIFICADO';
+        default:
+          return condition.toUpperCase();
+      }
+    }
 
     for (var i = 0; i < 58; i++) {
       final makeIndex = i % makes.length;
@@ -530,7 +556,7 @@ class MockVehicleDataSource {
           'https://images.unsplash.com/photo-${1617531653520 + i}?w=800',
         ],
         description:
-            '${conditions[i % conditions.length].toUpperCase()} ${makes[makeIndex]} ${models[i % models.length]} with great features',
+            '${getConditionSpanish(conditions[i % conditions.length])} ${makes[makeIndex]} ${models[i % models.length]} con excelentes características',
         location: cities[i % cities.length],
         dealerName: '${makes[makeIndex]} Dealer ${i % 10}',
         isFeatured: isFeatured,

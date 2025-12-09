@@ -77,7 +77,7 @@ class HomePage extends StatelessWidget {
                             .read<VehiclesBloc>()
                             .add(RefreshAllSectionsEvent());
                       },
-                      child: const Text('Retry'),
+                      child: const Text('Reintentar'),
                     ),
                   ],
                 ),
@@ -142,14 +142,14 @@ class HomePage extends StatelessWidget {
 
                     // Section 4: Week's Featured (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: "This Week's Featured",
-                      subtitle: 'Hand-picked vehicles for you',
+                      title: 'Destacados de la Semana',
+                      subtitle: 'Vehículos seleccionados para ti',
                       vehicles: state.weekFeatured,
                       onSeeAllTap: () {
                         // TODO: Navigate to full list
                       },
                       showBadge: true,
-                      badgeText: 'FEATURED',
+                      badgeText: 'DESTACADO',
                     ),
 
                     SizedBox(height: context.spacing(1.5)),
@@ -164,24 +164,24 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 6: SUVs & Trucks (10 vehicles, horizontal scroll)
+                    // Section 6: SUVs & Camionetas (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'SUVs & Trucks',
-                      subtitle: 'Power and space combined',
+                      title: 'SUVs y Camionetas',
+                      subtitle: 'Potencia y espacio combinados',
                       vehicles: state.suvsAndTrucks,
                       onSeeAllTap: () {
                         // TODO: Navigate to SUVs page
                       },
                       showBadge: true,
-                      badgeText: 'POWER',
+                      badgeText: 'POTENCIA',
                     ),
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 7: Premium Collection (10 vehicles, horizontal scroll)
+                    // Section 7: Colección Premium (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'Premium Collection',
-                      subtitle: 'Luxury at its finest',
+                      title: 'Colección Premium',
+                      subtitle: 'Lujo en su máxima expresión',
                       vehicles: state.premium,
                       onSeeAllTap: () {
                         // TODO: Navigate to premium page
@@ -192,10 +192,10 @@ class HomePage extends StatelessWidget {
 
                     SizedBox(height: context.spacing(1.5)),
 
-                    // Section 8: Electric & Hybrid (10 vehicles, horizontal scroll)
+                    // Section 8: Eléctricos e Híbridos (10 vehicles, horizontal scroll)
                     HorizontalVehicleSection(
-                      title: 'Electric & Hybrid',
-                      subtitle: 'The future of driving',
+                      title: 'Eléctricos e Híbridos',
+                      subtitle: 'El futuro de conducir',
                       vehicles: state.electricAndHybrid,
                       onSeeAllTap: () {
                         // TODO: Navigate to electric page

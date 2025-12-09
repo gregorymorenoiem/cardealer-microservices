@@ -99,7 +99,7 @@ class _SearchHeaderState extends State<SearchHeader>
                 IconButton(
                   onPressed: widget.onBack,
                   icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back',
+                  tooltip: 'Volver',
                 ),
                 const SizedBox(width: 8),
 
@@ -121,7 +121,7 @@ class _SearchHeaderState extends State<SearchHeader>
                       focusNode: widget.focusNode,
                       autofocus: true,
                       decoration: InputDecoration(
-                        hintText: 'Search vehicles...',
+                        hintText: 'Buscar vehículos...',
                         prefixIcon: Icon(
                           Icons.search,
                           color: Colors.grey.shade600,

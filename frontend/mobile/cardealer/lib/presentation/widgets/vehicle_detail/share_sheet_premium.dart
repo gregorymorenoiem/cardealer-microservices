@@ -172,7 +172,7 @@ class ShareSheetPremium extends StatelessWidget {
                       Expanded(
                         child: _ShareOptionButton(
                           icon: Icons.message,
-                          label: 'Message',
+                          label: 'Mensaje',
                           color: const Color(0xFF10B981),
                           onPressed: _shareGeneric,
                         ),
@@ -190,14 +190,14 @@ class ShareSheetPremium extends StatelessWidget {
                       Expanded(
                         child: _ShareOptionButton(
                           icon: Icons.content_copy,
-                          label: 'Copy Link',
+                          label: 'Copiar',
                           color: const Color(0xFF6366F1),
                           onPressed: () {
                             // Copy to clipboard logic would go here
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Link copied to clipboard'),
+                                content: Text('Enlace copiado al portapapeles'),
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -230,7 +230,7 @@ class ShareSheetPremium extends StatelessWidget {
                       Expanded(
                         child: _ShareOptionButton(
                           icon: Icons.more_horiz,
-                          label: 'More',
+                          label: 'Más',
                           color: Colors.grey.shade700,
                           onPressed: _shareGeneric,
                         ),

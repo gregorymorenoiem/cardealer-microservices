@@ -18,10 +18,10 @@ class SearchSuggestions extends StatelessWidget {
     {'text': 'Honda Civic', 'icon': Icons.trending_up, 'category': 'Popular'},
     {'text': 'Ford F-150', 'icon': Icons.trending_up, 'category': 'Popular'},
     {'text': 'Tesla Model 3', 'icon': Icons.trending_up, 'category': 'Popular'},
-    {'text': 'SUV', 'icon': Icons.directions_car, 'category': 'Category'},
-    {'text': 'Sedan', 'icon': Icons.directions_car, 'category': 'Category'},
-    {'text': 'Truck', 'icon': Icons.local_shipping, 'category': 'Category'},
-    {'text': 'Electric', 'icon': Icons.electric_car, 'category': 'Category'},
+    {'text': 'SUV', 'icon': Icons.directions_car, 'category': 'Categoría'},
+    {'text': 'Sedán', 'icon': Icons.directions_car, 'category': 'Categoría'},
+    {'text': 'Pickup', 'icon': Icons.local_shipping, 'category': 'Categoría'},
+    {'text': 'Eléctrico', 'icon': Icons.electric_car, 'category': 'Categoría'},
   ];
 
   List<Map<String, dynamic>> _getFilteredSuggestions() {
@@ -49,7 +49,7 @@ class SearchSuggestions extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
           child: Text(
-            query.isEmpty ? 'Popular Searches' : 'Suggestions',
+            query.isEmpty ? 'Búsquedas Populares' : 'Sugerencias',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

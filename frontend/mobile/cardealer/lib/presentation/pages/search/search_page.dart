@@ -124,23 +124,23 @@ class _SearchPageState extends State<SearchPage> {
   String _getSortLabel(String sortOption) {
     switch (sortOption) {
       case 'relevance':
-        return 'Relevance';
+        return 'Relevancia';
       case 'price_low':
-        return 'Price: Low to High';
+        return 'Precio: Menor a Mayor';
       case 'price_high':
-        return 'Price: High to Low';
+        return 'Precio: Mayor a Menor';
       case 'year_new':
-        return 'Newest';
+        return 'Más Reciente';
       case 'year_old':
-        return 'Oldest';
+        return 'Más Antiguo';
       case 'mileage_low':
-        return 'Low Mileage';
+        return 'Menor Kilometraje';
       case 'mileage_high':
-        return 'High Mileage';
+        return 'Mayor Kilometraje';
       case 'date_new':
-        return 'New Listings';
+        return 'Nuevos Listados';
       default:
-        return 'Sort';
+        return 'Ordenar';
     }
   }
 
@@ -313,7 +313,7 @@ class _SearchPageState extends State<SearchPage> {
                           const SizedBox(height: 24),
                           ElevatedButton(
                             onPressed: _clearSearch,
-                            child: const Text('Try Again'),
+                            child: const Text('Intentar de Nuevo'),
                           ),
                         ],
                       ),

@@ -109,22 +109,22 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Microphone Permission'),
+        title: const Text('Permiso de Micrófono'),
         content: const Text(
-          'This app needs microphone access to enable voice search. '
-          'Please grant permission in your device settings.',
+          'Esta aplicación necesita acceso al micrófono para la búsqueda por voz. '
+          'Por favor concede el permiso en la configuración de tu dispositivo.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               openAppSettings();
             },
-            child: const Text('Open Settings'),
+            child: const Text('Abrir Configuración'),
           ),
         ],
       ),

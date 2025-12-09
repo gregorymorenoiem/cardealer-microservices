@@ -49,7 +49,7 @@ class DailyDealsSection extends StatelessWidget {
                           colors: [Colors.red, Colors.orange],
                         ).createShader(bounds),
                         child: Text(
-                          'Daily Deals',
+                          'Ofertas del Día',
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
@@ -63,7 +63,7 @@ class DailyDealsSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Limited time offers - Act fast!',
+                    '¡Ofertas por tiempo limitado - Aprovecha!',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey.shade600,
                           fontSize: 13,
@@ -76,7 +76,7 @@ class DailyDealsSection extends StatelessWidget {
                   onPressed: onSeeAllTap,
                   child: const Row(
                     children: [
-                      Text('View All'),
+                      Text('Ver Todos'),
                       SizedBox(width: 4),
                       Icon(Icons.arrow_forward, size: 16),
                     ],

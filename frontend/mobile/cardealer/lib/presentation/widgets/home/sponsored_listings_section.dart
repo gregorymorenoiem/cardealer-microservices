@@ -152,7 +152,7 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                           children: [
                             Flexible(
                               child: Text(
-                                'Sponsored Listings',
+                                'Anuncios Patrocinados',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   fontSize: responsive.titleFontSize,
@@ -192,7 +192,7 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                         ),
                         SizedBox(height: responsive.cardSpacing * 0.2),
                         Text(
-                          'Premium featured vehicles',
+                          'Vehículos premium destacados',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: responsive.bodyFontSize,
                             color: Colors.white.withValues(alpha: 0.9),
@@ -221,7 +221,7 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'See All',
+                          'Ver Todo',
                           style: TextStyle(
                             fontSize: responsive.bodyFontSize,
                             fontWeight: FontWeight.w600,
@@ -382,7 +382,7 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                     ),
                     SizedBox(width: responsive.cardSpacing * 0.3),
                     Text(
-                      'SPONSORED',
+                      'PATROCINADO',
                       style: TextStyle(
                         fontSize: responsive.smallFontSize * 0.85,
                         fontWeight: FontWeight.bold,

@@ -143,7 +143,7 @@ class _Vehicle360ViewState extends State<Vehicle360View>
               ),
               SizedBox(height: 16),
               Text(
-                'Loading 360° View...',
+                'Cargando Vista 360°...',
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
