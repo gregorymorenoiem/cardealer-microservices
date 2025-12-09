@@ -150,13 +150,16 @@ class _SponsoredListingsSectionState extends State<SponsoredListingsSection>
                       children: [
                         Row(
                           children: [
-                            Text(
-                              'Sponsored Listings',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: responsive.titleFontSize,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
+                            Flexible(
+                              child: Text(
+                                'Sponsored Listings',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: responsive.titleFontSize,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             SizedBox(width: responsive.cardSpacing * 0.5),

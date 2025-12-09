@@ -62,14 +62,14 @@ class CompactVehicleCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Photo Section: 70%
+            // Photo Section: 60%
             Expanded(
-              flex: 7,
+              flex: 60,
               child: _buildPhotoSection(context, responsive),
             ),
-            // Info Section: 30%
+            // Info Section: 40%
             Expanded(
-              flex: 3,
+              flex: 40,
               child: _buildInfoSection(context, responsive),
             ),
           ],
@@ -251,12 +251,15 @@ class CompactVehicleCard extends StatelessWidget {
 
   Widget _buildInfoSection(BuildContext context, ResponsiveHelper responsive) {
     return Padding(
-      padding: EdgeInsets.all(responsive.horizontalPadding * 0.5),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.horizontalPadding * 0.375,
+        vertical: responsive.horizontalPadding * 0.25,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Row 1: Price + Quick CTA
+          // Row 1: Price
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -267,47 +270,14 @@ class CompactVehicleCard extends StatelessWidget {
                   style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
-                    fontSize: responsive.titleFontSize + 6,
+                    fontSize: responsive.titleFontSize + 4,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              // Quick Chat CTA
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: responsive.horizontalPadding * 0.5,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius:
-                      BorderRadius.circular(responsive.borderRadius * 0.6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: responsive.iconSize * 0.875,
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      'Chat',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: responsive.smallFontSize,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
-
-          SizedBox(height: 2),
 
           // Row 2: Title (Year + Make + Model)
           Text(
@@ -319,8 +289,6 @@ class CompactVehicleCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-
-          SizedBox(height: 2),
 
           // Row 3: Metadata (Mileage + Distance)
           Row(
