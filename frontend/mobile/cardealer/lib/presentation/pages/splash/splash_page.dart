@@ -27,9 +27,9 @@ class _SplashPageState extends State<SplashPage>
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.primaryDark,
-        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
 
@@ -95,17 +95,9 @@ class _SplashPageState extends State<SplashPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.primary,
-              AppColors.primaryDark,
-            ],
-          ),
-        ),
+        color: Colors.white,
         child: SafeArea(
           child: Center(
             child: AnimatedBuilder(
@@ -118,29 +110,16 @@ class _SplashPageState extends State<SplashPage>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo Icon with shadow
+                        // Logo Icon
                         Container(
                           width: 140,
                           height: 140,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(28),
-                            child: Image.asset(
-                              'assets/logos/icon.png',
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.contain,
-                            ),
+                          padding: const EdgeInsets.all(20),
+                          child: Image.asset(
+                            'assets/logos/icon.png',
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.contain,
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -151,31 +130,31 @@ class _SplashPageState extends State<SplashPage>
                             fontFamily: 'Poppins',
                             fontSize: 36,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppColors.primary,
                             letterSpacing: 1.5,
                           ),
                         ),
                         const SizedBox(height: 12),
                         // Tagline
-                        Text(
+                        const Text(
                           'Tu marketplace de vehículos',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 16,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: AppColors.textSecondary,
                             letterSpacing: 0.5,
                           ),
                         ),
                         const SizedBox(height: 60),
                         // Loading indicator
-                        SizedBox(
+                        const SizedBox(
                           width: 40,
                           height: 40,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white.withValues(alpha: 0.8),
+                              AppColors.primary,
                             ),
                           ),
                         ),
