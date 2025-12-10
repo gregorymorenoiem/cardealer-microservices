@@ -110,41 +110,12 @@ class _SplashPageState extends State<SplashPage>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo Icon
-                        Container(
-                          width: 140,
-                          height: 140,
-                          padding: const EdgeInsets.all(20),
-                          child: Image.asset(
-                            'assets/logos/logo.png',
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // App Name
-                        const Text(
-                          'CarDealer',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 36,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Tagline
-                        const Text(
-                          'Tu marketplace de vehículos',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.textSecondary,
-                            letterSpacing: 0.5,
-                          ),
+                        // Logo
+                        Image.asset(
+                          'assets/logos/logo.png',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: 60),
                         // Loading indicator
