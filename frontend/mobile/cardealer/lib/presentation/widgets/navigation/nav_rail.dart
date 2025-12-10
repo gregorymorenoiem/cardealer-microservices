@@ -93,7 +93,7 @@ class AppNavigationRail extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/logos/icon.png',
+                    'assets/logos/logo.png',
                     width: 32,
                     height: 32,
                   ),
@@ -112,7 +112,7 @@ class AppNavigationRail extends StatelessWidget {
           : Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Image.asset(
-                'assets/logos/icon.png',
+                'assets/logos/logo.png',
                 width: 32,
                 height: 32,
               ),
@@ -158,7 +158,7 @@ class AppNavigationDrawer extends StatelessWidget {
           child: Row(
             children: [
               Image.asset(
-                'assets/logos/icon.png',
+                'assets/logos/logo.png',
                 width: 36,
                 height: 36,
               ),
