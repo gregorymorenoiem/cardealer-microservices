@@ -6,7 +6,6 @@ import '../../bloc/auth/auth_state.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../../core/theme/colors.dart';
-import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/responsive/responsive_utils.dart';
@@ -44,14 +43,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
     }
-  }
-
-  void _handleGoogleLogin() {
-    context.read<AuthBloc>().add(const AuthGoogleLoginRequested());
-  }
-
-  void _handleAppleLogin() {
-    context.read<AuthBloc>().add(const AuthAppleLoginRequested());
   }
 
   void _navigateToRegister() {
@@ -113,26 +104,18 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: context.spacing(2)),
-              _buildLogo(80),
-              SizedBox(height: context.spacing(1)),
-              _buildTitle(32, 16),
-              SizedBox(height: context.spacing(2)),
+              SizedBox(height: context.spacing(6)),
+              _buildLogo(100),
+              SizedBox(height: context.spacing(4)),
               _buildEmailField(),
               const SizedBox(height: 16),
               _buildPasswordField(),
               SizedBox(height: context.spacing(0.5)),
               _buildForgotPassword(),
-              SizedBox(height: context.spacing(2)),
+              SizedBox(height: context.spacing(3)),
               _buildLoginButton(),
               SizedBox(height: context.spacing(2)),
-              _buildDivider(),
-              SizedBox(height: context.spacing(2)),
-              _buildSocialButtonsStacked(), // Stack on mobile
-              SizedBox(height: context.spacing(2)),
               _buildRegisterLink(),
-              SizedBox(height: context.spacing(1)),
-              _buildDemoAccountsHint(),
             ],
           ),
         ),
@@ -140,13 +123,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Tablet layout - medium spacing, side-by-side social buttons
+  // Tablet layout - medium spacing
   Widget _buildTabletLayout() {
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
           child: ResponsiveContainer(
-            maxWidth: 600,
+            maxWidth: 500,
             child: ResponsivePadding(
               multiplier: 1.5,
               child: Form(
@@ -154,11 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(height: context.spacing(2)),
-                    _buildLogo(100),
-                    SizedBox(height: context.spacing(1.5)),
-                    _buildTitle(36, 18),
-                    SizedBox(height: context.spacing(3)),
+                    SizedBox(height: context.spacing(6)),
+                    _buildLogo(120),
+                    SizedBox(height: context.spacing(4)),
                     _buildEmailField(),
                     const SizedBox(height: 20),
                     _buildPasswordField(),
@@ -166,14 +147,8 @@ class _LoginPageState extends State<LoginPage> {
                     _buildForgotPassword(),
                     SizedBox(height: context.spacing(3)),
                     _buildLoginButton(),
-                    SizedBox(height: context.spacing(3)),
-                    _buildDivider(),
-                    SizedBox(height: context.spacing(3)),
-                    _buildSocialButtonsRow(), // Side by side on tablet
-                    SizedBox(height: context.spacing(3)),
+                    SizedBox(height: context.spacing(2)),
                     _buildRegisterLink(),
-                    SizedBox(height: context.spacing(1.5)),
-                    _buildDemoAccountsHint(),
                   ],
                 ),
               ),
@@ -190,22 +165,20 @@ class _LoginPageState extends State<LoginPage> {
       child: Center(
         child: SingleChildScrollView(
           child: ResponsiveContainer(
-            maxWidth: 500,
+            maxWidth: 480,
             child: Card(
-              elevation: 4,
+              elevation: 8,
               margin: EdgeInsets.all(context.responsivePadding),
               child: Padding(
-                padding: EdgeInsets.all(context.spacing(3)),
+                padding: EdgeInsets.all(context.spacing(4)),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: context.spacing(1)),
-                      _buildLogo(120),
                       SizedBox(height: context.spacing(2)),
-                      _buildTitle(40, 20),
-                      SizedBox(height: context.spacing(3)),
+                      _buildLogo(140),
+                      SizedBox(height: context.spacing(4)),
                       _buildEmailField(),
                       const SizedBox(height: 24),
                       _buildPasswordField(),
@@ -213,15 +186,9 @@ class _LoginPageState extends State<LoginPage> {
                       _buildForgotPassword(),
                       SizedBox(height: context.spacing(3)),
                       _buildLoginButton(),
-                      SizedBox(height: context.spacing(3)),
-                      _buildDivider(),
-                      SizedBox(height: context.spacing(3)),
-                      _buildSocialButtonsRow(), // Side by side on desktop
-                      SizedBox(height: context.spacing(3)),
+                      SizedBox(height: context.spacing(2)),
                       _buildRegisterLink(),
                       SizedBox(height: context.spacing(2)),
-                      _buildDemoAccountsHint(),
-                      SizedBox(height: context.spacing(1)),
                     ],
                   ),
                 ),
@@ -240,30 +207,6 @@ class _LoginPageState extends State<LoginPage> {
         height: size,
         fit: BoxFit.contain,
       ),
-    );
-  }
-
-  Widget _buildTitle(double titleSize, double subtitleSize) {
-    return Column(
-      children: [
-        Text(
-          'Bienvenido',
-          style: AppTypography.h1.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: titleSize,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Inicia sesión para continuar',
-          style: AppTypography.bodyLarge.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: subtitleSize,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 
@@ -319,74 +262,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'O continúa con',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
-      ],
-    );
-  }
-
-  // Social buttons side by side (tablet/desktop)
-  Widget _buildSocialButtonsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: CustomButton(
-            text: 'Google',
-            onPressed: _handleGoogleLogin,
-            variant: ButtonVariant.outline,
-            size: ButtonSize.large,
-            icon: Icons.g_mobiledata,
-          ),
-        ),
-        SizedBox(width: context.spacing(0.75)),
-        Expanded(
-          child: CustomButton(
-            text: 'Apple',
-            onPressed: _handleAppleLogin,
-            variant: ButtonVariant.outline,
-            size: ButtonSize.large,
-            icon: Icons.apple,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Social buttons stacked (mobile)
-  Widget _buildSocialButtonsStacked() {
-    return Column(
-      children: [
-        CustomButton(
-          text: 'Continuar con Google',
-          onPressed: _handleGoogleLogin,
-          variant: ButtonVariant.outline,
-          size: ButtonSize.large,
-          icon: Icons.g_mobiledata,
-        ),
-        SizedBox(height: context.spacing(0.75)),
-        CustomButton(
-          text: 'Continuar con Apple',
-          onPressed: _handleAppleLogin,
-          variant: ButtonVariant.outline,
-          size: ButtonSize.large,
-          icon: Icons.apple,
-        ),
-      ],
-    );
-  }
-
   Widget _buildRegisterLink() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -413,44 +288,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDemoAccountsHint() {
-    return Container(
-      padding: EdgeInsets.all(context.spacing(0.75)),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.info.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '📝 Cuentas de prueba:',
-            style: AppTypography.labelLarge.copyWith(
-              color: AppColors.info,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '👤 Usuario: demo@cardealer.com / Demo123!',
-            style: AppTypography.labelSmall.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            '🏢 Dealer: dealer@cardealer.com / Dealer123!',
-            style: AppTypography.labelSmall.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
