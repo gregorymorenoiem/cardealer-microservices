@@ -235,10 +235,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildLogo(double size) {
     return Center(
-      child: Icon(
-        Icons.directions_car,
-        size: size,
-        color: AppColors.primary,
+      child: Image.asset(
+        'assets/logos/logo.png',
+        height: size,
+        fit: BoxFit.contain,
       ),
     );
   }

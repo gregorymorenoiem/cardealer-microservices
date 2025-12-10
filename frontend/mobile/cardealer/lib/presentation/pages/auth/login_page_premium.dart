@@ -205,10 +205,13 @@ class _LoginPagePremiumState extends State<LoginPagePremium>
               ),
             ],
           ),
-          child: const Icon(
-            Icons.directions_car_rounded,
-            size: 40,
-            color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              'assets/logos/logo.png',
+              height: 40,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
