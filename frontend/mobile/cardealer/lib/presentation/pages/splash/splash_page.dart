@@ -116,7 +116,7 @@ class _SplashPageState extends State<SplashPage>
                           height: 140,
                           padding: const EdgeInsets.all(20),
                           child: Image.asset(
-                            'assets/logos/icon.png',
+                            'assets/logos/logo.png',
                             width: 100,
                             height: 100,
                             fit: BoxFit.contain,
