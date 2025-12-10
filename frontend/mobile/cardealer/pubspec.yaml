@@ -1,5 +1,5 @@
 name: cardealer_mobile
-description: CarDealer Mobile App - Marketplace de vehículos para iOS y Android
+description: OKLA - Marketplace de vehículos para iOS y Android
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -145,4 +145,4 @@ flutter_launcher_icons:
   min_sdk_android: 21
   remove_alpha_ios: true
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
