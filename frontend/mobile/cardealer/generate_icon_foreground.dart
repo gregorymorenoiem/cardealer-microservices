@@ -23,9 +23,9 @@ void main() async {
   // Llenar con blanco
   img.fill(foreground, color: img.ColorRgba8(255, 255, 255, 255));
 
-  // Calcular dimensiones con 30% de padding en cada lado
-  // Esto deja un área segura del 40% en el centro
-  final padding = (1024 * 0.30).round();
+  // Calcular dimensiones con 20% de padding en cada lado
+  // Esto deja un área segura del 60% en el centro
+  final padding = (1024 * 0.20).round();
   final safeSize = 1024 - (padding * 2);
 
   // Redimensionar el icono original al área segura
