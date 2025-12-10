@@ -287,12 +287,11 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Expanded(child: Divider(color: Theme.of(context).dividerColor)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'o',
-            style: TextStyle(
+            'o continuar con',
+            style: AppTypography.bodySmall.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
             ),
           ),
         ),
@@ -303,27 +302,55 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildSocialButtons() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: CustomButton(
-            text: 'Google',
-            onPressed: _handleGoogleLogin,
-            variant: ButtonVariant.outline,
-            size: ButtonSize.large,
-            icon: Icons.g_mobiledata,
-          ),
+        _buildSocialButton(
+          icon: Icons.g_mobiledata,
+          onPressed: _handleGoogleLogin,
+          label: 'Google',
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: CustomButton(
-            text: 'Apple',
-            onPressed: _handleAppleLogin,
-            variant: ButtonVariant.outline,
-            size: ButtonSize.large,
-            icon: Icons.apple,
-          ),
+        const SizedBox(width: 24),
+        _buildSocialButton(
+          icon: Icons.apple,
+          onPressed: _handleAppleLogin,
+          label: 'Apple',
         ),
       ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String label,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey.shade300,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          size: 28,
+          color: Colors.black87,
+        ),
+      ),
     );
   }
 
