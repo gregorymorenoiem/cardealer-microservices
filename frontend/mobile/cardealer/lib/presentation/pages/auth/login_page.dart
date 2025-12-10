@@ -45,6 +45,14 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _handleGoogleLogin() {
+    context.read<AuthBloc>().add(const AuthGoogleLoginRequested());
+  }
+
+  void _handleAppleLogin() {
+    context.read<AuthBloc>().add(const AuthAppleLoginRequested());
+  }
+
   void _navigateToRegister() {
     Navigator.push(
       context,
@@ -104,16 +112,20 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: context.spacing(6)),
-              _buildLogo(100),
               SizedBox(height: context.spacing(4)),
+              _buildLogo(100),
+              SizedBox(height: context.spacing(3)),
               _buildEmailField(),
               const SizedBox(height: 16),
               _buildPasswordField(),
               SizedBox(height: context.spacing(0.5)),
               _buildForgotPassword(),
-              SizedBox(height: context.spacing(3)),
+              SizedBox(height: context.spacing(2)),
               _buildLoginButton(),
+              SizedBox(height: context.spacing(2)),
+              _buildDivider(),
+              SizedBox(height: context.spacing(2)),
+              _buildSocialButtons(),
               SizedBox(height: context.spacing(2)),
               _buildRegisterLink(),
             ],
@@ -137,16 +149,20 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(height: context.spacing(6)),
-                    _buildLogo(120),
                     SizedBox(height: context.spacing(4)),
+                    _buildLogo(120),
+                    SizedBox(height: context.spacing(3)),
                     _buildEmailField(),
                     const SizedBox(height: 20),
                     _buildPasswordField(),
                     SizedBox(height: context.spacing(0.5)),
                     _buildForgotPassword(),
-                    SizedBox(height: context.spacing(3)),
+                    SizedBox(height: context.spacing(2.5)),
                     _buildLoginButton(),
+                    SizedBox(height: context.spacing(2)),
+                    _buildDivider(),
+                    SizedBox(height: context.spacing(2)),
+                    _buildSocialButtons(),
                     SizedBox(height: context.spacing(2)),
                     _buildRegisterLink(),
                   ],
@@ -176,19 +192,23 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: context.spacing(2)),
+                      SizedBox(height: context.spacing(1)),
                       _buildLogo(140),
-                      SizedBox(height: context.spacing(4)),
+                      SizedBox(height: context.spacing(3)),
                       _buildEmailField(),
                       const SizedBox(height: 24),
                       _buildPasswordField(),
                       SizedBox(height: context.spacing(0.5)),
                       _buildForgotPassword(),
-                      SizedBox(height: context.spacing(3)),
+                      SizedBox(height: context.spacing(2.5)),
                       _buildLoginButton(),
                       SizedBox(height: context.spacing(2)),
-                      _buildRegisterLink(),
+                      _buildDivider(),
                       SizedBox(height: context.spacing(2)),
+                      _buildSocialButtons(),
+                      SizedBox(height: context.spacing(2)),
+                      _buildRegisterLink(),
+                      SizedBox(height: context.spacing(1)),
                     ],
                   ),
                 ),
@@ -259,6 +279,51 @@ class _LoginPageState extends State<LoginPage> {
         variant: ButtonVariant.primary,
         size: ButtonSize.large,
       ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'o',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: Theme.of(context).dividerColor)),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: CustomButton(
+            text: 'Google',
+            onPressed: _handleGoogleLogin,
+            variant: ButtonVariant.outline,
+            size: ButtonSize.large,
+            icon: Icons.g_mobiledata,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: CustomButton(
+            text: 'Apple',
+            onPressed: _handleAppleLogin,
+            variant: ButtonVariant.outline,
+            size: ButtonSize.large,
+            icon: Icons.apple,
+          ),
+        ),
+      ],
     );
   }
 
