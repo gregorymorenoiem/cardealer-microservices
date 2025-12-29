@@ -36,7 +36,7 @@
     "explore": "Explore",
     "actions": "Actions",
     "compare": "Compare",
-    "searchPlaceholder": "Search all marketplace...",
+    "searchPlaceholder": "Search vehicles...",
     "searchPlaceholderShort": "Search...",
     "viewAllMarketplace": "View all marketplace",
     "vehiclesDesc": "Cars, SUVs, Pickups",
@@ -333,9 +333,81 @@
     },
     "cta": {
       "title": "Ready to list?",
-      "subtitle": "Publish your vehicle or property and reach thousands of potential buyers",
-      "publishVehicle": "Publish Vehicle",
-      "publishProperty": "Publish Property"
+      "subtitle": "List your vehicle or property and reach thousands of potential buyers",
+      "publishVehicle": "List Vehicle",
+      "publishProperty": "List Property"
+    },
+    "vehicleSections": {
+      "hero": {
+        "title": "Find your ideal car"
+      },
+      "featured": {
+        "title": "Featured Vehicles",
+        "subtitle": "Explore our premium selection of carefully verified vehicles"
+      },
+      "weeklyFeatured": {
+        "title": "Featured This Week",
+        "subtitle": "Special selection of the best available vehicles"
+      },
+      "dailyDeals": {
+        "title": "Daily Deals",
+        "subtitle": "Take advantage of these special limited-time opportunities"
+      },
+      "suvTrucks": {
+        "title": "SUVs and Trucks",
+        "subtitle": "Ideal vehicles for families and adventures"
+      },
+      "premium": {
+        "title": "Premium Vehicles",
+        "subtitle": "Exclusive selection of high-end vehicles"
+      },
+      "electricHybrid": {
+        "title": "Electric and Hybrid",
+        "subtitle": "Efficient and environmentally friendly vehicles"
+      },
+      "whyChooseUs": {
+        "title": "Why Choose Us",
+        "subtitle": "The best platform to buy and sell vehicles"
+      },
+      "features": {
+        "findCar": {
+          "title": "Find Your Ideal Car",
+          "description": "Advanced filters to find exactly what you're looking for."
+        },
+        "sellFast": {
+          "title": "Sell Fast",
+          "description": "List in minutes and connect with verified buyers."
+        },
+        "buyConfident": {
+          "title": "Buy with Confidence",
+          "description": "All vehicles verified with complete history."
+        },
+        "directContact": {
+          "title": "Direct Contact",
+          "description": "Communicate directly with sellers without intermediaries."
+        }
+      },
+      "howItWorks": {
+        "title": "How It Works",
+        "subtitle": "Three simple steps to find your ideal vehicle",
+        "explore": {
+          "title": "Explore",
+          "description": "Browse thousands of vehicles in our catalog."
+        },
+        "connect": {
+          "title": "Connect",
+          "description": "Contact sellers directly to resolve questions."
+        },
+        "enjoy": {
+          "title": "Enjoy",
+          "description": "Close the deal and enjoy your new vehicle."
+        }
+      },
+      "cta": {
+        "title": "Ready to Sell Your Vehicle?",
+        "subtitle": "List your ad today and connect with thousands of interested buyers",
+        "button": "List My Vehicle"
+      }
     }
   },
   "footer": {

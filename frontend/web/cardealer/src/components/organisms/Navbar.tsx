@@ -5,7 +5,10 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
+import { LanguageSwitcher } from '@/components/common';
+import GlobalSearch from './GlobalSearch';
 import { 
   FiMenu, 
   FiX, 
@@ -19,6 +22,7 @@ import {
 import { FaCar } from 'react-icons/fa';
 
 export default function Navbar() {
+  const { t } = useTranslation('common');
   const { isAuthenticated, user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -36,10 +40,9 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { to: '/browse', label: 'Buscar Autos' },
-    { to: '/sell-your-car', label: 'Vender mi Auto' },
-    { to: '/compare', label: 'Comparar' },
-    { to: '/about', label: 'Nosotros' },
+    { to: '/', label: t('nav.home') },
+    { to: '/browse', label: t('nav.browse') + ' ' + t('nav.vehicles') },
+    { to: '/sell-your-car', label: t('nav.sell') + ' mi Auto' },
   ];
 
   return (
@@ -73,6 +76,11 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* Global Search (Desktop) */}
+          <div className="hidden md:block flex-1 max-w-lg mx-6">
+            <GlobalSearch placeholder={t('nav.searchPlaceholder')} />
+          </div>
+
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
             {isAuthenticated && user ? (
@@ -82,7 +90,7 @@ export default function Navbar() {
                   <Link
                     to="/wishlist"
                     className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                    title="Favoritos"
+                    title={t('nav.favorites')}
                   >
                     <FiHeart className="w-5 h-5" />
                   </Link>
@@ -90,7 +98,7 @@ export default function Navbar() {
                   <Link
                     to="/messages"
                     className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                    title="Mensajes"
+                    title={t('nav.messages')}
                   >
                     <FiMessageSquare className="w-5 h-5" />
                   </Link>
@@ -125,7 +133,7 @@ export default function Navbar() {
                               onClick={() => setIsUserMenuOpen(false)}
                             >
                               <FiUser className="w-4 h-4" />
-                              Mi Cuenta
+                              {t('nav.myAccount')}
                             </Link>
                             <Link
                               to="/profile"
@@ -133,7 +141,7 @@ export default function Navbar() {
                               onClick={() => setIsUserMenuOpen(false)}
                             >
                               <FiSettings className="w-4 h-4" />
-                              Configuración
+                              {t('nav.settings')}
                             </Link>
                             
                             {/* Dealer Portal */}
@@ -146,7 +154,7 @@ export default function Navbar() {
                                   onClick={() => setIsUserMenuOpen(false)}
                                 >
                                   <FaCar className="w-4 h-4" />
-                                  Portal Dealer
+                                  {t('nav.dealerPortal')}
                                 </Link>
                               </>
                             )}
@@ -161,7 +169,7 @@ export default function Navbar() {
                                   onClick={() => setIsUserMenuOpen(false)}
                                 >
                                   <FiSettings className="w-4 h-4" />
-                                  Administración
+                                  {t('nav.adminPortal')}
                                 </Link>
                               </>
                             )}
@@ -172,7 +180,7 @@ export default function Navbar() {
                               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                             >
                               <FiLogOut className="w-4 h-4" />
-                              Cerrar Sesión
+                              {t('nav.logout')}
                             </button>
                           </div>
                         </div>
@@ -187,16 +195,19 @@ export default function Navbar() {
                   to="/login"
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                 >
-                  Iniciar Sesión
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Registrarse
+                  {t('nav.register')}
                 </Link>
               </div>
             )}
+
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="minimal" className="hidden md:block ml-2" />
 
             {/* Mobile Menu Button */}
             <button
@@ -257,7 +268,7 @@ export default function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <FiUser className="w-5 h-5" />
-                      Mi Cuenta
+                      {t('nav.myAccount')}
                     </Link>
                     <Link
                       to="/wishlist"
@@ -265,7 +276,7 @@ export default function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <FiHeart className="w-5 h-5" />
-                      Favoritos
+                      {t('nav.favorites')}
                     </Link>
                     <Link
                       to="/messages"
@@ -273,7 +284,7 @@ export default function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <FiMessageSquare className="w-5 h-5" />
-                      Mensajes
+                      {t('nav.messages')}
                     </Link>
                     <Link
                       to="/profile"
@@ -281,7 +292,7 @@ export default function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <FiSettings className="w-5 h-5" />
-                      Configuración
+                      {t('nav.settings')}
                     </Link>
 
                     {/* Dealer Portal */}
@@ -292,7 +303,7 @@ export default function Navbar() {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <FaCar className="w-5 h-5" />
-                        Portal Dealer
+                        {t('nav.dealerPortal')}
                       </Link>
                     )}
 
@@ -304,7 +315,7 @@ export default function Navbar() {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <FiSettings className="w-5 h-5" />
-                        Administración
+                        {t('nav.adminPortal')}
                       </Link>
                     )}
                   </div>
@@ -319,7 +330,7 @@ export default function Navbar() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg font-medium"
                   >
                     <FiLogOut className="w-5 h-5" />
-                    Cerrar Sesión
+                    {t('nav.logout')}
                   </button>
                 </div>
               </>
@@ -330,17 +341,22 @@ export default function Navbar() {
                   className="block w-full px-4 py-3 text-center text-gray-700 hover:bg-gray-50 rounded-lg font-medium border border-gray-300"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Iniciar Sesión
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="block w-full px-4 py-3 text-center bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Registrarse
+                  {t('nav.register')}
                 </Link>
               </div>
             )}
+
+            {/* Language Switcher - Mobile */}
+            <div className="border-t border-gray-200 pt-4 px-4">
+              <LanguageSwitcher variant="minimal" />
+            </div>
           </div>
         )}
       </div>

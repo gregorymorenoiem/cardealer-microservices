@@ -36,7 +36,7 @@
     "explore": "Explorar",
     "actions": "Acciones",
     "compare": "Comparar",
-    "searchPlaceholder": "Buscar en todo el marketplace...",
+    "searchPlaceholder": "Buscar vehículos...",
     "searchPlaceholderShort": "Buscar...",
     "viewAllMarketplace": "Ver todo el marketplace",
     "vehiclesDesc": "Autos, SUVs, Pickups",
@@ -336,6 +336,78 @@
       "subtitle": "Publica tu vehículo o propiedad y llega a miles de compradores potenciales",
       "publishVehicle": "Publicar Vehículo",
       "publishProperty": "Publicar Propiedad"
+    },
+    "vehicleSections": {
+      "hero": {
+        "title": "Encuentra tu auto ideal"
+      },
+      "featured": {
+        "title": "Vehículos Destacados",
+        "subtitle": "Explora nuestra selección premium de vehículos cuidadosamente verificados"
+      },
+      "weeklyFeatured": {
+        "title": "Destacados de la Semana",
+        "subtitle": "Selección especial de los mejores vehículos disponibles"
+      },
+      "dailyDeals": {
+        "title": "Ofertas del Día",
+        "subtitle": "Aprovecha estas oportunidades especiales por tiempo limitado"
+      },
+      "suvTrucks": {
+        "title": "SUVs y Camionetas",
+        "subtitle": "Vehículos ideales para familias y aventuras"
+      },
+      "premium": {
+        "title": "Vehículos Premium",
+        "subtitle": "Selección exclusiva de vehículos de alta gama"
+      },
+      "electricHybrid": {
+        "title": "Eléctricos e Híbridos",
+        "subtitle": "Vehículos eficientes y amigables con el medio ambiente"
+      },
+      "whyChooseUs": {
+        "title": "Por qué Elegirnos",
+        "subtitle": "La mejor plataforma para comprar y vender vehículos"
+      },
+      "features": {
+        "findCar": {
+          "title": "Encuentra tu Auto Ideal",
+          "description": "Filtros avanzados para encontrar exactamente lo que buscas."
+        },
+        "sellFast": {
+          "title": "Vende Rápido",
+          "description": "Publica en minutos y conecta con compradores verificados."
+        },
+        "buyConfident": {
+          "title": "Compra con Confianza",
+          "description": "Todos los vehículos verificados con historial completo."
+        },
+        "directContact": {
+          "title": "Contacto Directo",
+          "description": "Comunícate directamente con vendedores sin intermediarios."
+        }
+      },
+      "howItWorks": {
+        "title": "Cómo Funciona",
+        "subtitle": "Tres simples pasos para encontrar tu vehículo ideal",
+        "explore": {
+          "title": "Explora",
+          "description": "Navega por miles de vehículos en nuestro catálogo."
+        },
+        "connect": {
+          "title": "Conecta",
+          "description": "Contacta directamente con vendedores para resolver dudas."
+        },
+        "enjoy": {
+          "title": "Disfruta",
+          "description": "Cierra el trato y disfruta tu nuevo vehículo."
+        }
+      },
+      "cta": {
+        "title": "¿Listo para Vender tu Vehículo?",
+        "subtitle": "Publica tu anuncio hoy y conecta con miles de compradores interesados",
+        "button": "Publicar mi Vehículo"
+      }
     }
   },
   "footer": {

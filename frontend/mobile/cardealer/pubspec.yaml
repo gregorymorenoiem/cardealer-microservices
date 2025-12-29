@@ -1,0 +1,148 @@
+name: cardealer_mobile
+description: OKLA - Marketplace de vehículos para iOS y Android
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_bloc: ^8.1.3
+  equatable: ^2.0.5
+  dartz: ^0.10.1
+  
+  # Dependency Injection
+  get_it: ^7.6.4
+  injectable: ^2.3.2
+  
+  # Network
+  dio: ^5.4.0
+  retrofit: ^4.0.3
+  json_annotation: ^4.8.1
+  pretty_dio_logger: ^1.3.1
+  
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.2
+  
+  # UI Components
+  cached_network_image: ^3.3.0
+  flutter_svg: ^2.0.9
+  shimmer: ^3.0.0
+  smooth_page_indicator: ^1.1.0
+  pull_to_refresh: ^2.0.0
+  lottie: ^3.1.2
+  
+  # Sprint 10 - Dealer Power dependencies
+  fl_chart: ^0.68.0
+  table_calendar: ^3.1.2
+  
+  # Utils
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
+  timeago: ^3.6.0
+  url_launcher: ^6.2.2
+  connectivity_plus: ^5.0.2
+  rxdart: ^0.27.7
+  path_provider: ^2.1.2
+  speech_to_text: ^7.0.0
+  permission_handler: ^11.3.0
+  crypto: ^3.0.3
+  
+  # Payment
+  flutter_stripe: ^10.1.0
+  
+  # Icons
+  cupertino_icons: ^1.0.6
+  
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_analytics: ^10.8.0
+  firebase_crashlytics: ^3.4.9
+  firebase_remote_config: ^4.3.8
+  firebase_messaging: ^14.7.10
+  photo_view: ^0.15.0
+  video_player: ^2.10.1
+  chewie: ^1.13.0
+  timeline_tile: ^2.0.0
+  share_plus: ^12.0.1
+  confetti: ^0.8.0
+  local_auth: ^3.0.0
+  google_maps_flutter: ^2.14.0
+  image_picker: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Code Generation
+  build_runner: ^2.4.6
+  injectable_generator: ^2.4.1
+  retrofit_generator: ^8.0.4
+  json_serializable: ^6.7.1
+  hive_generator: ^2.0.1
+  
+  # Linting
+  flutter_lints: ^3.0.1
+  
+  # Icon Generation
+  flutter_launcher_icons: ^0.13.1
+  
+  # Testing
+  bloc_test: ^9.1.5
+  mocktail: ^1.0.1
+  
+  # UI Development
+  widgetbook: ^3.8.0
+  widgetbook_annotation: ^3.2.0
+  widgetbook_generator: ^3.8.0
+  image: ^4.5.4
+
+flutter:
+  uses-material-design: true
+  generate: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/logos/
+    - assets/animations/
+
+  # Fonts commented out until actual font files are added
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #         weight: 400
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
+
+flutter_intl:
+  enabled: true
+  class_name: S
+  main_locale: es
+  arb_dir: lib/l10n
+  output_dir: lib/generated
+
+# App Icon Configuration
+# Para iconos adaptativos Android, el foreground necesita safe zone del 66%
+# El logo debe ocupar solo el centro (con padding del 17% en cada lado)
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"

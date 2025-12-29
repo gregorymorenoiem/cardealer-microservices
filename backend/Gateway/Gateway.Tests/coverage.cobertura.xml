@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.9431999999999999" branch-rate="0.85" version="1.9" timestamp="1764818375" lines-covered="449" lines-valid="476" branches-covered="102" branches-valid="120">
+<coverage line-rate="0.9431999999999999" branch-rate="0.85" version="1.9" timestamp="1765204332" lines-covered="449" lines-valid="476" branches-covered="102" branches-valid="120">
   <sources>
     <source>C:\Users\gmoreno\source\repos\cardealer\backend\Gateway\</source>
   </sources>

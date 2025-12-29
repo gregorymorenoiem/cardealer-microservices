@@ -1,3 +1,5 @@
+import type { ListingTier, FeaturedBadge, FeaturedPage, DealerTier } from '../types/listing';
+
 export interface Vehicle {
   id: string;
   make: string;
@@ -31,6 +33,18 @@ export interface Vehicle {
     rating: number;
     phone: string;
   };
+  
+  // Featured Listing fields (Sprint 1)
+  tier?: ListingTier;
+  featuredUntil?: Date;
+  featuredPosition?: number;
+  featuredPages?: FeaturedPage[];
+  featuredBadge?: FeaturedBadge;
+  qualityScore?: number;
+  engagementScore?: number;
+  dealerId?: string;
+  dealerTier?: DealerTier;
+  dealerVerified?: boolean;
 }
 
 export const mockVehicles: Vehicle[] = [
@@ -78,6 +92,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.8,
       phone: '+1 (555) 123-4567',
     },
+    // Featured listing fields
+    tier: 'enterprise',
+    featuredBadge: 'top-dealer',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 95,
+    engagementScore: 850,
+    dealerId: 'dealer-001',
+    dealerTier: 'enterprise',
+    dealerVerified: true,
   },
   {
     id: '2',
@@ -120,6 +143,68 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.6,
       phone: '+1 (555) 234-5678',
     },
+    // Featured listing fields
+    tier: 'premium',
+    featuredBadge: 'premium',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 88,
+    engagementScore: 720,
+    dealerId: 'dealer-002',
+    dealerTier: 'premium',
+    dealerVerified: true,
+  },
+  {
+    id: '11',
+    make: 'Audi',
+    model: 'A4',
+    year: 2023,
+    price: 44500,
+    mileage: 7800,
+    location: 'San Francisco, CA',
+    images: [
+      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&h=600&fit=crop',
+    ],
+    isFeatured: true,
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    bodyType: 'Sedan',
+    drivetrain: 'AWD',
+    engine: '2.0L Turbo I4',
+    horsepower: 261,
+    mpg: { city: 24, highway: 31 },
+    color: 'Mythos Black',
+    interiorColor: 'Black with Aluminum Trim',
+    vin: 'WAUDNAF40NA123456',
+    condition: 'Certified Pre-Owned',
+    features: [
+      'Virtual Cockpit',
+      'Premium Sound System',
+      'Panoramic Sunroof',
+      'Matrix LED Headlights',
+      'Heated Seats',
+      'Wireless Charging',
+      'Navigation Plus',
+      'Driver Assistance Package',
+      'Bang & Olufsen Audio',
+    ],
+    description: 'Certified Pre-Owned Audi A4 with Quattro AWD and premium features. Like-new condition with full Audi warranty coverage. Perfect combination of luxury, technology, and performance.',
+    seller: {
+      name: 'Audi San Francisco',
+      type: 'Dealer',
+      rating: 4.9,
+      phone: '+1 (555) 987-6543',
+    },
+    // Featured listing fields
+    tier: 'featured',
+    featuredBadge: 'certificado',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 90,
+    engagementScore: 780,
+    dealerId: 'dealer-011',
+    dealerTier: 'premium',
+    dealerVerified: true,
   },
   {
     id: '3',
@@ -160,6 +245,12 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.9,
       phone: '+1 (555) 345-6789',
     },
+    // Featured listing fields
+    tier: 'featured',
+    featuredBadge: 'destacado',
+    featuredPages: ['home'],
+    qualityScore: 82,
+    engagementScore: 620,
   },
   {
     id: '4',

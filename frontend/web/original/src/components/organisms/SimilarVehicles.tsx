@@ -1,15 +1,19 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import VehicleCard from '@/components/organisms/VehicleCard';
+import FeaturedListingCard from '@/components/molecules/FeaturedListingCard';
 import { mockVehicles, type Vehicle } from '@/data/mockVehicles';
+import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 import { FiArrowRight } from 'react-icons/fi';
 
 interface SimilarVehiclesProps {
   currentVehicle: Vehicle;
   maxItems?: number;
+  showDealerListings?: boolean;
 }
 
-export default function SimilarVehicles({ currentVehicle, maxItems = 4 }: SimilarVehiclesProps) {
+export default function SimilarVehicles({ currentVehicle, maxItems = 4, showDealerListings = true }: SimilarVehiclesProps) {
+  // Similar vehicles with similarity scoring
   const similarVehicles = useMemo(() => {
     // Filter out the current vehicle and find similar ones
     const candidates = mockVehicles.filter((v) => v.id !== currentVehicle.id);
@@ -43,62 +47,166 @@ export default function SimilarVehicles({ currentVehicle, maxItems = 4 }: Simila
       return { vehicle, score };
     });
 
-    // Sort by score (descending) and take top N
-    return scored
+    // Sort by score (descending) and take top N * 2 for ranking pool
+    const topSimilar = scored
       .sort((a, b) => b.score - a.score)
-      .slice(0, maxItems)
+      .slice(0, maxItems * 2)
       .map((item) => item.vehicle);
+
+    // Apply featured listings ranking algorithm (40% max featured)
+    return mixFeaturedAndOrganic(topSimilar, {
+      page: 'detail-similar',
+      maxFeaturedRatio: 0.40,
+      minQualityScore: 50, // Lower threshold for detail page
+      rotationInterval: 24,
+    }).slice(0, maxItems);
   }, [currentVehicle, maxItems]);
 
-  if (similarVehicles.length === 0) {
+  // Dealer's other listings
+  const dealerListings = useMemo(() => {
+    if (!showDealerListings) return [];
+
+    // Find other vehicles from the same dealer
+    const otherListings = mockVehicles.filter(
+      (v) => v.id !== currentVehicle.id && v.seller.name === currentVehicle.seller.name
+    );
+
+    // Apply featured listings ranking (30% max for dealer section)
+    const ranked = mixFeaturedAndOrganic(otherListings, {
+      page: 'detail-dealer',
+      maxFeaturedRatio: 0.30,
+      minQualityScore: 40,
+      rotationInterval: 24,
+    });
+
+    return ranked.slice(0, 4);
+  }, [currentVehicle, showDealerListings]);
+
+  if (similarVehicles.length === 0 && dealerListings.length === 0) {
     return null;
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-card p-6 sm:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold font-heading text-gray-900">
-          Similar Vehicles
-        </h2>
-        <Link
-          to="/browse"
-          className="flex items-center gap-2 text-primary hover:text-primary-600 font-medium transition-colors duration-200"
-        >
-          View All
-          <FiArrowRight size={18} />
-        </Link>
-      </div>
+    <div className="space-y-8">
+      {/* Similar Vehicles Section */}
+      {similarVehicles.length > 0 && (
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold font-heading text-gray-900">
+              Similar Vehicles
+            </h2>
+            <Link
+              to="/browse"
+              className="flex items-center gap-2 text-primary hover:text-primary-600 font-medium transition-colors duration-200"
+            >
+              View All
+              <FiArrowRight size={18} />
+            </Link>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {similarVehicles.map((vehicle) => (
-          <VehicleCard
-            key={vehicle.id}
-            id={vehicle.id}
-            make={vehicle.make}
-            model={vehicle.model}
-            year={vehicle.year}
-            price={vehicle.price}
-            mileage={vehicle.mileage}
-            location={vehicle.location}
-            imageUrl={vehicle.images[0]}
-            isFeatured={vehicle.isFeatured}
-            isNew={vehicle.isNew}
-            transmission={vehicle.transmission}
-            fuelType={vehicle.fuelType}
-          />
-        ))}
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {similarVehicles.map((vehicle) => {
+              // Use FeaturedListingCard for featured vehicles
+              if (vehicle.tier && vehicle.tier !== 'basic') {
+                return (
+                  <FeaturedListingCard
+                    key={vehicle.id}
+                    vehicle={vehicle}
+                    context="detail-similar"
+                  />
+                );
+              }
 
-      {similarVehicles.length < 3 && (
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 mb-4">
-            Looking for more options?
-          </p>
-          <Link to="/browse">
-            <button className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 font-medium">
-              Browse All Vehicles
-            </button>
-          </Link>
+              // Use regular VehicleCard for organic listings
+              return (
+                <VehicleCard
+                  key={vehicle.id}
+                  id={vehicle.id}
+                  make={vehicle.make}
+                  model={vehicle.model}
+                  year={vehicle.year}
+                  price={vehicle.price}
+                  mileage={vehicle.mileage}
+                  location={vehicle.location}
+                  imageUrl={vehicle.images[0]}
+                  isFeatured={vehicle.isFeatured}
+                  isNew={vehicle.isNew}
+                  transmission={vehicle.transmission}
+                  fuelType={vehicle.fuelType}
+                />
+              );
+            })}
+          </div>
+
+          {similarVehicles.length < 3 && (
+            <div className="mt-6 text-center">
+              <p className="text-gray-600 mb-4">
+                Looking for more options?
+              </p>
+              <Link to="/browse">
+                <button className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 font-medium">
+                  Browse All Vehicles
+                </button>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dealer's Other Listings Section */}
+      {dealerListings.length > 0 && (
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold font-heading text-gray-900 mb-1">
+                More from {currentVehicle.seller.name}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {dealerListings.length} {dealerListings.length === 1 ? 'listing' : 'listings'} available
+              </p>
+            </div>
+            <Link
+              to={`/browse?dealer=${encodeURIComponent(currentVehicle.seller.name)}`}
+              className="flex items-center gap-2 text-primary hover:text-primary-600 font-medium transition-colors duration-200"
+            >
+              View All
+              <FiArrowRight size={18} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {dealerListings.map((vehicle) => {
+              // Use FeaturedListingCard for featured vehicles
+              if (vehicle.tier && vehicle.tier !== 'basic') {
+                return (
+                  <FeaturedListingCard
+                    key={vehicle.id}
+                    vehicle={vehicle}
+                    context="detail-dealer"
+                  />
+                );
+              }
+
+              // Use regular VehicleCard for organic listings
+              return (
+                <VehicleCard
+                  key={vehicle.id}
+                  id={vehicle.id}
+                  make={vehicle.make}
+                  model={vehicle.model}
+                  year={vehicle.year}
+                  price={vehicle.price}
+                  mileage={vehicle.mileage}
+                  location={vehicle.location}
+                  imageUrl={vehicle.images[0]}
+                  isFeatured={vehicle.isFeatured}
+                  isNew={vehicle.isNew}
+                  transmission={vehicle.transmission}
+                  fuelType={vehicle.fuelType}
+                />
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

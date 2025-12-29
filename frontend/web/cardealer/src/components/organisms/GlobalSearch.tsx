@@ -36,7 +36,7 @@ const mockSearch = async (query: string): Promise<SearchResult[]> => {
   
   const results: SearchResult[] = [];
   
-  // Vehicle results
+  // Vehicle results only (cars-only marketplace)
   if (q.includes('toyota') || q.includes('auto') || q.includes('sedan') || q.includes('camioneta')) {
     results.push(
       { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
@@ -50,26 +50,19 @@ const mockSearch = async (query: string): Promise<SearchResult[]> => {
     );
   }
   
-  // Property results
-  if (q.includes('casa') || q.includes('house') || q.includes('venta')) {
+  if (q.includes('bmw') || q.includes('mercedes') || q.includes('audi')) {
     results.push(
-      { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
-      { id: 'p2', type: 'property', title: 'Casa en Condesa', subtitle: '3 rec • 2 baños • 220 m²', price: 8900000, url: '/properties/p2' },
+      { id: 'v4', type: 'vehicle', title: 'BMW 320i 2023', subtitle: 'Sedán • Automático • 12,000 km', price: 580000, url: '/vehicles/v4' },
+      { id: 'v5', type: 'vehicle', title: 'Mercedes-Benz C200 2024', subtitle: 'Sedán • Automático • 8,000 km', price: 720000, url: '/vehicles/v5' },
     );
   }
   
-  if (q.includes('depa') || q.includes('apartamento') || q.includes('renta')) {
-    results.push(
-      { id: 'p3', type: 'property', title: 'Departamento en Roma Norte', subtitle: '2 rec • 2 baños • 95 m²', price: 25000, url: '/properties/p3' },
-      { id: 'p4', type: 'property', title: 'Penthouse en Santa Fe', subtitle: '3 rec • 3 baños • 180 m²', price: 45000, url: '/properties/p4' },
-    );
-  }
-  
-  // If no specific matches, show some generic results
+  // If no specific matches, show some generic vehicle results
   if (results.length === 0 && q.length >= 2) {
     results.push(
       { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
-      { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
+      { id: 'v2', type: 'vehicle', title: 'Honda Civic 2024', subtitle: 'Sedán • Manual • Nuevo', price: 380000, url: '/vehicles/v3' },
+      { id: 'v3', type: 'vehicle', title: 'BMW 320i 2023', subtitle: 'Sedán • Automático • 12,000 km', price: 580000, url: '/vehicles/v4' },
     );
   }
   

@@ -1,14 +1,20 @@
 /**
  * HomePage - Main marketplace landing page
  * Multi-vertical marketplace with clean, scalable design
+ * Sprint 5: Integrated Featured Listings with HeroCarousel
+ * Sprint 5.2: Removed SearchSection, moved to Navbar for space optimization
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
 import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin, FiChevronDown } from 'react-icons/fi';
 import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
+import { HeroCarousel } from '@/components/organisms';
+import { FeaturedListingGrid } from '@/components/molecules';
+import { mockVehicles } from '@/data/mockVehicles';
+import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 
 // Search categories for the hero
 const searchCategories = [
@@ -473,12 +479,12 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
   };
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-6 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{title}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{title}</h2>
             <p className="text-gray-600">{subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -519,7 +525,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
           style={{ scrollSnapType: 'x mandatory' }}
         >
           {listings.map((listing) => {
@@ -594,6 +600,17 @@ const HomePage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('vehicles');
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
+  // Get featured vehicles for hero carousel (top 5 by ranking)
+  const heroVehicles = useMemo(() => {
+    return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
+  }, []);
+
+  // Get featured vehicles for homepage grid (exclude hero vehicles)
+  const gridVehicles = useMemo(() => {
+    const heroIds = new Set(heroVehicles.map(v => v.id));
+    return mockVehicles.filter(v => !heroIds.has(v.id));
+  }, [heroVehicles]);
+
   // Vehicle search states
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
@@ -664,263 +681,74 @@ const HomePage: React.FC = () => {
 
   return (
     <MainLayout>
-      {/* Hero Section with Background Image */}
-      <section className="relative min-h-[70vh] flex items-center">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
-            alt="Hero background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 via-gray-900/60 to-gray-900/40" />
-        </div>
+      {/* Hero Carousel - Sprint 5.2: 100% Visible, No Search Overlay */}
+      <HeroCarousel 
+        vehicles={heroVehicles} 
+        autoPlayInterval={5000}
+        showScrollHint={false}
+      />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-4xl mx-auto mb-8">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 text-center"
-            >
-              Descubre lo{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                Extraordinario
-              </span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl text-gray-200 text-center"
-            >
-              El marketplace donde la calidad se encuentra con la confianza
-            </motion.p>
+      {/* Featured Listings Grid - Sprint 5.2: Immediately After Hero */}
+      <section className="py-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Vehículos Destacados
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Explora nuestra selección premium de vehículos cuidadosamente verificados
+            </p>
           </div>
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="max-w-5xl mx-auto"
-          >
-              <div className="flex flex-col md:flex-row gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 relative z-50">
-              {/* Category Selector */}
-              <div className="relative z-50 md:w-48 flex-shrink-0">
-                <button
-                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                  className="w-full md:w-48 px-4 py-3 bg-white/10 rounded-xl text-white text-left flex items-center justify-between hover:bg-white/20 transition-colors"
-                >
-                  <span className="whitespace-nowrap">{searchCategories.find((c) => c.id === selectedCategory)?.label}</span>
-                  <FiChevronDown
-                    className={`w-5 h-5 transition-transform flex-shrink-0 ml-2 ${isCategoryOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {isCategoryOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl overflow-hidden z-50"
-                    >
-                      {searchCategories.map((category) => (
-                        <button
-                          key={category.id}
-                          onClick={() => {
-                            setSelectedCategory(category.id);
-                            setIsCategoryOpen(false);
-                          }}
-                          className={`w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors ${
-                            selectedCategory === category.id
-                              ? 'bg-blue-50 text-blue-600 font-medium'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {category.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Dynamic Search Fields based on Category */}
-              {selectedCategory === 'vehicles' && (
-                <>
-                  <select
-                    value={make}
-                    onChange={(e) => setMake(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Marca</option>
-                    {vehicleMakes.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Modelo"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Min"
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Max"
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              {selectedCategory === 'vehicle-rental' && (
-                <>
-                  <select
-                    value={vehicleType}
-                    onChange={(e) => setVehicleType(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Tipo</option>
-                    {vehicleTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="date"
-                    placeholder="Fecha Inicio"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="date"
-                    placeholder="Fecha Fin"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Ubicación"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              {selectedCategory === 'properties' && (
-                <>
-                  <select
-                    value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
-                    className="md:w-36 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Tipo</option>
-                    {propertyTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Ubicación"
-                    value={propertyLocation}
-                    onChange={(e) => setPropertyLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Min"
-                    value={propertyPriceMin}
-                    onChange={(e) => setPropertyPriceMin(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-28 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio Max"
-                    value={propertyPriceMax}
-                    onChange={(e) => setPropertyPriceMax(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-28 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Hab."
-                    value={bedrooms}
-                    onChange={(e) => setBedrooms(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-20 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              {selectedCategory === 'lodging' && (
-                <>
-                  <input
-                    type="date"
-                    placeholder="Check-in"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="date"
-                    placeholder="Check-out"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="md:w-40 px-4 py-3 bg-white rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Huéspedes"
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="md:w-32 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Ubicación"
-                    value={lodgingLocation}
-                    onChange={(e) => setLodgingLocation(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 px-4 py-3 bg-white rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </>
-              )}
-
-              <button 
-                onClick={handleSearch}
-                className="md:w-32 flex-shrink-0 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
-              >
-                Buscar
-              </button>
-            </div>
-          </motion.div>
+          
+          <FeaturedListingGrid vehicles={gridVehicles} />
         </div>
       </section>
 
+      {/* Featured of the Week - Mixed from all categories */}
+      <FeaturedSection
+        title="Destacados de la Semana"
+        subtitle="Selección exclusiva de nuestros mejores anuncios"
+        listings={[
+          ...vehiculosListings.slice(0, 2),
+          ...propiedadesListings.slice(0, 2),
+          ...rentaVehiculosListings.slice(0, 1),
+          ...hospedajeListings.slice(0, 1),
+        ]}
+        viewAllHref="/browse"
+        accentColor="blue"
+      />
+
+      {/* Other Category Sections */}
+      
+      <FeaturedSection
+        title="Renta de Vehículos"
+        subtitle="Alquila el vehículo perfecto para cualquier ocasión"
+        listings={rentaVehiculosListings}
+        viewAllHref="/vehicle-rental"
+        accentColor="amber"
+      />
+
+      <FeaturedSection
+        title="Propiedades Destacadas"
+        subtitle="Encuentra tu próximo hogar o inversión"
+        listings={propiedadesListings}
+        viewAllHref="/properties"
+        accentColor="emerald"
+      />
+
+      <FeaturedSection
+        title="Hospedaje Destacado"
+        subtitle="Apartamentos, hoteles y alojamientos"
+        listings={hospedajeListings}
+        viewAllHref="/lodging"
+        accentColor="purple"
+      />
+
       {/* Categories Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Explora por Categoría
             </h2>
             <p className="text-gray-600">
@@ -961,58 +789,11 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Featured of the Week - Mixed from all categories */}
-      <FeaturedSection
-        title="Destacados de la Semana"
-        subtitle="Selección exclusiva de nuestros mejores anuncios"
-        listings={[
-          ...vehiculosListings.slice(0, 2),
-          ...propiedadesListings.slice(0, 2),
-          ...rentaVehiculosListings.slice(0, 1),
-          ...hospedajeListings.slice(0, 1),
-        ]}
-        viewAllHref="/browse"
-        accentColor="blue"
-      />
-
-      {/* Featured Sections by Category */}
-      <FeaturedSection
-        title="Vehículos Destacados"
-        subtitle="Los mejores vehículos del mercado"
-        listings={vehiculosListings}
-        viewAllHref="/vehicles"
-        accentColor="blue"
-      />
-
-      <FeaturedSection
-        title="Renta de Vehículos"
-        subtitle="Alquila el vehículo perfecto para cualquier ocasión"
-        listings={rentaVehiculosListings}
-        viewAllHref="/vehicle-rental"
-        accentColor="amber"
-      />
-
-      <FeaturedSection
-        title="Propiedades Destacadas"
-        subtitle="Encuentra tu próximo hogar o inversión"
-        listings={propiedadesListings}
-        viewAllHref="/properties"
-        accentColor="emerald"
-      />
-
-      <FeaturedSection
-        title="Hospedaje Destacado"
-        subtitle="Apartamentos, hoteles y alojamientos"
-        listings={hospedajeListings}
-        viewAllHref="/lodging"
-        accentColor="purple"
-      />
-
       {/* Features Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Todo lo que Necesitas
             </h2>
             <p className="text-gray-600">
@@ -1020,7 +801,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -1028,12 +809,12 @@ const HomePage: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center p-6 bg-gray-50 rounded-2xl"
+                className="text-center p-4 bg-gray-50 rounded-2xl"
               >
-                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-sm">
@@ -1046,10 +827,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* How it Works */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-6 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Cómo Funciona
             </h2>
             <p className="text-gray-600">
@@ -1057,7 +838,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
               { step: '1', title: 'Explora', desc: 'Navega por miles de anuncios en las categorías que te interesan.' },
               { step: '2', title: 'Conecta', desc: 'Contacta directamente con vendedores para resolver tus dudas.' },
@@ -1075,10 +856,10 @@ const HomePage: React.FC = () => {
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-0.5 bg-gray-300" />
                 )}
                 
-                <div className="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-4">
+                <div className="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl font-bold text-blue-600">{item.step}</span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {item.title}
                 </h3>
                 <p className="text-gray-600 text-sm">
@@ -1091,13 +872,13 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 bg-white">
+      <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-3xl p-8 lg:p-12 text-center text-white">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-4">
+          <div className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-3xl p-6 lg:p-8 text-center text-white">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3">
               ¿Listo para empezar?
             </h2>
-            <p className="text-blue-100 mb-8 max-w-xl mx-auto">
+            <p className="text-blue-100 mb-6 max-w-xl mx-auto">
               Publica tu anuncio hoy y conecta con miles de compradores interesados
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
