@@ -12,6 +12,18 @@ dist
 dist-ssr
 *.local
 
+# ===========================================
+# Environment files (secrets)
+# ===========================================
+.env
+.env.local
+.env.*.local
+.env.production
+# Keep templates and examples
+!.env.example
+!.env.development
+!.env.production.template
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +34,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Testing
+coverage
+.nyc_output
+
+# Build cache
+.cache
+.eslintcache
+.parcel-cache
+
+# Storybook
+storybook-static
