@@ -26,7 +26,7 @@ namespace AdminService.Infrastructure.External
             try
             {
                 var instance = await _serviceDiscovery.FindServiceInstanceAsync("AuditService");
-                return $"http://{instance.Host}:{instance.Port}";
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://auditservice:80";
             }
             catch (Exception ex)
             {

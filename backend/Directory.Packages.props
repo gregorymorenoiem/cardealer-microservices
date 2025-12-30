@@ -1,36 +1,145 @@
 <Project>
-  <!-- Central package management disabled to avoid NU1008 errors -->
-  <!-- Projects still manage their own versions but this file documents recommended versions -->
+  <!-- 
+    Central Package Management Configuration
+    =========================================
+    NOTE: ManagePackageVersionsCentrally is set to FALSE to maintain backwards compatibility.
+    Projects currently have versions specified in their .csproj files.
+    
+    To enable CPM in the future:
+    1. Set ManagePackageVersionsCentrally to true
+    2. Remove Version attributes from all PackageReference items in .csproj files
+    
+    This file documents the CANONICAL versions that should be used across all projects.
+    All packages listed here have been unified as part of the Backend Improvement Sprint.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
   
   <ItemGroup>
-    <!-- Security Packages (Updated for vulnerability fixes) -->
+    <!-- ===== CORE FRAMEWORK ===== -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageVersion Include="Oracle.EntityFrameworkCore" Version="8.23.50" />
+    
+    <!-- ===== AUTHENTICATION & SECURITY ===== -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.2.1" />
-    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     <PackageVersion Include="System.Text.Json" Version="8.0.5" />
     <PackageVersion Include="System.Formats.Asn1" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <PackageVersion Include="Otp.NET" Version="1.4.0" />
+    <PackageVersion Include="QRCoder" Version="1.4.3" />
     
-    <!-- Unify EF Core versions to avoid MSB3277 conflicts -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
-
-    <!-- Pin the resilience package to a concrete version to avoid NU1603 resolution warnings -->
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
-    
-    <!-- Pin common Microsoft.Extensions packages to compatible versions -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <!-- ===== EXTENSIONS ===== -->
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
-
-    <!-- Pin EF provider packages to the same major/minor as EF Core itself -->
-    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-    <!-- Pomelo.MySql removed from central pins to avoid introducing EF Core 9.x transitive dependency -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <PackageVersion Include="System.Net.Http.Json" Version="8.0.1" />
+    
+    <!-- ===== CQRS & VALIDATION ===== -->
+    <PackageVersion Include="MediatR" Version="12.4.1" />
+    <PackageVersion Include="FluentValidation" Version="11.11.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    
+    <!-- ===== API & SWAGGER ===== -->
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.8.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="6.8.1" />
+    <PackageVersion Include="Ocelot" Version="22.0.1" />
+    
+    <!-- ===== SERVICE DISCOVERY ===== -->
+    <PackageVersion Include="Consul" Version="1.7.14.9" />
+    
+    <!-- ===== MESSAGING ===== -->
+    <PackageVersion Include="RabbitMQ.Client" Version="6.8.1" />
+    
+    <!-- ===== CACHING ===== -->
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.22" />
+    
+    <!-- ===== RESILIENCE ===== -->
+    <PackageVersion Include="Polly" Version="8.5.2" />
+    <PackageVersion Include="Polly.Extensions.Http" Version="3.0.0" />
+    
+    <!-- ===== SCHEDULING ===== -->
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.17" />
+    <PackageVersion Include="Hangfire.Core" Version="1.8.17" />
+    <PackageVersion Include="Hangfire.PostgreSql" Version="1.20.9" />
+    
+    <!-- ===== LOGGING & OBSERVABILITY ===== -->
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageVersion Include="Serilog.Enrichers.Span" Version="3.1.0" />
+    <PackageVersion Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.4" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Seq" Version="8.0.0" />
+    <PackageVersion Include="OpenTelemetry" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.10.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.12" />
+    
+    <!-- ===== HEALTH CHECKS ===== -->
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="8.0.2" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="8.0.1" />
+    <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.2" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
+    
+    <!-- ===== CLOUD STORAGE ===== -->
+    <PackageVersion Include="AWSSDK.S3" Version="3.7.410.1" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.23.0" />
+    
+    <!-- ===== IMAGE PROCESSING ===== -->
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.6" />
+    
+    <!-- ===== SEARCH ===== -->
+    <PackageVersion Include="Elastic.Clients.Elasticsearch" Version="8.17.0" />
+    
+    <!-- ===== TESTING ===== -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="FluentAssertions" Version="7.0.0" />
+    <PackageVersion Include="Bogus" Version="35.6.1" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
+    <PackageVersion Include="Testcontainers" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="3.10.0" />
+    <PackageVersion Include="Testcontainers.Redis" Version="3.10.0" />
+    
+    <!-- ===== MISC ===== -->
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="AutoMapper" Version="13.0.1" />
+    <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
   </ItemGroup>
 </Project>

@@ -400,6 +400,7 @@ public class StripeWebhooksController : ControllerBase
 
         // TODO: Enviar notificación al dealer
         // await _notificationService.SendTrialEndingNotificationAsync(dealerId);
+        await Task.CompletedTask;
     }
 
     // ========================================
@@ -489,6 +490,7 @@ public class StripeWebhooksController : ControllerBase
             invoice.CustomerId, invoice.AmountDue / 100m);
 
         // TODO: Enviar notificación de factura próxima
+        await Task.CompletedTask;
     }
 
     // ========================================
@@ -568,6 +570,7 @@ public class StripeWebhooksController : ControllerBase
 
         // TODO: Enviar email de bienvenida
         // TODO: Activar módulos según el plan comprado
+        await Task.CompletedTask;
     }
 
     // ========================================

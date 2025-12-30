@@ -94,7 +94,7 @@ public class CacheEntryTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Value.Should().BeGreaterThan(TimeSpan.Zero);
+        result!.Value.Should().BeGreaterThan(TimeSpan.Zero);
         result.Value.TotalMinutes.Should().BeApproximately(30, 0.1);
     }
 

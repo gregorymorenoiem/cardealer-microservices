@@ -11,7 +11,6 @@ public class ServiceRegistrationMiddleware
     private readonly RequestDelegate _next;
     private static bool _isRegistered = false;
     private static readonly object _lock = new object();
-    private static readonly ILogger<ServiceRegistrationMiddleware> _logger;
 
     public ServiceRegistrationMiddleware(RequestDelegate next)
     {

@@ -112,7 +112,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         try
         {
             // Execute with Circuit Breaker protection
-            await _resiliencePipeline.ExecuteAsync(async ct =>
+            await _resiliencePipeline.ExecuteAsync(ct =>
             {
                 var routingKey = @event.EventType; // e.g., "error.critical", "error.logged"
                 var messageBody = JsonSerializer.Serialize(@event, _jsonOptions);

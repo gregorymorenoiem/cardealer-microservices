@@ -228,7 +228,7 @@ public class BackupService : IBackupService
         }
     }
 
-    public async Task<bool> CancelBackupAsync(string backupResultId)
+    public Task<bool> CancelBackupAsync(string backupResultId)
     {
         if (_results.TryGetValue(backupResultId, out var result))
         {
@@ -237,10 +237,10 @@ public class BackupService : IBackupService
                 result.Status = BackupExecutionStatus.Cancelled;
                 result.CompletedAt = DateTime.UtcNow;
                 _logger.LogInformation("Cancelled backup: {ResultId}", backupResultId);
-                return true;
+                return Task.FromResult(true);
             }
         }
-        return false;
+        return Task.FromResult(false);
     }
 
     #endregion

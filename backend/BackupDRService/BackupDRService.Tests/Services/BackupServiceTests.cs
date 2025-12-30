@@ -545,7 +545,7 @@ public class BackupServiceTests
             .ReturnsAsync(new DatabaseBackupResult { Success = true });
 
         _storageProviderMock.Setup(s => s.UploadAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = null }); // No checksum
+            .ReturnsAsync(new StorageUploadResult { Success = true, Checksum = null! }); // No checksum
 
         var backupResult = await _service.ExecuteBackupAsync(job);
 

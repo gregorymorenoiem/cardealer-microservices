@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using MediaService.Application.Common.Behaviours;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

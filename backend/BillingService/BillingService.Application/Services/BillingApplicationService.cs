@@ -234,7 +234,7 @@ public class BillingApplicationService
         }
 
         // Cancelar en local
-        subscription.Cancel(request.Reason);
+        subscription.Cancel(request.Reason ?? "No reason provided");
         await _subscriptionRepository.UpdateAsync(subscription, cancellationToken);
 
         return MapToSubscriptionResponse(subscription);

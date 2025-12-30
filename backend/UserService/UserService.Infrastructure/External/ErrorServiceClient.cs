@@ -35,7 +35,7 @@ namespace UserService.Infrastructure.External
             }
         }
 
-        public async Task LogErrorAsync(string exceptionType, string message, string stackTrace, string endpoint = null, int? statusCode = null)
+        public async Task LogErrorAsync(string exceptionType, string message, string? stackTrace, string? endpoint = null, int? statusCode = null)
         {
             try
             {

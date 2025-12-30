@@ -98,7 +98,7 @@ public class IdempotencyHeaderOperationFilterTests
         operation.Parameters.Should().NotBeNull();
         operation.Parameters.Should().HaveCount(1);
 
-        var param = operation.Parameters[0];
+        var param = operation.Parameters![0];
         param.Name.Should().Be("X-Idempotency-Key");
         param.In.Should().Be(ParameterLocation.Header);
         param.Required.Should().BeTrue();
@@ -120,7 +120,7 @@ public class IdempotencyHeaderOperationFilterTests
         // Assert
         operation.Parameters.Should().NotBeNull();
 
-        var param = operation.Parameters[0];
+        var param = operation.Parameters![0];
         param.Required.Should().BeFalse();
         param.Description.Should().Contain("optional");
     }
@@ -309,7 +309,7 @@ public class IdempotencyHeaderOperationFilterTests
 
         // Assert
         operation.Parameters.Should().NotBeNull();
-        operation.Parameters[0].Name.Should().Be("Custom-Idempotency-Key");
+        operation.Parameters![0].Name.Should().Be("Custom-Idempotency-Key");
     }
 
     // =========== Tests for null responses ===========

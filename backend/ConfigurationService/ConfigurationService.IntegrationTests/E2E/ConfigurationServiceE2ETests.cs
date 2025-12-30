@@ -4,7 +4,6 @@ using ConfigurationService.Application.Commands;
 using ConfigurationService.Domain.Entities;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ConfigurationService.IntegrationTests.E2E;
 

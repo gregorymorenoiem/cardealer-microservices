@@ -43,14 +43,14 @@ public class IdempotentHttpClientTests
     }
 
     [Fact]
-    public void Constructor_WithCustomHeaderName_UsesCustomHeader()
+    public async Task Constructor_WithCustomHeaderName_UsesCustomHeader()
     {
         // Arrange
         SetupMockHandler(HttpStatusCode.OK, "Custom-Key");
         var client = new IdempotentHttpClient(_httpClient, "Custom-Key");
 
         // Act
-        var result = client.PostAsync("/test", new StringContent(""), "test-key").Result;
+        var result = await client.PostAsync("/test", new StringContent(""), "test-key");
 
         // Assert
         result.StatusCode.Should().Be(HttpStatusCode.OK);

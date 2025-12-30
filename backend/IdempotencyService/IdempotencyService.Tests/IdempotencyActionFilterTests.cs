@@ -88,7 +88,7 @@ public class IdempotencyActionFilterTests
 
         // Assert
         context.Result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequest = (BadRequestObjectResult)context.Result;
+        var badRequest = (BadRequestObjectResult)context.Result!;
         badRequest.Value.Should().NotBeNull();
     }
 
@@ -135,7 +135,7 @@ public class IdempotencyActionFilterTests
 
         // Assert
         context.Result.Should().BeOfType<ObjectResult>();
-        var result = (ObjectResult)context.Result;
+        var result = (ObjectResult)context.Result!;
         result.StatusCode.Should().Be(201);
         context.HttpContext.Response.Headers["X-Idempotency-Replayed"].ToString().Should().Be("true");
     }
@@ -325,7 +325,7 @@ public class IdempotencyActionFilterTests
             actionContext,
             new List<IFilterMetadata>(),
             new Dictionary<string, object?>(),
-            controller: null);
+            controller: null!);
     }
 
     private ActionExecutedContext CreateExecutedContext(ActionExecutingContext executing, IActionResult? result)
@@ -333,7 +333,7 @@ public class IdempotencyActionFilterTests
         return new ActionExecutedContext(
             executing,
             new List<IFilterMetadata>(),
-            controller: null)
+            controller: null!)
         {
             Result = result
         };

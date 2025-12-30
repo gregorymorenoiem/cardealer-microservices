@@ -137,7 +137,7 @@ public class InMemoryAlertingService : IAlertingService
                 var errorCount = logs.Count(l => l.IsError());
                 shouldTrigger = errorCount >= (rule.Condition.ErrorCountThreshold ?? 0);
                 context["ErrorCount"] = errorCount;
-                context["Threshold"] = rule.Condition.ErrorCountThreshold;
+                context["Threshold"] = rule.Condition.ErrorCountThreshold ?? 0;
                 break;
 
             case ConditionType.ErrorRate:
@@ -146,7 +146,7 @@ public class InMemoryAlertingService : IAlertingService
                 var errorRate = totalLogs > 0 ? (double)errors / totalLogs * 100 : 0;
                 shouldTrigger = errorRate >= (rule.Condition.ErrorRateThreshold ?? 0);
                 context["ErrorRate"] = errorRate;
-                context["Threshold"] = rule.Condition.ErrorRateThreshold;
+                context["Threshold"] = rule.Condition.ErrorRateThreshold ?? 0;
                 context["ErrorCount"] = errors;
                 context["TotalLogs"] = totalLogs;
                 break;
