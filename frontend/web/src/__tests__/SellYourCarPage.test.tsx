@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SellYourCarPage from '../pages/SellYourCarPage';
+import SellYourCarPage from '@/pages/vehicles/SellYourCarPage';
 
 // Mock child components
 vi.mock('../components/organisms/sell/VehicleInfoStep', () => ({

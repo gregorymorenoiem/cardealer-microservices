@@ -141,8 +141,8 @@ export const useAuthStore = create<AuthState>()(
 
       hasActiveSubscription: () => {
         const user = get().user;
-        if (!user?.dealer?.subscription) return false;
-        return user.dealer.subscription.status === 'active';
+        if (!user?.subscription) return false;
+        return user.subscription.status === 'active';
       },
 
       // Computed getters - Platform specific
@@ -183,7 +183,6 @@ export const useAuthStore = create<AuthState>()(
         return (
           user?.dealerPermissions?.includes(permission as DealerPermission) ||
           user?.platformPermissions?.includes(permission as PlatformPermission) ||
-          user?.permissions?.includes(permission) ||
           false
         );
       },

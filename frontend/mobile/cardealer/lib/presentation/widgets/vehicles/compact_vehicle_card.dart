@@ -102,7 +102,7 @@ class CompactVehicleCard extends StatelessWidget {
             ),
             errorWidget: (context, url, error) => Container(
               color: AppColors.surfaceVariant,
-              child: Column(
+              child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
@@ -110,7 +110,7 @@ class CompactVehicleCard extends StatelessWidget {
                     size: 48,
                     color: AppColors.textTertiary,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Image not available',
                     style: TextStyle(
@@ -168,7 +168,7 @@ class CompactVehicleCard extends StatelessWidget {
               ),
               child: Text(
                 _getBadgeText(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -233,7 +233,7 @@ class CompactVehicleCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${vehicle.images.length}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -296,7 +296,7 @@ class CompactVehicleCard extends StatelessWidget {
                   size: responsive.iconSize * 0.7,
                   color: AppColors.textSecondary,
                 ),
-                SizedBox(width: 2),
+                const SizedBox(width: 2),
                 Text(
                   _formatMileage(vehicle.mileage),
                   style: TextStyle(
@@ -304,14 +304,14 @@ class CompactVehicleCard extends StatelessWidget {
                     fontSize: responsive.smallFontSize,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 // Distance
                 Icon(
                   Icons.location_on,
                   size: responsive.iconSize * 0.7,
                   color: AppColors.textSecondary,
                 ),
-                SizedBox(width: 2),
+                const SizedBox(width: 2),
                 Expanded(
                   child: Text(
                     vehicle.location,

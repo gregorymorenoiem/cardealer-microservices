@@ -174,13 +174,17 @@ class ImagePreloader {
   }
 
   /// Preload images in the background with priority
+  /// Note: Context must be checked for validity before calling this method
   static void preloadInBackground(
     BuildContext context,
     List<String> imageUrls, {
     int priority = 0,
   }) {
     Future.delayed(Duration(milliseconds: priority * 100), () {
-      preloadImages(context, imageUrls);
+      // Check if context is still mounted before using it
+      if (context.mounted) {
+        preloadImages(context, imageUrls);
+      }
     });
   }
 }

@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Input from '@/components/atoms/Input';
 import Button from '@/components/atoms/Button';
-import type { VehicleFormData } from '@/pages/SellYourCarPage';
+import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
 
 const pricingSchema = z.object({
   price: z.number().min(1, 'Price is required').max(10000000, 'Price is too high'),

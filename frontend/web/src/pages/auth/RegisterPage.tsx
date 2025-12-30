@@ -97,7 +97,7 @@ export default function RegisterPage() {
       });
       
       // Update auth store
-      login(response.user, response.accessToken, response.refreshToken);
+      login(response);
       
       // Show success message and redirect
       navigate('/dashboard', { 

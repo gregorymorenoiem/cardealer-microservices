@@ -65,21 +65,21 @@ class AppNavigationRail extends StatelessWidget {
       backgroundColor: Colors.white,
       elevation: 4,
       indicatorColor: AppColors.primary.withValues(alpha: 0.1),
-      selectedIconTheme: IconThemeData(
+      selectedIconTheme: const IconThemeData(
         color: AppColors.primary,
         size: 24,
       ),
-      unselectedIconTheme: IconThemeData(
-        color: Colors.grey[600],
+      unselectedIconTheme: const IconThemeData(
+        color: Color(0xFF757575),
         size: 24,
       ),
-      selectedLabelTextStyle: TextStyle(
+      selectedLabelTextStyle: const TextStyle(
         color: AppColors.primary,
         fontWeight: FontWeight.w600,
         fontSize: 13,
       ),
-      unselectedLabelTextStyle: TextStyle(
-        color: Colors.grey[600],
+      unselectedLabelTextStyle: const TextStyle(
+        color: Color(0xFF757575),
         fontSize: 13,
       ),
       useIndicator: true,
@@ -98,7 +98,7 @@ class AppNavigationRail extends StatelessWidget {
                     height: 32,
                   ),
                   const SizedBox(width: 8),
-                  Text(
+                  const Text(
                     'CarDealer',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -163,7 +163,7 @@ class AppNavigationDrawer extends StatelessWidget {
                 height: 36,
               ),
               const SizedBox(width: 12),
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -177,7 +177,7 @@ class AppNavigationDrawer extends StatelessWidget {
                   Text(
                     'Tu próximo auto te espera',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: Color(0xFF757575),
                       fontSize: 12,
                     ),
                   ),

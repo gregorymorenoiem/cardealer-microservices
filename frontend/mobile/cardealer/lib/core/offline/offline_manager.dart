@@ -27,8 +27,8 @@ class NetworkStatusManager {
       currentStatus.contains(ConnectivityResult.ethernet);
 
   void initialize() {
-    Connectivity().onConnectivityChanged.listen((result) {
-      _connectivityController.add(result);
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      _connectivityController.add([result]);
     });
 
     // Check initial status
@@ -37,7 +37,7 @@ class NetworkStatusManager {
 
   Future<void> _checkInitialConnectivity() async {
     final result = await Connectivity().checkConnectivity();
-    _connectivityController.add(result);
+    _connectivityController.add([result]);
   }
 
   void dispose() {

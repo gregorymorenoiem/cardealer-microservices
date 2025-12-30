@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '@/components/atoms/Button';
-import type { VehicleFormData } from '@/pages/SellYourCarPage';
+import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
 import { FiPlus, FiX } from 'react-icons/fi';
 
 interface FeaturesStepProps {

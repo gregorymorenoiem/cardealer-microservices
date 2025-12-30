@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Input from '@/components/atoms/Input';
 import Button from '@/components/atoms/Button';
-import type { VehicleFormData } from '@/pages/SellYourCarPage';
+import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
 
 const makes = ['Tesla', 'BMW', 'Toyota', 'Ford', 'Honda', 'Audi', 'Mercedes-Benz', 'Chevrolet', 'Mazda', 'Volkswagen', 'Nissan', 'Hyundai', 'Kia', 'Jeep', 'Subaru'];
 const transmissions = ['Automatic', 'Manual', 'CVT', 'Semi-Automatic'];

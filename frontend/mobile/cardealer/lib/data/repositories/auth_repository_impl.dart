@@ -164,7 +164,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       if (_useMock) {
         final response = await _mockDataSource.getCurrentUser();
-        final user = UserModel.fromJson(response as Map<String, dynamic>);
+        final user = UserModel.fromJson(response);
         return Right(user);
       }
       
@@ -257,7 +257,7 @@ class AuthRepositoryImpl implements AuthRepository {
           phoneNumber: phoneNumber,
           avatarUrl: avatarUrl,
         );
-        final user = UserModel.fromJson(response as Map<String, dynamic>);
+        final user = UserModel.fromJson(response);
         return Right(user);
       }
       

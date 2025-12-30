@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import Button from '@/components/atoms/Button';
-import type { VehicleFormData } from '@/pages/SellYourCarPage';
+import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
 import { FiUpload, FiX, FiImage } from 'react-icons/fi';
 import imageCompression from 'browser-image-compression';
 
@@ -22,12 +22,12 @@ export default function PhotosStep({ data, onNext, onBack }: PhotosStepProps) {
   // Generate previews when images change
   useState(() => {
     if (data.images && data.images.length > 0) {
-      const previewUrls = data.images.map((file) => URL.createObjectURL(file));
+      const previewUrls = data.images.map((file: File) => URL.createObjectURL(file));
       setPreviews(previewUrls);
       
       // Cleanup
       return () => {
-        previewUrls.forEach((url) => URL.revokeObjectURL(url));
+        previewUrls.forEach((url: string) => URL.revokeObjectURL(url));
       };
     }
   });

@@ -251,7 +251,7 @@ class _SellYourCarCTAState extends State<SellYourCarCTA>
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Icon(
+                  const Icon(
                     Icons.arrow_forward,
                     color: AppColors.accent,
                     size: 18,

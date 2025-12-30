@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:image/image.dart' as img;
 
@@ -52,5 +53,5 @@ void main() async {
   print('  Tamaño: 1024x1024');
   print(
       '  Padding: ${padding}px (${(padding / 1024 * 100).toStringAsFixed(1)}%)');
-  print('  Área segura: ${safeSize}x${safeSize}');
+  print('  Área segura: ${safeSize}x$safeSize');
 }

@@ -38,7 +38,7 @@ export default function ProfilePage() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      username: user?.username || '',
+      username: user?.name || '',
       email: user?.email || '',
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
@@ -124,7 +124,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                {user?.username || 'User'}
+                {user?.name || 'User'}
               </h2>
               <p className="text-gray-600 text-sm">{user?.email}</p>
             </div>

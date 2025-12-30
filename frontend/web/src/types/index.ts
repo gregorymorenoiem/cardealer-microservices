@@ -36,11 +36,10 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  userId: string;
-  email: string;
+  user: User;
   accessToken: string;
   refreshToken: string;
-  expiresAt: string;
+  expiresAt?: string;
   requiresTwoFactor?: boolean;
 }
 
@@ -50,17 +49,30 @@ export interface RegisterRequest {
   password: string;
 }
 
+export type AccountType = 'guest' | 'individual' | 'dealer' | 'dealer_employee' | 'admin' | 'platform_employee';
+
 export interface User {
   id: string;
-  username: string;
   email: string;
+  name?: string;
+  username?: string;
   firstName?: string;
   lastName?: string;
   avatar?: string;
   phone?: string;
-  role: string;
-  isVerified: boolean;
-  memberSince: string;
+  role?: string;
+  roles?: string[];
+  accountType: AccountType;
+  dealerId?: string;
+  dealer?: {
+    subscription?: {
+      status: string;
+      plan?: string;
+    };
+  };
+  permissions?: string[];
+  isVerified?: boolean;
+  memberSince?: string;
 }
 
 // Vehicle Types

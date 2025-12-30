@@ -27,11 +27,8 @@ import {
   DollarSign,
   ShoppingBag,
   Clock,
-  FileEdit,
   Store,
-  Phone,
   Users,
-  UserPlus,
   CalendarCheck,
   UserCheck,
   Megaphone,
@@ -41,11 +38,8 @@ import {
   Mail,
   Crown,
   BarChart3,
-  MousePointer,
-  Target,
   Calculator,
   Table,
-  Download,
   Percent,
   Building,
   User,
@@ -72,7 +66,7 @@ interface MenuItem {
 const DealerSidebar = () => {
   const location = useLocation();
   const [expandedSections, setExpandedSections] = useState<string[]>(['dashboard']);
-  const { portalAccess, dealerPlan } = usePermissions();
+  const { portalAccess } = usePermissions();
 
   const menuItems: MenuItem[] = [
     {

@@ -58,7 +58,6 @@ export function LocalizedContent({
   const preferredContent = content[currentLang];
   const fallbackLang = currentLang === 'es' ? 'en' : 'es';
   const fallbackContent = content[fallbackLang];
-  const originalLang = content.originalLang || (content.es ? 'es' : 'en');
 
   // Determine what to display
   const displayContent = preferredContent || fallbackContent || '';

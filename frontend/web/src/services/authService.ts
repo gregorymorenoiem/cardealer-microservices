@@ -76,7 +76,7 @@ export const authService = {
         password: credentials.password,
       });
 
-      const { user, accessToken, refreshToken } = response.data;
+      const { user: _loginUser, accessToken, refreshToken } = response.data;
 
       // Store tokens
       localStorage.setItem('accessToken', accessToken);
@@ -106,7 +106,7 @@ export const authService = {
         phone: data.phone,
       });
 
-      const { user, accessToken, refreshToken } = response.data;
+      const { user: _registerUser, accessToken, refreshToken } = response.data;
 
       // Store tokens
       localStorage.setItem('accessToken', accessToken);

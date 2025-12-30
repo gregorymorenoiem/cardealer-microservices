@@ -17,9 +17,7 @@ class ConnectivityDataSource {
 
   /// Initialize connectivity listener
   void _initConnectivityListener() {
-    _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
-      // Use the first result or none if empty
-      final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
+    _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
       final state = _mapConnectivityResult(result);
       _connectivityController.add(state);
     });
@@ -28,8 +26,7 @@ class ConnectivityDataSource {
   /// Get current connectivity status
   Future<ConnectivityState> getCurrentConnectivity() async {
     try {
-      final results = await _connectivity.checkConnectivity();
-      final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
+      final result = await _connectivity.checkConnectivity();
       return _mapConnectivityResult(result);
     } catch (e) {
       // If check fails, assume offline

@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // Script para generar icono adaptativo con padding correcto
 // Los iconos adaptativos de Android requieren que el contenido esté en el 66% central
 // Ejecutar: dart run tool/generate_adaptive_icon.dart
@@ -61,7 +62,7 @@ void main() async {
   );
 
   // Guardar el foreground
-  final outputPath = 'assets/icons/app_icon_foreground.png';
+  const outputPath = 'assets/icons/app_icon_foreground.png';
   final outputFile = File(outputPath);
   await outputFile.writeAsBytes(img.encodePng(foreground));
 

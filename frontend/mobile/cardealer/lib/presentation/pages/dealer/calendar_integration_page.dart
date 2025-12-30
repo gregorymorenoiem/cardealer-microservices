@@ -300,8 +300,6 @@ class _CalendarIntegrationPageState extends State<CalendarIntegrationPage> {
   }
 
   void _showAddAppointmentDialog(BuildContext context) {
-    final theme = Theme.of(context);
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

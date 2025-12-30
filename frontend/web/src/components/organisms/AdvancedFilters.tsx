@@ -57,7 +57,7 @@ function AdvancedFilters({ onFilterChange, onSortChange, currentFilters, current
   const [localFilters, setLocalFilters] = useState<VehicleFilters>(currentFilters);
   const isFirstRenderRef = useRef(true);
   const onFilterChangeRef = useRef(onFilterChange);
-  const debounceTimerRef = useRef<number | undefined>(undefined);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   
   // Keep ref updated
   useEffect(() => {

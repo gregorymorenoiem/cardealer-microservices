@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '@/components/atoms/Button';
-import type { VehicleFormData } from '@/pages/SellYourCarPage';
+import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
 import { FiCheck, FiEdit2, FiMapPin, FiDollarSign, FiPhone, FiMail, FiUser } from 'react-icons/fi';
 
 interface ReviewStepProps {
@@ -70,7 +70,7 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
             />
             {data.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2 mt-2">
-                {data.images.slice(1, 5).map((image, index) => (
+                {data.images.slice(1, 5).map((image: File, index: number) => (
                   <img
                     key={index}
                     src={URL.createObjectURL(image)}
@@ -141,7 +141,7 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
           <div className="mb-6">
             <h5 className="text-sm font-semibold text-gray-900 mb-2">Features</h5>
             <div className="flex flex-wrap gap-2">
-              {data.features.slice(0, 8).map((feature) => (
+              {data.features.slice(0, 8).map((feature: string) => (
                 <span
                   key={feature}
                   className="px-3 py-1 bg-white border border-gray-300 rounded-full text-xs text-gray-700"

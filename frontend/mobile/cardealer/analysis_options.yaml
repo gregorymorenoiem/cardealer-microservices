@@ -59,6 +59,8 @@ analyzer:
     - "widgetbook/**"
     - "**/generated/**"
   errors:
+    # Ignorar TODOs - son marcadores intencionales de backlog, no errores
+    todo: ignore
     # Convertir warnings de estilo a info para reducir ruido
     prefer_const_constructors: info
     prefer_const_literals_to_create_immutables: info

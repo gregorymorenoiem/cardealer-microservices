@@ -400,17 +400,17 @@ class _ChatPageState extends State<ChatPage> {
               leading: const Icon(Icons.photo_camera),
               title: const Text('Cámara'),
               onTap: () async {
-                Navigator.pop(context);
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                navigator.pop();
                 final image = await _imagePicker.pickImage(
                   source: ImageSource.camera,
                 );
-                if (image != null) {
+                if (image != null && mounted) {
                   // TODO: Handle image upload
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Foto capturada')),
-                    );
-                  }
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Foto capturada')),
+                  );
                 }
               },
             ),
@@ -418,17 +418,17 @@ class _ChatPageState extends State<ChatPage> {
               leading: const Icon(Icons.photo_library),
               title: const Text('Galería'),
               onTap: () async {
-                Navigator.pop(context);
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                navigator.pop();
                 final image = await _imagePicker.pickImage(
                   source: ImageSource.gallery,
                 );
-                if (image != null) {
+                if (image != null && mounted) {
                   // TODO: Handle image upload
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Imagen seleccionada')),
-                    );
-                  }
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Imagen seleccionada')),
+                  );
                 }
               },
             ),

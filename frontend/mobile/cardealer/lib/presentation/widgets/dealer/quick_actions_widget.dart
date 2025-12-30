@@ -318,11 +318,11 @@ class _QuickActionButton extends StatelessWidget {
       label: Text(label),
       style: OutlinedButton.styleFrom(
         foregroundColor:
-            enabled ? color : theme.colorScheme.onSurface.withOpacity(0.38),
+            enabled ? color : theme.colorScheme.onSurface.withValues(alpha: 0.38),
         side: BorderSide(
           color: enabled
-              ? color.withOpacity(0.5)
-              : theme.colorScheme.outline.withOpacity(0.38),
+              ? color.withValues(alpha: 0.5)
+              : theme.colorScheme.outline.withValues(alpha: 0.38),
         ),
       ),
     );
@@ -389,7 +389,7 @@ class _BoostOption extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(8),
         color: recommended
-            ? theme.colorScheme.primaryContainer.withOpacity(0.1)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
             : null,
       ),
       child: Column(

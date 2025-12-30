@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import BrowsePage from '../pages/BrowsePage';
+import BrowsePage from '@/pages/vehicles/BrowsePage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Create a test query client

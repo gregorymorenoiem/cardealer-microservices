@@ -419,7 +419,7 @@ const PropertyDetailPage: React.FC = () => {
 
             {/* Contact Form */}
             <ContactSellerForm
-              vehicleName={typeof property.title === 'string' ? property.title : property.title.es || property.title.en || 'esta propiedad'}
+              vehicleName={property.title || 'esta propiedad'}
               sellerName={property.seller.name}
               sellerPhone={property.seller.phone || ''}
             />

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
-import VehicleDetailPage from '@/pages/VehicleDetailPage';
+import VehicleDetailPage from '@/pages/vehicles/VehicleDetailPage';
 import { mockVehicles } from '@/data/mockVehicles';
 
 // Mock the hooks

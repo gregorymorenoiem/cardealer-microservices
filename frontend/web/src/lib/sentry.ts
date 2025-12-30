@@ -26,7 +26,6 @@ interface SentryConfig {
  */
 function getSentryConfig(): SentryConfig {
   const isProd = import.meta.env.PROD;
-  const isDev = import.meta.env.DEV;
   
   return {
     dsn: import.meta.env.VITE_SENTRY_DSN || '',
@@ -61,14 +60,7 @@ export function initSentry(): void {
     // Integrations
     integrations: [
       // Browser tracing for performance monitoring
-      Sentry.browserTracingIntegration({
-        // Trace all requests to our API
-        tracePropagationTargets: [
-          'localhost',
-          /^https:\/\/api\.cardealer\.com/,
-          /^https:\/\/api\.okla\.do/,
-        ],
-      }),
+      Sentry.browserTracingIntegration(),
       // Session replay for debugging
       Sentry.replayIntegration({
         // Mask all text content for privacy

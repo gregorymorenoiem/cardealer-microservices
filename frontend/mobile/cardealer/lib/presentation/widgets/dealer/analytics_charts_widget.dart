@@ -93,7 +93,7 @@ class _ViewsOverTimeChart extends StatelessWidget {
                           if (value.toInt() >= 0 &&
                               value.toInt() < days.length) {
                             return SideTitleWidget(
-                              meta: meta,
+                              axisSide: meta.axisSide,
                               child: Text(
                                 days[value.toInt()],
                                 style: theme.textTheme.bodySmall,
@@ -287,7 +287,7 @@ class _LeadsFunnelChart extends StatelessWidget {
                           if (value.toInt() >= 0 &&
                               value.toInt() < stages.length) {
                             return SideTitleWidget(
-                              meta: meta,
+                              axisSide: meta.axisSide,
                               child: Text(
                                 stages[value.toInt()],
                                 style: theme.textTheme.bodySmall,

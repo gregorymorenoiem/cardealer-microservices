@@ -5,8 +5,9 @@
  * while providing a user-friendly fallback UI.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { captureError, addBreadcrumb } from '../lib/sentry';
+import React, { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
+import { captureError, addBreadcrumb } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;

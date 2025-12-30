@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/layouts/MainLayout';
 import VehicleCard from '@/components/organisms/VehicleCard';
 import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
@@ -9,7 +8,6 @@ import EmptyState from '@/components/organisms/EmptyState';
 import AdvancedFilters, { type VehicleFilters, type SortOption } from '@/components/organisms/AdvancedFilters';
 import Pagination from '@/components/molecules/Pagination';
 import { mockVehicles, filterVehicles, sortVehicles } from '@/data/mockVehicles';
-import { vehicleService } from '@/services/endpoints/vehicleService';
 import { useCompare } from '@/hooks/useCompare';
 import { FiGrid, FiList, FiBarChart2, FiMap } from 'react-icons/fi';
 
@@ -44,7 +42,7 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'year-desc');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [useMockData] = useState(true); // Toggle between mock and real API
+  const [_useMockData] = useState(true); // Toggle between mock and real API
 
   // Fetch vehicles with React Query (commented out until API is ready)
   // const { data, isLoading, isError, refetch } = useQuery({

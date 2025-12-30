@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AccountType } from '@/shared/types';
@@ -44,7 +44,7 @@ export default function ProtectedRoute({
 
   // Redirect to home if admin required but user is not admin
   if (requireAdmin) {
-    const isAdmin = user?.role === 'admin' || 
+    const isAdmin = user?.roles?.includes('admin') || 
                     user?.accountType === AccountType.ADMIN || 
                     user?.accountType === AccountType.PLATFORM_EMPLOYEE;
     if (!isAdmin) {
