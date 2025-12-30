@@ -2,6 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
+
 # Copy csproj files and restore
 COPY ["MediaService/MediaService.Api/MediaService.Api.csproj", "MediaService/MediaService.Api/"]
 COPY ["MediaService/MediaService.Application/MediaService.Application.csproj", "MediaService/MediaService.Application/"]
@@ -26,15 +33,23 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-# Create non-root user and uploads directory
+# Install wget for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends wget && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user, uploads directory and secrets directory
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /app/uploads && \
-    chown -R appuser:appuser /app
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
 USER appuser
+
+# Set Docker environment
+ENV ASPNETCORE_ENVIRONMENT=Docker
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "MediaService.Api.dll"]

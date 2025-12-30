@@ -2,11 +2,21 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
+# Copy ServiceDiscovery projects (required by UserService)
+COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+
 # Copy csproj files and restore
 COPY ["UserService/UserService.Api/UserService.Api.csproj", "UserService/UserService.Api/"]
 COPY ["UserService/UserService.Application/UserService.Application.csproj", "UserService/UserService.Application/"]
 COPY ["UserService/UserService.Domain/UserService.Domain.csproj", "UserService/UserService.Domain/"]
 COPY ["UserService/UserService.Infrastructure/UserService.Infrastructure.csproj", "UserService/UserService.Infrastructure/"]
+COPY ["UserService/UserService.Shared/UserService.Shared.csproj", "UserService/UserService.Shared/"]
 
 RUN dotnet restore "UserService/UserService.Api/UserService.Api.csproj"
 
@@ -25,13 +35,19 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create non-root user and secrets directory
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
+
+# Set environment for Docker
+ENV ASPNETCORE_ENVIRONMENT=Docker
+
 USER appuser
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "UserService.Api.dll"]

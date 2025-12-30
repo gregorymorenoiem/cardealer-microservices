@@ -2,15 +2,21 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
 # Copy csproj files
 COPY ["RealEstateService.Api/RealEstateService.Api.csproj", "RealEstateService.Api/"]
 COPY ["RealEstateService.Application/RealEstateService.Application.csproj", "RealEstateService.Application/"]
 COPY ["RealEstateService.Domain/RealEstateService.Domain.csproj", "RealEstateService.Domain/"]
 COPY ["RealEstateService.Infrastructure/RealEstateService.Infrastructure.csproj", "RealEstateService.Infrastructure/"]
-COPY ["../_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "../_Shared/CarDealer.Shared/"]
 
 # Restore
 RUN dotnet restore "RealEstateService.Api/RealEstateService.Api.csproj"
+
+# Copy shared source
+COPY ["_Shared/", "_Shared/"]
 
 # Copy everything
 COPY . .
@@ -29,10 +35,19 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
+# Create secrets directory for Docker secrets
+RUN mkdir -p /run/secrets
+
+# Set Docker environment
+ENV ASPNETCORE_ENVIRONMENT=Docker
+
 COPY --from=publish /app/publish .
+
+# Install wget for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "RealEstateService.Api.dll"]

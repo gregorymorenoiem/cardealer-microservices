@@ -18,10 +18,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        string? connectionString = null)
     {
-        // Database
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
+        // Database - use provided connection string or fallback to config
+        connectionString ??= configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
         services.AddDbContext<SchedulerDbContext>(options =>

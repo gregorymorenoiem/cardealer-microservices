@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ProductService.Domain.Entities;
 using ProductService.Infrastructure.Persistence;
 using ProductService.Infrastructure.Repositories;
+using CarDealer.Shared.MultiTenancy;
 using Xunit;
 
 namespace ProductService.Tests.Repositories;
@@ -15,7 +16,8 @@ public class ProductRepositoryTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        var context = new ApplicationDbContext(options);
+        var tenantContext = new TestTenantContext();
+        var context = new ApplicationDbContext(options, tenantContext);
 
         // Seed categories
         var vehiclesCategory = new Category
@@ -30,6 +32,15 @@ public class ProductRepositoryTests
         context.SaveChanges();
 
         return context;
+    }
+
+    /// <summary>
+    /// Test tenant context for unit tests
+    /// </summary>
+    private class TestTenantContext : ITenantContext
+    {
+        public Guid? CurrentDealerId => null;
+        public bool HasDealerContext => false;
     }
 
     [Fact]

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SchedulerService.Application\SchedulerService.Application.csproj" />
     <ProjectReference Include="..\SchedulerService.Infrastructure\SchedulerService.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

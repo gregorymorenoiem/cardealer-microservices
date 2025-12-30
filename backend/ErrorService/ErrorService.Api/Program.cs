@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -28,6 +30,9 @@ using ServiceDiscovery.Infrastructure.Services;
 using ErrorService.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Secret Provider for externalized configuration
+builder.Services.AddSecretProvider();
 
 // Configurar Serilog con enriquecimiento de TraceId
 Log.Logger = new LoggerConfiguration()
@@ -78,9 +83,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configurar autenticación JWT
+// Configurar autenticación JWT - using secrets
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -95,9 +100,9 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true),
         ValidateLifetime = jwtSettings.GetValue<bool>("ValidateLifetime", true),
         ValidateIssuerSigningKey = jwtSettings.GetValue<bool>("ValidateIssuerSigningKey", true),
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.FromMinutes(5)
     };
 

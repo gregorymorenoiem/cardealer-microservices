@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
 # Copy csproj files and restore
 COPY ["ProductService/ProductService.Api/ProductService.Api.csproj", "ProductService/ProductService.Api/"]
 COPY ["ProductService/ProductService.Application/ProductService.Application.csproj", "ProductService/ProductService.Application/"]
@@ -26,16 +30,23 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-# Create non-root user (Alpine syntax)
+# Create non-root user and secrets directory (Alpine syntax)
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Set Docker environment
+ENV ASPNETCORE_ENVIRONMENT=Docker
 
 USER appuser
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD dotnet /app/ProductService.Api.dll --help > /dev/null 2>&1 || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "ProductService.Api.dll"]

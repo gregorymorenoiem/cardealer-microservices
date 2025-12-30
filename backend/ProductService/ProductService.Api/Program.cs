@@ -2,8 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using ProductService.Domain.Interfaces;
 using ProductService.Infrastructure.Persistence;
 using ProductService.Infrastructure.Repositories;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ========================================
+// SECRET PROVIDER
+// ========================================
+
+builder.Services.AddSecretProvider();
 
 // ========================================
 // CONFIGURATION
@@ -25,8 +33,9 @@ builder.Services.AddSwaggerGen(c =>
 // DATABASE
 // ========================================
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Host=localhost;Port=5432;Database=productservice_db;Username=postgres;Password=postgres123";
+var connectionString = MicroserviceSecretsConfiguration.GetDatabaseConnectionString(
+    builder.Configuration, 
+    "DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {

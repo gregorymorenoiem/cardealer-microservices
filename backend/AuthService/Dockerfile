@@ -7,6 +7,9 @@ COPY ["AuthService/AuthService.Api/AuthService.Api.csproj", "AuthService/AuthSer
 COPY ["AuthService/AuthService.Application/AuthService.Application.csproj", "AuthService/AuthService.Application/"]
 COPY ["AuthService/AuthService.Domain/AuthService.Domain.csproj", "AuthService/AuthService.Domain/"]
 COPY ["AuthService/AuthService.Infrastructure/AuthService.Infrastructure.csproj", "AuthService/AuthService.Infrastructure/"]
+COPY ["AuthService/AuthService.Shared/AuthService.Shared.csproj", "AuthService/AuthService.Shared/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
 RUN dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
 
@@ -23,18 +26,25 @@ RUN dotnet publish "AuthService.Api.csproj" -c Release -o /app/publish /p:UseApp
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
 EXPOSE 80
-EXPOSE 443
+
+# Create directories for secrets
+RUN mkdir -p /run/secrets
 
 # Create non-root user (Alpine syntax)
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app /run/secrets
 
 USER appuser
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
+# Environment variables for secrets (can be overridden)
+ENV ASPNETCORE_ENVIRONMENT=Docker
+ENV ASPNETCORE_URLS=http://+:80
+
+# Health check using wget (lighter than curl on Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD dotnet /app/AuthService.Api.dll --help > /dev/null 2>&1 || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "AuthService.Api.dll"]

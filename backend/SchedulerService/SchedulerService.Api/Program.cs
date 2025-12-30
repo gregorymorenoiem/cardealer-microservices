@@ -3,8 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using SchedulerService.Application.Handlers;
 using SchedulerService.Infrastructure;
 using SchedulerService.Infrastructure.Data;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add secret provider for Docker secrets
+builder.Services.AddSecretProvider();
+
+// Get connection string with secrets support
+var connectionString = MicroserviceSecretsConfiguration.GetDatabaseConnectionString(
+    builder.Configuration, "SchedulerService");
 
 // Add services
 builder.Services.AddControllers();
@@ -24,11 +33,11 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateJobCommandHandler).Assembly));
 
 // Add Infrastructure layer (includes Hangfire, EF Core, repositories)
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, connectionString);
 
 // Health checks
 builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+    .AddNpgSql(connectionString);
 
 var app = builder.Build();
 

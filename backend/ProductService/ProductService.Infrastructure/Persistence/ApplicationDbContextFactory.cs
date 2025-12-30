@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using CarDealer.Shared.MultiTenancy;
 
 namespace ProductService.Infrastructure.Persistence;
 
@@ -13,10 +14,22 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
         // Connection string para desarrollo (migraciones)
-        var connectionString = "Host=localhost;Port=5432;Database=productservice_db;Username=postgres;Password=postgres123";
+        var connectionString = "Host=localhost;Port=5432;Database=productservice_db;Username=postgres;Password=";
 
         optionsBuilder.UseNpgsql(connectionString);
 
-        return new ApplicationDbContext(optionsBuilder.Options);
+        // Design-time tenant context (no tenant filtering during migrations)
+        var tenantContext = new DesignTimeTenantContext();
+
+        return new ApplicationDbContext(optionsBuilder.Options, tenantContext);
+    }
+
+    /// <summary>
+    /// Tenant context for design-time operations (migrations)
+    /// </summary>
+    private class DesignTimeTenantContext : ITenantContext
+    {
+        public Guid? CurrentDealerId => null;
+        public bool HasDealerContext => false;
     }
 }

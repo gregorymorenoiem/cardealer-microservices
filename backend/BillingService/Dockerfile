@@ -2,8 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy shared project
+# Copy shared projects
 COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj _Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj _Shared/CarDealer.Contracts/
 # Copy service projects
 COPY BillingService/BillingService.Domain/BillingService.Domain.csproj BillingService/BillingService.Domain/
 COPY BillingService/BillingService.Application/BillingService.Application.csproj BillingService/BillingService.Application/
@@ -17,6 +18,7 @@ RUN dotnet restore
 # Copy all source code
 WORKDIR /src
 COPY _Shared/CarDealer.Shared/ _Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Contracts/ _Shared/CarDealer.Contracts/
 COPY BillingService/ BillingService/
 
 # Build the application
@@ -31,6 +33,11 @@ RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
+# Install wget for health checks and create secrets directory
+RUN apt-get update && apt-get install -y --no-install-recommends wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/secrets
+
 # Create non-root user for security
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
@@ -39,18 +46,18 @@ COPY --from=publish /app/publish .
 
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_ENVIRONMENT=Docker
 
 # Change ownership and switch to non-root user
-RUN chown -R appuser:appgroup /app
+RUN chown -R appuser:appgroup /app /run/secrets
 USER appuser
 
 # Expose port
 EXPOSE 80
 
-# Health check
+# Health check using wget
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "BillingService.Api.dll"]

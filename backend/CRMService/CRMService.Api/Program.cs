@@ -3,6 +3,9 @@ using CRMService.Infrastructure.Persistence;
 using CRMService.Infrastructure.Persistence.Repositories;
 using CarDealer.Shared.Extensions;
 using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Database;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -16,6 +19,9 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+// Add secret provider for Docker secrets
+builder.Services.AddSecretProvider();
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -24,11 +30,8 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "CRM Service API", Version = "v1" });
 });
 
-// Configure DbContext
-builder.Services.AddDbContext<CRMDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+// Configure DbContext with multi-provider support
+builder.Services.AddDatabaseProvider<CRMDbContext>(builder.Configuration);
 
 // Register repositories
 builder.Services.AddScoped<ILeadRepository, LeadRepository>();

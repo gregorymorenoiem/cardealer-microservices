@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CRMService.Application\CRMService.Application.csproj" />
     <ProjectReference Include="..\CRMService.Infrastructure\CRMService.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

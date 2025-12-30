@@ -1,6 +1,7 @@
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Domain.Entities;
+using AuthService.Infrastructure.Configuration;
 using AuthService.Infrastructure.External;
 using AuthService.Infrastructure.Persistence;
 using AuthService.Infrastructure.Persistence.Repositories;
@@ -8,6 +9,7 @@ using AuthService.Infrastructure.Services.Identity;
 using AuthService.Infrastructure.Services.Notification;
 using AuthService.Infrastructure.Services.Security;
 using AuthService.Shared;
+using CarDealer.Shared.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,12 +33,16 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Database Context
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        // Secret Provider (reads from ENV vars and Docker secrets)
+        services.AddSecretProvider();
 
-        // Redis Configuration
-        var redisConnection = configuration.GetConnectionString("Redis");
+        // Database Context - connection string from secrets has priority
+        var connectionString = AuthSecretsConfiguration.GetDatabaseConnectionString(configuration);
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
+        // Redis Configuration - from secrets
+        var redisConnection = AuthSecretsConfiguration.GetRedisConnectionString(configuration);
         if (!string.IsNullOrEmpty(redisConnection))
         {
             services.AddSingleton<IConnectionMultiplexer>(sp =>
@@ -67,10 +73,14 @@ public static class ServiceCollectionExtensions
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
-        // JWT Authentication
-        var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>();
-        if (jwtSettings == null)
-            throw new InvalidOperationException("JWT settings are not configured.");
+        // JWT Authentication - keys from secrets
+        var (jwtKey, jwtIssuer, jwtAudience) = AuthSecretsConfiguration.GetJwtSettings(configuration);
+        var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+        
+        // Override with secrets
+        jwtSettings.Key = jwtKey;
+        jwtSettings.Issuer = jwtIssuer;
+        jwtSettings.Audience = jwtAudience;
 
         services.AddAuthentication(options =>
         {
@@ -154,7 +164,7 @@ public static class ServiceCollectionExtensions
         services.Configure<CacheSettings>(configuration.GetSection("Cache"));
         services.Configure<RateLimitSettings>(configuration.GetSection("Security:RateLimit"));
 
-        // Caching
+        // Caching - using redis connection from secrets
         var cacheSettings = configuration.GetSection("Cache").Get<CacheSettings>();
         if (cacheSettings?.EnableDistributedCache == true && !string.IsNullOrEmpty(redisConnection))
         {

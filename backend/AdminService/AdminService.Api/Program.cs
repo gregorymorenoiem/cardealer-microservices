@@ -4,8 +4,14 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using AdminService.Api.Middleware;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
+
+// Add secret provider for secure configuration
+builder.Services.AddSecretProvider();
 
 // Add services to the container.
 builder.Services.AddControllers();

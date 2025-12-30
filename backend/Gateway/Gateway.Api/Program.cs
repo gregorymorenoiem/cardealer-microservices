@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Ocelot.Provider.Polly;
@@ -17,6 +20,7 @@ using Gateway.Api.Middleware;
 using Gateway.Domain.Interfaces;
 using Gateway.Infrastructure.Services;
 using Gateway.Application.UseCases;
+using CarDealer.Shared.Configuration;
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -117,6 +121,38 @@ builder.Services.AddCors(options =>
     });
 });
 
+// 4.1 JWT Authentication from externalized secrets
+try
+{
+    var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+    
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+    
+    Log.Information("JWT Authentication configured successfully for Gateway");
+}
+catch (InvalidOperationException ex)
+{
+    Log.Warning("JWT Authentication not configured: {Message}. Routes requiring auth will fail.", ex.Message);
+}
+
 // 5. Configuración Ocelot con Polly
 builder.Services
     .AddOcelot(builder.Configuration)
@@ -148,6 +184,10 @@ app.UseHealthCheckMiddleware();
 
 // 9. Use routing for other endpoints
 app.UseRouting();
+
+// 9.1 Authentication and Authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Solo usar Swagger si no estamos en Testing
 if (!app.Environment.IsEnvironment("Testing"))

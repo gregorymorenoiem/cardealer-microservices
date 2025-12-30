@@ -10,6 +10,8 @@ COPY ["MessageBusService/MessageBusService.Domain/MessageBusService.Domain.cspro
 COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
 COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
 COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
 # Restore dependencies
 RUN dotnet restore "MessageBusService/MessageBusService.Api/MessageBusService.Api.csproj"
@@ -17,6 +19,7 @@ RUN dotnet restore "MessageBusService/MessageBusService.Api/MessageBusService.Ap
 # Copy everything else
 COPY MessageBusService/ MessageBusService/
 COPY ServiceDiscovery/ ServiceDiscovery/
+COPY _Shared/ _Shared/
 
 # Build
 WORKDIR "/src/MessageBusService/MessageBusService.Api"
@@ -30,10 +33,17 @@ RUN dotnet publish "MessageBusService.Api.csproj" -c Release -o /app/publish /p:
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 
+# Install wget for healthcheck and create secrets directory
+RUN apk add --no-cache wget && \
+    mkdir -p /run/secrets
+
 # Create non-root user (Alpine uses addgroup/adduser)
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app /run/secrets
+
+# Set environment to Docker
+ENV ASPNETCORE_ENVIRONMENT=Docker
 
 USER appuser
 
@@ -42,6 +52,6 @@ COPY --from=publish --chown=appuser:appuser /app/publish .
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD dotnet /app/MessageBusService.Api.dll --help > /dev/null 2>&1 || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "MessageBusService.Api.dll"]

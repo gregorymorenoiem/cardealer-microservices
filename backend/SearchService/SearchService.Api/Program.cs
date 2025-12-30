@@ -1,7 +1,12 @@
 using SearchService.Application;
 using SearchService.Infrastructure;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add secret provider for Docker secrets
+builder.Services.AddSecretProvider();
 
 // Add services to the container
 builder.Services.AddControllers();

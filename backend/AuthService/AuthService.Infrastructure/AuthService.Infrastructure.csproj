@@ -26,10 +26,10 @@
     
     <!-- Caching -->
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.11" />
     
     <!-- HTTP Client -->
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
     
     <!-- Configuration -->
@@ -54,6 +54,7 @@
   <ProjectReference Include="..\AuthService.Domain\AuthService.Domain.csproj" />
   <ProjectReference Include="..\AuthService.Shared\AuthService.Shared.csproj" />
   <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+  <ProjectReference Include="..\..\\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
   <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
   <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Infrastructure\ServiceDiscovery.Infrastructure.csproj" />
   <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />

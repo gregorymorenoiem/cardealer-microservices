@@ -5,9 +5,14 @@ using BillingService.Infrastructure.Persistence;
 using BillingService.Infrastructure.Repositories;
 using BillingService.Infrastructure.Services;
 using BillingService.Infrastructure.External;
+using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Configuration;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Secret Provider for Docker secrets
+builder.Services.AddSecretProvider();
 
 // Add Serilog
 Log.Logger = new LoggerConfiguration()
@@ -31,9 +36,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<StripeSettings>(
     builder.Configuration.GetSection("Stripe"));
 
-// Add DbContext
+// Add DbContext with secrets support
+var connectionString = MicroserviceSecretsConfiguration.GetDatabaseConnectionString(builder.Configuration, "BillingService");
 builder.Services.AddDbContext<BillingDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Add Repositories
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
