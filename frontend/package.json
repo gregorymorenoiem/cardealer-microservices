@@ -1,0 +1,51 @@
+{
+  "name": "cardealer-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CarDealer Frontend Monorepo - React Applications",
+  "workspaces": [
+    "web",
+    "web/okla",
+    "web/cardealer",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "dev:okla": "npm run dev --workspace=web/okla",
+    "dev:cardealer": "npm run dev --workspace=web/cardealer",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build --workspace=web",
+    "build:okla": "npm run build --workspace=web/okla",
+    "build:cardealer": "npm run build --workspace=web/cardealer",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "storybook": "npm run storybook --workspace=web",
+    "build-storybook": "npm run build-storybook --workspace=web",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "prettier": "^3.4.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gregorymorenoiem/cardealer-microservices.git"
+  },
+  "keywords": [
+    "cardealer",
+    "marketplace",
+    "react",
+    "vite",
+    "tailwindcss"
+  ],
+  "author": "CarDealer Team",
+  "license": "MIT"
+}

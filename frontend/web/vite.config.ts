@@ -1,13 +1,30 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react(),
+    // Sentry plugin for source maps upload (only in production builds)
+    mode === 'production' && sentryVitePlugin({
+      org: process.env.SENTRY_ORG || 'cardealer',
+      project: process.env.SENTRY_PROJECT || 'frontend',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: {
+        name: process.env.npm_package_version || '1.0.0',
+      },
+      sourcemaps: {
+        assets: './dist/**',
+      },
+      // Don't fail build if sourcemaps upload fails
+      telemetry: false,
+    }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -114,8 +131,8 @@ export default defineConfig({
       },
     },
     
-    // Generate source maps for debugging (but don't include in production)
-    sourcemap: false,
+    // Generate source maps for Sentry (hidden in production)
+    sourcemap: mode === 'production' ? 'hidden' : true,
     
     // Chunk size warnings
     chunkSizeWarningLimit: 500,
@@ -151,4 +168,4 @@ export default defineConfig({
     // Exclude heavy dependencies that should be code-split
     exclude: [],
   },
-})
+}))

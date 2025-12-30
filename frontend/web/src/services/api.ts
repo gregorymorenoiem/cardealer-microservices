@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
+import { captureError, addBreadcrumb } from '../lib/sentry';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:15095';
 
@@ -11,13 +12,25 @@ export const api: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor - Add auth token
+// Request interceptor - Add auth token and breadcrumb
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add breadcrumb for API request
+    addBreadcrumb(
+      'http',
+      `${config.method?.toUpperCase()} ${config.url}`,
+      {
+        method: config.method,
+        url: config.url,
+      },
+      'info'
+    );
+    
     return config;
   },
   (error: AxiosError) => {
@@ -25,11 +38,28 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle token refresh
+// Response interceptor - Handle token refresh and errors
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    
+    // Capture API errors in Sentry (skip 401 as they're handled)
+    if (error.response?.status !== 401) {
+      captureError(error as Error, {
+        tags: {
+          source: 'api',
+          endpoint: originalRequest?.url || 'unknown',
+          method: originalRequest?.method || 'unknown',
+        },
+        extra: {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+        },
+        level: error.response?.status && error.response.status >= 500 ? 'error' : 'warning',
+      });
+    }
 
     // If 401 and not already retried, try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -51,6 +81,8 @@ api.interceptors.response.use(
         // Save new tokens
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', newRefreshToken);
+        
+        addBreadcrumb('auth', 'Token refreshed successfully', undefined, 'info');
 
         // Retry original request with new token
         if (originalRequest.headers) {
@@ -59,6 +91,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed - logout user
+        addBreadcrumb('auth', 'Token refresh failed, logging out', undefined, 'warning');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';

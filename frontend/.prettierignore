@@ -1,0 +1,32 @@
+# Prettier Ignore
+# Directories
+node_modules/
+dist/
+build/
+coverage/
+.storybook-static/
+storybook-static/
+.next/
+.nuxt/
+.cache/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+*.min.js
+*.min.css
+*.bundle.js
+
+# Mobile
+mobile/cardealer/android/
+mobile/cardealer/ios/
+mobile/cardealer/.dart_tool/
+mobile/cardealer/build/
+
+# Other
+.git/
+.vscode/
+*.log
