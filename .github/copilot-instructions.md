@@ -506,6 +506,57 @@ npm run build    # Production build
 npm run test     # Vitest
 ```
 
+### ⚠️ NOTAS CRÍTICAS TYPESCRIPT/MONOREPO
+
+1. **Estructura Monorepo**: El proyecto usa npm workspaces. `node_modules` está en `frontend/` NO en `frontend/web/`
+
+2. **Configuración de typeRoots**: Los tsconfig deben apuntar al directorio padre:
+   ```json
+   // tsconfig.app.json y tsconfig.node.json
+   "typeRoots": ["../node_modules/@types"]
+   ```
+
+3. **Tipos de Vite y Node**: Usar triple-slash directives en lugar de `types` en tsconfig:
+   ```typescript
+   // src/vite-env.d.ts (DEBE existir)
+   /// <reference types="vite/client" />
+   
+   // vite.config.ts (al inicio del archivo)
+   /// <reference types="node" />
+   ```
+
+4. **verbatimModuleSyntax**: TypeScript 5.6 requiere imports de tipo explícitos:
+   ```typescript
+   // ❌ Incorrecto
+   import { ReactNode, ErrorInfo } from 'react';
+   
+   // ✅ Correcto - usar 'import type' para tipos
+   import type { ReactNode, ErrorInfo } from 'react';
+   import { Component } from 'react';  // solo valores
+   ```
+
+5. **Dos archivos de tipos User**: Existen diferencias entre:
+   - `src/types/index.ts` - Tipos locales simplificados
+   - `src/shared/types/index.ts` - Tipos compartidos completos
+   - **Importante**: User tiene `subscription` directamente, NO `dealer.subscription`
+
+6. **AccountType**: Debe incluir `'guest'` como valor válido:
+   ```typescript
+   type AccountType = 'guest' | 'individual' | 'dealer' | 'dealer_employee' | 'admin' | 'platform_employee';
+   ```
+
+7. **Sentry browserTracingIntegration**: No usar `tracePropagationTargets` dentro del integration:
+   ```typescript
+   // ❌ Deprecated
+   Sentry.browserTracingIntegration({
+     tracePropagationTargets: [...]  // NO
+   })
+   
+   // ✅ Correcto
+   Sentry.browserTracingIntegration()
+   // tracePropagationTargets va en Sentry.init() directamente
+   ```
+
 ---
 
 ## 📱 FRONTEND MOBILE (Flutter)
@@ -552,6 +603,76 @@ flutter run --flavor dev         # Dev flavor
 flutter build apk --release      # Android release
 flutter build ios --release      # iOS release
 ```
+
+### ⚠️ NOTAS CRÍTICAS FLUTTER/DART (APIs que han cambiado)
+
+1. **connectivity_plus**: El listener ahora retorna `ConnectivityResult` (single), NO `List<ConnectivityResult>`:
+   ```dart
+   // ❌ Incorrecto (API antigua)
+   Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+     final result = results.first;
+   });
+   
+   // ✅ Correcto (API actual)
+   Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+     // usar result directamente
+   });
+   ```
+
+2. **fl_chart SideTitleWidget**: Usar `axisSide` en lugar de `meta`:
+   ```dart
+   // ❌ Incorrecto
+   SideTitleWidget(meta: meta, child: Text('...'))
+   
+   // ✅ Correcto
+   SideTitleWidget(axisSide: meta.axisSide, child: Text('...'))
+   ```
+
+3. **Color.withOpacity deprecated**: Usar `withValues(alpha:)`:
+   ```dart
+   // ❌ Deprecated
+   color.withOpacity(0.5)
+   
+   // ✅ Correcto
+   color.withValues(alpha: 0.5)
+   ```
+
+4. **Uso de context después de async**: Siempre verificar `mounted`:
+   ```dart
+   // ❌ Incorrecto - puede fallar si widget fue desmontado
+   final image = await picker.pickImage(source: ImageSource.camera);
+   if (image != null) {
+     ScaffoldMessenger.of(context).showSnackBar(...);
+   }
+   
+   // ✅ Correcto - guardar referencias ANTES del await
+   final navigator = Navigator.of(context);
+   final messenger = ScaffoldMessenger.of(context);
+   navigator.pop();
+   final image = await picker.pickImage(source: ImageSource.camera);
+   if (image != null && mounted) {
+     messenger.showSnackBar(...);
+   }
+   ```
+
+5. **Scripts de utilidad**: Agregar `// ignore_for_file: avoid_print` en archivos tool/:
+   ```dart
+   // ignore_for_file: avoid_print
+   import 'dart:io';
+   
+   void main() {
+     print('This is allowed in scripts');
+   }
+   ```
+
+6. **Constantes en widgets**: Usar `const` cuando sea posible para mejor rendimiento:
+   ```dart
+   // ❌ Sin const - crea nueva instancia cada rebuild
+   Icon(Icons.home, color: Colors.blue)
+   
+   // ✅ Con const - misma instancia
+   const Icon(Icons.home, color: Colors.blue)
+   ```
 
 ---
 
