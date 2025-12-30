@@ -2,11 +2,12 @@ import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:dio/dio.dart';
 import 'injection.config.dart';
+import '../network/api_client.dart';
 import '../../data/datasources/mock/mock_vehicle_datasource.dart';
 import '../../data/datasources/mock/mock_auth_datasource.dart';
 import '../../data/datasources/remote/auth_remote_datasource.dart';
+import '../../data/datasources/remote/vehicle_remote_datasource.dart';
 import '../../data/repositories/vehicle_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/mock_messaging_repository.dart';
@@ -97,6 +98,11 @@ Future<void> configureDependencies() async {
   // Register network info
   getIt.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
 
+  // Register API Client (main HTTP client with interceptors)
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(secureStorage: getIt<FlutterSecureStorage>()),
+  );
+
   // Register data sources
   getIt.registerLazySingleton<MockVehicleDataSource>(
       () => MockVehicleDataSource());
@@ -106,20 +112,20 @@ Future<void> configureDependencies() async {
     () => MockAuthDataSource(),
   );
 
-  // Register Dio for API calls
-  getIt.registerLazySingleton<Dio>(() => Dio());
+  // Register Remote Data Sources
+  getIt.registerLazySingleton<VehicleRemoteDataSource>(
+    () => VehicleRemoteDataSource(apiClient: getIt<ApiClient>()),
+  );
 
   getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSource(
-      dio: getIt<Dio>(),
-      baseUrl: 'https://api.cardealer.com', // TODO: Move to environment config
-    ),
+    () => AuthRemoteDataSource(apiClient: getIt<ApiClient>()),
   );
 
   // Register repositories
   getIt.registerLazySingleton<VehicleRepository>(
     () => VehicleRepositoryImpl(
       mockDataSource: getIt<MockVehicleDataSource>(),
+      remoteDataSource: getIt<VehicleRemoteDataSource>(),
       networkInfo: getIt<NetworkInfo>(),
     ),
   );

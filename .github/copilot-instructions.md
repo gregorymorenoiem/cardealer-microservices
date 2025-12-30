@@ -812,6 +812,131 @@ Para tareas comunes, consulta los templates en `.github/copilot-samples/`:
 
 ---
 
+## 📱 FLUTTER MOBILE - NOTAS CRÍTICAS
+
+### Información del Proyecto
+
+| Aspecto | Valor |
+|---------|-------|
+| **Nombre del paquete** | `cardealer_mobile` (NO `cardealer`) |
+| **Ruta del proyecto** | `frontend/mobile/cardealer` |
+| **SDK Flutter** | >=3.4.0 (stable 3.35.4+) |
+| **SDK Dart** | >=3.4.0 <4.0.0 (3.9.2+) |
+
+### ⚠️ ERRORES COMUNES A EVITAR
+
+1. **Imports del paquete**: SIEMPRE usar `package:cardealer_mobile/...` NO `package:cardealer/...`
+
+2. **Dos archivos de Failures con sintaxis diferente**:
+   - `core/error/failures.dart` - Usa parámetros NOMBRADOS: `const AuthFailure({required super.message});`
+   - `core/errors/failures.dart` - Usa parámetros POSICIONALES: `const AuthFailure(super.message);`
+   - Los usecases de Auth importan `core/errors/failures.dart` (posicional)
+   - Los usecases de Vehicle importan `core/error/failures.dart` (nombrado)
+
+3. **Testing con mocktail (NO mockito)**:
+   - El proyecto usa `mocktail` para mocking - NO requiere code generation
+   - NO usar `@GenerateMocks` ni `build_runner`
+   - Sintaxis: `class MockRepo extends Mock implements Repo {}`
+   - When: `when(() => mock.method()).thenReturn(value)`
+   - Any: `any(named: 'param')` en lugar de `anyNamed('param')`
+   - Registrar fallback values: `setUpAll(() { registerFallbackValue(UserRole.individual); })`
+
+4. **Use cases sin parámetros**: Usar `.call()` explícito
+   ```dart
+   // ✅ Correcto
+   when(() => mockLogoutUseCase.call()).thenAnswer((_) async => const Right(null));
+   
+   // ❌ Incorrecto
+   when(() => mockLogoutUseCase()).thenAnswer(...);  // No funciona con mocktail
+   ```
+
+5. **AuthBloc estados de registro**: El registro emite `AuthRegistrationSuccess` NO `AuthAuthenticated`
+
+6. **Vehicle entity**: Requiere `createdAt` como parámetro obligatorio
+   ```dart
+   Vehicle(id: '1', name: 'Test', createdAt: DateTime(2024, 1, 1), ...)
+   ```
+
+### 🔧 COMANDOS FLUTTER
+
+```powershell
+# ⚠️ CRÍTICO: Los comandos flutter (analyze, test) pueden quedarse esperando input
+# SIEMPRE agregar `; echo ""` al final del comando para forzar que termine
+# O enviar ENTER manualmente si el proceso se queda colgado
+
+# Análisis - USAR ESTE FORMATO:
+flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1; echo ""
+
+# Tests - USAR ESTE FORMATO:
+flutter test 2>&1; echo ""
+flutter test test/presentation/bloc/ 2>&1; echo ""
+flutter test --reporter compact 2>&1; echo ""
+
+# Build runner (si fuera necesario - NO requerido con mocktail)
+dart run build_runner build --delete-conflicting-outputs
+
+# Limpiar y reconstruir
+flutter clean
+flutter pub get
+```
+
+### 📁 ESTRUCTURA DE TESTS
+
+```
+test/
+├── presentation/
+│   └── bloc/
+│       ├── auth/
+│       │   └── auth_bloc_test.dart      # 9 tests - mocktail
+│       └── vehicles/
+│           └── vehicles_bloc_test.dart  # 16 tests - mocktail
+└── ... (otros tests)
+```
+
+### 🧪 TEMPLATE DE TEST CON MOCKTAIL
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:dartz/dartz.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:cardealer_mobile/core/errors/failures.dart'; // posicional
+
+// Mock classes - NO code generation needed
+class MockMyUseCase extends Mock implements MyUseCase {}
+
+void main() {
+  late MyBloc bloc;
+  late MockMyUseCase mockUseCase;
+
+  // Register fallback values for non-primitive types
+  setUpAll(() {
+    registerFallbackValue(UserRole.individual);
+  });
+
+  setUp(() {
+    mockUseCase = MockMyUseCase();
+    bloc = MyBloc(myUseCase: mockUseCase);
+  });
+
+  tearDown(() {
+    bloc.close();
+  });
+
+  blocTest<MyBloc, MyState>(
+    'emits [Loading, Success] when successful',
+    build: () {
+      when(() => mockUseCase.call()).thenAnswer((_) async => const Right(result));
+      return bloc;
+    },
+    act: (bloc) => bloc.add(MyEvent()),
+    expect: () => [MyLoading(), MySuccess(result)],
+  );
+}
+```
+
+---
+
 ## 🏷️ COMMITS Y BRANCHES
 
 ### Convención de Commits

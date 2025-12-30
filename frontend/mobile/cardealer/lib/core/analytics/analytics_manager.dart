@@ -28,7 +28,7 @@ enum AnalyticsEventType {
 class AnalyticsEvent {
   final String name;
   final AnalyticsEventType type;
-  final Map<String, dynamic>? parameters;
+  final Map<String, Object>? parameters;
   final DateTime timestamp;
 
   AnalyticsEvent({
@@ -106,7 +106,7 @@ class AnalyticsManager {
 
   Future<void> logEvent(
     String name, {
-    Map<String, dynamic>? parameters,
+    Map<String, Object>? parameters,
     AnalyticsEventType type = AnalyticsEventType.custom,
   }) async {
     final event = AnalyticsEvent(

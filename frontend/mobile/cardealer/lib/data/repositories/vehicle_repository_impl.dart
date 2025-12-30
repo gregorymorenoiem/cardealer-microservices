@@ -1,26 +1,40 @@
 import 'package:dartz/dartz.dart';
+import '../../core/config/api_config.dart';
 import '../../core/error/failures.dart';
 import '../../core/network/network_info.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/entities/filter_criteria.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/mock/mock_vehicle_datasource.dart';
+import '../datasources/remote/vehicle_remote_datasource.dart';
 
 /// Implementation of vehicle repository with dual source pattern
+/// Uses remote API when available, falls back to mock data
 class VehicleRepositoryImpl implements VehicleRepository {
   final MockVehicleDataSource mockDataSource;
+  final VehicleRemoteDataSource? remoteDataSource;
   final NetworkInfo networkInfo;
+
+  /// Whether to use mock data (controlled by ApiConfig.enableMockData)
+  bool get _useMock => ApiConfig.enableMockData || remoteDataSource == null;
 
   VehicleRepositoryImpl({
     required this.mockDataSource,
+    this.remoteDataSource,
     required this.networkInfo,
   });
 
   @override
   Future<Either<Failure, List<Vehicle>>> getHeroCarouselVehicles() async {
     try {
-      final vehicles = await mockDataSource.getHeroCarouselVehicles();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getHeroCarouselVehicles();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getHeroCarouselVehicles();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -29,8 +43,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getFeaturedGridVehicles() async {
     try {
-      final vehicles = await mockDataSource.getFeaturedGridVehicles();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getFeaturedGridVehicles();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getFeaturedGridVehicles();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -39,8 +59,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getWeekFeaturedVehicles() async {
     try {
-      final vehicles = await mockDataSource.getWeekFeaturedVehicles();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getWeekFeaturedVehicles();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getWeekFeaturedVehicles();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -49,8 +75,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getDailyDeals() async {
     try {
-      final vehicles = await mockDataSource.getDailyDeals();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getDailyDeals();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getDailyDeals();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -59,8 +91,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getSUVsAndTrucks() async {
     try {
-      final vehicles = await mockDataSource.getSUVsAndTrucks();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getSUVsAndTrucks();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getSUVsAndTrucks();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -69,8 +107,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getPremiumVehicles() async {
     try {
-      final vehicles = await mockDataSource.getPremiumVehicles();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getPremiumVehicles();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getPremiumVehicles();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -79,8 +123,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getElectricAndHybrid() async {
     try {
-      final vehicles = await mockDataSource.getElectricAndHybrid();
+      if (_useMock) {
+        final vehicles = await mockDataSource.getElectricAndHybrid();
+        return Right(vehicles);
+      }
+      final vehicles = await remoteDataSource!.getElectricAndHybrid();
       return Right(vehicles);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -89,8 +139,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, List<Vehicle>>> getAllVehicles() async {
     try {
-      final vehicles = await mockDataSource.getAllVehicles();
-      return Right(vehicles);
+      if (_useMock) {
+        final vehicles = await mockDataSource.getAllVehicles();
+        return Right(vehicles);
+      }
+      final response = await remoteDataSource!.getVehicles();
+      return Right(response.items);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -99,12 +155,18 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Future<Either<Failure, Vehicle>> getVehicleById(String id) async {
     try {
-      final vehicles = await mockDataSource.getAllVehicles();
-      final vehicle = vehicles.firstWhere(
-        (v) => v.id == id,
-        orElse: () => throw Exception('Vehicle not found'),
-      );
+      if (_useMock) {
+        final vehicles = await mockDataSource.getAllVehicles();
+        final vehicle = vehicles.firstWhere(
+          (v) => v.id == id,
+          orElse: () => throw Exception('Vehicle not found'),
+        );
+        return Right(vehicle);
+      }
+      final vehicle = await remoteDataSource!.getVehicleById(id);
       return Right(vehicle);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

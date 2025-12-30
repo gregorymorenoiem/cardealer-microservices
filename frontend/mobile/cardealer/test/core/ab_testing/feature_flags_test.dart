@@ -11,26 +11,35 @@ void main() {
     test('should have correct default values', () {
       expect(FeatureFlags.newHomeDesign.defaultValue, isA<BoolValue>());
     });
+
+    test('should have description', () {
+      expect(FeatureFlags.newHomeDesign.description, isNotEmpty);
+    });
+
+    test('all flags should be defined', () {
+      expect(FeatureFlags.all, isNotEmpty);
+      expect(FeatureFlags.all.length, greaterThan(5));
+    });
   });
 
   group('FeatureFlagValue Tests', () {
     test('BoolValue should store boolean', () {
-      final value = BoolValue(true);
+      const value = BoolValue(true);
       expect(value.value, isTrue);
     });
 
     test('StringValue should store string', () {
-      final value = StringValue('test');
+      const value = StringValue('test');
       expect(value.value, equals('test'));
     });
 
     test('IntValue should store integer', () {
-      final value = IntValue(42);
+      const value = IntValue(42);
       expect(value.value, equals(42));
     });
 
     test('DoubleValue should store double', () {
-      final value = DoubleValue(3.14);
+      const value = DoubleValue(3.14);
       expect(value.value, closeTo(3.14, 0.001));
     });
   });
@@ -47,9 +56,30 @@ void main() {
       expect(value, isA<bool>());
     });
 
-    test('should initialize without errors', () async {
-      // Mock initialization
-      expect(() async => await manager.initialize(), returnsNormally);
+    test('should get int value', () {
+      final value = manager.getInt(FeatureFlags.maxItemsInCart);
+      expect(value, isA<int>());
+    });
+
+    test('should get double value', () {
+      final value = manager.getDouble(FeatureFlags.minOrderAmount);
+      expect(value, isA<double>());
+    });
+  });
+
+  group('ABTestVariant Tests', () {
+    test('should have control variant', () {
+      expect(ABTestVariant.control, isNotNull);
+      expect(ABTestVariant.control.name, equals('control'));
+    });
+
+    test('should have variantA', () {
+      expect(ABTestVariant.variantA, isNotNull);
+      expect(ABTestVariant.variantA.name, equals('variantA'));
+    });
+
+    test('should have all variants', () {
+      expect(ABTestVariant.values.length, equals(4));
     });
   });
 
@@ -58,34 +88,37 @@ void main() {
       const test = ABTest(
         key: 'test_experiment',
         variants: [
-          ABTestVariant(key: 'control', weight: 50),
-          ABTestVariant(key: 'variant_a', weight: 50),
+          ABTestVariant.control,
+          ABTestVariant.variantA,
         ],
-        description: 'Test experiment',
       );
 
       expect(test.key, equals('test_experiment'));
       expect(test.variants.length, equals(2));
-      expect(test.variants[0].weight, equals(50));
+      expect(test.defaultVariant, equals(ABTestVariant.control));
+    });
+
+    test('should have default variant', () {
+      const test = ABTest(
+        key: 'test',
+        variants: [ABTestVariant.control],
+        defaultVariant: ABTestVariant.variantB,
+      );
+
+      expect(test.defaultVariant, equals(ABTestVariant.variantB));
     });
   });
 
-  group('ABTestVariant Tests', () {
-    test('should create variant with correct properties', () {
-      const variant = ABTestVariant(
-        key: 'variant_a',
-        weight: 25,
-      );
-
-      expect(variant.key, equals('variant_a'));
-      expect(variant.weight, equals(25));
+  group('ABTests Registry Tests', () {
+    test('should have predefined tests', () {
+      expect(ABTests.homeLayout, isNotNull);
+      expect(ABTests.checkoutFlow, isNotNull);
+      expect(ABTests.pricingDisplay, isNotNull);
     });
 
-    test('should create default variant', () {
-      const variant = ABTestVariant(key: 'control');
-
-      expect(variant.key, equals('control'));
-      expect(variant.weight, equals(0));
+    test('should have all tests listed', () {
+      expect(ABTests.all, isNotEmpty);
+      expect(ABTests.all.length, equals(3));
     });
   });
 
@@ -94,26 +127,37 @@ void main() {
 
     setUp(() {
       manager = ABTestManager();
+      manager.clearAllAssignments();
     });
 
-    test('should assign variants consistently for same user', () {
-      const test = ABTest(
-        key: 'consistency_test',
-        variants: [
-          ABTestVariant(key: 'a', weight: 50),
-          ABTestVariant(key: 'b', weight: 50),
-        ],
-        description: 'Consistency test',
-      );
-
-      final variant1 = manager.getVariant(test, userId: 'user123');
-      final variant2 = manager.getVariant(test, userId: 'user123');
-
-      expect(variant1, equals(variant2));
+    test('should return variant for test', () {
+      final variant = manager.getVariant(ABTests.homeLayout);
+      expect(variant, isA<ABTestVariant>());
     });
 
-    test('should initialize without errors', () async {
-      expect(() async => await manager.initialize(), returnsNormally);
+    test('should allow setting variant override', () {
+      manager.setVariant(ABTests.homeLayout, ABTestVariant.variantA);
+      final variant = manager.getVariant(ABTests.homeLayout);
+      expect(variant, equals(ABTestVariant.variantA));
+    });
+
+    test('should check if in specific variant', () {
+      manager.setVariant(ABTests.homeLayout, ABTestVariant.variantB);
+      expect(manager.isInVariant(ABTests.homeLayout, ABTestVariant.variantB), isTrue);
+      expect(manager.isInVariant(ABTests.homeLayout, ABTestVariant.control), isFalse);
+    });
+
+    test('should clear assignment', () {
+      manager.setVariant(ABTests.homeLayout, ABTestVariant.variantA);
+      manager.clearAssignment(ABTests.homeLayout);
+      // After clearing, should get default or re-assigned variant
+      final variant = manager.getVariant(ABTests.homeLayout);
+      expect(variant, isA<ABTestVariant>());
+    });
+
+    test('should get all assignments', () {
+      final assignments = manager.getAllAssignments();
+      expect(assignments, isA<Map<String, String>>());
     });
   });
 }

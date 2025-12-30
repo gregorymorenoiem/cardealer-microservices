@@ -46,7 +46,7 @@ class AnalyticsService {
 
   static Future<void> logSearch({
     required String searchTerm,
-    Map<String, dynamic>? filters,
+    Map<String, Object>? filters,
   }) async {
     await _analytics.logSearch(
       searchTerm: searchTerm,

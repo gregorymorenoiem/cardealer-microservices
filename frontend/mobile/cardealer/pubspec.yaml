@@ -4,43 +4,43 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
+  sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   
   # State Management
-  flutter_bloc: ^8.1.3
-  equatable: ^2.0.5
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.7
   dartz: ^0.10.1
   
   # Dependency Injection
-  get_it: ^7.6.4
-  injectable: ^2.3.2
+  get_it: ^8.0.2
+  injectable: ^2.5.0
   
   # Network
-  dio: ^5.4.0
-  retrofit: ^4.0.3
-  json_annotation: ^4.8.1
-  pretty_dio_logger: ^1.3.1
+  dio: ^5.7.0
+  retrofit: ^4.4.1
+  json_annotation: ^4.9.0
+  pretty_dio_logger: ^1.4.0
   
   # Local Storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  flutter_secure_storage: ^9.0.0
-  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.5
   
   # UI Components
-  cached_network_image: ^3.3.0
-  flutter_svg: ^2.0.9
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.16
   shimmer: ^3.0.0
   smooth_page_indicator: ^1.1.0
   pull_to_refresh: ^2.0.0
-  lottie: ^3.1.2
+  lottie: ^3.3.1
   
   # Sprint 10 - Dealer Power dependencies
-  fl_chart: ^0.68.0
+  fl_chart: ^0.70.2
   table_calendar: ^3.1.2
   
   # Utils
@@ -48,26 +48,26 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   timeago: ^3.6.0
-  url_launcher: ^6.2.2
-  connectivity_plus: ^5.0.2
+  url_launcher: ^6.3.1
+  connectivity_plus: ^6.1.4
   rxdart: ^0.27.7
   path_provider: ^2.1.2
   speech_to_text: ^7.0.0
-  permission_handler: ^11.3.0
+  permission_handler: ^11.3.1
   crypto: ^3.0.3
   
   # Payment
-  flutter_stripe: ^10.1.0
+  flutter_stripe: ^11.4.0
   
   # Icons
   cupertino_icons: ^1.0.6
   
   # Firebase
-  firebase_core: ^2.24.2
-  firebase_analytics: ^10.8.0
-  firebase_crashlytics: ^3.4.9
-  firebase_remote_config: ^4.3.8
-  firebase_messaging: ^14.7.10
+  firebase_core: ^3.8.0
+  firebase_analytics: ^11.4.0
+  firebase_crashlytics: ^4.2.0
+  firebase_remote_config: ^5.2.0
+  firebase_messaging: ^15.2.0
   photo_view: ^0.15.0
   video_player: ^2.10.1
   chewie: ^1.13.0
@@ -83,26 +83,26 @@ dev_dependencies:
     sdk: flutter
   
   # Code Generation
-  build_runner: ^2.4.6
-  injectable_generator: ^2.4.1
-  retrofit_generator: ^8.0.4
-  json_serializable: ^6.7.1
+  build_runner: ^2.4.13
+  injectable_generator: ^2.6.2
+  retrofit_generator: ^8.2.1
+  json_serializable: ^6.8.0
   hive_generator: ^2.0.1
   
   # Linting
-  flutter_lints: ^3.0.1
+  flutter_lints: ^3.0.2
   
   # Icon Generation
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
   
   # Testing
-  bloc_test: ^9.1.5
-  mocktail: ^1.0.1
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
   
   # UI Development
-  widgetbook: ^3.8.0
+  widgetbook: ^3.10.1
   widgetbook_annotation: ^3.2.0
-  widgetbook_generator: ^3.8.0
+  widgetbook_generator: ^3.14.0
   image: ^4.5.4
 
 flutter:

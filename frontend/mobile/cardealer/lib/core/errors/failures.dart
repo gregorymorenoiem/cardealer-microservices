@@ -20,3 +20,11 @@ class CacheFailure extends Failure {
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
 }
+
+class AuthFailure extends Failure {
+  const AuthFailure(super.message);
+}
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure(super.message);
+}

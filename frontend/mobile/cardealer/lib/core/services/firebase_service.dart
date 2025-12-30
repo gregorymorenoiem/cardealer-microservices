@@ -4,11 +4,15 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import '../../app_config.dart';
+import '../../firebase_options.dart';
 
 class FirebaseService {
   static FirebaseAnalytics? _analytics;
   static FirebaseCrashlytics? _crashlytics;
   static FirebaseRemoteConfig? _remoteConfig;
+  static bool _initialized = false;
+
+  static bool get isInitialized => _initialized;
 
   static FirebaseAnalytics get analytics {
     if (_analytics == null) {
@@ -32,10 +36,20 @@ class FirebaseService {
   }
 
   /// Inicializa Firebase con la configuración apropiada
+  /// Firebase 3.x requiere DefaultFirebaseOptions
   static Future<void> initialize() async {
+    if (_initialized) {
+      if (kDebugMode) {
+        print('⚠️ Firebase ya está inicializado');
+      }
+      return;
+    }
+
     try {
-      // Inicializar Firebase
-      await Firebase.initializeApp();
+      // Inicializar Firebase con opciones de plataforma (Firebase 3.x)
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
       // Configurar Analytics (solo en prod y staging)
       if (AppConfig.instance.enableAnalytics) {
@@ -94,8 +108,10 @@ class FirebaseService {
       // Fetch remoto
       await _remoteConfig!.fetchAndActivate();
 
+      _initialized = true;
+
       if (kDebugMode) {
-        print('✅ Firebase inicializado correctamente');
+        print('✅ Firebase inicializado correctamente (SDK 3.x)');
         print('Environment: ${AppConfig.instance.flavor.name}');
         print('Analytics enabled: ${AppConfig.instance.enableAnalytics}');
       }
@@ -111,7 +127,7 @@ class FirebaseService {
   /// Log de evento personalizado
   static Future<void> logEvent({
     required String name,
-    Map<String, dynamic>? parameters,
+    Map<String, Object>? parameters,
   }) async {
     if (_analytics != null && AppConfig.instance.enableAnalytics) {
       try {

@@ -13,18 +13,18 @@ class NetworkStatusManager {
   factory NetworkStatusManager() => _instance;
   NetworkStatusManager._internal();
 
-  final _connectivityController = BehaviorSubject<ConnectivityResult>.seeded(
-    ConnectivityResult.none,
+  final _connectivityController = BehaviorSubject<List<ConnectivityResult>>.seeded(
+    [ConnectivityResult.none],
   );
 
-  Stream<ConnectivityResult> get connectivityStream =>
+  Stream<List<ConnectivityResult>> get connectivityStream =>
       _connectivityController.stream;
-  ConnectivityResult get currentStatus => _connectivityController.value;
+  List<ConnectivityResult> get currentStatus => _connectivityController.value;
 
   bool get isOnline =>
-      currentStatus == ConnectivityResult.wifi ||
-      currentStatus == ConnectivityResult.mobile ||
-      currentStatus == ConnectivityResult.ethernet;
+      currentStatus.contains(ConnectivityResult.wifi) ||
+      currentStatus.contains(ConnectivityResult.mobile) ||
+      currentStatus.contains(ConnectivityResult.ethernet);
 
   void initialize() {
     Connectivity().onConnectivityChanged.listen((result) {
@@ -62,7 +62,7 @@ class OfflineIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<ConnectivityResult>(
+    return StreamBuilder<List<ConnectivityResult>>(
       stream: NetworkStatusManager().connectivityStream,
       builder: (context, snapshot) {
         final isOnline = NetworkStatusManager().isOnline;
@@ -126,7 +126,7 @@ class OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<ConnectivityResult>(
+    return StreamBuilder<List<ConnectivityResult>>(
       stream: NetworkStatusManager().connectivityStream,
       builder: (context, snapshot) {
         final isOnline = NetworkStatusManager().isOnline;
