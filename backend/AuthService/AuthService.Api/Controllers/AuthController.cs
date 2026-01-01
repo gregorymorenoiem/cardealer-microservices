@@ -63,7 +63,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh-token")]
-    [Authorize]
+    [AllowAnonymous]  // RefreshToken NO debe requerir autorización (ese es su propósito)
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         var command = new RefreshTokenCommand(request.RefreshToken);
@@ -71,8 +71,19 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<RefreshTokenResponse>.Ok(result));
     }
 
+    /// <summary>
+    /// Cierra la sesión del usuario revocando su refresh token
+    /// </summary>
+    /// <param name="request">Request con el refreshToken a revocar</param>
+    /// <returns>Confirmación del logout</returns>
+    /// <response code="200">Logout exitoso, refreshToken revocado</response>
+    /// <response code="400">RefreshToken no proporcionado</response>
+    /// <response code="401">Token de acceso inválido o expirado</response>
     [HttpPost("logout")]
     [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
     {
         var command = new LogoutCommand(request.RefreshToken);

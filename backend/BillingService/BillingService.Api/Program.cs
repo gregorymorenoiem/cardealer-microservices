@@ -85,3 +85,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+// Make the implicit Program class public so it can be accessed by tests
+public partial class Program { }

@@ -22,16 +22,17 @@ COPY . .
 # 4) Variables de entorno para desarrollo
 ENV ASPNETCORE_ENVIRONMENT=Development \
     ASPNETCORE_URLS="http://+:80" \
-    DOTNET_MSBUILD_CONFIGURATION=Debug  \
-    DOTNET_BUILD_CONFIGURATION=Debug  \
-    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    DOTNET_BUILD_CONFIGURATION=Release \
     NUGET_XMLDOC_MODE=none
 
-# 5) Exponer puertos HTTP y debug (mapped to 4023:4022)
+# 5) Compilar el proyecto
+RUN dotnet build "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/build
+
+# 6) Exponer puertos HTTP y debug (mapped to 4023:4022)
 EXPOSE 80
 EXPOSE 4022
 
-# 6) Arranca vsdbg en modo servidor y luego hot-reload de la app
+# 7) Arranca vsdbg en modo servidor y luego ejecuta la DLL compilada
 ENTRYPOINT ["bash", "-lc", "\
   /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
-  dotnet watch run --project AuthService/AuthService.Api/AuthService.Api.csproj --urls http://0.0.0.0:80\n"]
+  dotnet /app/build/AuthService.Api.dll --urls http://0.0.0.0:80\n"]

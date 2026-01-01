@@ -10,6 +10,7 @@ using System.Reflection;
 using FluentValidation;
 using NotificationService.Shared;
 using CarDealer.Shared.Database;
+using CarDealer.Shared.Secrets;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
@@ -21,6 +22,9 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using NotificationService.Api.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -146,7 +150,80 @@ builder.Services.AddValidatorsFromAssembly(Assembly.Load("NotificationService.Ap
 builder.Services.Configure<NotificationSettings>(
     builder.Configuration.GetSection("NotificationSettings"));
 
+// ========== JWT AUTHENTICATION ==========
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "clave-super-secreta-desarrollo-32-caracteres-aaa";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "CarGurus-Dev";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Log.Warning("JWT Authentication failed: {Error}", context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Log.Debug("JWT Token validated for user: {User}",
+                context.Principal?.Identity?.Name ?? "Unknown");
+            return Task.CompletedTask;
+        }
+    };
+});
+
+// Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("NotificationServiceRead", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+    });
+    
+    options.AddPolicy("NotificationServiceAdmin", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("role", "admin", "notification-admin");
+    });
+});
+
 var app = builder.Build();
+
+// Apply database migrations automatically
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("Applying database migrations for NotificationService...");
+        dbContext.Database.Migrate();
+        logger.LogInformation("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -157,6 +234,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Service Discovery Auto-Registration

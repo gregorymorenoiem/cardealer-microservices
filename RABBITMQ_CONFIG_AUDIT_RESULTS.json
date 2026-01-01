@@ -1,0 +1,48 @@
+﻿{
+    "HostNameServices":  [
+
+                         ],
+    "Timestamp":  "2026-01-01 03:12:06",
+    "HostServices":  [
+                         "AuditService",
+                         "AuthService",
+                         "ErrorService",
+                         "MessageBusService",
+                         "NotificationService",
+                         "ReportsService",
+                         "RoleService",
+                         "UserService"
+                     ],
+    "Errors":  [
+
+               ],
+    "NoRabbitMQ":  [
+                       "AdminService",
+                       "AppointmentService",
+                       "BackupDRService",
+                       "BillingService",
+                       "CacheService",
+                       "ConfigurationService",
+                       "ContactService",
+                       "CRMService",
+                       "FeatureToggleService",
+                       "FileStorageService",
+                       "FinanceService",
+                       "Gateway",
+                       "HealthCheckService",
+                       "IdempotencyService",
+                       "IntegrationService",
+                       "InvoicingService",
+                       "LoggingService",
+                       "MarketingService",
+                       "MediaService",
+                       "MediaService",
+                       "ProductService",
+                       "RateLimitingService",
+                       "RealEstateService",
+                       "SchedulerService",
+                       "SearchService",
+                       "ServiceDiscovery",
+                       "TracingService"
+                   ]
+}

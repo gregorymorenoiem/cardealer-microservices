@@ -1,37 +1,18 @@
-############################################
-# Etapa única de desarrollo: SDK + hot-reload + debugger
-############################################
-FROM mcr.microsoft.com/dotnet/sdk:8.0
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
+WORKDIR /src
 
-# 1) Instala dotnet-watch y vsdbg para hot-reload y depuración remota
-RUN dotnet tool install --global dotnet-watch \
-    && export PATH="$PATH:/root/.dotnet/tools" \
- && apt-get update \
- && apt-get install -y unzip curl \
- && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
-
-WORKDIR /app
-
-# 2) Copia y restaura sólo el csproj de la API
-COPY AuditService/AuditService.Api/AuditService.Api.csproj ./AuditService/AuditService.Api/
-RUN dotnet restore "AuditService/AuditService.Api/AuditService.Api.csproj"
-
-# 3) Copia el resto del código fuente
+# Copy all code
 COPY . .
 
-# 4) Variables de entorno para desarrollo
-ENV ASPNETCORE_ENVIRONMENT=Development \
-    ASPNETCORE_URLS="http://+:80" \
-    DOTNET_MSBUILD_CONFIGURATION=Debug  \
-    DOTNET_BUILD_CONFIGURATION=Debug  \
-    DOTNET_USE_POLLING_FILE_WATCHER=true \
-    NUGET_XMLDOC_MODE=none
+# Restore and Build
+RUN dotnet restore "AuditService/AuditService.Api/AuditService.Api.csproj"
+RUN dotnet build "AuditService/AuditService.Api/AuditService.Api.csproj" -c Release -o /app/build --no-restore
 
-# 5) Exponer puertos HTTP y debug (mapped to 4025:4024)
+# Set working directory to build output
+WORKDIR /app/build
+
+# Expose ports
 EXPOSE 80
-EXPOSE 4024
 
-# 6) Arranca vsdbg en modo servidor y luego hot-reload de la app
-ENTRYPOINT ["bash", "-lc", "\
-  /vsdbg/vsdbg --interpreter=vscode --server --port 4024 & \
-  dotnet watch run --project AuditService/AuditService.Api/AuditService.Api.csproj --urls http://0.0.0.0:80\n"]
+# Run the compiled dll instead of dotnet run
+ENTRYPOINT ["dotnet", "AuditService.Api.dll"]

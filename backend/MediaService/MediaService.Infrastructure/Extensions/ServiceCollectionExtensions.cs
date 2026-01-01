@@ -81,9 +81,6 @@ public static class ServiceCollectionExtensions
                 failureStatus: HealthStatus.Unhealthy,
                 tags: new[] { "ready" });
 
-        // Middleware
-        services.AddTransient<ErrorHandlingMiddleware>();
-
         // Servicios de infraestructura adicionales
         services.AddSingleton<IFileValidator, FileValidator>();
         services.AddScoped<IStorageHealthChecker, StorageHealthChecker>();

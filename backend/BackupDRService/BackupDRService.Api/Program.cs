@@ -33,7 +33,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configure PostgreSQL DbContext
-var connectionString = builder.Configuration.GetConnectionString("BackupDb");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<BackupDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -64,9 +64,17 @@ builder.Services.AddHostedService<BackupSchedulerHostedService>();
 builder.Services.AddHostedService<RetentionCleanupHostedService>();
 
 // Add health checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString ?? string.Empty, name: "postgres")
-    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
+if (!string.IsNullOrEmpty(connectionString))
+{
+    builder.Services.AddHealthChecks()
+        .AddNpgSql(connectionString, name: "postgres")
+        .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
+}
+else
+{
+    builder.Services.AddHealthChecks()
+        .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
+}
 
 var app = builder.Build();
 

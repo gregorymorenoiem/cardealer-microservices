@@ -40,12 +40,15 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
+      RabbitMQ__HostName: "rabbitmq"
     ports:
       - "15083:80"
       - "24022:4022"
     depends_on:
       errorservice-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - cargurus-net

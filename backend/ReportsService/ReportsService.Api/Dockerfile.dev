@@ -1,0 +1,29 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 4022
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy shared projects
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
+# Copy project files
+COPY ["ReportsService/ReportsService.Api/ReportsService.Api.csproj", "ReportsService/ReportsService.Api/"]
+COPY ["ReportsService/ReportsService.Application/ReportsService.Application.csproj", "ReportsService/ReportsService.Application/"]
+COPY ["ReportsService/ReportsService.Domain/ReportsService.Domain.csproj", "ReportsService/ReportsService.Domain/"]
+COPY ["ReportsService/ReportsService.Infrastructure/ReportsService.Infrastructure.csproj", "ReportsService/ReportsService.Infrastructure/"]
+
+# Restore dependencies
+RUN dotnet restore "ReportsService/ReportsService.Api/ReportsService.Api.csproj"
+
+# Copy everything
+COPY . .
+
+# Set working directory
+WORKDIR "/src/ReportsService/ReportsService.Api"
+
+# Entry point with hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--no-launch-profile", "--urls", "http://+:80"]

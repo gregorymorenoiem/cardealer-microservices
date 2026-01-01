@@ -10,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add HttpClient for HealthChecker
+builder.Services.AddHttpClient();
+
 // Configure Consul Client
 var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
 builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(config =>
@@ -68,3 +71,4 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 
 // Make Program class accessible for integration tests
 public partial class Program { }
+ 

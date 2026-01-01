@@ -162,7 +162,8 @@ builder.Services.AddHealthChecks()
         name: "database",
         tags: new[] { "ready", "liveness" });
 
-// Add Health Checks UI
+// Add Health Checks UI - DISABLED due to missing IdentityModel dependency
+/*
 builder.Services.AddHealthChecksUI(setup =>
 {
     setup.SetHeaderText("Audit Service - Health Status");
@@ -172,6 +173,7 @@ builder.Services.AddHealthChecksUI(setup =>
     setup.MaximumHistoryEntriesPerEndpoint(50);
 })
 .AddInMemoryStorage();
+*/
 
 var app = builder.Build();
 
@@ -210,8 +212,8 @@ app.UseCors("CorsPolicy");
 app.UseRouting();
 app.UseAuthorization();
 
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+// Service Discovery Auto-Registration - DISABLED (Consul not available)
+// app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 app.MapControllers();
 
@@ -228,11 +230,14 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = check => check.Tags.Contains("ready")
 });
 
+// MapHealthChecksUI - DISABLED (UI configuration commented out above)
+/*
 app.MapHealthChecksUI(setup =>
 {
     setup.UIPath = "/health-ui";
     // setup.AddCustomStylesheet("healthchecks-ui.css"); // Comentar si no existe el archivo
 });
+*/
 
 // Global exception handling middleware
 app.Use(async (context, next) =>

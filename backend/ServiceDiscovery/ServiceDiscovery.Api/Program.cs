@@ -58,6 +58,14 @@ public partial class Program
         app.UseCors();
         app.UseAuthorization();
         app.MapControllers();
+        
+        // Add health check endpoint
+        app.MapGet("/health", () => Results.Ok(new 
+        { 
+            status = "healthy", 
+            service = "ServiceDiscovery",
+            timestamp = DateTime.UtcNow 
+        }));
 
         app.Run();
     }

@@ -1,0 +1,41 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Install debugger with automatic license acceptance
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip curl procps \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+
+WORKDIR /app
+
+# Copy project files - AdminService
+COPY AdminService/AdminService.Api/*.csproj ./AdminService/AdminService.Api/
+COPY AdminService/AdminService.Application/*.csproj ./AdminService/AdminService.Application/
+COPY AdminService/AdminService.Domain/*.csproj ./AdminService/AdminService.Domain/
+COPY AdminService/AdminService.Infrastructure/*.csproj ./AdminService/AdminService.Infrastructure/
+COPY AdminService/AdminService.Shared/*.csproj ./AdminService/AdminService.Shared/
+
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
+
+# Copy ServiceDiscovery project files
+COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+
+# Restore packages
+RUN dotnet restore "AdminService/AdminService.Api/AdminService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Debug environment
+ENV ASPNETCORE_ENVIRONMENT=Development \
+    ASPNETCORE_URLS="http://+:80" \
+    DOTNET_USE_POLLING_FILE_WATCHER=true
+
+EXPOSE 80
+EXPOSE 4022
+
+# Start with hot-reload
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "AdminService/AdminService.Api/AdminService.Api.csproj", "--urls", "http://0.0.0.0:80"]

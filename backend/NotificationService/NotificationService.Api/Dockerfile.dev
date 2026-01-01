@@ -7,18 +7,30 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Copy project files
+# Copy project files - NotificationService
 COPY NotificationService/NotificationService.Api/*.csproj ./NotificationService/NotificationService.Api/
 COPY NotificationService/NotificationService.Application/*.csproj ./NotificationService/NotificationService.Application/
 COPY NotificationService/NotificationService.Domain/*.csproj ./NotificationService/NotificationService.Domain/
 COPY NotificationService/NotificationService.Infrastructure/*.csproj ./NotificationService/NotificationService.Infrastructure/
 COPY NotificationService/NotificationService.Shared/*.csproj ./NotificationService/NotificationService.Shared/
 
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
+
+# Copy ServiceDiscovery project files
+COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+
+# Copy ErrorService.Shared (dependency from NotificationService.Application)
+COPY ErrorService/ErrorService.Shared/*.csproj ./ErrorService/ErrorService.Shared/
+
 # Restore packages
 RUN dotnet restore "NotificationService/NotificationService.Api/NotificationService.Api.csproj"
 
-# Copy source code
-COPY NotificationService/ ./NotificationService/
+# Copy all source code
+COPY . .
 
 # Debug environment
 ENV ASPNETCORE_ENVIRONMENT=Development \
@@ -28,4 +40,5 @@ ENV ASPNETCORE_ENVIRONMENT=Development \
 EXPOSE 80
 EXPOSE 4022
 
-ENTRYPOINT ["dotnet", "watch", "run", "--project", "NotificationService/NotificationService.Api/NotificationService.Api.csproj", "--urls", "http://0.0.0.0:80"]
+# Sin watch para evitar crashes en Docker
+ENTRYPOINT ["dotnet", "run", "--project", "NotificationService/NotificationService.Api/NotificationService.Api.csproj", "--urls", "http://0.0.0.0:80"]

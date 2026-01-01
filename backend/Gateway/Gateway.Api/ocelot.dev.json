@@ -156,6 +156,44 @@
       "UpstreamPathTemplate": "/api/notifications/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "SwaggerKey": "notifications"
+    },
+    {
+      "DownstreamPathTemplate": "/api/Templates/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/templates/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "notifications"
+    },
+    {
+      "DownstreamPathTemplate": "/api/Templates",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/templates",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "SwaggerKey": "notifications"
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/notifications/health",
+      "UpstreamHttpMethod": [ "GET" ]
     }
   ],
   "SwaggerEndPoints": [

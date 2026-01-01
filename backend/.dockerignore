@@ -1,0 +1,73 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Node
+**/node_modules/
+**/bower_components/
+package-lock.json
+yarn.lock
+
+# Frontend builds
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+
+# Flutter/Dart
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/pubspec.lock
+
+# Test results
+**/TestResults/
+**/*.trx
+**/coverage/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Docker
+**/Dockerfile
+docker-compose*.yml
+compose*.yaml
+
+# Documentation
+**/*.md
+!README.md
+
+# Logs
+**/logs/
+**/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+**/tmp/
+**/temp/

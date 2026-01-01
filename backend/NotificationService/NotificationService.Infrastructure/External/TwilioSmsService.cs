@@ -10,17 +10,29 @@ namespace NotificationService.Infrastructure.External;
 
 public class TwilioSmsService : ISmsProvider // ✅ Implementa interfaz de Domain
 {
-    private readonly string _fromNumber;
+    private readonly string? _fromNumber;
     private readonly ILogger<TwilioSmsService> _logger;
+    private readonly bool _isConfigured;
 
     public TwilioSmsService(
         IOptions<NotificationSettings> settings,
         ILogger<TwilioSmsService> logger)
     {
+        _logger = logger;
         var twilioSettings = settings.Value.Twilio;
+        
+        // Verificar si está configurado
+        if (string.IsNullOrWhiteSpace(twilioSettings?.AccountSid) || 
+            string.IsNullOrWhiteSpace(twilioSettings?.AuthToken))
+        {
+            _logger.LogWarning("Twilio credentials not configured. SMS sending will be mocked.");
+            _isConfigured = false;
+            return;
+        }
+        
         TwilioClient.Init(twilioSettings.AccountSid, twilioSettings.AuthToken);
         _fromNumber = twilioSettings.FromNumber;
-        _logger = logger;
+        _isConfigured = true;
     }
 
     public string ProviderName => "Twilio";
@@ -30,6 +42,13 @@ public class TwilioSmsService : ISmsProvider // ✅ Implementa interfaz de Domai
         string message,
         Dictionary<string, object>? metadata = null)
     {
+        // Si no está configurado, simular envío exitoso
+        if (!_isConfigured || string.IsNullOrWhiteSpace(_fromNumber))
+        {
+            _logger.LogInformation("[MOCK] SMS would be sent to {To}: {Message}", to, message);
+            return (true, $"mock-sms-{Guid.NewGuid()}", null);
+        }
+        
         try
         {
             var messageResource = await MessageResource.CreateAsync(

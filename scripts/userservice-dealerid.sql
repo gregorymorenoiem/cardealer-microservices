@@ -1,0 +1,8 @@
+-- Agregar DealerId a UserService
+-- Tablas: Users, UserRoles
+
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "DealerId" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+CREATE INDEX IF NOT EXISTS "IX_Users_DealerId" ON "Users"("DealerId");
+
+ALTER TABLE "UserRoles" ADD COLUMN IF NOT EXISTS "DealerId" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+CREATE INDEX IF NOT EXISTS "IX_UserRoles_DealerId" ON "UserRoles"("DealerId");

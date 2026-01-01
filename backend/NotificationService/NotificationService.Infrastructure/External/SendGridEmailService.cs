@@ -9,18 +9,29 @@ namespace NotificationService.Infrastructure.External;
 
 public class SendGridEmailService : IEmailProvider
 {
-    private readonly SendGridClient _client;
-    private readonly EmailAddress _fromAddress;
+    private readonly SendGridClient? _client;
+    private readonly EmailAddress? _fromAddress;
     private readonly ILogger<SendGridEmailService> _logger;
+    private readonly bool _isConfigured;
 
     public SendGridEmailService(
         IOptions<NotificationSettings> settings,
         ILogger<SendGridEmailService> logger)
     {
+        _logger = logger;
         var sendGridSettings = settings.Value.SendGrid;
+        
+        // Verificar si está configurado
+        if (string.IsNullOrWhiteSpace(sendGridSettings?.ApiKey))
+        {
+            _logger.LogWarning("SendGrid API Key not configured. Email sending will be mocked.");
+            _isConfigured = false;
+            return;
+        }
+        
         _client = new SendGridClient(sendGridSettings.ApiKey);
         _fromAddress = new EmailAddress(sendGridSettings.FromEmail, sendGridSettings.FromName);
-        _logger = logger;
+        _isConfigured = true;
     }
 
     public string ProviderName => "SendGrid";
@@ -32,6 +43,13 @@ public class SendGridEmailService : IEmailProvider
         bool isHtml = true,
         Dictionary<string, object>? metadata = null)
     {
+        // Si no está configurado, simular envío exitoso
+        if (!_isConfigured || _client == null || _fromAddress == null)
+        {
+            _logger.LogInformation("[MOCK] Email would be sent to {To} with subject: {Subject}", to, subject);
+            return (true, $"mock-{Guid.NewGuid()}", null);
+        }
+        
         try
         {
             var toEmail = new EmailAddress(to);

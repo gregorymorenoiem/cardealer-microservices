@@ -191,14 +191,16 @@ namespace NotificationService.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "text");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "metadata",
-                table: "notifications",
-                type: "jsonb",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "text",
-                oldNullable: true);
+            // Convert metadata column from text to jsonb with explicit USING clause
+            migrationBuilder.Sql(@"
+                ALTER TABLE notifications 
+                ALTER COLUMN metadata TYPE jsonb 
+                USING CASE 
+                    WHEN metadata IS NULL THEN NULL 
+                    WHEN metadata = '' THEN NULL
+                    ELSE metadata::jsonb 
+                END;
+            ");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "DealerId",
@@ -212,14 +214,16 @@ namespace NotificationService.Infrastructure.Migrations
                 type: "timestamp with time zone",
                 nullable: true);
 
-            migrationBuilder.AlterColumn<string>(
-                name: "variables",
-                table: "notification_templates",
-                type: "jsonb",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "text",
-                oldNullable: true);
+            // Convert variables column from text to jsonb with explicit USING clause
+            migrationBuilder.Sql(@"
+                ALTER TABLE notification_templates 
+                ALTER COLUMN variables TYPE jsonb 
+                USING CASE 
+                    WHEN variables IS NULL THEN NULL 
+                    WHEN variables = '' THEN NULL
+                    ELSE variables::jsonb 
+                END;
+            ");
 
             migrationBuilder.AlterColumn<string>(
                 name: "type",

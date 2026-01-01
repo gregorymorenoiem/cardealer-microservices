@@ -130,6 +130,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
 
         // Services
+        services.AddSingleton<Microsoft.AspNetCore.Identity.IPasswordHasher<object>, Microsoft.AspNetCore.Identity.PasswordHasher<object>>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtGenerator, JwtGenerator>();
         services.AddScoped<IEmailVerificationService, EmailVerificationService>();

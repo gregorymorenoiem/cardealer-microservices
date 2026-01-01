@@ -167,6 +167,8 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 // Application Services - Repositories
 builder.Services.AddScoped<IUserRepository, UserService.Infrastructure.Persistence.UserRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserService.Infrastructure.Persistence.UserRoleRepository>();
+builder.Services.AddScoped<IRoleRepository, UserService.Infrastructure.Persistence.EfRoleRepository>();
+builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
 
 // Application Services - External clients
 builder.Services.AddHttpClient<UserService.Application.Interfaces.IRoleServiceClient, UserService.Infrastructure.External.RoleServiceClient>(client =>
@@ -229,13 +231,22 @@ builder.Services.AddSingleton<UserService.Application.Metrics.UserServiceMetrics
 //     new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
-// TEMPORARY: Commented out for testing without RabbitMQ
-// builder.Services.AddSingleton<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-// builder.Services.AddSingleton<IEventPublisher>(sp =>
-//     sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
-
-// Background Service para procesar DLQ
-// builder.Services.AddHostedService<UserService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+// NOTE: Using NoOpEventPublisher for development. Enable RabbitMQ in production.
+var useRabbitMq = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+if (useRabbitMq)
+{
+    builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
+        new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+    builder.Services.AddSingleton<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+    builder.Services.AddSingleton<IEventPublisher>(sp =>
+        sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+    builder.Services.AddHostedService<UserService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+}
+else
+{
+    // Use NoOp publisher for development without RabbitMQ
+    builder.Services.AddSingleton<IEventPublisher, UserService.Infrastructure.Messaging.NoOpEventPublisher>();
+}
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
@@ -333,8 +344,12 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+// Service Discovery Auto-Registration (only if Consul is enabled)
+var consulEnabled = app.Configuration.GetValue<bool>("Consul:Enabled", false);
+if (consulEnabled)
+{
+    app.UseMiddleware<ServiceRegistrationMiddleware>();
+}
 
 // Middleware para capturar respuestas
 app.UseMiddleware<ResponseCaptureMiddleware>();

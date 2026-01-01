@@ -70,11 +70,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled for Docker
 app.UseAuthorization();
 
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+// Service Discovery Auto-Registration - DISABLED (Consul not available)
+// app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // Add Health Check endpoint
 app.MapGet("/health", async (IConnectionMultiplexer redis) =>

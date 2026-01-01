@@ -4,6 +4,7 @@ using ProductService.Infrastructure.Persistence;
 using ProductService.Infrastructure.Repositories;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.MultiTenancy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +15,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSecretProvider();
 
 // ========================================
+// MULTI-TENANCY
+// ========================================
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantContext, TenantContext>();
+
+// ========================================
 // CONFIGURATION
 // ========================================
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

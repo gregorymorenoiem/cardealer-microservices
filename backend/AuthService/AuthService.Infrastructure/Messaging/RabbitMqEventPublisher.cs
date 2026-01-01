@@ -33,9 +33,9 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         _logger = logger;
         _deadLetterQueue = deadLetterQueue;
 
-        var hostName = configuration["RabbitMQ:HostName"] ?? "localhost";
+        var hostName = configuration["RabbitMQ:Host"] ?? "localhost";
         var port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672");
-        var userName = configuration["RabbitMQ:UserName"] ?? "guest";
+        var userName = configuration["RabbitMQ:Username"] ?? "guest";
         var password = configuration["RabbitMQ:Password"] ?? "guest";
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
 

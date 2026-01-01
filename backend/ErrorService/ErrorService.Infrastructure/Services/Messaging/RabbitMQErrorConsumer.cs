@@ -14,9 +14,9 @@ namespace ErrorService.Infrastructure.Services.Messaging;
 
 public class RabbitMQSettings
 {
-    public string Host { get; set; } = "localhost";
+    public string HostName { get; set; } = "localhost";
     public int Port { get; set; } = 5672;
-    public string Username { get; set; } = "guest";
+    public string UserName { get; set; } = "guest";
     public string Password { get; set; } = "guest";
     public string VirtualHost { get; set; } = "/";
 }
@@ -56,9 +56,9 @@ public class RabbitMQErrorConsumer : BackgroundService
         {
             var factory = new ConnectionFactory
             {
-                HostName = rabbitMqSettings.Value.Host,
+                HostName = rabbitMqSettings.Value.HostName,
                 Port = rabbitMqSettings.Value.Port,
-                UserName = rabbitMqSettings.Value.Username,
+                UserName = rabbitMqSettings.Value.UserName,
                 Password = rabbitMqSettings.Value.Password,
                 VirtualHost = rabbitMqSettings.Value.VirtualHost,
                 DispatchConsumersAsync = true

@@ -73,8 +73,8 @@ app.UseAuthorization();
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "ConfigurationService" }));
 
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+// Service Discovery Auto-Registration - DISABLED (Consul not available)
+// app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 app.MapControllers();
 

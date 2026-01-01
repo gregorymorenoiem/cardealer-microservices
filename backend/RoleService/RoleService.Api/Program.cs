@@ -169,6 +169,9 @@ builder.Services.AddScoped<IPermissionRepository, RoleService.Infrastructure.Rep
 builder.Services.AddScoped<IRolePermissionRepository, RoleService.Infrastructure.Repositories.EfRolePermissionRepository>();
 builder.Services.AddScoped<IRoleLogRepository, RoleService.Infrastructure.Persistence.EfRoleLogRepository>();
 
+// Error Reporter Service
+builder.Services.AddScoped<IErrorReporter, RoleService.Infrastructure.Services.ErrorReporter>();
+
 // User Context Service
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<RoleService.Application.Interfaces.IUserContextService, RoleService.Infrastructure.Services.UserContextService>();
@@ -210,12 +213,25 @@ builder.Services.AddSingleton<RoleService.Application.Metrics.RoleServiceMetrics
 //     new RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
-// builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-// builder.Services.AddSingleton<IEventPublisher>(sp =>
-//     sp.GetRequiredService<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+// NOTE: Using NoOpEventPublisher for development. Enable RabbitMQ in production.
+var useRabbitMq = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+if (useRabbitMq)
+{
+    builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
+        new RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+    builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+    builder.Services.AddSingleton<IEventPublisher>(sp =>
+        sp.GetRequiredService<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+    builder.Services.AddHostedService<RoleService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+}
+else
+{
+    // Use NoOp publisher for development without RabbitMQ
+    builder.Services.AddSingleton<IEventPublisher, RoleService.Infrastructure.Messaging.NoOpEventPublisher>();
+}
 
 // Background Service para procesar DLQ
-// builder.Services.AddHostedService<RoleService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+// (Moved into conditional block above)
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
@@ -312,8 +328,12 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+// Service Discovery Auto-Registration (only if Consul is enabled)
+var consulEnabled = app.Configuration.GetValue<bool>("Consul:Enabled", false);
+if (consulEnabled)
+{
+    app.UseMiddleware<ServiceRegistrationMiddleware>();
+}
 
 // Middleware para capturar respuestas
 app.UseMiddleware<ResponseCaptureMiddleware>();

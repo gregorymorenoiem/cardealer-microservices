@@ -1,34 +1,41 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-# Install dotnet-watch and debugger
-RUN dotnet tool install --global dotnet-watch \
-    && export PATH="$PATH:/root/.dotnet/tools" \
-    && apt-get update \
-    && apt-get install -y unzip curl \
+# Install debugger with automatic license acceptance
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip curl procps \
     && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
 
 WORKDIR /app
 
-# Copiar los archivos de proyecto de ErrorService y restaurar
+# Copy project files - RoleService
+COPY RoleService/RoleService.Api/*.csproj ./RoleService/RoleService.Api/
+COPY RoleService/RoleService.Application/*.csproj ./RoleService/RoleService.Application/
+COPY RoleService/RoleService.Domain/*.csproj ./RoleService/RoleService.Domain/
+COPY RoleService/RoleService.Infrastructure/*.csproj ./RoleService/RoleService.Infrastructure/
+COPY RoleService/RoleService.Shared/*.csproj ./RoleService/RoleService.Shared/
 
-COPY ErrorService/ErrorService.Api/ErrorService.Api.csproj ./ErrorService/ErrorService.Api/
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
 
-# Restaurar los paquetes de ErrorService.Api
-RUN dotnet restore "ErrorService/ErrorService.Api/ErrorService.Api.csproj"
+# Copy ServiceDiscovery project files
+COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
 
-# Development environment variables
+# Restore packages
+RUN dotnet restore "RoleService/RoleService.Api/RoleService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Debug environment
 ENV ASPNETCORE_ENVIRONMENT=Development \
     ASPNETCORE_URLS="http://+:80" \
-    DOTNET_MSBUILD_CONFIGURATION=Debug \
-    DOTNET_BUILD_CONFIGURATION=Debug \
-    DOTNET_USE_POLLING_FILE_WATCHER=true \
-    NUGET_XMLDOC_MODE=none
+    DOTNET_USE_POLLING_FILE_WATCHER=true
 
-# Expose HTTP and debug ports
 EXPOSE 80
 EXPOSE 4022
 
-# Start debugger and hot-reload
-ENTRYPOINT ["bash", "-lc", "\
-  /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
-  dotnet watch run --project ErrorService/ErrorService.Api/ErrorService.Api.csproj --urls http://0.0.0.0:80"]
+# Start with hot-reload
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "RoleService/RoleService.Api/RoleService.Api.csproj", "--urls", "http://0.0.0.0:80"]

@@ -1,23 +1,14 @@
 using CarDealer.Shared.MultiTenancy;
 using CRMService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace CRMService.Infrastructure.Persistence;
 
 public class CRMDbContext : MultiTenantDbContext
 {
-    private readonly ILogger<CRMDbContext>? _logger;
-
     public CRMDbContext(DbContextOptions<CRMDbContext> options, ITenantContext tenantContext)
         : base(options, tenantContext)
     {
-    }
-
-    public CRMDbContext(DbContextOptions<CRMDbContext> options, ITenantContext tenantContext, ILogger<CRMDbContext> logger)
-        : base(options, tenantContext)
-    {
-        _logger = logger;
     }
 
     public DbSet<Lead> Leads { get; set; } = null!;
@@ -29,8 +20,6 @@ public class CRMDbContext : MultiTenantDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        _logger?.LogInformation("Configurando DbContext CRMDbContext con proveedor PostgreSQL");
 
         // Lead Configuration
         modelBuilder.Entity<Lead>(entity =>

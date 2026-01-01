@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
+WORKDIR /src
+
+# Copy all code
+COPY . .
+
+# Restore dependencies
+RUN dotnet restore "RealEstateService/RealEstateService.Api/RealEstateService.Api.csproj"
+
+# Set working directory to Api project
+WORKDIR /src/RealEstateService/RealEstateService.Api
+
+# Expose ports
+EXPOSE 80 4022
+
+# Run with dotnet watch for hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--no-launch-profile", "--urls", "http://+:80"]

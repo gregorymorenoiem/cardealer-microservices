@@ -58,13 +58,17 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
 // ========================================
 
-// Dead Letter Queue
-builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>(sp =>
+// Dead Letter Queue and RabbitMQ - conditional registration
+var rabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled");
+if (rabbitMQEnabled)
 {
-    var logger = sp.GetRequiredService<ILogger<InMemoryDeadLetterQueue>>();
-    return new InMemoryDeadLetterQueue(logger, maxRetries: 5);
-});
-builder.Services.AddHostedService<DeadLetterQueueProcessor>();
+    builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>(sp =>
+    {
+        var logger = sp.GetRequiredService<ILogger<InMemoryDeadLetterQueue>>();
+        return new InMemoryDeadLetterQueue(logger, maxRetries: 5);
+    });
+    builder.Services.AddHostedService<DeadLetterQueueProcessor>();
+}
 
 // Metrics
 builder.Services.AddSingleton<MediaServiceMetrics>();
@@ -149,14 +153,12 @@ builder.Services.Configure<RabbitMQSettings>(options =>
     options.ProcessMediaRoutingKey = rabbitMQConfig["ProcessMediaRoutingKey"] ?? "media.process";
 });
 
-// Add RabbitMQ services
-builder.Services.AddSingleton<IRabbitMQMediaProducer, RabbitMQMediaProducer>();
-builder.Services.AddHostedService<RabbitMQMediaConsumer>();
-
-// Add health checks
-builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>("database", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy)
-    .AddCheck<StorageHealthCheck>("storage", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
+// Add RabbitMQ services - only if enabled
+if (rabbitMQEnabled)
+{
+    builder.Services.AddSingleton<IRabbitMQMediaProducer, RabbitMQMediaProducer>();
+    builder.Services.AddHostedService<RabbitMQMediaConsumer>();
+}
 
 var app = builder.Build();
 

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace ErrorService.Api.Controllers
 {
-    [Authorize(Policy = "ErrorServiceAccess")]
+    [Authorize(Policy = "ErrorServiceRead")]
     [ApiController]
     [Route("api/[controller]")]
     public class ErrorsController : ControllerBase

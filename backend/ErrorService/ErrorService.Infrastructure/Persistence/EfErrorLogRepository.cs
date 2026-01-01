@@ -90,36 +90,35 @@ namespace ErrorService.Infrastructure.Persistence
                 baseQuery = baseQuery.Where(e => e.OccurredAt <= to.Value);
             }
 
-            var totalErrorsTask = baseQuery.CountAsync();
+            // Execute queries sequentially to avoid DbContext concurrency issues
+            var totalErrors = await baseQuery.CountAsync();
 
-            var errorsLast24HoursTask = baseQuery
+            var errorsLast24Hours = await baseQuery
                 .Where(e => e.OccurredAt >= DateTime.UtcNow.AddHours(-24))
                 .CountAsync();
 
-            var errorsLast7DaysTask = baseQuery
+            var errorsLast7Days = await baseQuery
                 .Where(e => e.OccurredAt >= DateTime.UtcNow.AddDays(-7))
                 .CountAsync();
 
-            var errorsByServiceTask = baseQuery
+            var errorsByService = await baseQuery
                 .GroupBy(e => e.ServiceName)
                 .Select(g => new { ServiceName = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.ServiceName, x => x.Count);
 
-            var errorsByStatusCodeTask = baseQuery
+            var errorsByStatusCode = await baseQuery
                 .Where(e => e.StatusCode.HasValue)
                 .GroupBy(e => e.StatusCode!.Value)
                 .Select(g => new { StatusCode = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.StatusCode, x => x.Count);
 
-            await Task.WhenAll(totalErrorsTask, errorsLast24HoursTask, errorsLast7DaysTask, errorsByServiceTask, errorsByStatusCodeTask);
-
             return new ErrorStats
             {
-                TotalErrors = totalErrorsTask.Result,
-                ErrorsLast24Hours = errorsLast24HoursTask.Result,
-                ErrorsLast7Days = errorsLast7DaysTask.Result,
-                ErrorsByService = errorsByServiceTask.Result,
-                ErrorsByStatusCode = errorsByStatusCodeTask.Result
+                TotalErrors = totalErrors,
+                ErrorsLast24Hours = errorsLast24Hours,
+                ErrorsLast7Days = errorsLast7Days,
+                ErrorsByService = errorsByService,
+                ErrorsByStatusCode = errorsByStatusCode
             };
         }
     }
