@@ -135,8 +135,8 @@ services:
       # Connection strings (compatibilidad)
       ConnectionStrings__DefaultConnection: "Host=authservice-db;Database=authservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
-      # RabbitMQ (opcional con Enabled=false)
-      RabbitMQ__Enabled: "false"
+      # RabbitMQ - ENABLED for production-like behavior
+      RabbitMQ__Enabled: "true"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__Username: "guest"
@@ -1738,7 +1738,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
     ports:
-      - "25448:5432"
+      - "25453:5432"  # Fixed: was conflicting with productservice-db
     volumes:
       - featuretoggleservice_data:/var/lib/postgresql/data
     networks:
@@ -1854,7 +1854,7 @@ services:
     networks:
       - cargurus-net
 
-  # IdempotencyService - Priority 3 (No DB)
+  # IdempotencyService - Priority 3 (No DB, uses Redis)
   idempotencyservice:
     build:
       context: ./backend
@@ -1870,10 +1870,14 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__Redis: "redis:6379,abortConnect=false"
       RabbitMQ__Enabled: "false"
       Consul__Enabled: "false"
     ports:
       - "15096:80"
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - cargurus-net
 

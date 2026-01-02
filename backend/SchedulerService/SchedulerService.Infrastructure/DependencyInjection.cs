@@ -49,8 +49,8 @@ public static class DependencyInjection
         // Services
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
 
-        // Execution Engine
-        services.AddSingleton(sp =>
+        // Execution Engine - Use Scoped because it depends on Scoped repositories
+        services.AddScoped<JobExecutionEngine>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<JobExecutionEngine>>();
             var jobRepo = sp.GetRequiredService<IJobRepository>();

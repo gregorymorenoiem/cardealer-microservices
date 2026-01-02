@@ -117,30 +117,33 @@ builder.Services.AddCors(options =>
 // TODA LA CONFIGURACIÓN EN UN SOLO LUGAR
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Service Discovery Configuration
-builder.Services.AddSingleton<IConsulClient>(sp =>
+// Service Discovery Configuration - with fallback to NoOp when Consul is disabled
+var consulEnabled = builder.Configuration.GetValue<bool>("Consul:Enabled", false);
+if (consulEnabled)
 {
-    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
-    return new ConsulClient(config => config.Address = new Uri(consulAddress));
-});
+    builder.Services.AddSingleton<IConsulClient>(sp =>
+    {
+        var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+        return new ConsulClient(config => config.Address = new Uri(consulAddress));
+    });
 
-builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-builder.Services.AddHttpClient("HealthCheck");
-builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+    builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+    builder.Services.AddHttpClient("HealthCheck");
+    builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+}
+else
+{
+    // Use NoOp implementations when Consul is disabled
+    builder.Services.AddScoped<IServiceRegistry, NoOpServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, NoOpServiceDiscovery>();
+}
 
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
-// ✅ NUEVO: Dead Letter Queue + Background Processor
-builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
-builder.Services.AddHostedService<DeadLetterQueueProcessor>();
-
 // ✅ NUEVO: Custom Metrics
 builder.Services.AddSingleton<AuthServiceMetrics>();
-
-// Event Publisher for RabbitMQ (ahora con DLQ)
-builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // MediatR & FluentValidation
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("AuthService.Application")));
@@ -150,14 +153,31 @@ builder.Services.AddValidatorsFromAssembly(Assembly.Load("AuthService.Applicatio
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<NotificationServiceSettings>(builder.Configuration.GetSection("NotificationService"));
 
-// Configurar RabbitMQ
+// RabbitMQ Configuration - Conditional based on Enabled flag
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
 builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
 builder.Services.Configure<ErrorServiceRabbitMQSettings>(builder.Configuration.GetSection("ErrorService"));
 builder.Services.Configure<NotificationServiceRabbitMQSettings>(builder.Configuration.GetSection("NotificationService"));
 
-// Registrar servicios de RabbitMQ
-builder.Services.AddSingleton<IErrorEventProducer, RabbitMQErrorProducer>();
-builder.Services.AddSingleton<INotificationEventProducer, RabbitMQNotificationProducer>();
+if (rabbitMqEnabled)
+{
+    // RabbitMQ enabled - use real implementations with DLQ
+    builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
+    builder.Services.AddHostedService<DeadLetterQueueProcessor>();
+    builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
+    builder.Services.AddSingleton<IErrorEventProducer, RabbitMQErrorProducer>();
+    builder.Services.AddSingleton<INotificationEventProducer, RabbitMQNotificationProducer>();
+    Log.Information("RabbitMQ ENABLED - Using real messaging implementations");
+}
+else
+{
+    // RabbitMQ disabled - use NoOp implementations
+    builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>(); // Still needed for DI
+    builder.Services.AddSingleton<IEventPublisher, NoOpEventPublisher>();
+    builder.Services.AddSingleton<IErrorEventProducer, NoOpErrorProducer>();
+    builder.Services.AddSingleton<INotificationEventProducer, NoOpNotificationProducer>();
+    Log.Information("RabbitMQ DISABLED - Using NoOp messaging implementations");
+}
 
 // Registrar AuthNotificationService con el constructor CORRECTO (5 parámetros)
 builder.Services.AddScoped<IAuthNotificationService>(provider =>

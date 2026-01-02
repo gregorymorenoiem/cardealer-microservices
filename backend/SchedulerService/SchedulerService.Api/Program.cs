@@ -5,6 +5,7 @@ using SchedulerService.Infrastructure;
 using SchedulerService.Infrastructure.Data;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +16,12 @@ builder.Services.AddSecretProvider();
 var connectionString = MicroserviceSecretsConfiguration.GetDatabaseConnectionString(
     builder.Configuration, "SchedulerService");
 
-// Add services
-builder.Services.AddControllers();
+// Add services with JSON cycle handling
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

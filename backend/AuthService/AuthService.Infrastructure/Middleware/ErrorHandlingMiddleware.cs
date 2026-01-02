@@ -1,5 +1,7 @@
 using AuthService.Shared.ErrorMessages;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using AuthService.Shared.Exceptions;
@@ -40,7 +42,7 @@ public class ErrorHandlingMiddleware
         var errorCode = GetErrorCode(exception);
         var statusCode = GetStatusCode(exception);
 
-        // Extraer información del contexto
+        // Extraer informaciï¿½n del contexto
         var userId = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var endpoint = context.Request.Path;
         var httpMethod = context.Request.Method;
@@ -64,7 +66,7 @@ public class ErrorHandlingMiddleware
             }
         };
 
-        // Publicar error asíncronamente (no esperar)
+        // Publicar error asï¿½ncronamente (no esperar)
         _ = _errorEventProducer.PublishErrorAsync(errorEvent);
 
         // Log local
@@ -74,12 +76,17 @@ public class ErrorHandlingMiddleware
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
 
+        // In development, show detailed error; in production, hide internal details
+        var environment = context.RequestServices.GetService<IWebHostEnvironment>();
+        var isDevelopment = environment?.EnvironmentName == "Development";
+
         var response = new
         {
             success = false,
-            error = exception is AppException ? exception.Message : "An error occurred",
+            error = (exception is AppException || isDevelopment) ? exception.Message : "An error occurred",
             errorCode = errorCode,
-            traceId = context.TraceIdentifier
+            traceId = context.TraceIdentifier,
+            details = isDevelopment ? exception.ToString() : null
         };
 
         await context.Response.WriteAsJsonAsync(response);

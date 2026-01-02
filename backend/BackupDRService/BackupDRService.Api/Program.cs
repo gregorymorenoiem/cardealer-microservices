@@ -94,12 +94,27 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<BackupDbContext>();
+    try
+    {
+        await dbContext.Database.EnsureCreatedAsync();
+        Log.Information("Database schema ensured for BackupDRService");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Could not ensure database creation - will retry on first use");
+    }
+}
+
 // Log startup
 Log.Information("BackupDRService starting on {Urls}", string.Join(", ", app.Urls));
 
 try
 {
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {

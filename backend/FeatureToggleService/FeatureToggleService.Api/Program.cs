@@ -1,6 +1,7 @@
 using FeatureToggleService.Application;
 using FeatureToggleService.Infrastructure;
 using HealthChecks.NpgSql;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -60,6 +61,20 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// Auto-create database from model (EnsureCreated for development)
+try
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<FeatureToggleService.Infrastructure.Data.FeatureToggleDbContext>();
+    // Use EnsureCreated instead of Migrate since there are no migrations
+    var created = await context.Database.EnsureCreatedAsync();
+    Log.Information("Database initialization completed. Tables created: {Created}", created);
+}
+catch (Exception ex)
+{
+    Log.Error(ex, "Database initialization failed");
+}
+
 // Configure pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -76,14 +91,6 @@ app.UseCors("AllowSpecificOrigins");
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
-
-// Auto-migrate in development - DISABLED (causes blocking on startup)
-// if (app.Environment.IsDevelopment())
-// {
-//     using var scope = app.Services.CreateScope();
-//     var context = scope.ServiceProvider.GetRequiredService<FeatureToggleService.Infrastructure.Data.FeatureToggleDbContext>();
-//     await context.Database.EnsureCreatedAsync();
-// }
 
 Log.Information("Feature Toggle Service starting on {Urls}", string.Join(", ", app.Urls));
 

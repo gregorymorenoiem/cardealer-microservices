@@ -6,9 +6,9 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0
 # 1) Instala dotnet-watch y vsdbg para hot-reload y depuración remota
 RUN dotnet tool install --global dotnet-watch \
     && export PATH="$PATH:/root/.dotnet/tools" \
- && apt-get update \
- && apt-get install -y unzip curl \
- && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+    && apt-get update \
+    && apt-get install -y unzip curl \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
 
 WORKDIR /app
 
@@ -28,11 +28,8 @@ ENV ASPNETCORE_ENVIRONMENT=Development \
 # 5) Compilar el proyecto
 RUN dotnet build "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/build
 
-# 6) Exponer puertos HTTP y debug (mapped to 4023:4022)
+# 6) Exponer puerto HTTP
 EXPOSE 80
-EXPOSE 4022
 
-# 7) Arranca vsdbg en modo servidor y luego ejecuta la DLL compilada
-ENTRYPOINT ["bash", "-lc", "\
-  /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
-  dotnet /app/build/AuthService.Api.dll --urls http://0.0.0.0:80\n"]
+# 7) Ejecuta la DLL compilada directamente
+ENTRYPOINT ["dotnet", "/app/build/AuthService.Api.dll"]
