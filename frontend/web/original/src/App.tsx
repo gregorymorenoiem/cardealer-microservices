@@ -100,6 +100,8 @@ function App() {
           {/* Public Routes - Original Design */}
           <Route path="/" element={<HomePage />} />
           <Route path="/browse" element={<VehicleBrowsePage />} />
+          <Route path="/browse/:id" element={<VehicleDetailPage />} />
+          <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
           <Route path="/compare" element={<VehicleComparePage />} />
           <Route path="/sell-your-car" element={<SellYourCarPage />} />
           

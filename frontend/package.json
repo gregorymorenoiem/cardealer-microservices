@@ -7,12 +7,14 @@
     "web",
     "web/okla",
     "web/cardealer",
+    "web/original",
     "shared"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=web",
     "dev:okla": "npm run dev --workspace=web/okla",
     "dev:cardealer": "npm run dev --workspace=web/cardealer",
+    "dev:original": "npm run dev --workspace=web/original",
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=web",
     "build:okla": "npm run build --workspace=web/okla",
