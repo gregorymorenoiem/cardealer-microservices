@@ -903,6 +903,101 @@ Sprint 6 → Sprint 7 → Sprint 8 → Sprint 9 → Sprint 10 → Sprint 11
 
 ---
 
+#### 🌿 FLUJO DE TRABAJO GIT POR SPRINT
+
+**⚠️ REGLA OBLIGATORIA:** Cada sprint se desarrolla en su propia rama (branch) para mantener `main` estable.
+
+**Proceso:**
+
+1. **Crear branch por sprint:**
+
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b sprint-0-setup-inicial
+   # O cualquier sprint: sprint-1-cuentas-terceros, sprint-2-auth-integration, etc.
+   ```
+
+2. **Desarrollo del sprint:**
+
+   - Hacer commits incrementales durante el desarrollo
+   - Probar cada feature antes de commit
+   - Mantener commits pequeños y atómicos
+
+3. **Testing completo:**
+
+   - Validar que TODAS las features del sprint funcionen
+   - Ejecutar tests unitarios e integración
+   - Verificar health checks de servicios
+   - Probar endpoints en Postman/cURL
+   - Validar frontend integrado (si aplica)
+
+4. **Merge a main solo cuando TODO funcione:**
+
+   ```bash
+   # Asegurarse que main esté actualizado
+   git checkout main
+   git pull origin main
+
+   # Merge del sprint
+   git merge sprint-0-setup-inicial --no-ff
+
+   # Push a remoto
+   git push origin main
+
+   # Eliminar branch local (opcional)
+   git branch -d sprint-0-setup-inicial
+   ```
+
+**Convención de nombres de branches:**
+
+| Sprint    | Nombre de Branch            |
+| --------- | --------------------------- |
+| Sprint 0  | `sprint-0-setup-inicial`    |
+| Sprint 1  | `sprint-1-cuentas-terceros` |
+| Sprint 2  | `sprint-2-auth-integration` |
+| Sprint 3  | `sprint-3-vehicle-service`  |
+| Sprint 4  | `sprint-4-media-upload`     |
+| Sprint 5  | `sprint-5-billing-payments` |
+| Sprint 6  | `sprint-6-notifications`    |
+| Sprint 7  | `sprint-7-messaging-crm`    |
+| Sprint 8  | `sprint-8-search-filters`   |
+| Sprint 9  | `sprint-9-saved-searches`   |
+| Sprint 10 | `sprint-10-admin-panel`     |
+| Sprint 11 | `sprint-11-testing-qa`      |
+
+**Ventajas de este flujo:**
+
+- ✅ `main` siempre está estable y deployable
+- ✅ Permite rollback fácil si algo falla
+- ✅ Facilita revisión de código por sprint
+- ✅ Commits más organizados y trazables
+- ✅ Posibilidad de trabajar en múltiples sprints en paralelo (si es necesario)
+
+**Comandos útiles:**
+
+```bash
+# Ver rama actual
+git branch --show-current
+
+# Ver todas las ramas
+git branch -a
+
+# Cambiar de rama
+git checkout sprint-X-nombre
+
+# Ver diferencias entre rama y main
+git diff main..sprint-X-nombre
+
+# Ver estado del merge
+git log --oneline --graph --all
+
+# Si necesitas deshacer un merge (ANTES de push)
+git reset --hard HEAD~1
+```
+
+---
+
 #### 💰 COSTOS ESTIMADOS (Mensual)
 
 | Servicio      | Tier                     | Costo         |
