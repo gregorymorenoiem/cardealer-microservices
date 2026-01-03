@@ -83,17 +83,13 @@ export default function RegisterPage() {
     try {
       setApiError(null);
       
-      // Parse name from username
-      const nameParts = data.username.split(' ');
-      const firstName = nameParts[0] || data.username;
-      const lastName = nameParts.slice(1).join(' ') || '';
-      
-      // Call mock register service
+      // Call register service with backend-expected format
       const response = await authService.register({
         email: data.email,
         password: data.password,
-        firstName,
-        lastName,
+        fullName: data.username, // Use username as display name
+        userName: data.username,
+        accountType: 'individual',
       });
       
       // Update auth store

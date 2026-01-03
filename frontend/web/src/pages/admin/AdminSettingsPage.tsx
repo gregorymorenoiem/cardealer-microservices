@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { FiSave, FiAlertCircle, FiCheck } from 'react-icons/fi';
-import { getSystemSettings, updateSystemSettings, type SystemSettings } from '@/services/adminService';
+import { FiSave, FiAlertCircle, FiCheck, FiRefreshCw } from 'react-icons/fi';
+import { useSettingsPage } from '@/hooks';
+import type { SystemSettings } from '@/services/adminService';
 
 export default function AdminSettingsPage() {
+  const { settings: apiSettings, isLoading, updateSettings, refetch } = useSettingsPage();
+  
   const [settings, setSettings] = useState<SystemSettings>({
     maintenanceMode: false,
     allowRegistrations: true,
@@ -13,31 +16,19 @@ export default function AdminSettingsPage() {
     featuredListingPrice: 49.99,
     commissionRate: 5,
   });
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    loadSettings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getSystemSettings();
-      setSettings(data);
-    } catch {
-      showMessage('error', 'Failed to load settings');
-    } finally {
-      setIsLoading(false);
+    if (apiSettings) {
+      setSettings(apiSettings);
     }
-  };
+  }, [apiSettings]);
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      await updateSystemSettings(settings);
+      await updateSettings.mutateAsync(settings);
       showMessage('success', 'Settings saved successfully');
     } catch {
       showMessage('error', 'Failed to save settings');
@@ -85,14 +76,24 @@ export default function AdminSettingsPage() {
           </h1>
           <p className="text-gray-600">Configure platform-wide settings</p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 flex items-center gap-2"
-        >
-          <FiSave size={18} />
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            <FiSave size={18} />
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
 
       {/* Message */}

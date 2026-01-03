@@ -1,13 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiSend } from 'react-icons/fi';
-import { useMessages } from '@/hooks/useMessages';
+import { FiSearch, FiSend, FiLoader } from 'react-icons/fi';
+import { useMessagesInbox, useChatWindow } from '@/hooks/useMessaging';
+
+// Extended type for display with vehiclePrice
+interface DisplayConversation {
+  id: string;
+  vehicleId: string;
+  vehicleTitle: string;
+  vehicleImage?: string;
+  vehiclePrice?: number;
+  buyerId: string;
+  buyerName: string;
+  buyerAvatar?: string;
+  sellerId: string;
+  sellerName: string;
+  sellerAvatar?: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+  messages?: Array<{
+    id: string;
+    conversationId: string;
+    senderId: string;
+    senderName: string;
+    senderAvatar?: string;
+    content: string;
+    isRead: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+}
 
 const MessagesPage = () => {
   const { t, i18n } = useTranslation('user');
-  const { conversations, selectedConversation, selectConversation, sendMessage } = useMessages();
+  const inbox = useMessagesInbox();
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const chatWindow = useChatWindow(selectedConversationId ?? '');
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
+
+  // Mark as read when selecting conversation
+  useEffect(() => {
+    if (selectedConversationId) {
+      chatWindow.markAsRead();
+    }
+  }, [selectedConversationId]);
+
+  // Get selected conversation from inbox
+  const selectedConversation = inbox.conversations.find(c => c.id === selectedConversationId) as DisplayConversation | undefined;
+  
+  // Get messages from chat window
+  const messages = chatWindow.messages;
 
   // Format relative time
   const formatTimeAgo = (timestamp: string) => {
@@ -26,29 +72,44 @@ const MessagesPage = () => {
     return date.toLocaleDateString(i18n.language === 'es' ? 'es-MX' : 'en-US', { month: 'short', day: 'numeric' });
   };
 
+  // Filter conversations from TanStack Query data
   const filteredConversations = searchQuery
-    ? conversations.filter(
+    ? inbox.conversations.filter(
         (c) =>
           c.vehicleTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
           c.sellerName.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : conversations;
+    : inbox.conversations;
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageInput.trim() || !selectedConversation) return;
+    if (!messageInput.trim() || !selectedConversationId) return;
 
-    sendMessage(selectedConversation.id, messageInput);
+    chatWindow.sendMessage(messageInput);
     setMessageInput('');
   };
 
-  const formatPrice = (price: number) => {
+  const selectConversation = (id: string) => {
+    setSelectedConversationId(id);
+  };
+
+  const formatPrice = (price?: number) => {
+    if (!price) return '';
     return new Intl.NumberFormat(i18n.language === 'es' ? 'es-MX' : 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
     }).format(price);
   };
+
+  // Loading state
+  if (inbox.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <FiLoader className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -150,34 +211,44 @@ const MessagesPage = () => {
 
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {selectedConversation.messages.map((message) => {
-                      const isCurrentUser = message.senderId === 'buyer-1';
-                      return (
-                        <div
-                          key={message.id}
-                          className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                        >
+                    {chatWindow.isLoading ? (
+                      <div className="flex justify-center py-8">
+                        <FiLoader className="w-6 h-6 animate-spin text-gray-400" />
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <div className="text-center text-gray-500 py-8">
+                        <p>{t('messages.noMessages')}</p>
+                      </div>
+                    ) : (
+                      messages.map((message) => {
+                        const isCurrentUser = message.senderId === 'buyer-1';
+                        return (
                           <div
-                            className={`max-w-[70%] ${
-                              isCurrentUser ? 'order-2' : 'order-1'
-                            }`}
+                            key={message.id}
+                            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                           >
                             <div
-                              className={`rounded-lg px-4 py-2 ${
-                                isCurrentUser
-                                  ? 'bg-primary text-white'
-                                  : 'bg-gray-100 text-gray-900'
+                              className={`max-w-[70%] ${
+                                isCurrentUser ? 'order-2' : 'order-1'
                               }`}
                             >
-                              <p className="text-sm">{message.content}</p>
+                              <div
+                                className={`rounded-lg px-4 py-2 ${
+                                  isCurrentUser
+                                    ? 'bg-primary text-white'
+                                    : 'bg-gray-100 text-gray-900'
+                                }`}
+                              >
+                                <p className="text-sm">{message.content}</p>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-1 px-2">
+                                {formatTimeAgo(message.timestamp)}
+                              </p>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1 px-2">
-                              {formatTimeAgo(message.timestamp)}
-                            </p>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
 
                   {/* Message Input */}
@@ -192,10 +263,14 @@ const MessagesPage = () => {
                       />
                       <button
                         type="submit"
-                        disabled={!messageInput.trim()}
+                        disabled={!messageInput.trim() || chatWindow.isSending}
                         className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
-                        <FiSend className="w-5 h-5" />
+                        {chatWindow.isSending ? (
+                          <FiLoader className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <FiSend className="w-5 h-5" />
+                        )}
                         {t('messages.send')}
                       </button>
                     </div>

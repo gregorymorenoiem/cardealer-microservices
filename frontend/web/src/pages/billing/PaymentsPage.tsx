@@ -13,6 +13,8 @@ import {
   FiExternalLink
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
+import { usePayments } from '@/hooks/useBilling';
+import { useAuthStore } from '@/store/authStore';
 import { mockPayments, formatCurrency, getStatusColor } from '@/mocks/billingData';
 import type { PaymentStatus } from '@/types/billing';
 
@@ -22,7 +24,17 @@ export default function PaymentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredPayments = mockPayments.filter((payment) => {
+  // Get user info
+  const { user } = useAuthStore();
+  const dealerId = user?.dealerId || user?.id || '';
+  
+  // Use TanStack Query hook
+  const { data: fetchedPayments } = usePayments(dealerId);
+  
+  // Use fetched data or fallback to mocks
+  const payments = fetchedPayments?.length ? fetchedPayments : mockPayments;
+
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch = 
       payment.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.cardLast4?.includes(searchQuery) ||

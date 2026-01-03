@@ -710,30 +710,55 @@ Sprint 3-12: (continúa...)                            │
 
 > **📍 UBICACIÓN:** Plan completo en `docs/sprints/frontend-backend-integration/`  
 > **📊 RESUMEN:** 12 sprints, ~261K tokens, 47-56 horas de implementación  
-> **🎯 OBJETIVO:** Integrar frontend React 19 con backend .NET 8 microservicios
+> **🎯 OBJETIVO:** Integrar frontend React 19 con backend .NET 8 microservicios  
+> **⚠️ ESTADO ACTUAL:** 0/12 sprints completados - TODO está pendiente de implementación
 
 ---
 
 #### 📋 ÍNDICE DE SPRINTS
 
+> **🚨 IMPORTANTE:** El archivo `PROGRESS_TRACKER.md` en esta carpeta muestra información INCORRECTA (dice 100% completo).  
+> **ESTADO REAL:** Ningún sprint ha sido implementado. La documentación existe, pero el código NO.
+
 Todos los sprints están documentados en detalle en: `docs/sprints/frontend-backend-integration/`
 
-| Sprint        | Documento                    | Tokens | Horas | Prioridad  | Estado       |
-| ------------- | ---------------------------- | ------ | ----- | ---------- | ------------ |
-| **Sprint 0**  | SPRINT_0_SETUP_INICIAL.md    | ~18K   | 2-3h  | 🔴 CRÍTICO | ⚪ Pendiente |
-| **Sprint 1**  | SPRINT_1_CUENTAS_TERCEROS.md | ~22K   | 3-4h  | 🔴 CRÍTICO | ⚪ Pendiente |
-| **Sprint 2**  | SPRINT_2_AUTH_INTEGRATION.md | ~25K   | 4-5h  | 🔴 CRÍTICO | ⚪ Pendiente |
-| **Sprint 3**  | SPRINT_3_VEHICLE_SERVICE.md  | ~30K   | 5-6h  | 🟠 Alta    | ⚪ Pendiente |
-| **Sprint 4**  | SPRINT_4_MEDIA_UPLOAD.md     | ~27K   | 4-5h  | 🟠 Alta    | ⚪ Pendiente |
-| **Sprint 5**  | SPRINT_5_BILLING_PAYMENTS.md | ~30K   | 5-6h  | 🟠 Alta    | ⚪ Pendiente |
-| **Sprint 6**  | SPRINT_6_NOTIFICATIONS.md    | ~25K   | 3-4h  | 🟡 Media   | ⚪ Pendiente |
-| **Sprint 7**  | SPRINT_7_MESSAGING_CRM.md    | ~20K   | 3-4h  | 🟡 Media   | ⚪ Pendiente |
-| **Sprint 8**  | SPRINT_8_SEARCH_FILTERS.md   | ~24K   | 4-5h  | 🟡 Media   | ⚪ Pendiente |
-| **Sprint 9**  | SPRINT_9_SAVED_SEARCHES.md   | ~18K   | 2-3h  | 🟢 Baja    | ⚪ Pendiente |
-| **Sprint 10** | SPRINT_10_ADMIN_PANEL.md     | ~22K   | 4h    | 🟡 Media   | ⚪ Pendiente |
-| **Sprint 11** | SPRINT_11_TESTING_QA.md      | ~20K   | 3-4h  | 🟠 Alta    | ⚪ Pendiente |
+| Sprint        | Documento                    | Tokens | Horas | Prioridad  | Estado REAL      |
+| ------------- | ---------------------------- | ------ | ----- | ---------- | ---------------- |
+| **Sprint 0**  | SPRINT_0_SETUP_INICIAL.md    | ~18K   | 2-3h  | 🔴 CRÍTICO | ❌ NO COMPLETADO |
+| **Sprint 1**  | SPRINT_1_CUENTAS_TERCEROS.md | ~22K   | 3-4h  | 🔴 CRÍTICO | ❌ NO COMPLETADO |
+| **Sprint 2**  | SPRINT_2_AUTH_INTEGRATION.md | ~25K   | 4-5h  | 🔴 CRÍTICO | ❌ NO COMPLETADO |
+| **Sprint 3**  | SPRINT_3_VEHICLE_SERVICE.md  | ~30K   | 5-6h  | 🟠 Alta    | ❌ NO COMPLETADO |
+| **Sprint 4**  | SPRINT_4_MEDIA_UPLOAD.md     | ~27K   | 4-5h  | 🟠 Alta    | ❌ NO COMPLETADO |
+| **Sprint 5**  | SPRINT_5_BILLING_PAYMENTS.md | ~30K   | 5-6h  | 🟠 Alta    | ❌ NO COMPLETADO |
+| **Sprint 6**  | SPRINT_6_NOTIFICATIONS.md    | ~25K   | 3-4h  | 🟡 Media   | ❌ NO COMPLETADO |
+| **Sprint 7**  | SPRINT_7_MESSAGING_CRM.md    | ~20K   | 3-4h  | 🟡 Media   | ❌ NO COMPLETADO |
+| **Sprint 8**  | SPRINT_8_SEARCH_FILTERS.md   | ~24K   | 4-5h  | 🟡 Media   | ❌ NO COMPLETADO |
+| **Sprint 9**  | SPRINT_9_SAVED_SEARCHES.md   | ~18K   | 2-3h  | 🟢 Baja    | ❌ NO COMPLETADO |
+| **Sprint 10** | SPRINT_10_ADMIN_PANEL.md     | ~22K   | 4h    | 🟡 Media   | ❌ NO COMPLETADO |
+| **Sprint 11** | SPRINT_11_TESTING_QA.md      | ~20K   | 3-4h  | 🟠 Alta    | ❌ NO COMPLETADO |
 
 **Total:** ~261K tokens | 47-56 horas + **28-36h adicionales (assets + catálogo)** = **75-92h total**
+
+#### ⚠️ EVIDENCIA DE NO COMPLETADOS:
+
+**Sprint 0 (Setup):**
+
+- ❌ No existe `frontend/web/.env` (solo templates)
+- ❌ No existe `compose.secrets.yaml` (solo ejemplo)
+- ❌ Carpeta `secrets/` vacía (sin archivos reales)
+
+**Sprint 1 (Cuentas Terceros):**
+
+- ❌ Google Maps API key hardcodeada en código (demo key)
+- ❌ No hay `firebase_service_account.json` real
+- ❌ No hay credenciales SendGrid, Twilio, Stripe, AWS S3
+- ❌ Variables de entorno usan valores placeholder/demo
+
+**Sprint 2-11:**
+
+- ❌ Frontend usa mock data, NO consume backend real
+- ❌ No hay integración OAuth2 funcional
+- ❌ No hay conexión real con servicios de terceros
 
 ---
 
@@ -769,113 +794,113 @@ Todos los sprints están documentados en detalle en: `docs/sprints/frontend-back
 
 #### 🎯 OBJETIVOS POR FASE
 
-##### Fase 0: Setup (2 sprints, ~40K tokens, 5-7h) 🔴 CRÍTICO
+##### Fase 0: Setup (2 sprints, ~40K tokens, 5-7h) 🔴 CRÍTICO - ❌ NO COMPLETADO
 
-**Sprint 0: Setup Inicial**
+**Sprint 0: Setup Inicial - ❌ PENDIENTE**
 
-- Variables de entorno (.env)
-- CORS y configuración JWT
-- Docker Compose ajustes
-- Testing del stack completo
+- ❌ Variables de entorno (.env) - NO existen archivos reales
+- ❌ CORS y configuración JWT - No verificado
+- ❌ Docker Compose ajustes - Solo templates
+- ❌ Testing del stack completo - No realizado
 
-**Sprint 1: Cuentas de Terceros**
+**Sprint 1: Cuentas de Terceros - ❌ PENDIENTE**
 
-- Google OAuth2 (Cloud Console)
-- Firebase (Push notifications)
-- Stripe (Pagos)
-- SendGrid (Email)
-- Twilio (SMS)
-- AWS S3 (Almacenamiento)
-- Sentry (Error tracking)
+- ❌ Google OAuth2 (Cloud Console) - Sin cuenta creada
+- ❌ Firebase (Push notifications) - Sin proyecto creado
+- ❌ Stripe (Pagos) - Sin cuenta creada
+- ❌ SendGrid (Email) - Sin API key
+- ❌ Twilio (SMS) - Sin cuenta creada
+- ❌ AWS S3 (Almacenamiento) - Sin credenciales
+- ❌ Sentry (Error tracking) - Sin DSN
 
-##### Fase 1: Core Features (4 sprints, ~112K tokens, 21-25h) 🔴 CRÍTICO
+##### Fase 1: Core Features (4 sprints, ~112K tokens, 21-25h) 🔴 CRÍTICO - ❌ NO COMPLETADO
 
-**Sprint 2: Auth Integration**
+**Sprint 2: Auth Integration - ❌ PENDIENTE**
 
-- Zustand auth store
-- JWT refresh automático
-- OAuth2 Google login
-- PrivateRoute component
-- User profile integration
+- ❌ Zustand auth store - Frontend usa mock data
+- ❌ JWT refresh automático - No implementado
+- ❌ OAuth2 Google login - No configurado
+- ❌ PrivateRoute component - Usa auth mock
+- ❌ User profile integration - No conectado a backend
 
-**Sprint 3: Vehicle Service**
+**Sprint 3: Vehicle Service - ❌ PENDIENTE**
 
-- Backend: CRUD completo de vehículos
-- Frontend: TanStack Query hooks
-- Filtros avanzados
-- Paginación y ordenamiento
-- Custom fields JSON
+- ❌ Backend: CRUD completo de vehículos - Endpoints básicos existen pero no probados
+- ❌ Frontend: TanStack Query hooks - Usa mock data
+- ❌ Filtros avanzados - No implementado
+- ❌ Paginación y ordenamiento - No implementado
+- ❌ Custom fields JSON - No implementado
 
-**Sprint 4: Media Upload**
+**Sprint 4: Media Upload - ❌ PENDIENTE**
 
-- S3 storage integration
-- ImageSharp backend processing
-- Drag & drop frontend
-- Preview y progress bars
-- Optimización de imágenes
+- ❌ S3 storage integration - Sin credenciales AWS
+- ❌ ImageSharp backend processing - No configurado
+- ❌ Drag & drop frontend - No implementado
+- ❌ Preview y progress bars - No implementado
+- ❌ Optimización de imágenes - No implementado
 
-**Sprint 5: Billing & Payments**
+**Sprint 5: Billing & Payments - ❌ PENDIENTE**
 
-- Stripe integration completa
-- 3 planes de suscripción
-- Webhooks para eventos
-- Gestión de payment methods
-- Invoicing history
+- ❌ Stripe integration completa - Sin API keys
+- ❌ 3 planes de suscripción - No configurado
+- ❌ Webhooks para eventos - No configurado
+- ❌ Gestión de payment methods - No implementado
+- ❌ Invoicing history - No implementado
 
-##### Fase 2: Notificaciones (2 sprints, ~45K tokens, 7-8h) 🟠 ALTA
+##### Fase 2: Notificaciones (2 sprints, ~45K tokens, 7-8h) 🟠 ALTA - ❌ NO COMPLETADO
 
-**Sprint 6: Notifications**
+**Sprint 6: Notifications - ❌ PENDIENTE**
 
-- Email con SendGrid
-- SMS con Twilio
-- Push con Firebase Cloud Messaging
-- NotificationCenter UI component
-- Preferencias de usuario
+- ❌ Email con SendGrid - Sin API key
+- ❌ SMS con Twilio - Sin credenciales
+- ❌ Push con Firebase Cloud Messaging - Sin proyecto
+- ❌ NotificationCenter UI component - No implementado
+- ❌ Preferencias de usuario - No implementado
 
-**Sprint 7: Messaging & CRM**
+**Sprint 7: Messaging & CRM - ❌ PENDIENTE**
 
-- SignalR Hub para chat real-time
-- ChatHub backend
-- ChatWindow frontend component
-- MessageList con paginación
-- CRM básico para leads
+- ❌ SignalR Hub para chat real-time - No implementado
+- ❌ ChatHub backend - No implementado
+- ❌ ChatWindow frontend component - No implementado
+- ❌ MessageList con paginación - No implementado
+- ❌ CRM básico para leads - No implementado
 
-##### Fase 3: Avanzadas (2 sprints, ~42K tokens, 7-8h) 🟡 MEDIA
+##### Fase 3: Avanzadas (2 sprints, ~42K tokens, 7-8h) 🟡 MEDIA - ❌ NO COMPLETADO
 
-**Sprint 8: Search & Filters**
+**Sprint 8: Search & Filters - ❌ PENDIENTE**
 
-- Elasticsearch integration
-- Full-text search
-- FilterSidebar component avanzado
-- Geolocalización con Google Maps
-- Autocompletado de búsquedas
+- ❌ Elasticsearch integration - No configurado
+- ❌ Full-text search - No implementado
+- ❌ FilterSidebar component avanzado - No implementado
+- ❌ Geolocalización con Google Maps - API key hardcodeada/demo
+- Autocompletado de búsquedas - No implementado
 
-**Sprint 9: Saved Searches**
+**Sprint 9: Saved Searches - ❌ PENDIENTE**
 
-- SavedSearch entity
-- Email alerts para nuevos matches
-- Hangfire background jobs
-- SavedSearchCard component
-- Toggle de alertas activas
+- ❌ SavedSearch entity - No implementado
+- ❌ Email alerts para nuevos matches - No implementado
+- ❌ Hangfire background jobs - No configurado
+- ❌ SavedSearchCard component - No implementado
+- ❌ Toggle de alertas activas - No implementado
 
-##### Fase 4: Admin & QA (2 sprints, ~42K tokens, 7-8h) 🟢 MEDIA-CRÍTICA
+##### Fase 4: Admin & QA (2 sprints, ~42K tokens, 7-8h) 🟢 MEDIA-CRÍTICA - ❌ NO COMPLETADO
 
-**Sprint 10: Admin Panel**
+**Sprint 10: Admin Panel - ❌ PENDIENTE**
 
-- AdminService backend
-- Verificación de dealers
-- Aprobación de vehículos
-- Moderación de contenido
-- Dashboard de métricas
+- ❌ AdminService backend - No implementado
+- ❌ Verificación de dealers - No implementado
+- ❌ Aprobación de vehículos - No implementado
+- ❌ Moderación de contenido - No implementado
+- ❌ Dashboard de métricas - No implementado
 
-**Sprint 11: Testing & QA**
+**Sprint 11: Testing & QA - ❌ PENDIENTE**
 
-- Unit tests (xUnit + Jest)
-- Integration tests (Testcontainers)
-- E2E tests (Playwright)
-- Cobertura >= 80% backend
-- Cobertura >= 70% frontend
-- CI/CD pipeline
+- ❌ Unit tests (xUnit + Jest) - No implementados para integraciones
+- ❌ Integration tests (Testcontainers) - No implementados
+- ❌ E2E tests (Playwright) - No implementados
+- ❌ Cobertura >= 80% backend - No verificado
+- ❌ Cobertura >= 70% frontend - No verificado
+- ❌ CI/CD pipeline - No configurado para integraciones
 
 ---
 

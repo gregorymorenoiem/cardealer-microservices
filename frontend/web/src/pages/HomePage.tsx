@@ -22,7 +22,7 @@ const searchCategories = [
 // Mock data - Vehículos en Venta
 const vehiculosListings = [
   {
-    id: 'v1',
+    id: '1',
     title: 'Mercedes-Benz Clase C AMG 2024',
     price: 75000,
     image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&h=600&fit=crop',
@@ -32,7 +32,7 @@ const vehiculosListings = [
     reviews: 47,
   },
   {
-    id: 'v2',
+    id: '2',
     title: 'BMW Serie 7 Executive Package',
     price: 95000,
     image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop',
@@ -42,7 +42,7 @@ const vehiculosListings = [
     reviews: 62,
   },
   {
-    id: 'v3',
+    id: '3',
     title: 'Porsche 911 Carrera S',
     price: 135000,
     image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop',
@@ -52,7 +52,7 @@ const vehiculosListings = [
     reviews: 89,
   },
   {
-    id: 'v4',
+    id: '4',
     title: 'Audi RS7 Sportback 2024',
     price: 128000,
     image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&h=600&fit=crop',
@@ -62,7 +62,7 @@ const vehiculosListings = [
     reviews: 31,
   },
   {
-    id: 'v5',
+    id: '5',
     title: 'Tesla Model S Plaid',
     price: 108000,
     image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&h=600&fit=crop',
@@ -72,7 +72,7 @@ const vehiculosListings = [
     reviews: 56,
   },
   {
-    id: 'v6',
+    id: '6',
     title: 'Range Rover Sport HSE',
     price: 89000,
     image: 'https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=800&h=600&fit=crop',
@@ -86,7 +86,7 @@ const vehiculosListings = [
 // Mock data - Renta de Vehículos
 const rentaVehiculosListings = [
   {
-    id: 'rv1',
+    id: '7',
     title: 'BMW X5 - Renta por Día',
     price: 150,
     priceLabel: '/día',
@@ -97,7 +97,7 @@ const rentaVehiculosListings = [
     reviews: 124,
   },
   {
-    id: 'rv2',
+    id: '8',
     title: 'Mercedes GLE Coupe - Renta Semanal',
     price: 850,
     priceLabel: '/semana',
@@ -108,7 +108,7 @@ const rentaVehiculosListings = [
     reviews: 89,
   },
   {
-    id: 'rv3',
+    id: '9',
     title: 'Porsche Cayenne - Renta Premium',
     price: 200,
     priceLabel: '/día',
@@ -119,7 +119,7 @@ const rentaVehiculosListings = [
     reviews: 67,
   },
   {
-    id: 'rv4',
+    id: '10',
     title: 'Cadillac Escalade - Eventos',
     price: 280,
     priceLabel: '/día',
@@ -130,7 +130,7 @@ const rentaVehiculosListings = [
     reviews: 45,
   },
   {
-    id: 'rv5',
+    id: '1',
     title: 'Tesla Model X - Renta Ecológica',
     price: 175,
     priceLabel: '/día',
@@ -141,7 +141,7 @@ const rentaVehiculosListings = [
     reviews: 98,
   },
   {
-    id: 'rv6',
+    id: '2',
     title: 'Range Rover Velar - Lujo',
     price: 190,
     priceLabel: '/día',
@@ -395,6 +395,34 @@ const getCategoryClasses = (category: string) => {
   return colorClasses[color] || colorClasses.blue;
 };
 
+// Generate SEO-friendly slug from title
+const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim();
+};
+
+// Get the correct detail URL based on category (SEO-friendly)
+const getListingUrl = (category: string, id: string, title: string): string => {
+  const slug = slugify(title);
+  switch (category) {
+    case 'Vehículos':
+    case 'Renta de Vehículos':
+      return `/vehicles/${slug}-${id}`;
+    case 'Propiedades':
+      return `/properties/${slug}-${id}`;
+    case 'Hospedaje':
+      return `/properties/${slug}-${id}`;
+    default:
+      return `/vehicles/${slug}-${id}`;
+  }
+};
+
 // Featured Section Component
 interface FeaturedSectionProps {
   title: string;
@@ -528,7 +556,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
             return (
               <Link
                 key={listing.id}
-                to={`/listing/${listing.id}`}
+                to={getListingUrl(listing.category, listing.id, listing.title)}
                 className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group"
                 style={{ scrollSnapAlign: 'start' }}
               >

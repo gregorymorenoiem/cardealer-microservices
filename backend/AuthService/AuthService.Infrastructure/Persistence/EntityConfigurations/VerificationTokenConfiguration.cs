@@ -27,8 +27,7 @@ public class VerificationTokenConfiguration : IEntityTypeConfiguration<Verificat
 
         builder.Property(vt => vt.Type)
             .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(50);
+            .HasConversion<int>();  // Match PostgreSQL integer column
 
         builder.Property(vt => vt.ExpiresAt)
             .IsRequired();

@@ -1,42 +1,24 @@
-import { useState, useEffect } from 'react';
-import { FiAlertCircle, FiEye, FiCheck, FiX } from 'react-icons/fi';
-import { getReportedContent, reviewReport, type ReportedContent } from '@/services/adminService';
+import { useState } from 'react';
+import { FiAlertCircle, FiEye, FiCheck, FiX, FiRefreshCw } from 'react-icons/fi';
+import { useModerationPage } from '@/hooks';
+import type { ReportedContent } from '@/services/adminService';
 
 type ReportStatusFilter = 'all' | 'pending' | 'reviewed' | 'resolved' | 'dismissed';
 
 export default function AdminReportsPage() {
-  const [reports, setReports] = useState<ReportedContent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<ReportStatusFilter>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportedContent | null>(null);
-
-  useEffect(() => {
-    loadReports();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, statusFilter]);
-
-  const loadReports = async () => {
-    try {
-      setIsLoading(true);
-      const filters = statusFilter !== 'all' ? { status: statusFilter } : {};
-      const response = await getReportedContent(currentPage, 20, filters);
-      setReports(response.reports);
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Error loading reports:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+  const filters = statusFilter !== 'all' ? { status: statusFilter } : {};
+  const { reports, total, isLoading, refetch, reviewReport } = useModerationPage(currentPage, 20, filters);
 
   const handleReview = async (id: string, action: 'resolve' | 'dismiss') => {
     const notes = prompt(`Add notes for ${action}ing this report (optional):`);
     
     try {
-      await reviewReport(id, action, notes || undefined);
-      loadReports();
+      await reviewReport.mutateAsync({ reportId: id, action, notes: notes || undefined });
+      refetch();
       setSelectedReport(null);
     } catch {
       alert(`Failed to ${action} report`);
@@ -75,11 +57,21 @@ export default function AdminReportsPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold font-heading text-gray-900 mb-2">
-          Reports
-        </h1>
-        <p className="text-gray-600">Review and manage reported content</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold font-heading text-gray-900 mb-2">
+            Reports
+          </h1>
+          <p className="text-gray-600">Review and manage reported content ({total} total)</p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
       {/* Stats */}

@@ -1,12 +1,33 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useUsersManagement, useBanUser, useUnbanUser, useDeleteUser } from '../../hooks';
 import { mockAdminUsers } from '../../data/mockAdmin';
 import type { AdminUser } from '../../types/admin';
-import { FiSearch, FiShield, FiLock, FiUnlock, FiTrash2, FiMoreVertical } from 'react-icons/fi';
+import { FiSearch, FiShield, FiLock, FiUnlock, FiTrash2, FiMoreVertical, FiRefreshCw } from 'react-icons/fi';
 
 type FilterStatus = 'all' | 'active' | 'banned';
 
 const UsersManagementPage = () => {
-  const [users, setUsers] = useState<AdminUser[]>(mockAdminUsers);
+  const { users: apiUsers, isLoading, refetch } = useUsersManagement();
+  const banUser = useBanUser();
+  const unbanUser = useUnbanUser();
+  const deleteUserMutation = useDeleteUser();
+  
+  // Usar datos de la API o fallback a mock
+  const users: AdminUser[] = useMemo(() => {
+    if (apiUsers && apiUsers.length > 0) {
+      return apiUsers.map(u => ({
+        id: u.id,
+        username: u.username || u.email?.split('@')[0] || 'user',
+        email: u.email || '',
+        role: u.role || 'user',
+        status: u.status || 'active',
+        listingsCount: u.listingsCount || 0,
+        joinedAt: u.joinedAt || u.createdAt || new Date().toISOString(),
+      }));
+    }
+    return mockAdminUsers;
+  }, [apiUsers]);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
@@ -55,27 +76,34 @@ const UsersManagementPage = () => {
     );
   };
 
-  const handleBanUser = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, status: 'banned' as const } : user
-      )
-    );
+  const handleBanUser = async (userId: string) => {
+    try {
+      await banUser.mutateAsync({ id: userId, reason: 'Banned by admin' });
+      refetch();
+    } catch (error) {
+      console.error('Error banning user:', error);
+    }
     setSelectedUser(null);
   };
 
-  const handleUnbanUser = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, status: 'active' as const } : user
-      )
-    );
+  const handleUnbanUser = async (userId: string) => {
+    try {
+      await unbanUser.mutateAsync(userId);
+      refetch();
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+    }
     setSelectedUser(null);
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      setUsers((prev) => prev.filter((user) => user.id !== userId));
+      try {
+        await deleteUserMutation.mutateAsync(userId);
+        refetch();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+      }
       setSelectedUser(null);
     }
   };
@@ -100,10 +128,25 @@ const UsersManagementPage = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
-        <p className="text-gray-600 mt-1">Manage user accounts and permissions</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
+          <p className="text-gray-600 mt-1">Manage user accounts and permissions</p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-8 text-gray-500">Loading users...</div>
+      )}
 
       {/* Filters & Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

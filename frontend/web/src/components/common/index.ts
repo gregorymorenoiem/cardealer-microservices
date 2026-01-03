@@ -7,3 +7,7 @@
 export { LanguageSwitcher } from './LanguageSwitcher';
 export { LocalizedContent, LanguageBadge, useLocalizedContent } from './LocalizedContent';
 export type { MultiLangText } from './LocalizedContent';
+
+// Media upload components
+export { ImageDropZone } from './ImageDropZone';
+export type { ImageDropZoneProps, ImagePreview } from './ImageDropZone';

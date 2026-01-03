@@ -1,13 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBell, FiX } from 'react-icons/fi';
-import { useNotifications } from '../../hooks/useMessages';
-import type { Notification } from '../../types/message';
+import { FiBell, FiX, FiLoader } from 'react-icons/fi';
+import { useNotificationCenter } from '@/hooks/useNotifications';
+
+// Local notification type for display
+interface DisplayNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  link?: string;
+  icon?: string;
+}
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    isMarkingAllAsRead,
+  } = useNotificationCenter(1, 10);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -67,7 +85,12 @@ const NotificationDropdown = () => {
 
           {/* Notifications List */}
           <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {isLoading ? (
+              <div className="px-4 py-8 text-center text-gray-500">
+                <FiLoader className="w-8 h-8 animate-spin mx-auto text-gray-400" />
+                <p className="text-sm mt-2">Loading notifications...</p>
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <FiBell className="w-8 h-8 text-gray-400" />
@@ -79,14 +102,14 @@ const NotificationDropdown = () => {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                    !notification.read ? 'bg-blue-50' : ''
+                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                    !notification.isRead ? 'bg-blue-50' : ''
                   }`}
                 >
-                  {notification.actionUrl ? (
+                  {notification.link ? (
                     <Link
-                      to={notification.actionUrl}
-                      onClick={() => handleNotificationClick(notification.id, notification.actionUrl)}
+                      to={notification.link}
+                      onClick={() => handleNotificationClick(notification.id, notification.link)}
                       className="block"
                     >
                       <NotificationContent notification={notification} />
@@ -105,10 +128,11 @@ const NotificationDropdown = () => {
           {notifications.length > 0 && (
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex gap-2">
               <button
-                onClick={markAllAsRead}
-                className="flex-1 text-sm text-primary hover:text-primary-dark font-medium transition-colors"
+                onClick={() => markAllAsRead()}
+                disabled={isMarkingAllAsRead || unreadCount === 0}
+                className="flex-1 text-sm text-primary hover:text-primary-dark font-medium transition-colors disabled:opacity-50"
               >
-                Mark all as read
+                {isMarkingAllAsRead ? 'Marking...' : 'Mark all as read'}
               </button>
               <Link
                 to="/notifications"
@@ -126,17 +150,21 @@ const NotificationDropdown = () => {
 };
 
 // Notification Content Component
-const NotificationContent = ({ notification }: { notification: Notification }) => {
-  const getNotificationIcon = (type: string) => {
+const NotificationContent = ({ notification }: { notification: DisplayNotification }) => {
+  const getNotificationIcon = (type: string, icon?: string) => {
+    if (icon) return icon;
     switch (type) {
       case 'message':
         return '💬';
+      case 'approval':
       case 'listing':
         return '✅';
       case 'favorite':
         return '❤️';
-      case 'review':
-        return '⭐';
+      case 'sale':
+        return '🎉';
+      case 'vehicle':
+        return '🚗';
       case 'system':
         return '💰';
       default:
@@ -146,12 +174,12 @@ const NotificationContent = ({ notification }: { notification: Notification }) =
 
   return (
     <div className="flex gap-3">
-      <div className="text-2xl flex-shrink-0">{getNotificationIcon(notification.type)}</div>
+      <div className="text-2xl flex-shrink-0">{getNotificationIcon(notification.type, notification.icon)}</div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
         <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{notification.message}</p>
         <p className="text-xs text-gray-400 mt-1">
-          {new Date(notification.timestamp).toLocaleDateString('en-US', {
+          {new Date(notification.createdAt).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
@@ -159,7 +187,7 @@ const NotificationContent = ({ notification }: { notification: Notification }) =
           })}
         </p>
       </div>
-      {!notification.read && (
+      {!notification.isRead && (
         <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
       )}
     </div>

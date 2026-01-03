@@ -44,7 +44,7 @@ export default function VehicleCard({
   return (
     <Link
       to={`/vehicles/${id}`}
-      className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
+      className="block group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
     >
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
@@ -69,15 +69,17 @@ export default function VehicleCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="absolute top-3 right-3 flex gap-2">
+        <div className="absolute top-3 right-3 flex gap-2 z-10">
           {/* Compare Button */}
           <button
+            type="button"
             className={`
               w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm
               ${inCompare ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/90 hover:bg-white text-gray-700'}
             `}
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               if (inCompare) {
                 removeFromCompare(id);
               } else {
@@ -91,12 +93,14 @@ export default function VehicleCard({
 
           {/* Favorite Button */}
           <button
+            type="button"
             className={`
               w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm
               ${isLiked ? 'bg-red-500 hover:bg-red-600' : 'bg-white/90 hover:bg-white'}
             `}
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               toggleFavorite(id);
             }}
             title={isLiked ? t('common:buttons.removeFromFavorites') : t('common:buttons.addToFavorites')}

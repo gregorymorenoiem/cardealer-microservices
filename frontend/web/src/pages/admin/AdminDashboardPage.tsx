@@ -1,12 +1,42 @@
 import { useTranslation } from 'react-i18next';
-import { mockAdminStats, mockActivityLogs } from '../../data/mockAdmin';
-import type { ActivityLog } from '../../types/admin';
-import { FiPackage, FiUsers, FiDollarSign, FiTrendingUp, FiEye, FiMessageSquare } from 'react-icons/fi';
+import { useAdminDashboard } from '@/hooks/useAdmin';
+import { FiPackage, FiUsers, FiDollarSign, FiTrendingUp, FiEye, FiMessageSquare, FiRefreshCw } from 'react-icons/fi';
+
+// Types for dashboard
+interface ActivityLog {
+  id: string;
+  type: string;
+  action: string;
+  description: string;
+  severity: string;
+  userName?: string;
+  timestamp: string;
+}
 
 const AdminDashboardPage = () => {
   const { t } = useTranslation(['admin', 'common']);
-  const stats = mockAdminStats;
-  const recentActivity = mockActivityLogs.slice(0, 5);
+  const { stats, activityLogs, isLoading, refetch } = useAdminDashboard();
+  
+  // Map API stats to expected format (with defaults)
+  const dashboardStats = {
+    pendingApprovals: stats?.pendingApprovals ?? 0,
+    activeListings: stats?.activeListings ?? 0,
+    totalUsers: stats?.totalUsers ?? 0,
+    totalRevenue: stats?.revenue ?? 0,
+    todayViews: 0, // Not available in API yet
+    todayInquiries: 0, // Not available in API yet
+  };
+  
+  // Map activity logs to expected format
+  const recentActivity: ActivityLog[] = (activityLogs || []).slice(0, 5).map((log) => ({
+    id: log.id || String(Math.random()),
+    type: log.entityType || 'info',
+    action: log.action || 'Activity',
+    description: log.details || '',
+    severity: 'info',
+    userName: log.userName,
+    timestamp: log.timestamp || new Date().toISOString(),
+  }));
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -48,10 +78,25 @@ const AdminDashboardPage = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{t('admin:dashboard.title')}</h1>
-        <p className="text-gray-600 mt-1">{t('admin:dashboard.subtitle')}</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{t('admin:dashboard.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin:dashboard.subtitle')}</p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Actualizar
+        </button>
       </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-8 text-gray-500">Cargando estadísticas...</div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -60,7 +105,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Pending Approvals</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+              <p className="text-3xl font-bold text-gray-900">{dashboardStats.pendingApprovals}</p>
               <p className="text-sm text-orange-600 mt-2">Requires attention</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -74,7 +119,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Active Listings</p>
-              <p className="text-3xl font-bold text-gray-900">{formatNumber(stats.activeListings)}</p>
+              <p className="text-3xl font-bold text-gray-900">{formatNumber(dashboardStats.activeListings)}</p>
               <p className="text-sm text-green-600 mt-2">+12% this month</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -88,7 +133,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Users</p>
-              <p className="text-3xl font-bold text-gray-900">{formatNumber(stats.totalUsers)}</p>
+              <p className="text-3xl font-bold text-gray-900">{formatNumber(dashboardStats.totalUsers)}</p>
               <p className="text-sm text-blue-600 mt-2">+8% this month</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -102,7 +147,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(dashboardStats.totalRevenue)}</p>
               <p className="text-sm text-green-600 mt-2">+15% this month</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -116,7 +161,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Today's Views</p>
-              <p className="text-3xl font-bold text-gray-900">{formatNumber(stats.todayViews)}</p>
+              <p className="text-3xl font-bold text-gray-900">{formatNumber(dashboardStats.todayViews)}</p>
               <p className="text-sm text-gray-500 mt-2">Last 24 hours</p>
             </div>
             <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -130,7 +175,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Today's Inquiries</p>
-              <p className="text-3xl font-bold text-gray-900">{formatNumber(stats.todayInquiries)}</p>
+              <p className="text-3xl font-bold text-gray-900">{formatNumber(dashboardStats.todayInquiries)}</p>
               <p className="text-sm text-gray-500 mt-2">Last 24 hours</p>
             </div>
             <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
@@ -185,7 +230,7 @@ const AdminDashboardPage = () => {
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
           <h3 className="text-lg font-semibold mb-2">Pending Approvals</h3>
           <p className="text-blue-100 mb-4">
-            {stats.pendingApprovals} listings waiting for review
+            {dashboardStats.pendingApprovals} listings waiting for review
           </p>
           <a
             href="/admin/pending"
@@ -198,7 +243,7 @@ const AdminDashboardPage = () => {
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
           <h3 className="text-lg font-semibold mb-2">User Management</h3>
           <p className="text-purple-100 mb-4">
-            Manage {stats.totalUsers} registered users
+            Manage {dashboardStats.totalUsers} registered users
           </p>
           <a
             href="/admin/users"

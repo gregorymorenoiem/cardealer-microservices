@@ -1,17 +1,32 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import VehicleCard from '@/components/organisms/VehicleCard';
-import { mockVehicles, type Vehicle } from '@/data/mockVehicles';
+import { getSimilarVehicles, type Vehicle } from '@/services/vehicleService';
+import { mockVehicles } from '@/data/mockVehicles';
 import { FiArrowRight } from 'react-icons/fi';
 
 interface SimilarVehiclesProps {
-  currentVehicle: Vehicle;
+  currentVehicle: { id: string; make?: string; model?: string; bodyType?: string; year?: number; price?: number; transmission?: string; fuelType?: string };
   maxItems?: number;
 }
 
 export default function SimilarVehicles({ currentVehicle, maxItems = 4 }: SimilarVehiclesProps) {
+  // Try to fetch similar vehicles from API
+  const { data: apiVehicles, isError } = useQuery({
+    queryKey: ['similar-vehicles', currentVehicle.id, maxItems],
+    queryFn: () => getSimilarVehicles(currentVehicle.id, maxItems),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
   const similarVehicles = useMemo(() => {
-    // Filter out the current vehicle and find similar ones
+    // Use API data if available
+    if (!isError && apiVehicles && apiVehicles.length > 0) {
+      return apiVehicles.filter(v => v.id !== currentVehicle.id).slice(0, maxItems);
+    }
+
+    // Fallback to mock data with similarity scoring
     const candidates = mockVehicles.filter((v) => v.id !== currentVehicle.id);
 
     // Score each vehicle based on similarity
@@ -28,11 +43,13 @@ export default function SimilarVehicles({ currentVehicle, maxItems = 4 }: Simila
       if (vehicle.bodyType === currentVehicle.bodyType) score += 3;
 
       // Similar year (+/- 3 years) (2 points)
-      if (Math.abs(vehicle.year - currentVehicle.year) <= 3) score += 2;
+      if (currentVehicle.year && Math.abs(vehicle.year - currentVehicle.year) <= 3) score += 2;
 
       // Similar price (+/- 30%) (2 points)
-      const priceDiff = Math.abs(vehicle.price - currentVehicle.price) / currentVehicle.price;
-      if (priceDiff <= 0.3) score += 2;
+      if (currentVehicle.price) {
+        const priceDiff = Math.abs(vehicle.price - currentVehicle.price) / currentVehicle.price;
+        if (priceDiff <= 0.3) score += 2;
+      }
 
       // Same transmission (1 point)
       if (vehicle.transmission === currentVehicle.transmission) score += 1;
@@ -48,7 +65,7 @@ export default function SimilarVehicles({ currentVehicle, maxItems = 4 }: Simila
       .sort((a, b) => b.score - a.score)
       .slice(0, maxItems)
       .map((item) => item.vehicle);
-  }, [currentVehicle, maxItems]);
+  }, [currentVehicle, maxItems, apiVehicles, isError]);
 
   if (similarVehicles.length === 0) {
     return null;

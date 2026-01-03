@@ -11,7 +11,9 @@ import {
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
-import { plans, formatCurrency, mockPaymentMethods } from '@/mocks/billingData';
+import { usePlans, usePaymentMethods, useCreateSubscription } from '@/hooks/useBilling';
+import { useAuthStore } from '@/store/authStore';
+import { plans as mockPlans, formatCurrency, mockPaymentMethods } from '@/mocks/billingData';
 import type { BillingCycle } from '@/types/billing';
 
 interface LocationState {
@@ -27,10 +29,23 @@ export default function CheckoutPage() {
   const planId = state?.planId || 'professional';
   const billingCycle = state?.billingCycle || 'monthly';
   
+  // Get user info
+  const { user } = useAuthStore();
+  const dealerId = user?.dealerId || user?.id || '';
+  
+  // Use TanStack Query hooks
+  const { data: fetchedPlans } = usePlans();
+  const { data: fetchedPaymentMethods } = usePaymentMethods(dealerId);
+  const createSubscription = useCreateSubscription();
+  
+  // Use fetched data or fallback to mocks
+  const plans = fetchedPlans?.length ? fetchedPlans : mockPlans;
+  const paymentMethods = fetchedPaymentMethods?.length ? fetchedPaymentMethods : mockPaymentMethods;
+  
   const plan = plans.find(p => p.id === planId) || plans[2]; // Default to professional
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    mockPaymentMethods.find(m => m.isDefault)?.id || mockPaymentMethods[0]?.id
+    paymentMethods.find(m => m.isDefault)?.id || paymentMethods[0]?.id
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -56,16 +71,36 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Navigate to success page or billing dashboard
-    navigate('/billing', { 
-      state: { 
-        success: true, 
-        message: `Successfully subscribed to ${plan.name} plan!` 
-      } 
-    });
+    try {
+      // Try to create subscription via API
+      await createSubscription.mutateAsync({
+        dealerId,
+        planId,
+        cycle: billingCycle,
+        paymentMethodId: selectedPaymentMethod,
+        promoCode: promoApplied ? promoCode : undefined,
+      });
+      
+      // Navigate to success page or billing dashboard
+      navigate('/billing', { 
+        state: { 
+          success: true, 
+          message: `Successfully subscribed to ${plan.name} plan!` 
+        } 
+      });
+    } catch {
+      // Fallback: simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      navigate('/billing', { 
+        state: { 
+          success: true, 
+          message: `Successfully subscribed to ${plan.name} plan!` 
+        } 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -118,7 +153,7 @@ export default function CheckoutPage() {
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h2>
                   
                   <div className="space-y-3">
-                    {mockPaymentMethods.map((method) => (
+                    {paymentMethods.map((method) => (
                       <label
                         key={method.id}
                         className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${

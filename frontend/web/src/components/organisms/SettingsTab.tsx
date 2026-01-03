@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/authService';
 import uploadService from '@/services/uploadService';
-import notificationService, { type NotificationPreferences } from '@/services/notificationService';
+import { type NotificationPreferences } from '@/services/notificationService';
+import { useNotificationPreferences, useUpdatePreferences } from '@/hooks/useNotifications';
 import { FiUser, FiBell, FiLock, FiShield, FiMail, FiCamera, FiCheck, FiX } from 'react-icons/fi';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,6 +40,10 @@ export default function SettingsTab() {
   const [errorMessage, setErrorMessage] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user?.avatar);
   const [uploadProgress, setUploadProgress] = useState(0);
+  // TanStack Query hooks for notification preferences
+  const { data: fetchedPreferences, isLoading: prefsLoading } = useNotificationPreferences();
+  const updatePreferences = useUpdatePreferences();
+
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     emailNotifications: true,
     pushNotifications: false,
@@ -65,18 +70,12 @@ export default function SettingsTab() {
     resolver: zodResolver(passwordSchema),
   });
 
-  // Load notification preferences
+  // Sync notification preferences from API
   useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        const prefs = await notificationService.getPreferences();
-        setNotificationPrefs(prefs);
-      } catch (error) {
-        console.error('Error loading preferences:', error);
-      }
-    };
-    loadPreferences();
-  }, []);
+    if (fetchedPreferences) {
+      setNotificationPrefs(fetchedPreferences);
+    }
+  }, [fetchedPreferences]);
 
   const showMessage = (type: 'success' | 'error', message: string) => {
     if (type === 'success') {
@@ -161,14 +160,19 @@ export default function SettingsTab() {
     const newValue = !notificationPrefs[key];
     setNotificationPrefs((prev) => ({ ...prev, [key]: newValue }));
 
-    try {
-      await notificationService.updatePreferences({ [key]: newValue });
-      showMessage('success', 'Notification preferences updated');
-    } catch {
-      // Revert on error
-      setNotificationPrefs((prev) => ({ ...prev, [key]: !newValue }));
-      showMessage('error', 'Failed to update preferences');
-    }
+    updatePreferences.mutate(
+      { [key]: newValue },
+      {
+        onSuccess: () => {
+          showMessage('success', 'Notification preferences updated');
+        },
+        onError: () => {
+          // Revert on error
+          setNotificationPrefs((prev) => ({ ...prev, [key]: !newValue }));
+          showMessage('error', 'Failed to update preferences');
+        },
+      }
+    );
   };
 
   const handleDeleteAccount = async () => {

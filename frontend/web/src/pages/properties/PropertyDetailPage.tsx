@@ -16,9 +16,16 @@ import ContactSellerForm from '@/components/organisms/ContactSellerForm';
 import type { PropertyListing } from '@/types/marketplace';
 import { isPropertyListing } from '@/types/marketplace';
 
+// Extract the ID from SEO-friendly URL (e.g., "penthouse-de-lujo-con-vista-al-mar-p1" -> "p1")
+const extractIdFromSlug = (slugWithId: string): string => {
+  const parts = slugWithId.split('-');
+  return parts[parts.length - 1] || slugWithId;
+};
+
 const PropertyDetailPage: React.FC = () => {
   const { t } = useTranslation(['properties', 'common']);
-  const { id } = useParams<{ id: string }>();
+  const { id: slugWithId } = useParams<{ id: string }>();
+  const id = slugWithId ? extractIdFromSlug(slugWithId) : undefined;
   
   const { data: listing, isLoading, error } = useListing(id || '');
   const { data: similarListings = [] } = useSimilarListings(listing || null, 4);

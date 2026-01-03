@@ -12,12 +12,26 @@ import {
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
-import { plans, formatCurrency, mockSubscription } from '@/mocks/billingData';
+import { usePlans, useSubscription } from '@/hooks/useBilling';
+import { useAuthStore } from '@/store/authStore';
+import { plans as mockPlans, formatCurrency } from '@/mocks/billingData';
 import type { BillingCycle, PlanConfig } from '@/types/billing';
 
 export default function PlansPage() {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+  
+  // Get user info for subscription lookup
+  const { user } = useAuthStore();
+  const dealerId = user?.dealerId || user?.id || '';
+  
+  // Use TanStack Query hooks
+  const { data: fetchedPlans, isLoading: isLoadingPlans } = usePlans();
+  const { data: currentSubscription, isLoading: isLoadingSub } = useSubscription(dealerId);
+  
+  // Use fetched plans if available, fallback to mocks
+  const plans = fetchedPlans || mockPlans;
+  const isLoading = isLoadingPlans || isLoadingSub;
 
   const getPrice = (plan: PlanConfig) => {
     return plan.prices[billingCycle];
@@ -36,12 +50,14 @@ export default function PlansPage() {
   };
 
   const isCurrentPlan = (planId: string) => {
-    return mockSubscription.plan === planId && mockSubscription.cycle === billingCycle;
+    if (!currentSubscription) return false;
+    return currentSubscription.plan === planId && currentSubscription.cycle === billingCycle;
   };
 
   const isUpgrade = (planId: string) => {
     const planOrder = ['free', 'basic', 'professional', 'enterprise'];
-    const currentIndex = planOrder.indexOf(mockSubscription.plan);
+    const currentPlan = currentSubscription?.plan || 'free';
+    const currentIndex = planOrder.indexOf(currentPlan);
     const planIndex = planOrder.indexOf(planId);
     return planIndex > currentIndex;
   };

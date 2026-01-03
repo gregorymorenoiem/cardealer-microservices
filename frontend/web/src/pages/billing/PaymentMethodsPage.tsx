@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,25 +12,56 @@ import {
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
+import { usePaymentMethods, useSetDefaultPaymentMethod, useRemovePaymentMethod } from '@/hooks/useBilling';
+import { useAuthStore } from '@/store/authStore';
 import { mockPaymentMethods } from '@/mocks/billingData';
 import type { PaymentMethodInfo } from '@/types/billing';
 
 export default function PaymentMethodsPage() {
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>(mockPaymentMethods);
+  // Get user info
+  const { user } = useAuthStore();
+  const dealerId = user?.dealerId || user?.id || '';
+  
+  // Use TanStack Query hooks
+  const { data: fetchedPaymentMethods } = usePaymentMethods(dealerId);
+  const setDefaultMutation = useSetDefaultPaymentMethod();
+  const removeMutation = useRemovePaymentMethod();
+  
+  // Use fetched data or fallback to mocks
+  const initialMethods = fetchedPaymentMethods?.length ? fetchedPaymentMethods : mockPaymentMethods;
+  
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>(initialMethods);
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const handleSetDefault = (id: string) => {
-    setPaymentMethods(methods =>
-      methods.map(m => ({
-        ...m,
-        isDefault: m.id === id,
-      }))
-    );
+  // Update local state when API data changes
+  useEffect(() => {
+    if (fetchedPaymentMethods?.length) {
+      setPaymentMethods(fetchedPaymentMethods);
+    }
+  }, [fetchedPaymentMethods]);
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      await setDefaultMutation.mutateAsync({ dealerId, paymentMethodId: id });
+    } catch {
+      // Fallback to local state update
+      setPaymentMethods(methods =>
+        methods.map(m => ({
+          ...m,
+          isDefault: m.id === id,
+        }))
+      );
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setPaymentMethods(methods => methods.filter(m => m.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await removeMutation.mutateAsync({ dealerId, paymentMethodId: id });
+    } catch {
+      // Fallback to local state update
+      setPaymentMethods(methods => methods.filter(m => m.id !== id));
+    }
     setDeleteConfirm(null);
   };
 

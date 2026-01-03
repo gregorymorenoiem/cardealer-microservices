@@ -1,11 +1,19 @@
-import { useState } from 'react';
-import { mockPendingVehicles } from '../../data/mockAdmin';
+import { useState, useCallback } from 'react';
+import { usePendingApprovalsPage } from '../../hooks';
 import { LocalizedContent } from '@/components/common';
 import type { PendingVehicle } from '../../types/admin';
-import { FiCheck, FiX, FiEye, FiUser, FiCalendar, FiMail } from 'react-icons/fi';
+import { FiCheck, FiX, FiEye, FiUser, FiCalendar, FiRefreshCw } from 'react-icons/fi';
 
 const PendingApprovalsPage = () => {
-  const [vehicles, setVehicles] = useState<PendingVehicle[]>(mockPendingVehicles);
+  const { 
+    vehicles, 
+    total, 
+    isLoading, 
+    refetch, 
+    approveVehicle, 
+    rejectVehicle 
+  } = usePendingApprovalsPage();
+  
   const [selectedVehicle, setSelectedVehicle] = useState<PendingVehicle | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -52,21 +60,24 @@ const PendingApprovalsPage = () => {
     setCurrentImageIndex(0);
   };
 
-  const handleApprove = async (vehicleId: string) => {
+  const handleApprove = useCallback(async (vehicleId: string) => {
     setIsProcessing(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await approveVehicle.mutateAsync(vehicleId);
+      refetch();
+    } catch (error) {
+      console.error('Error approving vehicle:', error);
+    }
     
-    setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
     setSelectedVehicle(null);
     setShowDetailsModal(false);
     setIsProcessing(false);
     
     console.log('Approved vehicle:', vehicleId);
-  };
+  }, [approveVehicle, refetch]);
 
-  const handleReject = async (vehicleId: string) => {
+  const handleReject = useCallback(async (vehicleId: string) => {
     if (!rejectReason.trim()) {
       alert('Please provide a reason for rejection');
       return;
@@ -74,29 +85,47 @@ const PendingApprovalsPage = () => {
     
     setIsProcessing(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await rejectVehicle.mutateAsync({ vehicleId, reason: rejectReason });
+      refetch();
+    } catch (error) {
+      console.error('Error rejecting vehicle:', error);
+    }
     
-    setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
     setSelectedVehicle(null);
     setRejectReason('');
     setShowDetailsModal(false);
     setIsProcessing(false);
     
     console.log('Rejected vehicle:', vehicleId, 'Reason:', rejectReason);
-  };
+  }, [rejectVehicle, rejectReason, refetch]);
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Pending Approvals</h1>
-        <p className="text-gray-600 mt-1">
-          {vehicles.length} listing{vehicles.length !== 1 ? 's' : ''} waiting for review
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Pending Approvals</h1>
+          <p className="text-gray-600 mt-1">
+            {total} listing{total !== 1 ? 's' : ''} waiting for review
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
-      {vehicles.length === 0 ? (
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-8 text-gray-500">Loading pending approvals...</div>
+      )}
+
+      {!isLoading && vehicles.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FiCheck className="w-8 h-8 text-green-600" />

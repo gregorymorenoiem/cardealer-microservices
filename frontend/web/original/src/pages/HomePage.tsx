@@ -533,7 +533,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
             return (
               <Link
                 key={listing.id}
-                to={`/listing/${listing.id}`}
+                to={`/vehicles/${listing.id}`}
                 className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group"
                 style={{ scrollSnapAlign: 'start' }}
               >
@@ -883,7 +883,7 @@ const HomePage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/vehicles/sell"
+                to="/sell-your-car"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 hover:bg-gray-100 font-medium rounded-xl transition-colors"
               >
                 <FaCar className="w-5 h-5" />

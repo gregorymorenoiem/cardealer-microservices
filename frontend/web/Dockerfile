@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Install dependencies first (better caching)
 COPY package*.json ./
-RUN npm ci --frozen-lockfile
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .

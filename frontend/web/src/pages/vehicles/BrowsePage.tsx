@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '@/layouts/MainLayout';
@@ -7,9 +7,12 @@ import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
 import EmptyState from '@/components/organisms/EmptyState';
 import AdvancedFilters, { type VehicleFilters, type SortOption } from '@/components/organisms/AdvancedFilters';
 import Pagination from '@/components/molecules/Pagination';
+import SaveSearchModal, { type SaveSearchData } from '@/components/organisms/SaveSearchModal';
+import { type VehicleFilters as ServiceFilters } from '@/services/vehicleService';
 import { mockVehicles, filterVehicles, sortVehicles } from '@/data/mockVehicles';
 import { useCompare } from '@/hooks/useCompare';
-import { FiGrid, FiList, FiBarChart2, FiMap } from 'react-icons/fi';
+import { useSearchPage, useAddRecentSearch, useCreateSavedSearch } from '@/hooks/useSearch';
+import { FiGrid, FiList, FiBarChart2, FiMap, FiWifi, FiWifiOff, FiBookmark, FiSave } from 'react-icons/fi';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -42,35 +45,73 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'year-desc');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [_useMockData] = useState(true); // Toggle between mock and real API
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
-  // Fetch vehicles with React Query (commented out until API is ready)
-  // const { data, isLoading, isError, refetch } = useQuery({
-  //   queryKey: ['vehicles', filters, sortBy, currentPage],
-  //   queryFn: () => vehicleService.searchVehicles({
-  //     ...filters,
-  //     sort: sortBy,
-  //     page: currentPage,
-  //     limit: ITEMS_PER_PAGE,
-  //   }),
-  //   staleTime: 5 * 60 * 1000, // 5 minutes
-  // });
+  // Convert UI filters to service filters format
+  const serviceFilters: ServiceFilters = useMemo(() => ({
+    search: filters.make || filters.model ? `${filters.make || ''} ${filters.model || ''}`.trim() : undefined,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
+  }), [filters]);
 
-  // Mock data fallback (remove when API is ready)
-  const isLoading = false;
-  const isError = false;
-  const filteredVehicles = filterVehicles(mockVehicles, filters);
-  const sortedVehicles = sortVehicles(filteredVehicles, sortBy);
-  const totalPages = Math.ceil(sortedVehicles.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedVehicles = sortedVehicles.slice(startIndex, endIndex);
-  const totalItems = sortedVehicles.length;
+  // Use the composite search hook
+  const searchPage = useSearchPage(serviceFilters, currentPage, ITEMS_PER_PAGE);
+  const addRecentSearch = useAddRecentSearch();
+  const createSavedSearch = useCreateSavedSearch();
 
-  // When using real API, use this instead:
-  // const vehicles = data?.data.items || [];
-  // const totalItems = data?.data.total || 0;
-  // const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  // Handler for saving search
+  const handleSaveSearch = useCallback((data: SaveSearchData) => {
+    createSavedSearch.mutate({
+      name: data.name,
+      filters: data.filters as Record<string, unknown>,
+      notificationsEnabled: data.notificationsEnabled,
+      alertFrequency: data.alertFrequency,
+    }, {
+      onSuccess: () => {
+        setShowSaveModal(false);
+      },
+    });
+  }, [createSavedSearch]);
+
+  // Use API data if available, fallback to mock data
+  const isUsingMockData = searchPage.isError || searchPage.vehicles.length === 0;
+  
+  // Process data - API first, then mock as fallback
+  const processedData = useMemo(() => {
+    if (!searchPage.isError && searchPage.vehicles.length > 0) {
+      // Using real API data - sort on client side since backend may not support sort
+      const sorted = sortVehicles(searchPage.vehicles as unknown as typeof mockVehicles, sortBy);
+      return {
+        vehicles: sorted,
+        totalItems: searchPage.total,
+        totalPages: searchPage.totalPages,
+        isLoading: searchPage.isLoading,
+        isError: false,
+      };
+    }
+    
+    // Fallback to mock data
+    const filteredVehicles = filterVehicles(mockVehicles, filters);
+    const sortedVehicles = sortVehicles(filteredVehicles, sortBy);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedVehicles = sortedVehicles.slice(startIndex, endIndex);
+    
+    return {
+      vehicles: paginatedVehicles,
+      totalItems: sortedVehicles.length,
+      totalPages: Math.ceil(sortedVehicles.length / ITEMS_PER_PAGE),
+      isLoading: false,
+      isError: false,
+    };
+  }, [searchPage, filters, sortBy, currentPage]);
+
+  const { vehicles: paginatedVehicles, totalItems, totalPages, isLoading, isError } = processedData;
+
+  // Log API status for debugging and track search
+  if (searchPage.isError) {
+    console.warn('ProductService API error, using mock data');
+  }
 
   // Update URL params when filters change
   const updateURLParams = useCallback((filters: VehicleFilters, sort: SortOption, page: number) => {
@@ -96,7 +137,18 @@ export default function BrowsePage() {
     setFilters(newFilters);
     setCurrentPage(1);
     updateURLParams(newFilters, sortBy, 1);
-  }, [sortBy, updateURLParams]);
+    
+    // Track search in recent searches
+    const searchQuery = newFilters.make || newFilters.model 
+      ? `${newFilters.make || ''} ${newFilters.model || ''}`.trim() 
+      : null;
+    if (searchQuery) {
+      addRecentSearch.mutate({
+        query: searchQuery,
+        filters: newFilters as Record<string, unknown>,
+      });
+    }
+  }, [sortBy, updateURLParams, addRecentSearch]);
 
   const handleSortChange = useCallback((newSort: SortOption) => {
     setSortBy(newSort);
@@ -141,9 +193,23 @@ export default function BrowsePage() {
               <div className="bg-white rounded-xl shadow-card p-4 sm:p-6 mb-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {t('browse.vehiclesFound', { count: sortedVehicles.length })}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {t('browse.vehiclesFound', { count: totalItems })}
+                      </p>
+                      {/* Data source indicator */}
+                      <span 
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          isUsingMockData 
+                            ? 'bg-amber-100 text-amber-700' 
+                            : 'bg-green-100 text-green-700'
+                        }`}
+                        title={isUsingMockData ? 'Using demo data' : 'Live data from ProductService'}
+                      >
+                        {isUsingMockData ? <FiWifiOff size={12} /> : <FiWifi size={12} />}
+                        {isUsingMockData ? 'Demo' : 'Live'}
+                      </span>
+                    </div>
                     {Object.keys(filters).some((key) => filters[key as keyof VehicleFilters]) && (
                       <p className="text-sm text-gray-600 mt-1">
                         {t('browse.filteredResults')}
@@ -153,6 +219,31 @@ export default function BrowsePage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-3">
+                    {/* Save Search Button */}
+                    <button
+                      onClick={() => setShowSaveModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-primary text-white hover:bg-primary-dark"
+                      title="Guardar esta búsqueda"
+                    >
+                      <FiSave size={18} />
+                      <span className="hidden sm:inline">Guardar búsqueda</span>
+                    </button>
+
+                    {/* Saved Searches Button */}
+                    <Link
+                      to="/saved-searches"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      title={`${searchPage.savedSearches.length} búsquedas guardadas`}
+                    >
+                      <FiBookmark size={18} />
+                      <span className="hidden sm:inline">Guardadas</span>
+                      {searchPage.savedSearches.length > 0 && (
+                        <span className="ml-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-sm">
+                          {searchPage.savedSearches.length}
+                        </span>
+                      )}
+                    </Link>
+
                     {/* Compare Button */}
                     <Link
                       to="/vehicles/compare"
@@ -278,6 +369,15 @@ export default function BrowsePage() {
           </div>
         </div>
       </div>
+
+      {/* Save Search Modal */}
+      <SaveSearchModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveSearch}
+        filters={filters}
+        isSaving={createSavedSearch.isPending}
+      />
     </MainLayout>
   );
 }

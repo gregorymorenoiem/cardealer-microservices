@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiMessageSquare, FiCheckCircle } from 'react-icons/fi';
+import { useQuery } from '@tanstack/react-query';
+import { FiSearch, FiMessageSquare, FiCheckCircle, FiWifi, FiWifiOff } from 'react-icons/fi';
 import Button from '@/components/atoms/Button';
 import MainLayout from '@/layouts/MainLayout';
 import SearchBar from '@/components/molecules/SearchBar';
 import VehicleCard from '@/components/organisms/VehicleCard';
+import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
+import { getFeaturedVehicles } from '@/services/vehicleService';
 import { mockVehicles } from '@/data/mockVehicles';
 
 function HomePage() {
@@ -14,8 +17,23 @@ function HomePage() {
     // TODO: Navigate to browse page with filters
   };
 
-  // Get featured vehicles for display
-  const featuredVehicles = mockVehicles.filter(v => v.isFeatured).slice(0, 8);
+  // Fetch featured vehicles from API
+  const { 
+    data: apiVehicles, 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['featured-vehicles', 8],
+    queryFn: () => getFeaturedVehicles(8),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Use API data or fallback to mock
+  const isUsingMockData = isError || !apiVehicles?.length;
+  const featuredVehicles = !isUsingMockData 
+    ? apiVehicles 
+    : mockVehicles.filter(v => v.isFeatured).slice(0, 8);
 
   return (
     <MainLayout>
@@ -143,9 +161,23 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900 mb-2">
-                {t('vehicles:home.featuredListings')}
-              </h2>
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900">
+                  {t('vehicles:home.featuredListings')}
+                </h2>
+                {/* Data source indicator */}
+                <span 
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    isUsingMockData 
+                      ? 'bg-amber-100 text-amber-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}
+                  title={isUsingMockData ? 'Using demo data' : 'Live data from ProductService'}
+                >
+                  {isUsingMockData ? <FiWifiOff size={12} /> : <FiWifi size={12} />}
+                  {isUsingMockData ? 'Demo' : 'Live'}
+                </span>
+              </div>
               <p className="text-gray-600">
                 {t('vehicles:home.featuredSubtitle')}
               </p>
@@ -157,23 +189,30 @@ function HomePage() {
 
           {/* Vehicle Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {featuredVehicles.map((vehicle) => (
-              <VehicleCard
-                key={vehicle.id}
-                id={vehicle.id}
-                make={vehicle.make}
-                model={vehicle.model}
-                year={vehicle.year}
-                price={vehicle.price}
-                mileage={vehicle.mileage}
-                location={vehicle.location}
-                imageUrl={vehicle.images[0]}
-                isFeatured={vehicle.isFeatured}
-                isNew={vehicle.isNew}
-                transmission={vehicle.transmission}
-                fuelType={vehicle.fuelType}
-              />
-            ))}
+            {isLoading ? (
+              // Show skeletons while loading
+              Array.from({ length: 8 }).map((_, i) => (
+                <VehicleCardSkeleton key={i} />
+              ))
+            ) : (
+              featuredVehicles.map((vehicle) => (
+                <VehicleCard
+                  key={vehicle.id}
+                  id={vehicle.id}
+                  make={vehicle.make}
+                  model={vehicle.model}
+                  year={vehicle.year}
+                  price={vehicle.price}
+                  mileage={vehicle.mileage}
+                  location={vehicle.location || ''}
+                  imageUrl={vehicle.images?.[0] || '/placeholder-car.jpg'}
+                  isFeatured={vehicle.isFeatured}
+                  isNew={vehicle.isNew}
+                  transmission={vehicle.transmission}
+                  fuelType={vehicle.fuelType}
+                />
+              ))
+            )}
           </div>
 
           <div className="text-center mt-10">

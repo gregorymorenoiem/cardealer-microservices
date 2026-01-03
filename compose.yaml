@@ -148,6 +148,16 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
+      # CORS
+      Cors__AllowedOrigins__0: "http://localhost:3000"
+      Cors__AllowedOrigins__1: "http://localhost:3001"
+      Cors__AllowedOrigins__2: "http://localhost:5173"
+      Cors__AllowedOrigins__3: "http://localhost:5174"
+      Cors__AllowedHeaders__0: "*"
+      Cors__AllowCredentials: "true"
+      # Google OAuth - Set via environment variables
+      Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-your-google-client-id}"
+      Authentication__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET:-your-google-client-secret}"
     ports:
       - "15085:80" # Cambiado
       - "24023:4022" # Cambiado
@@ -629,6 +639,8 @@ services:
         condition: service_healthy
       errorservice:
         condition: service_started
+    ports:
+      - "15090:80"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:80"
@@ -653,18 +665,21 @@ services:
       RabbitMQ__Password: guest
       Consul__Enabled: "false"
       Consul__Address: "http://consul:8500"
-      # Storage configuration
-      S3Storage__Enabled: "false"
+      # Storage configuration - AWS S3 Enabled
+      S3Storage__Enabled: "true"
+      S3Storage__AccessKey: "${AWS_ACCESS_KEY_ID:-AKIAQII4Y254AUECTCON}"
+      S3Storage__SecretKey: "${AWS_SECRET_ACCESS_KEY:-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}"
+      S3Storage__BucketName: "${AWS_S3_BUCKET:-okla-images-2026}"
+      S3Storage__Region: "${AWS_REGION:-us-east-2}"
+      S3Storage__CdnBaseUrl: ""
+      S3Storage__PreSignedUrlExpirationMinutes: "60"
       AzureBlobStorage__Enabled: "false"
-      LocalStorage__Enabled: "true"
+      LocalStorage__Enabled: "false"
       LocalStorage__BasePath: "/app/media-files"
       ServiceUrls__ErrorService: "http://errorservice:80"
     volumes:
       - ./backend:/app
       - mediaservice_files:/app/media-files
-    ports:
-      - "15102:80"
-      - "24025:4022"
     networks:
       - cargurus-net
 
@@ -1106,6 +1121,270 @@ services:
       - "24034:4022"
     depends_on:
       productservice-db:
+        condition: service_healthy
+      errorservice:
+        condition: service_started
+    networks:
+      - cargurus-net
+
+  # ==============================================
+  # 4 VERTICAL-SPECIFIC MICROSERVICES (Jan 2026)
+  # ==============================================
+
+  # VehiclesSaleService - Vehicles for Sale vertical
+  vehiclessaleservice-db:
+    image: postgres:16
+    container_name: vehiclessaleservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: vehiclessaleservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25460:5432"
+    volumes:
+      - vehiclessaleservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vehiclessaleservice:
+    build:
+      context: ./backend
+      dockerfile: VehiclesSaleService/VehiclesSaleService.Api/Dockerfile.dev
+    container_name: vehiclessaleservice
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__Host: vehiclessaleservice-db
+      Database__Port: "5432"
+      Database__Database: vehiclessaleservice
+      Database__Username: postgres
+      Database__Password: password
+      Database__AutoMigrate: "true"
+      ConnectionStrings__DefaultConnection: "Host=vehiclessaleservice-db;Database=vehiclessaleservice;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      ServiceUrls__ErrorService: "http://errorservice:80"
+    ports:
+      - "15070:80"
+    depends_on:
+      vehiclessaleservice-db:
+        condition: service_healthy
+      errorservice:
+        condition: service_started
+    networks:
+      - cargurus-net
+
+  # VehiclesRentService - Vehicles for Rent vertical
+  vehiclesrentservice-db:
+    image: postgres:16
+    container_name: vehiclesrentservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: vehiclesrentservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25461:5432"
+    volumes:
+      - vehiclesrentservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vehiclesrentservice:
+    build:
+      context: ./backend
+      dockerfile: VehiclesRentService/VehiclesRentService.Api/Dockerfile.dev
+    container_name: vehiclesrentservice
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__Host: vehiclesrentservice-db
+      Database__Port: "5432"
+      Database__Database: vehiclesrentservice
+      Database__Username: postgres
+      Database__Password: password
+      Database__AutoMigrate: "true"
+      ConnectionStrings__DefaultConnection: "Host=vehiclesrentservice-db;Database=vehiclesrentservice;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      ServiceUrls__ErrorService: "http://errorservice:80"
+    ports:
+      - "15071:80"
+    depends_on:
+      vehiclesrentservice-db:
+        condition: service_healthy
+      errorservice:
+        condition: service_started
+    networks:
+      - cargurus-net
+
+  # PropertiesSaleService - Properties for Sale vertical
+  propertiessaleservice-db:
+    image: postgres:16
+    container_name: propertiessaleservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: propertiessaleservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25462:5432"
+    volumes:
+      - propertiessaleservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  propertiessaleservice:
+    build:
+      context: ./backend
+      dockerfile: PropertiesSaleService/PropertiesSaleService.Api/Dockerfile.dev
+    container_name: propertiessaleservice
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__Host: propertiessaleservice-db
+      Database__Port: "5432"
+      Database__Database: propertiessaleservice
+      Database__Username: postgres
+      Database__Password: password
+      Database__AutoMigrate: "true"
+      ConnectionStrings__DefaultConnection: "Host=propertiessaleservice-db;Database=propertiessaleservice;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      ServiceUrls__ErrorService: "http://errorservice:80"
+    ports:
+      - "15072:80"
+    depends_on:
+      propertiessaleservice-db:
+        condition: service_healthy
+      errorservice:
+        condition: service_started
+    networks:
+      - cargurus-net
+
+  # PropertiesRentService - Properties for Rent vertical
+  propertiesrentservice-db:
+    image: postgres:16
+    container_name: propertiesrentservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: propertiesrentservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25463:5432"
+    volumes:
+      - propertiesrentservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  propertiesrentservice:
+    build:
+      context: ./backend
+      dockerfile: PropertiesRentService/PropertiesRentService.Api/Dockerfile.dev
+    container_name: propertiesrentservice
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__Host: propertiesrentservice-db
+      Database__Port: "5432"
+      Database__Database: propertiesrentservice
+      Database__Username: postgres
+      Database__Password: password
+      Database__AutoMigrate: "true"
+      ConnectionStrings__DefaultConnection: "Host=propertiesrentservice-db;Database=propertiesrentservice;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      ServiceUrls__ErrorService: "http://errorservice:80"
+    ports:
+      - "15073:80"
+    depends_on:
+      propertiesrentservice-db:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -1936,6 +2215,40 @@ services:
     networks:
       - cargurus-net
 
+  # Frontend Web (React + Vite) - Development Mode
+  frontend-web:
+    build:
+      context: ./frontend/web
+      dockerfile: Dockerfile.dev
+    container_name: frontend-web
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          memory: 1G
+    ports:
+      - "3000:5173"  # Vite dev server
+    volumes:
+      - ./frontend/web/src:/app/src
+      - ./frontend/web/public:/app/public
+    depends_on:
+      - gateway
+      - authservice
+    networks:
+      - cargurus-net
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=1536
+      - VITE_API_URL=http://localhost:18443/api
+      - VITE_AUTH_SERVICE_URL=http://localhost:15085/api
+      - VITE_PRODUCT_SERVICE_URL=http://localhost:15006/api
+      - VITE_MEDIA_SERVICE_URL=http://localhost:15090/api
+      - VITE_USE_MOCK_AUTH=false
+      - VITE_ENABLE_MSW=false
+      - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-your-google-client-id}
+    restart: on-failure
+
 volumes:
   errorservice_data:
   authservice_data:
@@ -1957,6 +2270,10 @@ volumes:
   realestateservice_data:
   messagebusservice_data:
   productservice_data:
+  vehiclessaleservice_data:
+  vehiclesrentservice_data:
+  propertiessaleservice_data:
+  propertiesrentservice_data:
   auditservice_data:
   backupdrservice_data:
   schedulerservice_data:

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/layouts/MainLayout';
 import { LocalizedContent } from '@/components/common';
 import ImageGallery from '@/components/organisms/ImageGallery';
@@ -9,20 +11,67 @@ import ReviewsSection from '@/components/organisms/ReviewsSection';
 import SimilarVehicles from '@/components/organisms/SimilarVehicles';
 import ShareButton from '@/components/molecules/ShareButton';
 import PrintButton from '@/components/atoms/PrintButton';
+import { getVehicleById, type Vehicle } from '@/services/vehicleService';
 import { mockVehicles } from '@/data/mockVehicles';
 import { getReviewStats, getVehicleReviews } from '@/data/mockReviews';
 import { formatPrice } from '@/utils/formatters';
-import { FiHome, FiChevronRight, FiStar, FiMapPin, FiPhone, FiUser, FiHeart } from 'react-icons/fi';
+import { FiHome, FiChevronRight, FiStar, FiMapPin, FiPhone, FiUser, FiHeart, FiLoader, FiAlertCircle, FiWifi, FiWifiOff } from 'react-icons/fi';
 import { useFavorites } from '@/hooks/useFavorites';
+
+// Extract the ID from SEO-friendly URL (e.g., "mercedes-benz-clase-c-amg-2024-v1" -> "v1")
+const extractIdFromSlug = (slugWithId: string): string => {
+  const parts = slugWithId.split('-');
+  return parts[parts.length - 1] || slugWithId;
+};
 
 export default function VehicleDetailPage() {
   const { t } = useTranslation('vehicles');
-  const { id } = useParams<{ id: string }>();
-  const vehicle = mockVehicles.find((v) => v.id === id);
+  const { id: slugWithId } = useParams<{ id: string }>();
+  const id = slugWithId ? extractIdFromSlug(slugWithId) : undefined;
   const { isFavorite, toggleFavorite } = useFavorites();
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  // Fetch vehicle from ProductService
+  const {
+    data: apiVehicle,
+    isLoading, 
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['vehicle', id],
+    queryFn: () => getVehicleById(id!),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+
+  // Fallback to mock data if API fails
+  const mockVehicle = mockVehicles.find((v) => v.id === id);
+  const isUsingMockData = isError || !apiVehicle;
+  const vehicle = apiVehicle || mockVehicle;
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="bg-gray-50 min-h-screen py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-center justify-center py-20">
+              <FiLoader className="animate-spin text-primary mb-4" size={48} />
+              <p className="text-gray-600">Loading vehicle details...</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (!vehicle) {
-    return <Navigate to="/browse" replace />;
+    return <Navigate to="/vehicles" replace />;
   }
 
   const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
@@ -53,13 +102,27 @@ export default function VehicleDetailPage() {
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
               <div className="flex-1">
-                <h1 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900 mb-2">
-                  {vehicleTitle}
-                </h1>
+                <div className="flex items-center gap-2 mb-2">
+                  <h1 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900">
+                    {vehicleTitle}
+                  </h1>
+                  {/* Data source indicator */}
+                  <span 
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      isUsingMockData 
+                        ? 'bg-amber-100 text-amber-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                    title={isUsingMockData ? 'Using demo data' : 'Live data from ProductService'}
+                  >
+                    {isUsingMockData ? <FiWifiOff size={12} /> : <FiWifi size={12} />}
+                    {isUsingMockData ? 'Demo' : 'Live'}
+                  </span>
+                </div>
                 <div className="flex items-center gap-4 text-gray-600">
                   <span className="flex items-center gap-1">
                     <FiMapPin size={16} />
-                    {vehicle.location}
+                    {vehicle.location || 'Location not specified'}
                   </span>
                   {vehicle.condition && (
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">

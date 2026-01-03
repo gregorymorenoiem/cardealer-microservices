@@ -24,6 +24,8 @@ import {
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import PendingApprovalsPage from './pages/admin/PendingApprovalsPage';
@@ -173,6 +175,12 @@ function App() {
               <RegisterPage />
             </AuthLayout>
           } />
+          <Route path="/forgot-password" element={
+            <AuthLayout>
+              <ForgotPasswordPage />
+            </AuthLayout>
+          } />
+          <Route path="/auth/callback/:provider" element={<OAuthCallbackPage />} />
           
           {/* Protected Routes */}
           <Route path="/profile" element={

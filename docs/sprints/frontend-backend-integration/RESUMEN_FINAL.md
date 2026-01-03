@@ -59,22 +59,12 @@ Todos los sprints están en: `docs/sprints/frontend-backend-integration/`
 
 4. **[SPRINT_0_SETUP_INICIAL.md](SPRINT_0_SETUP_INICIAL.md)** - ~18K tokens, 2-3h  
    ✅ Variables de entorno, CORS, JWT secrets
-   ✅ **CRÍTICO:** Migración de Assets Frontend → Backend (16-20h)
-     - Auditoría de URLs externas (imágenes/videos)
-     - Descargar y optimizar assets (~200-300 archivos)
-     - Seed MediaService con assets
-     - Actualizar frontend para consumir backend
 
 5. **[SPRINT_1_CUENTAS_TERCEROS.md](SPRINT_1_CUENTAS_TERCEROS.md)** - ~22K tokens, 3-4h  
    ✅ Google, Firebase, Stripe, SendGrid, Twilio, AWS S3, Sentry
 
 ### Sprints - Fase 1: Core Features (4 sprints, ~112K tokens, 21-25 horas)
 
-   ✅ **CRÍTICO:** Seed Catálogo de Vehículos tipo CarGurus (12-16h)
-     - Base de datos con ~50-100 marcas (Toyota, Ford, Honda, etc.)
-     - ~500-1000 modelos con especificaciones técnicas
-     - Endpoints de catálogo (makes, models, years, trims)
-     - Frontend muestra dropdowns con datos reales
 6. **[SPRINT_2_AUTH_INTEGRATION.md](SPRINT_2_AUTH_INTEGRATION.md)** - ~25K tokens, 4h  
    ✅ Zustand auth, JWT refresh, OAuth2, PrivateRoute
 

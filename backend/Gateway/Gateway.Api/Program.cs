@@ -99,23 +99,37 @@ builder.Services.AddOpenTelemetry()
         }
     });
 
-// 4. CORS simplificado
+// 4. CORS configurado para múltiples frontends
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactPolicy", policy =>
     {
         if (isDevelopment)
         {
-            policy.WithOrigins("http://localhost:5173")
+            // Permitir múltiples puertos de desarrollo
+            policy.WithOrigins(
+                    "http://localhost:5173",    // Vite default
+                    "http://localhost:5174",    // Frontend original
+                    "http://localhost:3000",    // React alternative
+                    "http://localhost:4200",    // Angular (si aplica)
+                    "http://localhost:8080"     // Frontend Docker
+                  )
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();
         }
         else
         {
-            policy.WithOrigins("https://inelcasrl.com.do")
+            // Producción
+            policy.WithOrigins(
+                    "https://inelcasrl.com.do",
+                    "https://www.inelcasrl.com.do",
+                    "https://cardealer.app",
+                    "https://www.cardealer.app"
+                  )
                   .AllowAnyMethod()
                   .AllowAnyHeader()
+                  .AllowCredentials()
                   .SetPreflightMaxAge(TimeSpan.FromHours(1));
         }
     });
@@ -125,7 +139,7 @@ builder.Services.AddCors(options =>
 try
 {
     var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
-    
+
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -145,7 +159,7 @@ try
             ClockSkew = TimeSpan.FromMinutes(5)
         };
     });
-    
+
     Log.Information("JWT Authentication configured successfully for Gateway");
 }
 catch (InvalidOperationException ex)

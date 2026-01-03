@@ -1,9 +1,7 @@
 import axios from 'axios';
 import type { User } from '@/types';
-import { getMockUserByEmail } from '@/mocks/mockUsers';
 
-const AUTH_API_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:5001/api';
-const USE_MOCK_AUTH = import.meta.env.VITE_USE_MOCK_AUTH === 'true' || true; // Enable mock by default
+const AUTH_API_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:15085/api';
 
 interface LoginCredentials {
   email: string;
@@ -14,9 +12,10 @@ interface LoginCredentials {
 interface RegisterData {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  userName: string;
   phone?: string;
+  accountType: 'individual' | 'dealer';
 }
 
 interface LoginResponse {
@@ -30,66 +29,67 @@ interface RefreshTokenResponse {
   refreshToken: string;
 }
 
+// Backend API response types (from AuthService)
+interface BackendAuthResponse {
+  success: boolean;
+  data: {
+    userId: string;
+    email: string;
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: string;
+    requiresTwoFactor: boolean;
+    tempToken: string | null;
+  };
+  error: string | null;
+}
+
 /**
  * Authentication service - handles login, register, logout, and token management
  */
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    // Mock authentication for testing
-    if (USE_MOCK_AUTH) {
-      const mockUser = getMockUserByEmail(credentials.email);
-      
-      if (mockUser) {
-        // Validate password (all dealers use "password123", admin uses "admin123")
-        const validPassword = 
-          (mockUser.accountType === 'admin' && credentials.password === 'admin123') ||
-          (mockUser.accountType !== 'admin' && credentials.password === 'password123');
-
-        if (!validPassword) {
-          throw new Error('Invalid email or password');
-        }
-
-        const mockResponse: LoginResponse = {
-          user: mockUser,
-          accessToken: 'mock-access-token-' + Date.now(),
-          refreshToken: 'mock-refresh-token-' + Date.now(),
-        };
-
-        // Store tokens
-        localStorage.setItem('accessToken', mockResponse.accessToken);
-        localStorage.setItem('refreshToken', mockResponse.refreshToken);
-
-        if (credentials.rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-        }
-
-        return mockResponse;
-      }
-
-      throw new Error('User not found');
-    }
-
-    // Real API authentication
     try {
-      const response = await axios.post(`${AUTH_API_URL}/auth/login`, {
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/login`, {
         email: credentials.email,
         password: credentials.password,
       });
 
-      const { user: _loginUser, accessToken, refreshToken } = response.data;
+      const { data } = response.data;
+
+      if (!data) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Transform backend response to frontend format
+      const user: User = {
+        id: data.userId,
+        email: data.email,
+        fullName: data.email.split('@')[0], // Temporary until we get user profile
+        accountType: 'individual', // TODO: Get from profile endpoint
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+      };
+
+      const loginResponse: LoginResponse = {
+        user,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      };
 
       // Store tokens
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('userId', data.userId);
 
       if (credentials.rememberMe) {
         localStorage.setItem('rememberMe', 'true');
       }
 
-      return response.data;
+      return loginResponse;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        const message = error.response.data?.message || 'Invalid email or password';
+        const message = error.response.data?.error || 'Invalid email or password';
         throw new Error(message);
       }
       throw new Error('Login failed. Please try again.');
@@ -98,24 +98,44 @@ export const authService = {
 
   async register(data: RegisterData): Promise<LoginResponse> {
     try {
-      const response = await axios.post(`${AUTH_API_URL}/auth/register`, {
+      // Backend only expects: userName, email, password
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/register`, {
+        userName: data.userName,
         email: data.email,
         password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
       });
 
-      const { user: _registerUser, accessToken, refreshToken } = response.data;
+      const { data: backendData } = response.data;
+
+      if (!backendData) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Transform backend response to frontend format
+      const user: User = {
+        id: backendData.userId,
+        email: backendData.email,
+        fullName: data.fullName,
+        accountType: data.accountType,
+        emailVerified: false, // User needs to verify email
+        createdAt: new Date().toISOString(),
+      };
+
+      const loginResponse: LoginResponse = {
+        user,
+        accessToken: backendData.accessToken,
+        refreshToken: backendData.refreshToken,
+      };
 
       // Store tokens
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('accessToken', backendData.accessToken);
+      localStorage.setItem('refreshToken', backendData.refreshToken);
+      localStorage.setItem('userId', backendData.userId);
 
-      return response.data;
+      return loginResponse;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        const message = error.response.data?.message || 'Registration failed';
+        const message = error.response.data?.error || 'Registration failed';
         throw new Error(message);
       }
       throw new Error('Registration failed. Please try again.');
@@ -127,7 +147,7 @@ export const authService = {
       const refreshToken = localStorage.getItem('refreshToken');
       
       if (refreshToken) {
-        await axios.post(`${AUTH_API_URL}/auth/logout`, { refreshToken });
+        await axios.post(`${AUTH_API_URL}/Auth/logout`, { refreshToken });
       }
     } catch (error) {
       console.error('Error during logout:', error);
@@ -135,6 +155,7 @@ export const authService = {
       // Clear tokens regardless of API call success
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userId');
       localStorage.removeItem('rememberMe');
     }
   },
@@ -147,19 +168,29 @@ export const authService = {
         throw new Error('No refresh token available');
       }
 
-      const response = await axios.post(`${AUTH_API_URL}/auth/refresh`, { refreshToken });
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/refresh-token`, { 
+        refreshToken 
+      });
 
-      const { accessToken, refreshToken: newRefreshToken } = response.data;
+      const { data } = response.data;
+
+      if (!data) {
+        throw new Error('Invalid response from server');
+      }
 
       // Update tokens
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', newRefreshToken);
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
 
-      return response.data;
+      return {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      };
     } catch (error) {
       // If refresh fails, clear tokens and force re-login
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userId');
       localStorage.removeItem('rememberMe');
       throw new Error('Session expired. Please login again.');
     }
@@ -202,7 +233,7 @@ export const authService = {
 
   async forgotPassword(email: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/auth/forgot-password`, { email });
+      await axios.post(`${AUTH_API_URL}/Auth/forgot-password`, { email });
     } catch (error) {
       console.error('Error sending password reset email:', error);
       throw new Error('Failed to send password reset email');
@@ -211,13 +242,13 @@ export const authService = {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/auth/reset-password`, {
+      await axios.post(`${AUTH_API_URL}/Auth/reset-password`, {
         token,
         newPassword,
       });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        const message = error.response.data?.message || 'Failed to reset password';
+        const message = error.response.data?.error || 'Failed to reset password';
         throw new Error(message);
       }
       throw new Error('Failed to reset password');
@@ -226,7 +257,7 @@ export const authService = {
 
   async verifyEmail(token: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/auth/verify-email`, { token });
+      await axios.post(`${AUTH_API_URL}/Auth/verify-email`, { token });
     } catch (error) {
       console.error('Error verifying email:', error);
       throw new Error('Failed to verify email');
@@ -252,5 +283,96 @@ export const authService = {
 
   isAuthenticated(): boolean {
     return !!this.getAccessToken();
+  },
+
+  // OAuth2 methods
+  async loginWithGoogle(): Promise<void> {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      throw new Error('Google Client ID not configured');
+    }
+
+    // Construct OAuth URL
+    const redirectUri = `${window.location.origin}/auth/callback/google`;
+    const scope = 'openid email profile';
+    const responseType = 'code';
+    
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.append('client_id', googleClientId);
+    authUrl.searchParams.append('redirect_uri', redirectUri);
+    authUrl.searchParams.append('response_type', responseType);
+    authUrl.searchParams.append('scope', scope);
+    authUrl.searchParams.append('access_type', 'offline');
+    authUrl.searchParams.append('prompt', 'consent');
+
+    // Redirect to Google OAuth
+    window.location.href = authUrl.toString();
+  },
+
+  async loginWithMicrosoft(): Promise<void> {
+    const microsoftClientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
+    if (!microsoftClientId) {
+      throw new Error('Microsoft Client ID not configured');
+    }
+
+    // Construct OAuth URL
+    const redirectUri = `${window.location.origin}/auth/callback/microsoft`;
+    const scope = 'openid email profile';
+    const responseType = 'code';
+    
+    const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
+    authUrl.searchParams.append('client_id', microsoftClientId);
+    authUrl.searchParams.append('redirect_uri', redirectUri);
+    authUrl.searchParams.append('response_type', responseType);
+    authUrl.searchParams.append('scope', scope);
+    authUrl.searchParams.append('response_mode', 'query');
+
+    // Redirect to Microsoft OAuth
+    window.location.href = authUrl.toString();
+  },
+
+  async handleOAuthCallback(provider: 'google' | 'microsoft', code: string): Promise<LoginResponse> {
+    try {
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/ExternalAuth/callback`, {
+        provider,
+        code,
+        redirectUri: `${window.location.origin}/auth/callback/${provider}`,
+      });
+
+      const { data } = response.data;
+
+      if (!data) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Transform backend response to frontend format
+      const user: User = {
+        id: data.userId,
+        email: data.email,
+        fullName: data.email.split('@')[0],
+        accountType: 'individual',
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+      };
+
+      const loginResponse: LoginResponse = {
+        user,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      };
+
+      // Store tokens
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('userId', data.userId);
+
+      return loginResponse;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'OAuth authentication failed';
+        throw new Error(message);
+      }
+      throw new Error('OAuth authentication failed. Please try again.');
+    }
   },
 };

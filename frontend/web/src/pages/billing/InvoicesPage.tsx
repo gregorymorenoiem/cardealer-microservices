@@ -13,6 +13,8 @@ import {
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
+import { useInvoices } from '@/hooks/useBilling';
+import { useAuthStore } from '@/store/authStore';
 import { mockInvoices, formatCurrency, getStatusColor } from '@/mocks/billingData';
 import type { InvoiceStatus } from '@/types/billing';
 
@@ -22,7 +24,17 @@ export default function InvoicesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredInvoices = mockInvoices.filter((invoice) => {
+  // Get user info
+  const { user } = useAuthStore();
+  const dealerId = user?.dealerId || user?.id || '';
+  
+  // Use TanStack Query hook
+  const { data: fetchedInvoices } = useInvoices(dealerId);
+  
+  // Use fetched data or fallback to mocks
+  const invoices = fetchedInvoices?.length ? fetchedInvoices : mockInvoices;
+
+  const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = 
       invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       formatCurrency(invoice.totalAmount).includes(searchQuery);

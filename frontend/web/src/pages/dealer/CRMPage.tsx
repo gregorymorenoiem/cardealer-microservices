@@ -3,9 +3,11 @@
  * 
  * Visual pipeline management for deals and leads
  * Drag-and-drop interface for moving deals between stages
+ * 
+ * Updated to use TanStack Query hooks for data fetching
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus,
@@ -27,17 +29,16 @@ import {
   Briefcase,
   Clock,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { 
-  mockPipelines, 
-  mockDeals, 
-  mockLeads, 
-  mockActivities,
-  type Deal,
-  type Lead,
-  type Stage,
-} from '@/mocks/crmData';
+  useKanbanBoard,
+  useRecentLeads,
+  useMoveDeal,
+  usePipelines,
+} from '@/hooks/useCRM';
+import type { Deal, Lead, Stage } from '@/mocks/crmData';
 
 // Deal Card Component
 const DealCard = ({ 
@@ -282,10 +283,18 @@ const CRMPage = () => {
   const { portalAccess } = usePermissions();
   
   const [selectedPipeline, setSelectedPipeline] = useState<string>('pipeline-001');
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // TanStack Query hooks for data fetching
+  const pipelines = usePipelines();
+  const kanban = useKanbanBoard(selectedPipeline);
+  const recentLeadsQuery = useRecentLeads(5);
+  const moveDealMutation = useMoveDeal();
+  
+  // Derived state
+  const deals = kanban.deals;
+  const leads = recentLeadsQuery.data ?? [];
+  const isLoading = kanban.isLoading || pipelines.isLoading;
 
   // Check CRM access
   if (!portalAccess.crm) {
@@ -312,60 +321,43 @@ const CRMPage = () => {
     );
   }
 
-  // Load mock data
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setDeals(mockDeals);
-      setLeads(mockLeads);
-      setIsLoading(false);
-    };
-    loadData();
-  }, []);
-
-  // Get current pipeline
+  // Get current pipeline from TanStack Query data
   const currentPipeline = useMemo(() => {
-    return mockPipelines.find(p => p.id === selectedPipeline) || mockPipelines[0];
-  }, [selectedPipeline]);
+    const allPipelines = pipelines.data ?? [];
+    return allPipelines.find(p => p.id === selectedPipeline) || allPipelines[0];
+  }, [pipelines.data, selectedPipeline]);
 
-  // Filter deals by pipeline and search
+  // Filter deals by search
   const filteredDeals = useMemo(() => {
     return deals.filter(deal => {
-      const matchesPipeline = deal.pipelineId === selectedPipeline;
       const matchesSearch = searchQuery === '' || 
         deal.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesPipeline && matchesSearch;
+      return matchesSearch;
     });
-  }, [deals, selectedPipeline, searchQuery]);
+  }, [deals, searchQuery]);
 
   // Get deals by stage
   const getDealsByStage = (stageId: string) => {
     return filteredDeals.filter(d => d.stageId === stageId);
   };
 
-  // Move deal between stages
+  // Move deal between stages using TanStack Query mutation
   const moveDeal = (dealId: string, direction: 'prev' | 'next') => {
-    setDeals(prev => {
-      return prev.map(deal => {
-        if (deal.id !== dealId) return deal;
-        
-        const currentStageIndex = currentPipeline.stages.findIndex(s => s.id === deal.stageId);
-        const newIndex = direction === 'next' 
-          ? Math.min(currentStageIndex + 1, currentPipeline.stages.length - 1)
-          : Math.max(currentStageIndex - 1, 0);
-        
-        const newStage = currentPipeline.stages[newIndex];
-        
-        return {
-          ...deal,
-          stageId: newStage.id,
-          stageName: newStage.name,
-          stageColor: newStage.color,
-          probability: newStage.defaultProbability,
-          status: newStage.isWonStage ? 'Won' : newStage.isLostStage ? 'Lost' : 'Open',
-        };
-      });
+    if (!currentPipeline) return;
+    
+    const deal = deals.find(d => d.id === dealId);
+    if (!deal) return;
+    
+    const currentStageIndex = currentPipeline.stages.findIndex(s => s.id === deal.stageId);
+    const newIndex = direction === 'next' 
+      ? Math.min(currentStageIndex + 1, currentPipeline.stages.length - 1)
+      : Math.max(currentStageIndex - 1, 0);
+    
+    const newStage = currentPipeline.stages[newIndex];
+    
+    moveDealMutation.mutate({
+      dealId,
+      data: { stageId: newStage.id }
     });
   };
 

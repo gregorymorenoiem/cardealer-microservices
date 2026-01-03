@@ -421,7 +421,7 @@ export const OklaPremiumPage = () => {
   };
 
   const handleListingClick = (id: string) => {
-    navigate(`/marketplace/vehicles/${id}`);
+    navigate(`/vehicles/${id}`);
   };
 
   const handleCategoryClick = (id: string) => {
