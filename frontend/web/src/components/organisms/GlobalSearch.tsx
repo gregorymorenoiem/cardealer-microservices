@@ -29,8 +29,9 @@ interface SearchResult {
   model?: string;
 }
 
-// API URL for VehiclesSaleService
-const VEHICLES_API_URL = import.meta.env.VITE_VEHICLES_SALE_SERVICE_URL || 'http://localhost:15070/api';
+// API Gateway URL - routes to VehiclesSaleService
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const VEHICLES_API_URL = `${API_URL}/api/vehicles`;
 
 // Real search using VehiclesSaleService API
 const searchVehicles = async (query: string): Promise<SearchResult[]> => {

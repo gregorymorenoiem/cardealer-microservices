@@ -1,6 +1,6 @@
 /**
  * VehiclesSaleService - Real API client for vehicle sales
- * Connects to VehiclesSaleService microservice (port 15070)
+ * Connects via API Gateway to VehiclesSaleService microservice
  */
 
 import axios from 'axios';
@@ -10,7 +10,9 @@ import { getVehicleSaleImageUrl } from '@utils/s3ImageUrl';
 // API CONFIGURATION
 // ============================================================
 
-const VEHICLES_API_URL = import.meta.env.VITE_VEHICLES_SALE_SERVICE_URL || 'http://localhost:15070/api';
+// API Gateway URL - routes to VehiclesSaleService
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const VEHICLES_API_URL = `${API_URL}/api/vehicles`;
 
 const vehiclesApi = axios.create({
   baseURL: VEHICLES_API_URL,

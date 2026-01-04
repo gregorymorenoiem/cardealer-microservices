@@ -7,8 +7,9 @@
 
 import axios from 'axios';
 
-// VehiclesSaleService API URL
-const VEHICLES_SALE_API_URL = import.meta.env.VITE_VEHICLES_SALE_SERVICE_URL || 'http://localhost:15070/api';
+// API Gateway URL - routes to VehiclesSaleService
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const VEHICLES_SALE_API_URL = `${API_URL}/api/vehicles`;
 
 // ============================================================
 // INTERFACES

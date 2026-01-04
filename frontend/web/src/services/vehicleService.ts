@@ -1,10 +1,13 @@
 import axios from 'axios';
 
-// ProductService API URL (legacy - still used for some features)
-const PRODUCT_API_URL = import.meta.env.VITE_PRODUCT_SERVICE_URL || 'http://localhost:15006/api';
+// API Gateway URL (routes to appropriate microservices)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-// VehiclesSaleService API URL (primary for vehicle operations)
-const VEHICLES_SALE_API_URL = import.meta.env.VITE_VEHICLES_SALE_SERVICE_URL || 'http://localhost:15070/api';
+// VehiclesSaleService via Gateway
+const VEHICLES_SALE_API_URL = `${API_URL}/api/vehicles`;
+
+// ProductService via Gateway (legacy)
+const PRODUCT_API_URL = `${API_URL}/api/products`;
 
 // ============================================================
 // BACKEND TYPES (matching ProductService schema)

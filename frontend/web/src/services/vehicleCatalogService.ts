@@ -14,10 +14,12 @@ import axios from 'axios';
 // API CONFIGURATION
 // ============================================================
 
-const CATALOG_API_URL = import.meta.env.VITE_VEHICLES_SALE_SERVICE_URL || 'http://localhost:15070';
+// API Gateway URL - routes to VehiclesSaleService catalog endpoints
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const CATALOG_API_URL = `${API_URL}/api/vehicles/catalog`;
 
 const catalogApi = axios.create({
-  baseURL: `${CATALOG_API_URL}/api/catalog`,
+  baseURL: CATALOG_API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
