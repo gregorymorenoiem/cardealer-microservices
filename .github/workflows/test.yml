@@ -24,9 +24,12 @@ jobs:
           - AuthService
           - ErrorService
           - NotificationService
-          - ProductService
+          - VehiclesSaleService
           - UserService
           - RoleService
+          - MediaService
+          - BillingService
+          - Gateway
 
     steps:
       - name: Checkout code
