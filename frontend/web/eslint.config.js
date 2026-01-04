@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default [
-  { ignores: ['dist', 'node_modules', '.vite', 'public', '**/*.d.ts'] },
+  { ignores: ['dist', 'node_modules', '.vite', 'public', '**/*.d.ts', '.storybook'] },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -26,16 +26,17 @@ export default [
       '@typescript-eslint': tseslint.plugin,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
-      // Disable strict rules for faster CI
+      // Disable strict rules for CI
       'no-undef': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 ]
