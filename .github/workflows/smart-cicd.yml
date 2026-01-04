@@ -309,11 +309,10 @@ jobs:
         run: |
           # Apply Kubernetes manifests
           kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/configmaps/
-          kubectl apply -f k8s/secrets/
-          kubectl apply -f k8s/deployments/
-          kubectl apply -f k8s/services/
-          kubectl apply -f k8s/ingress/
+          kubectl apply -f k8s/configmaps.yaml
+          kubectl apply -f k8s/deployments.yaml
+          kubectl apply -f k8s/services.yaml
+          kubectl apply -f k8s/ingress.yaml
 
       - name: ✅ Verify deployment
         run: |
