@@ -1,32 +1,41 @@
 ############################################
-# PRODUCTION BUILD - RoleService Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy shared projects first
-COPY _Shared/ _Shared/
+# Copy project files for restore (from Dockerfile.dev)
+COPY RoleService/RoleService.Api/*.csproj ./RoleService/RoleService.Api/
+COPY RoleService/RoleService.Application/*.csproj ./RoleService/RoleService.Application/
+COPY RoleService/RoleService.Domain/*.csproj ./RoleService/RoleService.Domain/
+COPY RoleService/RoleService.Infrastructure/*.csproj ./RoleService/RoleService.Infrastructure/
+COPY RoleService/RoleService.Shared/*.csproj ./RoleService/RoleService.Shared/
 
-# Copy service projects
-COPY RoleService/RoleService.Domain/ RoleService/RoleService.Domain/
-COPY RoleService/RoleService.Application/ RoleService/RoleService.Application/
-COPY RoleService/RoleService.Infrastructure/ RoleService/RoleService.Infrastructure/
-COPY RoleService/RoleService.Api/ RoleService/RoleService.Api/
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
 
-# Restore dependencies
-WORKDIR /src/RoleService/RoleService.Api
-RUN dotnet restore
+# Copy ServiceDiscovery project files
+COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
 
-# Build
-RUN dotnet build -c Release -o /app/build
+# Restore packages
+RUN dotnet restore "RoleService/RoleService.Api/RoleService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Build in Release mode
+RUN dotnet build "RoleService/RoleService.Api/RoleService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "RoleService/RoleService.Api/RoleService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -37,7 +46,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 

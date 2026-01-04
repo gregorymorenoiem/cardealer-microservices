@@ -1,32 +1,44 @@
 ############################################
-# PRODUCTION BUILD - NotificationService Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy shared projects first
-COPY _Shared/ _Shared/
+# Copy project files for restore (from Dockerfile.dev)
+COPY NotificationService/NotificationService.Api/*.csproj ./NotificationService/NotificationService.Api/
+COPY NotificationService/NotificationService.Application/*.csproj ./NotificationService/NotificationService.Application/
+COPY NotificationService/NotificationService.Domain/*.csproj ./NotificationService/NotificationService.Domain/
+COPY NotificationService/NotificationService.Infrastructure/*.csproj ./NotificationService/NotificationService.Infrastructure/
+COPY NotificationService/NotificationService.Shared/*.csproj ./NotificationService/NotificationService.Shared/
 
-# Copy service projects
-COPY NotificationService/NotificationService.Domain/ NotificationService/NotificationService.Domain/
-COPY NotificationService/NotificationService.Application/ NotificationService/NotificationService.Application/
-COPY NotificationService/NotificationService.Infrastructure/ NotificationService/NotificationService.Infrastructure/
-COPY NotificationService/NotificationService.Api/ NotificationService/NotificationService.Api/
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
 
-# Restore dependencies
-WORKDIR /src/NotificationService/NotificationService.Api
-RUN dotnet restore
+# Copy ServiceDiscovery project files
+COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
 
-# Build
-RUN dotnet build -c Release -o /app/build
+# Copy ErrorService.Shared (dependency from NotificationService.Application)
+COPY ErrorService/ErrorService.Shared/*.csproj ./ErrorService/ErrorService.Shared/
+
+# Restore packages
+RUN dotnet restore "NotificationService/NotificationService.Api/NotificationService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Build in Release mode
+RUN dotnet build "NotificationService/NotificationService.Api/NotificationService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "NotificationService/NotificationService.Api/NotificationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -37,7 +49,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 

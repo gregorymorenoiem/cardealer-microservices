@@ -1,26 +1,28 @@
 ############################################
-# PRODUCTION BUILD - Gateway Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy Gateway project
-COPY Gateway/Gateway.Api/ Gateway/Gateway.Api/
+# Copy project file for restore (from Dockerfile.dev)
+COPY Gateway/Gateway.Api/Gateway.Api.csproj ./Gateway/Gateway.Api/
 
-# Restore dependencies
-WORKDIR /src/Gateway/Gateway.Api
-RUN dotnet restore
+# Restore packages
+RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 
-# Build
-RUN dotnet build -c Release -o /app/build
+# Copy all source code (same as Dockerfile.dev: COPY . .)
+COPY . .
+
+# Build in Release mode
+RUN dotnet build "Gateway/Gateway.Api/Gateway.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Gateway/Gateway.Api/Gateway.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -31,7 +33,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 

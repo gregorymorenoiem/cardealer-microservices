@@ -1,36 +1,28 @@
 ############################################
-# PRODUCTION BUILD - Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy shared projects first (for better layer caching)
-COPY _Shared/ _Shared/
+# Copy project file for restore (from Dockerfile.dev)
+COPY AuthService/AuthService.Api/AuthService.Api.csproj ./AuthService/AuthService.Api/
 
-# Copy service projects
-COPY AuthService/AuthService.Domain/ AuthService/AuthService.Domain/
-COPY AuthService/AuthService.Application/ AuthService/AuthService.Application/
-COPY AuthService/AuthService.Infrastructure/ AuthService/AuthService.Infrastructure/
-COPY AuthService/AuthService.Api/ AuthService/AuthService.Api/
+# Restore packages
+RUN dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
 
-# Copy ServiceDiscovery dependency
-COPY ServiceDiscovery/ServiceDiscovery.Application/ ServiceDiscovery/ServiceDiscovery.Application/
-COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/ ServiceDiscovery/ServiceDiscovery.Infrastructure/
+# Copy all source code (same as Dockerfile.dev: COPY . .)
+COPY . .
 
-# Restore dependencies
-WORKDIR /src/AuthService/AuthService.Api
-RUN dotnet restore
-
-# Build
-RUN dotnet build -c Release -o /app/build
+# Build in Release mode
+RUN dotnet build "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -41,7 +33,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 

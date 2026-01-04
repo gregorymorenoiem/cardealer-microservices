@@ -1,32 +1,33 @@
 ############################################
-# PRODUCTION BUILD - PropertiesSaleService Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy shared projects first
-COPY _Shared/ _Shared/
+# Copy shared projects (from Dockerfile.dev)
+COPY _Shared/CarDealer.Shared/ /app/_Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Contracts/ /app/_Shared/CarDealer.Contracts/
 
 # Copy service projects
-COPY PropertiesSaleService/PropertiesSaleService.Domain/ PropertiesSaleService/PropertiesSaleService.Domain/
-COPY PropertiesSaleService/PropertiesSaleService.Application/ PropertiesSaleService/PropertiesSaleService.Application/
-COPY PropertiesSaleService/PropertiesSaleService.Infrastructure/ PropertiesSaleService/PropertiesSaleService.Infrastructure/
-COPY PropertiesSaleService/PropertiesSaleService.Api/ PropertiesSaleService/PropertiesSaleService.Api/
+COPY PropertiesSaleService/PropertiesSaleService.Domain/ /app/PropertiesSaleService/PropertiesSaleService.Domain/
+COPY PropertiesSaleService/PropertiesSaleService.Application/ /app/PropertiesSaleService/PropertiesSaleService.Application/
+COPY PropertiesSaleService/PropertiesSaleService.Infrastructure/ /app/PropertiesSaleService/PropertiesSaleService.Infrastructure/
+COPY PropertiesSaleService/PropertiesSaleService.Shared/ /app/PropertiesSaleService/PropertiesSaleService.Shared/
+COPY PropertiesSaleService/PropertiesSaleService.Api/ /app/PropertiesSaleService/PropertiesSaleService.Api/
 
-# Restore dependencies
-WORKDIR /src/PropertiesSaleService/PropertiesSaleService.Api
+WORKDIR /app/PropertiesSaleService/PropertiesSaleService.Api
+
+# Restore and build in Release mode
 RUN dotnet restore
-
-# Build
 RUN dotnet build -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -37,7 +38,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 

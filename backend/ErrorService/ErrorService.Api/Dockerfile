@@ -1,32 +1,41 @@
 ############################################
-# PRODUCTION BUILD - ErrorService Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy shared projects first
-COPY _Shared/ _Shared/
+# Copy project files for restore (from Dockerfile.dev)
+COPY ErrorService/ErrorService.Api/ErrorService.Api.csproj ./ErrorService/ErrorService.Api/
+COPY ErrorService/ErrorService.Application/ErrorService.Application.csproj ./ErrorService/ErrorService.Application/
+COPY ErrorService/ErrorService.Domain/ErrorService.Domain.csproj ./ErrorService/ErrorService.Domain/
+COPY ErrorService/ErrorService.Infrastructure/ErrorService.Infrastructure.csproj ./ErrorService/ErrorService.Infrastructure/
+COPY ErrorService/ErrorService.Shared/ErrorService.Shared.csproj ./ErrorService/ErrorService.Shared/
 
-# Copy service projects
-COPY ErrorService/ErrorService.Domain/ ErrorService/ErrorService.Domain/
-COPY ErrorService/ErrorService.Application/ ErrorService/ErrorService.Application/
-COPY ErrorService/ErrorService.Infrastructure/ ErrorService/ErrorService.Infrastructure/
-COPY ErrorService/ErrorService.Api/ ErrorService/ErrorService.Api/
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
 
-# Restore dependencies
-WORKDIR /src/ErrorService/ErrorService.Api
-RUN dotnet restore
+# Copy ServiceDiscovery project files
+COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
 
-# Build
-RUN dotnet build -c Release -o /app/build
+# Restore packages
+RUN dotnet restore "ErrorService/ErrorService.Api/ErrorService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Build in Release mode
+RUN dotnet build "ErrorService/ErrorService.Api/ErrorService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ErrorService/ErrorService.Api/ErrorService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -37,7 +46,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 

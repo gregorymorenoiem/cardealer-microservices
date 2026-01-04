@@ -1,32 +1,37 @@
 ############################################
-# PRODUCTION BUILD - MediaService Multi-stage Dockerfile
+# PRODUCTION Dockerfile - Based on Dockerfile.dev
 ############################################
 
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy shared projects first
-COPY _Shared/ _Shared/
+# Copy project files for restore (from Dockerfile.dev)
+COPY ["MediaService/MediaService.Api/MediaService.Api.csproj", "MediaService/MediaService.Api/"]
+COPY ["MediaService/MediaService.Application/MediaService.Application.csproj", "MediaService/MediaService.Application/"]
+COPY ["MediaService/MediaService.Domain/MediaService.Domain.csproj", "MediaService/MediaService.Domain/"]
+COPY ["MediaService/MediaService.Infrastructure/MediaService.Infrastructure.csproj", "MediaService/MediaService.Infrastructure/"]
+COPY ["MediaService/MediaService.Shared/MediaService.Shared.csproj", "MediaService/MediaService.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
 
-# Copy service projects
-COPY MediaService/MediaService.Domain/ MediaService/MediaService.Domain/
-COPY MediaService/MediaService.Application/ MediaService/MediaService.Application/
-COPY MediaService/MediaService.Infrastructure/ MediaService/MediaService.Infrastructure/
-COPY MediaService/MediaService.Api/ MediaService/MediaService.Api/
+# Restore packages
+RUN dotnet restore "MediaService/MediaService.Api/MediaService.Api.csproj"
 
-# Restore dependencies
-WORKDIR /src/MediaService/MediaService.Api
-RUN dotnet restore
+# Copy all source code
+COPY . .
 
-# Build
-RUN dotnet build -c Release -o /app/build
+# Build in Release mode
+WORKDIR "/src/MediaService/MediaService.Api"
+RUN dotnet build "MediaService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime
+# Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
@@ -37,7 +42,7 @@ USER appuser
 # Copy published app
 COPY --from=publish /app/publish .
 
-# Environment
+# Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:80
 
