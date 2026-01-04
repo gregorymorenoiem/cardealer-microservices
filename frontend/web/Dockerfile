@@ -77,12 +77,12 @@ RUN addgroup -g 1001 -S nginx-user && \
     chown -R nginx-user:nginx-user /var/cache/nginx /var/log/nginx /etc/nginx/conf.d /usr/share/nginx/html && \
     touch /var/run/nginx.pid && chown nginx-user:nginx-user /var/run/nginx.pid
 
-# Expose port 80
-EXPOSE 80
+# Expose port 8080 (non-privileged)
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost/health || exit 1
+    CMD wget -qO- http://localhost:8080/health || exit 1
 
 # Run as non-root
 USER nginx-user
