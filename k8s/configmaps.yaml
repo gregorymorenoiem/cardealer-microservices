@@ -8,27 +8,27 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: global-config
-  namespace: cardealer
+  namespace: okla
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   DOTNET_RUNNING_IN_CONTAINER: "true"
   TZ: "UTC"
   
   # Service Discovery
-  CONSUL_HOST: "consul.cardealer.svc.cluster.local"
+  CONSUL_HOST: "consul.okla.svc.cluster.local"
   CONSUL_PORT: "8500"
   
   # Redis
-  REDIS_HOST: "redis.cardealer.svc.cluster.local"
+  REDIS_HOST: "redis.okla.svc.cluster.local"
   REDIS_PORT: "6379"
   
   # RabbitMQ
-  RABBITMQ_HOST: "rabbitmq.cardealer.svc.cluster.local"
+  RABBITMQ_HOST: "rabbitmq.okla.svc.cluster.local"
   RABBITMQ_PORT: "5672"
   
   # OpenTelemetry
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.cardealer.svc.cluster.local:4317"
-  OTEL_SERVICE_NAME: "cardealer"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.okla.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "okla"
 
 ---
 # Gateway specific configuration
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: gateway-config
-  namespace: cardealer
+  namespace: okla
 data:
   # Ocelot routes are loaded from this ConfigMap
   ocelot.json: |
@@ -93,7 +93,7 @@ data:
         }
       ],
       "GlobalConfiguration": {
-        "BaseUrl": "https://api.cardealer.do"
+        "BaseUrl": "https://api.okla.do"
       }
     }
 
@@ -103,7 +103,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: frontend-config
-  namespace: cardealer
+  namespace: okla
 data:
   nginx.conf: |
     server {
@@ -129,7 +129,7 @@ data:
 
         # API proxy
         location /api/ {
-            proxy_pass http://gateway.cardealer.svc.cluster.local/api/;
+            proxy_pass http://gateway.okla.svc.cluster.local/api/;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;

@@ -10,7 +10,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-web-hpa
-  namespace: cardealer
+  namespace: okla
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -45,7 +45,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: gateway-hpa
-  namespace: cardealer
+  namespace: okla
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -70,7 +70,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: authservice-hpa
-  namespace: cardealer
+  namespace: okla
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -98,7 +98,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: vehiclessaleservice-hpa
-  namespace: cardealer
+  namespace: okla
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -120,7 +120,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: mediaservice-hpa
-  namespace: cardealer
+  namespace: okla
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

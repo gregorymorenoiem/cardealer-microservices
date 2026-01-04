@@ -13,7 +13,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-web
-  namespace: cardealer
+  namespace: okla
   labels:
     app: frontend-web
     tier: frontend
@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: frontend-web
-          image: ghcr.io/gregorymorenoiem/cardealer-web:latest
+          image: ghcr.io/gregorymorenoiem/okla-web:latest
           ports:
             - containerPort: 80
           resources:
@@ -70,7 +70,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gateway
-  namespace: cardealer
+  namespace: okla
   labels:
     app: gateway
     tier: backend
@@ -130,7 +130,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: authservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: authservice
     tier: backend
@@ -189,7 +189,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: userservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: userservice
     tier: backend
@@ -246,7 +246,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vehiclessaleservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: vehiclessaleservice
     tier: backend
@@ -303,7 +303,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: propertiessaleservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: propertiessaleservice
     tier: backend
@@ -360,7 +360,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mediaservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: mediaservice
     tier: backend
@@ -419,7 +419,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notificationservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: notificationservice
     tier: backend
@@ -478,7 +478,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: billingservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: billingservice
     tier: backend
@@ -537,7 +537,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: errorservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: errorservice
     tier: backend

@@ -117,13 +117,13 @@ jobs:
             --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
             --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
             --from-literal=POSTGRES_SSL_MODE=require \
-            -n cardealer --dry-run=client -o yaml | kubectl apply -f -
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
           
           kubectl create secret generic jwt-secrets \
             --from-literal=JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-            --from-literal=JWT_ISSUER=cardealer.do \
-            --from-literal=JWT_AUDIENCE=cardealer-app \
-            -n cardealer --dry-run=client -o yaml | kubectl apply -f -
+            --from-literal=JWT_ISSUER=okla.do \
+            --from-literal=JWT_AUDIENCE=okla-app \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
           
           kubectl create secret generic external-services-secrets \
             --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
@@ -131,14 +131,14 @@ jobs:
             --from-literal=SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }} \
             --from-literal=AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
             --from-literal=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            -n cardealer --dry-run=client -o yaml | kubectl apply -f -
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
           
           # Create Docker registry secret
           kubectl create secret docker-registry registry-credentials \
             --docker-server=ghcr.io \
             --docker-username=${{ github.actor }} \
             --docker-password=${{ secrets.GITHUB_TOKEN }} \
-            -n cardealer --dry-run=client -o yaml | kubectl apply -f -
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
 
       - name: ⚙️ Apply ConfigMaps
         run: |
@@ -156,7 +156,7 @@ jobs:
             # Apply deployment with updated image
             kubectl set image deployment/$SERVICE \
               $SERVICE=${{ env.IMAGE_PREFIX }}/$SERVICE:$VERSION \
-              -n cardealer --record 2>/dev/null || \
+              -n okla --record 2>/dev/null || \
             kubectl apply -f k8s/deployments.yaml
           done
 
@@ -174,7 +174,7 @@ jobs:
           
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             echo "⏳ Waiting for $SERVICE rollout..."
-            kubectl rollout status deployment/$SERVICE -n cardealer --timeout=300s || true
+            kubectl rollout status deployment/$SERVICE -n okla --timeout=300s || true
           done
 
       - name: ✅ Verify deployment
@@ -185,19 +185,19 @@ jobs:
           # Get all pods
           echo "### Pods" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n cardealer >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n okla >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           
           # Get all services
           echo "### Services" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get svc -n cardealer >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n okla >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           
           # Get ingress
           echo "### Ingress" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get ingress -n cardealer >> $GITHUB_STEP_SUMMARY
+          kubectl get ingress -n okla >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: 🔔 Notify on Slack
@@ -228,11 +228,11 @@ jobs:
           ENV="${{ needs.prepare.outputs.environment }}"
           
           if [ "$ENV" == "production" ]; then
-            FRONTEND_URL="https://cardealer.do"
-            API_URL="https://api.cardealer.do"
+            FRONTEND_URL="https://okla.do"
+            API_URL="https://api.okla.do"
           else
-            FRONTEND_URL="https://staging.cardealer.do"
-            API_URL="https://api-staging.cardealer.do"
+            FRONTEND_URL="https://staging.okla.do"
+            API_URL="https://api-staging.okla.do"
           fi
           
           echo "🔍 Checking $FRONTEND_URL..."
@@ -250,11 +250,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### URLs" >> $GITHUB_STEP_SUMMARY
           if [ "${{ needs.prepare.outputs.environment }}" == "production" ]; then
-            echo "- Frontend: https://cardealer.do" >> $GITHUB_STEP_SUMMARY
-            echo "- API: https://api.cardealer.do" >> $GITHUB_STEP_SUMMARY
+            echo "- Frontend: https://okla.do" >> $GITHUB_STEP_SUMMARY
+            echo "- API: https://api.okla.do" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- Frontend: https://staging.cardealer.do" >> $GITHUB_STEP_SUMMARY
-            echo "- API: https://api-staging.cardealer.do" >> $GITHUB_STEP_SUMMARY
+            echo "- Frontend: https://staging.okla.do" >> $GITHUB_STEP_SUMMARY
+            echo "- API: https://api-staging.okla.do" >> $GITHUB_STEP_SUMMARY
           fi
 
   # ============================================
@@ -283,7 +283,7 @@ jobs:
           
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             echo "⏪ Rolling back $SERVICE..."
-            kubectl rollout undo deployment/$SERVICE -n cardealer || true
+            kubectl rollout undo deployment/$SERVICE -n okla || true
           done
 
       - name: 📊 Rollback summary

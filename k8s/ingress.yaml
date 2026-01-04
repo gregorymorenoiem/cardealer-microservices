@@ -12,8 +12,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cardealer-ingress
-  namespace: cardealer
+  name: okla-ingress
+  namespace: okla
   annotations:
     # Digital Ocean Load Balancer
     kubernetes.io/ingress.class: nginx
@@ -48,14 +48,14 @@ metadata:
 spec:
   tls:
     - hosts:
-        - cardealer.do
-        - www.cardealer.do
-        - api.cardealer.do
-      secretName: cardealer-tls
+        - okla.do
+        - www.okla.do
+        - api.okla.do
+      secretName: okla-tls
   
   rules:
     # Frontend - Main domain
-    - host: cardealer.do
+    - host: okla.do
       http:
         paths:
           - path: /
@@ -67,7 +67,7 @@ spec:
                   number: 80
     
     # Frontend - WWW subdomain
-    - host: www.cardealer.do
+    - host: www.okla.do
       http:
         paths:
           - path: /
@@ -79,7 +79,7 @@ spec:
                   number: 80
     
     # API - Gateway
-    - host: api.cardealer.do
+    - host: api.okla.do
       http:
         paths:
           - path: /
@@ -99,7 +99,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@cardealer.do
+    email: admin@okla.do
     privateKeySecretRef:
       name: letsencrypt-prod-key
     solvers:
@@ -116,7 +116,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: admin@cardealer.do
+    email: admin@okla.do
     privateKeySecretRef:
       name: letsencrypt-staging-key
     solvers:

@@ -8,7 +8,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend-web
-  namespace: cardealer
+  namespace: okla
   labels:
     app: frontend-web
 spec:
@@ -26,7 +26,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: gateway
-  namespace: cardealer
+  namespace: okla
   labels:
     app: gateway
 spec:
@@ -44,7 +44,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: authservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: authservice
 spec:
@@ -62,7 +62,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: userservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: userservice
 spec:
@@ -80,7 +80,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: vehiclessaleservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: vehiclessaleservice
 spec:
@@ -98,7 +98,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: propertiessaleservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: propertiessaleservice
 spec:
@@ -116,7 +116,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mediaservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: mediaservice
 spec:
@@ -134,7 +134,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: notificationservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: notificationservice
 spec:
@@ -152,7 +152,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: billingservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: billingservice
 spec:
@@ -170,7 +170,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: errorservice
-  namespace: cardealer
+  namespace: okla
   labels:
     app: errorservice
 spec:

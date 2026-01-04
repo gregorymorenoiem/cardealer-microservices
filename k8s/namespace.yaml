@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cardealer
+  name: okla
   labels:
-    app.kubernetes.io/name: cardealer
+    app.kubernetes.io/name: okla
     app.kubernetes.io/managed-by: kubectl

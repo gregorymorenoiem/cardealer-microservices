@@ -317,9 +317,9 @@ jobs:
 
       - name: ✅ Verify deployment
         run: |
-          kubectl rollout status deployment/frontend-web -n cardealer --timeout=300s
-          kubectl rollout status deployment/gateway -n cardealer --timeout=300s
-          kubectl rollout status deployment/authservice -n cardealer --timeout=300s
+          kubectl rollout status deployment/frontend-web -n okla --timeout=300s
+          kubectl rollout status deployment/gateway -n okla --timeout=300s
+          kubectl rollout status deployment/authservice -n okla --timeout=300s
 
   # ============================================
   # SUMMARY
