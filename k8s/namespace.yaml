@@ -1,0 +1,10 @@
+# =============================================================================
+# NAMESPACE - CarDealer Platform
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cardealer
+  labels:
+    app.kubernetes.io/name: cardealer
+    app.kubernetes.io/managed-by: kubectl

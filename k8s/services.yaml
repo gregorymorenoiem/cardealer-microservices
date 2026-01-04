@@ -1,0 +1,183 @@
+# =============================================================================
+# SERVICES - Kubernetes Services for Internal Communication
+# =============================================================================
+
+---
+# Frontend Web
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-web
+  namespace: cardealer
+  labels:
+    app: frontend-web
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: frontend-web
+
+---
+# Gateway
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: cardealer
+  labels:
+    app: gateway
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: gateway
+
+---
+# Auth Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: authservice
+  namespace: cardealer
+  labels:
+    app: authservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: authservice
+
+---
+# User Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: userservice
+  namespace: cardealer
+  labels:
+    app: userservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: userservice
+
+---
+# Vehicles Sale Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehiclessaleservice
+  namespace: cardealer
+  labels:
+    app: vehiclessaleservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: vehiclessaleservice
+
+---
+# Properties Sale Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: propertiessaleservice
+  namespace: cardealer
+  labels:
+    app: propertiessaleservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: propertiessaleservice
+
+---
+# Media Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediaservice
+  namespace: cardealer
+  labels:
+    app: mediaservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: mediaservice
+
+---
+# Notification Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: notificationservice
+  namespace: cardealer
+  labels:
+    app: notificationservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: notificationservice
+
+---
+# Billing Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: billingservice
+  namespace: cardealer
+  labels:
+    app: billingservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: billingservice
+
+---
+# Error Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: errorservice
+  namespace: cardealer
+  labels:
+    app: errorservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: errorservice

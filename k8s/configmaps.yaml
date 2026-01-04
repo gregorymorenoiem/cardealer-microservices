@@ -1,0 +1,145 @@
+# =============================================================================
+# CONFIGMAPS - Application Configuration
+# =============================================================================
+
+---
+# Global configuration shared by all services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: global-config
+  namespace: cardealer
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  DOTNET_RUNNING_IN_CONTAINER: "true"
+  TZ: "UTC"
+  
+  # Service Discovery
+  CONSUL_HOST: "consul.cardealer.svc.cluster.local"
+  CONSUL_PORT: "8500"
+  
+  # Redis
+  REDIS_HOST: "redis.cardealer.svc.cluster.local"
+  REDIS_PORT: "6379"
+  
+  # RabbitMQ
+  RABBITMQ_HOST: "rabbitmq.cardealer.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  
+  # OpenTelemetry
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.cardealer.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "cardealer"
+
+---
+# Gateway specific configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: cardealer
+data:
+  # Ocelot routes are loaded from this ConfigMap
+  ocelot.json: |
+    {
+      "Routes": [
+        {
+          "UpstreamPathTemplate": "/api/auth/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/auth/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/users/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/users/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicles/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/vehicles/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/properties/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/properties/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "propertiessaleservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/media/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/media/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/notifications/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/notifications/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/billing/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/billing/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }]
+        }
+      ],
+      "GlobalConfiguration": {
+        "BaseUrl": "https://api.cardealer.do"
+      }
+    }
+
+---
+# Frontend configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: cardealer
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Gzip compression
+        gzip on;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # SPA routing
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # API proxy
+        location /api/ {
+            proxy_pass http://gateway.cardealer.svc.cluster.local/api/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Health check
+        location /health {
+            return 200 'OK';
+            add_header Content-Type text/plain;
+        }
+    }

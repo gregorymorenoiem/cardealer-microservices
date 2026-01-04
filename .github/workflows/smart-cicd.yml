@@ -1,0 +1,353 @@
+# =============================================================================
+# SMART TRIGGERS CI/CD - Monorepo Orchestrator
+# =============================================================================
+# Detecta qué servicios cambiaron y solo ejecuta CI/CD para ellos
+# Ahorra ~80% de minutos de GitHub Actions
+# =============================================================================
+
+name: 🚀 Smart CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Evita ejecuciones duplicadas
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # STEP 1: Detectar cambios
+  # ============================================
+  detect-changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      # Backend services
+      authservice: ${{ steps.filter.outputs.authservice }}
+      userservice: ${{ steps.filter.outputs.userservice }}
+      roleservice: ${{ steps.filter.outputs.roleservice }}
+      errorservice: ${{ steps.filter.outputs.errorservice }}
+      notificationservice: ${{ steps.filter.outputs.notificationservice }}
+      vehiclessaleservice: ${{ steps.filter.outputs.vehiclessaleservice }}
+      vehiclesrentservice: ${{ steps.filter.outputs.vehiclesrentservice }}
+      propertiessaleservice: ${{ steps.filter.outputs.propertiessaleservice }}
+      propertiesrentservice: ${{ steps.filter.outputs.propertiesrentservice }}
+      mediaservice: ${{ steps.filter.outputs.mediaservice }}
+      billingservice: ${{ steps.filter.outputs.billingservice }}
+      crmservice: ${{ steps.filter.outputs.crmservice }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      # Shared libraries
+      shared: ${{ steps.filter.outputs.shared }}
+      # Frontend
+      frontend-web: ${{ steps.filter.outputs.frontend-web }}
+      # Infrastructure
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            # Backend microservices
+            authservice:
+              - 'backend/AuthService/**'
+              - 'backend/_Shared/**'
+            userservice:
+              - 'backend/UserService/**'
+              - 'backend/_Shared/**'
+            roleservice:
+              - 'backend/RoleService/**'
+              - 'backend/_Shared/**'
+            errorservice:
+              - 'backend/ErrorService/**'
+              - 'backend/_Shared/**'
+            notificationservice:
+              - 'backend/NotificationService/**'
+              - 'backend/_Shared/**'
+            vehiclessaleservice:
+              - 'backend/VehiclesSaleService/**'
+              - 'backend/_Shared/**'
+            vehiclesrentservice:
+              - 'backend/VehiclesRentService/**'
+              - 'backend/_Shared/**'
+            propertiessaleservice:
+              - 'backend/PropertiesSaleService/**'
+              - 'backend/_Shared/**'
+            propertiesrentservice:
+              - 'backend/PropertiesRentService/**'
+              - 'backend/_Shared/**'
+            mediaservice:
+              - 'backend/MediaService/**'
+              - 'backend/_Shared/**'
+            billingservice:
+              - 'backend/BillingService/**'
+              - 'backend/_Shared/**'
+            crmservice:
+              - 'backend/CRMService/**'
+              - 'backend/_Shared/**'
+            gateway:
+              - 'backend/Gateway/**'
+            # Shared libraries (triggers rebuild of dependent services)
+            shared:
+              - 'backend/_Shared/**'
+            # Frontend
+            frontend-web:
+              - 'frontend/web/**'
+            # Infrastructure
+            infrastructure:
+              - 'k8s/**'
+              - 'helm/**'
+              - 'compose.yaml'
+              - 'compose.*.yaml'
+
+      - name: 📊 Summary of changes
+        run: |
+          echo "## 📊 Detected Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| AuthService | ${{ steps.filter.outputs.authservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UserService | ${{ steps.filter.outputs.userservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ErrorService | ${{ steps.filter.outputs.errorservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Web | ${{ steps.filter.outputs.frontend-web }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Shared Libraries | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # BACKEND SERVICES (Conditional)
+  # ============================================
+  
+  authservice:
+    name: 🔐 AuthService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.authservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: authservice
+      service-path: backend/AuthService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  userservice:
+    name: 👤 UserService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.userservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: userservice
+      service-path: backend/UserService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  roleservice:
+    name: 🎭 RoleService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.roleservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: roleservice
+      service-path: backend/RoleService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  errorservice:
+    name: ⚠️ ErrorService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.errorservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: errorservice
+      service-path: backend/ErrorService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  notificationservice:
+    name: 📬 NotificationService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.notificationservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: notificationservice
+      service-path: backend/NotificationService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  vehiclessaleservice:
+    name: 🚗 VehiclesSaleService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.vehiclessaleservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: vehiclessaleservice
+      service-path: backend/VehiclesSaleService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  vehiclesrentservice:
+    name: 🚙 VehiclesRentService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.vehiclesrentservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: vehiclesrentservice
+      service-path: backend/VehiclesRentService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  propertiessaleservice:
+    name: 🏠 PropertiesSaleService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.propertiessaleservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: propertiessaleservice
+      service-path: backend/PropertiesSaleService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  propertiesrentservice:
+    name: 🏢 PropertiesRentService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.propertiesrentservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: propertiesrentservice
+      service-path: backend/PropertiesRentService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  mediaservice:
+    name: 📸 MediaService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.mediaservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: mediaservice
+      service-path: backend/MediaService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  billingservice:
+    name: 💳 BillingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.billingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: billingservice
+      service-path: backend/BillingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  gateway:
+    name: 🌐 Gateway
+    needs: detect-changes
+    if: needs.detect-changes.outputs.gateway == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: gateway
+      service-path: backend/Gateway
+      run-tests: false
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # FRONTEND
+  # ============================================
+  frontend-web:
+    name: 🌐 Frontend Web
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-web == 'true'
+    uses: ./.github/workflows/_reusable-frontend.yml
+    with:
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # DEPLOY TO DIGITAL OCEAN (Only on main)
+  # ============================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    needs: 
+      - authservice
+      - userservice
+      - roleservice
+      - errorservice
+      - notificationservice
+      - vehiclessaleservice
+      - mediaservice
+      - gateway
+      - frontend-web
+    if: |
+      always() && 
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: 🔐 Setup Kubernetes
+        run: |
+          doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
+
+      - name: 🚀 Deploy to Kubernetes
+        run: |
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmaps/
+          kubectl apply -f k8s/secrets/
+          kubectl apply -f k8s/deployments/
+          kubectl apply -f k8s/services/
+          kubectl apply -f k8s/ingress/
+
+      - name: ✅ Verify deployment
+        run: |
+          kubectl rollout status deployment/frontend-web -n cardealer --timeout=300s
+          kubectl rollout status deployment/gateway -n cardealer --timeout=300s
+          kubectl rollout status deployment/authservice -n cardealer --timeout=300s
+
+  # ============================================
+  # SUMMARY
+  # ============================================
+  summary:
+    name: 📊 Pipeline Summary
+    needs:
+      - detect-changes
+      - authservice
+      - userservice
+      - roleservice
+      - errorservice
+      - gateway
+      - frontend-web
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "## 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| AuthService | ${{ needs.authservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UserService | ${{ needs.userservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RoleService | ${{ needs.roleservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ErrorService | ${{ needs.errorservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

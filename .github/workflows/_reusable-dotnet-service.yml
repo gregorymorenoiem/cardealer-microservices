@@ -1,0 +1,197 @@
+# =============================================================================
+# REUSABLE WORKFLOW: .NET Microservice CI/CD
+# =============================================================================
+# Template reutilizable para todos los microservicios .NET
+# Incluye: Build, Test, Docker Build/Push, Security Scan
+#
+# Uso:
+#   jobs:
+#     ci-cd:
+#       uses: ./.github/workflows/_reusable-dotnet-service.yml
+#       with:
+#         service-name: authservice
+#         service-path: backend/AuthService
+# =============================================================================
+
+name: Reusable .NET Service CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        description: 'Nombre del servicio (lowercase, ej: authservice)'
+        required: true
+        type: string
+      service-path:
+        description: 'Path al servicio (ej: backend/AuthService)'
+        required: true
+        type: string
+      dotnet-version:
+        description: 'Versión de .NET SDK'
+        required: false
+        type: string
+        default: '8.0.x'
+      run-tests:
+        description: 'Ejecutar tests'
+        required: false
+        type: boolean
+        default: true
+      run-docker-build:
+        description: 'Construir imagen Docker'
+        required: false
+        type: boolean
+        default: true
+      run-docker-push:
+        description: 'Push imagen a registry'
+        required: false
+        type: boolean
+        default: false
+      docker-registry:
+        description: 'Docker registry URL'
+        required: false
+        type: string
+        default: 'ghcr.io'
+    secrets:
+      REGISTRY_USERNAME:
+        required: false
+      REGISTRY_PASSWORD:
+        required: false
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  # ============================================
+  # JOB 1: Build & Test
+  # ============================================
+  build-and-test:
+    name: 🔨 Build & Test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      # Cache NuGet packages
+      - name: 📦 Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: 📥 Restore dependencies
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet restore
+
+      - name: 🔨 Build
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet build --no-restore --configuration Release
+
+      - name: 🧪 Run tests
+        if: inputs.run-tests
+        working-directory: ${{ inputs.service-path }}
+        run: |
+          if [ -d "${{ inputs.service-name }}.Tests" ] || [ -d "*.Tests" ]; then
+            dotnet test --no-build --configuration Release \
+              --logger "trx;LogFileName=test-results.trx" \
+              --collect:"XPlat Code Coverage" \
+              --results-directory ./TestResults
+          else
+            echo "⚠️ No test project found, skipping tests"
+          fi
+
+      - name: 📊 Upload test results
+        if: inputs.run-tests && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ inputs.service-name }}
+          path: ${{ inputs.service-path }}/TestResults
+          retention-days: 7
+
+      - name: 🏷️ Generate version
+        id: version
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION"
+
+  # ============================================
+  # JOB 2: Docker Build & Push
+  # ============================================
+  docker:
+    name: 🐳 Docker Build
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: inputs.run-docker-build
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Cache Docker layers
+      - name: 📦 Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ inputs.service-name }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ inputs.service-name }}-
+
+      - name: 🔐 Login to Container Registry
+        if: inputs.run-docker-push
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.docker-registry }}
+          username: ${{ secrets.REGISTRY_USERNAME || github.actor }}
+          password: ${{ secrets.REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ${{ inputs.service-path }}/${{ inputs.service-name }}.Api/Dockerfile
+          push: ${{ inputs.run-docker-push }}
+          tags: |
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          build-args: |
+            BUILD_VERSION=${{ needs.build-and-test.outputs.version }}
+
+      # Fix cache growth
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: 🔒 Run Trivy vulnerability scanner
+        if: inputs.run-docker-build
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: 📤 Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
