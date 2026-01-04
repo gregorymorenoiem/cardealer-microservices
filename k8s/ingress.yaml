@@ -48,14 +48,14 @@ metadata:
 spec:
   tls:
     - hosts:
-        - okla.do
-        - www.okla.do
-        - api.okla.do
+        - okla.com.do
+        - www.okla.com.do
+        - api.okla.com.do
       secretName: okla-tls
   
   rules:
     # Frontend - Main domain
-    - host: okla.do
+    - host: okla.com.do
       http:
         paths:
           - path: /
@@ -67,7 +67,7 @@ spec:
                   number: 80
     
     # Frontend - WWW subdomain
-    - host: www.okla.do
+    - host: www.okla.com.do
       http:
         paths:
           - path: /
@@ -79,7 +79,7 @@ spec:
                   number: 80
     
     # API - Gateway
-    - host: api.okla.do
+    - host: api.okla.com.do
       http:
         paths:
           - path: /
@@ -99,7 +99,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@okla.do
+    email: admin@okla.com.do
     privateKeySecretRef:
       name: letsencrypt-prod-key
     solvers:
@@ -116,7 +116,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: admin@okla.do
+    email: admin@okla.com.do
     privateKeySecretRef:
       name: letsencrypt-staging-key
     solvers:
