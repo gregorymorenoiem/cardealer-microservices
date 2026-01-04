@@ -96,9 +96,7 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/${{ matrix.service.name }}:latest
             ${{ env.IMAGE_PREFIX }}/${{ matrix.service.name }}:1.0.${{ github.run_number }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-        continue-on-error: true
+          no-cache: true
 
       - name: 📋 Build Summary
         run: |
