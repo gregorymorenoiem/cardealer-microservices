@@ -18,8 +18,22 @@ public class Vehicle : ITenantEntity
     public decimal Price { get; set; }
     public string Currency { get; set; } = "USD";
     public VehicleStatus Status { get; set; } = VehicleStatus.Draft;
+
+    // ========================================
+    // INFORMACIÓN DEL VENDEDOR
+    // ========================================
     public Guid SellerId { get; set; }
     public string SellerName { get; set; } = string.Empty;
+    public SellerType SellerType { get; set; } = SellerType.Individual;
+    public string? SellerPhone { get; set; }
+    public string? SellerEmail { get; set; }
+    public string? SellerWhatsApp { get; set; }
+    public bool SellerVerified { get; set; } = false;
+    public decimal? SellerRating { get; set; }
+    public int? SellerReviewCount { get; set; }
+    public string? SellerCity { get; set; }
+    public string? SellerState { get; set; }
+    public string? SellerLogoUrl { get; set; } // Para dealers
 
     // ========================================
     // IDENTIFICACIÓN DEL VEHÍCULO
@@ -65,7 +79,7 @@ public class Vehicle : ITenantEntity
     public VehicleCondition Condition { get; set; } = VehicleCondition.Used;
     public int? PreviousOwners { get; set; }
     public bool AccidentHistory { get; set; } = false;
-    public bool CleanTitle { get; set; } = true;
+    public bool HasCleanTitle { get; set; } = true;
 
     // ========================================
     // APARIENCIA
@@ -254,22 +268,14 @@ public enum VehicleCondition
 }
 
 /// <summary>
-/// Imágenes del vehículo
+/// Tipo de vendedor
 /// </summary>
-public class VehicleImage : ITenantEntity
+public enum SellerType
 {
-    public Guid Id { get; set; }
-    public Guid DealerId { get; set; }
-    public Guid VehicleId { get; set; }
-    public string Url { get; set; } = string.Empty;
-    public string? ThumbnailUrl { get; set; }
-    public string? Caption { get; set; }
-    public ImageType ImageType { get; set; } = ImageType.Exterior;
-    public int SortOrder { get; set; }
-    public bool IsPrimary { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public Vehicle? Vehicle { get; set; }
+    Individual = 0,     // Vendedor particular
+    Dealer = 1,         // Concesionario/Lote
+    Franchise = 2,      // Concesionario oficial de marca
+    Wholesale = 3       // Mayorista
 }
 
 /// <summary>
@@ -283,79 +289,4 @@ public enum ImageType
     Damage = 3,
     Documents = 4,
     Other = 99
-}
-
-/// <summary>
-/// Categoría de vehículos
-/// </summary>
-public class Category
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Slug { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public string? IconUrl { get; set; }
-    public Guid? ParentId { get; set; }
-    public int Level { get; set; }
-    public int SortOrder { get; set; }
-    public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public Category? Parent { get; set; }
-    public ICollection<Category> Children { get; set; } = new List<Category>();
-    public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
-}
-
-/// <summary>
-/// Marca de vehículos (Make)
-/// </summary>
-public class VehicleMake
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty; // Toyota, Honda, Ford
-    public string? LogoUrl { get; set; }
-    public string? Country { get; set; }
-    public bool IsActive { get; set; } = true;
-    public int SortOrder { get; set; }
-
-    public ICollection<VehicleModel> Models { get; set; } = new List<VehicleModel>();
-}
-
-/// <summary>
-/// Modelo de vehículos
-/// </summary>
-public class VehicleModel
-{
-    public Guid Id { get; set; }
-    public Guid MakeId { get; set; }
-    public string Name { get; set; } = string.Empty; // Camry, Civic, F-150
-    public string? ImageUrl { get; set; }
-    public VehicleType VehicleType { get; set; }
-    public BodyStyle DefaultBodyStyle { get; set; }
-    public int YearStart { get; set; } // Año de inicio del modelo
-    public int? YearEnd { get; set; } // Año de fin (null = aún en producción)
-    public bool IsActive { get; set; } = true;
-
-    public VehicleMake? Make { get; set; }
-    public ICollection<VehicleTrim> Trims { get; set; } = new List<VehicleTrim>();
-}
-
-/// <summary>
-/// Versiones/Trims del modelo
-/// </summary>
-public class VehicleTrim
-{
-    public Guid Id { get; set; }
-    public Guid ModelId { get; set; }
-    public string Name { get; set; } = string.Empty; // LE, SE, XLE
-    public int Year { get; set; }
-    public decimal? BaseMSRP { get; set; }
-    public string? EngineInfo { get; set; }
-    public TransmissionType DefaultTransmission { get; set; }
-    public DriveType DefaultDriveType { get; set; }
-    public FuelType DefaultFuelType { get; set; }
-    public int? Horsepower { get; set; }
-    public bool IsActive { get; set; } = true;
-
-    public VehicleModel? Model { get; set; }
 }

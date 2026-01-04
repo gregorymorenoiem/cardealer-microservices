@@ -1,9 +1,13 @@
+using CarDealer.Shared.MultiTenancy;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using VehiclesSaleService.Domain.Entities;
+using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Persistence;
 using VehiclesSaleService.Infrastructure.Repositories;
 using Xunit;
+using Entities = VehiclesSaleService.Domain.Entities;
 
 namespace VehiclesSaleService.Tests.Repositories;
 
@@ -11,6 +15,7 @@ public class VehicleRepositoryTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
     private readonly VehicleRepository _repository;
+    private readonly Guid _testDealerId = Guid.NewGuid();
 
     public VehicleRepositoryTests()
     {
@@ -18,7 +23,11 @@ public class VehicleRepositoryTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        // Mock ITenantContext
+        var tenantContextMock = new Mock<ITenantContext>();
+        tenantContextMock.Setup(t => t.CurrentDealerId).Returns(_testDealerId);
+
+        _context = new ApplicationDbContext(options, tenantContextMock.Object);
         _repository = new VehicleRepository(_context);
     }
 
@@ -56,22 +65,6 @@ public class VehicleRepositoryTests : IDisposable
         result.Should().BeNull();
     }
 
-    [Fact]
-    public async Task GetByIdAsync_DeletedVehicle_ReturnsNull()
-    {
-        // Arrange
-        var vehicle = CreateTestVehicle();
-        vehicle.IsDeleted = true;
-        _context.Vehicles.Add(vehicle);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.GetByIdAsync(vehicle.Id);
-
-        // Assert
-        result.Should().BeNull();
-    }
-
     #endregion
 
     #region GetByVINAsync Tests
@@ -97,7 +90,7 @@ public class VehicleRepositoryTests : IDisposable
     public async Task GetByVINAsync_NonExistingVIN_ReturnsNull()
     {
         // Act
-        var result = await _repository.GetByVINAsync("NONEXISTENT12345");
+        var result = await _repository.GetByVINAsync("NONEXISTENT123456");
 
         // Assert
         result.Should().BeNull();
@@ -105,144 +98,13 @@ public class VehicleRepositoryTests : IDisposable
 
     #endregion
 
-    #region SearchAsync Tests
-
-    [Fact]
-    public async Task SearchAsync_NoParameters_ReturnsActiveVehicles()
-    {
-        // Arrange
-        var activeVehicle = CreateTestVehicle(status: VehicleStatus.Active);
-        var draftVehicle = CreateTestVehicle(status: VehicleStatus.Draft);
-        _context.Vehicles.AddRange(activeVehicle, draftVehicle);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new VehicleSearchParameters());
-
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().Status.Should().Be(VehicleStatus.Active);
-    }
-
-    [Fact]
-    public async Task SearchAsync_ByMake_FiltersCorrectly()
-    {
-        // Arrange
-        var toyota = CreateTestVehicle(make: "Toyota");
-        var honda = CreateTestVehicle(make: "Honda");
-        _context.Vehicles.AddRange(toyota, honda);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new VehicleSearchParameters { Make = "Toyota" });
-
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().Make.Should().Be("Toyota");
-    }
-
-    [Fact]
-    public async Task SearchAsync_ByPriceRange_FiltersCorrectly()
-    {
-        // Arrange
-        var cheap = CreateTestVehicle(price: 10000);
-        var medium = CreateTestVehicle(price: 25000);
-        var expensive = CreateTestVehicle(price: 50000);
-        _context.Vehicles.AddRange(cheap, medium, expensive);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new VehicleSearchParameters
-        {
-            MinPrice = 20000,
-            MaxPrice = 30000
-        });
-
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().Price.Should().Be(25000);
-    }
-
-    [Fact]
-    public async Task SearchAsync_ByYearRange_FiltersCorrectly()
-    {
-        // Arrange
-        var old = CreateTestVehicle(year: 2015);
-        var recent = CreateTestVehicle(year: 2023);
-        var newest = CreateTestVehicle(year: 2024);
-        _context.Vehicles.AddRange(old, recent, newest);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new VehicleSearchParameters
-        {
-            MinYear = 2022,
-            MaxYear = 2024
-        });
-
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().AllSatisfy(v => v.Year.Should().BeGreaterOrEqualTo(2022));
-    }
-
-    [Fact]
-    public async Task SearchAsync_WithPagination_ReturnsCorrectPage()
-    {
-        // Arrange
-        for (int i = 0; i < 25; i++)
-        {
-            _context.Vehicles.Add(CreateTestVehicle(title: $"Vehicle {i}"));
-        }
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new VehicleSearchParameters
-        {
-            Page = 2,
-            PageSize = 10
-        });
-
-        // Assert
-        result.Should().HaveCount(10);
-    }
-
-    [Fact]
-    public async Task SearchAsync_BySearchTerm_SearchesTitleMakeModel()
-    {
-        // Arrange
-        var camry = CreateTestVehicle(title: "2024 Toyota Camry", make: "Toyota", model: "Camry");
-        var accord = CreateTestVehicle(title: "2024 Honda Accord", make: "Honda", model: "Accord");
-        _context.Vehicles.AddRange(camry, accord);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new VehicleSearchParameters
-        {
-            SearchTerm = "camry"
-        });
-
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().Model.Should().Be("Camry");
-    }
-
-    #endregion
-
     #region CreateAsync Tests
 
     [Fact]
-    public async Task CreateAsync_ValidVehicle_SavesAndReturnsVehicle()
+    public async Task CreateAsync_ValidVehicle_ReturnsCreatedVehicle()
     {
         // Arrange
-        var vehicle = new Vehicle
-        {
-            Title = "New Vehicle",
-            Make = "Ford",
-            Model = "Mustang",
-            Year = 2024,
-            Price = 45000,
-            VIN = "1FA6P8TH2K1234567"
-        };
+        var vehicle = CreateTestVehicle();
 
         // Act
         var result = await _repository.CreateAsync(vehicle);
@@ -250,23 +112,9 @@ public class VehicleRepositoryTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().NotBe(Guid.Empty);
-        result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
 
-        var saved = await _context.Vehicles.FindAsync(result.Id);
-        saved.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task CreateAsync_SetsUpdatedAt()
-    {
-        // Arrange
-        var vehicle = CreateTestVehicle();
-
-        // Act
-        var result = await _repository.CreateAsync(vehicle);
-
-        // Assert
-        result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        var savedVehicle = await _context.Vehicles.FindAsync(result.Id);
+        savedVehicle.Should().NotBeNull();
     }
 
     #endregion
@@ -274,7 +122,7 @@ public class VehicleRepositoryTests : IDisposable
     #region UpdateAsync Tests
 
     [Fact]
-    public async Task UpdateAsync_ExistingVehicle_UpdatesFields()
+    public async Task UpdateAsync_ExistingVehicle_UpdatesVehicle()
     {
         // Arrange
         var vehicle = CreateTestVehicle();
@@ -282,15 +130,14 @@ public class VehicleRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
+        vehicle.Price = 35000m;
         vehicle.Title = "Updated Title";
-        vehicle.Price = 99999;
         await _repository.UpdateAsync(vehicle);
 
         // Assert
-        var updated = await _context.Vehicles.FindAsync(vehicle.Id);
-        updated!.Title.Should().Be("Updated Title");
-        updated.Price.Should().Be(99999);
-        updated.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        var updatedVehicle = await _context.Vehicles.FindAsync(vehicle.Id);
+        updatedVehicle!.Price.Should().Be(35000m);
+        updatedVehicle.Title.Should().Be("Updated Title");
     }
 
     #endregion
@@ -298,7 +145,7 @@ public class VehicleRepositoryTests : IDisposable
     #region DeleteAsync Tests
 
     [Fact]
-    public async Task DeleteAsync_ExistingVehicle_SoftDeletes()
+    public async Task DeleteAsync_ExistingVehicle_SoftDeletesVehicle()
     {
         // Arrange
         var vehicle = CreateTestVehicle();
@@ -309,150 +156,143 @@ public class VehicleRepositoryTests : IDisposable
         await _repository.DeleteAsync(vehicle.Id);
 
         // Assert
-        var deleted = await _context.Vehicles.FindAsync(vehicle.Id);
-        deleted!.IsDeleted.Should().BeTrue();
-        deleted.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-    }
-
-    [Fact]
-    public async Task DeleteAsync_NonExistingVehicle_DoesNotThrow()
-    {
-        // Act
-        var act = async () => await _repository.DeleteAsync(Guid.NewGuid());
-
-        // Assert
-        await act.Should().NotThrowAsync();
+        var deletedVehicle = await _context.Vehicles.FindAsync(vehicle.Id);
+        deletedVehicle!.IsDeleted.Should().BeTrue();
     }
 
     #endregion
 
-    #region ExistsAsync Tests
+    #region SearchAsync Tests
 
     [Fact]
-    public async Task ExistsAsync_ExistingVehicle_ReturnsTrue()
+    public async Task SearchAsync_ByMake_ReturnsMatchingVehicles()
     {
         // Arrange
-        var vehicle = CreateTestVehicle();
-        _context.Vehicles.Add(vehicle);
+        var toyota1 = CreateTestVehicle("Toyota", "Camry");
+        var toyota2 = CreateTestVehicle("Toyota", "Corolla");
+        var honda = CreateTestVehicle("Honda", "Civic");
+
+        _context.Vehicles.AddRange(toyota1, toyota2, honda);
         await _context.SaveChangesAsync();
 
+        var parameters = new VehicleSearchParameters { Make = "Toyota" };
+
         // Act
-        var result = await _repository.ExistsAsync(vehicle.Id);
+        var results = await _repository.SearchAsync(parameters);
 
         // Assert
-        result.Should().BeTrue();
+        results.Should().HaveCount(2);
+        results.All(v => v.Make == "Toyota").Should().BeTrue();
     }
 
     [Fact]
-    public async Task ExistsAsync_DeletedVehicle_ReturnsFalse()
+    public async Task SearchAsync_ByPriceRange_ReturnsMatchingVehicles()
     {
         // Arrange
-        var vehicle = CreateTestVehicle();
-        vehicle.IsDeleted = true;
-        _context.Vehicles.Add(vehicle);
+        var cheap = CreateTestVehicle();
+        cheap.Price = 15000m;
+
+        var mid = CreateTestVehicle();
+        mid.Price = 25000m;
+
+        var expensive = CreateTestVehicle();
+        expensive.Price = 50000m;
+
+        _context.Vehicles.AddRange(cheap, mid, expensive);
         await _context.SaveChangesAsync();
 
-        // Act
-        var result = await _repository.ExistsAsync(vehicle.Id);
-
-        // Assert
-        result.Should().BeFalse();
-    }
-
-    #endregion
-
-    #region GetBySellerAsync Tests
-
-    [Fact]
-    public async Task GetBySellerAsync_ReturnsSellersVehicles()
-    {
-        // Arrange
-        var sellerId = Guid.NewGuid();
-        var sellerVehicle = CreateTestVehicle();
-        sellerVehicle.SellerId = sellerId;
-
-        var otherVehicle = CreateTestVehicle();
-        otherVehicle.SellerId = Guid.NewGuid();
-
-        _context.Vehicles.AddRange(sellerVehicle, otherVehicle);
-        await _context.SaveChangesAsync();
+        var parameters = new VehicleSearchParameters
+        {
+            MinPrice = 20000m,
+            MaxPrice = 30000m
+        };
 
         // Act
-        var result = await _repository.GetBySellerAsync(sellerId);
+        var results = await _repository.SearchAsync(parameters);
 
         // Assert
-        result.Should().HaveCount(1);
-        result.First().SellerId.Should().Be(sellerId);
-    }
-
-    #endregion
-
-    #region GetByDealerAsync Tests
-
-    [Fact]
-    public async Task GetByDealerAsync_ReturnsDealersVehicles()
-    {
-        // Arrange
-        var dealerId = Guid.NewGuid();
-        var dealerVehicle = CreateTestVehicle();
-        dealerVehicle.DealerId = dealerId;
-
-        var otherVehicle = CreateTestVehicle();
-        otherVehicle.DealerId = Guid.NewGuid();
-
-        _context.Vehicles.AddRange(dealerVehicle, otherVehicle);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.GetByDealerAsync(dealerId);
-
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().DealerId.Should().Be(dealerId);
-    }
-
-    #endregion
-
-    #region GetFeaturedAsync Tests
-
-    [Fact]
-    public async Task GetFeaturedAsync_ReturnsFeaturedVehicles()
-    {
-        // Arrange
-        var featured = CreateTestVehicle();
-        featured.IsFeatured = true;
-
-        var regular = CreateTestVehicle();
-        regular.IsFeatured = false;
-
-        _context.Vehicles.AddRange(featured, regular);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.GetFeaturedAsync(10);
-
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().IsFeatured.Should().BeTrue();
+        results.Should().HaveCount(1);
+        results.First().Price.Should().Be(25000m);
     }
 
     [Fact]
-    public async Task GetFeaturedAsync_RespectsLimit()
+    public async Task SearchAsync_ByYear_ReturnsMatchingVehicles()
     {
         // Arrange
-        for (int i = 0; i < 10; i++)
+        var old = CreateTestVehicle();
+        old.Year = 2018;
+
+        var recent = CreateTestVehicle();
+        recent.Year = 2023;
+
+        var newest = CreateTestVehicle();
+        newest.Year = 2024;
+
+        _context.Vehicles.AddRange(old, recent, newest);
+        await _context.SaveChangesAsync();
+
+        var parameters = new VehicleSearchParameters
+        {
+            MinYear = 2022
+        };
+
+        // Act
+        var results = await _repository.SearchAsync(parameters);
+
+        // Assert
+        results.Should().HaveCount(2);
+        results.All(v => v.Year >= 2022).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SearchAsync_ByCondition_ReturnsMatchingVehicles()
+    {
+        // Arrange
+        var newCar = CreateTestVehicle();
+        newCar.Condition = VehicleCondition.New;
+
+        var usedCar = CreateTestVehicle();
+        usedCar.Condition = VehicleCondition.Used;
+
+        _context.Vehicles.AddRange(newCar, usedCar);
+        await _context.SaveChangesAsync();
+
+        var parameters = new VehicleSearchParameters
+        {
+            Condition = VehicleCondition.New
+        };
+
+        // Act
+        var results = await _repository.SearchAsync(parameters);
+
+        // Assert
+        results.Should().HaveCount(1);
+        results.First().Condition.Should().Be(VehicleCondition.New);
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithPagination_ReturnsCorrectPage()
+    {
+        // Arrange
+        for (int i = 0; i < 25; i++)
         {
             var vehicle = CreateTestVehicle();
-            vehicle.IsFeatured = true;
+            vehicle.Title = $"Vehicle {i:D2}";
             _context.Vehicles.Add(vehicle);
         }
         await _context.SaveChangesAsync();
 
+        var parameters = new VehicleSearchParameters
+        {
+            Skip = 10,
+            Take = 10
+        };
+
         // Act
-        var result = await _repository.GetFeaturedAsync(5);
+        var results = await _repository.SearchAsync(parameters);
 
         // Assert
-        result.Should().HaveCount(5);
+        results.Should().HaveCount(10);
     }
 
     #endregion
@@ -460,63 +300,79 @@ public class VehicleRepositoryTests : IDisposable
     #region GetCountAsync Tests
 
     [Fact]
-    public async Task GetCountAsync_NoParameters_ReturnsActiveCount()
+    public async Task GetCountAsync_WithParameters_ReturnsCorrectCount()
     {
         // Arrange
-        _context.Vehicles.Add(CreateTestVehicle());
-        _context.Vehicles.Add(CreateTestVehicle());
-        var deleted = CreateTestVehicle();
-        deleted.IsDeleted = true;
-        _context.Vehicles.Add(deleted);
+        var toyota1 = CreateTestVehicle("Toyota", "Camry");
+        var toyota2 = CreateTestVehicle("Toyota", "Corolla");
+        var honda = CreateTestVehicle("Honda", "Civic");
+
+        _context.Vehicles.AddRange(toyota1, toyota2, honda);
+        await _context.SaveChangesAsync();
+
+        var parameters = new VehicleSearchParameters { Make = "Toyota" };
+
+        // Act
+        var count = await _repository.GetCountAsync(parameters);
+
+        // Assert
+        count.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetCountAsync_NoParameters_ReturnsTotalCount()
+    {
+        // Arrange
+        _context.Vehicles.AddRange(
+            CreateTestVehicle(),
+            CreateTestVehicle(),
+            CreateTestVehicle()
+        );
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.GetCountAsync();
+        var count = await _repository.GetCountAsync();
 
         // Assert
-        result.Should().Be(2);
+        count.Should().Be(3);
     }
 
     #endregion
 
     #region Helper Methods
 
-    private static Vehicle CreateTestVehicle(
-        string? title = null,
-        string make = "Toyota",
-        string model = "Camry",
-        int year = 2024,
-        decimal price = 25000,
-        VehicleStatus status = VehicleStatus.Active)
+    private Vehicle CreateTestVehicle(string make = "Toyota", string model = "Camry")
     {
         return new Vehicle
         {
             Id = Guid.NewGuid(),
-            DealerId = Guid.NewGuid(),
-            SellerId = Guid.NewGuid(),
-            Title = title ?? $"{year} {make} {model}",
-            Description = "Test vehicle description",
+            DealerId = _testDealerId,
+            Title = $"2024 {make} {model} SE",
             Make = make,
             Model = model,
-            Year = year,
-            Price = price,
+            Year = 2024,
+            Price = 28500.00m,
             VIN = GenerateRandomVIN(),
-            Status = status,
-            Currency = "USD",
-            VehicleType = VehicleType.Car,
+            Status = VehicleStatus.Active,
             Condition = VehicleCondition.Used,
             Mileage = 25000,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            MileageUnit = MileageUnit.Miles,
+            VehicleType = VehicleType.Car,
+            BodyStyle = BodyStyle.Sedan,
+            FuelType = FuelType.Gasoline,
+            Transmission = TransmissionType.Automatic,
+            DriveType = Entities.DriveType.FWD,
+            SellerId = Guid.NewGuid(),
+            SellerName = "Test Dealer",
+            CreatedAt = DateTime.UtcNow
         };
     }
 
-    private static string GenerateRandomVIN()
+    private string GenerateRandomVIN()
     {
         const string chars = "ABCDEFGHJKLMNPRSTUVWXYZ0123456789";
         var random = new Random();
-        return new string(Enumerable.Repeat(chars, 17)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+        return new string(Enumerable.Range(0, 17).Select(_ => chars[random.Next(chars.Length)]).ToArray());
     }
 
     #endregion

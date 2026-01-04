@@ -4,6 +4,7 @@ import { FiMapPin, FiActivity, FiHeart, FiBarChart2 } from 'react-icons/fi';
 import { formatPrice, formatMileage } from '@/utils/formatters';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useCompare } from '@/hooks/useCompare';
+import { generateVehicleUrl } from '@/utils/seoSlug';
 
 export interface VehicleCardProps {
   id: string;
@@ -40,10 +41,13 @@ export default function VehicleCard({
   const { isInCompare, addToCompare, removeFromCompare } = useCompare();
   const isLiked = isFavorite(id);
   const inCompare = isInCompare(id);
+  
+  // Generate SEO-friendly URL
+  const vehicleUrl = generateVehicleUrl({ id, year, make, model });
 
   return (
     <Link
-      to={`/vehicles/${id}`}
+      to={vehicleUrl}
       className="block group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
     >
       {/* Image Container */}

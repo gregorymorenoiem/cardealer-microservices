@@ -510,5 +510,8 @@ _channel.QueueDeclare(
 | **NotificationService** | `notification.sent` | `auth.user.registered`, `vehicle.created`, `vehicle.sold` |
 | **AuditService** | `audit.log.created` | Todos (wildcard `*.*.#`) |
 | **ErrorService** | `error.logged` | `*.*.error` |
-| **ProductService** | `vehicle.created`, `vehicle.updated`, `vehicle.sold` | - |
+| **VehiclesSaleService** | `vehicle.created`, `vehicle.updated`, `vehicle.sold` | - |
+| **VehiclesRentService** | `rental.created`, `rental.completed`, `rental.cancelled` | - |
+| **PropertiesSaleService** | `property.created`, `property.updated`, `property.sold` | - |
+| **PropertiesRentService** | `lease.created`, `lease.completed`, `lease.terminated` | - |
 | **MediaService** | `media.uploaded`, `media.deleted` | `vehicle.created` |

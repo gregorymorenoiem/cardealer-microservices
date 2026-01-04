@@ -60,6 +60,16 @@ export const useAuthStore = create<AuthState>()(
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
         });
+        
+        // Save user email to localStorage for ID mapping between AuthService and UserService
+        if (response.user?.email) {
+          localStorage.setItem('userEmail', response.user.email);
+        }
+        
+        // Also save accessToken for dealerSellerService
+        if (response.accessToken) {
+          localStorage.setItem('accessToken', response.accessToken);
+        }
       },
 
       logout: () => {
@@ -68,6 +78,10 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           refreshToken: null,
         });
+        
+        // Clear saved data
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('accessToken');
       },
 
       updateUser: (user: User) => {

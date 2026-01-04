@@ -13,8 +13,8 @@ public class VehicleImage : ITenantEntity
 
     public string Url { get; set; } = string.Empty;
     public string? ThumbnailUrl { get; set; }
-    public string? Title { get; set; }
-    public string? AltText { get; set; }
+    public string? Caption { get; set; }
+    public ImageType ImageType { get; set; } = ImageType.Exterior;
     public int SortOrder { get; set; } = 0;
     public bool IsPrimary { get; set; } = false;
     public long? FileSize { get; set; }

@@ -1,21 +1,25 @@
 /**
  * MapViewPage - Professional dealer map view for vehicles
  * Shows dealers with their inventory on an interactive map
+ * 
+ * Uses real data from VehiclesSaleService backend
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api';
 import MainLayout from '@/layouts/MainLayout';
-import { mockVehicleDealers } from '@/data/mockDealers';
+import { getDealersWithVehicles, type DealerLocation } from '@/services/dealerService';
+import { integrationConfig } from '@/config/env';
 import { 
   FiX, FiPhone, FiNavigation, FiShare2, FiStar, 
   FiMapPin, FiFilter, FiChevronLeft, FiCheckCircle,
-  FiMessageCircle, FiCopy, FiExternalLink
+  FiMessageCircle, FiCopy, FiExternalLink, FiLoader
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDKVgKqLUzWFaEMcXjkZUUTOFDNa4V0AFI';
+// Use API key from environment config
+const GOOGLE_MAPS_API_KEY = integrationConfig.googleMapsKey || 'AIzaSyBHYPOPdUI45VrntYnM173q19BYVQ7k4nY';
 
 const mapContainerStyle = {
   width: '100%',
@@ -36,6 +40,11 @@ export default function MapViewPage() {
   const dealerIdFromUrl = urlParams.get('dealer');
   const pageFromUrl = urlParams.get('page');
   
+  // State for dealers data from backend
+  const [dealers, setDealers] = useState<DealerLocation[]>([]);
+  const [isLoadingDealers, setIsLoadingDealers] = useState(true);
+  const [dealersError, setDealersError] = useState<string | null>(null);
+  
   const [selectedDealer, setSelectedDealer] = useState<string | null>(dealerIdFromUrl);
   const [hoveredDealer, setHoveredDealer] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -53,6 +62,27 @@ export default function MapViewPage() {
     id: 'google-map-script',
   });
 
+  // Fetch dealers from backend on mount
+  useEffect(() => {
+    const fetchDealers = async () => {
+      setIsLoadingDealers(true);
+      setDealersError(null);
+      
+      try {
+        const data = await getDealersWithVehicles();
+        setDealers(data);
+        console.log('✅ Loaded', data.length, 'dealers with vehicles');
+      } catch (error) {
+        console.error('❌ Error loading dealers:', error);
+        setDealersError('Error al cargar los dealers. Por favor, intenta de nuevo.');
+      } finally {
+        setIsLoadingDealers(false);
+      }
+    };
+
+    fetchDealers();
+  }, []);
+
   // Close filters when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,19 +95,8 @@ export default function MapViewPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showFilters]);
 
-  // Update URL when dealer selection changes
-  useEffect(() => {
-    if (selectedDealer) {
-      const params = new URLSearchParams();
-      params.set('dealer', selectedDealer);
-      const currentPage = Math.floor(imageStartIndex / 3) + 1;
-      params.set('page', currentPage.toString());
-      navigate(`?${params.toString()}`, { replace: true });
-    }
-  }, [selectedDealer, imageStartIndex, navigate]);
-
   // Calculate distance from user location
-  const getDistance = useCallback((dealer: typeof mockVehicleDealers[0]) => {
+  const getDistance = useCallback((dealer: DealerLocation) => {
     const R = 6371;
     const dLat = (dealer.latitude - userLocation.lat) * Math.PI / 180;
     const dLon = (dealer.longitude - userLocation.lng) * Math.PI / 180;
@@ -89,20 +108,23 @@ export default function MapViewPage() {
     return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)} km`;
   }, [userLocation]);
 
-  // Filter dealers
+  // Filter dealers from backend data
   const filteredDealers = useMemo(() => {
-    return mockVehicleDealers.filter(dealer => {
+    return dealers.filter(dealer => {
       if (filters.verified && !dealer.isVerified) return false;
       
       // Distance filter
       if (filters.maxDistance > 0) {
-        const distance = parseFloat(getDistance(dealer).replace(' km', ''));
+        const distanceStr = getDistance(dealer);
+        const distance = distanceStr.includes('km') 
+          ? parseFloat(distanceStr.replace(' km', ''))
+          : parseFloat(distanceStr.replace('m', '')) / 1000;
         if (distance > filters.maxDistance) return false;
       }
       
       return true;
     });
-  }, [filters, getDistance]);
+  }, [dealers, filters, getDistance]);
 
   // Calculate map center
   const center = useMemo(() => {
@@ -129,9 +151,9 @@ export default function MapViewPage() {
     }).format(price);
   };
 
-  const handleShare = useCallback((dealer: typeof mockVehicleDealers[0], method: 'copy' | 'whatsapp') => {
+  const handleShare = useCallback((dealer: DealerLocation, method: 'copy' | 'whatsapp') => {
     const url = `${window.location.origin}/vehicles/map?dealer=${dealer.id}`;
-    const message = `🚗 ${dealer.name}\n📍 ${dealer.address}\n⭐ ${dealer.rating}/5 (${dealer.reviewCount} reseñas)\n🔗 ${url}`;
+    const message = `🚗 ${dealer.name}\n📍 ${dealer.address}\n⭐ ${dealer.rating.toFixed(1)}/5 (${dealer.reviewCount} reseñas)\n🔗 ${url}`;
 
     if (method === 'copy') {
       navigator.clipboard.writeText(url);
@@ -142,12 +164,15 @@ export default function MapViewPage() {
     setShowShareMenu(false);
   }, []);
 
-  if (loadError) {
+  // Show error state
+  if (loadError || dealersError) {
     return (
       <MainLayout>
         <div className="h-screen flex items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 font-semibold mb-2">Error al cargar el mapa</p>
+            <p className="text-red-600 font-semibold mb-2">
+              {loadError ? 'Error al cargar el mapa' : dealersError}
+            </p>
             <p className="text-gray-600">Por favor, intenta nuevamente más tarde</p>
             <button
               onClick={() => navigate('/vehicles')}
@@ -161,13 +186,39 @@ export default function MapViewPage() {
     );
   }
 
-  if (!isLoaded) {
+  // Show loading state
+  if (!isLoaded || isLoadingDealers) {
     return (
       <MainLayout>
         <div className="h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Cargando mapa de dealers...</p>
+            <FiLoader className="animate-spin h-16 w-16 text-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">
+              {!isLoaded ? 'Cargando mapa...' : 'Cargando dealers con vehículos...'}
+            </p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show empty state if no dealers found
+  if (dealers.length === 0) {
+    return (
+      <MainLayout>
+        <div className="h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center max-w-md mx-auto px-4">
+            <FiMapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">No hay dealers disponibles</h2>
+            <p className="text-gray-600 mb-6">
+              No se encontraron dealers con vehículos publicados en este momento.
+            </p>
+            <button
+              onClick={() => navigate('/vehicles')}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Explorar vehículos
+            </button>
           </div>
         </div>
       </MainLayout>
@@ -339,7 +390,7 @@ export default function MapViewPage() {
                       <div className="flex items-center gap-3 text-xs text-gray-600">
                         <span className="flex items-center gap-1">
                           <FiStar className="w-3 h-3 fill-amber-400 text-amber-400" />
-                          <span className="font-semibold text-gray-900">{dealer.rating}</span>
+                          <span className="font-semibold text-gray-900">{dealer.rating.toFixed(1)}</span>
                           <span className="text-gray-500">({dealer.reviewCount})</span>
                         </span>
                         <span>•</span>

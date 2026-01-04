@@ -124,10 +124,6 @@ export {
   useLeadActivities,
   useTodaysActivities,
   useOverdueActivities,
-  useCreateActivity,
-  useUpdateActivity,
-  useDeleteActivity,
-  useCompleteActivity,
   // Stats
   useCRMStats,
   // Composite

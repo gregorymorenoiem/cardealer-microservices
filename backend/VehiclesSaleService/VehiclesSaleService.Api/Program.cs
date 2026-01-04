@@ -66,6 +66,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IVehicleCatalogRepository, VehicleCatalogRepository>();
 
 // ========================================
 // CORS

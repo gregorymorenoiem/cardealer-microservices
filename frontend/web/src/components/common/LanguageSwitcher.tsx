@@ -50,27 +50,52 @@ export const LanguageSwitcher = ({
     setIsOpen(false);
   };
 
-  // Minimal variant - just flags/icons
+  // Minimal variant - single button with dropdown
   if (variant === 'minimal') {
     return (
-      <div className={`flex items-center gap-1 ${className}`}>
-        {supportedLanguages.map((lang) => (
-          <button
-            key={lang}
-            onClick={() => changeLanguage(lang)}
-            className={`
-              p-1.5 rounded-md text-lg transition-all
-              ${currentLanguage === lang 
-                ? 'bg-primary-100 ring-2 ring-primary-500' 
-                : 'hover:bg-gray-100'
-              }
-            `}
-            title={languageLabels[lang]}
-            aria-label={`Switch to ${languageLabels[lang]}`}
+      <div className={`relative ${className}`} ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 rounded-xl text-xl hover:bg-gray-100 transition-all duration-200"
+          title={languageLabels[currentLanguage]}
+          aria-label={`Current language: ${languageLabels[currentLanguage]}`}
+          aria-expanded={isOpen}
+        >
+          {languageFlags[currentLanguage]}
+        </button>
+
+        {isOpen && (
+          <div 
+            className="
+              absolute right-0 mt-2 w-36 py-1
+              bg-white rounded-xl shadow-xl border border-gray-100
+              z-50 animate-in fade-in slide-in-from-top-2 duration-200
+            "
+            role="listbox"
           >
-            {languageFlags[lang]}
-          </button>
-        ))}
+            {supportedLanguages.map((lang) => (
+              <button
+                key={lang}
+                onClick={() => changeLanguage(lang)}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 text-sm
+                  ${currentLanguage === lang 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                  }
+                `}
+                role="option"
+                aria-selected={currentLanguage === lang}
+              >
+                <span className="text-lg">{languageFlags[lang]}</span>
+                <span className="flex-1 text-left font-medium">{languageLabels[lang]}</span>
+                {currentLanguage === lang && (
+                  <Check className="h-4 w-4 text-blue-600" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

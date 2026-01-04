@@ -46,6 +46,13 @@ namespace UserService.Infrastructure.Persistence.Configurations
 
             builder.Property(u => u.LastLoginAt);
 
+            // AccountType enum
+            builder.Property(u => u.AccountType)
+                .IsRequired()
+                .HasDefaultValue(AccountType.Individual)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
             // Índices
             builder.HasIndex(u => u.Email)
                 .IsUnique()

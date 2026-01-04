@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { authService } from '@/services/authService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const { provider } = useParams<{ provider: 'google' | 'microsoft' }>();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
+  const storeLogin = useAuthStore((state) => state.login);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function OAuthCallbackPage() {
         const response = await authService.handleOAuthCallback(provider, code);
 
         // Update auth store
-        login(response);
+        storeLogin(response);
 
         // Redirect to dashboard
         navigate('/dashboard', { replace: true });
@@ -49,7 +49,7 @@ export default function OAuthCallbackPage() {
     };
 
     handleCallback();
-  }, [provider, searchParams, login, navigate]);
+  }, [provider, searchParams, storeLogin, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

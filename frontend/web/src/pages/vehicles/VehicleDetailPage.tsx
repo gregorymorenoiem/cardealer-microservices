@@ -18,16 +18,20 @@ import { formatPrice } from '@/utils/formatters';
 import { FiHome, FiChevronRight, FiStar, FiMapPin, FiPhone, FiUser, FiHeart, FiLoader, FiAlertCircle, FiWifi, FiWifiOff } from 'react-icons/fi';
 import { useFavorites } from '@/hooks/useFavorites';
 
-// Extract the ID from SEO-friendly URL (e.g., "mercedes-benz-clase-c-amg-2024-v1" -> "v1")
+// Extract the ID from SEO-friendly URL
+// Format: /vehicles/{year}-{make}-{model}-{uuid}
+// Example: /vehicles/2024-mercedes-benz-clase-c-amg-a1111111-1111-1111-1111-111111111111
 const extractIdFromSlug = (slugWithId: string): string => {
-  const parts = slugWithId.split('-');
-  return parts[parts.length - 1] || slugWithId;
+  // UUID pattern: 8-4-4-4-12 hexadecimal digits separated by hyphens
+  const uuidRegex = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i;
+  const match = slugWithId.match(uuidRegex);
+  return match ? match[1] : slugWithId;
 };
 
 export default function VehicleDetailPage() {
   const { t } = useTranslation('vehicles');
-  const { id: slugWithId } = useParams<{ id: string }>();
-  const id = slugWithId ? extractIdFromSlug(slugWithId) : undefined;
+  const { slug } = useParams<{ slug: string }>();
+  const id = slug ? extractIdFromSlug(slug) : undefined;
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // Scroll to top when page loads

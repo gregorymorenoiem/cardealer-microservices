@@ -1,29 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import ComparisonTable from '@/components/organisms/ComparisonTable';
 import { useCompare } from '@/hooks/useCompare';
-import { mockVehicles } from '@/data/mockVehicles';
+import { getAllVehicles, compareVehicles } from '@/services/vehicleService';
+import type { Vehicle } from '@/services/vehicleService';
+import { generateVehicleUrl } from '@/utils/seoSlug';
 import { FiX, FiPlus } from 'react-icons/fi';
 
 export default function ComparePage() {
   const navigate = useNavigate();
   const { compareItems, removeFromCompare, clearCompare, canAddMore, addToCompare, maxItems } = useCompare();
   const [showSelector, setShowSelector] = useState(false);
+  const [vehiclesToCompare, setVehiclesToCompare] = useState<Vehicle[]>([]);
+  const [availableVehicles, setAvailableVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Get vehicles to compare
-  const vehiclesToCompare = compareItems
-    .map((id) => mockVehicles.find((v) => v.id === id))
-    .filter((v) => v !== undefined);
+  // Load vehicles to compare from backend
+  useEffect(() => {
+    const loadVehicles = async () => {
+      try {
+        setLoading(true);
+        
+        if (compareItems.length > 0) {
+          // Fetch the specific vehicles to compare
+          const compared = await compareVehicles(compareItems);
+          setVehiclesToCompare(compared);
+        } else {
+          setVehiclesToCompare([]);
+        }
 
-  // Get available vehicles (not in compare)
-  const availableVehicles = mockVehicles.filter((v) => !compareItems.includes(v.id));
+        // Fetch all available vehicles
+        const result = await getAllVehicles({ page: 0, pageSize: 20 });
+        const available = result.vehicles.filter((v: Vehicle) => !compareItems.includes(v.id));
+        setAvailableVehicles(available);
+      } catch (error) {
+        console.error('Error loading vehicles:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVehicles();
+  }, [compareItems]);
 
   const handleAddVehicle = (vehicleId: string) => {
     addToCompare(vehicleId);
     setShowSelector(false);
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading comparison...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (compareItems.length === 0) {
     return (
@@ -200,15 +238,18 @@ export default function ComparePage() {
                     </h3>
                     <div className="space-y-3">
                       <Link
-                        to={`/vehicles/${vehicle.id}`}
+                        to={generateVehicleUrl(vehicle)}
                         className="block w-full px-4 py-2 bg-primary text-white text-center rounded-lg hover:bg-primary-600 transition-colors font-medium text-sm"
                       >
                         View Full Details
                       </Link>
                       <button
                         onClick={() => {
-                          // Simulate contact action
-                          alert(`Contact seller: ${vehicle.seller.name}\nPhone: ${vehicle.seller.phone}`);
+                          // Contact seller action
+                          const message = vehicle.sellerName 
+                            ? `Contact seller: ${vehicle.sellerName}${vehicle.sellerPhone ? '\nPhone: ' + vehicle.sellerPhone : ''}${vehicle.sellerEmail ? '\nEmail: ' + vehicle.sellerEmail : ''}`
+                            : 'Contact information not available';
+                          alert(message);
                         }}
                         className="block w-full px-4 py-2 bg-gray-100 text-gray-900 text-center rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
                       >

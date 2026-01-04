@@ -112,12 +112,12 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Get properties by owner/landlord
+    /// Get properties by agent
     /// </summary>
-    [HttpGet("seller/{sellerId:guid}")]
-    public async Task<ActionResult<IEnumerable<Property>>> GetBySeller(Guid sellerId)
+    [HttpGet("agent/{agentId:guid}")]
+    public async Task<ActionResult<IEnumerable<Property>>> GetByAgent(Guid agentId)
     {
-        var properties = await _propertyRepository.GetBySellerAsync(sellerId);
+        var properties = await _propertyRepository.GetByAgentAsync(agentId);
         return Ok(properties);
     }
 
@@ -174,8 +174,8 @@ public class PropertiesController : ControllerBase
             Neighborhood = request.Neighborhood,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
-            SellerId = request.SellerId,
-            SellerName = request.SellerName,
+            AgentId = request.AgentId,
+            AgentName = request.AgentName,
             DealerId = request.DealerId,
             CategoryId = request.CategoryId,
             CategoryName = category.Name
@@ -330,8 +330,8 @@ public record CreatePropertyRequest
     public string? Neighborhood { get; init; }
     public decimal? Latitude { get; init; }
     public decimal? Longitude { get; init; }
-    public Guid SellerId { get; init; }
-    public string SellerName { get; init; } = string.Empty;
+    public Guid AgentId { get; init; }
+    public string AgentName { get; init; } = string.Empty;
     public Guid? DealerId { get; init; }
     public Guid CategoryId { get; init; }
     public List<string>? Images { get; init; }

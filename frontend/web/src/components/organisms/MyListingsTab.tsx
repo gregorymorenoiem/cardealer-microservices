@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiEdit2, FiTrash2, FiEye, FiPlus, FiPackage } from 'react-icons/fi';
 import { formatPrice, formatMileage } from '@/utils/formatters';
+import { generateListingUrl } from '@/utils/seoSlug';
+import { getVehicleSaleImageUrl } from '@/utils/s3ImageUrl';
 
 interface Listing {
   id: string;
@@ -22,7 +24,7 @@ const mockListings: Listing[] = [
     title: '2023 Tesla Model 3 Long Range',
     price: 45999,
     mileage: 12000,
-    image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=400',
+    image: getVehicleSaleImageUrl('photo-1560958089-b8a1929cea89'),
     status: 'active',
     views: 245,
     inquiries: 12,
@@ -33,7 +35,7 @@ const mockListings: Listing[] = [
     title: '2022 BMW 3 Series 330i',
     price: 38500,
     mileage: 18000,
-    image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400',
+    image: getVehicleSaleImageUrl('photo-1555215695-3004980ad54e'),
     status: 'pending',
     views: 89,
     inquiries: 4,
@@ -152,7 +154,7 @@ export default function MyListingsTab() {
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <Link
-                    to={`/vehicles/${listing.id}`}
+                    to={generateListingUrl(listing.id, listing.title)}
                     className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
                   >
                     View

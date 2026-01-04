@@ -1,0 +1,71 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Fast checks for PRs
+  quick-checks:
+    name: Quick PR Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: frontend/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend/web
+        run: npm ci
+
+      - name: Lint check
+        working-directory: frontend/web
+        run: npm run lint
+
+      - name: Type check
+        working-directory: frontend/web
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        working-directory: frontend/web
+        run: npm test -- --run --reporter=verbose
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Backend build check
+        working-directory: backend
+        run: |
+          dotnet restore AuthService/AuthService.sln
+          dotnet build AuthService/AuthService.sln --no-restore
+
+      - name: PR size check
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
+          echo "Changed files: $CHANGED_FILES"
+          if [ $CHANGED_FILES -gt 100 ]; then
+            echo "::warning::PR has $CHANGED_FILES changed files. Consider splitting into smaller PRs."
+          fi
+
+      - name: Comment PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Quick checks completed! Full CI pipeline running in the background.'
+            })

@@ -1,6 +1,6 @@
 /**
  * GlobalSearch - Global search component with dropdown results
- * Searches across all verticals (vehicles and properties)
+ * Searches vehicles from the VehiclesSaleService API
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -10,11 +10,11 @@ import {
   FiSearch, 
   FiX, 
   FiTruck, 
-  FiHome,
   FiClock,
   FiArrowRight,
   FiLoader
 } from 'react-icons/fi';
+import { generateVehicleUrl } from '@/utils/seoSlug';
 
 interface SearchResult {
   id: string;
@@ -24,56 +24,95 @@ interface SearchResult {
   price: number;
   image?: string;
   url: string;
+  year?: number;
+  make?: string;
+  model?: string;
 }
 
-// Mock search results - in production this would come from an API
-const mockSearch = async (query: string): Promise<SearchResult[]> => {
-  await new Promise(resolve => setTimeout(resolve, 300));
+// API URL for VehiclesSaleService
+const VEHICLES_API_URL = import.meta.env.VITE_VEHICLES_SALE_SERVICE_URL || 'http://localhost:15070/api';
+
+// Real search using VehiclesSaleService API
+const searchVehicles = async (query: string): Promise<SearchResult[]> => {
+  if (!query.trim() || query.length < 2) return [];
   
-  if (!query.trim()) return [];
-  
-  const q = query.toLowerCase();
-  
-  const results: SearchResult[] = [];
-  
-  // Vehicle results
-  if (q.includes('toyota') || q.includes('auto') || q.includes('sedan') || q.includes('camioneta')) {
-    results.push(
-      { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
-      { id: 'v2', type: 'vehicle', title: 'Toyota RAV4 2023', subtitle: 'SUV • Híbrido • 15,000 km', price: 620000, url: '/vehicles/v2' },
+  try {
+    const response = await fetch(
+      `${VEHICLES_API_URL}/Vehicles?search=${encodeURIComponent(query)}&pageSize=8&page=1`
     );
+    
+    if (!response.ok) {
+      console.error('Search API error:', response.status);
+      return [];
+    }
+    
+    const data = await response.json();
+    
+    if (!data.vehicles || data.vehicles.length === 0) {
+      return [];
+    }
+    
+    // Transform API response to SearchResult format
+    return data.vehicles.map((vehicle: any) => {
+      // Map bodyStyle enum to readable text
+      const bodyStyleMap: Record<number, string> = {
+        0: 'Sedán',
+        1: 'Coupé',
+        2: 'Hatchback',
+        3: 'Wagon',
+        4: 'SUV',
+        5: 'Crossover',
+        6: 'Pickup',
+        7: 'Van',
+        8: 'Minivan',
+        9: 'Convertible',
+        10: 'Deportivo'
+      };
+      
+      // Map transmission enum
+      const transmissionMap: Record<number, string> = {
+        0: 'Automático',
+        1: 'Manual',
+        2: 'CVT'
+      };
+      
+      const bodyStyle = bodyStyleMap[vehicle.bodyStyle] || '';
+      const transmission = transmissionMap[vehicle.transmission] || '';
+      const mileageText = vehicle.mileage ? `${vehicle.mileage.toLocaleString()} km` : 'Nuevo';
+      
+      // Build subtitle with available info
+      const subtitleParts = [bodyStyle, transmission, mileageText].filter(Boolean);
+      
+      // Get primary image
+      const primaryImage = vehicle.images?.find((img: any) => img.isPrimary)?.url 
+        || vehicle.images?.[0]?.url 
+        || '/placeholder-car.jpg';
+      
+      // Generate SEO-friendly URL
+      const vehicleUrl = generateVehicleUrl({
+        id: vehicle.id,
+        year: vehicle.year,
+        make: vehicle.make,
+        model: vehicle.model
+      });
+      
+      return {
+        id: vehicle.id,
+        type: 'vehicle' as const,
+        title: vehicle.title || `${vehicle.make} ${vehicle.model} ${vehicle.year}`,
+        subtitle: subtitleParts.join(' • '),
+        price: vehicle.price,
+        image: primaryImage,
+        url: vehicleUrl,
+        year: vehicle.year,
+        make: vehicle.make,
+        model: vehicle.model
+      };
+    });
+  } catch (error) {
+    console.error('Error searching vehicles:', error);
+    return [];
   }
-  
-  if (q.includes('honda') || q.includes('civic')) {
-    results.push(
-      { id: 'v3', type: 'vehicle', title: 'Honda Civic 2024', subtitle: 'Sedán • Manual • Nuevo', price: 380000, url: '/vehicles/v3' },
-    );
-  }
-  
-  // Property results
-  if (q.includes('casa') || q.includes('house') || q.includes('venta')) {
-    results.push(
-      { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
-      { id: 'p2', type: 'property', title: 'Casa en Condesa', subtitle: '3 rec • 2 baños • 220 m²', price: 8900000, url: '/properties/p2' },
-    );
-  }
-  
-  if (q.includes('depa') || q.includes('apartamento') || q.includes('renta')) {
-    results.push(
-      { id: 'p3', type: 'property', title: 'Departamento en Roma Norte', subtitle: '2 rec • 2 baños • 95 m²', price: 25000, url: '/properties/p3' },
-      { id: 'p4', type: 'property', title: 'Penthouse en Santa Fe', subtitle: '3 rec • 3 baños • 180 m²', price: 45000, url: '/properties/p4' },
-    );
-  }
-  
-  // If no specific matches, show some generic results
-  if (results.length === 0 && q.length >= 2) {
-    results.push(
-      { id: 'v1', type: 'vehicle', title: 'Toyota Camry 2024', subtitle: 'Sedán • Automático • 5,000 km', price: 450000, url: '/vehicles/v1' },
-      { id: 'p1', type: 'property', title: 'Casa en Polanco', subtitle: '4 rec • 3 baños • 350 m²', price: 12500000, url: '/properties/p1' },
-    );
-  }
-  
-  return results;
 };
 
 interface GlobalSearchProps {
@@ -117,12 +156,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     localStorage.setItem('recentSearches', JSON.stringify(updated));
   }, [recentSearches]);
 
-  // Search debounce
+  // Search debounce - calls VehiclesSaleService API
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (query.length >= 2) {
         setIsLoading(true);
-        const searchResults = await mockSearch(query);
+        const searchResults = await searchVehicles(query);
         setResults(searchResults);
         setIsLoading(false);
       } else {
@@ -159,9 +198,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MXN',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
@@ -179,8 +218,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     inputRef.current?.focus();
   };
 
+  // Only vehicle results (no properties in this vehicle-only app)
   const vehicleResults = results.filter(r => r.type === 'vehicle');
-  const propertyResults = results.filter(r => r.type === 'property');
 
   return (
     <div 
@@ -256,7 +295,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3">
                       <FiTruck className="w-3 h-3" />
-                      Vehículos
+                      Vehículos ({vehicleResults.length} resultados)
                     </div>
                     <div className="space-y-1">
                       {vehicleResults.map((result) => (
@@ -266,9 +305,20 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                           onClick={() => handleResultClick(result)}
                           className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
                         >
-                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FiTruck className="w-6 h-6 text-gray-400" />
-                          </div>
+                          {result.image && result.image !== '/placeholder-car.jpg' ? (
+                            <img 
+                              src={result.image} 
+                              alt={result.title}
+                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/placeholder-car.jpg';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FiTruck className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 truncate group-hover:text-blue-600">
                               {result.title}
@@ -276,44 +326,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                             <div className="text-sm text-gray-500 truncate">{result.subtitle}</div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="font-semibold text-gray-900">
+                            <div className="font-semibold text-blue-600">
                               {formatPrice(result.price)}
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Properties Section */}
-                {propertyResults.length > 0 && (
-                  <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-3">
-                      <FiHome className="w-3 h-3" />
-                      Inmuebles
-                    </div>
-                    <div className="space-y-1">
-                      {propertyResults.map((result) => (
-                        <Link
-                          key={result.id}
-                          to={result.url}
-                          onClick={() => handleResultClick(result)}
-                          className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
-                        >
-                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FiHome className="w-6 h-6 text-gray-400" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 truncate group-hover:text-emerald-600">
-                              {result.title}
-                            </div>
-                            <div className="text-sm text-gray-500 truncate">{result.subtitle}</div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="font-semibold text-gray-900">
-                              {formatPrice(result.price)}
-                              {result.price < 100000 && <span className="text-sm text-gray-500">/mes</span>}
                             </div>
                           </div>
                         </Link>
@@ -326,22 +340,22 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 {results.length === 0 && !isLoading && (
                   <div className="p-8 text-center">
                     <FiSearch className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No se encontraron resultados para "{query}"</p>
-                    <p className="text-sm text-gray-400 mt-1">Intenta con otro término de búsqueda</p>
+                    <p className="text-gray-500">No se encontraron vehículos para "{query}"</p>
+                    <p className="text-sm text-gray-400 mt-1">Intenta con otra marca, modelo o palabra clave</p>
                   </div>
                 )}
 
                 {/* View All Results */}
                 {results.length > 0 && (
                   <Link
-                    to={`/search?q=${encodeURIComponent(query)}`}
+                    to={`/browse?search=${encodeURIComponent(query)}`}
                     onClick={() => {
                       saveRecentSearch(query);
                       setIsOpen(false);
                     }}
                     className="flex items-center justify-center gap-2 p-4 text-primary font-medium hover:bg-gray-50 transition-colors"
                   >
-                    Ver todos los resultados
+                    Ver todos los vehículos
                     <FiArrowRight className="w-4 h-4" />
                   </Link>
                 )}

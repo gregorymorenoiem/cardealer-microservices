@@ -73,12 +73,13 @@ export default function BrowsePage() {
     });
   }, [createSavedSearch]);
 
-  // Use API data if available, fallback to mock data
-  const isUsingMockData = searchPage.isError || searchPage.vehicles.length === 0;
+  // Use API data if available, fallback to mock data only on error
+  const useApiData = !searchPage.isError;
+  const isUsingMockData = !useApiData;
   
-  // Process data - API first, then mock as fallback
+  // Process data - API first (if sufficient data), then mock as fallback
   const processedData = useMemo(() => {
-    if (!searchPage.isError && searchPage.vehicles.length > 0) {
+    if (useApiData) {
       // Using real API data - sort on client side since backend may not support sort
       const sorted = sortVehicles(searchPage.vehicles as unknown as typeof mockVehicles, sortBy);
       return {
@@ -104,7 +105,7 @@ export default function BrowsePage() {
       isLoading: false,
       isError: false,
     };
-  }, [searchPage, filters, sortBy, currentPage]);
+  }, [useApiData, searchPage, filters, sortBy, currentPage]);
 
   const { vehicles: paginatedVehicles, totalItems, totalPages, isLoading, isError } = processedData;
 
@@ -219,16 +220,6 @@ export default function BrowsePage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-3">
-                    {/* Save Search Button */}
-                    <button
-                      onClick={() => setShowSaveModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-primary text-white hover:bg-primary-dark"
-                      title="Guardar esta búsqueda"
-                    >
-                      <FiSave size={18} />
-                      <span className="hidden sm:inline">Guardar búsqueda</span>
-                    </button>
-
                     {/* Saved Searches Button */}
                     <Link
                       to="/saved-searches"

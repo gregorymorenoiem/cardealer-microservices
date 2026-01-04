@@ -33,7 +33,7 @@ public class VehicleSearchParameters
     public BodyStyle? BodyStyle { get; set; }
     public FuelType? FuelType { get; set; }
     public TransmissionType? Transmission { get; set; }
-    public DriveType? DriveType { get; set; }
+    public Entities.DriveType? DriveType { get; set; }
     public VehicleCondition? Condition { get; set; }
     public string? ExteriorColor { get; set; }
     public string? State { get; set; }

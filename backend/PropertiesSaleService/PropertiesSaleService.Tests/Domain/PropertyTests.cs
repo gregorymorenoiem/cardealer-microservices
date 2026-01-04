@@ -17,6 +17,9 @@ public class PropertyTests
         property.IsDeleted.Should().BeFalse();
         property.Status.Should().Be(PropertyStatus.Draft);
         property.Currency.Should().Be("USD");
+        property.Country.Should().Be("USA");
+        property.PropertyType.Should().Be(PropertyType.House);
+        property.PropertySubType.Should().Be(PropertySubType.SingleFamily);
         property.Images.Should().NotBeNull();
         property.Images.Should().BeEmpty();
     }
@@ -29,6 +32,8 @@ public class PropertyTests
         {
             Id = Guid.NewGuid(),
             DealerId = Guid.NewGuid(),
+            AgentId = Guid.NewGuid(),
+            AgentName = "John Doe",
             Title = "Beautiful 3BR Home in Miami",
             StreetAddress = "123 Main Street",
             City = "Miami",
@@ -36,29 +41,35 @@ public class PropertyTests
             ZipCode = "33101",
             Price = 450000.00m,
             Bedrooms = 3,
-            Bathrooms = 2.5m,
+            Bathrooms = 2,
             SquareFeet = 2200,
-            PropertyType = PropertyType.SingleFamily,
+            PropertyType = PropertyType.House,
+            PropertySubType = PropertySubType.SingleFamily,
             Status = PropertyStatus.Active
         };
 
         // Assert
         property.Id.Should().NotBe(Guid.Empty);
         property.DealerId.Should().NotBe(Guid.Empty);
+        property.AgentId.Should().NotBe(Guid.Empty);
         property.Title.Should().NotBeNullOrEmpty();
         property.Price.Should().Be(450000.00m);
         property.Bedrooms.Should().Be(3);
-        property.Bathrooms.Should().Be(2.5m);
+        property.Bathrooms.Should().Be(2);
         property.SquareFeet.Should().Be(2200);
     }
 
     [Theory]
     [InlineData(PropertyStatus.Draft)]
+    [InlineData(PropertyStatus.PendingReview)]
     [InlineData(PropertyStatus.Active)]
+    [InlineData(PropertyStatus.UnderContract)]
     [InlineData(PropertyStatus.Pending)]
     [InlineData(PropertyStatus.Sold)]
-    [InlineData(PropertyStatus.Inactive)]
-    [InlineData(PropertyStatus.UnderContract)]
+    [InlineData(PropertyStatus.Closed)]
+    [InlineData(PropertyStatus.Withdrawn)]
+    [InlineData(PropertyStatus.Expired)]
+    [InlineData(PropertyStatus.Archived)]
     public void Property_AllStatuses_ShouldBeValid(PropertyStatus status)
     {
         // Arrange
@@ -69,12 +80,16 @@ public class PropertyTests
     }
 
     [Theory]
-    [InlineData(PropertyType.SingleFamily)]
+    [InlineData(PropertyType.House)]
     [InlineData(PropertyType.Condo)]
     [InlineData(PropertyType.Townhouse)]
     [InlineData(PropertyType.MultiFamily)]
+    [InlineData(PropertyType.Apartment)]
     [InlineData(PropertyType.Land)]
     [InlineData(PropertyType.Commercial)]
+    [InlineData(PropertyType.Industrial)]
+    [InlineData(PropertyType.Farm)]
+    [InlineData(PropertyType.MobileHome)]
     public void Property_AllTypes_ShouldBeValid(PropertyType type)
     {
         // Arrange
@@ -82,6 +97,25 @@ public class PropertyTests
 
         // Assert
         property.PropertyType.Should().Be(type);
+    }
+
+    [Theory]
+    [InlineData(PropertySubType.SingleFamily)]
+    [InlineData(PropertySubType.Duplex)]
+    [InlineData(PropertySubType.Triplex)]
+    [InlineData(PropertySubType.Fourplex)]
+    [InlineData(PropertySubType.Condo)]
+    [InlineData(PropertySubType.Loft)]
+    [InlineData(PropertySubType.VacantLand)]
+    [InlineData(PropertySubType.Office)]
+    [InlineData(PropertySubType.Retail)]
+    public void Property_AllSubTypes_ShouldBeValid(PropertySubType subType)
+    {
+        // Arrange
+        var property = new Property { PropertySubType = subType };
+
+        // Assert
+        property.PropertySubType.Should().Be(subType);
     }
 
     [Fact]
@@ -97,6 +131,7 @@ public class PropertyTests
         var image = new PropertyImage
         {
             Id = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
             PropertyId = property.Id,
             Url = "https://example.com/image.jpg",
             IsPrimary = true
@@ -117,8 +152,10 @@ public class PropertyTests
         var category = new Category
         {
             Id = Guid.NewGuid(),
+            DealerId = Guid.Empty,
             Name = "Residential",
-            Slug = "residential"
+            Slug = "residential",
+            IsSystem = true
         };
 
         var property = new Property
@@ -146,12 +183,11 @@ public class PropertyTests
 
         // Act
         property.IsDeleted = true;
-        property.DeletedAt = DateTime.UtcNow;
+        property.UpdatedAt = DateTime.UtcNow;
 
         // Assert
         property.IsDeleted.Should().BeTrue();
-        property.DeletedAt.Should().NotBeNull();
-        property.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        property.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -163,15 +199,15 @@ public class PropertyTests
             City = "Miami",
             State = "FL",
             ZipCode = "33101",
-            Latitude = 25.7617m,
-            Longitude = -80.1918m
+            Latitude = 25.7617,
+            Longitude = -80.1918
         };
 
         // Assert
         property.City.Should().Be("Miami");
         property.State.Should().Be("FL");
-        property.Latitude.Should().BeApproximately(25.7617m, 0.0001m);
-        property.Longitude.Should().BeApproximately(-80.1918m, 0.0001m);
+        property.Latitude.Should().BeApproximately(25.7617, 0.0001);
+        property.Longitude.Should().BeApproximately(-80.1918, 0.0001);
     }
 
     [Fact]
@@ -181,21 +217,27 @@ public class PropertyTests
         var property = new Property
         {
             HasPool = true,
-            HasGarage = true,
+            PoolType = PoolType.InGround,
             GarageSpaces = 2,
+            GarageType = GarageType.Attached,
             HasBasement = false,
+            BasementType = BasementType.None,
             HasFireplace = true,
-            LotSize = 0.25m,
+            FireplaceCount = 2,
+            LotSizeAcres = 0.25m,
             YearBuilt = 2020
         };
 
         // Assert
         property.HasPool.Should().BeTrue();
-        property.HasGarage.Should().BeTrue();
+        property.PoolType.Should().Be(PoolType.InGround);
         property.GarageSpaces.Should().Be(2);
+        property.GarageType.Should().Be(GarageType.Attached);
         property.HasBasement.Should().BeFalse();
+        property.BasementType.Should().Be(BasementType.None);
         property.HasFireplace.Should().BeTrue();
-        property.LotSize.Should().Be(0.25m);
+        property.FireplaceCount.Should().Be(2);
+        property.LotSizeAcres.Should().Be(0.25m);
         property.YearBuilt.Should().Be(2020);
     }
 
@@ -205,11 +247,15 @@ public class PropertyTests
         // Arrange & Act
         var property = new Property
         {
-            MLSNumber = "MLS-12345678"
+            MLSNumber = "MLS-12345678",
+            ParcelNumber = "123-456-789",
+            PropertyId = "PROP-001"
         };
 
         // Assert
         property.MLSNumber.Should().Be("MLS-12345678");
+        property.ParcelNumber.Should().Be("123-456-789");
+        property.PropertyId.Should().Be("PROP-001");
     }
 
     [Fact]
@@ -218,14 +264,127 @@ public class PropertyTests
         // Arrange & Act
         var property = new Property
         {
-            HasHOA = true,
-            HOAFee = 350.00m,
-            HOAFrequency = "Monthly"
+            HOAFeesMonthly = 350.00m,
+            HOAName = "Sunset Community HOA"
         };
 
         // Assert
-        property.HasHOA.Should().BeTrue();
-        property.HOAFee.Should().Be(350.00m);
-        property.HOAFrequency.Should().Be("Monthly");
+        property.HOAFeesMonthly.Should().Be(350.00m);
+        property.HOAName.Should().Be("Sunset Community HOA");
+    }
+
+    [Fact]
+    public void Property_SaleInfo_ShouldStoreDates()
+    {
+        // Arrange
+        var listingDate = DateTime.UtcNow.AddDays(-30);
+        var contractDate = DateTime.UtcNow.AddDays(-5);
+
+        var property = new Property
+        {
+            ListingDate = listingDate,
+            ContractDate = contractDate,
+            IsNewConstruction = true,
+            IsForeclosure = false,
+            IsShortSale = false,
+            VirtualTourAvailable = true,
+            VirtualTourUrl = "https://tour.example.com/123"
+        };
+
+        // Assert
+        property.ListingDate.Should().Be(listingDate);
+        property.ContractDate.Should().Be(contractDate);
+        property.IsNewConstruction.Should().BeTrue();
+        property.IsForeclosure.Should().BeFalse();
+        property.VirtualTourAvailable.Should().BeTrue();
+        property.VirtualTourUrl.Should().Be("https://tour.example.com/123");
+    }
+
+    [Fact]
+    public void Property_Metrics_ShouldTrackEngagement()
+    {
+        // Arrange & Act
+        var property = new Property
+        {
+            ViewCount = 150,
+            SavedCount = 25,
+            InquiryCount = 10,
+            TourRequestCount = 5,
+            DaysOnMarket = 30,
+            PriceChanges = 2
+        };
+
+        // Assert
+        property.ViewCount.Should().Be(150);
+        property.SavedCount.Should().Be(25);
+        property.InquiryCount.Should().Be(10);
+        property.TourRequestCount.Should().Be(5);
+        property.DaysOnMarket.Should().Be(30);
+        property.PriceChanges.Should().Be(2);
+    }
+
+    [Fact]
+    public void Property_Schools_ShouldStoreSchoolInfo()
+    {
+        // Arrange & Act
+        var property = new Property
+        {
+            ElementarySchool = "Lincoln Elementary",
+            MiddleSchool = "Jefferson Middle",
+            HighSchool = "Washington High",
+            SchoolDistrict = "Miami-Dade County Schools"
+        };
+
+        // Assert
+        property.ElementarySchool.Should().Be("Lincoln Elementary");
+        property.MiddleSchool.Should().Be("Jefferson Middle");
+        property.HighSchool.Should().Be("Washington High");
+        property.SchoolDistrict.Should().Be("Miami-Dade County Schools");
+    }
+
+    [Fact]
+    public void Property_Systems_ShouldStoreUtilities()
+    {
+        // Arrange & Act
+        var property = new Property
+        {
+            HeatingType = HeatingType.Forced,
+            CoolingType = CoolingType.Central,
+            HeatingFuel = "Natural Gas",
+            WaterSource = "Municipal",
+            SewerType = "Municipal"
+        };
+
+        // Assert
+        property.HeatingType.Should().Be(HeatingType.Forced);
+        property.CoolingType.Should().Be(CoolingType.Central);
+        property.HeatingFuel.Should().Be("Natural Gas");
+        property.WaterSource.Should().Be("Municipal");
+        property.SewerType.Should().Be("Municipal");
+    }
+
+    [Fact]
+    public void Property_Construction_ShouldStoreDetails()
+    {
+        // Arrange & Act
+        var property = new Property
+        {
+            ConstructionType = "Wood Frame",
+            RoofType = "Shingle",
+            ExteriorType = "Brick",
+            FoundationType = "Slab",
+            ArchitecturalStyle = ArchitecturalStyle.Colonial,
+            Stories = 2,
+            YearRenovated = 2018
+        };
+
+        // Assert
+        property.ConstructionType.Should().Be("Wood Frame");
+        property.RoofType.Should().Be("Shingle");
+        property.ExteriorType.Should().Be("Brick");
+        property.FoundationType.Should().Be("Slab");
+        property.ArchitecturalStyle.Should().Be(ArchitecturalStyle.Colonial);
+        property.Stories.Should().Be(2);
+        property.YearRenovated.Should().Be(2018);
     }
 }

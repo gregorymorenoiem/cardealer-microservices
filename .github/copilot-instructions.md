@@ -49,13 +49,13 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 
 **❌ NO crear servicios nuevos** - Los 35 existentes cubren 100% necesidades
 
-| Evaluación          | Decisión    | Justificación                              |
-| ------------------- | ----------- | ------------------------------------------ |
-| ReviewService       | ❌ NO crear | Extender ProductService (12-16h vs 40-50h) |
-| AnalyticsService    | ❌ NO crear | Extender ReportsService (16-20h vs 50-60h) |
-| MessageService      | ❌ NO crear | Ya existe NotificationService              |
-| SubscriptionService | ❌ NO crear | Ya existe BillingService                   |
-| InventoryService    | ❌ NO crear | Extender ProductService                    |
+| Evaluación          | Decisión    | Justificación                                   |
+| ------------------- | ----------- | ----------------------------------------------- |
+| ReviewService       | ❌ NO crear | Extender VehiclesSaleService (12-16h vs 40-50h) |
+| AnalyticsService    | ❌ NO crear | Extender ReportsService (16-20h vs 50-60h)      |
+| MessageService      | ❌ NO crear | Ya existe NotificationService                   |
+| SubscriptionService | ❌ NO crear | Ya existe BillingService                        |
+| InventoryService    | ❌ NO crear | Extender VehiclesSaleService                    |
 
 **Ahorro:** 120-180 horas evitando crear servicios innecesarios
 
@@ -66,7 +66,7 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 #### Admin (7 páginas)
 
 - ✅ AdminDashboardPage - **❌ NO conectada** (AdminService existe, 11 endpoints)
-- ✅ AdminListingsPage - **⚠️ Parcial** (ProductService)
+- ✅ AdminListingsPage - **⚠️ Parcial** (VehiclesSaleService)
 - ✅ AdminReportsPage - **❌ NO conectada** (ReportsService existe, 10 endpoints)
 - ✅ AdminSettingsPage - Mock data
 - ✅ CategoriesManagementPage - Mock data
@@ -90,7 +90,7 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 #### Dealer (8 páginas)
 
 - ✅ DealerDashboardPage - **⚠️ Parcial** (stats faltantes)
-- ✅ DealerListingsPage - **⚠️ Parcial** (ProductService)
+- ✅ DealerListingsPage - **⚠️ Parcial** (VehiclesSaleService)
 - ✅ CRMPage - **❌ NO conectada** (CRMService existe, 7 endpoints)
 - ✅ AnalyticsPage - **❌ NO conectada** (ReportsService existe)
 - ✅ CreateListingTestPage - Mock data
@@ -99,10 +99,10 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 
 #### Marketplace (6 páginas)
 
-- ✅ BrowsePage - **⚠️ Parcial** (ProductService search incompleto)
-- ✅ ListingFormPage - **⚠️ Parcial** (ProductService)
-- ✅ PropertyDetailPage - **❌ NO conectada** (RealEstateService existe, 8 endpoints)
-- ✅ VehicleDetailPage - **⚠️ Parcial** (ProductService)
+- ✅ BrowsePage - **⚠️ Parcial** (VehiclesSaleService search incompleto)
+- ✅ ListingFormPage - **⚠️ Parcial** (VehiclesSaleService)
+- ✅ PropertyDetailPage - **❌ NO conectada** (PropertiesSaleService existe, 8 endpoints)
+- ✅ VehicleDetailPage - **⚠️ Parcial** (VehiclesSaleService)
 - ✅ FavoritesPage - **❌ NO backend** (endpoint a crear: 4-6h)
 - ✅ SellerDashboardPage - Mock data
 
@@ -115,12 +115,12 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 
 #### Vehicles (6 páginas)
 
-- ✅ VehicleDetailPage - **⚠️ Parcial** (ProductService)
-- ✅ VehiclesHomePage - **⚠️ Parcial** (ProductService)
+- ✅ VehicleDetailPage - **⚠️ Parcial** (VehiclesSaleService)
+- ✅ VehiclesHomePage - **⚠️ Parcial** (VehiclesSaleService)
 - ✅ BrowsePage - **⚠️ Parcial** (search incompleto)
 - ✅ ComparePage - **❌ NO backend** (endpoint a crear: 6-8h)
 - ✅ MapViewPage - **❌ NO backend** (geolocation a crear: 8-10h)
-- ✅ SellYourCarPage - **⚠️ Parcial** (ProductService)
+- ✅ SellYourCarPage - **⚠️ Parcial** (VehiclesSaleService)
 
 **Leyenda:**
 
@@ -135,13 +135,16 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 #### 🟢 Servicios FUNCIONALES y Consumidos (8)
 
 1. **AuthService** (15085) - 15 endpoints - ✅ Login/Register/JWT funcional
-2. **ProductService** (15006) - 18 endpoints - ✅ CRUD básico, ⚠️ Faltan: favorites, comparison, geolocation, reviews
-3. **BillingService** (15008) - 12 endpoints - ✅ Stripe integration
-4. **Gateway** (18443) - Ocelot routing - ✅ 7 rutas configuradas
-5. **ErrorService** (15083) - 6 endpoints - ✅ Centralización de errores
-6. **CacheService** - 7 endpoints - ✅ Redis operations
-7. **MessageBusService** - 17 endpoints - ✅ RabbitMQ abstraction
-8. **LoggingService** - 23 endpoints - ✅ Logs centralizados
+2. **VehiclesSaleService** (15070) - 20+ endpoints - ✅ CRUD vehículos + Catálogo (Make/Model/Trim)
+3. **VehiclesRentService** (15071) - 15 endpoints - ✅ Alquiler de vehículos
+4. **PropertiesSaleService** (15072) - 18 endpoints - ✅ Venta de propiedades
+5. **PropertiesRentService** (15073) - 15 endpoints - ✅ Alquiler de propiedades
+6. **BillingService** (15008) - 12 endpoints - ✅ Stripe integration
+7. **Gateway** (18443) - Ocelot routing - ✅ 7 rutas configuradas
+8. **ErrorService** (15083) - 6 endpoints - ✅ Centralización de errores
+9. **CacheService** - 7 endpoints - ✅ Redis operations
+10. **MessageBusService** - 17 endpoints - ✅ RabbitMQ abstraction
+11. **LoggingService** - 23 endpoints - ✅ Logs centralizados
 
 #### 🟡 Servicios Parcialmente Conectados (5)
 
@@ -174,18 +177,22 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
 
 #### 🔴 Prioridad ALTA (140-178h)
 
-**ProductService** (40-52h):
+**VehiclesSaleService** (40-52h):
 
+- [x] **Vehicle Catalog** (COMPLETADO ✅)
+  - Tablas: `VehicleMakes`, `VehicleModels`, `VehicleTrims`
+  - Endpoints: `GET /api/catalog/makes`, `/models`, `/years`, `/trims`
+  - Frontend: VehicleCatalogSelector (Make→Model→Year→Trim→Auto-fill)
 - [ ] **Favorites/Wishlist** (4-6h)
-  - Tabla: `product_favorites` (user_id, product_id, created_at)
-  - Endpoints: `GET/POST/DELETE /products/{id}/favorite`
+  - Tabla: `vehicle_favorites` (user_id, vehicle_id, created_at)
+  - Endpoints: `GET/POST/DELETE /vehicles/{id}/favorite`
   - Frontend: FavoritesPage, WishlistPage
 - [ ] **Vehicle Comparison** (6-8h)
-  - Endpoint: `POST /products/compare` (recibe IDs, retorna comparación)
+  - Endpoint: `POST /vehicles/compare` (recibe IDs, retorna comparación)
   - Frontend: ComparePage con tabla lado a lado
 - [ ] **Geolocation Search** (8-10h)
-  - PostgreSQL: Agregar columna `GEOGRAPHY(POINT, 4326)` a products
-  - Endpoint: `GET /products/nearby?lat={lat}&lng={lng}&radius={km}`
+  - PostgreSQL: Agregar columna `GEOGRAPHY(POINT, 4326)` a vehicles
+  - Endpoint: `GET /vehicles/nearby?lat={lat}&lng={lng}&radius={km}`
   - Query: `ST_Distance(location, ST_MakePoint({lng}, {lat})::geography) <= {radius}`
   - Frontend: MapViewPage con Google Maps
 - [ ] **Saved Searches** (10-12h)
@@ -193,8 +200,8 @@ Este documento proporciona contexto completo para que GitHub Copilot pueda asist
   - Endpoints: `GET/POST/DELETE /searches/saved`
   - Email alerts con Hangfire
 - [ ] **Reviews & Ratings** (12-16h)
-  - Tablas: `product_reviews`, `review_votes`
-  - Endpoints: `GET/POST /products/{id}/reviews`, `/reviews/{id}/vote`
+  - Tablas: `vehicle_reviews`, `review_votes`
+  - Endpoints: `GET/POST /vehicles/{id}/reviews`, `/reviews/{id}/vote`
   - Frontend: Ratings component con estrellas
 
 **NotificationService** (24-30h):
@@ -1124,10 +1131,10 @@ Para más detalles, ver: `docs/sprints/frontend-backend-integration/RESUMEN_FINA
 
 ```csharp
 // ❌ NUNCA hacer esto
-public class VehicleReviewService { }  // Ya existe ProductService
+public class VehicleReviewService { }  // Ya existe VehiclesSaleService
 
 // ✅ SIEMPRE hacer esto
-// Extender ProductService.Application/Features/Reviews/
+// Extender VehiclesSaleService.Application/Features/Reviews/
 ```
 
 #### 2. SIEMPRE Usar Gateway
@@ -1144,8 +1151,8 @@ const response = await fetch("http://localhost:18443/api/auth/login");
 
 ```bash
 # ANTES de crear endpoint para favorites:
-# 1. Verificar ProductService existe y funciona
-curl http://localhost:15006/health
+# 1. Verificar VehiclesSaleService existe y funciona
+curl http://localhost:15070/health
 
 # 2. Verificar ruta en Gateway
 # Ver: backend/Gateway/Gateway.Api/ocelot.dev.json
@@ -1169,7 +1176,7 @@ Antes de cualquier integración, consultar:
 // const vehicles = mockVehicles; // Eliminar sin backend = app rota
 
 // ✅ Verificar backend primero
-const healthCheck = await fetch("http://localhost:15006/health");
+const healthCheck = await fetch("http://localhost:15070/health");
 if (healthCheck.ok) {
   // AHORA sí reemplazar
   const vehicles = await vehicleService.getAll();
@@ -1193,25 +1200,28 @@ public async Task POST_Favorites_Returns201() { }
 
 ### Quick Reference: ¿Qué Servicio Usar?
 
-| Feature Frontend | Servicio Backend    | Puerto | Estado                     |
-| ---------------- | ------------------- | ------ | -------------------------- |
-| Login/Register   | AuthService         | 15085  | ✅ Funcional               |
-| User Profile     | UserService         | 15100  | ⚠️ Parcial                 |
-| Vehicle CRUD     | ProductService      | 15006  | ⚠️ Parcial                 |
-| Favorites        | ProductService      | 15006  | ❌ Crear endpoint (4-6h)   |
-| Comparison       | ProductService      | 15006  | ❌ Crear endpoint (6-8h)   |
-| Reviews          | ProductService      | 15006  | ❌ Crear endpoint (12-16h) |
-| Notifications    | NotificationService | 15084  | ⚠️ Falta SignalR (24-30h)  |
-| Real Estate      | RealEstateService   | 15034  | ❌ NO consumido            |
-| CRM              | CRMService          | 15009  | ❌ NO consumido            |
-| Analytics        | ReportsService      | 15010  | ❌ NO consumido            |
-| Invoices         | InvoicingService    | 15031  | ❌ NO consumido            |
-| Payments         | BillingService      | 15008  | ✅ Funcional               |
-| Appointments     | AppointmentService  | 15032  | ❌ Sin UI (16-20h)         |
-| Jobs             | SchedulerService    | 15012  | ❌ Sin UI (12-14h)         |
-| Roles            | RoleService         | 15101  | ❌ Sin UI (14-16h)         |
-| Contact          | ContactService      | 15030  | ❌ NO consumido            |
-| Media Upload     | MediaService        | 15090  | ⚠️ Mejorar (18-22h)        |
+| Feature Frontend | Servicio Backend      | Puerto | Estado                     |
+| ---------------- | --------------------- | ------ | -------------------------- |
+| Login/Register   | AuthService           | 15085  | ✅ Funcional               |
+| User Profile     | UserService           | 15100  | ⚠️ Parcial                 |
+| Vehicle CRUD     | VehiclesSaleService   | 15070  | ✅ Funcional + Catálogo    |
+| Vehicle Catalog  | VehiclesSaleService   | 15070  | ✅ Make/Model/Year/Trim    |
+| Vehicle Rent     | VehiclesRentService   | 15071  | ✅ Funcional               |
+| Property Sale    | PropertiesSaleService | 15072  | ✅ Funcional               |
+| Property Rent    | PropertiesRentService | 15073  | ✅ Funcional               |
+| Favorites        | VehiclesSaleService   | 15070  | ❌ Crear endpoint (4-6h)   |
+| Comparison       | VehiclesSaleService   | 15070  | ❌ Crear endpoint (6-8h)   |
+| Reviews          | VehiclesSaleService   | 15070  | ❌ Crear endpoint (12-16h) |
+| Notifications    | NotificationService   | 15084  | ⚠️ Falta SignalR (24-30h)  |
+| CRM              | CRMService            | 15009  | ❌ NO consumido            |
+| Analytics        | ReportsService        | 15010  | ❌ NO consumido            |
+| Invoices         | InvoicingService      | 15031  | ❌ NO consumido            |
+| Payments         | BillingService        | 15008  | ✅ Funcional               |
+| Appointments     | AppointmentService    | 15032  | ❌ Sin UI (16-20h)         |
+| Jobs             | SchedulerService      | 15012  | ❌ Sin UI (12-14h)         |
+| Roles            | RoleService           | 15101  | ❌ Sin UI (14-16h)         |
+| Contact          | ContactService        | 15030  | ❌ NO consumido            |
+| Media Upload     | MediaService          | 15090  | ⚠️ Mejorar (18-22h)        |
 
 ---
 
@@ -1369,7 +1379,10 @@ cardealer-microservices/
 │   ├── AuthService/                  # Autenticación y autorización ✅🟢 FUNCIONAL
 │   ├── UserService/                  # Gestión de usuarios ✅
 │   ├── RoleService/                  # Gestión de roles y permisos ✅
-│   ├── ProductService/               # Productos genéricos marketplace ✅
+│   ├── VehiclesSaleService/          # Venta de vehículos + Catálogo ✅🟢
+│   ├── VehiclesRentService/          # Alquiler de vehículos ✅
+│   ├── PropertiesSaleService/        # Venta de propiedades ✅
+│   ├── PropertiesRentService/        # Alquiler de propiedades ✅
 │   ├── MediaService/                 # Gestión de archivos multimedia ✅
 │   ├── NotificationService/          # Email, SMS, Push notifications ✅
 │   ├── BillingService/               # Facturación y pagos ✅
@@ -1398,7 +1411,7 @@ cardealer-microservices/
 │   ├── ApiDocsService/               # Documentación API ✅
 │   ├── RateLimitingService/          # Rate limiting ✅
 │   ├── IdempotencyService/           # Idempotencia ✅
-│   ├── RealEstateService/            # Vertical inmobiliario ✅
+│   ├── RealEstateService/            # (DEPRECATED - usar PropertiesSaleService)
 │   ├── observability/                # Configs OpenTelemetry
 │   └── monitoring/                   # Prometheus/Grafana configs
 │   # ✅ = En docker-compose.yml (35/35 servicios) | 🟢 = Probado y funcional
@@ -1754,12 +1767,12 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 # 2. Identificar servicios NO necesarios para la prueba actual
 # Ejemplo: Si vas a probar CRMService, NO necesitas:
-# - ProductService, NotificationService, SearchService, etc.
+# - VehiclesSaleService, NotificationService, SearchService, etc.
 
 # 3. Bajar servicios innecesarios
-docker stop productservice notificationservice searchservice
+docker stop vehiclessaleservice notificationservice searchservice
 # O usar docker-compose
-docker-compose stop productservice notificationservice searchservice
+docker-compose stop vehiclessaleservice notificationservice searchservice
 
 # 4. Verificar liberación de recursos
 docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
@@ -1908,22 +1921,25 @@ docker logs -f authservice
 
 ### Puertos importantes
 
-| Servicio            | Puerto           | Estado              |
-| ------------------- | ---------------- | ------------------- |
-| Gateway             | 18443            | ✅                  |
-| AuthService         | 15085            | ✅                  |
-| ErrorService        | 15083            | ✅                  |
-| NotificationService | 15084            | ✅                  |
-| ProductService      | 15006            | ✅                  |
-| UserService         | 15100            | ❌ Falta en compose |
-| RoleService         | 15101            | ❌ Falta en compose |
-| Redis               | 6379             | ✅                  |
-| RabbitMQ            | 5672, 15672 (UI) | ✅                  |
-| PostgreSQL          | 25432-25446      | ✅                  |
-| Consul              | 8500             | ✅                  |
-| Prometheus          | 9090             | ⚪                  |
-| Grafana             | 3000             | ⚪                  |
-| Jaeger              | 16686            | ⚪                  |
+| Servicio              | Puerto           | Estado |
+| --------------------- | ---------------- | ------ |
+| Gateway               | 18443            | ✅     |
+| AuthService           | 15085            | ✅     |
+| ErrorService          | 15083            | ✅     |
+| NotificationService   | 15084            | ✅     |
+| VehiclesSaleService   | 15070            | ✅     |
+| VehiclesRentService   | 15071            | ✅     |
+| PropertiesSaleService | 15072            | ✅     |
+| PropertiesRentService | 15073            | ✅     |
+| UserService           | 15100            | ✅     |
+| RoleService           | 15101            | ✅     |
+| Redis                 | 6379             | ✅     |
+| RabbitMQ              | 5672, 15672 (UI) | ✅     |
+| PostgreSQL            | 25432-25446      | ✅     |
+| Consul                | 8500             | ✅     |
+| Prometheus            | 9090             | ⚪     |
+| Grafana               | 3000             | ⚪     |
+| Jaeger                | 16686            | ⚪     |
 
 > ✅ = Configurado y funcionando | ❌ = Falta en docker-compose | ⚪ = No desplegado
 
@@ -1949,15 +1965,18 @@ Basado en la complejidad del código (archivos .cs) y funcionalidad, cada servic
 
 ##### 🔴 Servicios CORE (Alta prioridad, más recursos)
 
-| Servicio                | Archivos | CPU  | RAM  | RAM Res. |  Requiere DB  | Descripción                         |
-| ----------------------- | :------: | :--: | :--: | :------: | :-----------: | ----------------------------------- |
-| **AuthService**         |   283    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Autenticación, JWT, Identity, 2FA   |
-| **Gateway**             |    39    | 0.25 | 256M |   128M   |      ❌       | API Gateway con Ocelot              |
-| **UserService**         |   143    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Gestión de usuarios                 |
-| **RoleService**         |   170    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Roles y permisos                    |
-| **ProductService**      |    53    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Productos del marketplace           |
-| **NotificationService** |   163    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Email, SMS, Push (SendGrid, Twilio) |
-| **ErrorService**        |   112    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Centralización de errores           |
+| Servicio                  | Archivos | CPU  | RAM  | RAM Res. |  Requiere DB  | Descripción                         |
+| ------------------------- | :------: | :--: | :--: | :------: | :-----------: | ----------------------------------- |
+| **AuthService**           |   283    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Autenticación, JWT, Identity, 2FA   |
+| **Gateway**               |    39    | 0.25 | 256M |   128M   |      ❌       | API Gateway con Ocelot              |
+| **UserService**           |   143    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Gestión de usuarios                 |
+| **RoleService**           |   170    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Roles y permisos                    |
+| **VehiclesSaleService**   |    80    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Venta vehículos + Catálogo          |
+| **VehiclesRentService**   |    60    | 0.4  | 320M |   192M   | ✅ PostgreSQL | Alquiler de vehículos               |
+| **PropertiesSaleService** |    70    | 0.4  | 320M |   192M   | ✅ PostgreSQL | Venta de propiedades                |
+| **PropertiesRentService** |    55    | 0.4  | 320M |   192M   | ✅ PostgreSQL | Alquiler de propiedades             |
+| **NotificationService**   |   163    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Email, SMS, Push (SendGrid, Twilio) |
+| **ErrorService**          |   112    | 0.5  | 384M |   256M   | ✅ PostgreSQL | Centralización de errores           |
 
 ##### 🟡 Servicios SECUNDARIOS (Uso moderado)
 
@@ -2040,12 +2059,12 @@ docker-compose up -d redis rabbitmq \
   notificationservice-db notificationservice \
   gateway
 
-# Perfil DESARROLLO (~5GB RAM) - Con productos y media
+# Perfil DESARROLLO (~5GB RAM) - Con vehículos y media
 docker-compose up -d redis rabbitmq \
   authservice-db authservice \
   errorservice-db errorservice \
   userservice-db userservice \
-  productservice-db productservice \
+  vehiclessaleservice-db vehiclessaleservice \
   mediaservice-db mediaservice \
   notificationservice-db notificationservice \
   gateway
@@ -2514,7 +2533,7 @@ class UserCardWidget extends StatelessWidget { }
 - ✅ Sprint 0.1-0.2: Infraestructura Docker y credenciales de prueba
 - ✅ Sprint 0.5.1-0.5.5: Docker Services (5 sprints)
 - ✅ Sprint 0.6.1: AuthService Dockerfile Fix
-- ✅ Sprint 0.6.2: ProductService Fix
+- ✅ Sprint 0.6.2: Vertical Services Fix (VehiclesSale/VehiclesRent/PropertiesSale/PropertiesRent)
 - ✅ Sprint 0.6.3: **Schema Validation** (1 Ene 2026 - 02:00)
 - ✅ Sprint 0.7.1: **Gestión de Secretos** (36 secretos reemplazados)
 - ✅ Sprint 0.7.2: **Validación de Secretos** (1 Ene 2026 - 04:00)
@@ -2593,7 +2612,7 @@ class UserCardWidget extends StatelessWidget { }
 
 - ✅ AuthService: Todas las columnas existen en la BD (`CreatedAt`, `UpdatedAt`, `DealerId`, `ExternalAuthProvider`, `ExternalUserId`)
 - ✅ RefreshTokens: `Id` existe como PK
-- ✅ ProductService: DealerId agregado a products, product_images, categories
+- ✅ VehiclesSaleService: DealerId agregado a vehicles, vehicle_images, categories + Catálogo (makes, models, trims)
 - ✅ UserService: Users, UserRoles con DealerId
 - ✅ RoleService: Roles, Permissions, RolePermissions con DealerId
 - ✅ ErrorService: error_logs con DealerId

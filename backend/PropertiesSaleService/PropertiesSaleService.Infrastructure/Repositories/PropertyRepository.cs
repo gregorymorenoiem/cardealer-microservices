@@ -58,12 +58,12 @@ public class PropertyRepository : IPropertyRepository
         return await query.Skip(p.Skip).Take(p.Take).ToListAsync();
     }
 
-    public async Task<IEnumerable<Property>> GetBySellerAsync(Guid sellerId)
+    public async Task<IEnumerable<Property>> GetByAgentAsync(Guid agentId)
     {
         return await _context.Properties
             .Include(p => p.Images.Where(i => i.IsPrimary))
             .Include(p => p.Category)
-            .Where(p => p.SellerId == sellerId && !p.IsDeleted)
+            .Where(p => p.AgentId == agentId && !p.IsDeleted)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }

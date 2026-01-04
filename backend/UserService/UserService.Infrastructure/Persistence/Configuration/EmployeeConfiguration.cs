@@ -30,7 +30,7 @@ namespace UserService.Infrastructure.Persistence.Configuration
 
             builder.Property(e => e.InvitationDate)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             builder.Property(e => e.Notes)
                 .HasMaxLength(500);
@@ -76,7 +76,7 @@ namespace UserService.Infrastructure.Persistence.Configuration
 
             builder.Property(e => e.HireDate)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             builder.Property(e => e.Department)
                 .HasMaxLength(100);
@@ -128,7 +128,7 @@ namespace UserService.Infrastructure.Persistence.Configuration
 
             builder.Property(e => e.InvitationDate)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             builder.Property(e => e.Token)
                 .IsRequired()
@@ -174,7 +174,7 @@ namespace UserService.Infrastructure.Persistence.Configuration
 
             builder.Property(e => e.InvitationDate)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             builder.Property(e => e.Token)
                 .IsRequired()

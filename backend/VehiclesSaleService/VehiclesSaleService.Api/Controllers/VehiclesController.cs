@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
+using Entities = VehiclesSaleService.Domain.Entities;
 
 namespace VehiclesSaleService.Api.Controllers;
 
@@ -23,7 +24,7 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Search vehicles with filters
+    /// Search vehicles with filters and pagination
     /// </summary>
     [HttpGet]
     public async Task<ActionResult<VehicleSearchResult>> Search([FromQuery] VehicleSearchRequest request)
@@ -38,7 +39,6 @@ public class VehiclesController : ControllerBase
             Model = request.Model,
             MinYear = request.MinYear,
             MaxYear = request.MaxYear,
-            MinMileage = request.MinMileage,
             MaxMileage = request.MaxMileage,
             VehicleType = request.VehicleType,
             BodyStyle = request.BodyStyle,
@@ -52,11 +52,14 @@ public class VehiclesController : ControllerBase
             ZipCode = request.ZipCode,
             IsCertified = request.IsCertified,
             HasCleanTitle = request.HasCleanTitle,
-            Skip = request.Page * request.PageSize,
+            Skip = Math.Max(0, (request.Page - 1)) * request.PageSize,  // Handle page=0 as page=1
             Take = request.PageSize,
             SortBy = request.SortBy ?? "CreatedAt",
             SortDescending = request.SortDescending ?? true
         };
+
+        // Normalize page to at least 1 for response
+        var normalizedPage = Math.Max(1, request.Page);
 
         var vehicles = await _vehicleRepository.SearchAsync(parameters);
         var totalCount = await _vehicleRepository.GetCountAsync(parameters);
@@ -65,9 +68,9 @@ public class VehiclesController : ControllerBase
         {
             Vehicles = vehicles,
             TotalCount = totalCount,
-            Page = request.Page,
+            Page = normalizedPage,
             PageSize = request.PageSize,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize)
+            TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
         });
     }
 
@@ -78,7 +81,6 @@ public class VehiclesController : ControllerBase
     public async Task<ActionResult<Vehicle>> GetById(Guid id)
     {
         var vehicle = await _vehicleRepository.GetByIdAsync(id);
-
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
@@ -89,10 +91,9 @@ public class VehiclesController : ControllerBase
     /// Get vehicle by VIN
     /// </summary>
     [HttpGet("vin/{vin}")]
-    public async Task<ActionResult<Vehicle>> GetByVin(string vin)
+    public async Task<ActionResult<Vehicle>> GetByVIN(string vin)
     {
         var vehicle = await _vehicleRepository.GetByVINAsync(vin);
-
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
@@ -110,16 +111,6 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Get vehicles by seller
-    /// </summary>
-    [HttpGet("seller/{sellerId:guid}")]
-    public async Task<ActionResult<IEnumerable<Vehicle>>> GetBySeller(Guid sellerId)
-    {
-        var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
-        return Ok(vehicles);
-    }
-
-    /// <summary>
     /// Get vehicles by dealer
     /// </summary>
     [HttpGet("dealer/{dealerId:guid}")]
@@ -130,20 +121,50 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Create new vehicle
+    /// Compare multiple vehicles by their IDs
+    /// </summary>
+    [HttpPost("compare")]
+    public async Task<ActionResult<IEnumerable<Vehicle>>> Compare([FromBody] CompareVehiclesRequest request)
+    {
+        if (request.VehicleIds == null || !request.VehicleIds.Any())
+            return BadRequest(new { message = "At least one vehicle ID is required" });
+
+        if (request.VehicleIds.Count > 5)
+            return BadRequest(new { message = "Cannot compare more than 5 vehicles at once" });
+
+        var vehicles = new List<Vehicle>();
+        foreach (var id in request.VehicleIds)
+        {
+            var vehicle = await _vehicleRepository.GetByIdAsync(id);
+            if (vehicle != null && !vehicle.IsDeleted && vehicle.Status != VehicleStatus.Archived)
+            {
+                vehicles.Add(vehicle);
+            }
+        }
+
+        if (!vehicles.Any())
+            return NotFound(new { message = "No vehicles found with the provided IDs" });
+
+        return Ok(vehicles);
+    }
+
+    /// <summary>
+    /// Create a new vehicle listing
     /// </summary>
     [HttpPost]
     public async Task<ActionResult<Vehicle>> Create([FromBody] CreateVehicleRequest request)
     {
-        // Validate category exists
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
-        if (category == null)
-            return BadRequest(new { message = "Category not found" });
+        if (request.CategoryId.HasValue)
+        {
+            var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value);
+            if (category == null)
+                return BadRequest(new { message = "Category not found" });
+        }
 
         var vehicle = new Vehicle
         {
             Title = request.Title,
-            Description = request.Description,
+            Description = request.Description ?? string.Empty,
             Price = request.Price,
             Currency = request.Currency ?? "USD",
             Status = VehicleStatus.Draft,
@@ -152,30 +173,28 @@ public class VehiclesController : ControllerBase
             Model = request.Model,
             Year = request.Year,
             Mileage = request.Mileage,
-            MileageUnit = request.MileageUnit ?? "miles",
+            MileageUnit = request.MileageUnit ?? MileageUnit.Miles,
             VehicleType = request.VehicleType,
-            BodyStyle = request.BodyStyle,
+            BodyStyle = request.BodyStyle ?? BodyStyle.Sedan,
             FuelType = request.FuelType,
             Transmission = request.Transmission,
             DriveType = request.DriveType,
             EngineSize = request.EngineSize,
-            EngineCylinders = request.EngineCylinders,
+            Cylinders = request.Cylinders,
             Horsepower = request.Horsepower,
             ExteriorColor = request.ExteriorColor,
             InteriorColor = request.InteriorColor,
             Condition = request.Condition,
             IsCertified = request.IsCertified ?? false,
             HasCleanTitle = request.HasCleanTitle ?? true,
-            StreetAddress = request.StreetAddress,
             City = request.City,
             State = request.State,
             ZipCode = request.ZipCode,
             Country = request.Country ?? "USA",
-            SellerId = request.SellerId,
-            SellerName = request.SellerName,
-            DealerId = request.DealerId,
-            CategoryId = request.CategoryId,
-            CategoryName = category.Name
+            SellerId = request.SellerId ?? Guid.Empty,
+            SellerName = request.SellerName ?? string.Empty,
+            DealerId = request.DealerId ?? Guid.Empty,
+            CategoryId = request.CategoryId
         };
 
         // Add images
@@ -202,28 +221,38 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Update vehicle
+    /// Update an existing vehicle
     /// </summary>
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<Vehicle>> Update(Guid id, [FromBody] UpdateVehicleRequest request)
     {
         var vehicle = await _vehicleRepository.GetByIdAsync(id);
-
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
-        // Update fields
-        if (request.Title != null) vehicle.Title = request.Title;
+        // Update only provided fields
+        if (!string.IsNullOrEmpty(request.Title)) vehicle.Title = request.Title;
         if (request.Description != null) vehicle.Description = request.Description;
         if (request.Price.HasValue) vehicle.Price = request.Price.Value;
+        if (!string.IsNullOrEmpty(request.Currency)) vehicle.Currency = request.Currency;
         if (request.Status.HasValue) vehicle.Status = request.Status.Value;
+        if (request.VehicleType.HasValue) vehicle.VehicleType = request.VehicleType.Value;
+        if (request.BodyStyle.HasValue) vehicle.BodyStyle = request.BodyStyle.Value;
+        if (request.FuelType.HasValue) vehicle.FuelType = request.FuelType.Value;
+        if (request.Transmission.HasValue) vehicle.Transmission = request.Transmission.Value;
+        if (request.DriveType.HasValue) vehicle.DriveType = request.DriveType.Value;
         if (request.Mileage.HasValue) vehicle.Mileage = request.Mileage.Value;
-        if (request.ExteriorColor != null) vehicle.ExteriorColor = request.ExteriorColor;
-        if (request.InteriorColor != null) vehicle.InteriorColor = request.InteriorColor;
+        if (!string.IsNullOrEmpty(request.ExteriorColor)) vehicle.ExteriorColor = request.ExteriorColor;
+        if (!string.IsNullOrEmpty(request.InteriorColor)) vehicle.InteriorColor = request.InteriorColor;
         if (request.Condition.HasValue) vehicle.Condition = request.Condition.Value;
         if (request.IsCertified.HasValue) vehicle.IsCertified = request.IsCertified.Value;
         if (request.HasCleanTitle.HasValue) vehicle.HasCleanTitle = request.HasCleanTitle.Value;
+        if (!string.IsNullOrEmpty(request.City)) vehicle.City = request.City;
+        if (!string.IsNullOrEmpty(request.State)) vehicle.State = request.State;
+        if (!string.IsNullOrEmpty(request.ZipCode)) vehicle.ZipCode = request.ZipCode;
         if (request.IsFeatured.HasValue) vehicle.IsFeatured = request.IsFeatured.Value;
+
+        vehicle.UpdatedAt = DateTime.UtcNow;
 
         await _vehicleRepository.UpdateAsync(vehicle);
 
@@ -233,13 +262,12 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Delete vehicle (soft delete)
+    /// Delete a vehicle (soft delete)
     /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var exists = await _vehicleRepository.ExistsAsync(id);
-
         if (!exists)
             return NotFound(new { message = "Vehicle not found" });
 
@@ -251,9 +279,7 @@ public class VehiclesController : ControllerBase
     }
 }
 
-// ========================================
-// Request/Response DTOs
-// ========================================
+#region Request/Response DTOs
 
 public record VehicleSearchRequest
 {
@@ -265,13 +291,12 @@ public record VehicleSearchRequest
     public string? Model { get; init; }
     public int? MinYear { get; init; }
     public int? MaxYear { get; init; }
-    public int? MinMileage { get; init; }
     public int? MaxMileage { get; init; }
     public VehicleType? VehicleType { get; init; }
     public BodyStyle? BodyStyle { get; init; }
     public FuelType? FuelType { get; init; }
-    public Transmission? Transmission { get; init; }
-    public DriveType? DriveType { get; init; }
+    public TransmissionType? Transmission { get; init; }
+    public Entities.DriveType? DriveType { get; init; }
     public VehicleCondition? Condition { get; init; }
     public string? ExteriorColor { get; init; }
     public string? State { get; init; }
@@ -279,7 +304,7 @@ public record VehicleSearchRequest
     public string? ZipCode { get; init; }
     public bool? IsCertified { get; init; }
     public bool? HasCleanTitle { get; init; }
-    public int Page { get; init; } = 0;
+    public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
     public string? SortBy { get; init; }
     public bool? SortDescending { get; init; }
@@ -305,29 +330,28 @@ public record CreateVehicleRequest
     public string Model { get; init; } = string.Empty;
     public int Year { get; init; }
     public int Mileage { get; init; }
-    public string? MileageUnit { get; init; }
+    public MileageUnit? MileageUnit { get; init; }
     public VehicleType VehicleType { get; init; }
     public BodyStyle? BodyStyle { get; init; }
     public FuelType FuelType { get; init; }
-    public Transmission Transmission { get; init; }
-    public DriveType DriveType { get; init; }
+    public TransmissionType Transmission { get; init; }
+    public Entities.DriveType DriveType { get; init; }
     public string? EngineSize { get; init; }
-    public int? EngineCylinders { get; init; }
+    public int? Cylinders { get; init; }
     public int? Horsepower { get; init; }
     public string? ExteriorColor { get; init; }
     public string? InteriorColor { get; init; }
     public VehicleCondition Condition { get; init; }
     public bool? IsCertified { get; init; }
     public bool? HasCleanTitle { get; init; }
-    public string? StreetAddress { get; init; }
     public string? City { get; init; }
     public string? State { get; init; }
     public string? ZipCode { get; init; }
     public string? Country { get; init; }
-    public Guid SellerId { get; init; }
-    public string SellerName { get; init; } = string.Empty;
+    public Guid? SellerId { get; init; }
+    public string? SellerName { get; init; }
     public Guid? DealerId { get; init; }
-    public Guid CategoryId { get; init; }
+    public Guid? CategoryId { get; init; }
     public List<string>? Images { get; init; }
 }
 
@@ -336,12 +360,28 @@ public record UpdateVehicleRequest
     public string? Title { get; init; }
     public string? Description { get; init; }
     public decimal? Price { get; init; }
+    public string? Currency { get; init; }
     public VehicleStatus? Status { get; init; }
+    public VehicleType? VehicleType { get; init; }
+    public BodyStyle? BodyStyle { get; init; }
+    public FuelType? FuelType { get; init; }
+    public TransmissionType? Transmission { get; init; }
+    public Entities.DriveType? DriveType { get; init; }
     public int? Mileage { get; init; }
     public string? ExteriorColor { get; init; }
     public string? InteriorColor { get; init; }
     public VehicleCondition? Condition { get; init; }
     public bool? IsCertified { get; init; }
     public bool? HasCleanTitle { get; init; }
+    public string? City { get; init; }
+    public string? State { get; init; }
+    public string? ZipCode { get; init; }
     public bool? IsFeatured { get; init; }
 }
+
+public record CompareVehiclesRequest
+{
+    public List<Guid> VehicleIds { get; init; } = new();
+}
+
+#endregion

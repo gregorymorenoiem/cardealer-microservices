@@ -50,14 +50,17 @@ public class ApplicationDbContext : MultiTenantDbContext
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
-            entity.Property(p => p.SellerName)
+            entity.Property(p => p.AgentName)
                 .HasMaxLength(200);
 
             // Identificación
             entity.Property(p => p.MLSNumber)
                 .HasMaxLength(20);
 
-            entity.Property(p => p.TaxID)
+            entity.Property(p => p.ParcelNumber)
+                .HasMaxLength(50);
+
+            entity.Property(p => p.PropertyId)
                 .HasMaxLength(50);
 
             // Tipo de propiedad
@@ -78,7 +81,7 @@ public class ApplicationDbContext : MultiTenantDbContext
                 .IsRequired()
                 .HasMaxLength(200);
 
-            entity.Property(p => p.Unit)
+            entity.Property(p => p.UnitNumber)
                 .HasMaxLength(50);
 
             entity.Property(p => p.City)
@@ -103,10 +106,10 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(p => p.Neighborhood)
                 .HasMaxLength(100);
 
-            // Estructura y tamaño
-            entity.Property(p => p.Bathrooms)
-                .HasPrecision(4, 1);
+            entity.Property(p => p.Subdivision)
+                .HasMaxLength(100);
 
+            // Estructura y tamaño
             entity.Property(p => p.GarageType)
                 .HasConversion<string>()
                 .HasMaxLength(30);
@@ -125,7 +128,10 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(p => p.RoofType)
                 .HasMaxLength(50);
 
-            entity.Property(p => p.ExteriorMaterial)
+            entity.Property(p => p.ConstructionType)
+                .HasMaxLength(100);
+
+            entity.Property(p => p.ExteriorType)
                 .HasMaxLength(100);
 
             // Sistemas
@@ -137,55 +143,48 @@ public class ApplicationDbContext : MultiTenantDbContext
                 .HasConversion<string>()
                 .HasMaxLength(30);
 
+            entity.Property(p => p.HeatingFuel)
+                .HasMaxLength(50);
+
             entity.Property(p => p.WaterSource)
                 .HasMaxLength(50);
 
             entity.Property(p => p.SewerType)
                 .HasMaxLength(50);
 
-            entity.Property(p => p.UtilitiesDescription)
-                .HasMaxLength(500);
+            // Lot info
+            entity.Property(p => p.LotSizeAcres)
+                .HasPrecision(18, 4);
 
-            // Exterior
-            entity.Property(p => p.LotSize)
-                .HasPrecision(18, 2);
-
-            entity.Property(p => p.LotSizeUnit)
-                .HasMaxLength(20)
-                .HasDefaultValue("sqft");
-
-            entity.Property(p => p.LotDescription)
-                .HasMaxLength(500);
-
+            // Pool and basement
             entity.Property(p => p.PoolType)
                 .HasConversion<string>()
                 .HasMaxLength(30);
 
-            entity.Property(p => p.FencingDescription)
-                .HasMaxLength(200);
-
-            // Sótano y garaje
             entity.Property(p => p.BasementType)
                 .HasConversion<string>()
                 .HasMaxLength(30);
-
-            entity.Property(p => p.BasementDescription)
-                .HasMaxLength(500);
 
             // Financiero
             entity.Property(p => p.TaxesYearly)
                 .HasPrecision(18, 2);
 
-            entity.Property(p => p.HOAFees)
+            entity.Property(p => p.HOAFeesMonthly)
                 .HasPrecision(18, 2);
 
-            entity.Property(p => p.HOAFeeFrequency)
-                .HasMaxLength(20);
+            entity.Property(p => p.HOAName)
+                .HasMaxLength(200);
 
-            entity.Property(p => p.HOADescription)
-                .HasMaxLength(500);
+            entity.Property(p => p.AssessedValue)
+                .HasPrecision(18, 2);
 
-            // Escuelas y zona
+            entity.Property(p => p.OriginalPrice)
+                .HasPrecision(18, 2);
+
+            entity.Property(p => p.PricePerSquareFoot)
+                .HasPrecision(18, 2);
+
+            // Escuelas
             entity.Property(p => p.SchoolDistrict)
                 .HasMaxLength(200);
 
@@ -198,11 +197,9 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(p => p.HighSchool)
                 .HasMaxLength(200);
 
-            entity.Property(p => p.Zoning)
-                .HasMaxLength(50);
-
-            entity.Property(p => p.FloodZone)
-                .HasMaxLength(20);
+            // Virtual tour
+            entity.Property(p => p.VirtualTourUrl)
+                .HasMaxLength(500);
 
             // JSON columns
             entity.Property(p => p.InteriorFeaturesJson)
@@ -217,11 +214,7 @@ public class ApplicationDbContext : MultiTenantDbContext
                 .HasColumnType("jsonb")
                 .HasDefaultValue("[]");
 
-            entity.Property(p => p.FlooringTypesJson)
-                .HasColumnType("jsonb")
-                .HasDefaultValue("[]");
-
-            entity.Property(p => p.RoomDetailsJson)
+            entity.Property(p => p.CommunityAmenitiesJson)
                 .HasColumnType("jsonb")
                 .HasDefaultValue("[]");
 
@@ -234,7 +227,7 @@ public class ApplicationDbContext : MultiTenantDbContext
 
             // Índices
             entity.HasIndex(p => p.DealerId);
-            entity.HasIndex(p => p.SellerId);
+            entity.HasIndex(p => p.AgentId);
             entity.HasIndex(p => p.Status);
             entity.HasIndex(p => p.Price);
             entity.HasIndex(p => p.PropertyType);
@@ -286,11 +279,18 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(i => i.ThumbnailUrl)
                 .HasMaxLength(500);
 
-            entity.Property(i => i.Caption)
+            entity.Property(i => i.Title)
+                .HasMaxLength(200);
+
+            entity.Property(i => i.AltText)
                 .HasMaxLength(500);
 
-            entity.Property(i => i.RoomType)
+            entity.Property(i => i.MimeType)
                 .HasMaxLength(50);
+
+            entity.Property(i => i.ImageType)
+                .HasConversion<string>()
+                .HasMaxLength(30);
 
             entity.Property(i => i.CreatedAt)
                 .HasDefaultValueSql("NOW()");
@@ -324,13 +324,19 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(c => c.IconUrl)
                 .HasMaxLength(500);
 
+            entity.Property(c => c.ImageUrl)
+                .HasMaxLength(500);
+
             entity.Property(c => c.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(c => c.UpdatedAt)
                 .HasDefaultValueSql("NOW()");
 
             entity.HasIndex(c => c.Slug).IsUnique();
             entity.HasIndex(c => c.ParentId);
             entity.HasIndex(c => c.IsActive);
-            entity.HasIndex(c => c.Level);
+            entity.HasIndex(c => c.SortOrder);
 
             entity.HasOne(c => c.Parent)
                 .WithMany(c => c.Children)
@@ -354,68 +360,80 @@ public class ApplicationDbContext : MultiTenantDbContext
             new Category
             {
                 Id = housesId,
+                DealerId = Guid.Empty,
                 Name = "Houses",
                 Slug = "houses-sale",
                 Description = "Single family homes for sale",
-                Level = 0,
                 SortOrder = 1,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                IsSystem = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = condosId,
+                DealerId = Guid.Empty,
                 Name = "Condos & Apartments",
                 Slug = "condos-sale",
                 Description = "Condominiums and apartments for sale",
-                Level = 0,
                 SortOrder = 2,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                IsSystem = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = townhomesId,
+                DealerId = Guid.Empty,
                 Name = "Townhomes",
                 Slug = "townhomes-sale",
                 Description = "Townhouses and row homes for sale",
-                Level = 0,
                 SortOrder = 3,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                IsSystem = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = landId,
+                DealerId = Guid.Empty,
                 Name = "Land & Lots",
                 Slug = "land-sale",
                 Description = "Vacant land and lots for sale",
-                Level = 0,
                 SortOrder = 4,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                IsSystem = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = commercialId,
+                DealerId = Guid.Empty,
                 Name = "Commercial",
                 Slug = "commercial-sale",
                 Description = "Commercial properties for sale",
-                Level = 0,
                 SortOrder = 5,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                IsSystem = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = multifamilyId,
+                DealerId = Guid.Empty,
                 Name = "Multi-Family",
                 Slug = "multifamily-sale",
                 Description = "Multi-family investment properties for sale",
-                Level = 0,
                 SortOrder = 6,
                 IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                IsSystem = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
     }

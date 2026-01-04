@@ -47,6 +47,21 @@ builder.Services.AddLogging();
 // Simple Health Check
 builder.Services.AddHealthChecks();
 
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "http://localhost:5173" };
+
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // ✅ USAR DEPENDENCY INJECTION DE INFRASTRUCTURE (INCLUYE RABBITMQ)
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -197,7 +212,7 @@ builder.Services.AddAuthorization(options =>
     {
         policy.RequireAuthenticatedUser();
     });
-    
+
     options.AddPolicy("NotificationServiceAdmin", policy =>
     {
         policy.RequireAuthenticatedUser();
@@ -212,7 +227,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
+
     try
     {
         logger.LogInformation("Applying database migrations for NotificationService...");
@@ -233,6 +248,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

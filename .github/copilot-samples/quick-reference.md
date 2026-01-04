@@ -162,13 +162,16 @@ docker stats
 
 | Servicio | Puerto | Health |
 |----------|--------|--------|
-| Gateway | 8080 | `/health` |
+| Gateway | 18443 | `/health` |
 | AuthService | 15085 | `/health` |
-| UserService | 15086 | `/health` |
-| RoleService | 15087 | `/health` |
-| ProductService | 15088 | `/health` |
+| UserService | 15100 | `/health` |
+| RoleService | 15101 | `/health` |
+| VehiclesSaleService | 15070 | `/health` |
+| VehiclesRentService | 15071 | `/health` |
+| PropertiesSaleService | 15072 | `/health` |
+| PropertiesRentService | 15073 | `/health` |
 | ErrorService | 15083 | `/health` |
-| NotificationService | 15089 | `/health` |
+| NotificationService | 15084 | `/health` |
 | MediaService | 15090 | `/health` |
 
 ### Infraestructura

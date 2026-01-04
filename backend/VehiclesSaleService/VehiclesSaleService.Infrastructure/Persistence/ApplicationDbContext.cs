@@ -222,13 +222,6 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(i => i.ThumbnailUrl)
                 .HasMaxLength(500);
 
-            entity.Property(i => i.Caption)
-                .HasMaxLength(500);
-
-            entity.Property(i => i.ImageType)
-                .HasConversion<string>()
-                .HasMaxLength(30);
-
             entity.Property(i => i.CreatedAt)
                 .HasDefaultValueSql("NOW()");
 
@@ -280,9 +273,6 @@ public class ApplicationDbContext : MultiTenantDbContext
                 .IsRequired()
                 .HasMaxLength(100);
 
-            entity.Property(m => m.ImageUrl)
-                .HasMaxLength(500);
-
             entity.Property(m => m.VehicleType)
                 .HasConversion<string>()
                 .HasMaxLength(30);
@@ -318,18 +308,18 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(t => t.BaseMSRP)
                 .HasPrecision(18, 2);
 
-            entity.Property(t => t.EngineInfo)
+            entity.Property(t => t.EngineSize)
                 .HasMaxLength(200);
 
-            entity.Property(t => t.DefaultTransmission)
+            entity.Property(t => t.Transmission)
                 .HasConversion<string>()
                 .HasMaxLength(30);
 
-            entity.Property(t => t.DefaultDriveType)
+            entity.Property(t => t.DriveType)
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
-            entity.Property(t => t.DefaultFuelType)
+            entity.Property(t => t.FuelType)
                 .HasConversion<string>()
                 .HasMaxLength(30);
 

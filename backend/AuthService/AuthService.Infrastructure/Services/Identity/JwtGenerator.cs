@@ -29,7 +29,9 @@ public class JwtGenerator : IJwtGenerator
             new Claim("security_stamp", user.SecurityStamp ?? ""),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             // Multi-tenant: dealerId
-            new Claim("dealerId", user.DealerId ?? string.Empty)
+            new Claim("dealerId", user.DealerId ?? string.Empty),
+            // Account type for role-based UI
+            new Claim("account_type", ((int)user.AccountType).ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));

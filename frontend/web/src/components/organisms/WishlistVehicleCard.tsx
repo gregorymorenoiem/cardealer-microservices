@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatPrice } from '@/utils/formatters';
+import { generateVehicleUrl } from '@/utils/seoSlug';
 import { 
   FiTrash2, FiEdit3, FiFolder, FiX, FiCheck 
 } from 'react-icons/fi';
@@ -47,11 +48,13 @@ const WishlistVehicleCard = memo(({
   onRemoveFromFolder,
 }: WishlistVehicleCardProps) => {
   const { t } = useTranslation(['vehicles', 'common']);
+  const vehicleUrl = generateVehicleUrl(vehicle);
+  
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="flex flex-col md:flex-row">
         {/* Image */}
-        <Link to={`/vehicles/${vehicle.id}`} className="md:w-1/3">
+        <Link to={vehicleUrl} className="md:w-1/3">
           <img
             src={vehicle.images[0]}
             alt={`${vehicle.make} ${vehicle.model}`}
@@ -62,7 +65,7 @@ const WishlistVehicleCard = memo(({
         {/* Content */}
         <div className="flex-1 p-6">
           <div className="flex items-start justify-between mb-4">
-            <Link to={`/vehicles/${vehicle.id}`}>
+            <Link to={vehicleUrl}>
               <h3 className="text-2xl font-bold text-gray-900 hover:text-primary transition-colors">
                 {vehicle.year} {vehicle.make} {vehicle.model}
               </h3>

@@ -166,7 +166,7 @@ public class VehicleRepository : IVehicleRepository
         if (!string.IsNullOrWhiteSpace(p.City)) query = query.Where(v => v.City!.ToLower() == p.City.ToLower());
         if (!string.IsNullOrWhiteSpace(p.ZipCode)) query = query.Where(v => v.ZipCode == p.ZipCode);
         if (p.IsCertified.HasValue) query = query.Where(v => v.IsCertified == p.IsCertified.Value);
-        if (p.HasCleanTitle.HasValue) query = query.Where(v => v.HasCleanTitle == p.HasCleanTitle.Value);
+        if (p.HasCleanTitle.HasValue) query = query.Where(v => v.CleanTitle == p.HasCleanTitle.Value);
 
         return query;
     }

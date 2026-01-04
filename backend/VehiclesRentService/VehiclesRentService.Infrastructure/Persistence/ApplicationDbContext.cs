@@ -208,12 +208,14 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(i => i.ThumbnailUrl)
                 .HasMaxLength(500);
 
-            entity.Property(i => i.Caption)
+            entity.Property(i => i.Title)
                 .HasMaxLength(500);
 
-            entity.Property(i => i.ImageType)
-                .HasConversion<string>()
-                .HasMaxLength(30);
+            entity.Property(i => i.AltText)
+                .HasMaxLength(500);
+
+            entity.Property(i => i.MimeType)
+                .HasMaxLength(100);
 
             entity.Property(i => i.CreatedAt)
                 .HasDefaultValueSql("NOW()");
@@ -266,8 +268,9 @@ public class ApplicationDbContext : MultiTenantDbContext
                 .IsRequired()
                 .HasMaxLength(100);
 
-            entity.Property(m => m.ImageUrl)
-                .HasMaxLength(500);
+            entity.Property(m => m.Slug)
+                .IsRequired()
+                .HasMaxLength(100);
 
             entity.Property(m => m.VehicleType)
                 .HasConversion<string>()
@@ -304,18 +307,18 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(t => t.BaseMSRP)
                 .HasPrecision(18, 2);
 
-            entity.Property(t => t.EngineInfo)
-                .HasMaxLength(200);
+            entity.Property(t => t.EngineSize)
+                .HasMaxLength(50);
 
-            entity.Property(t => t.DefaultTransmission)
+            entity.Property(t => t.Transmission)
                 .HasConversion<string>()
                 .HasMaxLength(30);
 
-            entity.Property(t => t.DefaultDriveType)
+            entity.Property(t => t.DriveType)
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
-            entity.Property(t => t.DefaultFuelType)
+            entity.Property(t => t.FuelType)
                 .HasConversion<string>()
                 .HasMaxLength(30);
 
@@ -354,7 +357,7 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.HasIndex(c => c.Slug).IsUnique();
             entity.HasIndex(c => c.ParentId);
             entity.HasIndex(c => c.IsActive);
-            entity.HasIndex(c => c.Level);
+            entity.HasIndex(c => c.SortOrder);
 
             entity.HasOne(c => c.Parent)
                 .WithMany(c => c.Children)
@@ -376,45 +379,49 @@ public class ApplicationDbContext : MultiTenantDbContext
             new Category
             {
                 Id = carsId,
+                DealerId = Guid.Empty,
                 Name = "Cars for Rent",
                 Slug = "cars-rent",
                 Description = "Sedans, coupes and sports cars for rent",
-                Level = 0,
                 SortOrder = 1,
                 IsActive = true,
+                IsSystem = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = trucksId,
+                DealerId = Guid.Empty,
                 Name = "Trucks for Rent",
                 Slug = "trucks-rent",
                 Description = "Pickup trucks and vans for rent",
-                Level = 0,
                 SortOrder = 2,
                 IsActive = true,
+                IsSystem = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = suvsId,
+                DealerId = Guid.Empty,
                 Name = "SUVs for Rent",
                 Slug = "suvs-rent",
                 Description = "SUVs and crossovers for rent",
-                Level = 0,
                 SortOrder = 3,
                 IsActive = true,
+                IsSystem = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
                 Id = motorcyclesId,
+                DealerId = Guid.Empty,
                 Name = "Motorcycles for Rent",
                 Slug = "motorcycles-rent",
                 Description = "Motorcycles and scooters for rent",
-                Level = 0,
                 SortOrder = 4,
                 IsActive = true,
+                IsSystem = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FadeIn } from '../animations/FadeIn';
 import { TextReveal } from '../animations/TextAnimations';
 import { OklaButton } from '../../atoms/okla/OklaButton';
+import { getPropertySaleImageUrl } from '@/utils/s3ImageUrl';
 
 interface OklaHeroProps {
   title?: string;
@@ -25,7 +26,7 @@ const categories = [
 export const OklaHero = ({
   title = 'Descubre lo Extraordinario',
   subtitle = 'El marketplace premium donde la calidad se encuentra con la confianza',
-  backgroundImage = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070',
+  backgroundImage = getPropertySaleImageUrl('photo-1486406146926-c627a92ad1ab'),
   showSearch = true,
   showTrustBadges = true,
   onSearch,

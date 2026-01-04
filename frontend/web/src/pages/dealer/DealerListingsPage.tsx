@@ -29,6 +29,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { getVehicleSaleImageUrl, getPropertySaleImageUrl } from '@/utils/s3ImageUrl';
 
 // Mock Listing type
 interface Listing {
@@ -70,7 +71,7 @@ const mockListings: Listing[] = [
     isFeatured: true,
     views: 234,
     inquiries: 12,
-    image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400',
+    image: getVehicleSaleImageUrl('photo-1621007947382-bb3c3994e3fb'),
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-15T14:30:00Z',
   },
@@ -87,7 +88,7 @@ const mockListings: Listing[] = [
     isFeatured: false,
     views: 189,
     inquiries: 8,
-    image: 'https://images.unsplash.com/photo-1568844293986-8c2bfd4b01e5?w=400',
+    image: getVehicleSaleImageUrl('photo-1549317661-bd32c8ce0db2'),
     createdAt: '2025-01-05T09:00:00Z',
     updatedAt: '2025-01-14T11:00:00Z',
   },
@@ -104,7 +105,7 @@ const mockListings: Listing[] = [
     isFeatured: false,
     views: 0,
     inquiries: 0,
-    image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400',
+    image: getVehicleSaleImageUrl('photo-1555215695-3004980ad54e'),
     createdAt: '2025-01-15T08:00:00Z',
     updatedAt: '2025-01-15T08:00:00Z',
   },
@@ -121,7 +122,7 @@ const mockListings: Listing[] = [
     isFeatured: true,
     views: 456,
     inquiries: 23,
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400',
+    image: getPropertySaleImageUrl('photo-1600596542815-ffad4c1539a9'),
     createdAt: '2024-12-20T10:00:00Z',
     updatedAt: '2025-01-12T16:00:00Z',
   },
@@ -138,7 +139,7 @@ const mockListings: Listing[] = [
     isFeatured: false,
     views: 567,
     inquiries: 34,
-    image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400',
+    image: getVehicleSaleImageUrl('photo-1618843479313-40f8afb4b4d8'),
     createdAt: '2024-11-15T10:00:00Z',
     updatedAt: '2025-01-10T09:00:00Z',
   },
@@ -155,7 +156,7 @@ const mockListings: Listing[] = [
     isFeatured: false,
     views: 0,
     inquiries: 0,
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400',
+    image: getPropertySaleImageUrl('photo-1502672260266-1c1ef2d93688'),
     createdAt: '2025-01-14T10:00:00Z',
     updatedAt: '2025-01-14T10:00:00Z',
   },
@@ -172,7 +173,7 @@ const mockListings: Listing[] = [
     isFeatured: false,
     views: 0,
     inquiries: 0,
-    image: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?w=400',
+    image: getVehicleSaleImageUrl('photo-1584345604476-8ec5e12e42dd'),
     createdAt: '2025-01-13T10:00:00Z',
     updatedAt: '2025-01-14T08:00:00Z',
   },

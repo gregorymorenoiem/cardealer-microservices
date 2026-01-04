@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
@@ -24,7 +24,7 @@ export default function LoginPage() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const storeLogin = useAuthStore((state) => state.login);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const {
@@ -49,8 +49,8 @@ export default function LoginPage() {
         rememberMe: data.rememberMe,
       });
       
-      // Update auth store
-      login(response);
+      // Update auth store with response
+      storeLogin(response);
       
       // Redirect based on account type
       let defaultPath = '/dashboard';
@@ -177,24 +177,6 @@ export default function LoginPage() {
         onMicrosoftClick={handleMicrosoftLogin}
         disabled={isSubmitting}
       />
-
-      {/* Demo Credentials */}
-      <div className="mt-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-        <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          🔑 Test Credentials:
-        </p>
-        
-        <div className="space-y-2 text-sm">
-          <div className="font-mono text-gray-700">
-            <p><strong>Email:</strong> test@example.com</p>
-            <p><strong>Password:</strong> Admin123!</p>
-          </div>
-        </div>
-
-        <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-gray-600">
-          💡 Or register a new account using the form above
-        </div>
-      </div>
 
       {/* Register Link */}
       <p className="mt-8 text-center text-sm text-gray-600">

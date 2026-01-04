@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { LocalizedContent } from '@/components/common';
 import { FiEye, FiTrash2, FiCheck, FiX, FiSearch, FiFilter } from 'react-icons/fi';
 import { getAllVehicles, approveVehicle, rejectVehicle, deleteVehicle, type Vehicle, type VehicleFilters } from '@/services/vehicleService';
+import { generateVehicleUrl } from '@/utils/seoSlug';
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'sold';
 
@@ -256,7 +257,7 @@ export default function AdminListingsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <Link
-                            to={`/vehicles/${vehicle.id}`}
+                            to={generateVehicleUrl(vehicle)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="View"
                           >

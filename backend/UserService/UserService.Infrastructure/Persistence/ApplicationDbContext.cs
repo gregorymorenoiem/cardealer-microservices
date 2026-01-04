@@ -12,6 +12,11 @@ namespace UserService.Infrastructure.Persistence
         public DbSet<UserRole> UserRoles => Set<UserRole>();
         public DbSet<UserService.Domain.Entities.Role> Roles => Set<UserService.Domain.Entities.Role>();
 
+        // Dealers y vendedores
+        public DbSet<Dealer> Dealers => Set<Dealer>();
+        public DbSet<SellerProfile> SellerProfiles => Set<SellerProfile>();
+        public DbSet<IdentityDocument> IdentityDocuments => Set<IdentityDocument>();
+
         // Entidades de empleados
         public DbSet<DealerEmployee> DealerEmployees => Set<DealerEmployee>();
         public DbSet<PlatformEmployee> PlatformEmployees => Set<PlatformEmployee>();

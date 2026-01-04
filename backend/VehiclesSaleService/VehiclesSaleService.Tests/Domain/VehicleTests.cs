@@ -1,6 +1,7 @@
 using FluentAssertions;
 using VehiclesSaleService.Domain.Entities;
 using Xunit;
+using Entities = VehiclesSaleService.Domain.Entities;
 
 namespace VehiclesSaleService.Tests.Domain;
 
@@ -52,9 +53,9 @@ public class VehicleTests
     [Theory]
     [InlineData(VehicleStatus.Draft)]
     [InlineData(VehicleStatus.Active)]
-    [InlineData(VehicleStatus.Pending)]
+    [InlineData(VehicleStatus.PendingReview)]
     [InlineData(VehicleStatus.Sold)]
-    [InlineData(VehicleStatus.Inactive)]
+    [InlineData(VehicleStatus.Archived)]
     public void Vehicle_AllStatuses_ShouldBeValid(VehicleStatus status)
     {
         // Arrange
@@ -142,31 +143,26 @@ public class VehicleTests
 
         // Act - Simulating soft delete
         vehicle.IsDeleted = true;
-        vehicle.DeletedAt = DateTime.UtcNow;
+        vehicle.UpdatedAt = DateTime.UtcNow;
 
         // Assert
         vehicle.IsDeleted.Should().BeTrue();
-        vehicle.DeletedAt.Should().NotBeNull();
-        vehicle.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        vehicle.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
 
     [Fact]
-    public void Vehicle_Pricing_ShouldHandleNullableFields()
+    public void Vehicle_Pricing_ShouldHandlePrice()
     {
         // Arrange & Act
         var vehicle = new Vehicle
         {
             Price = 25000m,
-            OriginalPrice = 28000m,
-            DownPayment = 5000m,
-            MonthlyPayment = 450m
+            Currency = "USD"
         };
 
         // Assert
         vehicle.Price.Should().Be(25000m);
-        vehicle.OriginalPrice.Should().Be(28000m);
-        vehicle.DownPayment.Should().Be(5000m);
-        vehicle.MonthlyPayment.Should().Be(450m);
+        vehicle.Currency.Should().Be("USD");
     }
 
     [Fact]
@@ -178,14 +174,95 @@ public class VehicleTests
             City = "Miami",
             State = "FL",
             ZipCode = "33101",
-            Latitude = 25.7617m,
-            Longitude = -80.1918m
+            Latitude = 25.7617,
+            Longitude = -80.1918
         };
 
         // Assert
         vehicle.City.Should().Be("Miami");
         vehicle.State.Should().Be("FL");
-        vehicle.Latitude.Should().BeApproximately(25.7617m, 0.0001m);
-        vehicle.Longitude.Should().BeApproximately(-80.1918m, 0.0001m);
+        vehicle.Latitude.Should().BeApproximately(25.7617, 0.0001);
+        vehicle.Longitude.Should().BeApproximately(-80.1918, 0.0001);
+    }
+
+    [Fact]
+    public void Vehicle_EngineSpecs_ShouldBeConfigurable()
+    {
+        // Arrange & Act
+        var vehicle = new Vehicle
+        {
+            EngineSize = "2.5L",
+            Horsepower = 203,
+            Torque = 184,
+            Cylinders = 4,
+            Transmission = TransmissionType.Automatic,
+            DriveType = Entities.DriveType.FWD,
+            FuelType = FuelType.Gasoline
+        };
+
+        // Assert
+        vehicle.EngineSize.Should().Be("2.5L");
+        vehicle.Horsepower.Should().Be(203);
+        vehicle.Cylinders.Should().Be(4);
+        vehicle.Transmission.Should().Be(TransmissionType.Automatic);
+        vehicle.DriveType.Should().Be(Entities.DriveType.FWD);
+    }
+
+    [Fact]
+    public void Vehicle_Mileage_ShouldSupportDifferentUnits()
+    {
+        // Arrange & Act
+        var vehicleMiles = new Vehicle
+        {
+            Mileage = 50000,
+            MileageUnit = MileageUnit.Miles
+        };
+
+        var vehicleKm = new Vehicle
+        {
+            Mileage = 80000,
+            MileageUnit = MileageUnit.Kilometers
+        };
+
+        // Assert
+        vehicleMiles.MileageUnit.Should().Be(MileageUnit.Miles);
+        vehicleKm.MileageUnit.Should().Be(MileageUnit.Kilometers);
+    }
+
+    [Fact]
+    public void Vehicle_Condition_ShouldHandleAllStates()
+    {
+        // Arrange & Act
+        var newVehicle = new Vehicle { Condition = VehicleCondition.New };
+        var usedVehicle = new Vehicle { Condition = VehicleCondition.Used };
+        var certifiedVehicle = new Vehicle
+        {
+            Condition = VehicleCondition.CertifiedPreOwned,
+            IsCertified = true,
+            CertificationProgram = "Toyota CPO"
+        };
+
+        // Assert
+        newVehicle.Condition.Should().Be(VehicleCondition.New);
+        usedVehicle.Condition.Should().Be(VehicleCondition.Used);
+        certifiedVehicle.IsCertified.Should().BeTrue();
+        certifiedVehicle.CertificationProgram.Should().Be("Toyota CPO");
+    }
+
+    [Fact]
+    public void Vehicle_Engagement_ShouldTrackMetrics()
+    {
+        // Arrange
+        var vehicle = new Vehicle();
+
+        // Act
+        vehicle.ViewCount = 100;
+        vehicle.FavoriteCount = 25;
+        vehicle.InquiryCount = 10;
+
+        // Assert
+        vehicle.ViewCount.Should().Be(100);
+        vehicle.FavoriteCount.Should().Be(25);
+        vehicle.InquiryCount.Should().Be(10);
     }
 }

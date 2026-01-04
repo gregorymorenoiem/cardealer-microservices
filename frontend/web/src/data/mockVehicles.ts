@@ -1,3 +1,5 @@
+import type { ListingTier, FeaturedBadge, FeaturedPage, DealerTier } from '../types/listing';
+
 export interface Vehicle {
   id: string;
   make: string;
@@ -31,6 +33,18 @@ export interface Vehicle {
     rating: number;
     phone: string;
   };
+  
+  // Featured Listing fields (Sprint 1)
+  tier?: ListingTier;
+  featuredUntil?: Date;
+  featuredPosition?: number;
+  featuredPages?: FeaturedPage[];
+  featuredBadge?: FeaturedBadge;
+  qualityScore?: number;
+  engagementScore?: number;
+  dealerId?: string;
+  dealerTier?: DealerTier;
+  dealerVerified?: boolean;
 }
 
 export const mockVehicles: Vehicle[] = [
@@ -78,6 +92,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.8,
       phone: '+1 (555) 123-4567',
     },
+    // Featured listing fields
+    tier: 'enterprise',
+    featuredBadge: 'top-dealer',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 95,
+    engagementScore: 850,
+    dealerId: 'dealer-001',
+    dealerTier: 'enterprise',
+    dealerVerified: true,
   },
   {
     id: '2',
@@ -120,6 +143,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.6,
       phone: '+1 (555) 234-5678',
     },
+    // Featured listing fields
+    tier: 'premium',
+    featuredBadge: 'premium',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 88,
+    engagementScore: 720,
+    dealerId: 'dealer-003',
+    dealerTier: 'premium',
+    dealerVerified: true,
   },
   {
     id: '3',
@@ -201,6 +233,15 @@ export const mockVehicles: Vehicle[] = [
       rating: 4.7,
       phone: '+1 (555) 456-7890',
     },
+    // Featured listing fields
+    tier: 'featured',
+    featuredBadge: 'destacado',
+    featuredPages: ['home', 'browse'],
+    qualityScore: 82,
+    engagementScore: 650,
+    dealerId: 'dealer-004',
+    dealerTier: 'premium',
+    dealerVerified: true,
   },
   {
     id: '5',
@@ -430,6 +471,44 @@ export const mockVehicles: Vehicle[] = [
       type: 'Private',
       rating: 4.8,
       phone: '+1 (555) 012-3456',
+    },
+  },
+  {
+    id: '11',
+    make: 'Mazda',
+    model: 'CX-5',
+    year: 2023,
+    price: 31500,
+    mileage: 8500,
+    location: 'Portland, OR',
+    images: [
+      'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&h=600&fit=crop',
+    ],
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    bodyType: 'SUV',
+    drivetrain: 'AWD',
+    engine: '2.5L I4',
+    horsepower: 187,
+    mpg: { city: 25, highway: 31 },
+    color: 'Soul Red Crystal',
+    interiorColor: 'Black Leather',
+    vin: 'JM3KFBDM5P0123456',
+    condition: 'Used',
+    features: [
+      'Apple CarPlay',
+      'Android Auto',
+      'Blind Spot Monitoring',
+      'Rear Cross Traffic Alert',
+      'Adaptive Cruise Control',
+      'Lane Keep Assist',
+    ],
+    description: 'Stunning Mazda CX-5 in Soul Red Crystal. Premium features, AWD, and exceptional fuel economy. Meticulously maintained with full service history.',
+    seller: {
+      name: 'Premium Auto Group',
+      type: 'Dealer',
+      rating: 4.6,
+      phone: '+1 (555) 123-4567',
     },
   },
 ];

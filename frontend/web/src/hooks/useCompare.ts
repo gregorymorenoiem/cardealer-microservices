@@ -1,58 +1,86 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 
 const COMPARE_KEY = 'cardealer_compare';
 const MAX_COMPARE_ITEMS = 3;
 
+// Global store for compare items
+let compareStore: string[] = [];
+let listeners: Set<() => void> = new Set();
+
+// Initialize from localStorage
+try {
+  const stored = localStorage.getItem(COMPARE_KEY);
+  compareStore = stored ? JSON.parse(stored) : [];
+} catch {
+  compareStore = [];
+}
+
+function getSnapshot(): string[] {
+  return compareStore;
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function notifyListeners() {
+  listeners.forEach(listener => listener());
+}
+
+function setCompareStore(newItems: string[]) {
+  compareStore = newItems;
+  try {
+    localStorage.setItem(COMPARE_KEY, JSON.stringify(newItems));
+  } catch (error) {
+    console.error('Error saving compare items:', error);
+  }
+  notifyListeners();
+}
+
+// Listen for localStorage changes from other tabs
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === COMPARE_KEY) {
+      try {
+        compareStore = e.newValue ? JSON.parse(e.newValue) : [];
+        notifyListeners();
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  });
+}
+
 export function useCompare() {
-  const loadCompareItems = (): string[] => {
-    try {
-      const stored = localStorage.getItem(COMPARE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Error loading compare items:', error);
-      return [];
-    }
-  };
+  const compareItems = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  const [compareItems, setCompareItems] = useState<string[]>(loadCompareItems);
-
-  // Save to localStorage whenever compareItems changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(COMPARE_KEY, JSON.stringify(compareItems));
-    } catch (error) {
-      console.error('Error saving compare items:', error);
+  const addToCompare = useCallback((vehicleId: string) => {
+    if (compareStore.includes(vehicleId)) {
+      return; // Already in compare
     }
+    if (compareStore.length >= MAX_COMPARE_ITEMS) {
+      alert(`You can only compare up to ${MAX_COMPARE_ITEMS} vehicles at a time`);
+      return;
+    }
+    setCompareStore([...compareStore, vehicleId]);
+  }, []);
+
+  const removeFromCompare = useCallback((vehicleId: string) => {
+    setCompareStore(compareStore.filter((id) => id !== vehicleId));
+  }, []);
+
+  const clearCompare = useCallback(() => {
+    setCompareStore([]);
+  }, []);
+
+  const isInCompare = useCallback((vehicleId: string) => {
+    return compareItems.includes(vehicleId);
   }, [compareItems]);
 
-  const addToCompare = (vehicleId: string) => {
-    setCompareItems((prev) => {
-      if (prev.includes(vehicleId)) {
-        return prev; // Already in compare
-      }
-      if (prev.length >= MAX_COMPARE_ITEMS) {
-        alert(`You can only compare up to ${MAX_COMPARE_ITEMS} vehicles at a time`);
-        return prev;
-      }
-      return [...prev, vehicleId];
-    });
-  };
-
-  const removeFromCompare = (vehicleId: string) => {
-    setCompareItems((prev) => prev.filter((id) => id !== vehicleId));
-  };
-
-  const clearCompare = () => {
-    setCompareItems([]);
-  };
-
-  const isInCompare = (vehicleId: string) => {
-    return compareItems.includes(vehicleId);
-  };
-
-  const canAddMore = () => {
+  const canAddMore = useCallback(() => {
     return compareItems.length < MAX_COMPARE_ITEMS;
-  };
+  }, [compareItems.length]);
 
   return {
     compareItems,

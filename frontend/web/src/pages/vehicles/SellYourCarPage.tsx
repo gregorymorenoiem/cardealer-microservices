@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import VehicleInfoStep from '@/components/organisms/sell/VehicleInfoStep';
@@ -7,6 +8,8 @@ import FeaturesStep from '@/components/organisms/sell/FeaturesStep';
 import PricingStep from '@/components/organisms/sell/PricingStep';
 import ReviewStep from '@/components/organisms/sell/ReviewStep';
 import { FiCheck } from 'react-icons/fi';
+import { createVehicle } from '@/services/vehicleService';
+import { uploadVehicleImages } from '@/services/mediaService';
 
 export interface VehicleFormData {
   // Step 1: Vehicle Info
@@ -49,8 +52,10 @@ const steps = [
 ];
 
 export default function SellYourCarPage() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [showDraftModal, setShowDraftModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Partial<VehicleFormData>>(() => {
     // Load from localStorage on mount
     const saved = localStorage.getItem('sell-vehicle-draft');
@@ -129,15 +134,86 @@ export default function SellYourCarPage() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    
     try {
-      // TODO: Submit to API
-      console.log('Submitting listing:', formData);
+      setIsSubmitting(true);
+      
+      // Validate required fields
+      if (!formData.make || !formData.model || !formData.year || !formData.price) {
+        alert('⚠️ Please fill in all required fields (Make, Model, Year, Price)');
+        return;
+      }
+
+      console.log('Creating vehicle listing...', formData);
+      
+      // STEP 1: Upload images to MediaService first
+      let uploadedImageUrls: string[] = [];
+      
+      if (formData.images && formData.images.length > 0) {
+        console.log(`📸 Uploading ${formData.images.length} images to MediaService...`);
+        
+        try {
+          const uploadResults = await uploadVehicleImages(
+            formData.images,
+            (current, total, progress) => {
+              console.log(`Uploading image ${current}/${total} - ${progress}%`);
+            }
+          );
+          
+          uploadedImageUrls = uploadResults.map(result => result.url);
+          
+          console.log(`✅ Successfully uploaded ${uploadedImageUrls.length} images:`, uploadedImageUrls);
+          
+          if (uploadedImageUrls.length === 0) {
+            alert('⚠️ No images were uploaded successfully. The listing will be created without photos.');
+          }
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          const continueWithoutImages = confirm(
+            '⚠️ Some images failed to upload. Do you want to continue creating the listing without photos?\n\n' +
+            'You can add photos later by editing the listing.'
+          );
+          
+          if (!continueWithoutImages) {
+            return;
+          }
+        }
+      }
+      
+      // STEP 2: Create vehicle with uploaded image URLs
+      const vehiclePayload = {
+        ...formData,
+        images: uploadedImageUrls, // Replace File[] with string URLs
+      };
+      
+      const createdVehicle = await createVehicle(vehiclePayload as any);
+      
+      console.log('Vehicle created successfully:', createdVehicle);
+      
       // Clear draft after successful submission
       localStorage.removeItem('sell-vehicle-draft');
-      alert('Listing created successfully!');
+      
+      // Show success message
+      const imageCount = uploadedImageUrls.length;
+      alert(
+        `✅ Vehicle listing created successfully!\n\n` +
+        `ID: ${createdVehicle.id}\n` +
+        `Title: ${createdVehicle.title}\n` +
+        `Images uploaded: ${imageCount}\n\n` +
+        `Redirecting to your listing...`
+      );
+      
+      // Redirect to vehicle detail
+      setTimeout(() => {
+        navigate(`/vehicles/${createdVehicle.id}`);
+      }, 1000);
     } catch (error) {
-      console.error('Error creating listing:', error);
-      alert('Error creating listing. Please try again.');
+      console.error('Error creating vehicle listing:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`❌ Error creating listing:\n\n${errorMessage}\n\nPlease try again or contact support if the problem persists.`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -194,6 +270,7 @@ export default function SellYourCarPage() {
             onSubmit={handleSubmit}
             onBack={prevStep}
             onSaveDraft={saveDraft}
+            isSubmitting={isSubmitting}
           />
         );
       default:

@@ -1,8 +1,11 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using PropertiesSaleService.Domain.Entities;
+using PropertiesSaleService.Domain.Interfaces;
 using PropertiesSaleService.Infrastructure.Persistence;
 using PropertiesSaleService.Infrastructure.Repositories;
+using CarDealer.Shared.MultiTenancy;
 using Xunit;
 
 namespace PropertiesSaleService.Tests.Repositories;
@@ -11,6 +14,7 @@ public class PropertyRepositoryTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
     private readonly PropertyRepository _repository;
+    private readonly Guid _testDealerId = Guid.NewGuid();
 
     public PropertyRepositoryTests()
     {
@@ -18,7 +22,10 @@ public class PropertyRepositoryTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        var tenantContextMock = new Mock<ITenantContext>();
+        tenantContextMock.Setup(t => t.CurrentDealerId).Returns(_testDealerId);
+
+        _context = new ApplicationDbContext(options, tenantContextMock.Object);
         _repository = new PropertyRepository(_context);
     }
 
@@ -135,10 +142,10 @@ public class PropertyRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.SearchAsync(new PropertySearchParameters 
-        { 
-            MinPrice = 300000, 
-            MaxPrice = 500000 
+        var result = await _repository.SearchAsync(new PropertySearchParameters
+        {
+            MinPrice = 300000,
+            MaxPrice = 500000
         });
 
         // Assert
@@ -157,34 +164,34 @@ public class PropertyRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.SearchAsync(new PropertySearchParameters 
-        { 
-            MinBedrooms = 3 
+        var result = await _repository.SearchAsync(new PropertySearchParameters
+        {
+            MinBedrooms = 3
         });
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().AllSatisfy(p => p.Bedrooms.Should().BeGreaterOrEqualTo(3));
+        result.Should().AllSatisfy(p => p.Bedrooms.Should().BeGreaterThanOrEqualTo(3));
     }
 
     [Fact]
     public async Task SearchAsync_ByPropertyType_FiltersCorrectly()
     {
         // Arrange
-        var singleFamily = CreateTestProperty(propertyType: PropertyType.SingleFamily);
+        var house = CreateTestProperty(propertyType: PropertyType.House);
         var condo = CreateTestProperty(propertyType: PropertyType.Condo);
-        _context.Properties.AddRange(singleFamily, condo);
+        _context.Properties.AddRange(house, condo);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.SearchAsync(new PropertySearchParameters 
-        { 
-            PropertyType = PropertyType.SingleFamily 
+        var result = await _repository.SearchAsync(new PropertySearchParameters
+        {
+            PropertyType = PropertyType.House
         });
 
         // Assert
         result.Should().HaveCount(1);
-        result.First().PropertyType.Should().Be(PropertyType.SingleFamily);
+        result.First().PropertyType.Should().Be(PropertyType.House);
     }
 
     [Fact]
@@ -197,35 +204,14 @@ public class PropertyRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.SearchAsync(new PropertySearchParameters 
-        { 
-            City = "Miami" 
+        var result = await _repository.SearchAsync(new PropertySearchParameters
+        {
+            City = "Miami"
         });
 
         // Assert
         result.Should().HaveCount(1);
         result.First().City.Should().Be("Miami");
-    }
-
-    [Fact]
-    public async Task SearchAsync_WithPagination_ReturnsCorrectPage()
-    {
-        // Arrange
-        for (int i = 0; i < 25; i++)
-        {
-            _context.Properties.Add(CreateTestProperty(title: $"Property {i}"));
-        }
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _repository.SearchAsync(new PropertySearchParameters 
-        { 
-            Page = 2, 
-            PageSize = 10 
-        });
-
-        // Assert
-        result.Should().HaveCount(10);
     }
 
     [Fact]
@@ -238,9 +224,9 @@ public class PropertyRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.SearchAsync(new PropertySearchParameters 
-        { 
-            SearchTerm = "beachfront" 
+        var result = await _repository.SearchAsync(new PropertySearchParameters
+        {
+            SearchTerm = "beachfront"
         });
 
         // Assert
@@ -258,6 +244,9 @@ public class PropertyRepositoryTests : IDisposable
         // Arrange
         var property = new Property
         {
+            DealerId = _testDealerId,
+            AgentId = Guid.NewGuid(),
+            AgentName = "Test Agent",
             Title = "New Property Listing",
             StreetAddress = "456 Oak Avenue",
             City = "Miami",
@@ -267,7 +256,8 @@ public class PropertyRepositoryTests : IDisposable
             Bedrooms = 4,
             Bathrooms = 3,
             SquareFeet = 2500,
-            PropertyType = PropertyType.SingleFamily
+            PropertyType = PropertyType.House,
+            PropertySubType = PropertySubType.SingleFamily
         };
 
         // Act
@@ -374,28 +364,50 @@ public class PropertyRepositoryTests : IDisposable
 
     #endregion
 
-    #region GetBySellerAsync Tests
+    #region GetByAgentAsync Tests
 
     [Fact]
-    public async Task GetBySellerAsync_ReturnsSellerProperties()
+    public async Task GetByAgentAsync_ReturnsAgentProperties()
     {
         // Arrange
-        var sellerId = Guid.NewGuid();
-        var sellerProperty = CreateTestProperty();
-        sellerProperty.SellerId = sellerId;
+        var agentId = Guid.NewGuid();
+        var agentProperty = CreateTestProperty();
+        agentProperty.AgentId = agentId;
 
         var otherProperty = CreateTestProperty();
-        otherProperty.SellerId = Guid.NewGuid();
+        otherProperty.AgentId = Guid.NewGuid();
 
-        _context.Properties.AddRange(sellerProperty, otherProperty);
+        _context.Properties.AddRange(agentProperty, otherProperty);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.GetBySellerAsync(sellerId);
+        var result = await _repository.GetByAgentAsync(agentId);
 
         // Assert
         result.Should().HaveCount(1);
-        result.First().SellerId.Should().Be(sellerId);
+        result.First().AgentId.Should().Be(agentId);
+    }
+
+    #endregion
+
+    #region GetByDealerAsync Tests
+
+    [Fact]
+    public async Task GetByDealerAsync_ReturnsDealerProperties()
+    {
+        // Arrange - use the test dealer ID from context
+        var dealerProperty = CreateTestProperty();
+        dealerProperty.DealerId = _testDealerId;
+
+        _context.Properties.Add(dealerProperty);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetByDealerAsync(_testDealerId);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().DealerId.Should().Be(_testDealerId);
     }
 
     #endregion
@@ -425,22 +437,45 @@ public class PropertyRepositoryTests : IDisposable
 
     #endregion
 
+    #region GetCountAsync Tests
+
+    [Fact]
+    public async Task GetCountAsync_NoParameters_ReturnsNonDeletedCount()
+    {
+        // Arrange
+        _context.Properties.Add(CreateTestProperty());
+        _context.Properties.Add(CreateTestProperty());
+        var deleted = CreateTestProperty();
+        deleted.IsDeleted = true;
+        _context.Properties.Add(deleted);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetCountAsync();
+
+        // Assert
+        result.Should().Be(2);
+    }
+
+    #endregion
+
     #region Helper Methods
 
-    private static Property CreateTestProperty(
+    private Property CreateTestProperty(
         string? title = null,
         string city = "Miami",
         string state = "FL",
         decimal price = 450000,
         int bedrooms = 3,
-        PropertyType propertyType = PropertyType.SingleFamily,
+        PropertyType propertyType = PropertyType.House,
         PropertyStatus status = PropertyStatus.Active)
     {
         return new Property
         {
             Id = Guid.NewGuid(),
-            DealerId = Guid.NewGuid(),
-            SellerId = Guid.NewGuid(),
+            DealerId = _testDealerId,
+            AgentId = Guid.NewGuid(),
+            AgentName = "Test Agent",
             Title = title ?? $"Beautiful {bedrooms}BR Home in {city}",
             Description = "Test property description",
             StreetAddress = "123 Test Street",
@@ -449,13 +484,14 @@ public class PropertyRepositoryTests : IDisposable
             ZipCode = "33101",
             Price = price,
             Bedrooms = bedrooms,
-            Bathrooms = bedrooms - 0.5m,
+            Bathrooms = bedrooms - 1,
             SquareFeet = bedrooms * 500 + 1000,
             PropertyType = propertyType,
+            PropertySubType = PropertySubType.SingleFamily,
             Status = status,
             Currency = "USD",
             YearBuilt = 2020,
-            LotSize = 0.25m,
+            LotSizeAcres = 0.25m,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

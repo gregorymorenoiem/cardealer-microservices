@@ -1,7 +1,80 @@
 import axios from 'axios';
-import type { User } from '@/types';
+import type { User, AccountType } from '@/types';
 
 const AUTH_API_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:15085/api';
+
+/**
+ * Decode JWT token payload (without verification)
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract account type from JWT claims
+ * Backend sends account_type as integer: Guest=0, Individual=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5
+ */
+function getAccountTypeFromJwt(token: string): AccountType {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return 'individual';
+  
+  // Check for account_type claim (custom claim) - backend sends as integer
+  const accountTypeValue = payload['account_type'] || payload['accountType'];
+  if (accountTypeValue !== undefined) {
+    const accountTypeInt = typeof accountTypeValue === 'string' 
+      ? parseInt(accountTypeValue, 10) 
+      : accountTypeValue;
+    
+    // Map backend enum to frontend string
+    switch (accountTypeInt) {
+      case 0: return 'guest';
+      case 1: return 'individual';
+      case 2: return 'dealer';
+      case 3: return 'dealer_employee';
+      case 4: return 'admin';
+      case 5: return 'platform_employee';
+      default: return 'individual';
+    }
+  }
+  
+  // Check for role claims
+  const roles = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
+                payload['role'] || 
+                payload['roles'] || 
+                [];
+  
+  const roleList = Array.isArray(roles) ? roles : [roles];
+  
+  if (roleList.includes('admin') || roleList.includes('Admin')) {
+    return 'admin';
+  }
+  if (roleList.includes('dealer') || roleList.includes('Dealer')) {
+    return 'dealer';
+  }
+  if (roleList.includes('dealer_employee') || roleList.includes('DealerEmployee')) {
+    return 'dealer_employee';
+  }
+  
+  // Check dealerId - if present and not empty, user is a dealer
+  const dealerId = payload['dealerId'] || payload['dealer_id'];
+  if (dealerId && dealerId !== '') {
+    return 'dealer';
+  }
+  
+  return 'individual';
+}
 
 interface LoginCredentials {
   email: string;
@@ -62,11 +135,21 @@ export const authService = {
       }
 
       // Transform backend response to frontend format
+      // Get account type from JWT or backend response
+      const accountType = data.accountType 
+        ? (data.accountType as AccountType)
+        : getAccountTypeFromJwt(data.accessToken);
+      
+      // Get fullName from JWT claims
+      const jwtPayload = decodeJwtPayload(data.accessToken);
+      const fullName = jwtPayload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] as string 
+        || data.email.split('@')[0];
+      
       const user: User = {
         id: data.userId,
         email: data.email,
-        fullName: data.email.split('@')[0], // Temporary until we get user profile
-        accountType: 'individual', // TODO: Get from profile endpoint
+        fullName: fullName,
+        accountType: accountType,
         emailVerified: true,
         createdAt: new Date().toISOString(),
       };

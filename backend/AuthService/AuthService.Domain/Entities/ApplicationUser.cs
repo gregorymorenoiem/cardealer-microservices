@@ -37,6 +37,9 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
     // Multi-tenancy: DealerId
     public string? DealerId { get; set; }
 
+    // Account type for role-based access
+    public AccountType AccountType { get; set; } = AccountType.Individual;
+
     // Nuevas propiedades para autenticación externa
     public ExternalAuthProvider? ExternalAuthProvider { get; private set; }
     public string? ExternalUserId { get; private set; }

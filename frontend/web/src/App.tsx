@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HomePage from './pages/HomePage';
+import VehiclesOnlyHomePage from './pages/VehiclesOnlyHomePage';
 // OKLA Premium Pages
 import OklaPremiumPage from './pages/OklaPremiumPage';
 import OklaBrowsePage from './pages/OklaBrowsePage';
@@ -39,6 +40,8 @@ import DealerDashboardPage from './pages/dealer/DealerDashboardPage';
 import DealerListingsPage from './pages/dealer/DealerListingsPage';
 import CRMPage from './pages/dealer/CRMPage';
 import AnalyticsPage from './pages/dealer/AnalyticsPage';
+import DealerOnboardingPage from './pages/dealer/DealerOnboardingPage';
+import CreateSellerPage from './pages/dealer/CreateSellerPage';
 // Common pages (legal, info, help)
 import { 
   AboutPage, 
@@ -99,8 +102,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
+          {/* Public Routes - Vehicle-focused Home */}
+          <Route path="/" element={<VehiclesOnlyHomePage />} />
+          
+          {/* Marketplace Home (multi-vertical) */}
+          <Route path="/marketplace-home" element={<HomePage />} />
           
           {/* OKLA Premium Routes */}
           <Route path="/okla" element={<OklaPremiumPage />} />
@@ -111,7 +117,7 @@ function App() {
           <Route path="/vehicles" element={<VehicleBrowsePage />} />
           <Route path="/vehicles/home" element={<VehiclesHomePage />} />
           <Route path="/vehicles/map" element={<VehicleMapViewPage />} />
-          <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
+          <Route path="/vehicles/:slug" element={<VehicleDetailPage />} />
           <Route path="/vehicles/compare" element={<VehicleComparePage />} />
           <Route path="/browse" element={<VehicleBrowsePage />} />
           <Route path="/compare" element={<VehicleComparePage />} />
@@ -205,6 +211,8 @@ function App() {
           } />
           
           {/* Dealer Routes */}
+          <Route path="/dealer/onboarding" element={<DealerOnboardingPage />} />
+          <Route path="/seller/create" element={<CreateSellerPage />} />
           <Route path="/dealer" element={
             <ProtectedRoute requireDealer>
               <DealerLayout>

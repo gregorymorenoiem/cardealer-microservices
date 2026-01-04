@@ -8,7 +8,7 @@ public interface IPropertyRepository
     Task<Property?> GetByMLSNumberAsync(string mlsNumber);
     Task<IEnumerable<Property>> GetAllAsync(int skip = 0, int take = 100);
     Task<IEnumerable<Property>> SearchAsync(PropertySearchParameters parameters);
-    Task<IEnumerable<Property>> GetBySellerAsync(Guid sellerId);
+    Task<IEnumerable<Property>> GetByAgentAsync(Guid agentId);
     Task<IEnumerable<Property>> GetByDealerAsync(Guid dealerId);
     Task<IEnumerable<Property>> GetFeaturedAsync(int take = 10);
     Task<Property> CreateAsync(Property property);
