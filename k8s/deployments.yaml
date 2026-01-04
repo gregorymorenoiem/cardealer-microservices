@@ -2,7 +2,8 @@
 # DEPLOYMENTS - Backend Microservices
 # =============================================================================
 # Optimizado para Digital Ocean Kubernetes (DOKS)
-# Recursos mínimos para mantener costos bajos
+# Puerto 8080 para contenedores non-root
+# Database: Database__ConnectionStrings__PostgreSQL (CarDealer.Shared format)
 # =============================================================================
 
 ---
@@ -29,9 +30,9 @@ spec:
     spec:
       containers:
         - name: frontend-web
-          image: ghcr.io/gregorymorenoiem/okla-web:latest
+          image: ghcr.io/gregorymorenoiem/frontend-web:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           resources:
             requests:
               memory: "64Mi"
@@ -42,23 +43,15 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
-          volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: nginx.conf
-      volumes:
-        - name: nginx-config
-          configMap:
-            name: frontend-config
       imagePullSecrets:
         - name: registry-credentials
 
@@ -88,10 +81,15 @@ spec:
         - name: gateway
           image: ghcr.io/gregorymorenoiem/gateway:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
+            - secretRef:
+                name: jwt-secrets
           resources:
             requests:
               memory: "128Mi"
@@ -102,14 +100,14 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
-            initialDelaySeconds: 10
+              port: 8080
+            initialDelaySeconds: 15
             periodSeconds: 10
           volumeMounts:
             - name: ocelot-config
@@ -135,7 +133,7 @@ metadata:
     app: authservice
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: authservice
@@ -148,7 +146,10 @@ spec:
         - name: authservice
           image: ghcr.io/gregorymorenoiem/authservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
@@ -156,9 +157,6 @@ spec:
                 name: database-secrets
             - secretRef:
                 name: jwt-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=authservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
           resources:
             requests:
               memory: "128Mi"
@@ -169,13 +167,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
@@ -207,15 +205,17 @@ spec:
         - name: userservice
           image: ghcr.io/gregorymorenoiem/userservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
             - secretRef:
                 name: database-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=userservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
+            - secretRef:
+                name: jwt-secrets
           resources:
             requests:
               memory: "128Mi"
@@ -226,13 +226,72 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      imagePullSecrets:
+        - name: registry-credentials
+
+---
+# =============================================================================
+# ROLE SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roleservice
+  namespace: okla
+  labels:
+    app: roleservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: roleservice
+  template:
+    metadata:
+      labels:
+        app: roleservice
+    spec:
+      containers:
+        - name: roleservice
+          image: ghcr.io/gregorymorenoiem/roleservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: database-secrets
+            - secretRef:
+                name: jwt-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
@@ -251,7 +310,7 @@ metadata:
     app: vehiclessaleservice
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: vehiclessaleservice
@@ -264,15 +323,17 @@ spec:
         - name: vehiclessaleservice
           image: ghcr.io/gregorymorenoiem/vehiclessaleservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
             - secretRef:
                 name: database-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=vehiclessaleservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
+            - secretRef:
+                name: jwt-secrets
           resources:
             requests:
               memory: "128Mi"
@@ -283,70 +344,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
-            initialDelaySeconds: 30
-            periodSeconds: 10
-      imagePullSecrets:
-        - name: registry-credentials
-
----
-# =============================================================================
-# PROPERTIES SALE SERVICE
-# =============================================================================
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: propertiessaleservice
-  namespace: okla
-  labels:
-    app: propertiessaleservice
-    tier: backend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: propertiessaleservice
-  template:
-    metadata:
-      labels:
-        app: propertiessaleservice
-    spec:
-      containers:
-        - name: propertiessaleservice
-          image: ghcr.io/gregorymorenoiem/propertiessaleservice:latest
-          ports:
-            - containerPort: 80
-          envFrom:
-            - configMapRef:
-                name: global-config
-            - secretRef:
-                name: database-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=propertiessaleservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "250m"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 80
-            initialDelaySeconds: 60
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
@@ -378,7 +382,10 @@ spec:
         - name: mediaservice
           image: ghcr.io/gregorymorenoiem/mediaservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
@@ -386,9 +393,6 @@ spec:
                 name: database-secrets
             - secretRef:
                 name: external-services-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=mediaservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
           resources:
             requests:
               memory: "128Mi"
@@ -399,13 +403,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
@@ -437,7 +441,10 @@ spec:
         - name: notificationservice
           image: ghcr.io/gregorymorenoiem/notificationservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
@@ -445,9 +452,6 @@ spec:
                 name: database-secrets
             - secretRef:
                 name: external-services-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=notificationservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
           resources:
             requests:
               memory: "128Mi"
@@ -458,13 +462,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
@@ -496,7 +500,10 @@ spec:
         - name: billingservice
           image: ghcr.io/gregorymorenoiem/billingservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
@@ -504,9 +511,6 @@ spec:
                 name: database-secrets
             - secretRef:
                 name: external-services-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=billingservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
           resources:
             requests:
               memory: "128Mi"
@@ -517,13 +521,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
@@ -555,15 +559,15 @@ spec:
         - name: errorservice
           image: ghcr.io/gregorymorenoiem/errorservice:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
           envFrom:
             - configMapRef:
                 name: global-config
             - secretRef:
                 name: database-secrets
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              value: "Host=$(POSTGRES_HOST);Port=$(POSTGRES_PORT);Database=errorservice;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);SSL Mode=$(POSTGRES_SSL_MODE)"
           resources:
             requests:
               memory: "64Mi"
@@ -574,13 +578,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
       imagePullSecrets:
