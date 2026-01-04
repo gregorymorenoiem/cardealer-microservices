@@ -14,6 +14,11 @@ on:
         required: true
         type: string
 
+# Required permissions to push to GHCR
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
