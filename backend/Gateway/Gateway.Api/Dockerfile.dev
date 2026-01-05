@@ -1,37 +1,42 @@
 ############################################
-# Etapa única de desarrollo: SDK + hot-reload + debugger
+# Etapa única de desarrollo: SDK + debugger (sin hot-reload)
 ############################################
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-# 1) Instala dotnet-watch y vsdbg para hot-reload y depuración remota
-RUN dotnet tool install --global dotnet-watch \
-    && export PATH="$PATH:/root/.dotnet/tools" \
- && apt-get update \
- && apt-get install -y unzip curl \
- && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+# 1) Instala vsdbg para depuración remota
+RUN apt-get update \
+    && apt-get install -y unzip curl \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
 
 WORKDIR /app
 
-# 2) Copia y restaura sólo el csproj de la API
+# 2) Copia y restaura sólo el csproj de la API y dependencias
 COPY Gateway/Gateway.Api/Gateway.Api.csproj ./Gateway/Gateway.Api/
+COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj ./_Shared/CarDealer.Shared/
+COPY ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
+COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+
 RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 
 # 3) Copia el resto del código fuente
-COPY . .
+COPY Gateway/ ./Gateway/
+COPY _Shared/ ./_Shared/
+COPY ServiceDiscovery/ ./ServiceDiscovery/
 
-# 4) Variables de entorno para desarrollo
+# 4) Build the application
+RUN dotnet build "Gateway/Gateway.Api/Gateway.Api.csproj" -c Debug -o /app/build
+
+# 5) Variables de entorno para desarrollo
 ENV ASPNETCORE_ENVIRONMENT=Development \
     ASPNETCORE_URLS="http://+:80" \
-    DOTNET_MSBUILD_CONFIGURATION=Debug  \
-    DOTNET_BUILD_CONFIGURATION=Debug  \
-    DOTNET_USE_POLLING_FILE_WATCHER=true \
     NUGET_XMLDOC_MODE=none
 
-# 5) Exponer puertos HTTP y de debug (mapped to 4024:4022 en compose)
+# 6) Exponer puertos HTTP y de debug
 EXPOSE 80
 EXPOSE 4022
 
-# 6) Arranca vsdbg en modo servidor y luego hot-reload de la app
+# 7) Arranca vsdbg en modo servidor y luego la app (sin hot-reload)
 ENTRYPOINT ["bash", "-lc", "\
-  /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
-  dotnet watch run --project Gateway/Gateway.Api/Gateway.Api.csproj --urls http://0.0.0.0:80\n"]
+    /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
+    dotnet run --project Gateway/Gateway.Api/Gateway.Api.csproj --no-build --urls http://0.0.0.0:80\n"]

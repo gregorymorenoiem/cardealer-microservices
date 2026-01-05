@@ -138,6 +138,15 @@ public class Vehicle : ITenantEntity
     public int InquiryCount { get; set; } = 0;
 
     // ========================================
+    // SECCIONES DEL HOMEPAGE
+    // ========================================
+    /// <summary>
+    /// Secciones del homepage donde se mostrará este vehículo.
+    /// Es un campo de flags que permite múltiples secciones.
+    /// </summary>
+    public HomepageSection HomepageSections { get; set; } = HomepageSection.None;
+
+    // ========================================
     // METADATOS
     // ========================================
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -153,6 +162,11 @@ public class Vehicle : ITenantEntity
     public Guid? CategoryId { get; set; }
     public Category? Category { get; set; }
     public ICollection<VehicleImage> Images { get; set; } = new List<VehicleImage>();
+
+    /// <summary>
+    /// Secciones del homepage donde aparece este vehículo
+    /// </summary>
+    public ICollection<VehicleHomepageSection> HomepageSectionAssignments { get; set; } = new List<VehicleHomepageSection>();
 }
 
 /// <summary>
@@ -289,4 +303,39 @@ public enum ImageType
     Damage = 3,
     Documents = 4,
     Other = 99
+}
+
+/// <summary>
+/// Secciones del homepage donde se puede mostrar un vehículo.
+/// Usa Flags para permitir múltiples secciones simultáneamente.
+/// </summary>
+[Flags]
+public enum HomepageSection
+{
+    /// <summary>No aparece en ninguna sección del homepage</summary>
+    None = 0,
+
+    /// <summary>Aparece en el carousel principal (Hero)</summary>
+    Carousel = 1,
+
+    /// <summary>Aparece en la sección de Sedanes</summary>
+    Sedanes = 2,
+
+    /// <summary>Aparece en la sección de SUVs</summary>
+    SUVs = 4,
+
+    /// <summary>Aparece en la sección de Camionetas</summary>
+    Camionetas = 8,
+
+    /// <summary>Aparece en la sección de Deportivos</summary>
+    Deportivos = 16,
+
+    /// <summary>Aparece en la sección de Destacados</summary>
+    Destacados = 32,
+
+    /// <summary>Aparece en la sección de Lujo</summary>
+    Lujo = 64,
+
+    /// <summary>Aparece en todas las secciones aplicables</summary>
+    All = Carousel | Sedanes | SUVs | Camionetas | Deportivos | Destacados | Lujo
 }

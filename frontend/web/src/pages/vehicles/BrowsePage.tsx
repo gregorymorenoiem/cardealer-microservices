@@ -65,7 +65,6 @@ export default function BrowsePage() {
       name: data.name,
       filters: data.filters as Record<string, unknown>,
       notificationsEnabled: data.notificationsEnabled,
-      alertFrequency: data.alertFrequency,
     }, {
       onSuccess: () => {
         setShowSaveModal(false);

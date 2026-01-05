@@ -9,16 +9,24 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
-import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin, FiWifi, FiWifiOff } from 'react-icons/fi';
 import { FaCar, FaHome, FaKey, FaBed } from 'react-icons/fa';
 import HeroCarousel from '@/components/organisms/HeroCarousel';
 import FeaturedListingGrid from '@/components/molecules/FeaturedListingGrid';
-import { mockVehicles } from '@/data/mockVehicles';
+// COMMENTED: Mock data import - using real API data only
+// import { mockVehicles, type Vehicle } from '@/data/mockVehicles';
+import { type Vehicle } from '@/data/mockVehicles'; // Only import type, not mock data
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 import { generateListingUrl } from '@/utils/seoSlug';
 import { getVehicleSaleImageUrl, getVehicleRentImageUrl, getPropertySaleImageUrl, getLodgingImageUrl } from '@/utils/s3ImageUrl';
+import { useVehiclesSaleList, type VehicleListing } from '@/hooks/useVehiclesSale';
 
-// Mock data - Sedanes
+/* ============================================================
+ * MOCK DATA COMENTADO - Solo usar datos reales de la API
+ * TODO: Eliminar completamente cuando todas las secciones usen API
+ * ============================================================ */
+
+/* MOCK DATA COMENTADO - sedanesListings
 const sedanesListings = [
   {
     id: 'sed1',
@@ -121,8 +129,9 @@ const sedanesListings = [
     reviews: 41,
   },
 ];
+END sedanesListings */
 
-// Mock data - SUVs
+/* MOCK DATA COMENTADO - suvsListings
 const suvsListings = [
   {
     id: 'suv1',
@@ -225,8 +234,9 @@ const suvsListings = [
     reviews: 38,
   },
 ];
+END suvsListings */
 
-// Mock data - Trucks (Camionetas)
+/* MOCK DATA COMENTADO - trucksListings
 const trucksListings = [
   {
     id: 'truck1',
@@ -329,8 +339,9 @@ const trucksListings = [
     reviews: 43,
   },
 ];
+END trucksListings */
 
-// Mock data - Deportivos
+/* MOCK DATA COMENTADO - deportivosListings
 const deportivosListings = [
   {
     id: 'dep1',
@@ -433,8 +444,9 @@ const deportivosListings = [
     reviews: 21,
   },
 ];
+END deportivosListings */
 
-// Mock data - Vehículos en Venta
+/* MOCK DATA COMENTADO - vehiculosListings
 const vehiculosListings = [
   {
     id: 'v1',
@@ -497,8 +509,9 @@ const vehiculosListings = [
     reviews: 28,
   },
 ];
+END vehiculosListings */
 
-// Mock data - Renta de Vehículos
+/* MOCK DATA COMENTADO - rentaVehiculosListings
 const rentaVehiculosListings = [
   {
     id: 'rv1',
@@ -567,8 +580,9 @@ const rentaVehiculosListings = [
     reviews: 52,
   },
 ];
+END rentaVehiculosListings */
 
-// Mock data - Propiedades en Venta
+/* MOCK DATA COMENTADO - propiedadesListings
 const propiedadesListings = [
   {
     id: 'p1',
@@ -631,8 +645,9 @@ const propiedadesListings = [
     reviews: 12,
   },
 ];
+END propiedadesListings */
 
-// Mock data - Hospedaje
+/* MOCK DATA COMENTADO - hospedajeListings
 const hospedajeListings = [
   {
     id: 'h1',
@@ -701,6 +716,11 @@ const hospedajeListings = [
     reviews: 92,
   },
 ];
+END hospedajeListings */
+
+/* ============================================================
+ * FIN DE MOCK DATA COMENTADO
+ * ============================================================ */
 
 // Vertical categories configuration
 const verticals = [
@@ -1020,44 +1040,163 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
   );
 };
 
+/**
+ * Transform VehicleListing from API to Vehicle format for HeroCarousel/FeaturedListingGrid
+ */
+const transformToVehicle = (listing: VehicleListing): Vehicle => ({
+  id: listing.id,
+  make: listing.make,
+  model: listing.model,
+  year: listing.year,
+  price: listing.price,
+  mileage: listing.mileage,
+  location: listing.location,
+  images: listing.images.length > 0 ? listing.images : ['/placeholder-car.jpg'],
+  isFeatured: listing.isFeatured,
+  isNew: listing.condition === 'New',
+  transmission: (listing.transmission as Vehicle['transmission']) || 'Automatic',
+  fuelType: (listing.fuelType as Vehicle['fuelType']) || 'Gasoline',
+  bodyType: (listing.bodyStyle as Vehicle['bodyType']) || 'Sedan',
+  drivetrain: 'FWD',
+  engine: '2.0L',
+  horsepower: 200,
+  mpg: { city: 25, highway: 32 },
+  color: listing.exteriorColor || 'Unknown',
+  interiorColor: 'Black',
+  vin: 'N/A',
+  condition: (listing.condition as Vehicle['condition']) || 'Used',
+  features: [],
+  description: listing.description,
+  seller: {
+    name: listing.sellerName || 'Dealer',
+    type: 'Dealer',
+    rating: 4.8,
+    phone: '',
+  },
+});
+
 const HomePage: React.FC = () => {
+  // Fetch real vehicles from VehiclesSaleService API
+  const { vehicles: apiVehicles, isLoading, error } = useVehiclesSaleList(1, 20);
+  
+  // Debug: Log API response (remove in production)
+  console.log('[HomePage] API State:', { 
+    isLoading, 
+    error, 
+    apiVehiclesCount: apiVehicles.length,
+    apiVehicles: apiVehicles.slice(0, 2)
+  });
+  
+  // Check if we're using API data or fallback to mock
+  // ONLY fallback to mock if there's an explicit error, NOT when loading or empty
+  const isUsingMockData = !!error && !isLoading;
+  
+  // Transform API vehicles to Vehicle format
+  const transformedVehicles = useMemo(() => {
+    // If loading, return empty array to show skeleton
+    if (isLoading) {
+      return [];
+    }
+    // If we have API vehicles, use them
+    if (apiVehicles.length > 0) {
+      return apiVehicles.map(transformToVehicle);
+    }
+    // If there's an error, fallback to mock data
+    if (error) {
+      console.warn('[HomePage] API error, falling back to mock data:', error);
+      return mockVehicles;
+    }
+    // No vehicles and no error = empty database
+    return [];
+  }, [apiVehicles, isLoading, error]);
+
   // Get featured vehicles for hero carousel (top 5 by ranking)
   const heroVehicles = useMemo(() => {
-    return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
-  }, []);
+    return mixFeaturedAndOrganic(transformedVehicles, 'home').slice(0, 5);
+  }, [transformedVehicles]);
 
   // Get featured vehicles for homepage grid (exclude hero vehicles)
   const gridVehicles = useMemo(() => {
     const heroIds = new Set(heroVehicles.map(v => v.id));
-    return mockVehicles.filter(v => !heroIds.has(v.id));
-  }, [heroVehicles]);
+    return transformedVehicles.filter(v => !heroIds.has(v.id));
+  }, [heroVehicles, transformedVehicles]);
 
   return (
     <MainLayout>
       {/* Hero Carousel - Sprint 5.2: 100% Visible, No Search Overlay */}
-      <HeroCarousel 
-        vehicles={heroVehicles} 
-        autoPlayInterval={5000}
-        showScrollHint={false}
-      />
+      {isLoading ? (
+        <div className="h-[70vh] bg-gradient-to-r from-gray-800 to-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin text-4xl mb-4">⏳</div>
+            <p className="text-white text-xl">Cargando vehículos destacados...</p>
+          </div>
+        </div>
+      ) : heroVehicles.length > 0 ? (
+        <HeroCarousel 
+          vehicles={heroVehicles} 
+          autoPlayInterval={5000}
+          showScrollHint={false}
+        />
+      ) : (
+        <div className="h-[70vh] bg-gradient-to-r from-gray-800 to-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-white text-xl">No hay vehículos destacados disponibles</p>
+            {error && <p className="text-red-400 text-sm mt-2">Error: {error}</p>}
+          </div>
+        </div>
+      )}
 
       {/* Featured Listings Grid - Sprint 5.2: Immediately After Hero */}
       <section className="py-6 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Vehículos Destacados
-            </h2>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                Vehículos Destacados
+              </h2>
+              {/* Data source indicator */}
+              {isLoading ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  <span className="animate-spin">⏳</span>
+                  Cargando...
+                </span>
+              ) : (
+                <span 
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    isUsingMockData 
+                      ? 'bg-amber-100 text-amber-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}
+                  title={isUsingMockData ? 'Usando datos demo (error en API)' : 'Datos en vivo de la base de datos'}
+                >
+                  {isUsingMockData ? <FiWifiOff size={12} /> : <FiWifi size={12} />}
+                  {isUsingMockData ? 'Demo' : 'Live'}
+                </span>
+              )}
+            </div>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Explora nuestra selección premium de vehículos cuidadosamente verificados
+              {isLoading 
+                ? 'Conectando con la base de datos...' 
+                : transformedVehicles.length > 0
+                  ? `Explora nuestra selección de ${transformedVehicles.length} vehículos verificados`
+                  : 'No hay vehículos disponibles en este momento'}
             </p>
           </div>
           
-          <FeaturedListingGrid vehicles={gridVehicles} />
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-72" />
+              ))}
+            </div>
+          ) : (
+            <FeaturedListingGrid vehicles={gridVehicles} />
+          )}
         </div>
       </section>
 
-      {/* Featured of the Week - Mixed from all categories */}
+      {/* MOCK DATA COMENTADO - FeaturedSection components que usan mocks
+      
       <FeaturedSection
         title="Destacados de la Semana"
         subtitle="Selección exclusiva de nuestros mejores anuncios"
@@ -1071,7 +1210,6 @@ const HomePage: React.FC = () => {
         accentColor="blue"
       />
 
-      {/* Vehicle Category Sections */}
       <FeaturedSection
         title="Sedanes"
         subtitle="Elegancia y confort para tu día a día"
@@ -1104,8 +1242,6 @@ const HomePage: React.FC = () => {
         accentColor="blue"
       />
 
-      {/* Other Category Sections */}
-      
       <FeaturedSection
         title="Renta de Vehículos"
         subtitle="Alquila el vehículo perfecto para cualquier ocasión"
@@ -1129,6 +1265,8 @@ const HomePage: React.FC = () => {
         viewAllHref="/lodging"
         accentColor="purple"
       />
+      
+      END FeaturedSection components con mocks */}
 
       {/* Categories Section */}
       <section className="py-6 bg-white">

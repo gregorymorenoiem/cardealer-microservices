@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // API Gateway URL (routes to appropriate microservices)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
-// VehiclesSaleService via Gateway
-const VEHICLES_SALE_API_URL = `${API_URL}/api/vehicles`;
+// VehiclesSaleService via Gateway - base path without /vehicles
+const VEHICLES_SALE_API_URL = `${API_URL}/api`;
 
 // ProductService via Gateway (legacy)
 const PRODUCT_API_URL = `${API_URL}/api/products`;

@@ -21,6 +21,12 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<VehicleTrim> VehicleTrims => Set<VehicleTrim>();
     public DbSet<Category> Categories => Set<Category>();
 
+    // ========================================
+    // HOMEPAGE SECTION ENTITIES
+    // ========================================
+    public DbSet<HomepageSectionConfig> HomepageSectionConfigs => Set<HomepageSectionConfig>();
+    public DbSet<VehicleHomepageSection> VehicleHomepageSections => Set<VehicleHomepageSection>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -451,6 +457,197 @@ public class ApplicationDbContext : MultiTenantDbContext
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
+
+        // ========================================
+        // HOMEPAGE SECTION CONFIG CONFIGURATION
+        // ========================================
+
+        modelBuilder.Entity<HomepageSectionConfig>(entity =>
+        {
+            entity.ToTable("homepage_section_configs");
+            entity.HasKey(s => s.Id);
+
+            entity.Property(s => s.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(s => s.Slug)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(s => s.Description)
+                .HasMaxLength(500);
+
+            entity.Property(s => s.Icon)
+                .HasMaxLength(100);
+
+            entity.Property(s => s.AccentColor)
+                .HasMaxLength(30)
+                .HasDefaultValue("blue");
+
+            entity.Property(s => s.ViewAllHref)
+                .HasMaxLength(200);
+
+            entity.Property(s => s.Subtitle)
+                .HasMaxLength(200);
+
+            entity.Property(s => s.LayoutType)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            entity.HasIndex(s => s.Slug).IsUnique();
+            entity.HasIndex(s => s.DisplayOrder);
+            entity.HasIndex(s => s.IsActive);
+        });
+
+        // Seed default homepage sections
+        var carouselId = Guid.Parse("10000000-0000-0000-0000-000000000001");
+        var sedanesId = Guid.Parse("10000000-0000-0000-0000-000000000002");
+        var suvsSecId = Guid.Parse("10000000-0000-0000-0000-000000000003");
+        var camionetasId = Guid.Parse("10000000-0000-0000-0000-000000000004");
+        var deportivosId = Guid.Parse("10000000-0000-0000-0000-000000000005");
+        var destacadosId = Guid.Parse("10000000-0000-0000-0000-000000000006");
+        var lujoId = Guid.Parse("10000000-0000-0000-0000-000000000007");
+
+        modelBuilder.Entity<HomepageSectionConfig>().HasData(
+            new HomepageSectionConfig
+            {
+                Id = carouselId,
+                Name = "Carousel Principal",
+                Slug = "carousel",
+                Description = "Carousel hero principal del homepage",
+                DisplayOrder = 1,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FaCar",
+                AccentColor = "blue",
+                ViewAllHref = "/vehicles",
+                LayoutType = SectionLayoutType.Hero,
+                Subtitle = "Los mejores vehículos del momento",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new HomepageSectionConfig
+            {
+                Id = sedanesId,
+                Name = "Sedanes",
+                Slug = "sedanes",
+                Description = "Sedanes elegantes y confortables",
+                DisplayOrder = 2,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FaCar",
+                AccentColor = "blue",
+                ViewAllHref = "/vehicles?bodyStyle=Sedan",
+                LayoutType = SectionLayoutType.Carousel,
+                Subtitle = "Elegancia y confort para tu día a día",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new HomepageSectionConfig
+            {
+                Id = suvsSecId,
+                Name = "SUVs",
+                Slug = "suvs",
+                Description = "SUVs y Crossovers versátiles",
+                DisplayOrder = 3,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FaCar",
+                AccentColor = "blue",
+                ViewAllHref = "/vehicles?bodyStyle=SUV",
+                LayoutType = SectionLayoutType.Carousel,
+                Subtitle = "Espacio, potencia y versatilidad",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new HomepageSectionConfig
+            {
+                Id = camionetasId,
+                Name = "Camionetas",
+                Slug = "camionetas",
+                Description = "Pickups y camionetas de trabajo",
+                DisplayOrder = 4,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FaTruck",
+                AccentColor = "blue",
+                ViewAllHref = "/vehicles?bodyStyle=Pickup",
+                LayoutType = SectionLayoutType.Carousel,
+                Subtitle = "Potencia y capacidad para cualquier trabajo",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new HomepageSectionConfig
+            {
+                Id = deportivosId,
+                Name = "Deportivos",
+                Slug = "deportivos",
+                Description = "Autos deportivos y de alto rendimiento",
+                DisplayOrder = 5,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FaCar",
+                AccentColor = "red",
+                ViewAllHref = "/vehicles?bodyStyle=SportsCar",
+                LayoutType = SectionLayoutType.Carousel,
+                Subtitle = "Velocidad y adrenalina en cada curva",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new HomepageSectionConfig
+            {
+                Id = destacadosId,
+                Name = "Destacados",
+                Slug = "destacados",
+                Description = "Vehículos destacados de la semana",
+                DisplayOrder = 6,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FiStar",
+                AccentColor = "amber",
+                ViewAllHref = "/vehicles?featured=true",
+                LayoutType = SectionLayoutType.Grid,
+                Subtitle = "Selección exclusiva de nuestros mejores anuncios",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new HomepageSectionConfig
+            {
+                Id = lujoId,
+                Name = "Lujo",
+                Slug = "lujo",
+                Description = "Vehículos de lujo y premium",
+                DisplayOrder = 7,
+                MaxItems = 10,
+                IsActive = true,
+                Icon = "FiStar",
+                AccentColor = "purple",
+                ViewAllHref = "/vehicles?minPrice=80000",
+                LayoutType = SectionLayoutType.Carousel,
+                Subtitle = "Exclusividad y prestigio",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
+        );
+
+        // ========================================
+        // VEHICLE HOMEPAGE SECTION (Many-to-Many)
+        // ========================================
+
+        modelBuilder.Entity<VehicleHomepageSection>(entity =>
+        {
+            entity.ToTable("vehicle_homepage_sections");
+            entity.HasKey(vhs => vhs.Id);
+
+            entity.HasOne(vhs => vhs.Vehicle)
+                .WithMany(v => v.HomepageSectionAssignments)
+                .HasForeignKey(vhs => vhs.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(vhs => vhs.HomepageSectionConfig)
+                .WithMany(s => s.VehicleSections)
+                .HasForeignKey(vhs => vhs.HomepageSectionConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(vhs => new { vhs.VehicleId, vhs.HomepageSectionConfigId }).IsUnique();
+            entity.HasIndex(vhs => vhs.HomepageSectionConfigId);
+            entity.HasIndex(vhs => vhs.SortOrder);
+            entity.HasIndex(vhs => vhs.IsPinned);
+        });
     }
 
     public override int SaveChanges()

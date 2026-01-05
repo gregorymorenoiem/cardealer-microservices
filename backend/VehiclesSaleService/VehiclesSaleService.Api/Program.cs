@@ -25,6 +25,13 @@ builder.Services.AddScoped<ITenantContext, TenantContext>();
 // CONFIGURATION
 // ========================================
 
+// Configure routing to use lowercase URLs
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = false;
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VehiclesSaleService.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using VehiclesSaleService.Infrastructure.Persistence;
 namespace VehiclesSaleService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260105025859_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,7 +104,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Cars",
                             Slug = "cars",
                             SortOrder = 1,
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(8600)
+                            UpdatedAt = new DateTime(2026, 1, 5, 2, 58, 59, 24, DateTimeKind.Utc).AddTicks(3850)
                         },
                         new
                         {
@@ -115,7 +118,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Trucks",
                             Slug = "trucks",
                             SortOrder = 2,
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(8600)
+                            UpdatedAt = new DateTime(2026, 1, 5, 2, 58, 59, 24, DateTimeKind.Utc).AddTicks(3870)
                         },
                         new
                         {
@@ -129,7 +132,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "SUVs & Crossovers",
                             Slug = "suvs-crossovers",
                             SortOrder = 3,
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(8600)
+                            UpdatedAt = new DateTime(2026, 1, 5, 2, 58, 59, 24, DateTimeKind.Utc).AddTicks(3870)
                         },
                         new
                         {
@@ -143,7 +146,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Motorcycles",
                             Slug = "motorcycles",
                             SortOrder = 4,
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(8600)
+                            UpdatedAt = new DateTime(2026, 1, 5, 2, 58, 59, 24, DateTimeKind.Utc).AddTicks(3880)
                         },
                         new
                         {
@@ -157,7 +160,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Boats & Watercraft",
                             Slug = "boats-watercraft",
                             SortOrder = 5,
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(8610)
+                            UpdatedAt = new DateTime(2026, 1, 5, 2, 58, 59, 24, DateTimeKind.Utc).AddTicks(3880)
                         },
                         new
                         {
@@ -171,199 +174,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "RVs & Campers",
                             Slug = "rvs-campers",
                             SortOrder = 6,
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(8610)
-                        });
-                });
-
-            modelBuilder.Entity("VehiclesSaleService.Domain.Entities.HomepageSectionConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AccentColor")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasDefaultValue("blue");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LayoutType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<int>("MaxItems")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Subtitle")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ViewAllHref")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DisplayOrder");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.ToTable("homepage_section_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000001"),
-                            AccentColor = "blue",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Carousel hero principal del homepage",
-                            DisplayOrder = 1,
-                            Icon = "FaCar",
-                            IsActive = true,
-                            LayoutType = "Hero",
-                            MaxItems = 5,
-                            Name = "Carousel Principal",
-                            Slug = "carousel",
-                            Subtitle = "Los mejores vehículos del momento",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9470),
-                            ViewAllHref = "/vehicles"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000002"),
-                            AccentColor = "blue",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Sedanes elegantes y confortables",
-                            DisplayOrder = 2,
-                            Icon = "FaCar",
-                            IsActive = true,
-                            LayoutType = "Carousel",
-                            MaxItems = 10,
-                            Name = "Sedanes",
-                            Slug = "sedanes",
-                            Subtitle = "Elegancia y confort para tu día a día",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9470),
-                            ViewAllHref = "/vehicles?bodyStyle=Sedan"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000003"),
-                            AccentColor = "blue",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "SUVs y Crossovers versátiles",
-                            DisplayOrder = 3,
-                            Icon = "FaCar",
-                            IsActive = true,
-                            LayoutType = "Carousel",
-                            MaxItems = 10,
-                            Name = "SUVs",
-                            Slug = "suvs",
-                            Subtitle = "Espacio, potencia y versatilidad",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9470),
-                            ViewAllHref = "/vehicles?bodyStyle=SUV"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000004"),
-                            AccentColor = "blue",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Pickups y camionetas de trabajo",
-                            DisplayOrder = 4,
-                            Icon = "FaTruck",
-                            IsActive = true,
-                            LayoutType = "Carousel",
-                            MaxItems = 10,
-                            Name = "Camionetas",
-                            Slug = "camionetas",
-                            Subtitle = "Potencia y capacidad para cualquier trabajo",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9480),
-                            ViewAllHref = "/vehicles?bodyStyle=Pickup"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000005"),
-                            AccentColor = "red",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Autos deportivos y de alto rendimiento",
-                            DisplayOrder = 5,
-                            Icon = "FaCar",
-                            IsActive = true,
-                            LayoutType = "Carousel",
-                            MaxItems = 10,
-                            Name = "Deportivos",
-                            Slug = "deportivos",
-                            Subtitle = "Velocidad y adrenalina en cada curva",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9480),
-                            ViewAllHref = "/vehicles?bodyStyle=SportsCar"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000006"),
-                            AccentColor = "amber",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Vehículos destacados de la semana",
-                            DisplayOrder = 6,
-                            Icon = "FiStar",
-                            IsActive = true,
-                            LayoutType = "Grid",
-                            MaxItems = 8,
-                            Name = "Destacados",
-                            Slug = "destacados",
-                            Subtitle = "Selección exclusiva de nuestros mejores anuncios",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9480),
-                            ViewAllHref = "/vehicles?featured=true"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000007"),
-                            AccentColor = "purple",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Vehículos de lujo y premium",
-                            DisplayOrder = 7,
-                            Icon = "FiStar",
-                            IsActive = true,
-                            LayoutType = "Carousel",
-                            MaxItems = 10,
-                            Name = "Lujo",
-                            Slug = "lujo",
-                            Subtitle = "Exclusividad y prestigio",
-                            UpdatedAt = new DateTime(2026, 1, 5, 11, 49, 18, 446, DateTimeKind.Utc).AddTicks(9480),
-                            ViewAllHref = "/vehicles?minPrice=80000"
+                            UpdatedAt = new DateTime(2026, 1, 5, 2, 58, 59, 24, DateTimeKind.Utc).AddTicks(3880)
                         });
                 });
 
@@ -466,9 +277,6 @@ namespace VehiclesSaleService.Infrastructure.Migrations
 
                     b.Property<bool>("HasCleanTitle")
                         .HasColumnType("boolean");
-
-                    b.Property<int>("HomepageSections")
-                        .HasColumnType("integer");
 
                     b.Property<int?>("Horsepower")
                         .HasColumnType("integer");
@@ -714,47 +522,6 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                     b.HasIndex("Make", "Model", "Year");
 
                     b.ToTable("vehicles", (string)null);
-                });
-
-            modelBuilder.Entity("VehiclesSaleService.Domain.Entities.VehicleHomepageSection", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("HomepageSectionConfigId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsPinned")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("VehicleId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HomepageSectionConfigId");
-
-                    b.HasIndex("IsPinned");
-
-                    b.HasIndex("SortOrder");
-
-                    b.HasIndex("VehicleId", "HomepageSectionConfigId")
-                        .IsUnique();
-
-                    b.ToTable("vehicle_homepage_sections", (string)null);
                 });
 
             modelBuilder.Entity("VehiclesSaleService.Domain.Entities.VehicleImage", b =>
@@ -1029,25 +796,6 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("VehiclesSaleService.Domain.Entities.VehicleHomepageSection", b =>
-                {
-                    b.HasOne("VehiclesSaleService.Domain.Entities.HomepageSectionConfig", "HomepageSectionConfig")
-                        .WithMany("VehicleSections")
-                        .HasForeignKey("HomepageSectionConfigId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VehiclesSaleService.Domain.Entities.Vehicle", "Vehicle")
-                        .WithMany("HomepageSectionAssignments")
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HomepageSectionConfig");
-
-                    b.Navigation("Vehicle");
-                });
-
             modelBuilder.Entity("VehiclesSaleService.Domain.Entities.VehicleImage", b =>
                 {
                     b.HasOne("VehiclesSaleService.Domain.Entities.Vehicle", "Vehicle")
@@ -1088,15 +836,8 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                     b.Navigation("Vehicles");
                 });
 
-            modelBuilder.Entity("VehiclesSaleService.Domain.Entities.HomepageSectionConfig", b =>
-                {
-                    b.Navigation("VehicleSections");
-                });
-
             modelBuilder.Entity("VehiclesSaleService.Domain.Entities.Vehicle", b =>
                 {
-                    b.Navigation("HomepageSectionAssignments");
-
                     b.Navigation("Images");
                 });
 

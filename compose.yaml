@@ -579,14 +579,15 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:80"
-      DOTNET_USE_POLLING_FILE_WATCHER: "true"
-      DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
+      DOTNET_USE_POLLING_FILE_WATCHER: "false"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
     volumes:
-      # Actualizado: de './:/app' a './backend:/app'
-      - ./backend:/app
+      # Solo montar Gateway y _Shared para evitar reinicios por cambios en otros servicios
+      - ./backend/Gateway:/app/Gateway
+      - ./backend/_Shared:/app/_Shared
+      - ./backend/ServiceDiscovery:/app/ServiceDiscovery
     ports:
       - "18443:80" # Cambiado
       - "24024:4022" # Cambiado
@@ -718,7 +719,7 @@ services:
       - filestorageservice_uploads:/app/uploads
     ports:
       - "15114:5012"
-      - "24027:4022"
+      - "24039:4022"
     depends_on:
       - errorservice
     networks:
@@ -784,7 +785,7 @@ services:
       - ./backend:/app
     ports:
       - "15103:80"
-      - "24028:4022"
+      - "24040:4022"
     depends_on:
       reportsservice-db:
         condition: service_healthy
@@ -1052,75 +1053,9 @@ services:
       ServiceUrls__ErrorService: "http://errorservice:80"
     ports:
       - "15093:80"
-      - "24033:4022"
+      - "24041:4022"
     depends_on:
       redis:
-        condition: service_healthy
-      errorservice:
-        condition: service_started
-    networks:
-      - cargurus-net
-
-  # ProductService - Priority 1 Critical Service
-  productservice-db:
-    image: postgres:16
-    container_name: productservice-db
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      POSTGRES_DB: productservice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
-    ports:
-      - "25448:5432"
-    volumes:
-      - productservice_data:/var/lib/postgresql/data
-    networks:
-      - cargurus-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  productservice:
-    build:
-      context: ./backend
-      dockerfile: ProductService/Dockerfile
-    container_name: productservice
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__Host: productservice-db
-      Database__Port: "5432"
-      Database__Database: productservice
-      Database__Username: postgres
-      Database__Password: password
-      Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=productservice-db;Database=productservice;Username=postgres;Password=password"
-      ConnectionStrings__Redis: "redis:6379"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
-      ServiceUrls__ErrorService: "http://errorservice:80"
-    ports:
-      - "15006:80"
-      - "24034:4022"
-    depends_on:
-      productservice-db:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -1196,200 +1131,8 @@ services:
     networks:
       - cargurus-net
 
-  # VehiclesRentService - Vehicles for Rent vertical
-  vehiclesrentservice-db:
-    image: postgres:16
-    container_name: vehiclesrentservice-db
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      POSTGRES_DB: vehiclesrentservice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
-    ports:
-      - "25461:5432"
-    volumes:
-      - vehiclesrentservice_data:/var/lib/postgresql/data
-    networks:
-      - cargurus-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  vehiclesrentservice:
-    build:
-      context: ./backend
-      dockerfile: VehiclesRentService/VehiclesRentService.Api/Dockerfile.dev
-    container_name: vehiclesrentservice
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__Host: vehiclesrentservice-db
-      Database__Port: "5432"
-      Database__Database: vehiclesrentservice
-      Database__Username: postgres
-      Database__Password: password
-      Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=vehiclesrentservice-db;Database=vehiclesrentservice;Username=postgres;Password=password"
-      ConnectionStrings__Redis: "redis:6379"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
-      ServiceUrls__ErrorService: "http://errorservice:80"
-    ports:
-      - "15071:80"
-    depends_on:
-      vehiclesrentservice-db:
-        condition: service_healthy
-      errorservice:
-        condition: service_started
-    networks:
-      - cargurus-net
-
-  # PropertiesSaleService - Properties for Sale vertical
-  propertiessaleservice-db:
-    image: postgres:16
-    container_name: propertiessaleservice-db
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      POSTGRES_DB: propertiessaleservice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
-    ports:
-      - "25462:5432"
-    volumes:
-      - propertiessaleservice_data:/var/lib/postgresql/data
-    networks:
-      - cargurus-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  propertiessaleservice:
-    build:
-      context: ./backend
-      dockerfile: PropertiesSaleService/PropertiesSaleService.Api/Dockerfile.dev
-    container_name: propertiessaleservice
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__Host: propertiessaleservice-db
-      Database__Port: "5432"
-      Database__Database: propertiessaleservice
-      Database__Username: postgres
-      Database__Password: password
-      Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=propertiessaleservice-db;Database=propertiessaleservice;Username=postgres;Password=password"
-      ConnectionStrings__Redis: "redis:6379"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
-      ServiceUrls__ErrorService: "http://errorservice:80"
-    ports:
-      - "15072:80"
-    depends_on:
-      propertiessaleservice-db:
-        condition: service_healthy
-      errorservice:
-        condition: service_started
-    networks:
-      - cargurus-net
-
-  # PropertiesRentService - Properties for Rent vertical
-  propertiesrentservice-db:
-    image: postgres:16
-    container_name: propertiesrentservice-db
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      POSTGRES_DB: propertiesrentservice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
-    ports:
-      - "25463:5432"
-    volumes:
-      - propertiesrentservice_data:/var/lib/postgresql/data
-    networks:
-      - cargurus-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  propertiesrentservice:
-    build:
-      context: ./backend
-      dockerfile: PropertiesRentService/PropertiesRentService.Api/Dockerfile.dev
-    container_name: propertiesrentservice
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__Host: propertiesrentservice-db
-      Database__Port: "5432"
-      Database__Database: propertiesrentservice
-      Database__Username: postgres
-      Database__Password: password
-      Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=propertiesrentservice-db;Database=propertiesrentservice;Username=postgres;Password=password"
-      ConnectionStrings__Redis: "redis:6379"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
-      ServiceUrls__ErrorService: "http://errorservice:80"
-    ports:
-      - "15073:80"
-    depends_on:
-      propertiesrentservice-db:
-        condition: service_healthy
-      errorservice:
-        condition: service_started
-    networks:
-      - cargurus-net
+  # NOTE: VehiclesRentService, PropertiesSaleService, PropertiesRentService REMOVED
+  # Platform currently only supports Vehicle Sales (VehiclesSaleService)
 
   # InvoicingService - Sprint 0.5.3.3
   invoicingservice-db:
@@ -1690,7 +1433,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
     ports:
-      - "25447:5432"
+      - "25448:5432"
     volumes:
       - realestateservice_data:/var/lib/postgresql/data
     networks:
@@ -1719,7 +1462,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=realestateservice-db;Database=realestateservice;Username=postgres;Password=password"
     ports:
       - "15113:80"
-      - "24037:4022"
+      - "24038:4022"
     depends_on:
       realestateservice-db:
         condition: service_healthy
@@ -1952,7 +1695,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
     ports:
-      - "25447:5432"
+      - "25454:5432"
     volumes:
       - configurationservice_data:/var/lib/postgresql/data
     networks:
@@ -2017,7 +1760,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
     ports:
-      - "25453:5432"  # Fixed: was conflicting with productservice-db
+      - "25453:5432"
     volumes:
       - featuretoggleservice_data:/var/lib/postgresql/data
     networks:
@@ -2271,11 +2014,10 @@ volumes:
   marketingservice_data:
   realestateservice_data:
   messagebusservice_data:
-  productservice_data:
   vehiclessaleservice_data:
-  vehiclesrentservice_data:
-  propertiessaleservice_data:
-  propertiesrentservice_data:
+  # vehiclesrentservice_data: REMOVED
+  # propertiessaleservice_data: REMOVED
+  # propertiesrentservice_data: REMOVED
   auditservice_data:
   backupdrservice_data:
   schedulerservice_data:

@@ -9,7 +9,9 @@ import axios from 'axios';
 
 // API Gateway URL - routes to VehiclesSaleService
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-const VEHICLES_SALE_API_URL = `${API_URL}/api/vehicles`;
+const VEHICLES_API_BASE = `${API_URL}/api`;
+// Fallback to direct service if Gateway fails
+const VEHICLES_DIRECT_URL = 'http://localhost:15070/api';
 
 // ============================================================
 // INTERFACES
@@ -156,20 +158,31 @@ const transformVehicleToListing = (vehicle: BackendVehicle): DealerListing => {
  * Fetch all vehicles from backend and group them by dealer
  */
 export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
-  try {
-    console.log('🗺️ Fetching dealers with vehicles from:', VEHICLES_SALE_API_URL);
-    
-    // Fetch all active vehicles
-    const response = await axios.get<{ vehicles: BackendVehicle[] }>(`${VEHICLES_SALE_API_URL}/vehicles`, {
+  const fetchVehicles = async (baseUrl: string) => {
+    console.log('🗺️ Fetching dealers with vehicles from:', `${baseUrl}/vehicles`);
+    const response = await axios.get<{ vehicles: BackendVehicle[] }>(`${baseUrl}/vehicles`, {
       params: {
-        page: 0,
-        pageSize: 500, // Get all vehicles
+        page: 1,
+        pageSize: 500,
         sortBy: 'CreatedAt',
         sortDescending: true
-      }
+      },
+      timeout: 10000 // 10 second timeout
     });
+    return response.data?.vehicles || response.data || [];
+  };
 
-    const vehicles = response.data?.vehicles || response.data || [];
+  try {
+    let vehicles: BackendVehicle[] = [];
+    
+    // Try Gateway first, fallback to direct service
+    try {
+      vehicles = await fetchVehicles(VEHICLES_API_BASE);
+    } catch (gatewayError) {
+      console.warn('⚠️ Gateway failed, trying direct service...', gatewayError);
+      vehicles = await fetchVehicles(VEHICLES_DIRECT_URL);
+    }
+    
     console.log(`✅ Fetched ${Array.isArray(vehicles) ? vehicles.length : 0} vehicles`);
 
     if (!Array.isArray(vehicles) || vehicles.length === 0) {
@@ -260,7 +273,7 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
 export const getDealerById = async (dealerId: string): Promise<DealerLocation | null> => {
   try {
     const response = await axios.get<BackendVehicle[]>(
-      `${VEHICLES_SALE_API_URL}/vehicles/dealer/${dealerId}`
+      `${VEHICLES_API_BASE}/vehicles/dealer/${dealerId}`
     );
 
     const vehicles = response.data || [];

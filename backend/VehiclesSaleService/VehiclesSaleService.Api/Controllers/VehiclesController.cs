@@ -194,7 +194,8 @@ public class VehiclesController : ControllerBase
             SellerId = request.SellerId ?? Guid.Empty,
             SellerName = request.SellerName ?? string.Empty,
             DealerId = request.DealerId ?? Guid.Empty,
-            CategoryId = request.CategoryId
+            CategoryId = request.CategoryId,
+            HomepageSections = request.HomepageSections ?? HomepageSection.None
         };
 
         // Add images
@@ -251,6 +252,7 @@ public class VehiclesController : ControllerBase
         if (!string.IsNullOrEmpty(request.State)) vehicle.State = request.State;
         if (!string.IsNullOrEmpty(request.ZipCode)) vehicle.ZipCode = request.ZipCode;
         if (request.IsFeatured.HasValue) vehicle.IsFeatured = request.IsFeatured.Value;
+        if (request.HomepageSections.HasValue) vehicle.HomepageSections = request.HomepageSections.Value;
 
         vehicle.UpdatedAt = DateTime.UtcNow;
 
@@ -353,6 +355,13 @@ public record CreateVehicleRequest
     public Guid? DealerId { get; init; }
     public Guid? CategoryId { get; init; }
     public List<string>? Images { get; init; }
+
+    /// <summary>
+    /// Secciones del homepage donde mostrar este vehículo.
+    /// Valores: None=0, Carousel=1, Sedanes=2, SUVs=4, Camionetas=8, Deportivos=16, Destacados=32, Lujo=64
+    /// Se pueden combinar sumando los valores (ej: Carousel + Destacados = 33)
+    /// </summary>
+    public HomepageSection? HomepageSections { get; init; }
 }
 
 public record UpdateVehicleRequest
@@ -377,6 +386,13 @@ public record UpdateVehicleRequest
     public string? State { get; init; }
     public string? ZipCode { get; init; }
     public bool? IsFeatured { get; init; }
+
+    /// <summary>
+    /// Secciones del homepage donde mostrar este vehículo.
+    /// Valores: None=0, Carousel=1, Sedanes=2, SUVs=4, Camionetas=8, Deportivos=16, Destacados=32, Lujo=64
+    /// Se pueden combinar sumando los valores (ej: Carousel + Destacados = 33)
+    /// </summary>
+    public HomepageSection? HomepageSections { get; init; }
 }
 
 public record CompareVehiclesRequest

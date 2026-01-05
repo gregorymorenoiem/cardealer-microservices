@@ -2,8 +2,9 @@
  * VehiclesOnlyHomePage - Vehicle-only marketplace landing page
  * Same layout as HomePage but all sections focus on vehicle sales
  * 
- * Now uses REAL DATA from VehiclesSaleService API!
- * Images are stored as photoIds in the database and transformed to S3 URLs.
+ * Now uses REAL DATA from /api/homepagesections/homepage API!
+ * Sections are configured in database with assigned vehicles.
+ * Images use S3 URLs from the backend.
  */
 
 import React, { useRef, useState, useMemo } from 'react';
@@ -14,10 +15,9 @@ import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft
 import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
-import { mockVehicles } from '@/data/mockVehicles';
-import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
-import { useVehiclesSaleList, type VehicleListing } from '@/hooks/useVehiclesSale';
+import { useHomepageSections, type HomepageSection, type HomepageVehicle } from '@/hooks/useHomepageSections';
 import { generateListingUrl } from '@/utils/seoSlug';
+import type { Vehicle } from '@/data/mockVehicles';
 
 // Note: Vehicle categories removed - single category (vehicles) in first phase
 
@@ -54,12 +54,11 @@ const formatPrice = (price: number, currency = 'USD') => {
 };
 
 // =============================================
-// MOCK DATA REMOVED - Now using REAL DATA from VehiclesSaleService API
-// The API returns vehicles with BodyStyle: Sedan, SUV, Truck, Coupe
-// These are mapped to: Sedanes, SUVs, Camionetas, Deportivos
+// NOW USING /api/homepagesections/homepage API
+// Sections are configured in database with assigned vehicles
 // =============================================
 
-// Transform VehicleListing from API to FeaturedSection format
+// Transform HomepageVehicle to FeaturedSection format
 interface FeaturedListingItem {
   id: string;
   title: string;
@@ -72,68 +71,27 @@ interface FeaturedListingItem {
   reviews: number;
 }
 
-const transformToFeaturedListing = (vehicle: VehicleListing): FeaturedListingItem => {
-  // Map bodyStyle to category for display
-  const categoryMap: Record<string, string> = {
-    'Sedan': 'Sedanes',
-    'Coupe': 'Sedanes',
-    'SUV': 'SUVs',
-    'Crossover': 'SUVs',
-    'Wagon': 'SUVs',
-    'Pickup': 'Camionetas',  // Fixed: was 'Truck'
-    'SportsCar': 'Deportivos',  // Fixed: was 'Sports'
-  };
-  
-  // Electric/Hybrid vehicles get special category
-  let category = categoryMap[vehicle.bodyStyle] || 'Otros';
-  if (vehicle.fuelType === 'Electric' || vehicle.fuelType === 'Hybrid') {
-    category = 'Eléctricos';
-  }
-  if (vehicle.price >= 80000) {
-    category = 'Lujo';
-  }
-
-  // Generate consistent pseudo-random rating based on vehicle ID (so it doesn't change on re-render)
+// Transform HomepageVehicle to FeaturedListingItem (for FeaturedSection component)
+const transformToFeaturedListing = (vehicle: HomepageVehicle, sectionName: string): FeaturedListingItem => {
+  // Generate consistent pseudo-random rating based on vehicle ID
   const idHash = vehicle.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const rating = 4.5 + (idHash % 50) / 100; // Range: 4.50 - 4.99
-  const reviews = Math.max(10, Math.floor(vehicle.viewCount / 5) || Math.floor((idHash % 150) + 10));
+  const reviews = Math.floor((idHash % 150) + 10);
 
   return {
     id: vehicle.id,
-    title: vehicle.title,
+    title: vehicle.name,
     price: vehicle.price,
-    image: vehicle.primaryImage,
-    category,
-    location: vehicle.location,
-    rating: Number(rating.toFixed(1)), // Format to 1 decimal place
+    image: vehicle.imageUrl,
+    category: sectionName,
+    location: 'Santo Domingo', // Default location - API doesn't return this yet
+    rating: Number(rating.toFixed(1)),
     reviews,
   };
 };
 
-// Category to color mapping
-const getCategoryColor = (category: string): string => {
-  switch (category) {
-    case 'Sedanes':
-      return 'blue';
-    case 'SUVs':
-      return 'emerald';
-    case 'Camionetas':
-      return 'amber';
-    case 'Deportivos':
-    case 'Lujo':
-      return 'red';
-    case 'Eléctricos':
-      return 'green';
-    default:
-      return 'blue';
-  }
-};
-
-// Transform VehicleListing from API to Vehicle format (for FeaturedListingGrid/HeroCarousel)
-// This allows using real API data with existing components that expect mock Vehicle type
-import type { Vehicle } from '@/data/mockVehicles';
-
-const transformApiVehicleToVehicle = (v: VehicleListing): Vehicle => {
+// Transform HomepageVehicle to Vehicle format (for HeroCarousel and FeaturedListingGrid)
+const transformHomepageVehicleToVehicle = (v: HomepageVehicle): Vehicle => {
   // Map bodyStyle from API to bodyType expected by Vehicle type
   const bodyTypeMap: Record<string, Vehicle['bodyType']> = {
     'Sedan': 'Sedan',
@@ -162,18 +120,12 @@ const transformApiVehicleToVehicle = (v: VehicleListing): Vehicle => {
     'Automatic': 'Automatic',
     'Manual': 'Manual',
     'CVT': 'CVT',
+    'DualClutch': 'Automatic',
   };
 
-  // Map condition from API
-  const conditionMap: Record<string, Vehicle['condition']> = {
-    'New': 'New',
-    'Used': 'Used',
-    'CertifiedPreOwned': 'Certified Pre-Owned',
-  };
-
-  // Generate consistent pseudo-random rating based on vehicle ID (one digit, one decimal: 4.0 - 4.9)
+  // Generate consistent pseudo-random rating
   const idHash = v.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const sellerRating = parseFloat((4.0 + (idHash % 10) / 10).toFixed(1)); // Range: 4.0, 4.1, 4.2, ..., 4.9
+  const sellerRating = parseFloat((4.0 + (idHash % 10) / 10).toFixed(1));
 
   return {
     id: v.id,
@@ -182,43 +134,59 @@ const transformApiVehicleToVehicle = (v: VehicleListing): Vehicle => {
     year: v.year,
     price: v.price,
     mileage: v.mileage,
-    location: v.location,
-    images: v.images.length > 0 ? v.images : [v.primaryImage],
-    isFeatured: v.isFeatured,
-    isNew: v.condition === 'New',
+    location: 'Santo Domingo',
+    images: v.imageUrls.length > 0 ? v.imageUrls : [v.imageUrl],
+    isFeatured: v.isPinned,
+    isNew: false,
     transmission: transmissionMap[v.transmission] || 'Automatic',
     fuelType: fuelTypeMap[v.fuelType] || 'Gasoline',
     bodyType: bodyTypeMap[v.bodyStyle] || 'Sedan',
-    drivetrain: 'FWD', // Default - API doesn't have driveType yet
-    engine: `${v.make} Engine`, // Default
-    horsepower: 200, // Default
-    mpg: { city: 25, highway: 32 }, // Default
+    drivetrain: 'FWD',
+    engine: `${v.make} Engine`,
+    horsepower: 200,
+    mpg: { city: 25, highway: 32 },
     color: v.exteriorColor || 'Unknown',
-    interiorColor: 'Black', // Default
-    vin: '', // Not exposed in listing
-    condition: conditionMap[v.condition] || 'Used',
-    features: [], // Not exposed in listing
-    description: v.description,
+    interiorColor: 'Black',
+    vin: '',
+    condition: 'Used',
+    features: [],
+    description: '',
     seller: {
-      name: v.sellerName || 'Dealer',
+      name: 'Dealer',
       type: 'Dealer',
       rating: Number(sellerRating.toFixed(1)),
       phone: '+1 (555) 000-0000',
     },
-    // Set tier for featured vehicles
-    tier: v.isFeatured ? 'featured' : 'basic',
+    tier: v.isPinned ? 'featured' : 'basic',
   };
 };
 
+// Category to color mapping
+const getCategoryColor = (accentColor: string): string => {
+  // Map from API accentColor to Tailwind color
+  const colorMap: Record<string, string> = {
+    'blue': 'blue',
+    'emerald': 'emerald',
+    'amber': 'amber',
+    'red': 'red',
+    'green': 'green',
+    'purple': 'purple',
+    'pink': 'pink',
+  };
+  return colorMap[accentColor] || 'blue';
+};
+
 // Get Tailwind classes for category colors
-const getCategoryClasses = (category: string) => {
-  const color = getCategoryColor(category);
+const getCategoryClasses = (accentColor: string) => {
+  const color = getCategoryColor(accentColor);
   const colorClasses: Record<string, { badge: string; price: string }> = {
     blue: { badge: 'bg-blue-500', price: 'text-blue-600' },
     amber: { badge: 'bg-amber-500', price: 'text-amber-600' },
     emerald: { badge: 'bg-emerald-500', price: 'text-emerald-600' },
     red: { badge: 'bg-red-500', price: 'text-red-600' },
     green: { badge: 'bg-green-500', price: 'text-green-600' },
+    purple: { badge: 'bg-purple-500', price: 'text-purple-600' },
+    pink: { badge: 'bg-pink-500', price: 'text-pink-600' },
   };
   return colorClasses[color] || colorClasses.blue;
 };
@@ -421,99 +389,43 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
 
 const VehiclesOnlyHomePage: React.FC = () => {
   // =============================================
-  // REAL DATA FROM API - VehiclesSaleService
-  // Fetches 50 vehicles and organizes by BodyStyle
+  // REAL DATA FROM /api/homepagesections/homepage
+  // Sections and vehicles configured in database
   // =============================================
-  const { vehicles: apiVehicles, isLoading, error } = useVehiclesSaleList(1, 50);
+  const { 
+    sections, 
+    isLoading, 
+    error,
+    carousel,
+    sedanes,
+    suvs,
+    camionetas,
+    deportivos,
+    destacados,
+    lujo,
+  } = useHomepageSections();
 
-  // Transform API vehicles into section-specific arrays (organized by BodyStyle)
-  const { sedanesListings, suvsListings, trucksListings, deportivosListings, apiLuxuryListings, apiFeaturedListings } = useMemo(() => {
-    if (!apiVehicles || apiVehicles.length === 0) {
-      return {
-        sedanesListings: [],
-        suvsListings: [],
-        trucksListings: [],
-        deportivosListings: [],
-        apiLuxuryListings: [],
-        apiFeaturedListings: [],
-      };
-    }
-
-    const transformed = apiVehicles.map(transformToFeaturedListing);
-
-    // Filter by body style / category
-    const sedanes = apiVehicles
-      .filter(v => v.bodyStyle === 'Sedan' || v.bodyStyle === 'Coupe')
-      .map(transformToFeaturedListing)
-      .map(v => ({ ...v, category: 'Sedanes' }));
-    
-    const suvs = apiVehicles
-      .filter(v => v.bodyStyle === 'SUV' || v.bodyStyle === 'Crossover')
-      .map(transformToFeaturedListing)
-      .map(v => ({ ...v, category: 'SUVs' }));
-    
-    const trucks = apiVehicles
-      .filter(v => v.bodyStyle === 'Pickup')  // Changed from 'Truck' to match backend enum
-      .map(transformToFeaturedListing)
-      .map(v => ({ ...v, category: 'Camionetas' }));
-    
-    // Deportivos - Coupe bodyStyle with higher prices or sports-specific models
-    const deportivos = apiVehicles
-      .filter(v => (v.bodyStyle === 'Coupe' && v.price >= 50000) || 
-                   v.bodyStyle === 'SportsCar' ||  // Changed from 'Sports' to match backend enum
-                   ['Porsche', 'Ferrari', 'Lamborghini', 'McLaren', 'Aston Martin'].includes(v.make) ||
-                   ['911', 'M4', 'AMG GT', 'RS7', 'Corvette', 'Mustang', 'Challenger', 'GT-R', 'LC 500', 'Supra'].includes(v.model))
-      .map(transformToFeaturedListing)
-      .map(v => ({ ...v, category: 'Deportivos' }));
-    
-    const luxury = transformed.filter(v => 
-      v.category === 'Lujo' || v.category === 'Deportivos' || v.price >= 80000
-    ).slice(0, 10);
-
-    // Featured = mix of all categories
-    const featured = [
-      ...sedanes.slice(0, 2),
-      ...suvs.slice(0, 2),
-      ...trucks.slice(0, 2),
-      ...deportivos.slice(0, 2),
-    ].slice(0, 8);
-
-    return {
-      sedanesListings: sedanes.length > 0 ? sedanes : [],
-      suvsListings: suvs.length > 0 ? suvs : [],
-      trucksListings: trucks.length > 0 ? trucks : [],
-      deportivosListings: deportivos.length > 0 ? deportivos : [],
-      apiLuxuryListings: luxury,
-      apiFeaturedListings: featured.length > 0 ? featured : transformed.slice(0, 8),
-    };
-  }, [apiVehicles]);
-
-  // Transform API vehicles to Vehicle format for FeaturedListingGrid and HeroCarousel
-  const apiVehiclesAsVehicle = useMemo(() => {
-    if (!apiVehicles || apiVehicles.length === 0) return [];
-    return apiVehicles.map(transformApiVehicleToVehicle);
-  }, [apiVehicles]);
-
-  // Get featured vehicles for hero carousel (top 5)
-  // Uses API data now! Falls back to mockVehicles only if API fails
+  // Transform carousel vehicles to Vehicle format for HeroCarousel component
   const heroVehicles = useMemo(() => {
-    if (apiVehiclesAsVehicle.length > 0) {
-      return mixFeaturedAndOrganic(apiVehiclesAsVehicle, 'home').slice(0, 5);
-    }
-    // Fallback to mockVehicles if API not loaded yet
-    return mixFeaturedAndOrganic(mockVehicles, 'home').slice(0, 5);
-  }, [apiVehiclesAsVehicle]);
+    if (!carousel || carousel.vehicles.length === 0) return [];
+    return carousel.vehicles.map(transformHomepageVehicleToVehicle);
+  }, [carousel]);
 
-  // Get featured vehicles for homepage grid (exclude hero vehicles)
-  // Uses API data now! Falls back to mockVehicles only if API fails
+  // Transform destacados vehicles to Vehicle format for FeaturedListingGrid component
   const gridVehicles = useMemo(() => {
-    const heroIds = new Set(heroVehicles.map(v => v.id));
-    if (apiVehiclesAsVehicle.length > 0) {
-      return apiVehiclesAsVehicle.filter(v => !heroIds.has(v.id));
+    if (!destacados || destacados.vehicles.length === 0) {
+      // Fallback: use carousel vehicles if no destacados
+      if (!carousel || carousel.vehicles.length === 0) return [];
+      return carousel.vehicles.map(transformHomepageVehicleToVehicle);
     }
-    // Fallback to mockVehicles if API not loaded yet
-    return mockVehicles.filter(v => !heroIds.has(v.id));
-  }, [heroVehicles, apiVehiclesAsVehicle]);
+    return destacados.vehicles.map(transformHomepageVehicleToVehicle);
+  }, [destacados, carousel]);
+
+  // Transform section vehicles to FeaturedListingItem format
+  const transformSectionVehicles = (section: HomepageSection | undefined) => {
+    if (!section || section.vehicles.length === 0) return [];
+    return section.vehicles.map(v => transformToFeaturedListing(v, section.name));
+  };
 
   return (
     <MainLayout>
@@ -561,76 +473,75 @@ const VehiclesOnlyHomePage: React.FC = () => {
       )}
 
       {/* =============================================
-          SECCIONES CON REAL DATA - Organizados por BodyStyle
+          SECCIONES DESDE /api/homepagesections/homepage
+          Configuradas en base de datos con vehículos asignados
           ============================================= */}
       
-      {/* Sedanes Section - from API (BodyStyle: Sedan) */}
-      {!isLoading && sedanesListings.length > 0 && (
+      {/* Sedanes Section */}
+      {!isLoading && sedanes && sedanes.vehicles.length > 0 && (
         <FeaturedSection
-          title="Sedanes"
-          subtitle="Elegancia y confort para el día a día"
-          listings={sedanesListings}
-          viewAllHref="/vehicles?bodyType=sedan"
-          accentColor="blue"
+          title={sedanes.name}
+          subtitle={sedanes.subtitle}
+          listings={transformSectionVehicles(sedanes)}
+          viewAllHref={sedanes.viewAllHref}
+          accentColor={sedanes.accentColor}
         />
       )}
 
-      {/* SUVs Section - from API (BodyStyle: SUV) */}
-      {!isLoading && suvsListings.length > 0 && (
+      {/* SUVs Section */}
+      {!isLoading && suvs && suvs.vehicles.length > 0 && (
         <FeaturedSection
-          title="SUVs"
-          subtitle="Espacio, confort y versatilidad para toda la familia"
-          listings={suvsListings}
-          viewAllHref="/vehicles?bodyType=suv"
-          accentColor="emerald"
+          title={suvs.name}
+          subtitle={suvs.subtitle}
+          listings={transformSectionVehicles(suvs)}
+          viewAllHref={suvs.viewAllHref}
+          accentColor={suvs.accentColor}
         />
       )}
 
-      {/* Camionetas Section - from API (BodyStyle: Truck) */}
-      {!isLoading && trucksListings.length > 0 && (
+      {/* Camionetas Section */}
+      {!isLoading && camionetas && camionetas.vehicles.length > 0 && (
         <FeaturedSection
-          title="Camionetas"
-          subtitle="Potencia y capacidad para trabajo y aventura"
-          listings={trucksListings}
-          viewAllHref="/vehicles?bodyType=truck"
-          accentColor="amber"
+          title={camionetas.name}
+          subtitle={camionetas.subtitle}
+          listings={transformSectionVehicles(camionetas)}
+          viewAllHref={camionetas.viewAllHref}
+          accentColor={camionetas.accentColor}
         />
       )}
 
-      {/* Deportivos Section - from API (BodyStyle: Coupe with high price or sports models) */}
-      {!isLoading && deportivosListings.length > 0 && (
+      {/* Deportivos Section */}
+      {!isLoading && deportivos && deportivos.vehicles.length > 0 && (
         <FeaturedSection
-          title="Deportivos"
-          subtitle="Velocidad, adrenalina y diseño espectacular"
-          listings={deportivosListings}
-          viewAllHref="/vehicles?bodyType=coupe"
-          accentColor="red"
+          title={deportivos.name}
+          subtitle={deportivos.subtitle}
+          listings={transformSectionVehicles(deportivos)}
+          viewAllHref={deportivos.viewAllHref}
+          accentColor={deportivos.accentColor}
         />
       )}
 
-      {/* Featured of the Week - REAL DATA from API (opcional, si hay datos) */}
-      {!isLoading && apiFeaturedListings.length > 0 && (
+      {/* Destacados Section */}
+      {!isLoading && destacados && destacados.vehicles.length > 0 && (
         <FeaturedSection
-          title="Destacados de la Semana (API)"
-          subtitle="Vehículos reales de la base de datos"
-          listings={apiFeaturedListings}
-          viewAllHref="/vehicles?sort=year-desc"
-          accentColor="purple"
+          title={destacados.name}
+          subtitle={destacados.subtitle}
+          listings={transformSectionVehicles(destacados)}
+          viewAllHref={destacados.viewAllHref}
+          accentColor={destacados.accentColor}
         />
       )}
 
-      {/* Sports & Luxury Section - REAL DATA from API (opcional) */}
-      {!isLoading && apiLuxuryListings.length > 0 && (
+      {/* Lujo Section */}
+      {!isLoading && lujo && lujo.vehicles.length > 0 && (
         <FeaturedSection
-          title="Lujo (API)"
-          subtitle="Experiencias de conducción extraordinarias"
-          listings={apiLuxuryListings}
-          viewAllHref="/vehicles?bodyType=coupe&sort=year-desc"
-          accentColor="pink"
+          title={lujo.name}
+          subtitle={lujo.subtitle}
+          listings={transformSectionVehicles(lujo)}
+          viewAllHref={lujo.viewAllHref}
+          accentColor={lujo.accentColor}
         />
       )}
-
-      {/* Categories Section removed - single category (vehicles) in first phase */}
 
       {/* Features Section */}
       <section className="py-6 bg-white">

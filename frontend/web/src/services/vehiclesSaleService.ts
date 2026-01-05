@@ -11,7 +11,7 @@ import { getVehicleSaleImageUrl } from '@utils/s3ImageUrl';
 // ============================================================
 
 // API Gateway URL - routes to VehiclesSaleService
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 const VEHICLES_API_URL = `${API_URL}/api/vehicles`;
 
 const vehiclesApi = axios.create({
@@ -310,7 +310,7 @@ export const getVehicles = async (
       if (filters.search) params.append('search', filters.search);
     }
 
-    const response = await vehiclesApi.get<ApiVehiclesResponse>(`/vehicles?${params.toString()}`);
+    const response = await vehiclesApi.get<ApiVehiclesResponse>(`?${params.toString()}`);
     
     return {
       vehicles: response.data.vehicles.map(transformVehicle),
@@ -330,7 +330,7 @@ export const getVehicles = async (
  */
 export const getVehicleById = async (id: string): Promise<VehicleListing | null> => {
   try {
-    const response = await vehiclesApi.get<ApiVehicle>(`/vehicles/${id}`);
+    const response = await vehiclesApi.get<ApiVehicle>(`/${id}`);
     return transformVehicle(response.data);
   } catch (error) {
     console.error(`Error fetching vehicle ${id}:`, error);
@@ -343,7 +343,7 @@ export const getVehicleById = async (id: string): Promise<VehicleListing | null>
  */
 export const getFeaturedVehicles = async (limit: number = 6): Promise<VehicleListing[]> => {
   try {
-    const response = await vehiclesApi.get<ApiVehiclesResponse>(`/vehicles?pageSize=${limit}&featured=true`);
+    const response = await vehiclesApi.get<ApiVehiclesResponse>(`?pageSize=${limit}&featured=true`);
     return response.data.vehicles.map(transformVehicle);
   } catch (error) {
     console.error('Error fetching featured vehicles:', error);
@@ -357,7 +357,7 @@ export const getFeaturedVehicles = async (limit: number = 6): Promise<VehicleLis
  */
 export const getLatestVehicles = async (limit: number = 6): Promise<VehicleListing[]> => {
   try {
-    const response = await vehiclesApi.get<ApiVehiclesResponse>(`/vehicles?pageSize=${limit}&sortBy=createdAt&sortDesc=true`);
+    const response = await vehiclesApi.get<ApiVehiclesResponse>(`?pageSize=${limit}&sortBy=createdAt&sortDesc=true`);
     return response.data.vehicles.map(transformVehicle);
   } catch (error) {
     console.error('Error fetching latest vehicles:', error);
