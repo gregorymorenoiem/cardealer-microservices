@@ -44,52 +44,108 @@ data:
       "Routes": [
         {
           "UpstreamPathTemplate": "/api/auth/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/auth/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }]
         },
         {
           "UpstreamPathTemplate": "/api/users/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/users/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
         },
         {
+          "UpstreamPathTemplate": "/api/roles/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/roles/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicles",
+          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/vehicles",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/vehicles/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/vehicles/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
         },
         {
+          "UpstreamPathTemplate": "/api/homepagesections",
+          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/homepagesections",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/homepagesections/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/homepagesections/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/catalog/{everything}",
+          "UpstreamHttpMethod": ["GET", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/catalog/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/properties",
+          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/properties",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "propertiessaleservice", "Port": 80 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/properties/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/properties/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "propertiessaleservice", "Port": 80 }]
         },
         {
+          "UpstreamPathTemplate": "/api/media",
+          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/media",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/media/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/media/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }]
         },
         {
           "UpstreamPathTemplate": "/api/notifications/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/notifications/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 80 }]
         },
         {
           "UpstreamPathTemplate": "/api/billing/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
           "DownstreamPathTemplate": "/api/billing/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/errors/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/errors/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }]
         }
       ],
       "GlobalConfiguration": {
