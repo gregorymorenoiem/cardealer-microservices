@@ -386,11 +386,15 @@ spec:
           env:
             - name: ASPNETCORE_URLS
               value: "http://+:8080"
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Development"
           envFrom:
             - configMapRef:
                 name: global-config
             - secretRef:
                 name: mediaservice-db-secret
+            - secretRef:
+                name: jwt-secrets
             - secretRef:
                 name: external-services-secrets
           resources:
@@ -568,6 +572,8 @@ spec:
                 name: global-config
             - secretRef:
                 name: errorservice-db-secret
+            - secretRef:
+                name: jwt-secrets
           resources:
             requests:
               memory: "64Mi"
