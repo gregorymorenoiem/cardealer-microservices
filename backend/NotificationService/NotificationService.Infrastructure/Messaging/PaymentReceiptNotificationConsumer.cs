@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Billing;
-using NotificationService.Application.Interfaces;
+using NotificationService.Domain.Interfaces;
 using NotificationService.Application.DTOs;
 
 namespace NotificationService.Infrastructure.Messaging;
@@ -91,7 +91,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error processing PaymentCompletedEvent");
-                    
+
                     // Requeue message for retry
                     _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
                 }
@@ -165,7 +165,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
     }
 
     private async Task HandlePaymentCompletedEventAsync(
-        PaymentCompletedEvent @event,
+        PaymentCompletedEvent eventData,
         CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -173,8 +173,8 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
 
         try
         {
-            var subject = $"Recibo de Pago - ${@event.Amount:N2} {event.Currency}";
-            
+            var subject = $"Recibo de Pago - ${eventData.Amount:N2} {eventData.Currency}";
+
             var body = $@"
                 <html>
                 <body style='font-family: Arial, sans-serif;'>
@@ -184,7 +184,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                         </div>
                         
                         <div style='padding: 30px; background-color: #f8f9fa;'>
-                            <p>Hola <strong>{@event.UserName}</strong>,</p>
+                            <p>Hola <strong>{eventData.UserName}</strong>,</p>
                             <p>Tu pago se ha procesado exitosamente. Aquí están los detalles:</p>
                             
                             <table style='width: 100%; background-color: white; border-radius: 5px; padding: 20px; margin: 20px 0;'>
@@ -193,7 +193,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                                         <strong>ID de Pago:</strong>
                                     </td>
                                     <td style='padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;'>
-                                        {@event.PaymentId}
+                                        {eventData.PaymentId}
                                     </td>
                                 </tr>
                                 <tr>
@@ -201,7 +201,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                                         <strong>Monto:</strong>
                                     </td>
                                     <td style='padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-size: 20px; color: #28a745;'>
-                                        <strong>${@event.Amount:N2} {@event.Currency}</strong>
+                                        <strong>${eventData.Amount:N2} {eventData.Currency}</strong>
                                     </td>
                                 </tr>
                                 <tr>
@@ -209,7 +209,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                                         <strong>Fecha:</strong>
                                     </td>
                                     <td style='padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;'>
-                                        {@event.PaidAt:dd/MM/yyyy HH:mm:ss}
+                                        {eventData.PaidAt:dd/MM/yyyy HH:mm:ss}
                                     </td>
                                 </tr>
                                 <tr>
@@ -217,11 +217,11 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                                         <strong>Descripción:</strong>
                                     </td>
                                     <td style='padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;'>
-                                        {@event.Description}
+                                        {eventData.Description}
                                     </td>
                                 </tr>";
 
-            if (!string.IsNullOrEmpty(@event.SubscriptionPlan))
+            if (!string.IsNullOrEmpty(eventData.SubscriptionPlan))
             {
                 body += $@"
                                 <tr>
@@ -229,7 +229,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                                         <strong>Plan:</strong>
                                     </td>
                                     <td style='padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right;'>
-                                        {@event.SubscriptionPlan}
+                                        {eventData.SubscriptionPlan}
                                     </td>
                                 </tr>";
             }
@@ -240,7 +240,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                                         <strong>Stripe Payment ID:</strong>
                                     </td>
                                     <td style='padding: 10px; text-align: right; font-family: monospace; font-size: 12px;'>
-                                        {@event.StripePaymentIntentId}
+                                        {eventData.StripePaymentIntentId}
                                     </td>
                                 </tr>
                             </table>
@@ -268,27 +268,23 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                 </html>
             ";
 
-            var emailRequest = new EmailRequest
-            {
-                To = @event.UserEmail,
-                Subject = subject,
-                Body = body,
-                IsHtml = true
-            };
-
-            await emailService.SendEmailAsync(emailRequest);
+            await emailService.SendEmailAsync(
+                to: eventData.UserEmail,
+                subject: subject,
+                body: body,
+                isHtml: true);
 
             _logger.LogInformation(
                 "Payment receipt email sent to {Email} for PaymentId: {PaymentId}",
-                @event.UserEmail,
-                @event.PaymentId);
+                eventData.UserEmail,
+                eventData.PaymentId);
         }
         catch (Exception ex)
         {
             _logger.LogError(
                 ex,
                 "Failed to send payment receipt email for PaymentId: {PaymentId}",
-                @event.PaymentId);
+                eventData.PaymentId);
             throw;
         }
     }

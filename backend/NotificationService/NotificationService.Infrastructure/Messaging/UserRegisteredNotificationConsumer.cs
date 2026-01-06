@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Auth;
-using NotificationService.Application.Interfaces;
+using NotificationService.Domain.Interfaces;
 
 namespace NotificationService.Infrastructure.Messaging;
 
@@ -133,7 +133,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
         }
     }
 
-    private async Task HandleEventAsync(UserRegisteredEvent @event, CancellationToken cancellationToken)
+    private async Task HandleEventAsync(UserRegisteredEvent eventData, CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
 
@@ -144,22 +144,22 @@ public class UserRegisteredNotificationConsumer : BackgroundService
             // Enviar email de bienvenida
             var subject = "¡Bienvenido a CarDealer!";
             var body = $@"
-                <h1>¡Hola {@event.FullName}!</h1>
+                <h1>¡Hola {eventData.FullName}!</h1>
                 <p>Gracias por registrarte en CarDealer.</p>
-                <p>Tu cuenta ha sido creada exitosamente con el email: <strong>{@event.Email}</strong></p>
+                <p>Tu cuenta ha sido creada exitosamente con el email: <strong>{eventData.Email}</strong></p>
                 <p>Ahora puedes empezar a publicar tus vehículos o buscar el auto de tus sueños.</p>
                 <br>
                 <p>¡Bienvenido a bordo!</p>
                 <p><em>El equipo de CarDealer</em></p>
             ";
 
-            await emailService.SendEmailAsync(@event.Email, subject, body);
+            await emailService.SendEmailAsync(eventData.Email, subject, body);
 
-            _logger.LogInformation("Welcome email sent to {Email}", @event.Email);
+            _logger.LogInformation("Welcome email sent to {Email}", eventData.Email);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send welcome email to {Email}", @event.Email);
+            _logger.LogError(ex, "Failed to send welcome email to {Email}", eventData.Email);
             throw; // Re-throw para que RabbitMQ requeue el mensaje
         }
     }

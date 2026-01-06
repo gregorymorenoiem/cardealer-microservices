@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Vehicle;
-using NotificationService.Application.Interfaces;
+using NotificationService.Domain.Interfaces;
 using NotificationService.Application.DTOs;
 
 namespace NotificationService.Infrastructure.Messaging;
@@ -166,7 +166,7 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
     }
 
     private async Task HandleVehicleCreatedEventAsync(
-        VehicleCreatedEvent @event,
+        VehicleCreatedEvent eventData,
         CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -178,7 +178,7 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
             // Por ahora usamos datos del evento
             var dealerEmail = "dealer@example.com"; // TODO: Obtener email real del dealer
 
-            var subject = $"Nuevo Vehículo Publicado: {event.Year} {event.Make} {event.Model}";
+            var subject = $"Nuevo Vehículo Publicado: {eventData.Year} {eventData.Make} {eventData.Model}";
 
             var body = $@"
                 <html>
@@ -187,17 +187,17 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
                     <p>Se ha publicado un nuevo vehículo en tu cuenta:</p>
                     
                     <div style='background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;'>
-                        <h3 style='margin-top: 0; color: #007bff;'>{event.Year} {event.Make} {event.Model}</h3>
-                        <p><strong>VIN:</strong> {event.VIN}</p>
-                        <p><strong>Precio:</strong> ${event.Price:N2}</p>
-                        <p><strong>ID del Vehículo:</strong> {event.VehicleId}</p>
-                        <p><strong>Fecha de Publicación:</strong> {event.CreatedAt:dd/MM/yyyy HH:mm}</p>
+                        <h3 style='margin-top: 0; color: #007bff;'>{eventData.Year} {eventData.Make} {eventData.Model}</h3>
+                        <p><strong>VIN:</strong> {eventData.VIN}</p>
+                        <p><strong>Precio:</strong> ${eventData.Price:N2}</p>
+                        <p><strong>ID del Vehículo:</strong> {eventData.VehicleId}</p>
+                        <p><strong>Fecha de Publicación:</strong> {eventData.CreatedAt:dd/MM/yyyy HH:mm}</p>
                     </div>
                     
                     <p>Tu vehículo ahora está visible para los compradores en la plataforma.</p>
                     
                     <p style='margin-top: 30px;'>
-                        <a href='https://cardealer.com/vehicles/{event.VehicleId}' 
+                        <a href='https://cardealer.com/vehicles/{eventData.VehicleId}' 
                            style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
                             Ver Vehículo
                         </a>
@@ -212,26 +212,22 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
                 </html>
             ";
 
-            var emailRequest = new EmailRequest
-            {
-                To = dealerEmail,
-                Subject = subject,
-                Body = body,
-                IsHtml = true
-            };
-
-            await emailService.SendEmailAsync(emailRequest);
+            await emailService.SendEmailAsync(
+                to: dealerEmail,
+                subject: subject,
+                body: body,
+                isHtml: true);
 
             _logger.LogInformation(
                 "Vehicle creation notification sent to dealer for VehicleId: {VehicleId}",
-                @event.VehicleId);
+                eventData.VehicleId);
         }
         catch (Exception ex)
         {
             _logger.LogError(
                 ex,
                 "Failed to send vehicle creation notification for VehicleId: {VehicleId}",
-                @event.VehicleId);
+                eventData.VehicleId);
             throw;
         }
     }
