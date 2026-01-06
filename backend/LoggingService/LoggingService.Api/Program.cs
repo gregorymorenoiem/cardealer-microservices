@@ -71,6 +71,9 @@ app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 app.MapControllers();
 
+// Health Check Endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "LoggingService" }));
+
 try
 {
     Log.Information("Starting LoggingService API");

@@ -76,4 +76,7 @@ app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 app.MapControllers();
 
+// Health Check Endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "AdminService" }));
+
 app.Run();

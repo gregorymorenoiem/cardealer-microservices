@@ -335,6 +335,32 @@ services:
       retries: 3
 
   # ------------------------
+  # Consul - Service Discovery
+  # ------------------------
+  consul:
+    image: hashicorp/consul:1.17
+    container_name: consul
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 128M
+        reservations:
+          memory: 64M
+    ports:
+      - "8501:8500"
+    volumes:
+      - consul_data:/consul/data
+    networks:
+      - cargurus-net
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ------------------------
   # UserService Database
   # ------------------------
   userservice-db:
@@ -387,7 +413,7 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
-      RabbitMQ__Enabled: "false"
+      RabbitMQ__Enabled: "true"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__Username: "guest"
@@ -398,6 +424,8 @@ services:
       - "24027:4022"
     depends_on:
       userservice-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -539,6 +567,7 @@ services:
       RabbitMQ__Username: "guest"
       RabbitMQ__Password: "guest"
       Consul__Enabled: "false"
+      Consul__Address: "http://consul:8500"
       ServiceUrls__AuditService: "http://auditservice:80"
       ServiceUrls__NotificationService: "http://notificationservice:80"
       ServiceUrls__ErrorService: "http://errorservice:80"
@@ -547,6 +576,8 @@ services:
       - "24037:4022"
     depends_on:
       adminservice-db:
+        condition: service_healthy
+      consul:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -989,6 +1020,7 @@ services:
       RabbitMQ__Port: "5672"
       RabbitMQ__Username: "guest"
       RabbitMQ__Password: "guest"
+      Consul__Address: "http://consul:8500"
       ServiceUrls__ErrorService: "http://errorservice:80"
     ports:
       - "5009:80"
@@ -1000,6 +1032,8 @@ services:
         condition: service_healthy
       errorservice:
         condition: service_started
+      consul:
+        condition: service_healthy
     networks:
       - cargurus-net
 
@@ -1020,6 +1054,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__Redis: "redis:6379"
+      Consul__Address: "http://consul:8500"
       ServiceUrls__ErrorService: "http://errorservice:80"
     ports:
       - "5096:80"
@@ -1029,6 +1064,8 @@ services:
         condition: service_healthy
       errorservice:
         condition: service_started
+      consul:
+        condition: service_healthy
     networks:
       - cargurus-net
 
@@ -2026,6 +2063,7 @@ volumes:
   ratelimitingservice_data:
   rabbitmq_data:
   redis_data:
+  consul_data:
 
 networks:
   cargurus-net:

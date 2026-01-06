@@ -245,6 +245,9 @@ if (useRabbitMq)
     builder.Services.AddSingleton<IEventPublisher>(sp =>
         sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
     builder.Services.AddHostedService<UserService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+
+    // Consumer for UserRegisteredEvent from AuthService - syncs users automatically
+    builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserRegisteredEventConsumer>();
 }
 else
 {

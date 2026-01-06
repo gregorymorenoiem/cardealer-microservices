@@ -45,6 +45,6 @@ ENV ASPNETCORE_URLS=http://+:80
 
 # Health check using wget (lighter than curl on Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 http://localhost:80/health -qO- > /dev/null || exit 1
 
 ENTRYPOINT ["dotnet", "AdminService.Api.dll"]

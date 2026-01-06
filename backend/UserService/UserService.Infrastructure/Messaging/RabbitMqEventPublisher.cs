@@ -15,17 +15,21 @@ namespace UserService.Infrastructure.Messaging;
 /// RabbitMQ implementation of IEventPublisher with Circuit Breaker pattern.
 /// Publishes events to RabbitMQ topic exchanges for consumption by other microservices.
 /// Implements resilience with Polly Circuit Breaker to handle RabbitMQ unavailability.
+/// Uses lazy connection to avoid startup failures when RabbitMQ is not immediately available.
 /// </summary>
 public class RabbitMqEventPublisher : IEventPublisher, IDisposable
 {
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
+    private IConnection? _connection;
+    private IModel? _channel;
     private readonly ILogger<RabbitMqEventPublisher> _logger;
     private readonly UserServiceMetrics _metrics;
     private readonly IDeadLetterQueue? _deadLetterQueue;
     private readonly string _exchangeName;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly ResiliencePipeline _resiliencePipeline;
+    private readonly IConfiguration _configuration;
+    private readonly object _connectionLock = new();
+    private bool _isConnected;
 
     public RabbitMqEventPublisher(
         IConfiguration configuration,
@@ -36,28 +40,8 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         _logger = logger;
         _metrics = metrics;
         _deadLetterQueue = deadLetterQueue;
+        _configuration = configuration;
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
-
-        var factory = new ConnectionFactory
-        {
-            HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
-            Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672"),
-            UserName = configuration["RabbitMQ:UserName"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest",
-            VirtualHost = configuration["RabbitMQ:VirtualHost"] ?? "/",
-            AutomaticRecoveryEnabled = true,
-            NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
-        };
-
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
-
-        // Declare topic exchange (idempotent operation)
-        _channel.ExchangeDeclare(
-            exchange: _exchangeName,
-            type: ExchangeType.Topic,
-            durable: true,
-            autoDelete: false);
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -69,15 +53,15 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         _resiliencePipeline = new ResiliencePipelineBuilder()
             .AddCircuitBreaker(new CircuitBreakerStrategyOptions
             {
-                FailureRatio = 0.5, // Open circuit if 50% of requests fail
-                SamplingDuration = TimeSpan.FromSeconds(30), // Sample window
-                MinimumThroughput = 3, // Minimum requests before breaking
-                BreakDuration = TimeSpan.FromSeconds(30), // Circuit stays open for 30s
+                FailureRatio = 0.5,
+                SamplingDuration = TimeSpan.FromSeconds(30),
+                MinimumThroughput = 3,
+                BreakDuration = TimeSpan.FromSeconds(30),
                 OnOpened = args =>
                 {
                     _metrics.SetCircuitBreakerState(CircuitBreakerState.Open);
                     _logger.LogWarning(
-                        "🔴 Circuit Breaker OPEN: RabbitMQ unavailable for {Duration}s. " +
+                        "Circuit Breaker OPEN: RabbitMQ unavailable for {Duration}s. " +
                         "Events will be logged but not published.",
                         args.BreakDuration.TotalSeconds);
                     return ValueTask.CompletedTask;
@@ -86,7 +70,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 {
                     _metrics.SetCircuitBreakerState(CircuitBreakerState.Closed);
                     _logger.LogInformation(
-                        "🟢 Circuit Breaker CLOSED: RabbitMQ connection restored. " +
+                        "Circuit Breaker CLOSED: RabbitMQ connection restored. " +
                         "Resuming event publishing.");
                     return ValueTask.CompletedTask;
                 },
@@ -94,16 +78,80 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 {
                     _metrics.SetCircuitBreakerState(CircuitBreakerState.HalfOpen);
                     _logger.LogInformation(
-                        "🟡 Circuit Breaker HALF-OPEN: Testing RabbitMQ connection...");
+                        "Circuit Breaker HALF-OPEN: Testing RabbitMQ connection...");
                     return ValueTask.CompletedTask;
                 }
             })
             .Build();
 
         _logger.LogInformation(
-            "RabbitMQ Event Publisher initialized with Circuit Breaker. " +
-            "Exchange: {Exchange}, Host: {Host}",
-            _exchangeName, factory.HostName);
+            "RabbitMQ Event Publisher initialized with Circuit Breaker (lazy connection). " +
+            "Exchange: {Exchange}",
+            _exchangeName);
+    }
+
+    /// <summary>
+    /// Ensures RabbitMQ connection is established. Uses lazy initialization.
+    /// </summary>
+    private bool EnsureConnected()
+    {
+        if (_isConnected && _channel != null && _channel.IsOpen)
+            return true;
+
+        lock (_connectionLock)
+        {
+            if (_isConnected && _channel != null && _channel.IsOpen)
+                return true;
+
+            try
+            {
+                // Support both naming conventions: RabbitMQ:Host and RabbitMQ:HostName
+                var host = _configuration["RabbitMQ:Host"]
+                    ?? _configuration["RabbitMQ:HostName"]
+                    ?? "localhost";
+                var portStr = _configuration["RabbitMQ:Port"] ?? "5672";
+                var username = _configuration["RabbitMQ:Username"]
+                    ?? _configuration["RabbitMQ:UserName"]
+                    ?? "guest";
+                var password = _configuration["RabbitMQ:Password"] ?? "guest";
+                var virtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/";
+
+                var factory = new ConnectionFactory
+                {
+                    HostName = host,
+                    Port = int.Parse(portStr),
+                    UserName = username,
+                    Password = password,
+                    VirtualHost = virtualHost,
+                    AutomaticRecoveryEnabled = true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
+                };
+
+                _connection = factory.CreateConnection();
+                _channel = _connection.CreateModel();
+
+                // Declare topic exchange (idempotent operation)
+                _channel.ExchangeDeclare(
+                    exchange: _exchangeName,
+                    type: ExchangeType.Topic,
+                    durable: true,
+                    autoDelete: false);
+
+                _isConnected = true;
+                _logger.LogInformation(
+                    "RabbitMQ connection established to {Host}:{Port}",
+                    host, portStr);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Could not connect to RabbitMQ. Events will be queued to DLQ if available.");
+                _isConnected = false;
+                return false;
+            }
+        }
     }
 
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
@@ -114,12 +162,17 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
             // Execute with Circuit Breaker protection
             await _resiliencePipeline.ExecuteAsync(async ct =>
             {
-                var routingKey = @event.EventType; // e.g., "error.critical", "error.logged"
+                if (!EnsureConnected() || _channel == null)
+                {
+                    throw new InvalidOperationException("RabbitMQ not connected");
+                }
+
+                var routingKey = @event.EventType;
                 var messageBody = JsonSerializer.Serialize(@event, _jsonOptions);
                 var body = Encoding.UTF8.GetBytes(messageBody);
 
                 var properties = _channel.CreateBasicProperties();
-                properties.Persistent = true; // Make messages durable
+                properties.Persistent = true;
                 properties.ContentType = "application/json";
                 properties.MessageId = @event.EventId.ToString();
                 properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -140,36 +193,40 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         }
         catch (BrokenCircuitException ex)
         {
-            // Circuit is open, log the event but don't fail the request
             _logger.LogWarning(ex,
-                "⚠️ Circuit Breaker OPEN: Cannot publish event {EventType} with ID {EventId}. " +
-                "Event logged locally and queued for retry when RabbitMQ recovers.",
+                "Circuit Breaker OPEN: Cannot publish event {EventType} with ID {EventId}. " +
+                "Event queued for retry when RabbitMQ recovers.",
                 @event.EventType, @event.EventId);
 
-            // ✅ Implementado: Dead Letter Queue para retry automático
-            if (_deadLetterQueue != null)
-            {
-                var failedEvent = new FailedEvent
-                {
-                    EventType = @event.EventType,
-                    EventJson = JsonSerializer.Serialize(@event, _jsonOptions),
-                    FailedAt = DateTime.UtcNow,
-                    RetryCount = 0
-                };
-                failedEvent.ScheduleNextRetry();
-                _deadLetterQueue.Enqueue(failedEvent);
-
-                _logger.LogInformation(
-                    "📮 Event {EventId} queued to DLQ for retry in {Minutes} minutes",
-                    failedEvent.Id, Math.Pow(2, 0)); // 1 minuto inicial
-            }
+            QueueToDeadLetter(@event);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "❌ Failed to publish event {EventType} with ID {EventId}",
+                "Failed to publish event {EventType} with ID {EventId}. Queuing to DLQ.",
                 @event.EventType, @event.EventId);
-            throw;
+
+            QueueToDeadLetter(@event);
+        }
+    }
+
+    private void QueueToDeadLetter<TEvent>(TEvent @event) where TEvent : IEvent
+    {
+        if (_deadLetterQueue != null)
+        {
+            var failedEvent = new FailedEvent
+            {
+                EventType = @event.EventType,
+                EventJson = JsonSerializer.Serialize(@event, _jsonOptions),
+                FailedAt = DateTime.UtcNow,
+                RetryCount = 0
+            };
+            failedEvent.ScheduleNextRetry();
+            _deadLetterQueue.Enqueue(failedEvent);
+
+            _logger.LogInformation(
+                "Event {EventId} queued to DLQ for retry",
+                @event.EventId);
         }
     }
 
