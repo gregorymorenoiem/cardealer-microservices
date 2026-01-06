@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to'
+        description: "Environment to deploy to"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging
@@ -22,7 +22,7 @@ on:
       services:
         description: 'Services to deploy (comma-separated or "all")'
         required: false
-        default: 'all'
+        default: "all"
         type: string
 
   # Trigger automático después de CI exitoso
@@ -118,13 +118,15 @@ jobs:
             --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
             --from-literal=POSTGRES_SSL_MODE=require \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
-          
+
           kubectl create secret generic jwt-secrets \
-            --from-literal=JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-            --from-literal=JWT_ISSUER=okla.do \
-            --from-literal=JWT_AUDIENCE=okla-app \
+            --from-literal=Jwt__Key=${{ secrets.JWT_SECRET_KEY }} \
+            --from-literal=Jwt__Issuer=OklaService-Prod \
+            --from-literal=Jwt__Audience=Okla-App \
+            --from-literal=Jwt__ExpiresMinutes=60 \
+            --from-literal=Jwt__RefreshTokenExpiresDays=7 \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
-          
+
           kubectl create secret generic external-services-secrets \
             --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
             --from-literal=STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }} \
@@ -132,7 +134,7 @@ jobs:
             --from-literal=AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
             --from-literal=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
-          
+
           # Create Docker registry secret
           kubectl create secret docker-registry registry-credentials \
             --docker-server=ghcr.io \
@@ -148,10 +150,10 @@ jobs:
         run: |
           echo "🗄️ Deploying PostgreSQL databases..."
           kubectl apply -f k8s/databases.yaml
-          
+
           echo "⏳ Waiting for databases to be ready..."
           sleep 30
-          
+
           # Wait for each database to be ready
           for DB in authservice-db userservice-db roleservice-db vehiclessaleservice-db mediaservice-db notificationservice-db billingservice-db errorservice-db; do
             echo "⏳ Waiting for $DB..."
@@ -166,10 +168,10 @@ jobs:
       - name: 🚀 Deploy services
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
-          
+
           echo "🚀 Applying all deployments..."
           kubectl apply -f k8s/deployments.yaml
-          
+
           # Restart deployments to pick up new secrets
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             echo "🔄 Restarting $SERVICE..."
@@ -187,7 +189,7 @@ jobs:
       - name: ⏳ Wait for rollout
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
-          
+
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             echo "⏳ Waiting for $SERVICE rollout..."
             kubectl rollout status deployment/$SERVICE -n okla --timeout=300s || true
@@ -197,19 +199,19 @@ jobs:
         run: |
           echo "## 📊 Deployment Status" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Get all pods
           echo "### Pods" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl get pods -n okla >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          
+
           # Get all services
           echo "### Services" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl get svc -n okla >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          
+
           # Get ingress
           echo "### Ingress" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -242,7 +244,7 @@ jobs:
       - name: 🏥 Check endpoints
         run: |
           ENV="${{ needs.prepare.outputs.environment }}"
-          
+
           if [ "$ENV" == "production" ]; then
             FRONTEND_URL="https://okla.do"
             API_URL="https://api.okla.do"
@@ -250,10 +252,10 @@ jobs:
             FRONTEND_URL="https://staging.okla.do"
             API_URL="https://api-staging.okla.do"
           fi
-          
+
           echo "🔍 Checking $FRONTEND_URL..."
           curl -sf "$FRONTEND_URL/health" || echo "⚠️ Frontend health check failed"
-          
+
           echo "🔍 Checking $API_URL..."
           curl -sf "$API_URL/health" || echo "⚠️ API health check failed"
 
@@ -296,7 +298,7 @@ jobs:
       - name: ⏪ Rollback deployments
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
-          
+
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             echo "⏪ Rolling back $SERVICE..."
             kubectl rollout undo deployment/$SERVICE -n okla || true
