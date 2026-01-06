@@ -5,6 +5,7 @@ using BillingService.Infrastructure.Persistence;
 using BillingService.Infrastructure.Repositories;
 using BillingService.Infrastructure.Services;
 using BillingService.Infrastructure.External;
+using BillingService.Infrastructure.Messaging;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using Serilog;
@@ -50,6 +51,9 @@ builder.Services.AddScoped<IStripeCustomerRepository, StripeCustomerRepository>(
 // Add Stripe Services
 builder.Services.AddScoped<IStripeService, StripeService>();
 builder.Services.AddScoped<BillingApplicationService>();
+
+// Add RabbitMQ Event Publisher
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // Add UserService Client for syncing subscriptions
 var userServiceUrl = builder.Configuration["Services:UserService"] ?? "http://localhost:5020";

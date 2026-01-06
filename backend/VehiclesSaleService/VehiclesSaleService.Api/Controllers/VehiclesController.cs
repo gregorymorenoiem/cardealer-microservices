@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
+using VehiclesSaleService.Infrastructure.Messaging;
+using CarDealer.Contracts.Events.Vehicle;
 using Entities = VehiclesSaleService.Domain.Entities;
 
 namespace VehiclesSaleService.Api.Controllers;
@@ -11,15 +13,18 @@ public class VehiclesController : ControllerBase
 {
     private readonly IVehicleRepository _vehicleRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<VehiclesController> _logger;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
         ICategoryRepository categoryRepository,
+        IEventPublisher eventPublisher,
         ILogger<VehiclesController> logger)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
+        _eventPublisher = eventPublisher;
         _logger = logger;
     }
 
@@ -217,6 +222,29 @@ public class VehiclesController : ControllerBase
         var created = await _vehicleRepository.CreateAsync(vehicle);
 
         _logger.LogInformation("Vehicle created: {VehicleId} - {Title}", created.Id, created.Title);
+
+        // Publish VehicleCreatedEvent to RabbitMQ
+        try
+        {
+            await _eventPublisher.PublishAsync(new VehicleCreatedEvent
+            {
+                VehicleId = created.Id,
+                Make = created.Make,
+                Model = created.Model,
+                Year = created.Year,
+                Price = created.Price,
+                VIN = created.VIN ?? string.Empty,
+                CreatedBy = created.SellerId,
+                CreatedAt = created.CreatedAt
+            });
+
+            _logger.LogInformation("VehicleCreatedEvent published for VehicleId: {VehicleId}", created.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish VehicleCreatedEvent for VehicleId: {VehicleId}", created.Id);
+            // Don't fail the request if event publishing fails
+        }
 
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }

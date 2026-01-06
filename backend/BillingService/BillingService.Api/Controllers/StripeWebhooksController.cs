@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using BillingService.Domain.Interfaces;
 using BillingService.Infrastructure.Services;
 using BillingService.Infrastructure.External;
+using BillingService.Infrastructure.Messaging;
+using CarDealer.Contracts.Events.Billing;
 using Stripe;
 using DomainEntities = BillingService.Domain.Entities;
 
@@ -24,6 +26,7 @@ public class StripeWebhooksController : ControllerBase
     private readonly IPaymentRepository _paymentRepository;
     private readonly IStripeCustomerRepository _customerRepository;
     private readonly IUserServiceClient _userServiceClient;
+    private readonly IEventPublisher _eventPublisher;
     private readonly StripeSettings _stripeSettings;
 
     public StripeWebhooksController(
@@ -34,6 +37,7 @@ public class StripeWebhooksController : ControllerBase
         IPaymentRepository paymentRepository,
         IStripeCustomerRepository customerRepository,
         IUserServiceClient userServiceClient,
+        IEventPublisher eventPublisher,
         IOptions<StripeSettings> stripeSettings)
     {
         _logger = logger;
@@ -43,6 +47,7 @@ public class StripeWebhooksController : ControllerBase
         _paymentRepository = paymentRepository;
         _customerRepository = customerRepository;
         _userServiceClient = userServiceClient;
+        _eventPublisher = eventPublisher;
         _stripeSettings = stripeSettings.Value;
     }
 
@@ -525,6 +530,37 @@ public class StripeWebhooksController : ControllerBase
         payment.MarkSucceeded(paymentIntent.LatestCharge?.ReceiptUrl);
 
         await _paymentRepository.AddAsync(payment);
+
+        // Publicar evento de pago completado
+        try
+        {
+            // Obtener información del usuario (en producción esto vendría de UserService)
+            var userEmail = customer.Email ?? "unknown@example.com";
+            var userName = customer.Name ?? "Unknown User";
+
+            await _eventPublisher.PublishAsync(new PaymentCompletedEvent
+            {
+                PaymentId = payment.Id,
+                UserId = customer.DealerId,
+                UserEmail = userEmail,
+                UserName = userName,
+                Amount = payment.Amount,
+                Currency = paymentIntent.Currency.ToUpper(),
+                StripePaymentIntentId = paymentIntent.Id,
+                Description = payment.Description ?? string.Empty,
+                SubscriptionPlan = null, // TODO: Agregar plan de suscripción si aplica
+                PaidAt = DateTime.UtcNow
+            });
+
+            _logger.LogInformation(
+                "PaymentCompletedEvent published for PaymentId: {PaymentId}, StripePaymentIntentId: {StripeId}",
+                payment.Id, paymentIntent.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish PaymentCompletedEvent for PaymentIntentId: {PaymentIntentId}", paymentIntent.Id);
+            // No fallar el webhook si la publicación del evento falla
+        }
     }
 
     private async Task HandlePaymentIntentFailed(Event stripeEvent)

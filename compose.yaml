@@ -671,6 +671,8 @@ services:
         condition: service_healthy
       errorservice:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "15090:80"
     environment:
@@ -690,11 +692,12 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
-      RabbitMQ__Enabled: "false"
-      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      RabbitMQ__Username: guest
-      RabbitMQ__Password: guest
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__VirtualHost: "/"
       Consul__Enabled: "false"
       Consul__Address: "http://consul:8500"
       # Storage configuration - AWS S3 Enabled
@@ -885,6 +888,12 @@ services:
       Stripe__SecretKey: "sk_test_demo_key_for_development"
       Stripe__WebhookSecret: "whsec_demo_secret_for_development"
       Stripe__PublishableKey: "pk_test_demo_key_for_development"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__VirtualHost: "/"
     # Removed volume mount - code copied during build
     ports:
       - "15107:80"
@@ -894,6 +903,8 @@ services:
         condition: service_healthy
       errorservice:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - cargurus-net
 
@@ -1157,11 +1168,19 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__VirtualHost: "/"
       ServiceUrls__ErrorService: "http://errorservice:80"
     ports:
       - "15070:80"
     depends_on:
       vehiclessaleservice-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -1549,12 +1568,19 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: "Host=auditservice-db;Database=auditservice;Username=postgres;Password=password"
-      RabbitMQ__Enabled: "false"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__VirtualHost: "/"
       Consul__Enabled: "false"
     ports:
       - "5084:80"
     depends_on:
       auditservice-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - cargurus-net

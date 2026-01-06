@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Persistence;
 using VehiclesSaleService.Infrastructure.Repositories;
+using VehiclesSaleService.Infrastructure.Messaging;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.MultiTenancy;
@@ -74,6 +75,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IVehicleCatalogRepository, VehicleCatalogRepository>();
+
+// RabbitMQ Event Publisher
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // ========================================
 // CORS

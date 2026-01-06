@@ -84,8 +84,11 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 // 🔧 Register Teams Provider
 builder.Services.AddHttpClient<ITeamsProvider, TeamsProvider>();
 
-// 🔧 Register ErrorCriticalEvent Consumer as Hosted Service
+// 🔧 Register RabbitMQ Consumers as Hosted Services
 builder.Services.AddHostedService<ErrorCriticalEventConsumer>();
+builder.Services.AddHostedService<UserRegisteredNotificationConsumer>();
+builder.Services.AddHostedService<VehicleCreatedNotificationConsumer>();
+builder.Services.AddHostedService<PaymentReceiptNotificationConsumer>();
 
 // Dead Letter Queue
 builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>(sp =>
