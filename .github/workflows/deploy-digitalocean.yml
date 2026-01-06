@@ -144,20 +144,36 @@ jobs:
         run: |
           kubectl apply -f k8s/configmaps.yaml
 
+      - name: �️ Deploy Databases (StatefulSets)
+        run: |
+          echo "🗄️ Deploying PostgreSQL databases..."
+          kubectl apply -f k8s/databases.yaml
+          
+          echo "⏳ Waiting for databases to be ready..."
+          sleep 30
+          
+          # Wait for each database to be ready
+          for DB in authservice-db userservice-db roleservice-db vehiclessaleservice-db mediaservice-db notificationservice-db billingservice-db errorservice-db; do
+            echo "⏳ Waiting for $DB..."
+            kubectl rollout status statefulset/$DB -n okla --timeout=120s || true
+          done
+
+      - name: 🔐 Apply Database Secrets
+        run: |
+          echo "🔐 Applying database connection secrets..."
+          kubectl apply -f k8s/db-secrets.yaml
+
       - name: 🚀 Deploy services
         run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
           SERVICES="${{ needs.prepare.outputs.services }}"
           
-          # Update image tags in deployments
+          echo "🚀 Applying all deployments..."
+          kubectl apply -f k8s/deployments.yaml
+          
+          # Restart deployments to pick up new secrets
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
-            echo "🚀 Deploying $SERVICE:$VERSION"
-            
-            # Apply deployment with updated image
-            kubectl set image deployment/$SERVICE \
-              $SERVICE=${{ env.IMAGE_PREFIX }}/$SERVICE:$VERSION \
-              -n okla --record 2>/dev/null || \
-            kubectl apply -f k8s/deployments.yaml
+            echo "🔄 Restarting $SERVICE..."
+            kubectl rollout restart deployment/$SERVICE -n okla 2>/dev/null || true
           done
 
       - name: 📡 Apply Services

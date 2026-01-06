@@ -154,7 +154,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: authservice-db-secret
             - secretRef:
                 name: jwt-secrets
           resources:
@@ -213,7 +213,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: userservice-db-secret
             - secretRef:
                 name: jwt-secrets
           resources:
@@ -272,7 +272,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: roleservice-db-secret
             - secretRef:
                 name: jwt-secrets
           resources:
@@ -331,7 +331,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: vehiclessaleservice-db-secret
             - secretRef:
                 name: jwt-secrets
           resources:
@@ -390,7 +390,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: mediaservice-db-secret
             - secretRef:
                 name: external-services-secrets
           resources:
@@ -449,7 +449,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: notificationservice-db-secret
             - secretRef:
                 name: external-services-secrets
           resources:
@@ -508,7 +508,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: billingservice-db-secret
             - secretRef:
                 name: external-services-secrets
           resources:
@@ -567,7 +567,7 @@ spec:
             - configMapRef:
                 name: global-config
             - secretRef:
-                name: database-secrets
+                name: errorservice-db-secret
           resources:
             requests:
               memory: "64Mi"
