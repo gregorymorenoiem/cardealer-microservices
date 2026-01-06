@@ -23,9 +23,21 @@ namespace UserService.Infrastructure.Migrations
                     PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    LastLoginAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    LastLoginAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    // Account type system
+                    AccountType = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
+                    // Platform-level fields
+                    PlatformRole = table.Column<int>(type: "integer", nullable: true),
+                    PlatformPermissions = table.Column<string>(type: "text", nullable: true),
+                    // Dealer-level fields
+                    DealerId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DealerRole = table.Column<int>(type: "integer", nullable: true),
+                    DealerPermissions = table.Column<string>(type: "text", nullable: true),
+                    // Employee metadata
+                    EmployerUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
