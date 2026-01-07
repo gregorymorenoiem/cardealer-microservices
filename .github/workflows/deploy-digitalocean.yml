@@ -147,9 +147,9 @@ jobs:
         run: |
           kubectl apply -f k8s/configmaps.yaml
 
-      - name: 🗄️ Deploy Infrastructure (PostgreSQL + Redis)
+      - name: 🗄️ Deploy Infrastructure (PostgreSQL + Redis + RabbitMQ)
         run: |
-          echo "🗄️ Deploying consolidated PostgreSQL + Redis..."
+          echo "🗄️ Deploying consolidated infrastructure..."
           kubectl apply -f k8s/infrastructure.yaml
 
           echo "⏳ Waiting for PostgreSQL to be ready..."
@@ -158,8 +158,11 @@ jobs:
           echo "⏳ Waiting for Redis to be ready..."
           kubectl rollout status deployment/redis -n okla --timeout=60s || true
 
+          echo "⏳ Waiting for RabbitMQ to be ready..."
+          kubectl rollout status deployment/rabbitmq -n okla --timeout=120s || true
+
           # Wait for databases to be fully initialized
-          echo "⏳ Waiting for database initialization..."
+          echo "⏳ Waiting for infrastructure initialization..."
           sleep 30
 
       - name: 🔐 Apply Database Secrets
