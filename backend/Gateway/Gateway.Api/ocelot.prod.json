@@ -7,7 +7,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ]
     },
     {
@@ -16,7 +16,7 @@
       "DownstreamPathTemplate": "/api/errors",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -30,7 +30,7 @@
       "DownstreamPathTemplate": "/api/errors/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -44,7 +44,7 @@
       "DownstreamPathTemplate": "/api/errors/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -58,7 +58,7 @@
       "DownstreamPathTemplate": "/api/errors/services",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -72,7 +72,7 @@
       "DownstreamPathTemplate": "/api/errors/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -86,7 +86,7 @@
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
+        { "Host": "errorservice", "Port": 8080 }
       ],
       "DangerousAcceptAnyServerCertificateValidator": true,
       "QoSOptions": {
@@ -102,7 +102,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 80 }
+        { "Host": "authservice", "Port": 8080 }
       ]
     },
     {
@@ -111,7 +111,7 @@
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 80 }
+        { "Host": "authservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -125,7 +125,7 @@
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 80 }
+        { "Host": "authservice", "Port": 8080 }
       ],
       "DangerousAcceptAnyServerCertificateValidator": true,
       "QoSOptions": {
@@ -140,7 +140,7 @@
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "gateway", "Port": 80 }
+        { "Host": "gateway", "Port": 8080 }
       ],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
@@ -150,7 +150,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "notificationservice",
-          "Port": 80
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/{everything}",
@@ -163,7 +163,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "notificationservice",
-          "Port": 80
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/templates/{everything}",
@@ -176,7 +176,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "notificationservice",
-          "Port": 80
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/templates",
@@ -189,7 +189,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "notificationservice",
-          "Port": 80
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/health",
@@ -202,7 +202,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ]
     },
     {
@@ -211,7 +211,7 @@
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -225,7 +225,7 @@
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -239,7 +239,7 @@
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -253,7 +253,7 @@
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -268,7 +268,7 @@
       "DownstreamPathTemplate": "/api/catalog",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -282,7 +282,7 @@
       "DownstreamPathTemplate": "/api/catalog/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -297,7 +297,7 @@
       "DownstreamPathTemplate": "/api/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -311,7 +311,7 @@
       "DownstreamPathTemplate": "/api/categories/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -326,7 +326,7 @@
       "DownstreamPathTemplate": "/api/homepagesections",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -340,7 +340,7 @@
       "DownstreamPathTemplate": "/api/homepagesections/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
+        { "Host": "vehiclessaleservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -355,7 +355,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "mediaservice", "Port": 80 }
+        { "Host": "mediaservice", "Port": 8080 }
       ]
     },
     {
@@ -364,7 +364,7 @@
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "mediaservice", "Port": 80 }
+        { "Host": "mediaservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -378,7 +378,7 @@
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "mediaservice", "Port": 80 }
+        { "Host": "mediaservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -393,7 +393,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "billingservice", "Port": 80 }
+        { "Host": "billingservice", "Port": 8080 }
       ]
     },
     {
@@ -402,7 +402,7 @@
       "DownstreamPathTemplate": "/api/billing/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "billingservice", "Port": 80 }
+        { "Host": "billingservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
@@ -420,7 +420,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ]
     },
     {
@@ -429,7 +429,7 @@
       "DownstreamPathTemplate": "/api/users",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
@@ -446,7 +446,7 @@
       "DownstreamPathTemplate": "/api/users/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
@@ -464,7 +464,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ]
     },
     {
@@ -473,7 +473,7 @@
       "DownstreamPathTemplate": "/api/dealers/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -487,7 +487,7 @@
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -502,7 +502,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ]
     },
     {
@@ -511,7 +511,7 @@
       "DownstreamPathTemplate": "/api/sellers/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -525,7 +525,7 @@
       "DownstreamPathTemplate": "/api/sellers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
+        { "Host": "userservice", "Port": 8080 }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -540,7 +540,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "roleservice", "Port": 80 }
+        { "Host": "roleservice", "Port": 8080 }
       ]
     },
     {
@@ -549,7 +549,7 @@
       "DownstreamPathTemplate": "/api/roles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "roleservice", "Port": 80 }
+        { "Host": "roleservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
@@ -567,7 +567,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "adminservice", "Port": 80 }
+        { "Host": "adminservice", "Port": 8080 }
       ]
     },
     {
@@ -576,7 +576,7 @@
       "DownstreamPathTemplate": "/api/admin/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "adminservice", "Port": 80 }
+        { "Host": "adminservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
@@ -594,7 +594,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "crmservice", "Port": 80 }
+        { "Host": "crmservice", "Port": 8080 }
       ]
     },
     {
@@ -603,7 +603,7 @@
       "DownstreamPathTemplate": "/api/crm/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "crmservice", "Port": 80 }
+        { "Host": "crmservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
@@ -621,7 +621,7 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "reportsservice", "Port": 80 }
+        { "Host": "reportsservice", "Port": 8080 }
       ]
     },
     {
@@ -630,7 +630,7 @@
       "DownstreamPathTemplate": "/api/reports/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "reportsservice", "Port": 80 }
+        { "Host": "reportsservice", "Port": 8080 }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
