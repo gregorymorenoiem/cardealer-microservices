@@ -15,11 +15,15 @@ data:
   Cache__Provider: "Redis"
   Cache__Redis__Host: "redis"
   Cache__Redis__Port: "6379"
-  # RabbitMQ
+  # RabbitMQ (algunos servicios usan HostName, otros Host)
   RabbitMQ__Host: "rabbitmq"
+  RabbitMQ__HostName: "rabbitmq"
   RabbitMQ__Port: "5672"
   RabbitMQ__Username: "guest"
+  RabbitMQ__UserName: "guest"
   RabbitMQ__Password: "guest"
+  RabbitMQ__VirtualHost: "/"
+  RabbitMQ__ExchangeName: "cardealer.events"
   # Logging
   Serilog__MinimumLevel__Default: "Information"
   Serilog__MinimumLevel__Override__Microsoft: "Warning"
