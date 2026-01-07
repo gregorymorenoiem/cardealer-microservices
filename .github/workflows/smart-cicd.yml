@@ -38,9 +38,10 @@ jobs:
       errorservice: ${{ steps.filter.outputs.errorservice }}
       notificationservice: ${{ steps.filter.outputs.notificationservice }}
       vehiclessaleservice: ${{ steps.filter.outputs.vehiclessaleservice }}
-      vehiclesrentservice: ${{ steps.filter.outputs.vehiclesrentservice }}
-      propertiessaleservice: ${{ steps.filter.outputs.propertiessaleservice }}
-      propertiesrentservice: ${{ steps.filter.outputs.propertiesrentservice }}
+      # Disabled temporarily - not in use
+      # vehiclesrentservice: ${{ steps.filter.outputs.vehiclesrentservice }}
+      # propertiessaleservice: ${{ steps.filter.outputs.propertiessaleservice }}
+      # propertiesrentservice: ${{ steps.filter.outputs.propertiesrentservice }}
       mediaservice: ${{ steps.filter.outputs.mediaservice }}
       billingservice: ${{ steps.filter.outputs.billingservice }}
       crmservice: ${{ steps.filter.outputs.crmservice }}
@@ -80,15 +81,16 @@ jobs:
             vehiclessaleservice:
               - 'backend/VehiclesSaleService/**'
               - 'backend/_Shared/**'
-            vehiclesrentservice:
-              - 'backend/VehiclesRentService/**'
-              - 'backend/_Shared/**'
-            propertiessaleservice:
-              - 'backend/PropertiesSaleService/**'
-              - 'backend/_Shared/**'
-            propertiesrentservice:
-              - 'backend/PropertiesRentService/**'
-              - 'backend/_Shared/**'
+            # Disabled temporarily - not in use
+            # vehiclesrentservice:
+            #   - 'backend/VehiclesRentService/**'
+            #   - 'backend/_Shared/**'
+            # propertiessaleservice:
+            #   - 'backend/PropertiesSaleService/**'
+            #   - 'backend/_Shared/**'
+            # propertiesrentservice:
+            #   - 'backend/PropertiesRentService/**'
+            #   - 'backend/_Shared/**'
             mediaservice:
               - 'backend/MediaService/**'
               - 'backend/_Shared/**'
@@ -129,7 +131,7 @@ jobs:
   # ============================================
   # BACKEND SERVICES (Conditional)
   # ============================================
-  
+
   authservice:
     name: 🔐 AuthService
     needs: detect-changes
@@ -196,38 +198,39 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
-  vehiclesrentservice:
-    name: 🚙 VehiclesRentService
-    needs: detect-changes
-    if: needs.detect-changes.outputs.vehiclesrentservice == 'true'
-    uses: ./.github/workflows/_reusable-dotnet-service.yml
-    with:
-      service-name: vehiclesrentservice
-      service-path: backend/VehiclesRentService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
-    secrets: inherit
+  # Disabled temporarily - not in use (code errors pending fix)
+  # vehiclesrentservice:
+  #   name: 🚙 VehiclesRentService
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.vehiclesrentservice == 'true'
+  #   uses: ./.github/workflows/_reusable-dotnet-service.yml
+  #   with:
+  #     service-name: vehiclesrentservice
+  #     service-path: backend/VehiclesRentService
+  #     run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+  #   secrets: inherit
 
-  propertiessaleservice:
-    name: 🏠 PropertiesSaleService
-    needs: detect-changes
-    if: needs.detect-changes.outputs.propertiessaleservice == 'true'
-    uses: ./.github/workflows/_reusable-dotnet-service.yml
-    with:
-      service-name: propertiessaleservice
-      service-path: backend/PropertiesSaleService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
-    secrets: inherit
+  # propertiessaleservice:
+  #   name: 🏠 PropertiesSaleService
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.propertiessaleservice == 'true'
+  #   uses: ./.github/workflows/_reusable-dotnet-service.yml
+  #   with:
+  #     service-name: propertiessaleservice
+  #     service-path: backend/PropertiesSaleService
+  #     run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+  #   secrets: inherit
 
-  propertiesrentservice:
-    name: 🏢 PropertiesRentService
-    needs: detect-changes
-    if: needs.detect-changes.outputs.propertiesrentservice == 'true'
-    uses: ./.github/workflows/_reusable-dotnet-service.yml
-    with:
-      service-name: propertiesrentservice
-      service-path: backend/PropertiesRentService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
-    secrets: inherit
+  # propertiesrentservice:
+  #   name: 🏢 PropertiesRentService
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.propertiesrentservice == 'true'
+  #   uses: ./.github/workflows/_reusable-dotnet-service.yml
+  #   with:
+  #     service-name: propertiesrentservice
+  #     service-path: backend/PropertiesRentService
+  #     run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+  #   secrets: inherit
 
   mediaservice:
     name: 📸 MediaService
@@ -280,7 +283,7 @@ jobs:
   # ============================================
   deploy-staging:
     name: 🚀 Deploy to Staging
-    needs: 
+    needs:
       - authservice
       - userservice
       - roleservice

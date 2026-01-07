@@ -74,7 +74,8 @@ jobs:
         id: services
         run: |
           if [ "${{ inputs.services }}" == "all" ] || [ -z "${{ inputs.services }}" ]; then
-            SERVICES="frontend-web,gateway,authservice,userservice,vehiclessaleservice,propertiessaleservice,mediaservice,notificationservice,billingservice,errorservice"
+            # Note: vehiclesrentservice, propertiessaleservice, propertiesrentservice disabled temporarily
+            SERVICES="frontend-web,gateway,authservice,userservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice"
           else
             SERVICES="${{ inputs.services }}"
           fi
