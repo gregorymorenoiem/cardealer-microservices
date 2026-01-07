@@ -315,9 +315,22 @@ jobs:
 
       - name: 🚀 Deploy to Kubernetes
         run: |
-          # Apply Kubernetes manifests
+          # Apply Kubernetes manifests in order
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmaps.yaml
+          kubectl apply -f k8s/db-secrets.yaml
+          
+          # Deploy infrastructure (PostgreSQL + Redis)
+          kubectl apply -f k8s/infrastructure.yaml
+          
+          echo "⏳ Waiting for PostgreSQL to be ready..."
+          kubectl rollout status statefulset/postgres -n okla --timeout=180s || true
+          sleep 15
+          
+          echo "⏳ Waiting for Redis to be ready..."
+          kubectl rollout status deployment/redis -n okla --timeout=60s || true
+          
+          # Deploy services
           kubectl apply -f k8s/deployments.yaml
           kubectl apply -f k8s/services.yaml
           kubectl apply -f k8s/ingress.yaml
