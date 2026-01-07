@@ -276,6 +276,7 @@ jobs:
     uses: ./.github/workflows/_reusable-frontend.yml
     with:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      vite-api-url: 'https://api.okla.com.do'
     secrets: inherit
 
   # ============================================

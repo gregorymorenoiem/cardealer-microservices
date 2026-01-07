@@ -5,6 +5,7 @@
  * This module provides a single source of truth for all configuration.
  * 
  * @module config/env
+ * @updated 2025-01-02 - Production API URL fix via VITE_API_URL build arg
  */
 
 /**
