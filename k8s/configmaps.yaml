@@ -190,6 +190,6 @@ data:
         }
       ],
       "GlobalConfiguration": {
-        "BaseUrl": "https://api.okla.com"
+        "BaseUrl": "https://api.okla.com.do"
       }
     }
