@@ -29,9 +29,16 @@ spec:
     spec:
       containers:
         - name: frontend-web
-          image: ghcr.io/gregorymorenoiem/frontend-web:latest
+          image: ghcr.io/gregorymorenoiem/cardealer-web:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: RUNTIME_API_URL
+              value: "https://api.okla.com.do"
+            - name: NODE_ENV
+              value: "production"
+            - name: RUNTIME_APP_VERSION
+              value: "1.0.0"
           resources:
             requests:
               memory: "64Mi"
@@ -51,8 +58,6 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -120,8 +125,6 @@ spec:
         - name: ocelot-config
           configMap:
             name: gateway-config
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -185,8 +188,6 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -250,8 +251,6 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -315,8 +314,6 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -380,8 +377,6 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -445,8 +440,6 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -510,8 +503,6 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -575,8 +566,6 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
 
 ---
 # =============================================================================
@@ -640,5 +629,3 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
-      imagePullSecrets:
-        - name: registry-credentials
