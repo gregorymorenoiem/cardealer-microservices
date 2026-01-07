@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\TracingService.Application\TracingService.Application.csproj" />
+    <ProjectReference Include="../TracingService.Application/TracingService.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SearchService.Application\SearchService.Application.csproj" />
-    <ProjectReference Include="..\SearchService.Infrastructure\SearchService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../SearchService.Application/SearchService.Application.csproj" />
+    <ProjectReference Include="../SearchService.Infrastructure/SearchService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

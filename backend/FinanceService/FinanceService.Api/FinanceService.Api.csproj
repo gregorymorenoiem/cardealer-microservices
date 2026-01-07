@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FinanceService.Application\FinanceService.Application.csproj" />
-    <ProjectReference Include="..\FinanceService.Infrastructure\FinanceService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../FinanceService.Application/FinanceService.Application.csproj" />
+    <ProjectReference Include="../FinanceService.Infrastructure/FinanceService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

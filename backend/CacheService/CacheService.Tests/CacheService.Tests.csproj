@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CacheService.Domain\CacheService.Domain.csproj" />
-    <ProjectReference Include="..\CacheService.Application\CacheService.Application.csproj" />
-    <ProjectReference Include="..\CacheService.Infrastructure\CacheService.Infrastructure.csproj" />
+    <ProjectReference Include="../CacheService.Domain/CacheService.Domain.csproj" />
+    <ProjectReference Include="../CacheService.Application/CacheService.Application.csproj" />
+    <ProjectReference Include="../CacheService.Infrastructure/CacheService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

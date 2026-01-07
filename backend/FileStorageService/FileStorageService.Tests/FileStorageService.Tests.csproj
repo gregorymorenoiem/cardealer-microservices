@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileStorageService.Core\FileStorageService.Core.csproj" />
-    <ProjectReference Include="..\FileStorageService.Api\FileStorageService.Api.csproj" />
+    <ProjectReference Include="../FileStorageService.Core/FileStorageService.Core.csproj" />
+    <ProjectReference Include="../FileStorageService.Api/FileStorageService.Api.csproj" />
   </ItemGroup>
 
 </Project>

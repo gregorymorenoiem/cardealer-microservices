@@ -14,7 +14,6 @@ public class RedisFixture : IAsyncLifetime
     {
         _container = new RedisBuilder()
             .WithImage("redis:7-alpine")
-            .WithPortBinding(6380, 6379)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
     }

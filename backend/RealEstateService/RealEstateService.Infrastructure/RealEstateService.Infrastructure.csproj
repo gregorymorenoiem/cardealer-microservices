@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\RealEstateService.Domain\RealEstateService.Domain.csproj" />
+    <ProjectReference Include="../RealEstateService.Domain/RealEstateService.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

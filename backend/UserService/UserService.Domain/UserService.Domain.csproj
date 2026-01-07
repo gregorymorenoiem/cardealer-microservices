@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

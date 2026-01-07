@@ -15,9 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BillingService.Domain\BillingService.Domain.csproj" />
-    <ProjectReference Include="..\BillingService.Application\BillingService.Application.csproj" />
-    <ProjectReference Include="..\..\..\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../BillingService.Domain/BillingService.Domain.csproj" />
+    <ProjectReference Include="../BillingService.Application/BillingService.Application.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

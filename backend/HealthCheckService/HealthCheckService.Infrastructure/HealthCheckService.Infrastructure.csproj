@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\HealthCheckService.Domain\HealthCheckService.Domain.csproj" />
-    <ProjectReference Include="..\HealthCheckService.Application\HealthCheckService.Application.csproj" />
+    <ProjectReference Include="../HealthCheckService.Domain/HealthCheckService.Domain.csproj" />
+    <ProjectReference Include="../HealthCheckService.Application/HealthCheckService.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

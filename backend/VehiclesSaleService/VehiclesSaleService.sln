@@ -3,17 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Domain", "VehiclesSaleService.Domain\VehiclesSaleService.Domain.csproj", "{14B86CE6-22AE-429C-B732-31ABCF3BA080}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Domain", "VehiclesSaleService.Domain/VehiclesSaleService.Domain.csproj", "{14B86CE6-22AE-429C-B732-31ABCF3BA080}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Application", "VehiclesSaleService.Application\VehiclesSaleService.Application.csproj", "{89EBF302-32EF-4C52-9CB6-B4852735E7CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Application", "VehiclesSaleService.Application/VehiclesSaleService.Application.csproj", "{89EBF302-32EF-4C52-9CB6-B4852735E7CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Infrastructure", "VehiclesSaleService.Infrastructure\VehiclesSaleService.Infrastructure.csproj", "{71ED67CC-436E-4030-9999-965B0CF2F9F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Infrastructure", "VehiclesSaleService.Infrastructure/VehiclesSaleService.Infrastructure.csproj", "{71ED67CC-436E-4030-9999-965B0CF2F9F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Api", "VehiclesSaleService.Api\VehiclesSaleService.Api.csproj", "{37C05632-18ED-4CC2-A1FD-9772DD201FE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Api", "VehiclesSaleService.Api/VehiclesSaleService.Api.csproj", "{37C05632-18ED-4CC2-A1FD-9772DD201FE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Shared", "VehiclesSaleService.Shared\VehiclesSaleService.Shared.csproj", "{F0966349-3CB4-4EC1-8023-A27D1D9C7366}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Shared", "VehiclesSaleService.Shared/VehiclesSaleService.Shared.csproj", "{F0966349-3CB4-4EC1-8023-A27D1D9C7366}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Tests", "VehiclesSaleService.Tests\VehiclesSaleService.Tests.csproj", "{E9EC57D7-2231-464F-BF30-2E46F24DAD32}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehiclesSaleService.Tests", "VehiclesSaleService.Tests/VehiclesSaleService.Tests.csproj", "{E9EC57D7-2231-464F-BF30-2E46F24DAD32}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts", "../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "{53EA9163-7637-4535-A49F-3CC7C5863A9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Shared", "../_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "{0D61DF4C-5725-42B1-B968-A292F599261C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,5 +52,13 @@ Global
 		{E9EC57D7-2231-464F-BF30-2E46F24DAD32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9EC57D7-2231-464F-BF30-2E46F24DAD32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9EC57D7-2231-464F-BF30-2E46F24DAD32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53EA9163-7637-4535-A49F-3CC7C5863A9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53EA9163-7637-4535-A49F-3CC7C5863A9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53EA9163-7637-4535-A49F-3CC7C5863A9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53EA9163-7637-4535-A49F-3CC7C5863A9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D61DF4C-5725-42B1-B968-A292F599261C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D61DF4C-5725-42B1-B968-A292F599261C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D61DF4C-5725-42B1-B968-A292F599261C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D61DF4C-5725-42B1-B968-A292F599261C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

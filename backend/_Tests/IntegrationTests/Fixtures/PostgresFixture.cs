@@ -17,7 +17,6 @@ public class PostgresFixture : IAsyncLifetime
             .WithDatabase("cardealer_test")
             .WithUsername("test")
             .WithPassword("test123")
-            .WithPortBinding(5433, 5432)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
             .Build();
     }

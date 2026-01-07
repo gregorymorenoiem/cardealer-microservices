@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SearchService.Domain\SearchService.Domain.csproj" />
-    <ProjectReference Include="..\SearchService.Application\SearchService.Application.csproj" />
+    <ProjectReference Include="../SearchService.Domain/SearchService.Domain.csproj" />
+    <ProjectReference Include="../SearchService.Application/SearchService.Application.csproj" />
   </ItemGroup>
 
 </Project>

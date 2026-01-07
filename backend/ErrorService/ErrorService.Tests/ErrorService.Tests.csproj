@@ -20,11 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ErrorService.Api\ErrorService.Api.csproj" />
-    <ProjectReference Include="..\ErrorService.Application\ErrorService.Application.csproj" />
-    <ProjectReference Include="..\ErrorService.Domain\ErrorService.Domain.csproj" />
-    <ProjectReference Include="..\ErrorService.Infrastructure\ErrorService.Infrastructure.csproj" />
-    <ProjectReference Include="..\ErrorService.Shared\ErrorService.Shared.csproj" />
+    <ProjectReference Include="../ErrorService.Api/ErrorService.Api.csproj" />
+    <ProjectReference Include="../ErrorService.Application/ErrorService.Application.csproj" />
+    <ProjectReference Include="../ErrorService.Domain/ErrorService.Domain.csproj" />
+    <ProjectReference Include="../ErrorService.Infrastructure/ErrorService.Infrastructure.csproj" />
+    <ProjectReference Include="../ErrorService.Shared/ErrorService.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

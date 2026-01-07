@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />
-    <ProjectReference Include="..\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="../ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+    <ProjectReference Include="../ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

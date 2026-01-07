@@ -5,17 +5,17 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LoggingService", "LoggingService", "{DD9A4D5E-7401-4C0C-8D36-F36AF752C949}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Domain", "LoggingService.Domain\LoggingService.Domain.csproj", "{DB2820FB-5F49-472E-97D1-F5D208906479}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Domain", "LoggingService.Domain/LoggingService.Domain.csproj", "{DB2820FB-5F49-472E-97D1-F5D208906479}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Application", "LoggingService.Application\LoggingService.Application.csproj", "{9DC12649-4A95-4F06-B8F6-090672E7EC9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Application", "LoggingService.Application/LoggingService.Application.csproj", "{9DC12649-4A95-4F06-B8F6-090672E7EC9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Infrastructure", "LoggingService.Infrastructure\LoggingService.Infrastructure.csproj", "{F6C7FFF8-A8BD-4B14-AEDD-AEBED2BD3D3C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Infrastructure", "LoggingService.Infrastructure/LoggingService.Infrastructure.csproj", "{F6C7FFF8-A8BD-4B14-AEDD-AEBED2BD3D3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Api", "LoggingService.Api\LoggingService.Api.csproj", "{FEED3C81-20AF-4F9C-A7D5-EC583BB92F95}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Api", "LoggingService.Api/LoggingService.Api.csproj", "{FEED3C81-20AF-4F9C-A7D5-EC583BB92F95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Tests", "LoggingService.Tests\LoggingService.Tests.csproj", "{B7689528-1E7A-404E-A316-E81264BD500F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.Tests", "LoggingService.Tests/LoggingService.Tests.csproj", "{B7689528-1E7A-404E-A316-E81264BD500F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.IntegrationTests", "LoggingService.IntegrationTests\LoggingService.IntegrationTests.csproj", "{D03B04FB-DE60-498D-9158-375950F66F27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingService.IntegrationTests", "LoggingService.IntegrationTests/LoggingService.IntegrationTests.csproj", "{D03B04FB-DE60-498D-9158-375950F66F27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

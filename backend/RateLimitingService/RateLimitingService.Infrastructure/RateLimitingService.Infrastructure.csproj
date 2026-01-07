@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RateLimitingService.Core\RateLimitingService.Core.csproj" />
+    <ProjectReference Include="../RateLimitingService.Core/RateLimitingService.Core.csproj" />
   </ItemGroup>
 
 </Project>

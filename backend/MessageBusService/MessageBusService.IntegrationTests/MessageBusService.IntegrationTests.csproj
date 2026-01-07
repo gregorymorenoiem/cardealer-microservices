@@ -28,8 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageBusService.Api\MessageBusService.Api.csproj" />
-    <ProjectReference Include="..\MessageBusService.Infrastructure\MessageBusService.Infrastructure.csproj" />
+    <ProjectReference Include="../MessageBusService.Api/MessageBusService.Api.csproj" />
+    <ProjectReference Include="../MessageBusService.Infrastructure/MessageBusService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

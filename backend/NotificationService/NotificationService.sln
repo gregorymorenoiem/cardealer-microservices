@@ -3,15 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Api", "NotificationService.Api\NotificationService.Api.csproj", "{33A72E0F-31B6-44EE-BE8A-9918C579A03A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Api", "NotificationService.Api/NotificationService.Api.csproj", "{33A72E0F-31B6-44EE-BE8A-9918C579A03A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Application", "NotificationService.Application\NotificationService.Application.csproj", "{BD386408-39B4-461D-84F4-FFB5710662E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Application", "NotificationService.Application/NotificationService.Application.csproj", "{BD386408-39B4-461D-84F4-FFB5710662E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Domain", "NotificationService.Domain\NotificationService.Domain.csproj", "{119CBFFB-51F2-427B-B33A-38B75F4F959E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Domain", "NotificationService.Domain/NotificationService.Domain.csproj", "{119CBFFB-51F2-427B-B33A-38B75F4F959E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Infrastructure", "NotificationService.Infrastructure\NotificationService.Infrastructure.csproj", "{591A2444-7A5F-48DB-90C1-FB73D44A87C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Infrastructure", "NotificationService.Infrastructure/NotificationService.Infrastructure.csproj", "{591A2444-7A5F-48DB-90C1-FB73D44A87C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Shared", "NotificationService.Shared\NotificationService.Shared.csproj", "{E5B0E1D0-AF59-4955-8C27-541D12DB02A9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.Shared", "NotificationService.Shared/NotificationService.Shared.csproj", "{E5B0E1D0-AF59-4955-8C27-541D12DB02A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts", "../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "{659F3B4C-EB2E-4E01-8B0C-B21B7D84F002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Shared", "../_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "{B733A71C-4FF1-4586-BEF5-984006898384}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,5 +46,13 @@ Global
 		{E5B0E1D0-AF59-4955-8C27-541D12DB02A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5B0E1D0-AF59-4955-8C27-541D12DB02A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5B0E1D0-AF59-4955-8C27-541D12DB02A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{659F3B4C-EB2E-4E01-8B0C-B21B7D84F002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{659F3B4C-EB2E-4E01-8B0C-B21B7D84F002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{659F3B4C-EB2E-4E01-8B0C-B21B7D84F002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{659F3B4C-EB2E-4E01-8B0C-B21B7D84F002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B733A71C-4FF1-4586-BEF5-984006898384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B733A71C-4FF1-4586-BEF5-984006898384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B733A71C-4FF1-4586-BEF5-984006898384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B733A71C-4FF1-4586-BEF5-984006898384}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

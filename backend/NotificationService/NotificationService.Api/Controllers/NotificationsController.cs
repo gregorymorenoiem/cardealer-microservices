@@ -47,9 +47,16 @@ public class NotificationsController : ControllerBase
     [HttpGet("{id:guid}/status")]
     public async Task<ActionResult<GetNotificationStatusResponse>> GetStatus(Guid id)
     {
-        // ✅ Usar el namespace completo para evitar ambigüedad
-        var query = new Application.UseCases.GetNotificationStatus.GetNotificationStatusQuery(id);
-        var result = await _mediator.Send(query);
-        return Ok(result);
+        try
+        {
+            // ✅ Usar el namespace completo para evitar ambigüedad
+            var query = new Application.UseCases.GetNotificationStatus.GetNotificationStatusQuery(id);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (ErrorService.Shared.Exceptions.NotFoundException)
+        {
+            return NotFound(new { Message = $"Notification with ID {id} not found" });
+        }
     }
 }

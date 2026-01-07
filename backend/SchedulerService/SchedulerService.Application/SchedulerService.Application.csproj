@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\SchedulerService.Domain\SchedulerService.Domain.csproj" />
+    <ProjectReference Include="../SchedulerService.Domain/SchedulerService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VehiclesSaleService.Application\VehiclesSaleService.Application.csproj" />
-    <ProjectReference Include="..\VehiclesSaleService.Infrastructure\VehiclesSaleService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../VehiclesSaleService.Application/VehiclesSaleService.Application.csproj" />
+    <ProjectReference Include="../VehiclesSaleService.Infrastructure/VehiclesSaleService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

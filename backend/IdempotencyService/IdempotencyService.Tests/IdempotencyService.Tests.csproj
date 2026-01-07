@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IdempotencyService.Core\IdempotencyService.Core.csproj" />
-    <ProjectReference Include="..\IdempotencyService.Api\IdempotencyService.Api.csproj" />
+    <ProjectReference Include="../IdempotencyService.Core/IdempotencyService.Core.csproj" />
+    <ProjectReference Include="../IdempotencyService.Api/IdempotencyService.Api.csproj" />
   </ItemGroup>
 
 </Project>

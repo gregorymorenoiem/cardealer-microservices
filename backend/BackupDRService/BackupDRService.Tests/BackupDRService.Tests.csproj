@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BackupDRService.Core\BackupDRService.Core.csproj" />
-    <ProjectReference Include="..\BackupDRService.Api\BackupDRService.Api.csproj" />
+    <ProjectReference Include="../BackupDRService.Core/BackupDRService.Core.csproj" />
+    <ProjectReference Include="../BackupDRService.Api/BackupDRService.Api.csproj" />
   </ItemGroup>
 
 </Project>

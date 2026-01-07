@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RealEstateService.Domain\RealEstateService.Domain.csproj" />
-    <ProjectReference Include="..\RealEstateService.Application\RealEstateService.Application.csproj" />
+    <ProjectReference Include="../RealEstateService.Domain/RealEstateService.Domain.csproj" />
+    <ProjectReference Include="../RealEstateService.Application/RealEstateService.Application.csproj" />
   </ItemGroup>
 
 </Project>

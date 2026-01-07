@@ -17,21 +17,31 @@ namespace AuthService.Tests.Integration.Factories
 {
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
+        // Use a static DB name so all tests share the same database within a collection
+        private static readonly string DatabaseName = $"AuthServiceTestDb_{Guid.NewGuid():N}";
+
         public Task InitializeAsync() => Task.CompletedTask;
 
         public new Task DisposeAsync() => Task.CompletedTask;
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            // Set required environment variables for JWT
+            builder.UseSetting("Jwt:Key", "ThisIsATestSecretKeyForAuthServiceTestingPurposesOnly12345");
+            builder.UseSetting("Jwt:Issuer", "AuthService.Tests");
+            builder.UseSetting("Jwt:Audience", "AuthService.Tests");
+            builder.UseSetting("Jwt:ExpirationMinutes", "60");
+            builder.UseSetting("Database:AutoMigrate", "false"); // Disable migrations for InMemory
+
             builder.ConfigureTestServices(services =>
             {
                 // Remove existing DbContextOptions
                 services.RemoveAll(typeof(DbContextOptions<ApplicationDbContext>));
 
-                // Use InMemory database for testing
+                // Use InMemory database for testing - shared across all tests in factory
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase("AuthServiceTestDb");
+                    options.UseInMemoryDatabase(DatabaseName);
                     options.EnableSensitiveDataLogging();
                     options.EnableDetailedErrors();
                 });

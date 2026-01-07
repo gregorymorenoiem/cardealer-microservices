@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ApiDocsService.Core\ApiDocsService.Core.csproj" />
-    <ProjectReference Include="..\ApiDocsService.Api\ApiDocsService.Api.csproj" />
+    <ProjectReference Include="../ApiDocsService.Core/ApiDocsService.Core.csproj" />
+    <ProjectReference Include="../ApiDocsService.Api/ApiDocsService.Api.csproj" />
   </ItemGroup>
 
 </Project>

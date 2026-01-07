@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TracingService.Domain\TracingService.Domain.csproj" />
-    <ProjectReference Include="..\TracingService.Application\TracingService.Application.csproj" />
+    <ProjectReference Include="../TracingService.Domain/TracingService.Domain.csproj" />
+    <ProjectReference Include="../TracingService.Application/TracingService.Application.csproj" />
   </ItemGroup>
 
 </Project>

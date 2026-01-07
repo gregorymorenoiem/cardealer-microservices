@@ -6,9 +6,17 @@ using FluentAssertions;
 using LoggingService.Domain;
 using Serilog;
 using Serilog.Core;
+using Xunit;
 
 namespace LoggingService.IntegrationTests;
 
+/// <summary>
+/// E2E tests for LoggingService using Seq as log aggregator.
+/// These tests are marked with [Trait("Category", "E2E")] for CI/CD filtering.
+/// Skip in fast CI runs with: --filter "Category!=E2E"
+/// </summary>
+[Trait("Category", "E2E")]
+[Trait("Category", "Integration")]
 public class LoggingServiceE2ETests : IAsyncLifetime
 {
     private IContainer? _seqContainer;
@@ -16,17 +24,25 @@ public class LoggingServiceE2ETests : IAsyncLifetime
     private HttpClient? _client;
     private string _seqUrl = string.Empty;
 
+    // CI/CD: Timeout for container startup (image pull can take time on first run)
+    private static readonly TimeSpan ContainerStartTimeout = TimeSpan.FromMinutes(3);
+
     public async Task InitializeAsync()
     {
-        // Start Seq container
+        // Start Seq container with explicit timeout for CI/CD environments
+        // Using specific version tag for reproducible builds instead of :latest
         _seqContainer = new ContainerBuilder()
-            .WithImage("datalust/seq:latest")
+            .WithImage("datalust/seq:2024")
             .WithPortBinding(5341, true)
             .WithEnvironment("ACCEPT_EULA", "Y")
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(5341)))
+            .WithWaitStrategy(Wait.ForUnixContainer()
+                .UntilHttpRequestIsSucceeded(r => r
+                    .ForPort(5341)
+                    .ForPath("/api")))
             .Build();
 
-        await _seqContainer.StartAsync();
+        using var cts = new CancellationTokenSource(ContainerStartTimeout);
+        await _seqContainer.StartAsync(cts.Token);
 
         // Get the mapped port
         var seqPort = _seqContainer.GetMappedPublicPort(5341);

@@ -20,10 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CRMService.Api\CRMService.Api.csproj" />
-    <ProjectReference Include="..\CRMService.Application\CRMService.Application.csproj" />
-    <ProjectReference Include="..\CRMService.Domain\CRMService.Domain.csproj" />
-    <ProjectReference Include="..\CRMService.Infrastructure\CRMService.Infrastructure.csproj" />
+    <ProjectReference Include="../CRMService.Api/CRMService.Api.csproj" />
+    <ProjectReference Include="../CRMService.Application/CRMService.Application.csproj" />
+    <ProjectReference Include="../CRMService.Domain/CRMService.Domain.csproj" />
+    <ProjectReference Include="../CRMService.Infrastructure/CRMService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

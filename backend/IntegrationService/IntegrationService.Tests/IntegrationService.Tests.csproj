@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IntegrationService.Domain\IntegrationService.Domain.csproj" />
-    <ProjectReference Include="..\IntegrationService.Application\IntegrationService.Application.csproj" />
+    <ProjectReference Include="../IntegrationService.Domain/IntegrationService.Domain.csproj" />
+    <ProjectReference Include="../IntegrationService.Application/IntegrationService.Application.csproj" />
   </ItemGroup>
 
 </Project>

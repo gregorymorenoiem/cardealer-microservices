@@ -51,7 +51,7 @@
 
   <ItemGroup>
     <!-- Project References - using correct relative paths -->
-    <ProjectReference Include="..\..\Gateway\Gateway.Api\Gateway.Api.csproj" />
+    <ProjectReference Include="../../Gateway/Gateway.Api/Gateway.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

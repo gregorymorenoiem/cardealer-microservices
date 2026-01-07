@@ -34,10 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gateway.Api\Gateway.Api.csproj" />
-    <ProjectReference Include="..\Gateway.Domain\Gateway.Domain.csproj" />
-    <ProjectReference Include="..\Gateway.Application\Gateway.Application.csproj" />
-    <ProjectReference Include="..\Gateway.Infrastructure\Gateway.Infrastructure.csproj" />
+    <ProjectReference Include="../Gateway.Api/Gateway.Api.csproj" />
+    <ProjectReference Include="../Gateway.Domain/Gateway.Domain.csproj" />
+    <ProjectReference Include="../Gateway.Application/Gateway.Application.csproj" />
+    <ProjectReference Include="../Gateway.Infrastructure/Gateway.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

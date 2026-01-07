@@ -345,10 +345,20 @@ public class RabbitMQNotificationConsumer : BackgroundService
 
     public override void Dispose()
     {
-        _channel?.Close();
-        _channel?.Dispose();
-        _connection?.Close();
-        _connection?.Dispose();
+        try
+        {
+            _channel?.Close();
+            _channel?.Dispose();
+        }
+        catch { /* Channel may already be closed */ }
+
+        try
+        {
+            _connection?.Close();
+            _connection?.Dispose();
+        }
+        catch { /* Connection may already be closed */ }
+
         base.Dispose();
     }
 }

@@ -24,9 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FinanceService.Domain\FinanceService.Domain.csproj" />
-    <ProjectReference Include="..\FinanceService.Application\FinanceService.Application.csproj" />
-    <ProjectReference Include="..\FinanceService.Infrastructure\FinanceService.Infrastructure.csproj" />
+    <ProjectReference Include="../FinanceService.Domain/FinanceService.Domain.csproj" />
+    <ProjectReference Include="../FinanceService.Application/FinanceService.Application.csproj" />
+    <ProjectReference Include="../FinanceService.Infrastructure/FinanceService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

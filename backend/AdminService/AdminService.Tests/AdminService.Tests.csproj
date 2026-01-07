@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AdminService.Api\AdminService.Api.csproj" />
-    <ProjectReference Include="..\AdminService.Application\AdminService.Application.csproj" />
-    <ProjectReference Include="..\AdminService.Infrastructure\AdminService.Infrastructure.csproj" />
+    <ProjectReference Include="../AdminService.Api/AdminService.Api.csproj" />
+    <ProjectReference Include="../AdminService.Application/AdminService.Application.csproj" />
+    <ProjectReference Include="../AdminService.Infrastructure/AdminService.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

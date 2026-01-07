@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageService.Core", "FileStorageService.Core\FileStorageService.Core.csproj", "{E29D747E-F072-46D6-A21F-35BF7C1B9213}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageService.Core", "FileStorageService.Core/FileStorageService.Core.csproj", "{E29D747E-F072-46D6-A21F-35BF7C1B9213}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageService.Api", "FileStorageService.Api\FileStorageService.Api.csproj", "{EBA2033C-7EEF-468D-9453-1B6272E4DEBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageService.Api", "FileStorageService.Api/FileStorageService.Api.csproj", "{EBA2033C-7EEF-468D-9453-1B6272E4DEBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageService.Tests", "FileStorageService.Tests\FileStorageService.Tests.csproj", "{8A50E5B9-8147-467B-8900-B31B282DE20B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageService.Tests", "FileStorageService.Tests/FileStorageService.Tests.csproj", "{8A50E5B9-8147-467B-8900-B31B282DE20B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

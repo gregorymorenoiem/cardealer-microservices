@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\CacheService.Application\CacheService.Application.csproj" />
-    <ProjectReference Include="..\CacheService.Domain\CacheService.Domain.csproj" />
+    <ProjectReference Include="../CacheService.Application/CacheService.Application.csproj" />
+    <ProjectReference Include="../CacheService.Domain/CacheService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

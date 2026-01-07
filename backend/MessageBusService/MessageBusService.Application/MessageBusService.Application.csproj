@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageBusService.Domain\MessageBusService.Domain.csproj" />
+    <ProjectReference Include="../MessageBusService.Domain/MessageBusService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

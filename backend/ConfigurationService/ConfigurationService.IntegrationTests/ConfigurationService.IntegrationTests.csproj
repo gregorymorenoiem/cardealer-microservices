@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ConfigurationService.Infrastructure\ConfigurationService.Infrastructure.csproj" />
-    <ProjectReference Include="..\ConfigurationService.Api\ConfigurationService.Api.csproj" />
+    <ProjectReference Include="../ConfigurationService.Infrastructure/ConfigurationService.Infrastructure.csproj" />
+    <ProjectReference Include="../ConfigurationService.Api/ConfigurationService.Api.csproj" />
   </ItemGroup>
 
 </Project>

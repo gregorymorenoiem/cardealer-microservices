@@ -14,9 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UserService.Domain\UserService.Domain.csproj" />
-    <ProjectReference Include="..\UserService.Shared\UserService.Shared.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../UserService.Domain/UserService.Domain.csproj" />
+    <ProjectReference Include="../UserService.Shared/UserService.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
   
 </Project>

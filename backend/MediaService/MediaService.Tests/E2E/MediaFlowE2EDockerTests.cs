@@ -30,13 +30,15 @@ public class MediaFlowE2EDockerTests : IClassFixture<DockerWebApplicationFactory
     }
 
     [Fact]
-    public async Task Docker_E2E_02_GET_MediaList_ReturnsOk()
+    public async Task Docker_E2E_02_GET_MediaById_NonExistent_ReturnsNotFound()
     {
-        _output.WriteLine("=== Docker E2E Test - GET /api/media ===");
+        _output.WriteLine("=== Docker E2E Test - GET /api/media/{id} (non-existent) ===");
 
-        var response = await _client.GetAsync("/api/media?page=1&pageSize=10");
+        var nonExistentId = Guid.NewGuid();
+        var response = await _client.GetAsync($"/api/media/{nonExistentId}");
 
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NoContent);
-        _output.WriteLine("✓ Media list retrieved successfully");
+        // Un ID inexistente debe devolver 404 o 400
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.BadRequest);
+        _output.WriteLine("✓ Non-existent media returns expected status");
     }
 }

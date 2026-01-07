@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ConfigurationService.Application\ConfigurationService.Application.csproj" />
-    <ProjectReference Include="..\ConfigurationService.Infrastructure\ConfigurationService.Infrastructure.csproj" />
+    <ProjectReference Include="../ConfigurationService.Application/ConfigurationService.Application.csproj" />
+    <ProjectReference Include="../ConfigurationService.Infrastructure/ConfigurationService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

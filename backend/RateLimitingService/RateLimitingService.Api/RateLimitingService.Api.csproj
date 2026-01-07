@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RateLimitingService.Core\RateLimitingService.Core.csproj" />
-    <ProjectReference Include="..\RateLimitingService.Infrastructure\RateLimitingService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../RateLimitingService.Core/RateLimitingService.Core.csproj" />
+    <ProjectReference Include="../RateLimitingService.Infrastructure/RateLimitingService.Infrastructure.csproj" />
+    <ProjectReference Include="../..//_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

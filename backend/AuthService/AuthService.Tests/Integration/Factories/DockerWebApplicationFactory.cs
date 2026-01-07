@@ -43,18 +43,29 @@ namespace AuthService.Tests.Integration.Factories
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            // Set JWT configuration using UseSetting (highest priority)
+            builder.UseSetting("Jwt:Key", "TestSecretKeyThatIsAtLeast32CharactersLong!");
+            builder.UseSetting("Jwt:Issuer", "TestIssuer");
+            builder.UseSetting("Jwt:Audience", "TestAudience");
+            builder.UseSetting("Jwt:ExpirationInMinutes", "60");
+            builder.UseSetting("Jwt:RefreshTokenExpirationInDays", "7");
+            builder.UseSetting("Database:AutoMigrate", "false");
+
             builder.ConfigureAppConfiguration((context, config) =>
             {
                 // Add in-memory configuration for RabbitMQ
-                var rabbitMqConfig = new Dictionary<string, string>
+                var testConfig = new Dictionary<string, string>
                 {
+                    // RabbitMQ Configuration
                     ["RabbitMQ:HostName"] = _rabbitMqContainer.Hostname,
+                    ["RabbitMQ:Host"] = _rabbitMqContainer.Hostname,
                     ["RabbitMQ:Port"] = _rabbitMqContainer.GetMappedPublicPort(5672).ToString(),
                     ["RabbitMQ:UserName"] = "testuser",
                     ["RabbitMQ:Password"] = "testpass",
                     ["RabbitMQ:VirtualHost"] = "/",
                     ["RabbitMQ:ExchangeName"] = "auth_events",
                     ["RabbitMQ:RetryCount"] = "3",
+                    ["RabbitMQ:Enabled"] = "false",
                     ["ErrorService:RabbitMQ:HostName"] = _rabbitMqContainer.Hostname,
                     ["ErrorService:RabbitMQ:Port"] = _rabbitMqContainer.GetMappedPublicPort(5672).ToString(),
                     ["ErrorService:RabbitMQ:UserName"] = "testuser",
@@ -73,7 +84,7 @@ namespace AuthService.Tests.Integration.Factories
                     ["NotificationService:RabbitMQ:RoutingKey"] = "notification"
                 };
 
-                config.AddInMemoryCollection(rabbitMqConfig!);
+                config.AddInMemoryCollection(testConfig!);
             });
 
             builder.ConfigureTestServices(services =>

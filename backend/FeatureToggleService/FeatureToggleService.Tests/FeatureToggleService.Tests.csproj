@@ -26,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FeatureToggleService.Domain\FeatureToggleService.Domain.csproj" />
-    <ProjectReference Include="..\FeatureToggleService.Application\FeatureToggleService.Application.csproj" />
-    <ProjectReference Include="..\FeatureToggleService.Infrastructure\FeatureToggleService.Infrastructure.csproj" />
+    <ProjectReference Include="../FeatureToggleService.Domain/FeatureToggleService.Domain.csproj" />
+    <ProjectReference Include="../FeatureToggleService.Application/FeatureToggleService.Application.csproj" />
+    <ProjectReference Include="../FeatureToggleService.Infrastructure/FeatureToggleService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

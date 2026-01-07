@@ -26,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />
-    <ProjectReference Include="..\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
-    <ProjectReference Include="..\ServiceDiscovery.Infrastructure\ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="../ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+    <ProjectReference Include="../ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="../ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

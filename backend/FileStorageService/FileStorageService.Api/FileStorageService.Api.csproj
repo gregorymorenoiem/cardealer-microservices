@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileStorageService.Core\FileStorageService.Core.csproj" />
-    <ProjectReference Include="..\..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" Condition="Exists('..\..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj')" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" Condition="Exists('..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj')" />
+    <ProjectReference Include="../FileStorageService.Core/FileStorageService.Core.csproj" />
+    <ProjectReference Include="../../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" Condition="Exists('../../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj')" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" Condition="Exists('../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj')" />
   </ItemGroup>
 
 </Project>

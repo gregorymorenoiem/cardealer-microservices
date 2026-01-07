@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AdminService.Domain\AdminService.Domain.csproj" />
-    <ProjectReference Include="..\AdminService.Shared\AdminService.Shared.csproj" />
+    <ProjectReference Include="../AdminService.Domain/AdminService.Domain.csproj" />
+    <ProjectReference Include="../AdminService.Shared/AdminService.Shared.csproj" />
   </ItemGroup>
 
 </Project>

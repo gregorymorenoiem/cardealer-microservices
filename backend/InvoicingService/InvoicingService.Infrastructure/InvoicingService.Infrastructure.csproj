@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InvoicingService.Application\InvoicingService.Application.csproj" />
-    <ProjectReference Include="..\InvoicingService.Domain\InvoicingService.Domain.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../InvoicingService.Application/InvoicingService.Application.csproj" />
+    <ProjectReference Include="../InvoicingService.Domain/InvoicingService.Domain.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

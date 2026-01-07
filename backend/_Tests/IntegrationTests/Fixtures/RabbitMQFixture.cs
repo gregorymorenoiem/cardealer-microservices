@@ -16,8 +16,6 @@ public class RabbitMQFixture : IAsyncLifetime
             .WithImage("rabbitmq:3-management-alpine")
             .WithUsername("guest")
             .WithPassword("guest")
-            .WithPortBinding(5673, 5672)
-            .WithPortBinding(15673, 15672)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
             .Build();
     }

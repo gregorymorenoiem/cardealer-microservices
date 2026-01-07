@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FeatureToggleService.Domain\FeatureToggleService.Domain.csproj" />
+    <ProjectReference Include="../FeatureToggleService.Domain/FeatureToggleService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

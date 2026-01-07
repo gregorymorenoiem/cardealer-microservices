@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using NotificationService.Infrastructure.Persistence;
 using NotificationService.Shared;
 using Testcontainers.PostgreSql;
@@ -44,34 +45,48 @@ namespace NotificationService.Tests.Integration.Factories
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
-                var rabbitMqConfig = new Dictionary<string, string>
+                var testConfig = new Dictionary<string, string>
                 {
+                    ["RabbitMQ:Host"] = _rabbitMqContainer.Hostname,
                     ["RabbitMQ:HostName"] = _rabbitMqContainer.Hostname,
                     ["RabbitMQ:Port"] = _rabbitMqContainer.GetMappedPublicPort(5672).ToString(),
                     ["RabbitMQ:UserName"] = "testuser",
-                    ["RabbitMQ:Password"] = "testpass"
+                    ["RabbitMQ:Password"] = "testpass",
+                    ["ConnectionStrings:DefaultConnection"] = _postgresContainer.GetConnectionString(),
+                    ["Database:Host"] = _postgresContainer.Hostname,
+                    ["Database:Port"] = _postgresContainer.GetMappedPublicPort(5432).ToString(),
+                    ["Database:Database"] = "notificationservice_test",
+                    ["Database:Username"] = "testuser",
+                    ["Database:Password"] = "testpass",
+                    ["Database:Provider"] = "PostgreSQL"
                 };
 
-                config.AddInMemoryCollection(rabbitMqConfig!);
+                config.AddInMemoryCollection(testConfig!);
             });
 
             builder.ConfigureTestServices(services =>
             {
-                services.RemoveAll(typeof(DbContextOptions<NotificationDbContext>));
-                services.AddDbContext<NotificationDbContext>(options =>
+                services.RemoveAll(typeof(DbContextOptions<ApplicationDbContext>));
+                services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseNpgsql(_postgresContainer.GetConnectionString());
                     options.EnableSensitiveDataLogging();
                     options.EnableDetailedErrors();
                 });
-
-                var sp = services.BuildServiceProvider();
-                using var scope = sp.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
-                db.Database.EnsureCreated();
             });
 
             builder.UseEnvironment("Testing");
+        }
+
+        protected override IHost CreateHost(IHostBuilder builder)
+        {
+            var host = base.CreateHost(builder);
+
+            using var scope = host.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.Database.EnsureCreated();
+
+            return host;
         }
     }
 }

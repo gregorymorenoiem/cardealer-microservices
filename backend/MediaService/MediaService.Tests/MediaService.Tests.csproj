@@ -28,10 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MediaService.Api\MediaService.Api.csproj" />
-    <ProjectReference Include="..\MediaService.Application\MediaService.Application.csproj" />
-    <ProjectReference Include="..\MediaService.Domain\MediaService.Domain.csproj" />
-    <ProjectReference Include="..\MediaService.Infrastructure\MediaService.Infrastructure.csproj" />
+    <ProjectReference Include="../MediaService.Api/MediaService.Api.csproj" />
+    <ProjectReference Include="../MediaService.Application/MediaService.Application.csproj" />
+    <ProjectReference Include="../MediaService.Domain/MediaService.Domain.csproj" />
+    <ProjectReference Include="../MediaService.Infrastructure/MediaService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

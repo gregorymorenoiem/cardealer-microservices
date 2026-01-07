@@ -20,9 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InvoicingService.Domain\InvoicingService.Domain.csproj" />
-    <ProjectReference Include="..\InvoicingService.Application\InvoicingService.Application.csproj" />
-    <ProjectReference Include="..\InvoicingService.Infrastructure\InvoicingService.Infrastructure.csproj" />
+    <ProjectReference Include="../InvoicingService.Domain/InvoicingService.Domain.csproj" />
+    <ProjectReference Include="../InvoicingService.Application/InvoicingService.Application.csproj" />
+    <ProjectReference Include="../InvoicingService.Infrastructure/InvoicingService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

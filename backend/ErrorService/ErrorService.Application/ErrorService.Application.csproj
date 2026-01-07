@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ErrorService.Domain\ErrorService.Domain.csproj" />
+    <ProjectReference Include="../ErrorService.Domain/ErrorService.Domain.csproj" />
   </ItemGroup>
   
 </Project>

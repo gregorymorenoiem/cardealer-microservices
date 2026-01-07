@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HealthCheckService.Domain\HealthCheckService.Domain.csproj" />
+    <ProjectReference Include="../HealthCheckService.Domain/HealthCheckService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

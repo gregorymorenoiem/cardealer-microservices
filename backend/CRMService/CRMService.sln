@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Api", "CRMService.Api\CRMService.Api.csproj", "{A1B2C3D4-1111-2222-3333-444455556666}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Api", "CRMService.Api/CRMService.Api.csproj", "{A1B2C3D4-1111-2222-3333-444455556666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Application", "CRMService.Application\CRMService.Application.csproj", "{A1B2C3D4-1111-2222-3333-444455557777}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Application", "CRMService.Application/CRMService.Application.csproj", "{A1B2C3D4-1111-2222-3333-444455557777}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Domain", "CRMService.Domain\CRMService.Domain.csproj", "{A1B2C3D4-1111-2222-3333-444455558888}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Domain", "CRMService.Domain/CRMService.Domain.csproj", "{A1B2C3D4-1111-2222-3333-444455558888}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Infrastructure", "CRMService.Infrastructure\CRMService.Infrastructure.csproj", "{A1B2C3D4-1111-2222-3333-444455559999}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Infrastructure", "CRMService.Infrastructure/CRMService.Infrastructure.csproj", "{A1B2C3D4-1111-2222-3333-444455559999}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Tests", "CRMService.Tests\CRMService.Tests.csproj", "{A1B2C3D4-1111-2222-3333-44445555AAAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRMService.Tests", "CRMService.Tests/CRMService.Tests.csproj", "{A1B2C3D4-1111-2222-3333-44445555AAAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

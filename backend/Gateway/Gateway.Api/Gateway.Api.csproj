@@ -36,12 +36,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Application\ServiceDiscovery.Application.csproj" />
-    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Infrastructure\ServiceDiscovery.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\ServiceDiscovery\ServiceDiscovery.Domain\ServiceDiscovery.Domain.csproj" />
-    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
-    <ProjectReference Include="..\Gateway.Application\Gateway.Application.csproj" />
-    <ProjectReference Include="..\Gateway.Infrastructure\Gateway.Infrastructure.csproj" />
+    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+    <ProjectReference Include="../..//_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../Gateway.Application/Gateway.Application.csproj" />
+    <ProjectReference Include="../Gateway.Infrastructure/Gateway.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

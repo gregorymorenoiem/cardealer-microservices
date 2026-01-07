@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NotificationService.Domain\NotificationService.Domain.csproj" />
-    <ProjectReference Include="..\..\ErrorService\ErrorService.Shared\ErrorService.Shared.csproj" />
+    <ProjectReference Include="../NotificationService.Domain/NotificationService.Domain.csproj" />
+    <ProjectReference Include="../../ErrorService/ErrorService.Shared/ErrorService.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageBusService.Application\MessageBusService.Application.csproj" />
-    <ProjectReference Include="..\MessageBusService.Infrastructure\MessageBusService.Infrastructure.csproj" />
-    <ProjectReference Include="..\MessageBusService.Api\MessageBusService.Api.csproj" />
+    <ProjectReference Include="../MessageBusService.Application/MessageBusService.Application.csproj" />
+    <ProjectReference Include="../MessageBusService.Infrastructure/MessageBusService.Infrastructure.csproj" />
+    <ProjectReference Include="../MessageBusService.Api/MessageBusService.Api.csproj" />
   </ItemGroup>
 
 </Project>

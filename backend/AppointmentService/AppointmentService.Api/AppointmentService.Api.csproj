@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AppointmentService.Application\AppointmentService.Application.csproj" />
-    <ProjectReference Include="..\AppointmentService.Infrastructure\AppointmentService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../AppointmentService.Application/AppointmentService.Application.csproj" />
+    <ProjectReference Include="../AppointmentService.Infrastructure/AppointmentService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

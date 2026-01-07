@@ -200,15 +200,29 @@ builder.Services.AddScoped<IAuthNotificationService>(provider =>
 // 🚨 CONSTRUIR LA APLICACIÓN
 var app = builder.Build();
 
-// Migraciones
+// Migraciones (solo para proveedores relacionales, no InMemory)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var authContext = services.GetRequiredService<ApplicationDbContext>();
-        authContext.Database.Migrate();
-        Log.Information("AuthService database migrations applied successfully.");
+
+        // Check if we should auto-migrate (disabled for InMemory testing)
+        var configuration = services.GetRequiredService<IConfiguration>();
+        var autoMigrate = configuration.GetValue<bool>("Database:AutoMigrate", true);
+
+        // Only migrate if we're using a relational provider and auto-migrate is enabled
+        if (autoMigrate && authContext.Database.IsRelational())
+        {
+            authContext.Database.Migrate();
+            Log.Information("AuthService database migrations applied successfully.");
+        }
+        else if (!authContext.Database.IsRelational())
+        {
+            authContext.Database.EnsureCreated();
+            Log.Information("AuthService using non-relational database (InMemory), EnsureCreated called.");
+        }
     }
     catch (Exception ex)
     {

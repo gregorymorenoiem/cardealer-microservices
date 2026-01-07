@@ -16,10 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TracingService.Application\TracingService.Application.csproj" />
-    <ProjectReference Include="..\TracingService.Infrastructure\TracingService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../TracingService.Application/TracingService.Application.csproj" />
+    <ProjectReference Include="../TracingService.Infrastructure/TracingService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

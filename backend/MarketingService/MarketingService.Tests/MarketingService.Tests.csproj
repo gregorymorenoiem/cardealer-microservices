@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MarketingService.Domain\MarketingService.Domain.csproj" />
-    <ProjectReference Include="..\MarketingService.Application\MarketingService.Application.csproj" />
+    <ProjectReference Include="../MarketingService.Domain/MarketingService.Domain.csproj" />
+    <ProjectReference Include="../MarketingService.Application/MarketingService.Application.csproj" />
   </ItemGroup>
 
 </Project>

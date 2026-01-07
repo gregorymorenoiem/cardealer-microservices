@@ -24,10 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PropertiesSaleService.Domain\PropertiesSaleService.Domain.csproj" />
-    <ProjectReference Include="..\PropertiesSaleService.Application\PropertiesSaleService.Application.csproj" />
-    <ProjectReference Include="..\PropertiesSaleService.Infrastructure\PropertiesSaleService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../PropertiesSaleService.Domain/PropertiesSaleService.Domain.csproj" />
+    <ProjectReference Include="../PropertiesSaleService.Application/PropertiesSaleService.Application.csproj" />
+    <ProjectReference Include="../PropertiesSaleService.Infrastructure/PropertiesSaleService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

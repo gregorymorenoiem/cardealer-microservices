@@ -22,9 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ContactService.Api\ContactService.Api.csproj" />
-    <ProjectReference Include="..\ContactService.Application\ContactService.Application.csproj" />
-    <ProjectReference Include="..\ContactService.Domain\ContactService.Domain.csproj" />
+    <ProjectReference Include="../ContactService.Api/ContactService.Api.csproj" />
+    <ProjectReference Include="../ContactService.Application/ContactService.Application.csproj" />
+    <ProjectReference Include="../ContactService.Domain/ContactService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

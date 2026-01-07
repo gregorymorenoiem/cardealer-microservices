@@ -6,9 +6,9 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\MediaService.Domain\MediaService.Domain.csproj" />
-    <ProjectReference Include="..\MediaService.Shared\MediaService.Shared.csproj" />
-    <ProjectReference Include="..\..\\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../MediaService.Domain/MediaService.Domain.csproj" />
+    <ProjectReference Include="../MediaService.Shared/MediaService.Shared.csproj" />
+    <ProjectReference Include="../..//_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

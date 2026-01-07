@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RateLimitingService.Api\RateLimitingService.Api.csproj" />
-    <ProjectReference Include="..\RateLimitingService.Core\RateLimitingService.Core.csproj" />
+    <ProjectReference Include="../RateLimitingService.Api/RateLimitingService.Api.csproj" />
+    <ProjectReference Include="../RateLimitingService.Core/RateLimitingService.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

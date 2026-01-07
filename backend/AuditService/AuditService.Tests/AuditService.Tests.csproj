@@ -28,10 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuditService.Api\AuditService.Api.csproj" />
-    <ProjectReference Include="..\AuditService.Application\AuditService.Application.csproj" />
-    <ProjectReference Include="..\AuditService.Domain\AuditService.Domain.csproj" />
-    <ProjectReference Include="..\AuditService.Infrastructure\AuditService.Infrastructure.csproj" />
+    <ProjectReference Include="../AuditService.Api/AuditService.Api.csproj" />
+    <ProjectReference Include="../AuditService.Application/AuditService.Application.csproj" />
+    <ProjectReference Include="../AuditService.Domain/AuditService.Domain.csproj" />
+    <ProjectReference Include="../AuditService.Infrastructure/AuditService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

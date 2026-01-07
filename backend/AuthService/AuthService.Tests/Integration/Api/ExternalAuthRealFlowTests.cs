@@ -7,8 +7,6 @@ using AuthService.Shared;
 using AuthService.Tests.Integration.Factories;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace AuthService.Tests.Integration.Api;
@@ -29,26 +27,19 @@ public class ExternalAuthRealFlowTests : IClassFixture<CustomWebApplicationFacto
 
     private async Task<string> GetAuthTokenAsync()
     {
-        // Register and verify user
-        var registerRequest = new RegisterRequest("externalauthuser", "externalauth@test.com", "Test123!");
-        await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        // Register user with unique email - registration returns access token directly
+        var uniqueId = Guid.NewGuid().ToString("N");
+        var registerRequest = new RegisterRequest($"externalauthuser_{uniqueId}", $"externalauth_{uniqueId}@test.com", "Test123!");
+        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
 
-        // Mark as verified
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AuthService.Infrastructure.Persistence.ApplicationDbContext>();
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == "externalauth@test.com");
-        if (user != null && !user.EmailConfirmed)
+        if (!registerResponse.IsSuccessStatusCode)
         {
-            user.ConfirmEmail();
-            await dbContext.SaveChangesAsync();
+            return string.Empty;
         }
 
-        // Login to get token
-        var loginRequest = new LoginRequest("externalauth@test.com", "Test123!");
-        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
-
-        return loginResult?.Data?.AccessToken ?? string.Empty;
+        // Registration returns the access token directly
+        var registerResult = await registerResponse.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
+        return registerResult?.Data?.AccessToken ?? string.Empty;
     }
 
     [Fact]

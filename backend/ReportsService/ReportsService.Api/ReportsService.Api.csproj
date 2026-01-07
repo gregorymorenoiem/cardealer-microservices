@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ReportsService.Application\ReportsService.Application.csproj" />
-    <ProjectReference Include="..\ReportsService.Infrastructure\ReportsService.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="../ReportsService.Application/ReportsService.Application.csproj" />
+    <ProjectReference Include="../ReportsService.Infrastructure/ReportsService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

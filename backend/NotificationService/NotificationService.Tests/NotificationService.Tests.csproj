@@ -28,10 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NotificationService.Api\NotificationService.Api.csproj" />
-    <ProjectReference Include="..\NotificationService.Application\NotificationService.Application.csproj" />
-    <ProjectReference Include="..\NotificationService.Domain\NotificationService.Domain.csproj" />
-    <ProjectReference Include="..\NotificationService.Infrastructure\NotificationService.Infrastructure.csproj" />
+    <ProjectReference Include="../NotificationService.Api/NotificationService.Api.csproj" />
+    <ProjectReference Include="../NotificationService.Application/NotificationService.Application.csproj" />
+    <ProjectReference Include="../NotificationService.Domain/NotificationService.Domain.csproj" />
+    <ProjectReference Include="../NotificationService.Infrastructure/NotificationService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

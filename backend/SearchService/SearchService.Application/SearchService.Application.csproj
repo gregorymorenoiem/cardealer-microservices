@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\SearchService.Domain\SearchService.Domain.csproj" />
+    <ProjectReference Include="../SearchService.Domain/SearchService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

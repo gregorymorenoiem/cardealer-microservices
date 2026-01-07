@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\ConfigurationService.Domain\ConfigurationService.Domain.csproj" />
+    <ProjectReference Include="../ConfigurationService.Domain/ConfigurationService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
