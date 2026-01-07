@@ -50,9 +50,23 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 8080 }]
         },
         {
+          "UpstreamPathTemplate": "/api/auth",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/auth",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 8080 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/users/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/users/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/users",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/users",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }]
         },
@@ -64,9 +78,23 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }]
         },
         {
+          "UpstreamPathTemplate": "/api/roles",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/roles",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/vehicles/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/vehicles/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicles",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/vehicles",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }]
         },
@@ -78,9 +106,23 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 8080 }]
         },
         {
+          "UpstreamPathTemplate": "/api/media",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/media",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 8080 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/billing/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/billing/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/billing",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/billing",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 8080 }]
         },
@@ -92,11 +134,59 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 8080 }]
         },
         {
+          "UpstreamPathTemplate": "/api/notifications",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/notifications",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 8080 }]
+        },
+        {
           "UpstreamPathTemplate": "/api/errors/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/errors/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/errors",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/errors",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 8080 }]
+        }
+      ],
+      "SwaggerEndPoints": [
+        {
+          "Key": "AuthService",
+          "Config": [{ "Name": "Auth Service", "Version": "v1", "Url": "http://authservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "UserService",
+          "Config": [{ "Name": "User Service", "Version": "v1", "Url": "http://userservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "RoleService",
+          "Config": [{ "Name": "Role Service", "Version": "v1", "Url": "http://roleservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "VehiclesSaleService",
+          "Config": [{ "Name": "Vehicles Sale Service", "Version": "v1", "Url": "http://vehiclessaleservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "MediaService",
+          "Config": [{ "Name": "Media Service", "Version": "v1", "Url": "http://mediaservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "BillingService",
+          "Config": [{ "Name": "Billing Service", "Version": "v1", "Url": "http://billingservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "NotificationService",
+          "Config": [{ "Name": "Notification Service", "Version": "v1", "Url": "http://notificationservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "ErrorService",
+          "Config": [{ "Name": "Error Service", "Version": "v1", "Url": "http://errorservice:8080/swagger/v1/swagger.json" }]
         }
       ],
       "GlobalConfiguration": {

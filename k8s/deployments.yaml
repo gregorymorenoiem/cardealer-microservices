@@ -114,7 +114,7 @@ spec:
             failureThreshold: 5
           volumeMounts:
             - name: ocelot-config
-              mountPath: /app/ocelot.json
+              mountPath: /app/ocelot.prod.json
               subPath: ocelot.json
       volumes:
         - name: ocelot-config
