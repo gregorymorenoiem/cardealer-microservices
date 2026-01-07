@@ -1,9 +1,8 @@
 # =============================================================================
-# DEPLOYMENTS - Backend Microservices
+# MVP SELF-MANAGED - Deployments Optimizados
 # =============================================================================
-# Optimizado para Digital Ocean Kubernetes (DOKS)
-# Puerto 8080 para contenedores non-root
-# Database: Database__ConnectionStrings__PostgreSQL (CarDealer.Shared format)
+# Solo los servicios esenciales con recursos mínimos
+# Réplicas: 1 para minimizar recursos (escalar después)
 # =============================================================================
 
 ---
@@ -19,7 +18,7 @@ metadata:
     app: frontend-web
     tier: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend-web
@@ -36,19 +35,19 @@ spec:
           resources:
             requests:
               memory: "64Mi"
-              cpu: "50m"
+              cpu: "25m"
             limits:
               memory: "128Mi"
               cpu: "100m"
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
           readinessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -57,7 +56,7 @@ spec:
 
 ---
 # =============================================================================
-# GATEWAY (API Gateway - Ocelot)
+# GATEWAY
 # =============================================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -68,7 +67,7 @@ metadata:
     app: gateway
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: gateway
@@ -92,11 +91,11 @@ spec:
                 name: jwt-secrets
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
+              memory: "64Mi"
+              cpu: "25m"
             limits:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "192Mi"
+              cpu: "150m"
           livenessProbe:
             httpGet:
               path: /health
@@ -157,13 +156,15 @@ spec:
                 name: authservice-db-secret
             - secretRef:
                 name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
               memory: "128Mi"
-              cpu: "100m"
+              cpu: "50m"
             limits:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
@@ -216,13 +217,15 @@ spec:
                 name: userservice-db-secret
             - secretRef:
                 name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
               memory: "128Mi"
-              cpu: "100m"
+              cpu: "50m"
             limits:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
@@ -275,13 +278,15 @@ spec:
                 name: roleservice-db-secret
             - secretRef:
                 name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
               memory: "128Mi"
-              cpu: "100m"
+              cpu: "50m"
             limits:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
@@ -334,13 +339,15 @@ spec:
                 name: vehiclessaleservice-db-secret
             - secretRef:
                 name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
               memory: "128Mi"
-              cpu: "100m"
+              cpu: "50m"
             limits:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
@@ -386,8 +393,6 @@ spec:
           env:
             - name: ASPNETCORE_URLS
               value: "http://+:8080"
-            - name: ASPNETCORE_ENVIRONMENT
-              value: "Development"
           envFrom:
             - configMapRef:
                 name: global-config
@@ -396,73 +401,14 @@ spec:
             - secretRef:
                 name: jwt-secrets
             - secretRef:
-                name: external-services-secrets
+                name: redis-secrets
           resources:
             requests:
               memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-      imagePullSecrets:
-        - name: registry-credentials
-
----
-# =============================================================================
-# NOTIFICATION SERVICE
-# =============================================================================
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: notificationservice
-  namespace: okla
-  labels:
-    app: notificationservice
-    tier: backend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: notificationservice
-  template:
-    metadata:
-      labels:
-        app: notificationservice
-    spec:
-      containers:
-        - name: notificationservice
-          image: ghcr.io/gregorymorenoiem/notificationservice:latest
-          ports:
-            - containerPort: 8080
-          env:
-            - name: ASPNETCORE_URLS
-              value: "http://+:8080"
-          envFrom:
-            - configMapRef:
-                name: global-config
-            - secretRef:
-                name: notificationservice-db-secret
-            - secretRef:
-                name: external-services-secrets
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
+              cpu: "50m"
             limits:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
@@ -514,14 +460,77 @@ spec:
             - secretRef:
                 name: billingservice-db-secret
             - secretRef:
-                name: external-services-secrets
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
               memory: "128Mi"
-              cpu: "100m"
+              cpu: "50m"
             limits:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      imagePullSecrets:
+        - name: registry-credentials
+
+---
+# =============================================================================
+# NOTIFICATION SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notificationservice
+  namespace: okla
+  labels:
+    app: notificationservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notificationservice
+  template:
+    metadata:
+      labels:
+        app: notificationservice
+    spec:
+      containers:
+        - name: notificationservice
+          image: ghcr.io/gregorymorenoiem/notificationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: notificationservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
@@ -574,13 +583,15 @@ spec:
                 name: errorservice-db-secret
             - secretRef:
                 name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
-              memory: "64Mi"
+              memory: "128Mi"
               cpu: "50m"
             limits:
-              memory: "128Mi"
-              cpu: "100m"
+              memory: "256Mi"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health

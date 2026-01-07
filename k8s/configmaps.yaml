@@ -1,9 +1,8 @@
 # =============================================================================
-# CONFIGMAPS - Application Configuration
+# MVP SELF-MANAGED - ConfigMaps
 # =============================================================================
 
 ---
-# Global configuration shared by all services
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,191 +10,87 @@ metadata:
   namespace: okla
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
-  DOTNET_RUNNING_IN_CONTAINER: "true"
-  TZ: "UTC"
-  
-  # Service Discovery
-  CONSUL_HOST: "consul.okla.svc.cluster.local"
-  CONSUL_PORT: "8500"
-  
+  TZ: "America/New_York"
   # Redis
-  REDIS_HOST: "redis.okla.svc.cluster.local"
-  REDIS_PORT: "6379"
-  
-  # RabbitMQ
-  RABBITMQ_HOST: "rabbitmq.okla.svc.cluster.local"
-  RABBITMQ_PORT: "5672"
-  
-  # OpenTelemetry
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.okla.svc.cluster.local:4317"
-  OTEL_SERVICE_NAME: "okla"
+  Cache__Provider: "Redis"
+  Cache__Redis__Host: "redis"
+  Cache__Redis__Port: "6379"
+  # Logging
+  Serilog__MinimumLevel__Default: "Information"
+  Serilog__MinimumLevel__Override__Microsoft: "Warning"
+  # OpenTelemetry (disabled for MVP)
+  OpenTelemetry__Enabled: "false"
+  # Consul (disabled for MVP)
+  Consul__Enabled: "false"
 
 ---
-# Gateway specific configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: gateway-config
   namespace: okla
 data:
-  # Ocelot routes are loaded from this ConfigMap
   ocelot.json: |
     {
       "Routes": [
         {
           "UpstreamPathTemplate": "/api/auth/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/auth/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/users/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/users/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/roles/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/roles/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/vehicles",
-          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/vehicles",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/vehicles/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/vehicles/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/homepagesections",
-          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/homepagesections",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/homepagesections/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/homepagesections/{everything}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/catalog/{everything}",
-          "UpstreamHttpMethod": ["GET", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/catalog/{everything}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/properties",
-          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/properties",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "propertiessaleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/properties/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/properties/{everything}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "propertiessaleservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/media",
-          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/media",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/media/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/media/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }]
-        },
-        {
-          "UpstreamPathTemplate": "/api/notifications/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-          "DownstreamPathTemplate": "/api/notifications/{everything}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/billing/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/billing/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/notifications/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/notifications/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/errors/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/errors/{everything}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }]
+          "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 8080 }]
         }
       ],
       "GlobalConfiguration": {
-        "BaseUrl": "https://api.okla.com.do"
+        "BaseUrl": "https://api.okla.com"
       }
-    }
-
----
-# Frontend configuration
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: frontend-config
-  namespace: okla
-data:
-  nginx.conf: |
-    server {
-        listen 80;
-        server_name _;
-        root /usr/share/nginx/html;
-        index index.html;
-
-        # Gzip compression
-        gzip on;
-        gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
-
-        # Cache static assets
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
-
-        # SPA routing
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
-
-        # API proxy
-        location /api/ {
-            proxy_pass http://gateway.okla.svc.cluster.local/api/;
-            proxy_http_version 1.1;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        # Health check
-        location /health {
-            return 200 'OK';
-            add_header Content-Type text/plain;
-        }
     }

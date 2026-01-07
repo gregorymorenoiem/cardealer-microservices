@@ -147,19 +147,20 @@ jobs:
         run: |
           kubectl apply -f k8s/configmaps.yaml
 
-      - name: �️ Deploy Databases (StatefulSets)
+      - name: 🗄️ Deploy Infrastructure (PostgreSQL + Redis)
         run: |
-          echo "🗄️ Deploying PostgreSQL databases..."
-          kubectl apply -f k8s/databases.yaml
+          echo "🗄️ Deploying consolidated PostgreSQL + Redis..."
+          kubectl apply -f k8s/infrastructure.yaml
 
-          echo "⏳ Waiting for databases to be ready..."
+          echo "⏳ Waiting for PostgreSQL to be ready..."
+          kubectl rollout status statefulset/postgres -n okla --timeout=180s || true
+
+          echo "⏳ Waiting for Redis to be ready..."
+          kubectl rollout status deployment/redis -n okla --timeout=60s || true
+
+          # Wait for databases to be fully initialized
+          echo "⏳ Waiting for database initialization..."
           sleep 30
-
-          # Wait for each database to be ready
-          for DB in authservice-db userservice-db roleservice-db vehiclessaleservice-db mediaservice-db notificationservice-db billingservice-db errorservice-db; do
-            echo "⏳ Waiting for $DB..."
-            kubectl rollout status statefulset/$DB -n okla --timeout=120s || true
-          done
 
       - name: 🔐 Apply Database Secrets
         run: |

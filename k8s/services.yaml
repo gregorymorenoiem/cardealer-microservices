@@ -1,201 +1,143 @@
 # =============================================================================
-# SERVICES - Kubernetes Services for Internal Communication
+# MVP SELF-MANAGED - Services
 # =============================================================================
 
 ---
-# Frontend Web
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-web
   namespace: okla
-  labels:
-    app: frontend-web
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: frontend-web
 
 ---
-# Gateway
 apiVersion: v1
 kind: Service
 metadata:
   name: gateway
   namespace: okla
-  labels:
-    app: gateway
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: gateway
 
 ---
-# Auth Service
 apiVersion: v1
 kind: Service
 metadata:
   name: authservice
   namespace: okla
-  labels:
-    app: authservice
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: authservice
 
 ---
-# Role Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: roleservice
-  namespace: okla
-  labels:
-    app: roleservice
-spec:
-  type: ClusterIP
-  ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
-  selector:
-    app: roleservice
-
----
-# User Service
 apiVersion: v1
 kind: Service
 metadata:
   name: userservice
   namespace: okla
-  labels:
-    app: userservice
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: userservice
 
 ---
-# Vehicles Sale Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: roleservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: roleservice
+
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: vehiclessaleservice
   namespace: okla
-  labels:
-    app: vehiclessaleservice
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: vehiclessaleservice
 
 ---
-# Properties Sale Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: propertiessaleservice
-  namespace: okla
-  labels:
-    app: propertiessaleservice
-spec:
-  type: ClusterIP
-  ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
-  selector:
-    app: propertiessaleservice
-
----
-# Media Service
 apiVersion: v1
 kind: Service
 metadata:
   name: mediaservice
   namespace: okla
-  labels:
-    app: mediaservice
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: mediaservice
 
 ---
-# Notification Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: notificationservice
-  namespace: okla
-  labels:
-    app: notificationservice
-spec:
-  type: ClusterIP
-  ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
-  selector:
-    app: notificationservice
-
----
-# Billing Service
 apiVersion: v1
 kind: Service
 metadata:
   name: billingservice
   namespace: okla
-  labels:
-    app: billingservice
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: billingservice
 
 ---
-# Error Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: notificationservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: notificationservice
+
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: errorservice
   namespace: okla
-  labels:
-    app: errorservice
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
-      protocol: TCP
   selector:
     app: errorservice
