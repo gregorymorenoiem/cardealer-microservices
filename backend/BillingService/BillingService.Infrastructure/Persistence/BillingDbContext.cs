@@ -10,6 +10,7 @@ public class BillingDbContext : DbContext
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<StripeCustomer> StripeCustomers => Set<StripeCustomer>();
     public DbSet<EarlyBirdMember> EarlyBirdMembers => Set<EarlyBirdMember>();
+    public DbSet<AzulTransaction> AzulTransactions => Set<AzulTransaction>();
 
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
@@ -130,5 +131,8 @@ public class BillingDbContext : DbContext
                 .HasColumnName("CreatedAt")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
+
+        // Apply AzulTransaction configuration
+        modelBuilder.ApplyConfiguration(new Configurations.AzulTransactionConfiguration());
     }
 }
