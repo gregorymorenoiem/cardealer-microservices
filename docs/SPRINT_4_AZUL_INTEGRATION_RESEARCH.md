@@ -269,16 +269,19 @@ backend/BillingService/
 ### 📦 Componentes Implementados
 
 #### 1. DTOs y Modelos (Subtasks 1-2)
+
 - ✅ `AzulPaymentRequest.cs` - Request DTO con 16 campos requeridos
 - ✅ `AzulPaymentResponse.cs` - Response DTO con helpers IsApproved/IsDeclined
 - ✅ 13 propiedades para metadata del pago (authorization, response codes, timestamps)
 
 #### 2. Configuración (Subtask 3)
+
 - ✅ `AzulConfiguration.cs` - Configuración con URLs dinámicas Test/Production
 - ✅ `appsettings.json` - Sección Azul configurada
 - ✅ Dynamic URLs basadas en IsTestEnvironment flag
 
 #### 3. Servicios de Seguridad (Subtask 4)
+
 - ✅ `IAzulHashGenerator` - Interface en Application layer
 - ✅ `AzulHashGenerator` - Implementación HMAC-SHA512 en Infrastructure
 - ✅ `GenerateRequestHash()` - 17 parámetros para Payment Page
@@ -286,12 +289,14 @@ backend/BillingService/
 - ✅ `ValidateResponseHash()` - Verifica integridad de respuestas AZUL
 
 #### 4. Servicios de Pago (Subtask 5)
+
 - ✅ `IAzulPaymentService` - Interface para creación de pagos
 - ✅ `AzulPaymentService` - Implementación con formateo de montos
 - ✅ `CreatePaymentRequest()` - Genera request con AuthHash
 - ✅ `FormatAmount()` - Convierte decimales a formato AZUL (sin puntos, últimos 2 dígitos = centavos)
 
 #### 5. Controllers (Subtasks 6-7)
+
 - ✅ `AzulPaymentController` - POST /api/payment/azul/initiate
 - ✅ `AzulCallbackController` - 3 callbacks (approved/declined/cancelled)
 - ✅ Hash validation en todos los callbacks
@@ -299,7 +304,9 @@ backend/BillingService/
 - ✅ Error handling con try-catch
 
 #### 6. Dominio y Persistencia (Subtasks 8-10)
+
 - ✅ `AzulTransaction.cs` - Entity con 18 propiedades
+
   - OrderNumber, AzulOrderId, Amount, ITBIS
   - AuthorizationCode, ResponseCode, IsoCode
   - Status (Approved/Declined/Cancelled/Error)
@@ -308,31 +315,35 @@ backend/BillingService/
   - Audit fields (IpAddress, UserAgent, Timestamps)
 
 - ✅ `IAzulTransactionRepository` - Interface con 8 métodos
+
   - GetByIdAsync, GetByOrderNumberAsync, GetByAzulOrderIdAsync
   - GetByUserIdAsync, GetApprovedTransactionsAsync
   - CreateAsync, UpdateAsync, ExistsAsync
 
 - ✅ `AzulTransactionRepository` - Implementación EF Core
+
   - LINQ queries con async/await
   - OrderByDescending para date sorting
   - Where clauses para Status filtering
 
 - ✅ `AzulTransactionConfiguration` - Fluent API
+
   - 18 column mappings con HasColumnName
   - Decimal precision (18,2) para Amount/ITBIS
   - MaxLength specifications
   - 5 performance indexes:
-    * idx_azul_transactions_order_number
-    * idx_azul_transactions_azul_order_id
-    * idx_azul_transactions_user_id
-    * idx_azul_transactions_status
-    * idx_azul_transactions_datetime
+    - idx_azul_transactions_order_number
+    - idx_azul_transactions_azul_order_id
+    - idx_azul_transactions_user_id
+    - idx_azul_transactions_status
+    - idx_azul_transactions_datetime
 
 - ✅ `BillingDbContext.cs` - Updated
   - DbSet<AzulTransaction> added
   - Configuration applied in OnModelCreating
 
 #### 7. Dependency Injection (Subtask 10)
+
 - ✅ `Program.cs` - Todos los servicios registrados
   - AzulConfiguration con Options pattern
   - IAzulHashGenerator → AzulHashGenerator (Scoped)
@@ -340,6 +351,7 @@ backend/BillingService/
   - IAzulTransactionRepository → AzulTransactionRepository (Scoped)
 
 #### 8. Database Migration (Subtask 11)
+
 - ✅ `20260108161828_AddAzulTransactions.cs` - EF Core migration
 - ✅ Migration aplicada a Docker PostgreSQL container
 - ✅ Tabla `azul_transactions` creada con 18 columnas
@@ -349,6 +361,7 @@ backend/BillingService/
 ### 🗂️ Archivos Creados/Modificados
 
 **Nuevos archivos (13):**
+
 1. `BillingService.Application/DTOs/Azul/AzulPaymentRequest.cs`
 2. `BillingService.Application/DTOs/Azul/AzulPaymentResponse.cs`
 3. `BillingService.Application/Configuration/AzulConfiguration.cs`
@@ -364,6 +377,7 @@ backend/BillingService/
 13. `BillingService.Infrastructure/Migrations/20260108161828_AddAzulTransactions.cs`
 
 **Archivos modificados (4):**
+
 1. `BillingService.Api/Program.cs` - DI registration
 2. `BillingService.Api/appsettings.json` - Azul configuration
 3. `BillingService.Api/BillingService.Api.csproj` - Added EF Design package
@@ -373,7 +387,7 @@ backend/BillingService/
 
 ```sql
 -- Tabla creada correctamente
-SELECT table_name FROM information_schema.tables 
+SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public' AND table_name = 'azul_transactions';
 -- Resultado: azul_transactions
 
@@ -399,6 +413,7 @@ WHERE table_schema = 'public' AND table_name = 'azul_transactions';
 ### 🚀 Próximos Pasos (Phase 2)
 
 #### Testing (Alta Prioridad)
+
 - [ ] Crear tests unitarios para AzulHashGenerator
 - [ ] Crear tests de integración para AzulPaymentService
 - [ ] Crear tests de API para controllers
@@ -406,12 +421,14 @@ WHERE table_schema = 'public' AND table_name = 'azul_transactions';
 - [ ] Validar hash generation/validation
 
 #### Configuración (Requerido antes de producción)
+
 - [ ] Obtener credenciales de producción de AZUL
 - [ ] Configurar MerchantId, AuthKey, Auth1, Auth2
 - [ ] Actualizar callback URLs a dominio de producción
 - [ ] Probar en ambiente de pruebas AZUL
 
 #### Frontend Integration (Sprint 5)
+
 - [ ] Crear PaymentMethodSelector component
 - [ ] Implementar redirect a AZUL Payment Page
 - [ ] Handle callbacks (approved/declined/cancelled pages)
@@ -419,10 +436,79 @@ WHERE table_schema = 'public' AND table_name = 'azul_transactions';
 - [ ] Integrar con checkout flow
 
 #### Webservices API (Phase 3 - Opcional)
+
 - [ ] Implementar direct charge via JSON API
 - [ ] Agregar DataVault tokenization
 - [ ] Implementar 3D Secure 2.0
 - [ ] Crear servicio de refund/void
+
+---
+
+## 📚 Recursos Adicionales
+
+### Guías y Documentación
+
+| Recurso                    | Descripción                                        | Ubicación                                                       |
+| -------------------------- | -------------------------------------------------- | --------------------------------------------------------------- |
+| **Guía de Sandbox**        | Proceso completo para obtener credenciales de AZUL | [AZUL_SANDBOX_SETUP_GUIDE.md](AZUL_SANDBOX_SETUP_GUIDE.md)      |
+| **Script de Testing**      | Tests automatizados de integración                 | [scripts/test-azul-sandbox.sh](../scripts/test-azul-sandbox.sh) |
+| **Formulario HTML Test**   | Interfaz web para probar pagos manualmente         | [test-azul-payment.html](test-azul-payment.html)                |
+| **Documentación Completa** | Resumen de completado de Sprint 4                  | [SPRINT_4_COMPLETED.md](SPRINT_4_COMPLETED.md)                  |
+
+### Testing Tools
+
+#### 1. Script de Testing Automatizado
+
+```bash
+# Ejecutar todos los tests de integración
+cd /Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices
+./scripts/test-azul-sandbox.sh
+
+# Tests incluidos:
+# ✅ Health check del servicio
+# ✅ Payment initiation
+# ✅ Formateo de montos
+# ✅ Generación de AuthHash
+# ✅ Conexión a PostgreSQL
+# ✅ Verificación de tabla y índices
+# ✅ Análisis de logs
+```
+
+#### 2. Formulario HTML de Testing Manual
+
+```bash
+# Abrir el formulario en el navegador
+open docs/test-azul-payment.html
+
+# O servir con Python
+cd docs
+python3 -m http.server 8000
+# Luego abrir: http://localhost:8000/test-azul-payment.html
+```
+
+**Funcionalidades del formulario:**
+
+- Input de amount, ITBIS y orderNumber
+- Generación automática de payment request via API
+- Redirect automático a AZUL Payment Page
+- Lista de tarjetas de prueba con resultados esperados
+
+### Comandos Útiles
+
+```bash
+# Ver logs de BillingService
+docker logs billingservice --tail 100 -f
+
+# Verificar transacciones en DB
+docker exec postgres_db psql -U postgres -d billingservice -c \
+  "SELECT order_number, status, amount, created_at FROM azul_transactions ORDER BY created_at DESC LIMIT 10;"
+
+# Reiniciar servicio después de cambios
+docker-compose restart billingservice
+
+# Rebuild completo
+docker-compose up -d --build billingservice
+```
 
 ---
 
