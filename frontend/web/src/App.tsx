@@ -30,6 +30,9 @@ import DealerRegistrationPage from './pages/DealerRegistrationPage';
 import DealerDashboard from './pages/DealerDashboard';
 // Inventory Management pages (Sprint 6)
 import InventoryManagementPage from './pages/InventoryManagementPage';
+// Public Dealer Profile pages (Sprint 7)
+import PublicDealerProfilePage from './pages/PublicDealerProfilePage';
+import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -234,6 +237,17 @@ function App() {
             element={
               <ProtectedRoute>
                 <InventoryManagementPage dealerId="DEALER_ID_PLACEHOLDER" />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Public Dealer Profile Routes (Sprint 7) */}
+          <Route path="/dealers/:slug" element={<PublicDealerProfilePage />} />
+          <Route
+            path="/dealer/profile/edit"
+            element={
+              <ProtectedRoute>
+                <DealerProfileEditorPage />
               </ProtectedRoute>
             }
           />

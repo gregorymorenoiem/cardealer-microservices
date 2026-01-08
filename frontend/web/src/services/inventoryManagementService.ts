@@ -99,12 +99,12 @@ export interface InventoryStatsDto {
 export enum InventoryStatus {
   Active = 'Active',
   Paused = 'Paused',
-  Sold = 'Sold'
+  Sold = 'Sold',
 }
 
 export enum InventoryVisibility {
   Public = 'Public',
-  Private = 'Private'
+  Private = 'Private',
 }
 
 export interface InventoryFilters {
@@ -149,7 +149,8 @@ class InventoryManagementService {
     if (filters.status) params.append('status', filters.status);
     if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters.sortDescending !== undefined) params.append('sortDescending', filters.sortDescending.toString());
+    if (filters.sortDescending !== undefined)
+      params.append('sortDescending', filters.sortDescending.toString());
 
     const response = await this.api.get<PagedResultDto<InventoryItemDto>>(`?${params.toString()}`);
     return response.data;
@@ -182,7 +183,10 @@ class InventoryManagementService {
   /**
    * Update an existing inventory item
    */
-  async updateInventoryItem(id: string, request: UpdateInventoryItemRequest): Promise<InventoryItemDto> {
+  async updateInventoryItem(
+    id: string,
+    request: UpdateInventoryItemRequest
+  ): Promise<InventoryItemDto> {
     const response = await this.api.put<InventoryItemDto>(`/${id}`, request);
     return response.data;
   }

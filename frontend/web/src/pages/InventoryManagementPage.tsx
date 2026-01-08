@@ -19,7 +19,7 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | undefined>(undefined);
@@ -36,7 +36,7 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
     try {
       setLoading(true);
       setError(null);
-      
+
       const filters: InventoryFilters = {
         dealerId,
         page,
@@ -71,7 +71,7 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
     if (selectedItems.size === inventoryData?.items.length) {
       setSelectedItems(new Set());
     } else {
-      const allIds = inventoryData?.items.map(item => item.id) || [];
+      const allIds = inventoryData?.items.map((item) => item.id) || [];
       setSelectedItems(new Set(allIds));
     }
   };
@@ -82,16 +82,16 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
       return;
     }
 
-    const confirmMessage = 
-      action === 'delete' 
-        ? '¿Estás seguro de eliminar los ítems seleccionados?' 
+    const confirmMessage =
+      action === 'delete'
+        ? '¿Estás seguro de eliminar los ítems seleccionados?'
         : `¿Confirmar cambiar status a ${action === 'activate' ? 'Activo' : 'Pausado'}?`;
 
     if (!confirm(confirmMessage)) return;
 
     try {
       const itemIds = Array.from(selectedItems);
-      
+
       if (action === 'delete') {
         // Delete items one by one
         for (const id of itemIds) {
@@ -168,7 +168,9 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
             <div>
               <select
                 value={statusFilter || ''}
-                onChange={(e) => setStatusFilter(e.target.value ? e.target.value as InventoryStatus : undefined)}
+                onChange={(e) =>
+                  setStatusFilter(e.target.value ? (e.target.value as InventoryStatus) : undefined)
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Todos los estados</option>
@@ -241,20 +243,37 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
                   <th className="px-4 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedItems.size === inventoryData?.items.length && inventoryData?.items.length > 0}
+                      checked={
+                        selectedItems.size === inventoryData?.items.length &&
+                        inventoryData?.items.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="rounded border-gray-300"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stock #</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Stock #
+                  </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">VIN</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Ubicación</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Precio Lista</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Estado</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Ubicación
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Precio Lista
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Estado
+                  </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Días</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Vistas</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Consultas</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Acciones</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Vistas
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Consultas
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -268,14 +287,18 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
                         className="rounded border-gray-300"
                       />
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.stockNumber}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      {item.stockNumber}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{item.vin || 'N/A'}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{item.location || 'N/A'}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900">
                       {inventoryManagementService.formatCurrency(item.listPrice)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${inventoryManagementService.getStatusColor(item.status)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${inventoryManagementService.getStatusColor(item.status)}`}
+                      >
                         {inventoryManagementService.getStatusLabel(item.status)}
                       </span>
                       {item.isHot && (
@@ -330,11 +353,12 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
           {inventoryData && inventoryData.totalPages > 1 && (
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Mostrando {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, inventoryData.totalCount)} de {inventoryData.totalCount}
+                Mostrando {(page - 1) * pageSize + 1} -{' '}
+                {Math.min(page * pageSize, inventoryData.totalCount)} de {inventoryData.totalCount}
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                   className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
                 >
@@ -344,7 +368,7 @@ export default function InventoryManagementPage({ dealerId }: InventoryManagemen
                   Página {page} de {inventoryData.totalPages}
                 </span>
                 <button
-                  onClick={() => setPage(p => Math.min(inventoryData.totalPages, p + 1))}
+                  onClick={() => setPage((p) => Math.min(inventoryData.totalPages, p + 1))}
                   disabled={page === inventoryData.totalPages}
                   className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
                 >

@@ -202,25 +202,31 @@ export default function DealerDashboard() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold mb-4">Acciones Rápidas</h2>
               <div className="space-y-3">
-                <button 
+                <button
                   onClick={() => navigate('/vehicles/create')}
                   className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
                   + Publicar Vehículo
                 </button>
-                <button 
+                <button
+                  onClick={() => navigate('/dealer/profile/edit')}
+                  className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                >
+                  ✏️ Editar Perfil Público
+                </button>
+                <button
                   onClick={() => navigate('/dealer/inventory')}
                   className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                 >
                   Ver Inventario
                 </button>
-                <button 
+                <button
                   onClick={() => navigate('/dealer/inventory/import')}
                   className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                 >
                   Importar CSV
                 </button>
-                <button 
+                <button
                   onClick={() => navigate('/inquiries/received')}
                   className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                 >
