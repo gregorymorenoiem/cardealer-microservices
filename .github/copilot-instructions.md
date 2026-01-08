@@ -946,7 +946,7 @@ Ejemplos:
 
 ### 🎯 Completar un Sprint CORRECTAMENTE
 
-Cada sprint debe seguir este checklist COMPLETO antes de marcarse como terminado:
+⚠️ **IMPORTANTE:** Un sprint NO está completo hasta que TODAS estas tareas estén 100% terminadas. Lo que parece "100%" es típicamente solo 90-95% hasta hacer estas validaciones finales.
 
 #### 1️⃣ Backend Development
 
@@ -956,6 +956,15 @@ Cada sprint debe seguir este checklist COMPLETO antes de marcarse como terminado
 - [ ] Crear Entity Configurations (EF Core)
 - [ ] Agregar Health Checks
 - [ ] Documentar API con Swagger/XML comments
+
+#### 🧪 TESTING COMPLETO (OBLIGATORIO)
+
+- [ ] **Crear proyectos .Tests para CADA microservicio nuevo**
+- [ ] **Implementar mínimo 5-7 tests por servicio**
+- [ ] **Verificar que TODOS los tests compilan sin errores**
+- [ ] **Ejecutar todos los tests y confirmar que pasan**
+- [ ] **Configurar coverlet.collector para coverage**
+- [ ] **Resolver TODOS los problemas de compilación/runtime**
 
 #### 2️⃣ Frontend Development (SI APLICA)
 
@@ -999,6 +1008,24 @@ export const MiNuevoComponente = () => {
   );
 };
 ```
+
+#### 🚀 CI/CD INTEGRATION (CRÍTICO)
+
+- [ ] **Agregar servicios nuevos a smart-cicd.yml**
+- [ ] **Configurar detection rules (paths filter)**
+- [ ] **Crear jobs de CI/CD para cada servicio**
+- [ ] **Actualizar outputs y summaries**
+- [ ] **Verificar que el pipeline detecta cambios correctamente**
+- [ ] **Probar que tests se ejecutan automáticamente en CI/CD**
+
+#### 📝 COMMIT & DEPLOYMENT (FINAL)
+
+- [ ] **git add . (todos los archivos)**
+- [ ] **git commit con mensaje descriptivo completo**
+- [ ] **git push origin development**
+- [ ] **Verificar que CI/CD se ejecuta correctamente**
+- [ ] **Confirmar que todos los tests pasan en GitHub Actions**
+- [ ] **Validar que coverage reports se generan**
 
 #### 4️⃣ Docker & Testing
 
@@ -1089,6 +1116,9 @@ export const MiNuevoComponente = () => {
 6. **Saltarse Health Check** → K8s no puede monitorear el servicio
 7. **No actualizar Gateway** → 404 en API calls
 8. **Commits sin testing** → Breaking changes
+9. **❌ DECIR "100%" SIN TESTS** → Sprint incompleto
+10. **❌ NO ACTUALIZAR CI/CD** → Servicios no se despliegan automáticamente
+11. **❌ OLVIDAR COMMIT/PUSH** → Trabajo se pierde localmente
 
 ### ✅ HACER SIEMPRE:
 
@@ -1096,7 +1126,9 @@ export const MiNuevoComponente = () => {
 2. **Backend nuevo = Docker build + test** → Calidad asegurada
 3. **Cambio en servicio = Actualizar Gateway** → Routing correcto
 4. **Feature completo = Testing end-to-end** → UX funcional
-5. **Sprint terminado = Checklist 100%** → Deploy confiable
+5. **✅ MICROSERVICIO NUEVO = PROYECTO DE TESTS OBLIGATORIO**
+6. **✅ SPRINT TERMINADO = CI/CD ACTUALIZADO + COMMIT/PUSH**
+7. **✅ "100%" = TESTS PASANDO + PIPELINE FUNCIONANDO**
 
 ---
 
@@ -1139,7 +1171,16 @@ Copiar esto al inicio de cada sprint:
 - [ ] FluentValidation agregado
 - [ ] Health Check funcional
 - [ ] Docker build exitoso
-- [ ] Tests locales pasados
+- [ ] **TESTS CREADOS (OBLIGATORIO)**
+
+### Testing (CRÍTICO - NO OPCIONAL)
+
+- [ ] **Proyecto .Tests creado**
+- [ ] **Mínimo 5-7 tests por servicio**
+- [ ] **Todos los tests compilan**
+- [ ] **Todos los tests pasan**
+- [ ] **Coverage configurado**
+- [ ] **Tests probados localmente**
 
 ### Frontend (si aplica)
 
@@ -1158,6 +1199,14 @@ Copiar esto al inicio de cada sprint:
 - [ ] API calls desde frontend OK
 - [ ] Auth/ProtectedRoute funciona
 
+### CI/CD (OBLIGATORIO)
+
+- [ ] **Servicios agregados a smart-cicd.yml**
+- [ ] **Detection rules configuradas**
+- [ ] **Jobs de CI/CD creados**
+- [ ] **Pipeline detecta cambios correctamente**
+- [ ] **Tests se ejecutan automáticamente**
+
 ### Testing
 
 - [ ] Todos los endpoints probados
@@ -1172,6 +1221,14 @@ Copiar esto al inicio de cada sprint:
 - [ ] CI/CD workflow funcional
 - [ ] Deploy exitoso a DOKS
 - [ ] Verificación en producción
+
+### Final (CRÍTICO)
+
+- [ ] **git add . && git commit**
+- [ ] **git push origin development**
+- [ ] **CI/CD ejecutándose correctamente**
+- [ ] **Todos los tests pasando en GitHub Actions**
+- [ ] **Coverage reports generándose**
 
 ### Documentación
 
@@ -1213,3 +1270,50 @@ Copiar esto al inicio de cada sprint:
 ---
 
 _Documento mantenido por el equipo de desarrollo - Enero 2026_
+
+---
+
+## 🚨 LECCIÓN APRENDIDA: TAREAS POST-"100%"
+
+### ⚠️ PROBLEMA IDENTIFICADO EN SPRINT 1
+
+**Cuando dije "Sprint 1 100% completo" la primera vez, aún faltaban estas tareas CRÍTICAS:**
+
+#### 🧪 Testing Infrastructure (FALTABA COMPLETAMENTE)
+
+- [ ] ❌ MaintenanceService tenía **0 tests** (necesitaba 6)
+- [ ] ❌ ComparisonService tenía **0 tests** (necesitaba 6)
+- [ ] ❌ AlertService tenía **0 tests** (necesitaba 7)
+- [ ] ❌ Total: **19 tests** que NO EXISTÍAN
+
+#### 🔧 Compilación y Debug
+
+- [ ] ❌ Errores de constructor en entidades
+- [ ] ❌ Namespaces incorrectos
+- [ ] ❌ Referencias de proyectos faltantes
+- [ ] ❌ Múltiples iteraciones de debugging
+
+#### 🚀 CI/CD Pipeline
+
+- [ ] ❌ 3 servicios NO estaban en smart-cicd.yml
+- [ ] ❌ Detection rules faltantes
+- [ ] ❌ Jobs de CI/CD no configurados
+- [ ] ❌ Pipeline no detectaba cambios
+
+#### 📝 Deployment Final
+
+- [ ] ❌ Commit y push no realizados
+- [ ] ❌ Cambios solo existían localmente
+- [ ] ❌ No validado en CI/CD
+
+### 💡 NUEVA REGLA OBLIGATORIA
+
+**UN SPRINT NO ESTÁ 100% HASTA QUE:**
+
+1. ✅ **TODOS los tests existen y pasan**
+2. ✅ **CI/CD pipeline actualizado y funcionando**
+3. ✅ **Commit y push realizados**
+4. ✅ **GitHub Actions ejecutándose correctamente**
+5. ✅ **Coverage reports generándose**
+
+**Lo que parece "100%" es típicamente 90-95%. Las tareas finales son OBLIGATORIAS.**

@@ -54,6 +54,20 @@ namespace UserService.Domain.Entities
         public string PhoneNumber { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public bool EmailConfirmed { get; set; } = false;
+        
+        // Profile fields for seller public profile
+        public string? ProfilePicture { get; set; }
+        public string? City { get; set; }
+        public string? Province { get; set; }
+        public string? BusinessName { get; set; }
+        public string? BusinessPhone { get; set; }
+        public string? BusinessAddress { get; set; }
+        public string? RNC { get; set; }
+        public string? PreferredContactMethod { get; set; } = "email"; // email, phone, both
+        public string? BusinessHours { get; set; } = "9:00 AM - 6:00 PM";
+        public string? AutoReplyMessage { get; set; }
+        public bool IsEmailVerified { get; set; } = false;
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }

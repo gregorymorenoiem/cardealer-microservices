@@ -1,29 +1,62 @@
-using Consul;
-using ServiceDiscovery.Application.Interfaces;
-using ServiceDiscovery.Infrastructure.Services;
-using ContactService.Api.Middleware;
+using ContactService.Domain.Interfaces;
+using ContactService.Infrastructure.Persistence;
+using ContactService.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using CarDealer.Shared.MultiTenancy;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add HttpClient for HealthChecker
-builder.Services.AddHttpClient();
+// Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure Consul Client
-var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
-builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(config =>
+// Multi-tenancy
+builder.Services.AddScoped<ITenantContext, TenantContext>();
+
+// Repositories
+builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
+builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
+
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException()))
+        };
+    });
+
+// CORS
+builder.Services.AddCors(options =>
 {
-    config.Address = new Uri(consulAddress);
-}));
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "https://okla.com.do")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
-// Configure Service Discovery
-builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContext<ApplicationDbContext>();
 
 var app = builder.Build();
 
@@ -34,40 +67,29 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Service Discovery Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+app.MapControllers();
+app.MapHealthChecks("/health");
 
-// Health endpoint
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "ContactService" }));
-
-var summaries = new[]
+// Auto-migrate database
+using (var scope = app.Services.CreateScope())
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
 
 // Make Program class accessible for integration tests
 public partial class Program { }

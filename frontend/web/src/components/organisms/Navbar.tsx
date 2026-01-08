@@ -70,6 +70,8 @@ export default function Navbar() {
     { href: '/favorites', label: 'Favoritos', icon: FiHeart },
     { href: '/comparison', label: 'Comparar', icon: FiGrid },
     { href: '/alerts', label: 'Alertas', icon: FiBriefcase },
+    { href: '/my-inquiries', label: 'Mis Consultas', icon: FiMessageSquare },
+    { href: '/received-inquiries', label: 'Consultas Recibidas', icon: FiUserCheck },
   ];
 
   return (

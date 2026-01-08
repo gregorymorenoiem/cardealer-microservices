@@ -1,45 +1,48 @@
 using Microsoft.EntityFrameworkCore;
 using ComparisonService.Domain.Entities;
+using CarDealer.Shared.MultiTenancy;
 
 namespace ComparisonService.Infrastructure.Persistence;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : MultiTenantDbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<Comparison> Comparisons => Set<Comparison>();
+    public DbSet<VehicleComparison> VehicleComparisons => Set<VehicleComparison>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Comparison>(entity =>
+        modelBuilder.Entity<VehicleComparison>(entity =>
         {
-            entity.ToTable("comparisons");
-            entity.HasKey(c => c.Id);
-
-            entity.Property(c => c.UserId).IsRequired();
-            entity.Property(c => c.Name).IsRequired().HasMaxLength(200);
+            entity.ToTable("vehicle_comparisons");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt);
+            entity.Property(e => e.ShareToken).HasMaxLength(50);
             
-            // Store VehicleIds as JSON array
-            entity.Property(c => c.VehicleIds)
+            // Store VehicleIds as JSON for better query support
+            entity.Property(e => e.VehicleIds)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>()
+                )
                 .HasColumnType("jsonb");
 
-            entity.Property(c => c.ShareToken).HasMaxLength(50);
-            entity.Property(c => c.CreatedAt).IsRequired();
-            entity.Property(c => c.UpdatedAt).IsRequired();
-            entity.Property(c => c.IsPublic).IsRequired();
-
-            // Indexes
-            entity.HasIndex(c => c.UserId);
-            entity.HasIndex(c => c.ShareToken).IsUnique();
-            entity.HasIndex(c => c.CreatedAt);
+            // Indexes for performance
+            entity.HasIndex(e => e.UserId).HasDatabaseName("IX_vehicle_comparisons_user_id");
+            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_vehicle_comparisons_created_at");
+            entity.HasIndex(e => e.ShareToken)
+                .HasDatabaseName("IX_vehicle_comparisons_share_token")
+                .IsUnique()
+                .HasFilter("share_token IS NOT NULL");
+                
+            // Compound index for user's recent comparisons
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt })
+                .HasDatabaseName("IX_vehicle_comparisons_user_created");
         });
     }
 }

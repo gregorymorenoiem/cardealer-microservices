@@ -54,6 +54,8 @@ jobs:
       maintenanceservice: ${{ steps.filter.outputs.maintenanceservice }}
       comparisonservice: ${{ steps.filter.outputs.comparisonservice }}
       alertservice: ${{ steps.filter.outputs.alertservice }}
+      # Sprint 2 microservices
+      contactservice: ${{ steps.filter.outputs.contactservice }}
       gateway: ${{ steps.filter.outputs.gateway }}
       # Shared libraries
       shared: ${{ steps.filter.outputs.shared }}
@@ -119,6 +121,10 @@ jobs:
             alertservice:
               - 'backend/AlertService/**'
               - 'backend/_Shared/**'
+            # Sprint 2 microservices
+            contactservice:
+              - 'backend/ContactService/**'
+              - 'backend/_Shared/**'
             gateway:
               - 'backend/Gateway/**'
             # Shared libraries (triggers rebuild of dependent services)
@@ -146,6 +152,7 @@ jobs:
           echo "| MaintenanceService | ${{ steps.filter.outputs.maintenanceservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ComparisonService | ${{ steps.filter.outputs.comparisonservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AlertService | ${{ steps.filter.outputs.alertservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ContactService | ${{ steps.filter.outputs.contactservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ steps.filter.outputs.frontend-web }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Shared Libraries | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
@@ -309,6 +316,17 @@ jobs:
     with:
       service-name: alertservice
       service-path: backend/AlertService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  contactservice:
+    name: 📞 ContactService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.contactservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: contactservice
+      service-path: backend/ContactService
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 

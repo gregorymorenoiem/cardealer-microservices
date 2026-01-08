@@ -15,6 +15,9 @@ import { SearchPage } from './pages/SearchPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { ComparisonPage } from './pages/ComparisonPage';
 import { AlertsPage } from './pages/AlertsPage';
+// Contact pages (Sprint 2)
+import { MyInquiriesPage } from './pages/MyInquiriesPage';
+import { ReceivedInquiriesPage } from './pages/ReceivedInquiriesPage';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -118,6 +121,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <AlertsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Contact Routes (Sprint 2) */}
+          <Route
+            path="/my-inquiries"
+            element={
+              <ProtectedRoute>
+                <MyInquiriesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/received-inquiries"
+            element={
+              <ProtectedRoute>
+                <ReceivedInquiriesPage />
               </ProtectedRoute>
             }
           />
