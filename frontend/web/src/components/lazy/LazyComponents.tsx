@@ -191,34 +191,6 @@ export const PreloadLink: React.FC<PreloadLinkProps> = ({
 // Vertical-Specific Lazy Components
 // ============================================
 
-// Vehicle pages (Blue vertical)
-export const LazyVehicleBrowse = createLazyComponent(
-  () => import('@/pages/marketplace/BrowsePage'),
-  { fallback: <PageLoadingFallback type="browse" /> }
-);
-
-export const LazyVehicleDetail = createLazyComponent(
-  () => import('@/pages/marketplace/VehicleDetailPage'),
-  { fallback: <PageLoadingFallback type="detail" /> }
-);
-
-// Property pages (Green vertical)
-export const LazyPropertyBrowse = createLazyComponent(
-  () => import('@/pages/marketplace/BrowsePage'),
-  { fallback: <PageLoadingFallback type="browse" /> }
-);
-
-export const LazyPropertyDetail = createLazyComponent(
-  () => import('@/pages/marketplace/PropertyDetailPage'),
-  { fallback: <PageLoadingFallback type="detail" /> }
-);
-
-// Marketplace home
-export const LazyMarketplaceHome = createLazyComponent(
-  () => import('@/pages/MarketplaceHomePage'),
-  { fallback: <PageLoadingFallback type="hero" /> }
-);
-
 // Admin pages (heavy, should be lazy)
 export const LazyAdminDashboard = createLazyComponent(
   () => import('@/pages/admin/AdminDashboardPage'),
@@ -241,16 +213,6 @@ export const LazyBillingDashboard = createLazyComponent(
 // ============================================
 
 export const useRoutePreloader = () => {
-  const preloadVehicles = useCallback(() => {
-    LazyVehicleBrowse.preload();
-    LazyVehicleDetail.preload();
-  }, []);
-
-  const preloadProperties = useCallback(() => {
-    LazyPropertyBrowse.preload();
-    LazyPropertyDetail.preload();
-  }, []);
-
   const preloadAdmin = useCallback(() => {
     LazyAdminDashboard.preload();
     LazyAdminCategories.preload();
@@ -261,8 +223,6 @@ export const useRoutePreloader = () => {
   }, []);
 
   return {
-    preloadVehicles,
-    preloadProperties,
     preloadAdmin,
     preloadBilling,
   };

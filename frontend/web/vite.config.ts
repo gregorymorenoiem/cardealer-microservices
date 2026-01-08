@@ -72,14 +72,6 @@ export default defineConfig(({ mode }) => ({
           'vendor-motion': ['framer-motion'],
           'vendor-ui': ['react-icons', 'lucide-react', 'clsx'],
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          
-          // Feature chunks - load on demand
-          'feature-marketplace': [
-            './src/pages/MarketplaceHomePage.tsx',
-            './src/components/marketplace/CategorySelector.tsx',
-            './src/components/marketplace/SearchBar.tsx',
-            './src/components/marketplace/FeaturedListings.tsx',
-          ],
         },
         
         // Optimize chunk filenames for caching

@@ -1,11 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HomePage from './pages/HomePage';
-import VehiclesOnlyHomePage from './pages/VehiclesOnlyHomePage';
-// OKLA Premium Pages
-import OklaPremiumPage from './pages/OklaPremiumPage';
-import OklaBrowsePage from './pages/OklaBrowsePage';
-import OklaDetailPage from './pages/OklaDetailPage';
 // Vehicle module pages
 import { 
   VehicleBrowsePage, 
@@ -54,24 +49,11 @@ import {
   PrivacyPage, 
   CookiesPage 
 } from './pages/common';
-// Properties pages
-import { PropertyBrowsePage, PropertyDetailPage } from './pages/properties';
-import PropertyMapViewPage from './pages/properties/MapViewPage';
 // Layouts and components
 import AuthLayout from './layouts/AuthLayout';
 import AdminLayout from './layouts/AdminLayout';
 import DealerLayout from './layouts/DealerLayout';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
-// Marketplace pages
-import MarketplaceHomePage from './pages/MarketplaceHomePage';
-import { 
-  MarketplaceBrowsePage, 
-  PropertyDetailPage as MarketplacePropertyDetailPage, 
-  VehicleDetailPage as MarketplaceVehicleDetailPage,
-  SellerDashboardPage,
-  ListingFormPage,
-  MarketplaceFavoritesPage,
-} from './pages/marketplace';
 // Billing pages
 import {
   BillingDashboardPage,
@@ -81,8 +63,6 @@ import {
   PaymentMethodsPage,
   CheckoutPage,
 } from './pages/billing';
-import PerformanceTestPage from './pages/PerformanceTestPage';
-import { MockLoginPage } from './pages/MockLoginPage';
 import './index.css';
 
 // Create a query client
@@ -103,15 +83,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public Routes - Vehicle-focused Home */}
-          <Route path="/" element={<VehiclesOnlyHomePage />} />
-          
-          {/* Marketplace Home (multi-vertical) */}
-          <Route path="/marketplace-home" element={<HomePage />} />
-          
-          {/* OKLA Premium Routes */}
-          <Route path="/okla" element={<OklaPremiumPage />} />
-          <Route path="/okla/browse" element={<OklaBrowsePage />} />
-          <Route path="/okla/listing/:id" element={<OklaDetailPage />} />
+          <Route path="/" element={<HomePage />} />
           
           {/* Vehicle Module Routes */}
           <Route path="/vehicles" element={<VehicleBrowsePage />} />
@@ -123,27 +95,11 @@ function App() {
           <Route path="/compare" element={<VehicleComparePage />} />
           <Route path="/sell-your-car" element={<SellYourCarPage />} />
           
-          {/* Properties Module Routes */}
-          <Route path="/properties" element={<PropertyBrowsePage />} />
-          <Route path="/properties/map" element={<PropertyMapViewPage />} />
-          <Route path="/properties/:id" element={<PropertyDetailPage />} />
-          <Route path="/properties/compare" element={<VehicleComparePage />} />
-          
           {/* User Routes */}
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/dashboard" element={<UserDashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          
-          {/* Marketplace Routes (Legacy - can be removed later) */}
-          <Route path="/marketplace" element={<MarketplaceHomePage />} />
-          <Route path="/marketplace/browse" element={<MarketplaceBrowsePage />} />
-          <Route path="/marketplace/vehicles/:id" element={<MarketplaceVehicleDetailPage />} />
-          <Route path="/marketplace/properties/:id" element={<MarketplacePropertyDetailPage />} />
-          <Route path="/marketplace/seller" element={<SellerDashboardPage />} />
-          <Route path="/marketplace/listings/new" element={<ListingFormPage />} />
-          <Route path="/marketplace/listings/:id/edit" element={<ListingFormPage />} />
-          <Route path="/marketplace/favorites" element={<MarketplaceFavoritesPage />} />
           
           {/* Billing Routes */}
           <Route path="/billing" element={<BillingDashboardPage />} />
@@ -152,10 +108,6 @@ function App() {
           <Route path="/billing/payments" element={<PaymentsPage />} />
           <Route path="/billing/payment-methods" element={<PaymentMethodsPage />} />
           <Route path="/billing/checkout" element={<CheckoutPage />} />
-          
-          {/* Test Route - Remove in production */}
-          <Route path="/test/performance" element={<PerformanceTestPage />} />
-          <Route path="/test/login" element={<MockLoginPage />} />
           
           {/* Information Pages */}
           <Route path="/about" element={<AboutPage />} />

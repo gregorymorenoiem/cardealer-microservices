@@ -204,7 +204,7 @@ export const useLatestVehiclesSale = (limit: number = 6): UseFeaturedVehiclesSal
 };
 
 // ============================================================
-// HOOK: useHomePageVehiclesSale (for VehiclesOnlyHomePage sections)
+// HOOK: useHomePageVehiclesSale (for HomePage sections)
 // ============================================================
 
 interface HomePageSection {
