@@ -210,4 +210,59 @@ public class DealerRepository : IDealerRepository
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
+
+    // Sprint 7: Public Profile Methods
+    public async Task<Dealer?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        return await _context.Dealers
+            .Include(d => d.Locations)
+                .ThenInclude(l => l.BusinessHours)
+            .FirstOrDefaultAsync(d => d.Slug == slug && d.Status == DealerStatus.Active, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Dealer>> GetTrustedDealersAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Dealers
+            .Where(d => d.IsTrustedDealer && d.Status == DealerStatus.Active)
+            .OrderByDescending(d => d.TotalSales)
+            .ThenByDescending(d => d.AverageRating)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Dealer>> GetFoundingMembersAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Dealers
+            .Where(d => d.IsFoundingMember && d.Status == DealerStatus.Active)
+            .OrderBy(d => d.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Dealer>> GetTopRatedDealersAsync(int count = 10, CancellationToken cancellationToken = default)
+    {
+        return await _context.Dealers
+            .Where(d => d.Status == DealerStatus.Active && d.TotalReviews > 0)
+            .OrderByDescending(d => d.AverageRating)
+            .ThenByDescending(d => d.TotalReviews)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task UpdateProfileAsync(Dealer dealer, CancellationToken cancellationToken = default)
+    {
+        dealer.UpdatedAt = DateTime.UtcNow;
+        _context.Dealers.Update(dealer);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Dealers.Where(d => d.Slug == slug);
+        
+        if (excludeDealerId.HasValue)
+        {
+            query = query.Where(d => d.Id != excludeDealerId.Value);
+        }
+        
+        return await query.AnyAsync(cancellationToken);
+    }
 }

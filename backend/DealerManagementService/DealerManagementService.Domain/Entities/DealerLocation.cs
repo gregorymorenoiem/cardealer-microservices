@@ -26,7 +26,14 @@ public class DealerLocation
     public string? Email { get; set; }
     
     // Hours
-    public string? WorkingHours { get; set; } // JSON: {"monday": "8:00-18:00", ...}
+    public string? WorkingHours { get; set; } // JSON: {"monday": "8:00-18:00", ...} (Deprecated)
+    public List<BusinessHours> BusinessHours { get; set; } = new(); // Sprint 7: Structured hours
+    
+    // Features
+    public bool HasShowroom { get; set; }
+    public bool HasServiceCenter { get; set; }
+    public bool HasParking { get; set; }
+    public int? ParkingSpaces { get; set; }
     
     // Status
     public bool IsActive { get; set; } = true;

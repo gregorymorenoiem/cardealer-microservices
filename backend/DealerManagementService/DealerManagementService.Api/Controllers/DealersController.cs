@@ -182,4 +182,76 @@ public class DealersController : ControllerBase
             }
         });
     }
+
+    // ============================================
+    // Sprint 7: Public Profile Endpoints
+    // ============================================
+
+    /// <summary>
+    /// Get public dealer profile by slug
+    /// </summary>
+    [HttpGet("public/{slug}")]
+    [ProducesResponseType(typeof(PublicDealerProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PublicDealerProfileDto>> GetPublicProfile(string slug)
+    {
+        var query = new GetPublicProfileQuery(slug);
+        var result = await _mediator.Send(query);
+        
+        if (result == null)
+        {
+            return NotFound(new { message = $"Dealer with slug '{slug}' not found" });
+        }
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get all trusted dealers
+    /// </summary>
+    [HttpGet("trusted")]
+    [ProducesResponseType(typeof(List<PublicDealerProfileDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<PublicDealerProfileDto>>> GetTrustedDealers()
+    {
+        var query = new GetTrustedDealersQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Update dealer public profile
+    /// </summary>
+    [HttpPut("{id:guid}/profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(PublicDealerProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PublicDealerProfileDto>> UpdateProfile(
+        Guid id,
+        [FromBody] UpdateProfileRequest request)
+    {
+        try
+        {
+            var command = new UpdateDealerProfileCommand(id, request);
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating dealer profile {DealerId}", id);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get profile completion percentage and missing fields
+    /// </summary>
+    [HttpGet("{id:guid}/profile/completion")]
+    [Authorize]
+    [ProducesResponseType(typeof(ProfileCompletionDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ProfileCompletionDto>> GetProfileCompletion(Guid id)
+    {
+        var query = new GetProfileCompletionQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }

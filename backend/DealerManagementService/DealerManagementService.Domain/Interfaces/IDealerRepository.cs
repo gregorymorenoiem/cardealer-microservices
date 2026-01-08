@@ -33,4 +33,12 @@ public interface IDealerRepository
     Task DeactivateSubscriptionAsync(Guid dealerId, CancellationToken cancellationToken = default);
     Task IncrementActiveListingsAsync(Guid dealerId, CancellationToken cancellationToken = default);
     Task DecrementActiveListingsAsync(Guid dealerId, CancellationToken cancellationToken = default);
+    
+    // Sprint 7: Public Profile
+    Task<Dealer?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Dealer>> GetTrustedDealersAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<Dealer>> GetFoundingMembersAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<Dealer>> GetTopRatedDealersAsync(int count = 10, CancellationToken cancellationToken = default);
+    Task UpdateProfileAsync(Dealer dealer, CancellationToken cancellationToken = default);
+    Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, CancellationToken cancellationToken = default);
 }

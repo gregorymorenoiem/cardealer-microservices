@@ -170,3 +170,140 @@ public record DealerListResponse(
     int PageSize,
     int TotalPages
 );
+
+// ============================================
+// Sprint 7: Public Profile DTOs
+// ============================================
+
+public record PublicDealerProfileDto(
+    Guid Id,
+    string BusinessName,
+    string? Slogan,
+    string? Description,
+    string? AboutUs,
+    string? LogoUrl,
+    string? BannerUrl,
+    DateTime? EstablishedDate,
+    string Slug,
+    string City,
+    string Province,
+    bool IsTrustedDealer,
+    bool IsFoundingMember,
+    DateTime? TrustedDealerSince,
+    double AverageRating,
+    int TotalReviews,
+    int TotalSales,
+    int ActiveListings,
+    List<string> Specialties,
+    List<string> SupportedBrands,
+    PublicContactInfo ContactInfo,
+    List<DealerFeature> Features,
+    List<PublicLocationDto> Locations,
+    SocialMediaLinks? SocialMedia,
+    SEOMetadata? SEO
+);
+
+public record PublicContactInfo(
+    string? Phone,
+    string? Email,
+    string? Website,
+    string? WhatsAppNumber,
+    bool ShowPhone,
+    bool ShowEmail
+);
+
+public record DealerFeature(
+    string Name,
+    string Icon,
+    bool IsAvailable
+);
+
+public record PublicLocationDto(
+    Guid Id,
+    string Name,
+    string Type,
+    bool IsPrimary,
+    string Address,
+    string City,
+    string Province,
+    double? Latitude,
+    double? Longitude,
+    string Phone,
+    string? Email,
+    List<BusinessHoursDto> BusinessHours,
+    bool HasShowroom,
+    bool HasServiceCenter,
+    bool HasParking,
+    int? ParkingSpaces,
+    bool IsActive
+);
+
+public record BusinessHoursDto(
+    string DayOfWeek,
+    bool IsOpen,
+    string? OpenTime,
+    string? CloseTime,
+    string? BreakStartTime,
+    string? BreakEndTime,
+    string? Notes,
+    string FormattedHours
+);
+
+public record SocialMediaLinks(
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? TwitterUrl,
+    string? YouTubeUrl
+);
+
+public record SEOMetadata(
+    string? MetaTitle,
+    string? MetaDescription,
+    string? MetaKeywords
+);
+
+public record UpdateProfileRequest(
+    string? Slogan,
+    string? AboutUs,
+    List<string>? Specialties,
+    List<string>? SupportedBrands,
+    string? LogoUrl,
+    string? BannerUrl,
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? TwitterUrl,
+    string? YouTubeUrl,
+    string? WhatsAppNumber,
+    bool? ShowPhoneOnProfile,
+    bool? ShowEmailOnProfile,
+    bool? AcceptsTradeIns,
+    bool? OffersFinancing,
+    bool? OffersWarranty,
+    bool? OffersHomeDelivery,
+    string? MetaTitle,
+    string? MetaDescription,
+    string? MetaKeywords
+);
+
+public record UpdateLocationRequest(
+    Guid LocationId,
+    string? Name,
+    string? Address,
+    string? City,
+    string? Province,
+    double? Latitude,
+    double? Longitude,
+    string? Phone,
+    string? Email,
+    bool? HasShowroom,
+    bool? HasServiceCenter,
+    bool? HasParking,
+    int? ParkingSpaces,
+    List<BusinessHoursDto>? BusinessHours
+);
+
+public record ProfileCompletionDto(
+    int CompletionPercentage,
+    List<string> MissingFields,
+    List<string> CompletedSections
+);

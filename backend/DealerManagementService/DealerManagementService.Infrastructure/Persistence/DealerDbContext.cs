@@ -12,6 +12,7 @@ public class DealerDbContext : DbContext
     public DbSet<Dealer> Dealers => Set<Dealer>();
     public DbSet<DealerDocument> DealerDocuments => Set<DealerDocument>();
     public DbSet<DealerLocation> DealerLocations => Set<DealerLocation>();
+    public DbSet<BusinessHours> BusinessHours => Set<BusinessHours>(); // Sprint 7
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,9 @@ public class DealerDbContext : DbContext
             entity.HasIndex(e => e.VerificationStatus);
             entity.HasIndex(e => e.CurrentPlan);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.Slug).IsUnique(); // Sprint 7
+            entity.HasIndex(e => e.IsTrustedDealer); // Sprint 7
+            entity.HasIndex(e => e.IsFoundingMember); // Sprint 7
             
             entity.Property(e => e.BusinessName).HasMaxLength(200).IsRequired();
             entity.Property(e => e.RNC).HasMaxLength(50).IsRequired();
@@ -88,5 +92,21 @@ public class DealerDbContext : DbContext
             
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
+
+        // Sprint 7: BusinessHours Configuration
+        modelBuilder.Entity<BusinessHours>(entity =>
+        {
+            entity.ToTable("business_hours");
+            entity.HasKey(e => e.Id);
+            
+            entity.HasIndex(e => e.DealerLocationId);
+            entity.HasIndex(e => e.DayOfWeek);
+            
+            entity.HasOne(e => e.DealerLocation)
+                .WithMany(l => l.BusinessHours)
+                .HasForeignKey(e => e.DealerLocationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
+

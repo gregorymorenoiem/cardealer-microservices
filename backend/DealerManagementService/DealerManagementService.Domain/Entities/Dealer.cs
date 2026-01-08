@@ -32,6 +32,37 @@ public class Dealer
     public DateTime? EstablishedDate { get; set; }
     public int? EmployeeCount { get; set; }
     
+    // Public Profile (Sprint 7)
+    public string? Slogan { get; set; }
+    public string? AboutUs { get; set; }
+    public List<string> Specialties { get; set; } = new();
+    public List<string> SupportedBrands { get; set; } = new();
+    public string? FacebookUrl { get; set; }
+    public string? InstagramUrl { get; set; }
+    public string? TwitterUrl { get; set; }
+    public string? YouTubeUrl { get; set; }
+    public string? WhatsAppNumber { get; set; }
+    public bool ShowPhoneOnProfile { get; set; } = true;
+    public bool ShowEmailOnProfile { get; set; } = true;
+    public bool AcceptsTradeIns { get; set; }
+    public bool OffersFinancing { get; set; }
+    public bool OffersWarranty { get; set; }
+    public bool OffersHomeDelivery { get; set; }
+    
+    // SEO
+    public string? MetaTitle { get; set; }
+    public string? MetaDescription { get; set; }
+    public string? MetaKeywords { get; set; }
+    public string Slug { get; set; } = string.Empty;
+    
+    // Badges & Trust
+    public bool IsTrustedDealer { get; set; }
+    public bool IsFoundingMember { get; set; } // Early Bird participant
+    public DateTime? TrustedDealerSince { get; set; }
+    public double AverageRating { get; set; }
+    public int TotalReviews { get; set; }
+    public int TotalSales { get; set; }
+    
     // Verification Documents
     public List<DealerDocument> Documents { get; set; } = new();
     
@@ -73,6 +104,70 @@ public class Dealer
     public bool IsVerified()
     {
         return VerificationStatus == VerificationStatus.Verified && Status == DealerStatus.Active;
+    }
+    
+    // Sprint 7: Public Profile Methods
+    public string GenerateSlug()
+    {
+        var slug = BusinessName.ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u")
+            .Replace("ñ", "n");
+        
+        // Remove special characters
+        slug = new string(slug.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray());
+        
+        return slug;
+    }
+    
+    public void MarkAsTrusted()
+    {
+        IsTrustedDealer = true;
+        TrustedDealerSince = DateTime.UtcNow;
+    }
+    
+    public void RemoveTrustedBadge()
+    {
+        IsTrustedDealer = false;
+        TrustedDealerSince = null;
+    }
+    
+    public bool IsProfileComplete()
+    {
+        return !string.IsNullOrWhiteSpace(BusinessName)
+            && !string.IsNullOrWhiteSpace(Description)
+            && !string.IsNullOrWhiteSpace(LogoUrl)
+            && !string.IsNullOrWhiteSpace(Address)
+            && !string.IsNullOrWhiteSpace(Phone);
+    }
+    
+    public int GetProfileCompletionPercentage()
+    {
+        int totalFields = 20;
+        int completedFields = 0;
+        
+        if (!string.IsNullOrWhiteSpace(BusinessName)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(Description)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(AboutUs)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(LogoUrl)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(BannerUrl)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(Address)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(Phone)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(Email)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(Website)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(WhatsAppNumber)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(FacebookUrl)) completedFields++;
+        if (!string.IsNullOrWhiteSpace(InstagramUrl)) completedFields++;
+        if (Specialties.Any()) completedFields++;
+        if (SupportedBrands.Any()) completedFields++;
+        if (EstablishedDate.HasValue) completedFields++;
+        if (EmployeeCount.HasValue) completedFields++;
+        if (Locations.Any()) completedFields++;
+        if (AcceptsTradeIns) completedFields++;
+        if (OffersFinancing) completedFields++;
+        if (OffersWarranty) completedFields++;
+        
+        return (int)((completedFields / (double)totalFields) * 100);
     }
 }
 
