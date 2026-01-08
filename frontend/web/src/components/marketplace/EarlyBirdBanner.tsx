@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { FiGift, FiClock, FiStar } from 'react-icons/fi';
+import { FiPackage, FiClock, FiStar } from 'react-icons/fi';
 import Button from '@/components/atoms/Button';
+
+// Use environment configuration
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
 interface EarlyBirdBannerProps {
   onEnroll?: () => void;
@@ -14,6 +17,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
     seconds: 0,
   });
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isGracePeriod, setIsGracePeriod] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Deadline: January 31, 2026 23:59:59
@@ -23,16 +27,28 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
     // Check enrollment status
     const token = localStorage.getItem('authToken');
     if (token) {
-      fetch('https://api.okla.com.do/api/billing/earlybird/status', {
+      fetch(`${API_URL}/api/billing/earlybird/status`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`API responded with ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => {
           setIsEnrolled(data.isEnrolled);
+          setIsGracePeriod(data.isGracePeriod || false);
           setLoading(false);
         })
-        .catch(() => setLoading(false));
+        .catch((error) => {
+          // If API is not available, hide the banner to avoid spam
+          setIsGracePeriod(true); // Assume grace period if service unavailable
+          setLoading(false);
+        });
     } else {
+      // No token means user not authenticated, hide banner during grace period
+      setIsGracePeriod(true);
       setLoading(false);
     }
 
@@ -66,7 +82,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
     }
 
     try {
-      const response = await fetch('https://api.okla.com.do/api/billing/earlybird/enroll', {
+      const response = await fetch(`${API_URL}/api/billing/earlybird/enroll`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -85,6 +101,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
 
   if (loading) return null;
   if (isEnrolled) return null; // Don't show if already enrolled
+  if (isGracePeriod) return null; // Don't show during grace period
   if (timeLeft.days === 0 && timeLeft.hours === 0) return null; // Expired
 
   return (
@@ -93,7 +110,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-full">
-              <FiGift className="h-6 w-6" />
+              <FiPackage className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">

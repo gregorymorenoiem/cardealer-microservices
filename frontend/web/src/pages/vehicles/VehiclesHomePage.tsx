@@ -18,10 +18,10 @@ function HomePage() {
   };
 
   // Fetch featured vehicles from API
-  const { 
-    data: apiVehicles, 
-    isLoading, 
-    isError 
+  const {
+    data: apiVehicles,
+    isLoading,
+    isError,
   } = useQuery({
     queryKey: ['featured-vehicles', 8],
     queryFn: () => getFeaturedVehicles(8),
@@ -31,9 +31,9 @@ function HomePage() {
 
   // Use API data or fallback to mock
   const isUsingMockData = isError || !apiVehicles?.length;
-  const featuredVehicles = !isUsingMockData 
-    ? apiVehicles 
-    : mockVehicles.filter(v => v.isFeatured).slice(0, 8);
+  const featuredVehicles = !isUsingMockData
+    ? apiVehicles
+    : mockVehicles.filter((v) => v.isFeatured).slice(0, 8);
 
   return (
     <MainLayout>
@@ -41,9 +41,13 @@ function HomePage() {
       <div className="relative bg-gradient-to-br from-primary via-primary-600 to-secondary overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-          }}></div>
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+            }}
+          ></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
@@ -54,7 +58,7 @@ function HomePage() {
             <p className="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto mb-8">
               {t('vehicles:home.heroSubtitle')}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link to="/browse">
                 <Button variant="secondary" size="lg" className="shadow-lg">
@@ -63,7 +67,11 @@ function HomePage() {
                 </Button>
               </Link>
               <Link to="/sell">
-                <Button variant="outline" size="lg" className="bg-white/10 text-white border-white hover:bg-white hover:text-primary shadow-lg">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-white/10 text-white border-white hover:bg-white hover:text-primary shadow-lg"
+                >
                   {t('vehicles:home.sellYourCar')}
                 </Button>
               </Link>
@@ -122,9 +130,7 @@ function HomePage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 {t('vehicles:home.step1Title')}
               </h3>
-              <p className="text-gray-600">
-                {t('vehicles:home.step1Desc')}
-              </p>
+              <p className="text-gray-600">{t('vehicles:home.step1Desc')}</p>
             </div>
 
             {/* Step 2 */}
@@ -135,9 +141,7 @@ function HomePage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 {t('vehicles:home.step2Title')}
               </h3>
-              <p className="text-gray-600">
-                {t('vehicles:home.step2Desc')}
-              </p>
+              <p className="text-gray-600">{t('vehicles:home.step2Desc')}</p>
             </div>
 
             {/* Step 3 */}
@@ -148,9 +152,7 @@ function HomePage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 {t('vehicles:home.step3Title')}
               </h3>
-              <p className="text-gray-600">
-                {t('vehicles:home.step3Desc')}
-              </p>
+              <p className="text-gray-600">{t('vehicles:home.step3Desc')}</p>
             </div>
           </div>
         </div>
@@ -166,11 +168,9 @@ function HomePage() {
                   {t('vehicles:home.featuredListings')}
                 </h2>
                 {/* Data source indicator */}
-                <span 
+                <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                    isUsingMockData 
-                      ? 'bg-amber-100 text-amber-700' 
-                      : 'bg-green-100 text-green-700'
+                    isUsingMockData ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                   }`}
                   title={isUsingMockData ? 'Using demo data' : 'Live data from ProductService'}
                 >
@@ -178,41 +178,38 @@ function HomePage() {
                   {isUsingMockData ? 'Demo' : 'Live'}
                 </span>
               </div>
-              <p className="text-gray-600">
-                {t('vehicles:home.featuredSubtitle')}
-              </p>
+              <p className="text-gray-600">{t('vehicles:home.featuredSubtitle')}</p>
             </div>
-            <Link to="/browse" className="hidden sm:block text-primary hover:text-primary-600 font-medium">
+            <Link
+              to="/browse"
+              className="hidden sm:block text-primary hover:text-primary-600 font-medium"
+            >
               {t('vehicles:home.viewAll')} →
             </Link>
           </div>
 
           {/* Vehicle Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {isLoading ? (
-              // Show skeletons while loading
-              Array.from({ length: 8 }).map((_, i) => (
-                <VehicleCardSkeleton key={i} />
-              ))
-            ) : (
-              featuredVehicles.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  id={vehicle.id}
-                  make={vehicle.make}
-                  model={vehicle.model}
-                  year={vehicle.year}
-                  price={vehicle.price}
-                  mileage={vehicle.mileage}
-                  location={vehicle.location || ''}
-                  imageUrl={vehicle.images?.[0] || '/placeholder-car.jpg'}
-                  isFeatured={vehicle.isFeatured}
-                  isNew={vehicle.isNew}
-                  transmission={vehicle.transmission}
-                  fuelType={vehicle.fuelType}
-                />
-              ))
-            )}
+            {isLoading
+              ? // Show skeletons while loading
+                Array.from({ length: 8 }).map((_, i) => <VehicleCardSkeleton key={i} />)
+              : featuredVehicles.map((vehicle) => (
+                  <VehicleCard
+                    key={vehicle.id}
+                    id={vehicle.id}
+                    make={vehicle.make}
+                    model={vehicle.model}
+                    year={vehicle.year}
+                    price={vehicle.price}
+                    mileage={vehicle.mileage}
+                    location={vehicle.location || ''}
+                    imageUrl={vehicle.images?.[0] || '/placeholder-car.jpg'}
+                    isFeatured={vehicle.isFeatured}
+                    isNew={vehicle.isNew}
+                    transmission={vehicle.transmission}
+                    fuelType={vehicle.fuelType}
+                  />
+                ))}
           </div>
 
           <div className="text-center mt-10">

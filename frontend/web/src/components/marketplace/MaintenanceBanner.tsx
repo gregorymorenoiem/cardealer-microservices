@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { FiAlertCircle, FiX } from 'react-icons/fi';
 import Button from '@/components/atoms/Button';
 
+// Use environment configuration
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+
 interface MaintenanceBannerProps {
   onClose?: () => void;
 }
@@ -11,18 +14,24 @@ export const MaintenanceBanner = ({ onClose }: MaintenanceBannerProps) => {
   const [maintenanceData, setMaintenanceData] = useState<{
     isActive: boolean;
     message: string;
-    startTime: string;
-    endTime: string;
+    startTime?: string;
+    endTime?: string;
     severity: 'info' | 'warning' | 'error';
   } | null>(null);
 
   useEffect(() => {
     // Fetch current maintenance status
-    fetch('https://api.okla.com.do/api/maintenance/current')
+    fetch(`${API_URL}/api/maintenance/status`)
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.isActive) {
-          setMaintenanceData(data);
+        if (data && data.isMaintenanceMode) {
+          setMaintenanceData({
+            isActive: data.isMaintenanceMode,
+            message: data.maintenanceWindow?.message || 'Maintenance in progress',
+            startTime: data.maintenanceWindow?.startTime,
+            endTime: data.maintenanceWindow?.endTime,
+            severity: data.maintenanceWindow?.severity || 'info',
+          });
           setIsVisible(true);
         }
       })

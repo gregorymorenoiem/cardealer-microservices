@@ -22,20 +22,21 @@ Se ha completado exitosamente la integración del gateway de pagos **AZUL (Banco
 ## 🎯 Objetivos Alcanzados
 
 ### Objetivo Principal
+
 > **Integrar AZUL como segunda pasarela de pago para maximizar conversiones en el mercado dominicano.**
 
 **Resultado:** ✅ Completado 100%
 
 ### Objetivos Específicos
 
-| # | Objetivo | Status | Notas |
-|---|----------|--------|-------|
-| 1 | Implementar Payment Page integration | ✅ | POST /api/payment/azul/initiate |
-| 2 | Generar AuthHash con SHA-512 | ✅ | AzulHashGenerator con 17 params |
-| 3 | Validar respuestas de AZUL | ✅ | ValidateResponseHash en callbacks |
-| 4 | Persistir transacciones | ✅ | AzulTransaction entity con 18 fields |
-| 5 | Crear callbacks (approved/declined/cancelled) | ✅ | 3 endpoints con persistence |
-| 6 | Aplicar migration a DB | ✅ | azul_transactions table con 5 indexes |
+| #   | Objetivo                                      | Status | Notas                                 |
+| --- | --------------------------------------------- | ------ | ------------------------------------- |
+| 1   | Implementar Payment Page integration          | ✅     | POST /api/payment/azul/initiate       |
+| 2   | Generar AuthHash con SHA-512                  | ✅     | AzulHashGenerator con 17 params       |
+| 3   | Validar respuestas de AZUL                    | ✅     | ValidateResponseHash en callbacks     |
+| 4   | Persistir transacciones                       | ✅     | AzulTransaction entity con 18 fields  |
+| 5   | Crear callbacks (approved/declined/cancelled) | ✅     | 3 endpoints con persistence           |
+| 6   | Aplicar migration a DB                        | ✅     | azul_transactions table con 5 indexes |
 
 ---
 
@@ -128,43 +129,44 @@ Se ha completado exitosamente la integración del gateway de pagos **AZUL (Banco
 
 ### 1. DTOs (Data Transfer Objects)
 
-| Archivo | Propósito | Campos |
-|---------|-----------|--------|
-| `AzulPaymentRequest.cs` | Request para Payment Page | 16 (MerchantId, Amount, ITBIS, OrderNumber, URLs, AuthHash) |
-| `AzulPaymentResponse.cs` | Response de AZUL | 14 + helpers (IsApproved, IsDeclined) |
+| Archivo                  | Propósito                 | Campos                                                      |
+| ------------------------ | ------------------------- | ----------------------------------------------------------- |
+| `AzulPaymentRequest.cs`  | Request para Payment Page | 16 (MerchantId, Amount, ITBIS, OrderNumber, URLs, AuthHash) |
+| `AzulPaymentResponse.cs` | Response de AZUL          | 14 + helpers (IsApproved, IsDeclined)                       |
 
 ### 2. Configuration
 
-| Archivo | Propósito | Features |
-|---------|-----------|----------|
-| `AzulConfiguration.cs` | Settings del gateway | URLs dinámicas (Test/Prod), Credentials, Callbacks |
-| `appsettings.json` | Config section | Azul: { MerchantId, MerchantName, AuthKey, IsTestEnvironment } |
+| Archivo                | Propósito            | Features                                                       |
+| ---------------------- | -------------------- | -------------------------------------------------------------- |
+| `AzulConfiguration.cs` | Settings del gateway | URLs dinámicas (Test/Prod), Credentials, Callbacks             |
+| `appsettings.json`     | Config section       | Azul: { MerchantId, MerchantName, AuthKey, IsTestEnvironment } |
 
 ### 3. Services
 
-| Archivo | Propósito | Métodos |
-|---------|-----------|---------|
-| `IAzulHashGenerator` | Interface para hashing | GenerateRequestHash, ValidateResponseHash |
-| `AzulHashGenerator` | HMAC-SHA512 implementation | ComputeHmacSha512 (System.Security.Cryptography) |
-| `IAzulPaymentService` | Interface para pagos | CreatePaymentRequest |
-| `AzulPaymentService` | Business logic | FormatAmount, CreatePaymentRequest |
+| Archivo               | Propósito                  | Métodos                                          |
+| --------------------- | -------------------------- | ------------------------------------------------ |
+| `IAzulHashGenerator`  | Interface para hashing     | GenerateRequestHash, ValidateResponseHash        |
+| `AzulHashGenerator`   | HMAC-SHA512 implementation | ComputeHmacSha512 (System.Security.Cryptography) |
+| `IAzulPaymentService` | Interface para pagos       | CreatePaymentRequest                             |
+| `AzulPaymentService`  | Business logic             | FormatAmount, CreatePaymentRequest               |
 
 ### 4. Controllers
 
-| Endpoint | Método | Propósito | Request Body | Response |
-|----------|--------|-----------|--------------|----------|
-| `/api/payment/azul/initiate` | POST | Iniciar pago | { amount, itbis, orderNumber } | { paymentPageUrl, formFields } |
-| `/api/payment/azul/callback/approved` | GET | Callback aprobado | Query params (15) | Redirect |
-| `/api/payment/azul/callback/declined` | GET | Callback rechazado | Query params (15) | Redirect |
-| `/api/payment/azul/callback/cancelled` | GET | Callback cancelado | Query params (15) | Redirect |
+| Endpoint                               | Método | Propósito          | Request Body                   | Response                       |
+| -------------------------------------- | ------ | ------------------ | ------------------------------ | ------------------------------ |
+| `/api/payment/azul/initiate`           | POST   | Iniciar pago       | { amount, itbis, orderNumber } | { paymentPageUrl, formFields } |
+| `/api/payment/azul/callback/approved`  | GET    | Callback aprobado  | Query params (15)              | Redirect                       |
+| `/api/payment/azul/callback/declined`  | GET    | Callback rechazado | Query params (15)              | Redirect                       |
+| `/api/payment/azul/callback/cancelled` | GET    | Callback cancelado | Query params (15)              | Redirect                       |
 
 ### 5. Domain Entities
 
-| Entidad | Propósito | Relaciones |
-|---------|-----------|------------|
+| Entidad           | Propósito                    | Relaciones                  |
+| ----------------- | ---------------------------- | --------------------------- |
 | `AzulTransaction` | Persistir transacciones AZUL | FK opcional a User (UserId) |
 
 **Propiedades (18):**
+
 - `Id` (Guid, PK)
 - `OrderNumber` (string, 50, indexed)
 - `AzulOrderId` (string, 50, indexed)
@@ -190,12 +192,13 @@ Se ha completado exitosamente la integración del gateway de pagos **AZUL (Banco
 
 ### 6. Repositories
 
-| Interface/Implementación | Métodos | Technology |
-|--------------------------|---------|------------|
-| `IAzulTransactionRepository` | 8 métodos | Interface |
-| `AzulTransactionRepository` | EF Core implementation | LINQ + async/await |
+| Interface/Implementación     | Métodos                | Technology         |
+| ---------------------------- | ---------------------- | ------------------ |
+| `IAzulTransactionRepository` | 8 métodos              | Interface          |
+| `AzulTransactionRepository`  | EF Core implementation | LINQ + async/await |
 
 **Métodos:**
+
 1. `GetByIdAsync(Guid id)` - Obtener por ID
 2. `GetByOrderNumberAsync(string orderNumber)` - Buscar por número de orden
 3. `GetByAzulOrderIdAsync(string azulOrderId)` - Buscar por ID AZUL
@@ -210,6 +213,7 @@ Se ha completado exitosamente la integración del gateway de pagos **AZUL (Banco
 **Archivo:** `20260108161828_AddAzulTransactions.cs`
 
 **Operaciones:**
+
 - ✅ CREATE TABLE `azul_transactions` (18 columns)
 - ✅ CREATE PRIMARY KEY `PK_azul_transactions` on `Id`
 - ✅ CREATE INDEX `idx_azul_transactions_order_number` on `order_number`
@@ -226,14 +230,14 @@ Se ha completado exitosamente la integración del gateway de pagos **AZUL (Banco
 
 ### Manual Testing Realizado
 
-| Test Case | Endpoint | Input | Expected Output | Result |
-|-----------|----------|-------|-----------------|--------|
-| Initiate Payment | POST /api/payment/azul/initiate | { amount: 1000, itbis: 180, orderNumber: "TEST-001" } | { paymentPageUrl, formFields con AuthHash } | ✅ PASS |
-| Amount Formatting | N/A | 1000.00 | "100000" (sin decimales) | ✅ PASS |
-| ITBIS Formatting | N/A | 180.00 | "18000" | ✅ PASS |
-| AuthHash Generation | N/A | 17 parameters | SHA-512 128-char hex string | ✅ PASS |
-| Database Table | PostgreSQL | Migration | azul_transactions con 18 cols + 5 idx | ✅ PASS |
-| Service Health | GET /health | N/A | "Healthy" | ✅ PASS |
+| Test Case           | Endpoint                        | Input                                                 | Expected Output                             | Result  |
+| ------------------- | ------------------------------- | ----------------------------------------------------- | ------------------------------------------- | ------- |
+| Initiate Payment    | POST /api/payment/azul/initiate | { amount: 1000, itbis: 180, orderNumber: "TEST-001" } | { paymentPageUrl, formFields con AuthHash } | ✅ PASS |
+| Amount Formatting   | N/A                             | 1000.00                                               | "100000" (sin decimales)                    | ✅ PASS |
+| ITBIS Formatting    | N/A                             | 180.00                                                | "18000"                                     | ✅ PASS |
+| AuthHash Generation | N/A                             | 17 parameters                                         | SHA-512 128-char hex string                 | ✅ PASS |
+| Database Table      | PostgreSQL                      | Migration                                             | azul_transactions con 18 cols + 5 idx       | ✅ PASS |
+| Service Health      | GET /health                     | N/A                                                   | "Healthy"                                   | ✅ PASS |
 
 ### Test Curl Commands
 
@@ -274,36 +278,36 @@ curl http://localhost:15107/health
 
 ### Código
 
-| Métrica | Valor |
-|---------|-------|
-| Archivos creados | 13 |
-| Archivos modificados | 4 |
+| Métrica                    | Valor  |
+| -------------------------- | ------ |
+| Archivos creados           | 13     |
+| Archivos modificados       | 4      |
 | Líneas de código agregadas | ~1,850 |
-| Clases nuevas | 10 |
-| Interfaces nuevas | 3 |
-| Endpoints API | 4 |
-| Métodos de repositorio | 8 |
-| Índices de BD | 5 |
-| Migrations aplicadas | 1 |
+| Clases nuevas              | 10     |
+| Interfaces nuevas          | 3      |
+| Endpoints API              | 4      |
+| Métodos de repositorio     | 8      |
+| Índices de BD              | 5      |
+| Migrations aplicadas       | 1      |
 
 ### Tiempo
 
-| Fase | Duración | % del Total |
-|------|----------|-------------|
-| Investigación y documentación | 1h | 25% |
-| Implementación (Subtasks 1-10) | 2.5h | 62.5% |
-| Testing y debugging | 0.5h | 12.5% |
-| **Total** | **4h** | **100%** |
+| Fase                           | Duración | % del Total |
+| ------------------------------ | -------- | ----------- |
+| Investigación y documentación  | 1h       | 25%         |
+| Implementación (Subtasks 1-10) | 2.5h     | 62.5%       |
+| Testing y debugging            | 0.5h     | 12.5%       |
+| **Total**                      | **4h**   | **100%**    |
 
 ### Complejidad
 
-| Componente | Complejidad | Justificación |
-|------------|-------------|---------------|
-| Hash Generation | Alta | HMAC-SHA512 con 17 parámetros en orden específico |
-| Amount Formatting | Media | Conversión decimal → string sin punto, últimos 2 dígitos = centavos |
-| Persistence Layer | Media | Repository pattern con 8 métodos + EF Core configuration |
-| Callback Handling | Media | Hash validation + parsing AZUL DateTime format + persistence |
-| **Promedio** | **Media-Alta** | Integración bancaria con requisitos de seguridad estrictos |
+| Componente        | Complejidad    | Justificación                                                       |
+| ----------------- | -------------- | ------------------------------------------------------------------- |
+| Hash Generation   | Alta           | HMAC-SHA512 con 17 parámetros en orden específico                   |
+| Amount Formatting | Media          | Conversión decimal → string sin punto, últimos 2 dígitos = centavos |
+| Persistence Layer | Media          | Repository pattern con 8 métodos + EF Core configuration            |
+| Callback Handling | Media          | Hash validation + parsing AZUL DateTime format + persistence        |
+| **Promedio**      | **Media-Alta** | Integración bancaria con requisitos de seguridad estrictos          |
 
 ---
 
@@ -377,12 +381,14 @@ catch (Exception ex) {
 ### Prioridad Alta (Sprint 5)
 
 1. **Testing Completo**
+
    - [ ] Unit tests para AzulHashGenerator (SHA-512 validation)
    - [ ] Integration tests para AzulPaymentService
    - [ ] API tests para controllers (approved/declined/cancelled)
    - [ ] E2E testing con tarjetas de prueba AZUL
 
 2. **Configuración de Producción**
+
    - [ ] Solicitar credenciales de producción a AZUL
      - Contacto: solucionesintegradas@azul.com.do
      - Teléfono: 809-544-2985
@@ -401,12 +407,14 @@ catch (Exception ex) {
 ### Prioridad Media (Sprint 6-7)
 
 4. **Webservices API (Direct Integration)**
+
    - [ ] Implementar `AzulWebservicesService`
    - [ ] JSON API para charges directos
    - [ ] DataVault tokenization para tarjetas guardadas
    - [ ] 3D Secure 2.0 authentication
 
 5. **Advanced Features**
+
    - [ ] Refund/Void functionality
    - [ ] Recurring payments con DataVault
    - [ ] Split payments (múltiples sellers)
@@ -430,11 +438,11 @@ catch (Exception ex) {
 
 ## 📚 Documentación Generada
 
-| Archivo | Contenido | Estado |
-|---------|-----------|--------|
+| Archivo                                 | Contenido                      | Estado         |
+| --------------------------------------- | ------------------------------ | -------------- |
 | `SPRINT_4_AZUL_INTEGRATION_RESEARCH.md` | Investigación completa de AZUL | ✅ Actualizado |
-| `SPRINT_4_COMPLETED.md` | Este documento | ✅ Creado |
-| `/backend/BillingService/README.md` | Pendiente | ⏳ Por crear |
+| `SPRINT_4_COMPLETED.md`                 | Este documento                 | ✅ Creado      |
+| `/backend/BillingService/README.md`     | Pendiente                      | ⏳ Por crear   |
 
 ---
 
@@ -452,13 +460,10 @@ catch (Exception ex) {
 
 1. **Layer Dependencies:** Inicialmente AzulConfiguration estaba en Infrastructure, violando Clean Architecture
    - **Solución:** Movido a Application layer, Infrastructure lo implementa
-   
 2. **Interface Signatures:** Parámetros de hash generator no coincidían entre interface y uso
    - **Solución:** Actualizar interface basándose en implementación real de AZUL
-   
 3. **EF Tools Missing:** Docker container no tenía dotnet-ef para migrations
    - **Solución:** Agregar Microsoft.EntityFrameworkCore.Design a Api.csproj
-   
 4. **Amount Formatting:** AZUL requiere formato específico (sin decimales, últimos 2 dígitos = centavos)
    - **Solución:** Helper method `FormatAmount()` que multiplica por 100 y convierte a string
 
@@ -500,4 +505,4 @@ Para soporte técnico o solicitar credenciales:
 
 ---
 
-*Documento generado el 8 de enero de 2026 por GitHub Copilot*
+_Documento generado el 8 de enero de 2026 por GitHub Copilot_

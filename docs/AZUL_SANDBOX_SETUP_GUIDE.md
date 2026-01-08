@@ -40,48 +40,74 @@ Esta guía detalla el proceso completo para obtener credenciales de ambiente de 
 ### Correo de Solicitud (Template)
 
 ```
-Asunto: Solicitud de Credenciales Sandbox - OKLA Marketplace
+Asunto: Solicitud de Credenciales Sandbox - OKLA Clasificados de Vehículos (Proyecto en Desarrollo)
 
 Estimado Equipo de AZUL,
 
-Me dirijo a ustedes en nombre de OKLA Marketplace (okla.com.do), una
-plataforma de compra y venta de vehículos en República Dominicana.
+Me dirijo a ustedes en nombre de OKLA (okla.com.do), un proyecto de plataforma
+de clasificados automotrices que estamos desarrollando para el mercado dominicano para publicacion de vehiculos para comprar y ventas
 
 Solicitamos credenciales para el ambiente de pruebas (Sandbox) de AZUL
-Payment Gateway para integrar su procesador de pagos en nuestra plataforma.
+Payment Gateway para integrar y probar el procesamiento de pagos antes de
+nuestro lanzamiento oficial previsto para Q1 2026.
 
 INFORMACIÓN DE LA EMPRESA:
-- Razón Social: OKLA SRL
-- RNC: [PENDIENTE - Proporcionar]
-- Sitio Web: https://okla.com.do
-- Tipo de Negocio: Marketplace de Vehículos
-- Volumen Mensual Estimado: 50-100 transacciones inicialmente
+- Razón Social: OKLA SRL (en proceso de constitución)
+- RNC: [EN TRÁMITE]
+- Sitio Web: https://okla.com.do (en desarrollo)
+- Tipo de Negocio: Portal de Clasificados Automotrices
+- Modelo de Negocio: Cobro por publicación de anuncios de vehículos
+- Estado: Proyecto en fase de desarrollo y testing
 
-INFORMACIÓN TÉCNICA:
-- Método de Integración: Payment Page (Hosted)
-- Framework Backend: .NET 8.0 / C#
-- Tipo de Transacciones: Sale (venta con captura inmediata)
-- Necesidad de DataVault: Sí (futuro, para tarjetas guardadas)
+MODELO DE TRANSACCIONES PLANIFICADO:
+Procesaremos pagos de dealers y vendedores individuales por:
+- Publicaciones individuales: $29 USD por listing (vendedores individuales)
+- Planes mensuales para dealers: $49-$299 USD/mes
+- Paquetes de publicaciones destacadas: $10-20 USD
+- Renovaciones automáticas mensuales
 
-CREDENCIALES REQUERIDAS:
+VOLUMEN ESTIMADO POST-LANZAMIENTO:
+- Primeros 3 meses: 20-30 transacciones/mes
+- 6 meses: 50-75 transacciones/mes
+- 12 meses: 100+ transacciones/mes
+- Ticket promedio: $50-150 USD
+
+
+
+CASOS DE USO:
+1. Vendedor individual publica un vehículo → Pago único de $29 USD
+2. Dealer se suscribe a plan mensual → Pago recurrente de $49-$299 USD
+3. Destacar publicación → Pago adicional de $10-20 USD
+4. Renovación de suscripción → Cargo automático mensual
+
+CREDENCIALES REQUERIDAS PARA AMBIENTE SANDBOX:
 1. MerchantId (Test)
 2. MerchantName
 3. AuthKey
-4. Auth1 y Auth2 (para Webservices API en el futuro)
+4. Auth1 y Auth2 (para Webservices API - DataVault)
 5. Acceso al portal de pruebas
 
+OBJETIVO:
+Implementar y probar completamente la integración con AZUL durante el período
+de desarrollo (Enero-Febrero 2026) para solicitar credenciales de producción
+antes del lanzamiento oficial.
+
 INFORMACIÓN DE CONTACTO:
-- Nombre: [Tu Nombre]
-- Cargo: [Tu Cargo - Ej: Lead Developer]
-- Email: [Tu Email]
+- Nombre: Gregory Moreno
+- Cargo: Lead Developer
+- Email: gmoreno@okla.com.do
 - Teléfono: [Tu Teléfono]
 
-Agradecemos su pronta respuesta.
+Agradecemos su pronta respuesta y apoyo en esta etapa de desarrollo.
 
 Saludos cordiales,
-[Tu Nombre]
-[Tu Cargo]
-OKLA Marketplace
+Gregory Moreno/payment/azul                → AzulPaymentPage
+/payment/azul/approved       → AzulApprovedPage  
+/payment/azul/declined       → AzulDeclinedPage
+/payment/azul/cancelled      → AzulCancelledPage
+Lead Developer
+OKLA - Clasificados Automotrices
+https://okla.com.do
 ```
 
 ---

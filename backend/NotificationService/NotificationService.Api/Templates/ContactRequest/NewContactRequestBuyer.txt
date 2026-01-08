@@ -1,0 +1,29 @@
+🚗 OKLA - Consulta Enviada Exitosamente
+
+✅ ENVIADO
+
+¡Hola {{BuyerName}}!
+
+Tu consulta ha sido enviada exitosamente al vendedor. Te notificaremos cuando recibas una respuesta.
+
+📍 VEHÍCULO CONSULTADO:
+{{VehicleTitle}}
+Precio: {{VehiclePrice}}
+Vendedor: {{SellerName}}
+
+📝 TU MENSAJE:
+Asunto: {{Subject}}
+"{{Message}}"
+
+📞 MIENTRAS ESPERAS:
+• Revisa otros vehículos similares en OKLA
+• Prepara tus preguntas adicionales  
+• Considera agendar una cita para ver el vehículo
+
+🔗 VER MIS CONSULTAS: {{MyInquiriesUrl}}
+
+---
+Consulta enviada el {{CreatedAt}} | ID: {{ContactRequestId}}
+
+OKLA - Tu Marketplace de Vehículos en RD
+🌐 okla.com.do

@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { FiX, FiShare2, FiPlus, FiGrid, FiCar, FiCalendar, FiDollarSign, FiGauge, FiFuel, FiCopy, FiCheck, FiSearch, FiEdit3, FiTrash2 } from 'react-icons/fi';
+import {
+  FiX,
+  FiShare2,
+  FiPlus,
+  FiGrid,
+  FiCalendar,
+  FiDollarSign,
+  FiActivity,
+  FiDroplet,
+  FiCopy,
+  FiCheck,
+  FiSearch,
+  FiEdit3,
+  FiTrash2,
+} from 'react-icons/fi';
+import { FaCar } from 'react-icons/fa';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import EmptyState from '@/components/organisms/EmptyState';
@@ -34,53 +49,53 @@ interface VehicleComparison {
 // Mock data for development
 const mockVehicles: Vehicle[] = [
   {
-    id: "1",
-    title: "Toyota Camry 2022 Hybrid",
-    make: "Toyota",
-    model: "Camry",
+    id: '1',
+    title: 'Toyota Camry 2022 Hybrid',
+    make: 'Toyota',
+    model: 'Camry',
     year: 2022,
     price: 1800000,
     mileage: 25000,
-    fuelType: "Hybrid",
-    transmission: "Automatic",
-    condition: "Excellent",
-    engineSize: "2.5L",
+    fuelType: 'Hybrid',
+    transmission: 'Automatic',
+    condition: 'Excellent',
+    engineSize: '2.5L',
     horsepower: 208,
-    imageUrl: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400",
-    location: "Santo Domingo"
+    imageUrl: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400',
+    location: 'Santo Domingo',
   },
   {
-    id: "2", 
-    title: "Honda Accord 2023 Sport",
-    make: "Honda",
-    model: "Accord", 
+    id: '2',
+    title: 'Honda Accord 2023 Sport',
+    make: 'Honda',
+    model: 'Accord',
     year: 2023,
     price: 1950000,
     mileage: 15000,
-    fuelType: "Gasoline",
-    transmission: "CVT",
-    condition: "Like New",
-    engineSize: "1.5L Turbo",
+    fuelType: 'Gasoline',
+    transmission: 'CVT',
+    condition: 'Like New',
+    engineSize: '1.5L Turbo',
     horsepower: 192,
-    imageUrl: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400",
-    location: "Santiago"
+    imageUrl: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400',
+    location: 'Santiago',
   },
   {
-    id: "3",
-    title: "Nissan Altima 2021 SL", 
-    make: "Nissan",
-    model: "Altima",
+    id: '3',
+    title: 'Nissan Altima 2021 SL',
+    make: 'Nissan',
+    model: 'Altima',
     year: 2021,
     price: 1650000,
     mileage: 35000,
-    fuelType: "Gasoline",
-    transmission: "CVT",
-    condition: "Good",
-    engineSize: "2.5L",
+    fuelType: 'Gasoline',
+    transmission: 'CVT',
+    condition: 'Good',
+    engineSize: '2.5L',
     horsepower: 188,
-    imageUrl: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400",
-    location: "La Romana"
-  }
+    imageUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400',
+    location: 'La Romana',
+  },
 ];
 
 export function ComparisonPage() {
@@ -109,25 +124,25 @@ export function ComparisonPage() {
       // Mock data for now - replace with actual API call
       const mockComparisons: VehicleComparison[] = [
         {
-          id: "comp-1",
-          name: "Family Sedans",
+          id: 'comp-1',
+          name: 'Family Sedans',
           vehicleCount: 3,
           createdAt: new Date().toISOString(),
           isShared: true,
-          vehicleIds: ["1", "2", "3"],
-          vehicles: mockVehicles.filter(v => ["1", "2", "3"].includes(v.id))
+          vehicleIds: ['1', '2', '3'],
+          vehicles: mockVehicles.filter((v) => ['1', '2', '3'].includes(v.id)),
         },
         {
-          id: "comp-2",
-          name: "Compact Cars", 
+          id: 'comp-2',
+          name: 'Compact Cars',
           vehicleCount: 2,
           createdAt: new Date(Date.now() - 86400000).toISOString(),
           isShared: false,
-          vehicleIds: ["2", "3"],
-          vehicles: mockVehicles.filter(v => ["2", "3"].includes(v.id))
-        }
+          vehicleIds: ['2', '3'],
+          vehicles: mockVehicles.filter((v) => ['2', '3'].includes(v.id)),
+        },
       ];
-      
+
       setComparisons(mockComparisons);
       if (mockComparisons.length > 0) {
         setSelectedComparison(mockComparisons[0]);
@@ -152,10 +167,10 @@ export function ComparisonPage() {
         createdAt: new Date().toISOString(),
         isShared: false,
         vehicleIds: selectedVehicles,
-        vehicles: mockVehicles.filter(v => selectedVehicles.includes(v.id))
+        vehicles: mockVehicles.filter((v) => selectedVehicles.includes(v.id)),
       };
 
-      setComparisons(prev => [newComparison, ...prev]);
+      setComparisons((prev) => [newComparison, ...prev]);
       setSelectedComparison(newComparison);
       setShowCreateModal(false);
       setNewComparisonName('');
@@ -169,10 +184,10 @@ export function ComparisonPage() {
     if (!confirm('Are you sure you want to delete this comparison?')) return;
 
     try {
-      setComparisons(prev => prev.filter(c => c.id !== comparisonId));
-      
+      setComparisons((prev) => prev.filter((c) => c.id !== comparisonId));
+
       if (selectedComparison?.id === comparisonId) {
-        const remaining = comparisons.filter(c => c.id !== comparisonId);
+        const remaining = comparisons.filter((c) => c.id !== comparisonId);
         setSelectedComparison(remaining.length > 0 ? remaining[0] : null);
       }
     } catch (error) {
@@ -184,15 +199,15 @@ export function ComparisonPage() {
     try {
       const shareToken = Math.random().toString(36).substring(2, 18);
       const shareUrl = `${window.location.origin}/comparison/shared/${shareToken}`;
-      
+
       await navigator.clipboard.writeText(shareUrl);
       setCopiedShareUrl(true);
       setTimeout(() => setCopiedShareUrl(false), 2000);
-      
+
       // Update comparison as shared
-      setComparisons(prev => prev.map(c => 
-        c.id === comparisonId ? { ...c, isShared: true } : c
-      ));
+      setComparisons((prev) =>
+        prev.map((c) => (c.id === comparisonId ? { ...c, isShared: true } : c))
+      );
     } catch (error) {
       console.error('Failed to share comparison:', error);
     }
@@ -200,32 +215,32 @@ export function ComparisonPage() {
 
   const removeVehicle = (vehicleId: string) => {
     if (!selectedComparison) return;
-    
-    const updatedVehicles = selectedComparison.vehicles?.filter(v => v.id !== vehicleId) || [];
-    
+
+    const updatedVehicles = selectedComparison.vehicles?.filter((v) => v.id !== vehicleId) || [];
+
     if (updatedVehicles.length === 0) {
       alert('Cannot remove the last vehicle from comparison');
       return;
     }
-    
+
     const updatedComparison = {
       ...selectedComparison,
       vehicles: updatedVehicles,
-      vehicleIds: updatedVehicles.map(v => v.id),
-      vehicleCount: updatedVehicles.length
+      vehicleIds: updatedVehicles.map((v) => v.id),
+      vehicleCount: updatedVehicles.length,
     };
-    
+
     setSelectedComparison(updatedComparison);
-    setComparisons(prev => prev.map(c => 
-      c.id === selectedComparison.id ? updatedComparison : c
-    ));
+    setComparisons((prev) =>
+      prev.map((c) => (c.id === selectedComparison.id ? updatedComparison : c))
+    );
   };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-DO', {
       style: 'currency',
       currency: 'DOP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
@@ -242,9 +257,11 @@ export function ComparisonPage() {
             <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-1 space-y-4">
-                {Array(3).fill(0).map((_, i) => (
-                  <div key={i} className="h-24 bg-gray-200 rounded"></div>
-                ))}
+                {Array(3)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div key={i} className="h-24 bg-gray-200 rounded"></div>
+                  ))}
               </div>
               <div className="lg:col-span-3">
                 <div className="h-96 bg-gray-200 rounded"></div>
@@ -292,7 +309,9 @@ export function ComparisonPage() {
                   <div className="p-6 text-center">
                     <FiGrid className="mx-auto h-12 w-12 text-gray-300 mb-3" />
                     <p className="text-gray-500 text-sm">No comparisons yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Create your first comparison to get started</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Create your first comparison to get started
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-1">
@@ -319,7 +338,7 @@ export function ComparisonPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-gray-500">
-                            <FiCar className="inline h-3 w-3 mr-1" />
+                            <FaCar className="inline h-3 w-3 mr-1" />
                             {comparison.vehicleCount} vehicles
                           </p>
                           <div className="flex gap-1">
@@ -393,20 +412,26 @@ export function ComparisonPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="p-6">
                   {!selectedComparison.vehicles || selectedComparison.vehicles.length === 0 ? (
                     <div className="text-center py-12">
-                      <FiCar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Vehicles in Comparison</h3>
-                      <p className="text-gray-500">Add vehicles to start comparing their specifications</p>
+                      <FaCar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No Vehicles in Comparison
+                      </h3>
+                      <p className="text-gray-500">
+                        Add vehicles to start comparing their specifications
+                      </p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b">
-                            <th className="text-left p-4 font-medium text-gray-600 w-32">Specification</th>
+                            <th className="text-left p-4 font-medium text-gray-600 w-32">
+                              Specification
+                            </th>
                             {selectedComparison.vehicles.map((vehicle) => (
                               <th key={vehicle.id} className="text-center p-4 min-w-64">
                                 <div className="space-y-3">
@@ -425,7 +450,9 @@ export function ComparisonPage() {
                                   </div>
                                   <div>
                                     <h3 className="font-semibold text-sm">{vehicle.title}</h3>
-                                    <p className="text-lg font-bold text-blue-600">{formatPrice(vehicle.price)}</p>
+                                    <p className="text-lg font-bold text-blue-600">
+                                      {formatPrice(vehicle.price)}
+                                    </p>
                                   </div>
                                 </div>
                               </th>
@@ -434,17 +461,27 @@ export function ComparisonPage() {
                         </thead>
                         <tbody>
                           {[
-                            { label: 'Make', key: 'make', icon: FiCar },
-                            { label: 'Model', key: 'model', icon: FiCar },
+                            { label: 'Make', key: 'make', icon: FaCar },
+                            { label: 'Model', key: 'model', icon: FaCar },
                             { label: 'Year', key: 'year', icon: FiCalendar },
-                            { label: 'Price', key: 'price', icon: FiDollarSign, formatter: formatPrice },
-                            { label: 'Mileage', key: 'mileage', icon: FiGauge, formatter: formatMileage },
-                            { label: 'Fuel Type', key: 'fuelType', icon: FiFuel },
-                            { label: 'Transmission', key: 'transmission', icon: FiCar },
-                            { label: 'Condition', key: 'condition', icon: FiCar },
-                            { label: 'Engine Size', key: 'engineSize', icon: FiCar },
-                            { label: 'Horsepower', key: 'horsepower', icon: FiGauge },
-                            { label: 'Location', key: 'location', icon: FiCar }
+                            {
+                              label: 'Price',
+                              key: 'price',
+                              icon: FiDollarSign,
+                              formatter: formatPrice,
+                            },
+                            {
+                              label: 'Mileage',
+                              key: 'mileage',
+                              icon: FiActivity,
+                              formatter: formatMileage,
+                            },
+                            { label: 'Fuel Type', key: 'fuelType', icon: FiDroplet },
+                            { label: 'Transmission', key: 'transmission', icon: FaCar },
+                            { label: 'Condition', key: 'condition', icon: FaCar },
+                            { label: 'Engine Size', key: 'engineSize', icon: FaCar },
+                            { label: 'Horsepower', key: 'horsepower', icon: FiActivity },
+                            { label: 'Location', key: 'location', icon: FaCar },
                           ].map((spec) => (
                             <tr key={spec.key} className="border-b hover:bg-gray-50">
                               <td className="p-4 font-medium text-gray-700">
@@ -455,8 +492,7 @@ export function ComparisonPage() {
                                 <td key={vehicle.id} className="p-4 text-center">
                                   {spec.formatter
                                     ? spec.formatter(vehicle[spec.key as keyof Vehicle] as any)
-                                    : (vehicle[spec.key as keyof Vehicle] as string) || 'N/A'
-                                  }
+                                    : (vehicle[spec.key as keyof Vehicle] as string) || 'N/A'}
                                 </td>
                               ))}
                             </tr>
@@ -473,7 +509,8 @@ export function ComparisonPage() {
                   <FiGrid className="h-16 w-16 text-gray-300 mb-4" />
                   <h3 className="text-xl font-medium text-gray-900 mb-2">Select a Comparison</h3>
                   <p className="text-gray-500 text-center">
-                    Choose a comparison from the sidebar to view detailed specifications,<br />
+                    Choose a comparison from the sidebar to view detailed specifications,
+                    <br />
                     or create a new one to get started.
                   </p>
                 </div>
@@ -508,23 +545,22 @@ export function ComparisonPage() {
                     <label className="block text-sm font-medium text-gray-700">
                       Select Vehicles (max 3)
                     </label>
-                    <Button
-                      onClick={() => setShowVehicleModal(true)}
-                      variant="outline"
-                      size="sm"
-                    >
+                    <Button onClick={() => setShowVehicleModal(true)} variant="outline" size="sm">
                       <FiSearch className="mr-2 h-4 w-4" />
                       Browse Vehicles
                     </Button>
                   </div>
 
                   <div className="space-y-2">
-                    {selectedVehicles.map(vehicleId => {
-                      const vehicle = mockVehicles.find(v => v.id === vehicleId);
+                    {selectedVehicles.map((vehicleId) => {
+                      const vehicle = mockVehicles.find((v) => v.id === vehicleId);
                       if (!vehicle) return null;
-                      
+
                       return (
-                        <div key={vehicleId} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div
+                          key={vehicleId}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                        >
                           <div className="flex items-center gap-3">
                             <img
                               src={vehicle.imageUrl}
@@ -537,7 +573,9 @@ export function ComparisonPage() {
                             </div>
                           </div>
                           <button
-                            onClick={() => setSelectedVehicles(prev => prev.filter(id => id !== vehicleId))}
+                            onClick={() =>
+                              setSelectedVehicles((prev) => prev.filter((id) => id !== vehicleId))
+                            }
                             className="p-1 text-gray-400 hover:text-red-600 rounded"
                           >
                             <FiX className="h-4 w-4" />
@@ -545,7 +583,7 @@ export function ComparisonPage() {
                         </div>
                       );
                     })}
-                    
+
                     {selectedVehicles.length === 0 && (
                       <p className="text-sm text-gray-500 text-center py-4">
                         No vehicles selected. Click "Browse Vehicles" to add some.
@@ -587,7 +625,7 @@ export function ComparisonPage() {
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockVehicles.map(vehicle => (
+                  {mockVehicles.map((vehicle) => (
                     <div
                       key={vehicle.id}
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
@@ -597,9 +635,9 @@ export function ComparisonPage() {
                       }`}
                       onClick={() => {
                         if (selectedVehicles.includes(vehicle.id)) {
-                          setSelectedVehicles(prev => prev.filter(id => id !== vehicle.id));
+                          setSelectedVehicles((prev) => prev.filter((id) => id !== vehicle.id));
                         } else if (selectedVehicles.length < 3) {
-                          setSelectedVehicles(prev => [...prev, vehicle.id]);
+                          setSelectedVehicles((prev) => [...prev, vehicle.id]);
                         } else {
                           alert('Maximum 3 vehicles allowed');
                         }
@@ -614,7 +652,9 @@ export function ComparisonPage() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-sm">{vehicle.title}</h3>
                           <p className="text-blue-600 font-bold">{formatPrice(vehicle.price)}</p>
-                          <p className="text-sm text-gray-500">{vehicle.year} • {formatMileage(vehicle.mileage)}</p>
+                          <p className="text-sm text-gray-500">
+                            {vehicle.year} • {formatMileage(vehicle.mileage)}
+                          </p>
                         </div>
                         {selectedVehicles.includes(vehicle.id) && (
                           <FiCheck className="text-blue-600 flex-shrink-0" />
@@ -635,180 +675,6 @@ export function ComparisonPage() {
             </div>
           </div>
         )}
-      </div>
-    </MainLayout>
-  );
-}
-      setLoading(false);
-    }
-  };
-
-  const removeVehicle = async (vehicleId: string) => {
-    if (!comparison) return;
-
-    const token = localStorage.getItem('authToken');
-    try {
-      const response = await fetch(
-        `https://api.okla.com.do/api/comparisons/${comparison.id}/vehicles/${vehicleId}`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.ok) {
-        const updatedVehicles = comparison.vehicles.filter((v) => v.id !== vehicleId);
-        setComparison({ ...comparison, vehicles: updatedVehicles });
-      }
-    } catch (error) {
-      console.error('Failed to remove vehicle:', error);
-    }
-  };
-
-  const shareComparison = async () => {
-    if (!comparison) return;
-
-    const token = localStorage.getItem('authToken');
-    try {
-      const response = await fetch(
-        `https://api.okla.com.do/api/comparisons/${comparison.id}/share`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const data = await response.json();
-
-      navigator.clipboard.writeText(data.shareUrl);
-      alert('Link copiado al portapapeles');
-    } catch (error) {
-      console.error('Failed to share:', error);
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando comparación...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (!comparison || comparison.vehicles.length === 0) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-8">
-          <EmptyState
-            icon={FiPlus}
-            title="No hay vehículos para comparar"
-            description="Agrega hasta 3 vehículos para comparar sus especificaciones lado a lado"
-            actionLabel="Buscar Vehículos"
-            onAction={() => (window.location.href = '/search')}
-          />
-        </div>
-      </MainLayout>
-    );
-  }
-
-  const specs = [
-    { label: 'Precio', key: 'price', format: formatPrice },
-    { label: 'Kilometraje', key: 'mileage', format: (v: number) => `${v.toLocaleString()} km` },
-    { label: 'Transmisión', key: 'transmission' },
-    { label: 'Combustible', key: 'fuelType' },
-    { label: 'Motor', key: 'engineSize' },
-    { label: 'Caballos de Fuerza', key: 'horsepower', format: (v: number) => `${v} HP` },
-  ];
-
-  return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Comparar Vehículos</h1>
-            <p className="text-gray-600 mt-2">{comparison.vehicles.length} de 3 vehículos</p>
-          </div>
-          <Button onClick={shareComparison} leftIcon={<FiShare2 />}>
-            Compartir
-          </Button>
-        </div>
-
-        {/* Comparison Table */}
-        <div className="overflow-x-auto">
-          <div className="inline-flex min-w-full">
-            {/* Spec Labels Column */}
-            <div className="w-48 flex-shrink-0">
-              <div className="h-64 border-b border-gray-200"></div>
-              {specs.map((spec) => (
-                <div
-                  key={spec.key}
-                  className="h-16 border-b border-gray-200 flex items-center px-4 font-semibold"
-                >
-                  {spec.label}
-                </div>
-              ))}
-            </div>
-
-            {/* Vehicle Columns */}
-            {comparison.vehicles.map((vehicle) => (
-              <div key={vehicle.id} className="w-80 flex-shrink-0 border-l border-gray-200">
-                {/* Vehicle Header */}
-                <div className="h-64 p-4 relative">
-                  <button
-                    onClick={() => removeVehicle(vehicle.id)}
-                    className="absolute top-2 right-2 p-2 bg-white rounded-full shadow hover:bg-red-50"
-                  >
-                    <FiX className="w-4 h-4 text-red-600" />
-                  </button>
-                  <img
-                    src={vehicle.imageUrl}
-                    alt={`${vehicle.make} ${vehicle.model}`}
-                    className="w-full h-32 object-cover rounded-lg mb-2"
-                  />
-                  <h3 className="font-bold text-lg">
-                    {vehicle.make} {vehicle.model}
-                  </h3>
-                  <p className="text-gray-600">{vehicle.year}</p>
-                </div>
-
-                {/* Specs */}
-                {specs.map((spec) => (
-                  <div
-                    key={spec.key}
-                    className="h-16 border-t border-gray-200 flex items-center px-4"
-                  >
-                    {spec.format
-                      ? spec.format(vehicle[spec.key as keyof Vehicle] as any)
-                      : vehicle[spec.key as keyof Vehicle]}
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            {/* Add Vehicle Placeholder */}
-            {comparison.vehicles.length < 3 && (
-              <div className="w-80 flex-shrink-0 border-l border-gray-200">
-                <div className="h-64 flex items-center justify-center bg-gray-50">
-                  <Button onClick={() => (window.location.href = '/search')} leftIcon={<FiPlus />}>
-                    Agregar Vehículo
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </MainLayout>
   );

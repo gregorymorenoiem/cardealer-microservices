@@ -18,6 +18,16 @@ import { AlertsPage } from './pages/AlertsPage';
 // Contact pages (Sprint 2)
 import { MyInquiriesPage } from './pages/MyInquiriesPage';
 import { ReceivedInquiriesPage } from './pages/ReceivedInquiriesPage';
+// Payment pages (Sprint 4 - AZUL Integration)
+import { AzulPaymentPage } from './pages/AzulPaymentPage';
+import { AzulApprovedPage } from './pages/AzulApprovedPage';
+import { AzulDeclinedPage } from './pages/AzulDeclinedPage';
+import { AzulCancelledPage } from './pages/AzulCancelledPage';
+// Dealer Management pages (Sprint 5)
+import DealerLandingPage from './pages/DealerLandingPage';
+import DealerPricingPage from './pages/DealerPricingPage';
+import DealerRegistrationPage from './pages/DealerRegistrationPage';
+import DealerDashboard from './pages/DealerDashboard';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -196,6 +206,25 @@ function App() {
             }
           />
           <Route path="/auth/callback/:provider" element={<OAuthCallbackPage />} />
+
+          {/* Payment Routes (Sprint 4 - AZUL) */}
+          <Route path="/payment/azul" element={<AzulPaymentPage />} />
+          <Route path="/payment/azul/approved" element={<AzulApprovedPage />} />
+          <Route path="/payment/azul/declined" element={<AzulDeclinedPage />} />
+          <Route path="/payment/azul/cancelled" element={<AzulCancelledPage />} />
+
+          {/* Dealer Management Routes (Sprint 5) */}
+          <Route path="/dealer/landing" element={<DealerLandingPage />} />
+          <Route path="/dealer/pricing" element={<DealerPricingPage />} />
+          <Route path="/dealer/register" element={<DealerRegistrationPage />} />
+          <Route
+            path="/dealer/dashboard"
+            element={
+              <ProtectedRoute>
+                <DealerDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Routes */}
           <Route

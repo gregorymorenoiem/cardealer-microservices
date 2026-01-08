@@ -1,23 +1,24 @@
 services:
-  # PostgreSQL Database for ErrorService
-  errorservice-db:
+  # PostgreSQL Database Consolidado - Todas las bases de datos
+  # NUEVO: Servicio unificado que reemplazará todos los *_db individuales
+  postgres_db:
     image: postgres:16
-    container_name: errorservice-db
+    container_name: postgres_db
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: 256M
+          cpus: "1.0"
+          memory: 1024M
         reservations:
-          memory: 128M
+          memory: 512M
     environment:
-      POSTGRES_DB: errorservice
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
     ports:
-      - "25432:5432" # Cambiado a puerto alto
+      - "5433:5432" # Puerto diferente para no interferir con los existentes
     volumes:
-      - errorservice_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
     networks:
       - cargurus-net
     healthcheck:
@@ -25,6 +26,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # PostgreSQL Database for ErrorService
 
   # ErrorService API
   errorservice:
@@ -43,7 +46,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=errorservice-db;Database=errorservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=errorservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -57,7 +60,7 @@ services:
       - "15083:80" # Cambiado
       - "24022:4022" # Cambiado
     depends_on:
-      errorservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -79,31 +82,6 @@ services:
   # ------------------------
   # AuthService Database
   # ------------------------
-  authservice-db:
-    image: postgres:16
-    container_name: authservice-db
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      POSTGRES_DB: authservice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
-    ports:
-      - "25434:5432" # Cambiado a puerto alto
-    volumes:
-      - authservice_data:/var/lib/postgresql/data
-    networks:
-      - cargurus-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # ------------------------
   # AuthService API
@@ -125,15 +103,15 @@ services:
       ASPNETCORE_URLS: http://+:80
       # Database config (usado por CarDealer.Shared.Database)
       Database__Provider: "PostgreSQL"
-      Database__Host: "authservice-db"
+      Database__Host: "postgres_db"
       Database__Port: "5432"
       Database__Database: "authservice"
       Database__Username: "postgres"
       Database__Password: "password"
       Database__AutoMigrate: "true"
-      Database__ConnectionStrings__PostgreSQL: "Host=authservice-db;Database=authservice;Username=postgres;Password=password;Include Error Detail=true"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=authservice;Username=postgres;Password=password;Include Error Detail=true"
       # Connection strings (compatibilidad)
-      ConnectionStrings__DefaultConnection: "Host=authservice-db;Database=authservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=authservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       # RabbitMQ - ENABLED for production-like behavior
       RabbitMQ__Enabled: "true"
@@ -162,7 +140,7 @@ services:
       - "15085:80" # Cambiado
       - "24023:4022" # Cambiado
     depends_on:
-      authservice-db:
+      postgres_db:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -260,7 +238,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
       DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=notificationservice-db;Database=notificationservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=notificationservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       RabbitMQ__Host: "rabbitmq" # Para servicios con appsettings "Host"
       RabbitMQ__HostName: "rabbitmq" # Para servicios con appsettings "HostName"
@@ -283,7 +261,7 @@ services:
       - "15084:80" # Cambiado
       - "24026:4022" # Cambiado
     depends_on:
-      notificationservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -408,7 +386,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=userservice-db;Database=userservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=userservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -423,7 +401,7 @@ services:
       - "15100:80"
       - "24027:4022"
     depends_on:
-      userservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -483,7 +461,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=roleservice-db;Database=roleservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=roleservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -498,7 +476,7 @@ services:
       - "15101:80"
       - "24028:4022"
     depends_on:
-      roleservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -556,7 +534,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=adminservice-db;Database=adminservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=adminservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -575,7 +553,7 @@ services:
       - "15112:80"
       - "24037:4022"
     depends_on:
-      adminservice-db:
+      postgres_db:
         condition: service_healthy
       consul:
         condition: service_healthy
@@ -666,7 +644,7 @@ services:
         reservations:
           memory: 192M
     depends_on:
-      mediaservice-db:
+      postgres_db:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -680,13 +658,13 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
       DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
       Database__Provider: "PostgreSQL"
-      Database__Host: mediaservice-db
+      Database__Host: postgres_db
       Database__Port: "5432"
       Database__Database: mediaservice
       Database__Username: postgres
       Database__Password: password
       Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=mediaservice-db;Database=mediaservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=mediaservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -802,13 +780,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__Host: reportsservice-db
+      Database__Host: postgres_db
       Database__Port: "5432"
       Database__Database: reportsservice
       Database__Username: postgres
       Database__Password: password
       Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=reportsservice-db;Database=reportsservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=reportsservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -820,7 +798,7 @@ services:
       - "15103:80"
       - "24040:4022"
     depends_on:
-      reportsservice-db:
+      postgres_db:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -871,13 +849,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__Host: billingservice-db
+      Database__Host: postgres_db
       Database__Port: "5432"
       Database__Database: billingservice
       Database__Username: postgres
       Database__Password: password
       Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=billingservice-db;Database=billingservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=billingservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -898,7 +876,7 @@ services:
       - "15107:80"
       - "24029:4022"
     depends_on:
-      billingservice-db:
+      postgres_db:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -951,13 +929,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__Host: financeservice-db
+      Database__Host: postgres_db
       Database__Port: "5432"
       Database__Database: financeservice
       Database__Username: postgres
       Database__Password: password
       Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=financeservice-db;Database=financeservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=financeservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -968,7 +946,7 @@ services:
       - "15108:80"
       - "24030:4022"
     depends_on:
-      financeservice-db:
+      postgres_db:
         condition: service_healthy
       errorservice:
         condition: service_started
@@ -1018,13 +996,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__Host: messagebusservice-db
+      Database__Host: postgres_db
       Database__Port: "5432"
       Database__Database: messagebusservice
       Database__Username: postgres
       Database__Password: password
       Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=messagebusservice-db;Database=messagebusservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=messagebusservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -1036,7 +1014,7 @@ services:
       - "5009:80"
       - "24031:4022"
     depends_on:
-      messagebusservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -1156,13 +1134,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__Host: vehiclessaleservice-db
+      Database__Host: postgres_db
       Database__Port: "5432"
       Database__Database: vehiclessaleservice
       Database__Username: postgres
       Database__Password: password
       Database__AutoMigrate: "true"
-      ConnectionStrings__DefaultConnection: "Host=vehiclessaleservice-db;Database=vehiclessaleservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=vehiclessaleservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -1177,7 +1155,7 @@ services:
     ports:
       - "15070:80"
     depends_on:
-      vehiclessaleservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -1231,14 +1209,14 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=invoicingservice-db;Database=invoicingservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=invoicingservice;Username=postgres;Password=password"
       JwtSettings__SecretKey: "clave-super-secreta-desarrollo-32-caracteres-aaa"
       JwtSettings__Issuer: "CarDealer"
       JwtSettings__Audience: "CarDealerApp"
     ports:
       - "15109:80"
     depends_on:
-      invoicingservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1285,11 +1263,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=crmservice-db;Database=crmservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=crmservice;Username=postgres;Password=password"
     ports:
       - "15106:80"
     depends_on:
-      crmservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1336,12 +1314,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=contactservice-db;Database=contactservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=contactservice;Username=postgres;Password=password"
     ports:
       - "15110:80"
       - "24033:4022"
     depends_on:
-      contactservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1388,12 +1366,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=appointmentservice-db;Database=appointmentservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=appointmentservice;Username=postgres;Password=password"
     ports:
       - "15111:80"
       - "24034:4022"
     depends_on:
-      appointmentservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1440,12 +1418,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=marketingservice-db;Database=marketingservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=marketingservice;Username=postgres;Password=password"
     ports:
       - "15104:80"
       - "24035:4022"
     depends_on:
-      marketingservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1514,12 +1492,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=realestateservice-db;Database=realestateservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=realestateservice;Username=postgres;Password=password"
     ports:
       - "15113:80"
       - "24038:4022"
     depends_on:
-      realestateservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1566,7 +1544,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=auditservice-db;Database=auditservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=auditservice;Username=postgres;Password=password"
       RabbitMQ__Enabled: "true"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -1577,7 +1555,7 @@ services:
     ports:
       - "5084:80"
     depends_on:
-      auditservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -1626,13 +1604,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=backupdrservice-db;Database=backupdrservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=backupdrservice;Username=postgres;Password=password"
       RabbitMQ__Enabled: "false"
       Consul__Enabled: "false"
     ports:
       - "15098:80"
     depends_on:
-      backupdrservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1679,13 +1657,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=schedulerservice-db;Database=schedulerservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=schedulerservice;Username=postgres;Password=password"
       RabbitMQ__Enabled: "false"
       Consul__Enabled: "false"
     ports:
       - "15091:80"
     depends_on:
-      schedulerservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1787,14 +1765,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=configurationservice-db;Database=configurationservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=configurationservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       RabbitMQ__Enabled: "false"
       Consul__Enabled: "false"
     ports:
       - "5085:80"
     depends_on:
-      configurationservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -1851,13 +1829,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=featuretoggleservice-db;Database=featuretoggleservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=featuretoggleservice;Username=postgres;Password=password"
       RabbitMQ__Enabled: "false"
       Consul__Enabled: "false"
     ports:
       - "15094:80"
     depends_on:
-      featuretoggleservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -2008,14 +1986,14 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__PostgreSQL: "Host=ratelimitingservice-db;Database=ratelimitingservice;Username=postgres;Password=password"
+      ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=ratelimitingservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
       RabbitMQ__Enabled: "false"
       Consul__Enabled: "false"
     ports:
       - "15097:80"
     depends_on:
-      ratelimitingservice-db:
+      postgres_db:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -2107,9 +2085,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=maintenanceservice-db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=maintenanceservice-db;Database=maintenanceservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=maintenanceservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -2122,7 +2100,7 @@ services:
     ports:
       - "5061:80"
     depends_on:
-      maintenanceservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -2185,9 +2163,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=comparisonservice-db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=comparisonservice-db;Database=comparisonservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=comparisonservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -2201,7 +2179,7 @@ services:
     ports:
       - "5066:80"
     depends_on:
-      comparisonservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -2266,9 +2244,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: "Host=alertservice-db;Port=5432;Database=alertservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=alertservice-db;Database=alertservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=alertservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -2284,7 +2262,7 @@ services:
     ports:
       - "5067:80"
     depends_on:
-      alertservice-db:
+      postgres_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -2305,6 +2283,7 @@ services:
       retries: 3
 
 volumes:
+  postgres_data: # Nuevo volumen para la base de datos consolidada
   errorservice_data:
   authservice_data:
   notificationservice_data:

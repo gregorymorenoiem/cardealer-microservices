@@ -1,0 +1,34 @@
+🚗 OKLA - Nueva Consulta Recibida
+
+¡Hola {{SellerName}}!
+
+Has recibido una nueva consulta sobre uno de tus vehículos en OKLA.
+
+{{#IsUrgent}}⚡ CONSULTA URGENTE{{/IsUrgent}}
+
+📍 VEHÍCULO:
+{{VehicleTitle}}
+Precio: {{VehiclePrice}}
+Año: {{VehicleYear}} | Kilometraje: {{VehicleMileage}}
+
+👤 INTERESADO:
+Nombre: {{BuyerName}}
+Email: {{BuyerEmail}}
+{{#BuyerPhone}}Teléfono: {{BuyerPhone}}{{/BuyerPhone}}
+
+📝 ASUNTO: {{Subject}}
+
+MENSAJE:
+"{{Message}}"
+
+🔗 RESPONDER: {{ReplyUrl}}
+
+💡 Tip: Responde rápidamente para aumentar tus posibilidades de venta.
+
+---
+Consulta recibida el {{CreatedAt}} | ID: {{ContactRequestId}}
+
+OKLA - Tu Marketplace de Vehículos en RD
+🌐 okla.com.do
+
+Para dejar de recibir estas notificaciones: {{UnsubscribeUrl}}

@@ -64,6 +64,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/vehicles', label: t('nav.vehicles'), icon: FaCar },
     { href: '/search', label: 'Buscar', icon: FiSearch },
+    { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase },
   ];
 
   const userNavLinks = [

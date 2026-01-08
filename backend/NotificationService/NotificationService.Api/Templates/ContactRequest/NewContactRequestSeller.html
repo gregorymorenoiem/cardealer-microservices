@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nueva Consulta - OKLA</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #2563eb;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      .content {
+        background-color: #f9fafb;
+        padding: 30px;
+        border-left: 4px solid #2563eb;
+      }
+      .vehicle-info {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .button {
+        background-color: #2563eb;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+        margin-top: 20px;
+      }
+      .footer {
+        text-align: center;
+        padding: 20px;
+        color: #6b7280;
+        font-size: 14px;
+      }
+      .buyer-info {
+        background-color: #ecfdf5;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+      }
+      .urgent-badge {
+        background-color: #ef4444;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚗 OKLA</h1>
+        <h2>Nueva Consulta Recibida</h2>
+      </div>
+
+      <div class="content">
+        <h3>¡Hola {{SellerName}}!</h3>
+
+        <p>
+          Has recibido una nueva consulta sobre uno de tus vehículos en OKLA.
+        </p>
+
+        {{#IsUrgent}}
+        <div style="text-align: center; margin: 20px 0">
+          <span class="urgent-badge">⚡ CONSULTA URGENTE</span>
+        </div>
+        {{/IsUrgent}}
+
+        <div class="vehicle-info">
+          <h4>📍 Vehículo de Interés:</h4>
+          <p><strong>{{VehicleTitle}}</strong></p>
+          <p>Precio: <strong>{{VehiclePrice}}</strong></p>
+          <p>Año: {{VehicleYear}} | Kilometraje: {{VehicleMileage}}</p>
+
+          {{#VehicleImage}}
+          <img
+            src="{{VehicleImage}}"
+            alt="{{VehicleTitle}}"
+            style="
+              width: 100%;
+              max-width: 300px;
+              border-radius: 6px;
+              margin-top: 10px;
+            "
+          />
+          {{/VehicleImage}}
+        </div>
+
+        <div class="buyer-info">
+          <h4>👤 Información del Interesado:</h4>
+          <p><strong>Nombre:</strong> {{BuyerName}}</p>
+          <p><strong>Email:</strong> {{BuyerEmail}}</p>
+          {{#BuyerPhone}}
+          <p><strong>Teléfono:</strong> {{BuyerPhone}}</p>
+          {{/BuyerPhone}}
+        </div>
+
+        <div
+          style="
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+          "
+        >
+          <h4>📝 Asunto: {{Subject}}</h4>
+          <div
+            style="
+              background-color: #f3f4f6;
+              padding: 15px;
+              border-radius: 4px;
+              border-left: 3px solid #2563eb;
+            "
+          >
+            <p>{{Message}}</p>
+          </div>
+        </div>
+
+        <div style="text-align: center">
+          <a href="{{ReplyUrl}}" class="button"> Responder Consulta </a>
+        </div>
+
+        <div
+          style="
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fef3c7;
+            border-radius: 6px;
+          "
+        >
+          <p>
+            <strong>💡 Tip:</strong> Responde rápidamente para aumentar tus
+            posibilidades de venta. Los compradores valoran las respuestas
+            inmediatas.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>📧 Consulta recibida el {{CreatedAt}} | ID: {{ContactRequestId}}</p>
+        <p>
+          <a href="{{UnsubscribeUrl}}" style="color: #6b7280"
+            >Administrar Notificaciones</a
+          >
+          |
+          <a href="https://okla.com.do/help" style="color: #6b7280"
+            >Centro de Ayuda</a
+          >
+        </p>
+        <p style="margin-top: 20px">
+          <strong>OKLA - Tu Marketplace de Vehículos en RD</strong><br />
+          🌐 <a href="https://okla.com.do">okla.com.do</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
