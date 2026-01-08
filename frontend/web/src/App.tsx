@@ -28,6 +28,8 @@ import DealerLandingPage from './pages/DealerLandingPage';
 import DealerPricingPage from './pages/DealerPricingPage';
 import DealerRegistrationPage from './pages/DealerRegistrationPage';
 import DealerDashboard from './pages/DealerDashboard';
+// Inventory Management pages (Sprint 6)
+import InventoryManagementPage from './pages/InventoryManagementPage';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -222,6 +224,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <DealerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Inventory Management Routes (Sprint 6) */}
+          <Route
+            path="/dealer/inventory"
+            element={
+              <ProtectedRoute>
+                <InventoryManagementPage dealerId="DEALER_ID_PLACEHOLDER" />
               </ProtectedRoute>
             }
           />
