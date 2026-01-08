@@ -1,0 +1,10 @@
+# =============================================================================
+# MVP SELF-MANAGED - Namespace
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: okla
+  labels:
+    environment: production
+    tier: mvp

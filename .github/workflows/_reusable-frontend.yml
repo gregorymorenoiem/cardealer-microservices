@@ -11,40 +11,40 @@ on:
   workflow_call:
     inputs:
       node-version:
-        description: 'Versión de Node.js'
+        description: "Versión de Node.js"
         required: false
         type: string
-        default: '20.x'
+        default: "20.x"
       working-directory:
-        description: 'Directorio del frontend'
+        description: "Directorio del frontend"
         required: false
         type: string
-        default: 'frontend/web'
+        default: "frontend/web"
       run-e2e-tests:
-        description: 'Ejecutar tests E2E'
+        description: "Ejecutar tests E2E"
         required: false
         type: boolean
         default: false
       run-docker-build:
-        description: 'Construir imagen Docker'
+        description: "Construir imagen Docker"
         required: false
         type: boolean
         default: true
       run-docker-push:
-        description: 'Push imagen a registry'
+        description: "Push imagen a registry"
         required: false
         type: boolean
         default: false
       docker-registry:
-        description: 'Docker registry URL'
+        description: "Docker registry URL"
         required: false
         type: string
-        default: 'ghcr.io'
+        default: "ghcr.io"
       vite-api-url:
-        description: 'VITE_API_URL para build'
+        description: "VITE_API_URL para build"
         required: false
         type: string
-        default: 'http://localhost:8080'
+        default: "http://localhost:8080"
     secrets:
       REGISTRY_USERNAME:
         required: false
@@ -71,7 +71,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
       - name: 📦 Install dependencies
@@ -102,7 +102,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
       - name: 📦 Install dependencies
@@ -140,7 +140,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
       - name: 📦 Install dependencies

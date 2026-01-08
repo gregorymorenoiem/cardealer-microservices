@@ -1,0 +1,96 @@
+# =============================================================================
+# MVP SELF-MANAGED - ConfigMaps
+# =============================================================================
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: global-config
+  namespace: okla
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  TZ: "America/New_York"
+  # Redis
+  Cache__Provider: "Redis"
+  Cache__Redis__Host: "redis"
+  Cache__Redis__Port: "6379"
+  # Logging
+  Serilog__MinimumLevel__Default: "Information"
+  Serilog__MinimumLevel__Override__Microsoft: "Warning"
+  # OpenTelemetry (disabled for MVP)
+  OpenTelemetry__Enabled: "false"
+  # Consul (disabled for MVP)
+  Consul__Enabled: "false"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: okla
+data:
+  ocelot.json: |
+    {
+      "Routes": [
+        {
+          "UpstreamPathTemplate": "/api/auth/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/auth/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/users/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/users/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/roles/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/roles/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicles/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/vehicles/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/media/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/media/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/billing/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/billing/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/notifications/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/notifications/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "notificationservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/errors/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/errors/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 8080 }]
+        }
+      ],
+      "GlobalConfiguration": {
+        "BaseUrl": "https://api.okla.com"
+      }
+    }

@@ -3,15 +3,20 @@
 # =============================================================================
 # Detecta qué servicios cambiaron y solo ejecuta CI/CD para ellos
 # Ahorra ~80% de minutos de GitHub Actions
+# 
+# Branching Strategy:
+#   - main: Producción (deploy automático a DOKS)
+#   - development: Staging/Integración (build + tests)
+#   - sprint/*: Solo tests, no build imágenes
 # =============================================================================
 
 name: 🚀 Smart CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, development]
   pull_request:
-    branches: [main, develop]
+    branches: [main, development]
 
 # Required permissions to push to GHCR
 permissions:

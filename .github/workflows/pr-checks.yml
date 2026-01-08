@@ -3,13 +3,18 @@
 # =============================================================================
 # Optimizado para ejecutar en ~3-5 minutos
 # Solo lint, type check, y unit tests rápidos
+# 
+# Soporta PRs hacia:
+#   - main (producción)
+#   - development (integración)
+#   - sprint/* (trabajo de sprint)
 # =============================================================================
 
 name: 🔍 PR Checks
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, development, 'sprint/**']
 
 # Evita ejecuciones duplicadas
 concurrency:
