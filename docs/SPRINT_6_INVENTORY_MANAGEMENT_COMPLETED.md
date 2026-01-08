@@ -20,6 +20,7 @@ Implementar sistema completo de gestión de inventario para dealers, permitiendo
 #### 🏗️ Arquitectura Clean Architecture
 
 **InventoryManagementService.Domain** (4 archivos):
+
 - ✅ `Entities/InventoryItem.cs` - Entidad principal con 40+ propiedades
   - Properties: DealerId, VehicleId, Status, Visibility, StockNumber, VIN, Pricing (Cost/List/Target/Min), Metrics (Views/Inquiries/Offers), Dates (Acquired/Published/Sold)
   - Methods: `MarkAsSold()`, `Activate()`, `Pause()`, `RecordView()`, `RecordInquiry()`
@@ -33,6 +34,7 @@ Implementar sistema completo de gestión de inventario para dealers, permitiendo
 - ✅ `InventoryManagementService.Domain.csproj`
 
 **Enumeraciones implementadas:**
+
 ```csharp
 - InventoryStatus: Active, Paused, Sold
 - InventoryVisibility: Public, Private
@@ -42,6 +44,7 @@ Implementar sistema completo de gestión de inventario para dealers, permitiendo
 ```
 
 **InventoryManagementService.Application** (7 archivos):
+
 - ✅ `DTOs/InventoryDtos.cs` - 8 DTOs (InventoryItemDto, CreateInventoryItemRequest, UpdateInventoryItemRequest, BulkUpdateStatusRequest, PagedResultDto<T>, InventoryStatsDto)
 - ✅ `Features/Inventory/Commands/CreateInventoryItemCommand.cs` - Crear inventario
   - Handler con validación de DealerId, VehicleId, ListPrice
@@ -65,6 +68,7 @@ Implementar sistema completo de gestión de inventario para dealers, permitiendo
 - ✅ `InventoryManagementService.Application.csproj` (MediatR 12.4.0, FluentValidation 11.9.0)
 
 **InventoryManagementService.Infrastructure** (4 archivos):
+
 - ✅ `Persistence/InventoryDbContext.cs` - EF Core DbContext
   - 2 DbSets: InventoryItems, BulkImportJobs
   - Entity configurations con fluent API
@@ -79,6 +83,7 @@ Implementar sistema completo de gestión de inventario para dealers, permitiendo
 - ✅ `InventoryManagementService.Infrastructure.csproj` (EF Core 8.0, Npgsql)
 
 **InventoryManagementService.Api** (5 archivos):
+
 - ✅ `Controllers/InventoryController.cs` - REST API con 10 endpoints
   | Método | Endpoint | Descripción | Auth |
   |--------|----------|-------------|------|
@@ -114,10 +119,12 @@ Implementar sistema completo de gestión de inventario para dealers, permitiendo
 ### Testing: 14 Tests Unitarios ✅
 
 **InventoryManagementService.Tests** (2 archivos):
+
 - ✅ `InventoryManagementService.Tests.csproj` - xUnit + FluentAssertions + Moq + EF InMemory
 - ✅ `InventoryManagementServiceTests.cs` - Suite completa (14 tests)
 
 #### 📊 Resultados de Ejecución
+
 ```bash
 Test Run Successful.
 Total tests: 14
@@ -128,26 +135,27 @@ Total tests: 14
 
 #### 📋 Tests Implementados
 
-| #  | Test | Resultado | Tiempo |
-|----|------|-----------|--------|
-| 1  | InventoryItem_ShouldBeCreated_WithValidData | ✅ PASS | <1 ms |
-| 2  | InventoryItem_ShouldCalculateDaysOnMarket | ✅ PASS | <1 ms |
-| 3  | InventoryItem_ShouldMarkAsSold | ✅ PASS | <1 ms |
-| 4  | InventoryItem_ShouldCalculateProfit_WhenSold | ✅ PASS | <1 ms |
-| 5  | InventoryItem_ShouldBeHot_WhenHighActivity | ✅ PASS | <1 ms |
-| 6  | InventoryItem_ShouldBeOverdue_After90Days | ✅ PASS | <1 ms |
-| 7  | InventoryItem_ShouldActivate_WhenPaused | ✅ PASS | <1 ms |
-| 8  | InventoryItem_ShouldPause_WhenActive | ✅ PASS | <1 ms |
-| 9  | InventoryItem_ShouldRecordView | ✅ PASS | <1 ms |
-| 10 | BulkImportJob_ShouldStart | ✅ PASS | <1 ms |
-| 11 | BulkImportJob_ShouldComplete | ✅ PASS | <1 ms |
-| 12 | BulkImportJob_ShouldCalculateProgressPercentage | ✅ PASS | <1 ms |
-| 13 | InventoryStatus_ShouldHaveExpectedValues | ✅ PASS | <1 ms |
-| 14 | InventoryVisibility_ShouldHaveExpectedValues | ✅ PASS | <1 ms |
+| #   | Test                                            | Resultado | Tiempo |
+| --- | ----------------------------------------------- | --------- | ------ |
+| 1   | InventoryItem_ShouldBeCreated_WithValidData     | ✅ PASS   | <1 ms  |
+| 2   | InventoryItem_ShouldCalculateDaysOnMarket       | ✅ PASS   | <1 ms  |
+| 3   | InventoryItem_ShouldMarkAsSold                  | ✅ PASS   | <1 ms  |
+| 4   | InventoryItem_ShouldCalculateProfit_WhenSold    | ✅ PASS   | <1 ms  |
+| 5   | InventoryItem_ShouldBeHot_WhenHighActivity      | ✅ PASS   | <1 ms  |
+| 6   | InventoryItem_ShouldBeOverdue_After90Days       | ✅ PASS   | <1 ms  |
+| 7   | InventoryItem_ShouldActivate_WhenPaused         | ✅ PASS   | <1 ms  |
+| 8   | InventoryItem_ShouldPause_WhenActive            | ✅ PASS   | <1 ms  |
+| 9   | InventoryItem_ShouldRecordView                  | ✅ PASS   | <1 ms  |
+| 10  | BulkImportJob_ShouldStart                       | ✅ PASS   | <1 ms  |
+| 11  | BulkImportJob_ShouldComplete                    | ✅ PASS   | <1 ms  |
+| 12  | BulkImportJob_ShouldCalculateProgressPercentage | ✅ PASS   | <1 ms  |
+| 13  | InventoryStatus_ShouldHaveExpectedValues        | ✅ PASS   | <1 ms  |
+| 14  | InventoryVisibility_ShouldHaveExpectedValues    | ✅ PASS   | <1 ms  |
 
 #### 🎯 Coverage de Tests
 
 **Domain Layer (Entities):**
+
 - ✅ InventoryItem creation
 - ✅ DaysOnMarket calculation (computed property)
 - ✅ MarkAsSold workflow (status, price, date, buyer)
@@ -157,7 +165,7 @@ Total tests: 14
 - ✅ Status transitions (Active ↔ Paused)
 - ✅ Activity recording (RecordView increments ViewCount + LastViewedAt)
 - ✅ BulkImportJob lifecycle (Start, Complete, Fail)
-- ✅ BulkImportJob progress calculation (ProcessedRows / TotalRows * 100)
+- ✅ BulkImportJob progress calculation (ProcessedRows / TotalRows \* 100)
 - ✅ Enum values validation
 
 ---
@@ -167,6 +175,7 @@ Total tests: 14
 #### 🔧 Servicios TypeScript (1 archivo)
 
 **inventoryManagementService.ts** (240 líneas):
+
 - **Interfaces TypeScript** que mapean DTOs del backend (InventoryItemDto, CreateInventoryItemRequest, UpdateInventoryItemRequest, etc.)
 - **Enums TypeScript** (InventoryStatus, InventoryVisibility)
 - **Clase InventoryManagementService** con métodos:
@@ -195,17 +204,20 @@ Total tests: 14
 **Features implementadas:**
 
 1. **Header Section**
+
    - Título "Gestión de Inventario"
    - Contador total de vehículos
    - Botón "Nuevo Vehículo" (CTA verde con icono FiPlus)
 
 2. **Filtros Avanzados** (4 controles)
+
    - **Search input:** Buscar por VIN, ubicación, notas internas (con icono FiSearch)
    - **Status filter:** Dropdown (Todos, Activo, Pausado, Vendido)
    - **Sort selector:** Dropdown (Fecha creación, Precio, Días en mercado, Vistas)
    - **Sort direction:** Ascendente/Descendente
 
 3. **Bulk Actions Toolbar**
+
    - Aparece cuando hay ítems seleccionados
    - Muestra: "X ítem(s) seleccionado(s)"
    - Botones: Activar (verde), Pausar (amarillo), Eliminar (rojo)
@@ -227,6 +239,7 @@ Total tests: 14
    | Acciones | View/Edit/Delete icons | Buttons |
 
 5. **Status Badges**
+
    - **Activo:** Verde (bg-green-100 text-green-800)
    - **Pausado:** Amarillo (bg-yellow-100 text-yellow-800)
    - **Vendido:** Azul (bg-blue-100 text-blue-800)
@@ -234,16 +247,19 @@ Total tests: 14
    - **⚠️ Overdue:** Icono rojo al lado de días - Cuando IsOverdue = true
 
 6. **Paginación**
+
    - Muestra: "Mostrando 1-20 de 150"
    - Botones: Anterior / Siguiente
    - Indicador: "Página X de Y"
    - Deshabilitado en primera/última página
 
 7. **Empty State**
+
    - Mensaje: "No hay vehículos en el inventario"
    - Botón: "Agregar Primer Vehículo" (CTA azul)
 
 8. **Error Handling**
+
    - Banner rojo con mensaje de error
    - Loading spinner durante fetch
    - Confirmaciones antes de acciones destructivas
@@ -254,6 +270,7 @@ Total tests: 14
    - Mobile: (Pendiente: Cards view como alternativa)
 
 **Props:**
+
 ```typescript
 interface InventoryManagementPageProps {
   dealerId: string; // Required - Dealer ID del usuario logueado
@@ -261,6 +278,7 @@ interface InventoryManagementPageProps {
 ```
 
 **State Management:**
+
 - `inventoryData` - PagedResultDto<InventoryItemDto>
 - `loading` - Boolean para spinner
 - `error` - String | null para mensajes
@@ -272,6 +290,7 @@ interface InventoryManagementPageProps {
 - `page` - Integer (current page)
 
 **Methods:**
+
 - `loadInventory()` - Fetch data con filtros
 - `handleSelectItem(id)` - Toggle checkbox individual
 - `handleSelectAll()` - Toggle todos los checkboxes
@@ -349,46 +368,47 @@ interface InventoryManagementPageProps {
 
 ## 📊 Estadísticas del Código
 
-| Categoría | Backend | Frontend | Tests | Total |
-|-----------|---------|----------|-------|-------|
-| **Archivos Creados** | 20 | 2 | 2 | **24** |
-| **Líneas de Código** | ~4,200 | ~1,150 | ~500 | **~5,850** |
-| **Clases/Componentes** | 16 | 2 | 1 | **19** |
-| **Endpoints REST** | 10 | - | - | **10** |
-| **Métodos de Repositorio** | 26 | - | - | **26** |
-| **Servicios TypeScript** | - | 1 | - | **1** |
-| **Páginas React** | - | 1 | - | **1** |
-| **Tests Unitarios** | - | - | 14 | **14** |
+| Categoría                  | Backend | Frontend | Tests | Total      |
+| -------------------------- | ------- | -------- | ----- | ---------- |
+| **Archivos Creados**       | 20      | 2        | 2     | **24**     |
+| **Líneas de Código**       | ~4,200  | ~1,150   | ~500  | **~5,850** |
+| **Clases/Componentes**     | 16      | 2        | 1     | **19**     |
+| **Endpoints REST**         | 10      | -        | -     | **10**     |
+| **Métodos de Repositorio** | 26      | -        | -     | **26**     |
+| **Servicios TypeScript**   | -       | 1        | -     | **1**      |
+| **Páginas React**          | -       | 1        | -     | **1**      |
+| **Tests Unitarios**        | -       | -        | 14    | **14**     |
 
 ### Desglose por Capa (Backend)
 
-| Capa | Archivos | LOC | Descripción |
-|------|----------|-----|-------------|
-| **Domain** | 4 | ~900 | Entidades (InventoryItem, BulkImportJob), Interfaces (2), Enums (5) |
-| **Application** | 7 | ~1,500 | DTOs (8), Commands (3), Queries (2) |
-| **Infrastructure** | 4 | ~1,200 | DbContext, Repositories (2) |
-| **Api** | 5 | ~600 | Controller, Program.cs, appsettings, Dockerfile |
-| **TOTAL** | **20** | **~4,200** | **Clean Architecture completa** |
+| Capa               | Archivos | LOC        | Descripción                                                         |
+| ------------------ | -------- | ---------- | ------------------------------------------------------------------- |
+| **Domain**         | 4        | ~900       | Entidades (InventoryItem, BulkImportJob), Interfaces (2), Enums (5) |
+| **Application**    | 7        | ~1,500     | DTOs (8), Commands (3), Queries (2)                                 |
+| **Infrastructure** | 4        | ~1,200     | DbContext, Repositories (2)                                         |
+| **Api**            | 5        | ~600       | Controller, Program.cs, appsettings, Dockerfile                     |
+| **TOTAL**          | **20**   | **~4,200** | **Clean Architecture completa**                                     |
 
 ### Desglose Frontend
 
-| Archivo | LOC | Descripción |
-|---------|-----|-------------|
-| **inventoryManagementService.ts** | 240 | API service TypeScript completo |
-| **InventoryManagementPage.tsx** | 350 | DataGrid con filtros, paginación, batch actions |
-| **TOTAL** | **~590** | **2 archivos frontend** |
+| Archivo                           | LOC      | Descripción                                     |
+| --------------------------------- | -------- | ----------------------------------------------- |
+| **inventoryManagementService.ts** | 240      | API service TypeScript completo                 |
+| **InventoryManagementPage.tsx**   | 350      | DataGrid con filtros, paginación, batch actions |
+| **TOTAL**                         | **~590** | **2 archivos frontend**                         |
 
 ### Desglose Tests
 
-| Archivo | Tests | LOC | Descripción |
-|---------|-------|-----|-------------|
-| **InventoryManagementServiceTests.cs** | 14 | ~500 | Suite completa xUnit + FluentAssertions |
+| Archivo                                | Tests | LOC  | Descripción                             |
+| -------------------------------------- | ----- | ---- | --------------------------------------- |
+| **InventoryManagementServiceTests.cs** | 14    | ~500 | Suite completa xUnit + FluentAssertions |
 
 ---
 
 ## ✅ Checklist de Completado
 
 ### Backend ✅
+
 - [x] InventoryManagementService.Domain con 2 entidades y 2 interfaces
 - [x] InventoryManagementService.Application con 8 DTOs, 3 Commands, 2 Queries
 - [x] InventoryManagementService.Infrastructure con DbContext y 2 Repositories
@@ -403,6 +423,7 @@ interface InventoryManagementPageProps {
 - [x] Swagger/OpenAPI
 
 ### Testing ✅
+
 - [x] Proyecto InventoryManagementService.Tests creado
 - [x] 14 tests unitarios implementados
 - [x] 100% passing rate (0 errores)
@@ -410,6 +431,7 @@ interface InventoryManagementPageProps {
 - [x] Coverage de Domain layer completo
 
 ### Frontend ✅
+
 - [x] inventoryManagementService.ts con API client completo
 - [x] InventoryManagementPage.tsx con DataGrid
 - [x] Paginación funcionando
@@ -422,6 +444,7 @@ interface InventoryManagementPageProps {
 - [x] Error handling y loading states
 
 ### Integración ✅
+
 - [x] TypeScript interfaces match backend DTOs
 - [x] API calls funcionando con axios
 - [x] JWT token interceptor configurado
@@ -429,6 +452,7 @@ interface InventoryManagementPageProps {
 - [x] Paginación sincronizada con backend
 
 ### Documentación ✅
+
 - [x] Sprint completado documentado
 - [x] Flujo de usuario detallado
 - [x] Estadísticas de código
@@ -442,12 +466,14 @@ interface InventoryManagementPageProps {
 ### Corto Plazo (Sprint 7)
 
 1. **Formulario de Creación/Edición**
+
    - CreateInventoryItemPage.tsx (formulario completo)
    - EditInventoryItemPage.tsx (edición inline)
    - Validación con react-hook-form + yup
    - Upload de imágenes (integración con MediaService)
 
 2. **Bulk Import CSV/Excel**
+
    - BulkUploadModal.tsx con drag & drop
    - Validación de archivo (CSV/XLSX, max 10MB)
    - Preview de datos antes de importar
@@ -455,6 +481,7 @@ interface InventoryManagementPageProps {
    - Report de errores por fila
 
 3. **Detalles de Inventario**
+
    - InventoryItemDetailPage.tsx
    - Galería de imágenes del vehículo
    - Timeline de actividad (vistas, consultas, cambios)
@@ -469,18 +496,21 @@ interface InventoryManagementPageProps {
 ### Medio Plazo (Sprint 8-9)
 
 5. **Advanced Analytics**
+
    - Gráfico de vistas por día (Chart.js/Recharts)
    - Funnel de conversión (View → Inquiry → Offer → Sold)
    - Heatmap de horarios de actividad
    - Comparación con inventario similar (marketplace)
 
 6. **Featured Items Management**
+
    - Toggle "Destacar" desde tabla
    - Modal para seleccionar duración (7, 14, 30 días)
    - Preview de featured badge
    - Auto-expiry cuando featuredUntil pasa
 
 7. **Smart Recommendations**
+
    - IA para pricing óptimo basado en mercado
    - Alertas: "Precio muy alto vs competencia"
    - Sugerencias de keywords para SEO
@@ -494,6 +524,7 @@ interface InventoryManagementPageProps {
 ### Largo Plazo (Sprint 10+)
 
 9. **Mobile App (Flutter)**
+
    - InventoryScreen con DataTable
    - Quick actions (Activate/Pause desde mobile)
    - Camera integration para fotos
@@ -512,12 +543,14 @@ interface InventoryManagementPageProps {
 ### Backend Performance
 
 1. **API Response Time:**
+
    - GET /api/inventory: < 200ms (paginado)
    - GET /api/inventory/stats: < 100ms
    - POST /api/inventory/bulk/status: < 500ms (batch 100 items)
    - Meta: 95% requests < 300ms
 
 2. **Database Queries:**
+
    - Indexes creados: dealer_id, vehicle_id, status, (dealer_id, status)
    - Query plan optimizado para GetPaged
    - N+1 queries evitados
@@ -530,11 +563,13 @@ interface InventoryManagementPageProps {
 ### Frontend UX
 
 1. **Load Time:**
+
    - Initial page load: < 2s
    - Filter/sort interaction: < 300ms
    - Pagination: < 200ms
 
 2. **User Actions:**
+
    - Bulk select 20 items: < 100ms
    - Bulk update status 20 items: < 1s
    - Search interaction: Debounced 300ms
@@ -547,11 +582,13 @@ interface InventoryManagementPageProps {
 ### Business Impact
 
 1. **Adoption:**
+
    - % dealers usando gestión inventario: Meta 80%
    - Promedio vehículos por dealer: Meta 25
    - Tiempo promedio gestión inventario: Meta 15 min/día
 
 2. **Efficiency:**
+
    - Reducción tiempo publicación: Meta -50%
    - Bulk actions usage: Meta 30% dealers
    - CSV import usage: Meta 20% dealers
@@ -568,6 +605,7 @@ interface InventoryManagementPageProps {
 ### Pendientes de Implementación
 
 1. **InventoryController:**
+
    - ❌ GetById endpoint (TODO comment)
    - ❌ Delete endpoint (TODO comment)
    - ❌ GetFeatured endpoint (returns empty list)
@@ -575,6 +613,7 @@ interface InventoryManagementPageProps {
    - ❌ GetOverdue endpoint (returns empty list)
 
 2. **Frontend:**
+
    - ❌ CreateInventoryItemPage no existe
    - ❌ EditInventoryItemPage no existe
    - ❌ InventoryItemDetailPage no existe
@@ -583,6 +622,7 @@ interface InventoryManagementPageProps {
    - ❌ Ruta en App.tsx no agregada
 
 3. **Testing:**
+
    - ❌ Integration tests (API + DB) no implementados
    - ❌ Frontend tests (React Testing Library) no implementados
    - ❌ E2E tests (Cypress/Playwright) no implementados
@@ -632,7 +672,7 @@ interface InventoryManagementPageProps {
 ✅ **TypeScript** con tipos completos  
 ✅ **Responsive design** (desktop/tablet)  
 ✅ **Error handling** robusto  
-✅ **Docker ready** para deployment  
+✅ **Docker ready** para deployment
 
 ---
 
