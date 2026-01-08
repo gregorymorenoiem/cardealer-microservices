@@ -215,6 +215,12 @@ export default function DealerDashboard() {
                   ✏️ Editar Perfil Público
                 </button>
                 <button
+                  onClick={() => navigate('/dealer/analytics')}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-md"
+                >
+                  📊 Ver Analytics & Métricas
+                </button>
+                <button
                   onClick={() => navigate('/dealer/inventory')}
                   className="w-full px-4 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                 >

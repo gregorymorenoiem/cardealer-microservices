@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  FiPhone, FiMail, FiMapPin, FiExternalLink, 
-  FiClock, FiFacebook, FiInstagram, FiTwitter 
+import {
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiExternalLink,
+  FiClock,
+  FiFacebook,
+  FiInstagram,
+  FiTwitter,
 } from 'react-icons/fi';
 import { FaWhatsapp, FaYoutube } from 'react-icons/fa';
-import { 
-  PublicDealerProfile, 
-  PublicLocation, 
-  dealerPublicService 
+import {
+  PublicDealerProfile,
+  PublicLocation,
+  dealerPublicService,
 } from '@/services/dealerPublicService';
 import MainLayout from '@/layouts/MainLayout';
 
 export default function PublicDealerProfilePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  
+
   const [dealer, setDealer] = useState<PublicDealerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +41,14 @@ export default function PublicDealerProfilePage() {
       setLoading(true);
       const data = await dealerPublicService.getPublicProfile(slug!);
       setDealer(data);
-      
+
       // Set SEO meta tags
       if (data.seo?.metaTitle) {
         document.title = data.seo.metaTitle;
       } else {
         document.title = `${data.businessName} - OKLA`;
       }
-      
+
       if (data.seo?.metaDescription) {
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) {
@@ -75,9 +81,7 @@ export default function PublicDealerProfilePage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {error || 'Dealer no encontrado'}
           </h1>
-          <p className="text-gray-600 mb-6">
-            El dealer que buscas no existe o no está disponible.
-          </p>
+          <p className="text-gray-600 mb-6">El dealer que buscas no existe o no está disponible.</p>
           <button
             onClick={() => navigate('/vehicles')}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -121,17 +125,15 @@ export default function PublicDealerProfilePage() {
               {/* Info */}
               <div className="flex-1">
                 <div className="flex flex-wrap items-start gap-3 mb-3">
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    {dealer.businessName}
-                  </h1>
-                  
+                  <h1 className="text-3xl font-bold text-gray-900">{dealer.businessName}</h1>
+
                   {/* Badges */}
                   {dealer.isTrustedDealer && (
                     <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full flex items-center gap-1">
                       <span>✓</span> Dealer Verificado
                     </span>
                   )}
-                  
+
                   {dealer.isFoundingMember && (
                     <span className="px-3 py-1 bg-amber-600 text-white text-sm rounded-full flex items-center gap-1">
                       <span>🏆</span> Miembro Fundador
@@ -140,9 +142,7 @@ export default function PublicDealerProfilePage() {
                 </div>
 
                 {dealer.slogan && (
-                  <p className="text-lg text-gray-600 mb-3 italic">
-                    "{dealer.slogan}"
-                  </p>
+                  <p className="text-lg text-gray-600 mb-3 italic">"{dealer.slogan}"</p>
                 )}
 
                 {/* Rating & Stats */}
@@ -154,15 +154,13 @@ export default function PublicDealerProfilePage() {
                     <span className="text-gray-700 font-semibold">
                       {dealerPublicService.formatRating(dealer.averageRating)}
                     </span>
-                    <span className="text-gray-500">
-                      ({dealer.totalReviews} reviews)
-                    </span>
+                    <span className="text-gray-500">({dealer.totalReviews} reviews)</span>
                   </div>
-                  
+
                   <div className="text-gray-700">
                     <span className="font-semibold">{dealer.activeListings}</span> vehículos activos
                   </div>
-                  
+
                   <div className="text-gray-700">
                     <span className="font-semibold">{dealer.totalSales}</span> ventas realizadas
                   </div>
@@ -171,7 +169,9 @@ export default function PublicDealerProfilePage() {
                 {/* Location */}
                 <div className="flex items-center gap-2 text-gray-600 mb-4">
                   <FiMapPin className="w-4 h-4" />
-                  <span>{dealer.city}, {dealer.province}</span>
+                  <span>
+                    {dealer.city}, {dealer.province}
+                  </span>
                 </div>
 
                 {/* Contact Buttons */}
@@ -184,7 +184,7 @@ export default function PublicDealerProfilePage() {
                       <FiPhone /> Llamar
                     </a>
                   )}
-                  
+
                   {dealer.contactInfo.whatsAppNumber && (
                     <a
                       href={dealerPublicService.getWhatsAppLink(
@@ -198,7 +198,7 @@ export default function PublicDealerProfilePage() {
                       <FaWhatsapp /> WhatsApp
                     </a>
                   )}
-                  
+
                   {dealer.contactInfo.showEmail && dealer.contactInfo.email && (
                     <a
                       href={`mailto:${dealer.contactInfo.email}`}
@@ -207,7 +207,7 @@ export default function PublicDealerProfilePage() {
                       <FiMail /> Email
                     </a>
                   )}
-                  
+
                   {dealer.contactInfo.website && (
                     <a
                       href={dealer.contactInfo.website}
@@ -259,9 +259,7 @@ export default function PublicDealerProfilePage() {
                       >
                         <span className="text-2xl">{feature.icon}</span>
                         <span className="font-medium">{feature.name}</span>
-                        {feature.isAvailable && (
-                          <span className="ml-auto">✓</span>
-                        )}
+                        {feature.isAvailable && <span className="ml-auto">✓</span>}
                       </div>
                     ))}
                   </div>
@@ -271,9 +269,7 @@ export default function PublicDealerProfilePage() {
               {/* Locations */}
               {dealer.locations.length > 0 && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                    Sucursales
-                  </h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Sucursales</h2>
                   <div className="space-y-4">
                     {dealer.locations.map((location) => (
                       <LocationCard key={location.id} location={location} />
@@ -288,9 +284,7 @@ export default function PublicDealerProfilePage() {
               {/* Specialties */}
               {dealer.specialties.length > 0 && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">
-                    Especialidades
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Especialidades</h3>
                   <div className="flex flex-wrap gap-2">
                     {dealer.specialties.map((specialty, index) => (
                       <span
@@ -307,9 +301,7 @@ export default function PublicDealerProfilePage() {
               {/* Supported Brands */}
               {dealer.supportedBrands.length > 0 && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">
-                    Marcas que Manejamos
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Marcas que Manejamos</h3>
                   <div className="flex flex-wrap gap-2">
                     {dealer.supportedBrands.map((brand, index) => (
                       <span
@@ -326,9 +318,7 @@ export default function PublicDealerProfilePage() {
               {/* Social Media */}
               {dealer.socialMedia && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">
-                    Síguenos
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Síguenos</h3>
                   <div className="space-y-2">
                     {dealer.socialMedia.facebookUrl && (
                       <a
@@ -404,17 +394,13 @@ function LocationCard({ location }: { location: PublicLocation }) {
         <div>
           <h4 className="font-bold text-gray-900">{location.name}</h4>
           {location.isPrimary && (
-            <span className="text-xs text-blue-600 font-medium">
-              Sucursal Principal
-            </span>
+            <span className="text-xs text-blue-600 font-medium">Sucursal Principal</span>
           )}
         </div>
-        
+
         <span
           className={`px-2 py-1 text-xs rounded-full ${
-            openStatus === 'open'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
+            openStatus === 'open' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
           }`}
         >
           {openStatus === 'open' ? 'Abierto' : 'Cerrado'}
@@ -424,14 +410,16 @@ function LocationCard({ location }: { location: PublicLocation }) {
       <div className="space-y-2 text-sm text-gray-600 mb-3">
         <div className="flex items-start gap-2">
           <FiMapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <span>{location.address}, {location.city}</span>
+          <span>
+            {location.address}, {location.city}
+          </span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <FiClock className="w-4 h-4 flex-shrink-0" />
           <span>Hoy: {todayHours}</span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <FiPhone className="w-4 h-4 flex-shrink-0" />
           <a href={`tel:${location.phone}`} className="hover:underline">
@@ -443,9 +431,7 @@ function LocationCard({ location }: { location: PublicLocation }) {
       {/* Features */}
       <div className="flex flex-wrap gap-2 mb-3">
         {location.hasShowroom && (
-          <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">
-            Showroom
-          </span>
+          <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">Showroom</span>
         )}
         {location.hasServiceCenter && (
           <span className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded">

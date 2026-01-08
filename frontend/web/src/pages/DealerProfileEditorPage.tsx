@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FiSave, FiAlertCircle, FiCheck, FiExternalLink 
-} from 'react-icons/fi';
-import { 
-  PublicDealerProfile, 
+import { FiSave, FiAlertCircle, FiCheck, FiExternalLink } from 'react-icons/fi';
+import {
+  PublicDealerProfile,
   ProfileCompletion,
   UpdateProfileRequest,
-  dealerPublicService 
+  dealerPublicService,
 } from '@/services/dealerPublicService';
 import { dealerManagementService } from '@/services/dealerManagementService';
 import MainLayout from '@/layouts/MainLayout';
 
 export default function DealerProfileEditorPage() {
   const navigate = useNavigate();
-  
+
   const [dealer, setDealer] = useState<PublicDealerProfile | null>(null);
   const [completion, setCompletion] = useState<ProfileCompletion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,17 +30,17 @@ export default function DealerProfileEditorPage() {
   const fetchDealerProfile = async () => {
     try {
       setLoading(true);
-      
+
       // Get dealer by current user
       const dealerId = localStorage.getItem('dealerId'); // Assuming this is set after login
-      
+
       if (!dealerId) {
         setError('No se encontró información del dealer. Por favor contacte soporte.');
         return;
       }
 
       const dealerData = await dealerManagementService.getDealerById(dealerId);
-      
+
       // Get completion status
       const completionData = await dealerPublicService.getProfileCompletion(dealerId);
       setCompletion(completionData);
@@ -68,7 +66,7 @@ export default function DealerProfileEditorPage() {
         totalSales: dealerData.totalSales || 0,
         activeListings: 0,
       };
-      
+
       setDealer(profile);
 
       // Initialize form
@@ -104,7 +102,7 @@ export default function DealerProfileEditorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!dealer) return;
 
     try {
@@ -113,9 +111,9 @@ export default function DealerProfileEditorPage() {
       setSuccess(false);
 
       await dealerPublicService.updateProfile(dealer.id, formData);
-      
+
       setSuccess(true);
-      
+
       // Refresh data
       await fetchDealerProfile();
 
@@ -134,7 +132,10 @@ export default function DealerProfileEditorPage() {
   };
 
   const handleArrayChange = (field: 'specialties' | 'supportedBrands', value: string) => {
-    const items = value.split(',').map((s) => s.trim()).filter(Boolean);
+    const items = value
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     handleChange(field, items);
   };
 
@@ -152,7 +153,9 @@ export default function DealerProfileEditorPage() {
     return (
       <MainLayout>
         <div className="min-h-screen flex flex-col items-center justify-center px-4">
-          <div className="text-red-600 text-6xl mb-4"><FiAlertCircle /></div>
+          <div className="text-red-600 text-6xl mb-4">
+            <FiAlertCircle />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{error}</h1>
           <button
             onClick={() => navigate('/dealer/dashboard')}
@@ -171,26 +174,20 @@ export default function DealerProfileEditorPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Editar Perfil Público
-            </h1>
-            <p className="text-gray-600">
-              Optimiza tu perfil para atraer más clientes
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Editar Perfil Público</h1>
+            <p className="text-gray-600">Optimiza tu perfil para atraer más clientes</p>
           </div>
 
           {/* Profile Completion */}
           {completion && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Completitud del Perfil
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900">Completitud del Perfil</h3>
                 <span className="text-2xl font-bold text-blue-600">
                   {completion.completionPercentage}%
                 </span>
               </div>
-              
+
               <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
                 <div
                   className="bg-blue-600 h-3 rounded-full transition-all duration-500"
@@ -222,9 +219,7 @@ export default function DealerProfileEditorPage() {
           {success && (
             <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 flex items-center gap-3">
               <FiCheck className="text-green-600 text-xl" />
-              <p className="text-green-700 font-medium">
-                ¡Perfil actualizado exitosamente!
-              </p>
+              <p className="text-green-700 font-medium">¡Perfil actualizado exitosamente!</p>
             </div>
           )}
 
@@ -240,15 +235,11 @@ export default function DealerProfileEditorPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Información Básica
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Información Básica</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Slogan
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Slogan</label>
                   <input
                     type="text"
                     value={formData.slogan || ''}
@@ -257,9 +248,7 @@ export default function DealerProfileEditorPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     maxLength={100}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Máximo 100 caracteres
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Máximo 100 caracteres</p>
                 </div>
 
                 <div>
@@ -286,9 +275,7 @@ export default function DealerProfileEditorPage() {
                     placeholder="SUVs de lujo, Vehículos eléctricos, Sedanes deportivos"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Separar con comas
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Separar con comas</p>
                 </div>
 
                 <div>
@@ -302,24 +289,18 @@ export default function DealerProfileEditorPage() {
                     placeholder="Toyota, Honda, BMW, Mercedes-Benz"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Separar con comas
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Separar con comas</p>
                 </div>
               </div>
             </div>
 
             {/* Images */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Imágenes
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Imágenes</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Logo URL
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
                   <input
                     type="url"
                     value={formData.logoUrl || ''}
@@ -330,9 +311,7 @@ export default function DealerProfileEditorPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Banner URL
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Banner URL</label>
                   <input
                     type="url"
                     value={formData.bannerUrl || ''}
@@ -340,24 +319,18 @@ export default function DealerProfileEditorPage() {
                     placeholder="https://ejemplo.com/banner.jpg"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Recomendado: 1920x400px
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Recomendado: 1920x400px</p>
                 </div>
               </div>
             </div>
 
             {/* Social Media */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Redes Sociales
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Redes Sociales</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Facebook
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
                   <input
                     type="url"
                     value={formData.facebookUrl || ''}
@@ -368,9 +341,7 @@ export default function DealerProfileEditorPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Instagram
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
                   <input
                     type="url"
                     value={formData.instagramUrl || ''}
@@ -381,9 +352,7 @@ export default function DealerProfileEditorPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    WhatsApp
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
                   <input
                     type="tel"
                     value={formData.whatsAppNumber || ''}
@@ -397,9 +366,7 @@ export default function DealerProfileEditorPage() {
 
             {/* Features */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Servicios Ofrecidos
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Servicios Ofrecidos</h3>
 
               <div className="space-y-3">
                 {[
@@ -411,8 +378,10 @@ export default function DealerProfileEditorPage() {
                   <label key={field} className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formData[field as keyof UpdateProfileRequest] as boolean || false}
-                      onChange={(e) => handleChange(field as keyof UpdateProfileRequest, e.target.checked)}
+                      checked={(formData[field as keyof UpdateProfileRequest] as boolean) || false}
+                      onChange={(e) =>
+                        handleChange(field as keyof UpdateProfileRequest, e.target.checked)
+                      }
                       className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                     />
                     <span className="text-gray-700">{label}</span>
@@ -435,9 +404,7 @@ export default function DealerProfileEditorPage() {
                     onChange={(e) => handleChange('showPhoneOnProfile', e.target.checked)}
                     className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-gray-700">
-                    Mostrar teléfono en perfil público
-                  </span>
+                  <span className="text-gray-700">Mostrar teléfono en perfil público</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -447,9 +414,7 @@ export default function DealerProfileEditorPage() {
                     onChange={(e) => handleChange('showEmailOnProfile', e.target.checked)}
                     className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-gray-700">
-                    Mostrar email en perfil público
-                  </span>
+                  <span className="text-gray-700">Mostrar email en perfil público</span>
                 </label>
               </div>
             </div>
