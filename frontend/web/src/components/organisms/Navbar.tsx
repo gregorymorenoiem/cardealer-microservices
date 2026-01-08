@@ -11,13 +11,13 @@ import Button from '@/components/atoms/Button';
 import NotificationDropdown from './NotificationDropdown';
 import GlobalSearch from './GlobalSearch';
 import { LanguageSwitcher } from '@/components/common';
-import { 
-  FiMenu, 
-  FiX, 
-  FiUser, 
-  FiLogOut, 
-  FiSettings, 
-  FiMessageSquare, 
+import {
+  FiMenu,
+  FiX,
+  FiUser,
+  FiLogOut,
+  FiSettings,
+  FiMessageSquare,
   FiShield,
   FiSearch,
   FiChevronDown,
@@ -25,7 +25,7 @@ import {
   FiPlusCircle,
   FiGrid,
   FiBriefcase,
-  FiUserCheck
+  FiUserCheck,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 
@@ -63,6 +63,13 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/vehicles', label: t('nav.vehicles'), icon: FaCar },
+    { href: '/search', label: 'Buscar', icon: FiSearch },
+  ];
+
+  const userNavLinks = [
+    { href: '/favorites', label: 'Favoritos', icon: FiHeart },
+    { href: '/comparison', label: 'Comparar', icon: FiGrid },
+    { href: '/alerts', label: 'Alertas', icon: FiBriefcase },
   ];
 
   return (
@@ -71,19 +78,40 @@ export default function Navbar() {
       <div className="hidden lg:block bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-gray-300">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-2.5 flex justify-between items-center">
           <div className="flex items-center gap-8">
-            <a href="tel:+15551234567" className="flex items-center gap-2 hover:text-white transition-colors duration-200">
+            <a
+              href="tel:+15551234567"
+              className="flex items-center gap-2 hover:text-white transition-colors duration-200"
+            >
               <span>📞</span>
               <span className="text-sm font-medium">+1 (555) 123-4567</span>
             </a>
-            <a href="mailto:ventas@okla.com" className="flex items-center gap-2 hover:text-white transition-colors duration-200">
+            <a
+              href="mailto:ventas@okla.com"
+              className="flex items-center gap-2 hover:text-white transition-colors duration-200"
+            >
               <span>📧</span>
               <span className="text-sm font-medium">ventas@okla.com</span>
             </a>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/about" className="text-sm font-medium hover:text-white transition-colors duration-200">Acerca de</Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-white transition-colors duration-200">Contacto</Link>
-            <Link to="/help" className="text-sm font-medium hover:text-white transition-colors duration-200">Ayuda</Link>
+            <Link
+              to="/about"
+              className="text-sm font-medium hover:text-white transition-colors duration-200"
+            >
+              Acerca de
+            </Link>
+            <Link
+              to="/contact"
+              className="text-sm font-medium hover:text-white transition-colors duration-200"
+            >
+              Contacto
+            </Link>
+            <Link
+              to="/help"
+              className="text-sm font-medium hover:text-white transition-colors duration-200"
+            >
+              Ayuda
+            </Link>
           </div>
         </div>
       </div>
@@ -100,7 +128,9 @@ export default function Navbar() {
               <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent leading-tight">
                 Okla
               </span>
-              <span className="hidden sm:block text-[10px] lg:text-xs text-gray-500 -mt-0.5 tracking-widest uppercase font-semibold">Marketplace</span>
+              <span className="hidden sm:block text-[10px] lg:text-xs text-gray-500 -mt-0.5 tracking-widest uppercase font-semibold">
+                Marketplace
+              </span>
             </div>
           </Link>
 
@@ -111,7 +141,8 @@ export default function Navbar() {
                 key={link.href}
                 to={link.href}
                 className={`flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-xl font-semibold text-sm lg:text-base transition-all duration-200 ${
-                  location.pathname === link.href || (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'))
+                  location.pathname === link.href ||
+                  (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'))
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
                 }`}
@@ -120,7 +151,25 @@ export default function Navbar() {
                 <span>{link.label}</span>
               </Link>
             ))}
-            
+
+            {/* User-only navigation links */}
+            {isAuthenticated &&
+              user &&
+              userNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={`flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-xl font-semibold text-sm lg:text-base transition-all duration-200 ${
+                    location.pathname === link.href
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105'
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
+                  }`}
+                >
+                  <link.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+
             {/* Sell Button - CTA - Solo para usuarios autenticados */}
             {isAuthenticated && user && (
               <Link
@@ -166,7 +215,7 @@ export default function Navbar() {
                   <div className="hidden lg:block">
                     <NotificationDropdown />
                   </div>
-                  
+
                   {/* Messages - Hidden on small tablets */}
                   <Link
                     to="/messages"
@@ -188,16 +237,23 @@ export default function Navbar() {
                         </span>
                       </div>
                       <div className="hidden xl:block text-left">
-                        <p className="text-sm font-semibold text-gray-900 leading-tight truncate max-w-[120px]">{user.name || 'Usuario'}</p>
+                        <p className="text-sm font-semibold text-gray-900 leading-tight truncate max-w-[120px]">
+                          {user.name || 'Usuario'}
+                        </p>
                         <p className="text-xs text-gray-500 font-medium">Mi cuenta</p>
                       </div>
-                      <FiChevronDown className={`hidden lg:block w-4 h-4 text-gray-400 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                      <FiChevronDown
+                        className={`hidden lg:block w-4 h-4 text-gray-400 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                      />
                     </button>
 
                     {/* User Dropdown */}
                     {isUserMenuOpen && (
                       <>
-                        <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)} />
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        />
                         <div className="absolute right-0 mt-3 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-blue-50 via-blue-50 to-emerald-50 rounded-t-2xl">
                             <div className="flex items-center gap-4">
@@ -207,7 +263,9 @@ export default function Navbar() {
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-bold text-gray-900 truncate text-base">{user.name || user.email}</p>
+                                <p className="font-bold text-gray-900 truncate text-base">
+                                  {user.name || user.email}
+                                </p>
                                 <p className="text-sm text-gray-600 truncate">{user.email}</p>
                               </div>
                             </div>
@@ -228,7 +286,8 @@ export default function Navbar() {
                             </Link>
 
                             {/* Dealer Profile Link */}
-                            {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') && (
+                            {(user.accountType === 'dealer' ||
+                              user.accountType === 'dealer_employee') && (
                               <Link
                                 to="/dealer/profile"
                                 className="flex items-center gap-3 px-5 py-3.5 text-sm text-gray-700 hover:bg-emerald-50 transition-colors group"
@@ -239,7 +298,9 @@ export default function Navbar() {
                                 </div>
                                 <div>
                                   <p className="font-semibold text-emerald-700">Mi Dealer</p>
-                                  <p className="text-xs text-emerald-600 mt-0.5">Gestión de negocio</p>
+                                  <p className="text-xs text-emerald-600 mt-0.5">
+                                    Gestión de negocio
+                                  </p>
                                 </div>
                               </Link>
                             )}
@@ -269,13 +330,16 @@ export default function Navbar() {
                                     <FiShield className="w-5 h-5 text-purple-600" />
                                   </div>
                                   <div>
-                                    <p className="font-semibold text-purple-700">{t('nav.adminPortal')}</p>
+                                    <p className="font-semibold text-purple-700">
+                                      {t('nav.adminPortal')}
+                                    </p>
                                     <p className="text-xs text-purple-600 mt-0.5">Administración</p>
                                   </div>
                                 </Link>
                               </>
                             )}
-                            {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') && (
+                            {(user.accountType === 'dealer' ||
+                              user.accountType === 'dealer_employee') && (
                               <>
                                 <hr className="my-2 border-gray-200" />
                                 <Link
@@ -287,7 +351,9 @@ export default function Navbar() {
                                     <FaCar className="w-5 h-5 text-blue-600" />
                                   </div>
                                   <div>
-                                    <p className="font-semibold text-blue-700">{t('nav.dealerPortal')}</p>
+                                    <p className="font-semibold text-blue-700">
+                                      {t('nav.dealerPortal')}
+                                    </p>
                                     <p className="text-xs text-blue-600 mt-0.5">Portal de ventas</p>
                                   </div>
                                 </Link>
@@ -310,13 +376,13 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex items-center gap-3 lg:gap-4">
-                  <Link 
+                  <Link
                     to="/login"
                     className="px-4 lg:px-5 py-2.5 text-sm lg:text-base font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all duration-200"
                   >
                     {t('nav.login')}
                   </Link>
-                  
+
                   {/* Dropdown Únete */}
                   <div className="relative">
                     <button
@@ -324,19 +390,28 @@ export default function Navbar() {
                       className="flex items-center gap-2 px-5 lg:px-6 py-2.5 text-sm lg:text-base font-semibold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/40 hover:shadow-xl hover:shadow-blue-500/50 hover:scale-105 transition-all duration-200"
                     >
                       <span>Únete</span>
-                      <FiChevronDown className={`w-4 h-4 transition-transform duration-200 ${isJoinMenuOpen ? 'rotate-180' : ''}`} />
+                      <FiChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${isJoinMenuOpen ? 'rotate-180' : ''}`}
+                      />
                     </button>
 
                     {/* Join Dropdown Menu */}
                     {isJoinMenuOpen && (
                       <>
-                        <div className="fixed inset-0 z-10" onClick={() => setIsJoinMenuOpen(false)} />
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setIsJoinMenuOpen(false)}
+                        />
                         <div className="absolute right-0 mt-3 w-80 lg:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="px-5 py-4 border-b border-gray-100">
-                            <p className="text-base font-bold text-gray-900">¿Cómo quieres vender?</p>
-                            <p className="text-sm text-gray-600 mt-1">Elige el tipo de cuenta que necesitas</p>
+                            <p className="text-base font-bold text-gray-900">
+                              ¿Cómo quieres vender?
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Elige el tipo de cuenta que necesitas
+                            </p>
                           </div>
-                          
+
                           <div className="py-2">
                             {/* Registrarse como Dealer */}
                             <Link
@@ -348,11 +423,19 @@ export default function Navbar() {
                                 <FiBriefcase className="w-6 h-6 text-emerald-600" />
                               </div>
                               <div className="flex-1">
-                                <p className="font-bold text-emerald-700 text-base">Soy un Dealer</p>
-                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">Agencia, concesionario o negocio de vehículos</p>
+                                <p className="font-bold text-emerald-700 text-base">
+                                  Soy un Dealer
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                                  Agencia, concesionario o negocio de vehículos
+                                </p>
                                 <div className="flex flex-wrap gap-2 mt-2.5">
-                                  <span className="text-xs px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">Múltiples listados</span>
-                                  <span className="text-xs px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">Dashboard PRO</span>
+                                  <span className="text-xs px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">
+                                    Múltiples listados
+                                  </span>
+                                  <span className="text-xs px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">
+                                    Dashboard PRO
+                                  </span>
                                 </div>
                               </div>
                             </Link>
@@ -367,11 +450,19 @@ export default function Navbar() {
                                 <FiUserCheck className="w-6 h-6 text-purple-600" />
                               </div>
                               <div className="flex-1">
-                                <p className="font-bold text-purple-700 text-base">Soy Vendedor Individual</p>
-                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">Vendo mi vehículo personal u ocasional</p>
+                                <p className="font-bold text-purple-700 text-base">
+                                  Soy Vendedor Individual
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                                  Vendo mi vehículo personal u ocasional
+                                </p>
                                 <div className="flex flex-wrap gap-2 mt-2.5">
-                                  <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">Gratis</span>
-                                  <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">Fácil y rápido</span>
+                                  <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                                    Gratis
+                                  </span>
+                                  <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                                    Fácil y rápido
+                                  </span>
                                 </div>
                               </div>
                             </Link>
@@ -379,7 +470,14 @@ export default function Navbar() {
 
                           <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
                             <p className="text-sm text-gray-600">
-                              ¿Ya tienes cuenta? <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold" onClick={() => setIsJoinMenuOpen(false)}>Inicia sesión</Link>
+                              ¿Ya tienes cuenta?{' '}
+                              <Link
+                                to="/login"
+                                className="text-blue-600 hover:text-blue-700 font-semibold"
+                                onClick={() => setIsJoinMenuOpen(false)}
+                              >
+                                Inicia sesión
+                              </Link>
                             </p>
                           </div>
                         </div>
@@ -427,8 +525,9 @@ export default function Navbar() {
                   key={link.href}
                   to={link.href}
                   className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
-                    location.pathname === link.href || (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'))
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                    location.pathname === link.href ||
+                    (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'))
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                       : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -437,7 +536,26 @@ export default function Navbar() {
                   <span className="text-base">{link.label}</span>
                 </Link>
               ))}
-              
+
+              {/* User-only navigation links */}
+              {isAuthenticated &&
+                user &&
+                userNavLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
+                      location.pathname === link.href
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                        : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span className="text-base">{link.label}</span>
+                  </Link>
+                ))}
+
               {/* Sell CTA - Solo para usuarios autenticados */}
               {isAuthenticated && user && (
                 <Link
@@ -463,7 +581,9 @@ export default function Navbar() {
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-gray-900 text-base truncate">{user.name || user.email}</p>
+                    <p className="font-bold text-gray-900 text-base truncate">
+                      {user.name || user.email}
+                    </p>
                     <p className="text-sm text-gray-600 truncate">{user.email}</p>
                   </div>
                 </div>
@@ -568,7 +688,7 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-            
+
             {/* Language Switcher for Mobile */}
             <div className="px-4 py-4 mt-4 border-t border-gray-200">
               <LanguageSwitcher variant="minimal" />

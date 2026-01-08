@@ -1,23 +1,18 @@
 {
   "Routes": [
-
     {
       "UpstreamPathTemplate": "/api/errors/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/errors",
       "UpstreamHttpMethod": ["GET", "POST"],
       "DownstreamPathTemplate": "/api/errors",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -29,9 +24,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/errors/{id}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -43,9 +36,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/errors/stats",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -57,9 +48,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/errors/services",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -71,9 +60,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/errors/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -85,9 +72,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "errorservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
       "DangerousAcceptAnyServerCertificateValidator": true,
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -101,18 +86,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "OPTIONS", "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -121,12 +102,10 @@
     },
     {
       "UpstreamPathTemplate": "/auth-service/swagger/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
       "DangerousAcceptAnyServerCertificateValidator": true,
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -136,12 +115,10 @@
     },
     {
       "UpstreamPathTemplate": "/gateway-docs/{everything}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "gateway", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "gateway", "Port": 80 }],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
@@ -154,7 +131,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
       "SwaggerKey": "notifications"
     },
     {
@@ -167,7 +144,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/templates/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
       "SwaggerKey": "notifications"
     },
     {
@@ -180,7 +157,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/templates",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": ["GET", "POST"],
       "SwaggerKey": "notifications"
     },
     {
@@ -193,7 +170,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/health",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": ["GET"]
     },
 
     {
@@ -201,18 +178,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/products",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -224,9 +197,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -238,9 +209,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -252,9 +221,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -267,9 +234,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/catalog",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -281,9 +246,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/catalog/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -296,9 +259,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/categories",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -310,9 +271,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/categories/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -325,9 +284,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/homepagesections",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -339,9 +296,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/homepagesections/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "vehiclessaleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -354,18 +309,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "mediaservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/media/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "mediaservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -377,9 +328,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "mediaservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -392,18 +341,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "billingservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/billing/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/billing/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "billingservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -419,18 +364,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/users",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/users",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -445,9 +386,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/users/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -463,18 +402,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/dealers/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -486,9 +421,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -501,18 +434,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/sellers/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/sellers/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -524,9 +453,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/sellers",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -539,18 +466,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "roleservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/roles/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/roles/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "roleservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -566,18 +489,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "adminservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/admin/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/admin/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "adminservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -593,18 +512,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "crmservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "crmservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/crm/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/crm/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "crmservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "crmservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -620,18 +535,116 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "reportsservice", "Port": 80 }
-      ]
+      "DownstreamHostAndPorts": [{ "Host": "reportsservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/reports/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/reports/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "reportsservice", "Port": 80 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "reportsservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/Maintenance/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "maintenanceservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/comparisons",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/Comparisons",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "comparisonservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/comparisons/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/Comparisons/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "comparisonservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/pricealerts",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/PriceAlerts",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/pricealerts/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/PriceAlerts/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/savedsearches",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/SavedSearches",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/savedsearches/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/SavedSearches/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -644,14 +657,14 @@
   ],
   "SwaggerEndPoints": [
     {
-        "Key": "ErrorService",
-        "Config": [
-          {
-            "Name": "Error Service",
-            "Version": "v1",
-            "Url": "http://errorservice:80/swagger/v1/swagger.json"
-          }
-        ]
+      "Key": "ErrorService",
+      "Config": [
+        {
+          "Name": "Error Service",
+          "Version": "v1",
+          "Url": "http://errorservice:80/swagger/v1/swagger.json"
+        }
+      ]
     },
     {
       "Key": "NotificationService",

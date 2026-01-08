@@ -3,7 +3,7 @@
 # =============================================================================
 # Detecta qué servicios cambiaron y solo ejecuta CI/CD para ellos
 # Ahorra ~80% de minutos de GitHub Actions
-# 
+#
 # Branching Strategy:
 #   - main: Producción (deploy automático a DOKS)
 #   - development: Staging/Integración (build + tests)
@@ -50,6 +50,10 @@ jobs:
       mediaservice: ${{ steps.filter.outputs.mediaservice }}
       billingservice: ${{ steps.filter.outputs.billingservice }}
       crmservice: ${{ steps.filter.outputs.crmservice }}
+      # Sprint 1 microservices
+      maintenanceservice: ${{ steps.filter.outputs.maintenanceservice }}
+      comparisonservice: ${{ steps.filter.outputs.comparisonservice }}
+      alertservice: ${{ steps.filter.outputs.alertservice }}
       gateway: ${{ steps.filter.outputs.gateway }}
       # Shared libraries
       shared: ${{ steps.filter.outputs.shared }}
@@ -105,6 +109,16 @@ jobs:
             crmservice:
               - 'backend/CRMService/**'
               - 'backend/_Shared/**'
+            # Sprint 1 microservices
+            maintenanceservice:
+              - 'backend/MaintenanceService/**'
+              - 'backend/_Shared/**'
+            comparisonservice:
+              - 'backend/ComparisonService/**'
+              - 'backend/_Shared/**'
+            alertservice:
+              - 'backend/AlertService/**'
+              - 'backend/_Shared/**'
             gateway:
               - 'backend/Gateway/**'
             # Shared libraries (triggers rebuild of dependent services)
@@ -129,6 +143,9 @@ jobs:
           echo "| AuthService | ${{ steps.filter.outputs.authservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| UserService | ${{ steps.filter.outputs.userservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ErrorService | ${{ steps.filter.outputs.errorservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MaintenanceService | ${{ steps.filter.outputs.maintenanceservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ComparisonService | ${{ steps.filter.outputs.comparisonservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AlertService | ${{ steps.filter.outputs.alertservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ steps.filter.outputs.frontend-web }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Shared Libraries | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
@@ -256,6 +273,42 @@ jobs:
     with:
       service-name: billingservice
       service-path: backend/BillingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # SPRINT 1 MICROSERVICES (New)
+  # ============================================
+  maintenanceservice:
+    name: 🛠️ MaintenanceService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.maintenanceservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: maintenanceservice
+      service-path: backend/MaintenanceService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  comparisonservice:
+    name: 🔄 ComparisonService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.comparisonservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: comparisonservice
+      service-path: backend/ComparisonService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  alertservice:
+    name: 🔔 AlertService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.alertservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: alertservice
+      service-path: backend/AlertService
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 

@@ -1,12 +1,13 @@
 ############################################
-# Etapa única de desarrollo: SDK + debugger (sin hot-reload)
+# Etapa única de desarrollo con hot-reload
 ############################################
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-# 1) Instala vsdbg para depuración remota
-RUN apt-get update \
-    && apt-get install -y unzip curl \
-    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+# Instalar dotnet-watch y herramientas
+RUN dotnet tool install --global dotnet-watch \
+    && export PATH="$PATH:/root/.dotnet/tools" \
+    && apt-get update \
+    && apt-get install -y curl
 
 WORKDIR /app
 
@@ -24,19 +25,14 @@ COPY Gateway/ ./Gateway/
 COPY _Shared/ ./_Shared/
 COPY ServiceDiscovery/ ./ServiceDiscovery/
 
-# 4) Build the application
-RUN dotnet build "Gateway/Gateway.Api/Gateway.Api.csproj" -c Debug -o /app/build
-
-# 5) Variables de entorno para desarrollo
+# Variables de entorno para desarrollo
 ENV ASPNETCORE_ENVIRONMENT=Development \
     ASPNETCORE_URLS="http://+:80" \
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
     NUGET_XMLDOC_MODE=none
 
-# 6) Exponer puertos HTTP y de debug
+# Exponer puerto HTTP
 EXPOSE 80
-EXPOSE 4022
 
-# 7) Arranca vsdbg en modo servidor y luego la app (sin hot-reload)
-ENTRYPOINT ["bash", "-lc", "\
-    /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
-    dotnet run --project Gateway/Gateway.Api/Gateway.Api.csproj --no-build --urls http://0.0.0.0:80\n"]
+# Arrancar con hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "Gateway/Gateway.Api/Gateway.Api.csproj", "--urls", "http://0.0.0.0:80", "--no-restore"]

@@ -47,6 +47,7 @@ builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IStripeCustomerRepository, StripeCustomerRepository>();
+builder.Services.AddScoped<IEarlyBirdRepository, EarlyBirdRepository>();
 
 // Add Stripe Services
 builder.Services.AddScoped<IStripeService, StripeService>();

@@ -9,6 +9,7 @@ public class BillingDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<StripeCustomer> StripeCustomers => Set<StripeCustomer>();
+    public DbSet<EarlyBirdMember> EarlyBirdMembers => Set<EarlyBirdMember>();
 
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
@@ -87,6 +88,47 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(50);
             entity.Property(e => e.Metadata).HasMaxLength(4000); // JSON
             entity.Property(e => e.DefaultPaymentMethodId).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<EarlyBirdMember>(entity =>
+        {
+            entity.ToTable("early_bird_members");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.HasIndex(e => e.HasUsedBenefit);
+            entity.HasIndex(e => e.FreeUntil);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("Id");
+
+            entity.Property(e => e.UserId)
+                .IsRequired()
+                .HasColumnName("UserId");
+
+            entity.Property(e => e.EnrolledAt)
+                .IsRequired()
+                .HasColumnName("EnrolledAt");
+
+            entity.Property(e => e.FreeUntil)
+                .IsRequired()
+                .HasColumnName("FreeUntil");
+
+            entity.Property(e => e.HasUsedBenefit)
+                .IsRequired()
+                .HasColumnName("HasUsedBenefit")
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.BenefitUsedAt)
+                .HasColumnName("BenefitUsedAt");
+
+            entity.Property(e => e.SubscriptionIdWhenUsed)
+                .HasMaxLength(100)
+                .HasColumnName("SubscriptionIdWhenUsed");
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired()
+                .HasColumnName("CreatedAt")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 }

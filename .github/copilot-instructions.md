@@ -445,12 +445,12 @@ hotfix/payment-crash
 
 > ⚠️ **NOTA:** Actualmente solo existe un cluster (producción). El staging se implementará cuando haya más recursos.
 
-| Branch        | Ambiente           | Deploy                  | Descripción                              |
-| ------------- | ------------------ | ----------------------- | ---------------------------------------- |
-| `main`        | **Producción**     | ✅ Auto-deploy a DOKS   | okla.com.do                              |
-| `development` | **Pre-producción** | ❌ Solo CI/Tests        | Validación antes de merge a main         |
-| `sprint/*`    | Local              | ❌ No                   | Desarrollo local con docker-compose      |
-| `feature/*`   | Local          | localhost           | ❌ No       |
+| Branch        | Ambiente           | Deploy                | Descripción                         |
+| ------------- | ------------------ | --------------------- | ----------------------------------- |
+| `main`        | **Producción**     | ✅ Auto-deploy a DOKS | okla.com.do                         |
+| `development` | **Pre-producción** | ❌ Solo CI/Tests      | Validación antes de merge a main    |
+| `sprint/*`    | Local              | ❌ No                 | Desarrollo local con docker-compose |
+| `feature/*`   | Local              | localhost             | ❌ No                               |
 
 ### Comandos Útiles
 
@@ -939,6 +939,276 @@ Ejemplos:
 - Secrets en Kubernetes Secrets (no en código)
 - CORS configurado para dominios específicos (okla.com.do)
 - Rate limiting en Gateway
+
+---
+
+## ✅ WORKFLOW DE DESARROLLO - REGLAS OBLIGATORIAS
+
+### 🎯 Completar un Sprint CORRECTAMENTE
+
+Cada sprint debe seguir este checklist COMPLETO antes de marcarse como terminado:
+
+#### 1️⃣ Backend Development
+
+- [ ] Crear microservicio(s) con Clean Architecture
+- [ ] Implementar todos los endpoints requeridos
+- [ ] Agregar validaciones con FluentValidation
+- [ ] Crear Entity Configurations (EF Core)
+- [ ] Agregar Health Checks
+- [ ] Documentar API con Swagger/XML comments
+
+#### 2️⃣ Frontend Development (SI APLICA)
+
+- [ ] Crear componentes React/TypeScript
+- [ ] **INTEGRAR en la navegación (Navbar/Rutas)** ⚠️ CRÍTICO
+- [ ] Agregar en App.tsx con ProtectedRoute si requiere auth
+- [ ] Actualizar Navbar.tsx con links visibles
+- [ ] Envolver en MainLayout para banners site-wide
+- [ ] Verificar accesibilidad en Desktop, Tablet y Mobile
+- [ ] Asegurar que usuarios puedan ACCEDER a las funcionalidades
+
+#### 3️⃣ Integración de Rutas
+
+```tsx
+// ✅ SIEMPRE hacer esto cuando crees UI:
+
+// 1. Importar en App.tsx
+import { MiNuevoComponente } from "./pages/MiNuevoComponente";
+
+// 2. Agregar ruta
+<Route
+  path="/mi-ruta"
+  element={
+    <ProtectedRoute>
+      {" "}
+      {/* Si requiere auth */}
+      <MiNuevoComponente />
+    </ProtectedRoute>
+  }
+/>;
+
+// 3. Agregar link en Navbar.tsx
+const userNavLinks = [{ href: "/mi-ruta", label: "Mi Función", icon: FiIcon }];
+
+// 4. Envolver componente en MainLayout
+export const MiNuevoComponente = () => {
+  return (
+    <MainLayout>
+      <div>...</div>
+    </MainLayout>
+  );
+};
+```
+
+#### 4️⃣ Docker & Testing
+
+- [ ] **Compilar imagen Docker del servicio**
+  ```bash
+  docker build -t cardealer-miservicio:latest ./backend/MiServicio/MiServicio.Api
+  ```
+- [ ] **Probar localmente con docker-compose**
+  ```bash
+  docker-compose up miservicio postgres rabbitmq redis
+  ```
+- [ ] **Verificar Health Check**
+  ```bash
+  curl http://localhost:PORT/health
+  ```
+- [ ] **Probar todos los endpoints principales**
+  ```bash
+  # GET, POST, PUT, DELETE
+  curl -X POST http://localhost:PORT/api/endpoint \
+    -H "Content-Type: application/json" \
+    -d '{"field": "value"}'
+  ```
+- [ ] **Verificar logs sin errores**
+  ```bash
+  docker-compose logs -f miservicio
+  ```
+
+#### 5️⃣ Gateway Configuration
+
+- [ ] Agregar rutas en `ocelot.prod.json`
+- [ ] Usar puerto **8080** (NO 80) en DownstreamHostAndPorts
+- [ ] Actualizar ConfigMap en Kubernetes si está desplegado
+- [ ] Probar enrutamiento: `curl https://api.okla.com.do/api/miservicio/endpoint`
+
+#### 6️⃣ Kubernetes Deployment (si aplica)
+
+- [ ] Crear/actualizar Deployment en k8s/deployments.yaml
+- [ ] Crear/actualizar Service en k8s/services.yaml
+- [ ] Agregar variables de entorno en ConfigMap/Secrets
+- [ ] Agregar servicio a smart-cicd.yml workflow
+- [ ] Deploy y verificar pods: `kubectl get pods -n okla`
+
+#### 7️⃣ Documentación
+
+- [ ] Actualizar README del servicio con endpoints
+- [ ] Documentar DTOs y modelos de datos
+- [ ] Agregar ejemplos de uso en docs/
+- [ ] **Actualizar SPRINT_PLAN con checkmarks ✅**
+
+#### 8️⃣ Verificación Final
+
+```bash
+# Checklist de testing completo:
+
+# Backend funcionando
+✅ Health check responde 200 OK
+✅ GET endpoints devuelven datos correctos
+✅ POST/PUT crean/actualizan correctamente
+✅ DELETE elimina correctamente
+✅ Validaciones funcionan (400 Bad Request)
+✅ Auth funciona (401 Unauthorized si no token)
+
+# Frontend funcionando
+✅ Página se renderiza sin errores de consola
+✅ API calls funcionan (Network tab muestra 200)
+✅ Usuarios pueden navegar a la página
+✅ Botones/formularios funcionan
+✅ Responsive en mobile/tablet/desktop
+
+# Integración
+✅ Gateway rutea correctamente
+✅ CORS permite requests desde frontend
+✅ WebSocket funciona (si aplica)
+✅ RabbitMQ procesa eventos (si aplica)
+```
+
+---
+
+## 🚫 ERRORES COMUNES A EVITAR
+
+### ❌ NO HACER:
+
+1. **Crear UI sin agregar a navegación** → Usuarios no pueden acceder
+2. **Omitir docker build/test** → Errores en producción
+3. **Puerto 80 en K8s** → Debe ser 8080
+4. **Olvidar ProtectedRoute** → Páginas privadas accesibles sin auth
+5. **No probar endpoints** → Bugs en producción
+6. **Saltarse Health Check** → K8s no puede monitorear el servicio
+7. **No actualizar Gateway** → 404 en API calls
+8. **Commits sin testing** → Breaking changes
+
+### ✅ HACER SIEMPRE:
+
+1. **UI nueva = Ruta + Navbar link** → Accesibilidad garantizada
+2. **Backend nuevo = Docker build + test** → Calidad asegurada
+3. **Cambio en servicio = Actualizar Gateway** → Routing correcto
+4. **Feature completo = Testing end-to-end** → UX funcional
+5. **Sprint terminado = Checklist 100%** → Deploy confiable
+
+---
+
+## 🔄 FLUJO COMPLETO: Backend → Frontend → Testing
+
+```mermaid
+graph TD
+    A[Crear Backend Service] --> B[Implementar Endpoints]
+    B --> C[Docker Build & Test]
+    C --> D{Tests OK?}
+    D -->|NO| B
+    D -->|SÍ| E[Crear Frontend Components]
+    E --> F[Integrar en Navegación]
+    F --> G[Agregar Rutas en App.tsx]
+    G --> H[Actualizar Navbar.tsx]
+    H --> I[Probar Accesibilidad]
+    I --> J{Users can access?}
+    J -->|NO| F
+    J -->|SÍ| K[Actualizar Gateway]
+    K --> L[Deploy a Docker/K8s]
+    L --> M[Testing E2E]
+    M --> N{All tests pass?}
+    N -->|NO| L
+    N -->|SÍ| O[✅ Sprint Complete]
+```
+
+---
+
+## 📋 TEMPLATE: Checklist por Sprint
+
+Copiar esto al inicio de cada sprint:
+
+```markdown
+## Sprint X - [Nombre] - Checklist
+
+### Backend
+
+- [ ] Microservicio creado con Clean Architecture
+- [ ] Todos los endpoints implementados
+- [ ] FluentValidation agregado
+- [ ] Health Check funcional
+- [ ] Docker build exitoso
+- [ ] Tests locales pasados
+
+### Frontend (si aplica)
+
+- [ ] Componentes creados
+- [ ] Rutas agregadas en App.tsx
+- [ ] Links en Navbar (desktop + mobile)
+- [ ] MainLayout wrapper aplicado
+- [ ] Accesibilidad verificada
+- [ ] Responsive design OK
+
+### Integración
+
+- [ ] Gateway routes configuradas
+- [ ] Puerto 8080 verificado
+- [ ] CORS funcionando
+- [ ] API calls desde frontend OK
+- [ ] Auth/ProtectedRoute funciona
+
+### Testing
+
+- [ ] Todos los endpoints probados
+- [ ] UI navegable por usuarios
+- [ ] Docker compose up sin errores
+- [ ] Logs limpios sin warnings
+- [ ] Health checks responden
+
+### Deployment
+
+- [ ] K8s manifests actualizados
+- [ ] CI/CD workflow funcional
+- [ ] Deploy exitoso a DOKS
+- [ ] Verificación en producción
+
+### Documentación
+
+- [ ] README actualizado
+- [ ] API endpoints documentados
+- [ ] Sprint plan marcado ✅
+```
+
+---
+
+## 🎓 LECCIONES APRENDIDAS
+
+### Sprint 1 - Marketplace Foundations
+
+**Fecha:** Enero 8, 2026
+
+**Problema identificado:**
+
+- Componentes UI creados (SearchPage, FavoritesPage, ComparisonPage, AlertsPage) pero NO integrados en navegación
+- Usuarios no podían acceder a las nuevas funcionalidades
+- Faltaba agregar rutas en App.tsx
+- Faltaban links en Navbar.tsx
+- Componentes no envueltos en MainLayout
+
+**Solución aplicada:**
+
+1. Agregar importaciones en App.tsx
+2. Crear rutas con ProtectedRoute donde correspondía
+3. Actualizar Navbar con `navLinks` y `userNavLinks`
+4. Envolver todos los componentes en MainLayout
+5. Probar accesibilidad en desktop/mobile
+
+**Regla nueva:**
+
+> **SIEMPRE que crees UI, INMEDIATAMENTE integrarlo en navegación antes de marcar como completo.**
+
+**Documentación:** [SPRINT_1_NAVIGATION_INTEGRATION.md](../docs/SPRINT_1_NAVIGATION_INTEGRATION.md)
 
 ---
 

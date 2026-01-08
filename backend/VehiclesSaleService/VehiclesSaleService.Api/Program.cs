@@ -75,6 +75,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IVehicleCatalogRepository, VehicleCatalogRepository>();
+builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
 // RabbitMQ Event Publisher
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();

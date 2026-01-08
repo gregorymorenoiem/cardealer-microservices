@@ -31,6 +31,9 @@ namespace UserService.Infrastructure.Persistence
         public DbSet<ModuleAddon> ModuleAddons => Set<ModuleAddon>();
         public DbSet<DealerModuleSubscription> DealerModuleSubscriptions => Set<DealerModuleSubscription>();
 
+        // Onboarding
+        public DbSet<UserOnboarding> UserOnboardings => Set<UserOnboarding>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

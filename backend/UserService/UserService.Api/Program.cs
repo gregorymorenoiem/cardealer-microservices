@@ -172,6 +172,7 @@ builder.Services.AddScoped<IDealerRepository, UserService.Infrastructure.Persist
 builder.Services.AddScoped<ISellerProfileRepository, UserService.Infrastructure.Persistence.SellerProfileRepository>();
 builder.Services.AddScoped<IIdentityDocumentRepository, UserService.Infrastructure.Persistence.IdentityDocumentRepository>();
 builder.Services.AddScoped<IDealerEmployeeRepository, UserService.Infrastructure.Persistence.DealerEmployeeRepository>();
+builder.Services.AddScoped<IUserOnboardingRepository, UserService.Infrastructure.Repositories.UserOnboardingRepository>();
 builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
 
 // Application Services - External clients

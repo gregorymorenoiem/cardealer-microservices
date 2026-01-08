@@ -20,6 +20,7 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<VehicleModel> VehicleModels => Set<VehicleModel>();
     public DbSet<VehicleTrim> VehicleTrims => Set<VehicleTrim>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
 
     // ========================================
     // HOMEPAGE SECTION ENTITIES
@@ -647,6 +648,32 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.HasIndex(vhs => vhs.HomepageSectionConfigId);
             entity.HasIndex(vhs => vhs.SortOrder);
             entity.HasIndex(vhs => vhs.IsPinned);
+        });
+
+        // ========================================
+        // FAVORITES CONFIGURATION
+        // ========================================
+
+        modelBuilder.Entity<Favorite>(entity =>
+        {
+            entity.ToTable("favorites");
+            entity.HasKey(f => f.Id);
+
+            entity.Property(f => f.UserId).IsRequired();
+            entity.Property(f => f.VehicleId).IsRequired();
+            entity.Property(f => f.Notes).HasMaxLength(500);
+            entity.Property(f => f.CreatedAt).IsRequired();
+
+            // Relación con Vehicle
+            entity.HasOne(f => f.Vehicle)
+                .WithMany()
+                .HasForeignKey(f => f.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Índices
+            entity.HasIndex(f => f.UserId);
+            entity.HasIndex(f => f.VehicleId);
+            entity.HasIndex(f => new { f.UserId, f.VehicleId }).IsUnique();
         });
     }
 

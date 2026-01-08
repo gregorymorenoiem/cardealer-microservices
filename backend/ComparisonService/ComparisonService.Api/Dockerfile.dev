@@ -1,0 +1,38 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Install dotnet-watch and tools
+RUN dotnet tool install --global dotnet-watch \
+    && export PATH="$PATH:/root/.dotnet/tools" \
+    && apt-get update \
+    && apt-get install -y curl
+
+WORKDIR /app
+
+# Copy project files - ComparisonService
+COPY ComparisonService/ComparisonService.Api/ComparisonService.Api.csproj ./ComparisonService/ComparisonService.Api/
+COPY ComparisonService/ComparisonService.Domain/ComparisonService.Domain.csproj ./ComparisonService/ComparisonService.Domain/
+COPY ComparisonService/ComparisonService.Infrastructure/ComparisonService.Infrastructure.csproj ./ComparisonService/ComparisonService.Infrastructure/
+
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
+
+# Restore packages
+RUN dotnet restore "ComparisonService/ComparisonService.Api/ComparisonService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Development environment variables
+ENV ASPNETCORE_ENVIRONMENT=Development \
+    ASPNETCORE_URLS="http://+:80" \
+    DOTNET_MSBUILD_CONFIGURATION=Debug \
+    DOTNET_BUILD_CONFIGURATION=Debug \
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    NUGET_XMLDOC_MODE=none
+
+# Expose HTTP port
+EXPOSE 80
+
+# Start with hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "ComparisonService/ComparisonService.Api/ComparisonService.Api.csproj", "--urls", "http://0.0.0.0:80", "--no-restore"]

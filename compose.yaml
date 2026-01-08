@@ -6,7 +6,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -35,7 +35,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 384M
         reservations:
           memory: 256M
@@ -85,7 +85,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -116,7 +116,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 384M
         reservations:
           memory: 256M
@@ -189,7 +189,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -218,7 +218,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -250,7 +250,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 384M
         reservations:
           memory: 256M
@@ -262,8 +262,8 @@ services:
       Database__Provider: "PostgreSQL"
       Database__ConnectionStrings__PostgreSQL: "Host=notificationservice-db;Database=notificationservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
-      RabbitMQ__Host: "rabbitmq"           # Para servicios con appsettings "Host"
-      RabbitMQ__HostName: "rabbitmq"       # Para servicios con appsettings "HostName"
+      RabbitMQ__Host: "rabbitmq" # Para servicios con appsettings "Host"
+      RabbitMQ__HostName: "rabbitmq" # Para servicios con appsettings "HostName"
       RabbitMQ__Port: "5672"
       RabbitMQ__Username: "guest"
       RabbitMQ__Password: "guest"
@@ -318,7 +318,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 128M
         reservations:
           memory: 64M
@@ -343,7 +343,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 128M
         reservations:
           memory: 64M
@@ -369,7 +369,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -400,7 +400,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 384M
         reservations:
           memory: 256M
@@ -444,7 +444,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -475,7 +475,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 384M
         reservations:
           memory: 256M
@@ -517,7 +517,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -548,7 +548,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.4'
+          cpus: "0.4"
           memory: 320M
         reservations:
           memory: 192M
@@ -599,7 +599,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -620,8 +620,7 @@ services:
       - ./backend/_Shared:/app/_Shared
       - ./backend/ServiceDiscovery:/app/ServiceDiscovery
     ports:
-      - "18443:80" # Cambiado
-      - "24024:4022" # Cambiado
+      - "18443:80" # Gateway API
     networks:
       - cargurus-net
 
@@ -649,7 +648,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -662,7 +661,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.4'
+          cpus: "0.4"
           memory: 320M
         reservations:
           memory: 192M
@@ -727,7 +726,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 320M
         reservations:
           memory: 192M
@@ -766,7 +765,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -795,7 +794,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -835,7 +834,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -864,7 +863,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -915,7 +914,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -944,7 +943,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 192M
         reservations:
           memory: 96M
@@ -983,7 +982,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1011,7 +1010,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -1057,7 +1056,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -1080,7 +1079,7 @@ services:
     networks:
       - cargurus-net
 
-  # SearchService - Priority 1 Critical Service  
+  # SearchService - Priority 1 Critical Service
   searchservice:
     build:
       context: ./backend
@@ -1089,7 +1088,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.4'
+          cpus: "0.4"
           memory: 320M
         reservations:
           memory: 192M
@@ -1121,7 +1120,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1149,7 +1148,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 384M
         reservations:
           memory: 256M
@@ -1197,7 +1196,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1225,7 +1224,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 192M
         reservations:
           memory: 96M
@@ -1251,7 +1250,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1279,7 +1278,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -1302,7 +1301,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1330,7 +1329,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -1354,7 +1353,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1382,7 +1381,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -1406,7 +1405,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1434,7 +1433,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -1460,7 +1459,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -1480,7 +1479,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1508,7 +1507,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 192M
         reservations:
           memory: 96M
@@ -1532,7 +1531,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1560,7 +1559,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -1592,7 +1591,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1620,7 +1619,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -1645,7 +1644,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1673,7 +1672,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: "0.3"
           memory: 256M
         reservations:
           memory: 128M
@@ -1700,7 +1699,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: "0.15"
           memory: 128M
         reservations:
           memory: 64M
@@ -1726,7 +1725,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: "0.15"
           memory: 128M
         reservations:
           memory: 64M
@@ -1749,7 +1748,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1780,7 +1779,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -1814,7 +1813,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1845,7 +1844,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -1879,7 +1878,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: "0.15"
           memory: 128M
         reservations:
           memory: 64M
@@ -1902,7 +1901,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: "0.15"
           memory: 128M
         reservations:
           memory: 64M
@@ -1925,7 +1924,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 128M
         reservations:
           memory: 64M
@@ -1948,7 +1947,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: "0.15"
           memory: 128M
         reservations:
           memory: 64M
@@ -1973,7 +1972,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
         reservations:
           memory: 128M
@@ -1982,7 +1981,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
     ports:
-      - "25452:5432"  # Changed from 25449 (scheduler), 25450 (audit)
+      - "25452:5432" # Changed from 25449 (scheduler), 25450 (audit)
     volumes:
       - ratelimitingservice_data:/var/lib/postgresql/data
     networks:
@@ -2002,7 +2001,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: "0.2"
           memory: 192M
         reservations:
           memory: 96M
@@ -2030,12 +2029,12 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 2G
         reservations:
           memory: 1G
     ports:
-      - "3000:5173"  # Vite dev server
+      - "3000:5173" # Vite dev server
     volumes:
       - ./frontend/web/src:/app/src
       - ./frontend/web/public:/app/public
@@ -2056,6 +2055,254 @@ services:
       - VITE_ENABLE_MSW=false
       - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-your-google-client-id}
     restart: on-failure
+
+  # ========================================
+  # SPRINT 1 SERVICES - Marketplace Features
+  # ========================================
+
+  # ------------------------
+  # MaintenanceService Database
+  # ------------------------
+  maintenanceservice-db:
+    image: postgres:16
+    container_name: maintenanceservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: maintenanceservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25461:5432"
+    volumes:
+      - maintenanceservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # MaintenanceService API
+  # ------------------------
+  maintenanceservice:
+    build:
+      context: ./backend
+      dockerfile: MaintenanceService/MaintenanceService.Api/Dockerfile.dev
+    container_name: maintenanceservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=maintenanceservice-db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=maintenanceservice-db;Database=maintenanceservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+    ports:
+      - "5061:80"
+    depends_on:
+      maintenanceservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/MaintenanceService:/app/MaintenanceService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # ComparisonService Database
+  # ------------------------
+  comparisonservice-db:
+    image: postgres:16
+    container_name: comparisonservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: comparisonservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25466:5432"
+    volumes:
+      - comparisonservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # ComparisonService API
+  # ------------------------
+  comparisonservice:
+    build:
+      context: ./backend
+      dockerfile: ComparisonService/ComparisonService.Api/Dockerfile.dev
+    container_name: comparisonservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=comparisonservice-db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=comparisonservice-db;Database=comparisonservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      VehiclesService__BaseUrl: "http://vehiclessaleservice:80"
+    ports:
+      - "5066:80"
+    depends_on:
+      comparisonservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      vehiclessaleservice:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/ComparisonService:/app/ComparisonService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # AlertService Database
+  # ------------------------
+  alertservice-db:
+    image: postgres:16
+    container_name: alertservice-db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_DB: alertservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "25467:5432"
+    volumes:
+      - alertservice_data:/var/lib/postgresql/data
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------
+  # AlertService API
+  # ------------------------
+  alertservice:
+    build:
+      context: ./backend
+      dockerfile: AlertService/AlertService.Api/Dockerfile.dev
+    container_name: alertservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=alertservice-db;Port=5432;Database=alertservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=alertservice-db;Database=alertservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      VehiclesService__BaseUrl: "http://vehiclessaleservice:80"
+      NotificationService__BaseUrl: "http://notificationservice:80"
+      BillingService__BaseUrl: "http://billingservice:80"
+    ports:
+      - "5067:80"
+    depends_on:
+      alertservice-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      vehiclessaleservice:
+        condition: service_healthy
+      notificationservice:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/AlertService:/app/AlertService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   errorservice_data:
@@ -2090,6 +2337,10 @@ volumes:
   rabbitmq_data:
   redis_data:
   consul_data:
+  # Sprint 1 volumes
+  maintenanceservice_data:
+  comparisonservice_data:
+  alertservice_data:
 
 networks:
   cargurus-net:

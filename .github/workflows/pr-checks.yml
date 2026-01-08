@@ -3,7 +3,7 @@
 # =============================================================================
 # Optimizado para ejecutar en ~3-5 minutos
 # Solo lint, type check, y unit tests rápidos
-# 
+#
 # Soporta PRs hacia:
 #   - main (producción)
 #   - development (integración)
@@ -14,7 +14,7 @@ name: 🔍 PR Checks
 
 on:
   pull_request:
-    branches: [main, development, 'sprint/**']
+    branches: [main, development, "sprint/**"]
 
 # Evita ejecuciones duplicadas
 concurrency:
@@ -22,8 +22,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20.x'
-  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: "20.x"
+  DOTNET_VERSION: "8.0.x"
 
 jobs:
   # ============================================
@@ -71,7 +71,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: frontend/web/package-lock.json
 
       - name: 📦 Install dependencies
@@ -131,7 +131,7 @@ jobs:
             dotnet build _Shared/CarDealer.Shared/CarDealer.Shared.csproj --configuration Release || true
             dotnet build _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj --configuration Release || true
           fi
-          
+
           # Build AuthService (core service)
           if [ -d "AuthService" ]; then
             dotnet restore AuthService/AuthService.sln
@@ -155,11 +155,11 @@ jobs:
         run: |
           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
           ADDED_LINES=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1 | awk '{print $4}' || echo "0")
-          
+
           echo "📊 PR Statistics:"
           echo "  - Changed files: $CHANGED_FILES"
           echo "  - Added lines: $ADDED_LINES"
-          
+
           if [ "$CHANGED_FILES" -gt 50 ]; then
             echo "::warning::⚠️ Large PR with $CHANGED_FILES files. Consider splitting."
           fi
