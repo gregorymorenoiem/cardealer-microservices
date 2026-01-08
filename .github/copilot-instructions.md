@@ -290,11 +290,11 @@ El archivo `ocelot.prod.json` DEBE tener:
 
 ### Workflows Principales
 
-| Workflow    | Archivo                   | Trigger          | Función               |
-| ----------- | ------------------------- | ---------------- | --------------------- |
+| Workflow    | Archivo                   | Trigger             | Función               |
+| ----------- | ------------------------- | ------------------- | --------------------- |
 | Smart CI/CD | `smart-cicd.yml`          | Push a main/develop | Build + Push imágenes |
-| Deploy DO   | `deploy-digitalocean.yml` | Manual o post-CI | Deploy a DOKS         |
-| PR Checks   | `pr-checks.yml`           | PR abierto       | Validación            |
+| Deploy DO   | `deploy-digitalocean.yml` | Manual o post-CI    | Deploy a DOKS         |
+| PR Checks   | `pr-checks.yml`           | PR abierto          | Validación            |
 
 ### Servicios en CI/CD
 
@@ -346,14 +346,14 @@ SERVICES: "frontend-web,gateway,authservice,userservice,vehiclessaleservice,medi
 
 ### Tipos de Branches
 
-| Branch | Propósito | Crea desde | Merge hacia | Ejemplo |
-|--------|-----------|------------|-------------|---------|
-| `main` | Producción | - | - | `main` |
-| `development` | Integración/QA | `main` | `main` | `development` |
-| `sprint/*` | Trabajo de sprint | `development` | `development` | `sprint/4-pagos` |
-| `feature/*` | Nuevas funcionalidades | `sprint/*` | `sprint/*` | `feature/azul-gateway` |
-| `fix/*` | Corrección de bugs | `sprint/*` | `sprint/*` | `fix/login-error` |
-| `hotfix/*` | Fixes urgentes prod | `main` | `main` + `development` | `hotfix/critical-bug` |
+| Branch        | Propósito              | Crea desde    | Merge hacia            | Ejemplo                |
+| ------------- | ---------------------- | ------------- | ---------------------- | ---------------------- |
+| `main`        | Producción             | -             | -                      | `main`                 |
+| `development` | Integración/QA         | `main`        | `main`                 | `development`          |
+| `sprint/*`    | Trabajo de sprint      | `development` | `development`          | `sprint/4-pagos`       |
+| `feature/*`   | Nuevas funcionalidades | `sprint/*`    | `sprint/*`             | `feature/azul-gateway` |
+| `fix/*`       | Corrección de bugs     | `sprint/*`    | `sprint/*`             | `fix/login-error`      |
+| `hotfix/*`    | Fixes urgentes prod    | `main`        | `main` + `development` | `hotfix/critical-bug`  |
 
 ### Flujo de Trabajo Completo
 
@@ -396,8 +396,8 @@ git push origin development
 
 # 6. Pruebas en development
 #    - CI/CD ejecuta tests completos
-#    - QA manual si necesario
-#    - Staging environment (opcional)
+#    - Pruebas manuales en localhost
+#    - Validar que todo funciona antes de merge a main
 
 # ══════════════════════════════════════════════════════════════════════════════
 # RELEASE A PRODUCCIÓN
@@ -443,12 +443,14 @@ hotfix/payment-crash
 
 ### Ambientes por Branch
 
-| Branch | Ambiente | URL | Auto-deploy |
-|--------|----------|-----|-------------|
-| `main` | **Producción** | okla.com.do | ✅ Sí |
-| `development` | **Staging** | staging.okla.com.do | ✅ Sí |
-| `sprint/*` | Local | localhost | ❌ No |
-| `feature/*` | Local | localhost | ❌ No |
+> ⚠️ **NOTA:** Actualmente solo existe un cluster (producción). El staging se implementará cuando haya más recursos.
+
+| Branch        | Ambiente           | Deploy                  | Descripción                              |
+| ------------- | ------------------ | ----------------------- | ---------------------------------------- |
+| `main`        | **Producción**     | ✅ Auto-deploy a DOKS   | okla.com.do                              |
+| `development` | **Pre-producción** | ❌ Solo CI/Tests        | Validación antes de merge a main         |
+| `sprint/*`    | Local              | ❌ No                   | Desarrollo local con docker-compose      |
+| `feature/*`   | Local          | localhost           | ❌ No       |
 
 ### Comandos Útiles
 
@@ -482,6 +484,7 @@ git push origin v1.4.0
 Configurar en GitHub → Settings → Branches → Branch protection rules:
 
 **Para `main`:**
+
 - ✅ Require pull request before merging
 - ✅ Require approvals (1)
 - ✅ Require status checks to pass
@@ -489,6 +492,7 @@ Configurar en GitHub → Settings → Branches → Branch protection rules:
 - ✅ Do not allow bypassing
 
 **Para `development`:**
+
 - ✅ Require pull request before merging
 - ✅ Require status checks to pass
 - ❌ Require approvals (opcional para velocidad)
