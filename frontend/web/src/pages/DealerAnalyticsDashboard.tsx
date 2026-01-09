@@ -10,12 +10,12 @@ import {
   Tooltip,
   Legend,
   ArcElement,
-  Filler
+  Filler,
 } from 'chart.js';
 import {
   dealerAnalyticsService,
   AnalyticsDashboard,
-  ContactType
+  ContactType,
 } from '../services/dealerAnalyticsService';
 import { FiTrendingUp, FiEye, FiPhone, FiActivity, FiClock } from 'react-icons/fi';
 import MainLayout from '../layouts/MainLayout';
@@ -88,16 +88,24 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
     );
   }
 
-  if (!analytics) return <MainLayout><div className="p-8">No hay datos disponibles</div></MainLayout>;
+  if (!analytics)
+    return (
+      <MainLayout>
+        <div className="p-8">No hay datos disponibles</div>
+      </MainLayout>
+    );
 
-  const { summary, viewsTrend, contactMethodBreakdown, deviceBreakdown, topReferrers, liveStats } = analytics;
+  const { summary, viewsTrend, contactMethodBreakdown, deviceBreakdown, topReferrers, liveStats } =
+    analytics;
 
   // ============================================
   // CHART DATA CONFIGURATION
   // ============================================
 
   const viewsTrendData = {
-    labels: viewsTrend.map((point) => new Date(point.date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric' })),
+    labels: viewsTrend.map((point) =>
+      new Date(point.date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric' })
+    ),
     datasets: [
       {
         label: 'Vistas',
@@ -105,7 +113,7 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         fill: true,
-        tension: 0.4
+        tension: 0.4,
       },
       {
         label: 'Contactos',
@@ -113,9 +121,9 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
         borderColor: 'rgb(16, 185, 129)',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         fill: true,
-        tension: 0.4
-      }
-    ]
+        tension: 0.4,
+      },
+    ],
   };
 
   const contactMethodData = {
@@ -128,18 +136,18 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
           'rgba(147, 51, 234, 0.8)', // Email - purple
           'rgba(16, 185, 129, 0.8)', // WhatsApp - green
           'rgba(249, 115, 22, 0.8)', // Website - orange
-          'rgba(236, 72, 153, 0.8)'  // Social - pink
+          'rgba(236, 72, 153, 0.8)', // Social - pink
         ],
         borderColor: [
           'rgb(59, 130, 246)',
           'rgb(147, 51, 234)',
           'rgb(16, 185, 129)',
           'rgb(249, 115, 22)',
-          'rgb(236, 72, 153)'
+          'rgb(236, 72, 153)',
         ],
-        borderWidth: 2
-      }
-    ]
+        borderWidth: 2,
+      },
+    ],
   };
 
   const deviceBreakdownData = {
@@ -150,16 +158,12 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)', // Mobile
           'rgba(99, 102, 241, 0.8)', // Desktop
-          'rgba(139, 92, 246, 0.8)'  // Tablet
+          'rgba(139, 92, 246, 0.8)', // Tablet
         ],
-        borderColor: [
-          'rgb(59, 130, 246)',
-          'rgb(99, 102, 241)',
-          'rgb(139, 92, 246)'
-        ],
-        borderWidth: 2
-      }
-    ]
+        borderColor: ['rgb(59, 130, 246)', 'rgb(99, 102, 241)', 'rgb(139, 92, 246)'],
+        borderWidth: 2,
+      },
+    ],
   };
 
   return (
@@ -185,230 +189,242 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
           </div>
         </div>
 
-      {/* Live Stats Bar */}
-      {liveStats && (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Visitantes Activos</p>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-3xl font-bold">{liveStats.currentViewers}</span>
-                <span className="flex items-center space-x-1 animate-pulse">
-                  <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                  <span className="text-sm">En vivo</span>
-                </span>
-              </div>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Vistas Hoy</p>
-              <p className="text-3xl font-bold mt-1">{dealerAnalyticsService.formatNumber(liveStats.viewsToday)}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Contactos Hoy</p>
-              <p className="text-3xl font-bold mt-1">{dealerAnalyticsService.formatNumber(liveStats.contactsToday)}</p>
-            </div>
-            {liveStats.mostRecentView && (
+        {/* Live Stats Bar */}
+        {liveStats && (
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Última Visita</p>
-                <p className="text-lg font-semibold mt-1">
-                  {dealerAnalyticsService.getDeviceIcon(liveStats.mostRecentView.deviceType)}{' '}
-                  {liveStats.mostRecentView.city || 'Desconocido'}
-                </p>
-                <p className="text-sm text-blue-100">
-                  {new Date(liveStats.mostRecentView.viewedAt).toLocaleTimeString('es-DO', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                <p className="text-blue-100 text-sm font-medium">Visitantes Activos</p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-3xl font-bold">{liveStats.currentViewers}</span>
+                  <span className="flex items-center space-x-1 animate-pulse">
+                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                    <span className="text-sm">En vivo</span>
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Vistas Hoy</p>
+                <p className="text-3xl font-bold mt-1">
+                  {dealerAnalyticsService.formatNumber(liveStats.viewsToday)}
                 </p>
               </div>
-            )}
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Contactos Hoy</p>
+                <p className="text-3xl font-bold mt-1">
+                  {dealerAnalyticsService.formatNumber(liveStats.contactsToday)}
+                </p>
+              </div>
+              {liveStats.mostRecentView && (
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Última Visita</p>
+                  <p className="text-lg font-semibold mt-1">
+                    {dealerAnalyticsService.getDeviceIcon(liveStats.mostRecentView.deviceType)}{' '}
+                    {liveStats.mostRecentView.city || 'Desconocido'}
+                  </p>
+                  <p className="text-sm text-blue-100">
+                    {new Date(liveStats.mostRecentView.viewedAt).toLocaleTimeString('es-DO', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Summary Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          icon={<FiEye className="w-6 h-6 text-blue-600" />}
-          title="Total Vistas"
-          value={dealerAnalyticsService.formatNumber(summary.totalViews)}
-          subtitle={`${dealerAnalyticsService.formatNumber(summary.uniqueVisitors)} únicos`}
-          trend={summary.comparedToLastPeriod}
-          color="blue"
-        />
-        <StatCard
-          icon={<FiPhone className="w-6 h-6 text-green-600" />}
-          title="Contactos"
-          value={dealerAnalyticsService.formatNumber(summary.totalContacts)}
-          subtitle={`${dealerAnalyticsService.formatPercentage(summary.contactConversionRate)} conversión`}
-          trend={summary.comparedToLastPeriod}
-          color="green"
-        />
-        <StatCard
-          icon={<FiActivity className="w-6 h-6 text-purple-600" />}
-          title="Engagement"
-          value={dealerAnalyticsService.formatPercentage(summary.engagementRate)}
-          subtitle={`${dealerAnalyticsService.formatPercentage(summary.bounceRate)} bounce rate`}
-          color="purple"
-        />
-        <StatCard
-          icon={<FiClock className="w-6 h-6 text-orange-600" />}
-          title="Tiempo Promedio"
-          value={dealerAnalyticsService.formatDuration(summary.averageViewDuration)}
-          subtitle="Por visita"
-          color="orange"
-        />
-      </div>
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Views Trend Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tendencia de Vistas y Contactos</h3>
-          <Line
-            data={viewsTrendData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: true,
-              aspectRatio: 2,
-              plugins: {
-                legend: {
-                  position: 'bottom'
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              }
-            }}
+        {/* Summary Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            icon={<FiEye className="w-6 h-6 text-blue-600" />}
+            title="Total Vistas"
+            value={dealerAnalyticsService.formatNumber(summary.totalViews)}
+            subtitle={`${dealerAnalyticsService.formatNumber(summary.uniqueVisitors)} únicos`}
+            trend={summary.comparedToLastPeriod}
+            color="blue"
+          />
+          <StatCard
+            icon={<FiPhone className="w-6 h-6 text-green-600" />}
+            title="Contactos"
+            value={dealerAnalyticsService.formatNumber(summary.totalContacts)}
+            subtitle={`${dealerAnalyticsService.formatPercentage(summary.contactConversionRate)} conversión`}
+            trend={summary.comparedToLastPeriod}
+            color="green"
+          />
+          <StatCard
+            icon={<FiActivity className="w-6 h-6 text-purple-600" />}
+            title="Engagement"
+            value={dealerAnalyticsService.formatPercentage(summary.engagementRate)}
+            subtitle={`${dealerAnalyticsService.formatPercentage(summary.bounceRate)} bounce rate`}
+            color="purple"
+          />
+          <StatCard
+            icon={<FiClock className="w-6 h-6 text-orange-600" />}
+            title="Tiempo Promedio"
+            value={dealerAnalyticsService.formatDuration(summary.averageViewDuration)}
+            subtitle="Por visita"
+            color="orange"
           />
         </div>
 
-        {/* Contact Method Breakdown */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Métodos de Contacto</h3>
-          <div className="h-64">
-            <Pie
-              data={contactMethodData}
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Views Trend Chart */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Tendencia de Vistas y Contactos
+            </h3>
+            <Line
+              data={viewsTrendData}
               options={{
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
                 plugins: {
                   legend: {
-                    position: 'right'
-                  }
-                }
+                    position: 'bottom',
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
               }}
             />
           </div>
-        </div>
 
-        {/* Device Breakdown */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Dispositivos</h3>
-          <div className="h-64">
-            <Doughnut
-              data={deviceBreakdownData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'bottom'
-                  }
-                }
-              }}
-            />
+          {/* Contact Method Breakdown */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Métodos de Contacto</h3>
+            <div className="h-64">
+              <Pie
+                data={contactMethodData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'right',
+                    },
+                  },
+                }}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Top Referrers */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Fuentes de Tráfico</h3>
-          <div className="space-y-3">
-            {topReferrers.map((referrer, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{referrer.source}</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${referrer.percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <p className="ml-4 text-sm font-semibold text-gray-900 w-16 text-right">
-                  {dealerAnalyticsService.formatPercentage(referrer.percentage)}
-                </p>
-              </div>
-            ))}
+          {/* Device Breakdown */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dispositivos</h3>
+            <div className="h-64">
+              <Doughnut
+                data={deviceBreakdownData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                    },
+                  },
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Contact Methods Detailed Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Detalle de Métodos de Contacto</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Método
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Clicks
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  % Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Convertidos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tasa Conversión
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {contactMethodBreakdown.map((method, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-2">
-                        {dealerAnalyticsService.getContactTypeIcon(method.type)}
-                      </span>
-                      <span className="text-sm font-medium text-gray-900">{method.label}</span>
+          {/* Top Referrers */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Fuentes de Tráfico</h3>
+            <div className="space-y-3">
+              {topReferrers.map((referrer, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{referrer.source}</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${referrer.percentage}%` }}
+                      ></div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {dealerAnalyticsService.formatNumber(method.count)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {dealerAnalyticsService.formatPercentage(method.percentage)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {dealerAnalyticsService.formatNumber(method.convertedCount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      method.conversionRate >= 50 ? 'bg-green-100 text-green-800' :
-                      method.conversionRate >= 25 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {dealerAnalyticsService.formatPercentage(method.conversionRate)}
-                    </span>
-                  </td>
-                </tr>
+                  </div>
+                  <p className="ml-4 text-sm font-semibold text-gray-900 w-16 text-right">
+                    {dealerAnalyticsService.formatPercentage(referrer.percentage)}
+                  </p>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+
+        {/* Contact Methods Detailed Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Detalle de Métodos de Contacto</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Método
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Clicks
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    % Total
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Convertidos
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tasa Conversión
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {contactMethodBreakdown.map((method, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">
+                          {dealerAnalyticsService.getContactTypeIcon(method.type)}
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">{method.label}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {dealerAnalyticsService.formatNumber(method.count)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {dealerAnalyticsService.formatPercentage(method.percentage)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {dealerAnalyticsService.formatNumber(method.convertedCount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          method.conversionRate >= 50
+                            ? 'bg-green-100 text-green-800'
+                            : method.conversionRate >= 25
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {dealerAnalyticsService.formatPercentage(method.conversionRate)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>{' '}
+      {/* Close space-y-6 div */}
+    </MainLayout>
   );
 };
 
@@ -435,7 +451,7 @@ const StatCard = ({ icon, title, value, subtitle, trend, color }: StatCardProps)
     blue: 'bg-blue-50 border-blue-100',
     green: 'bg-green-50 border-green-100',
     purple: 'bg-purple-50 border-purple-100',
-    orange: 'bg-orange-50 border-orange-100'
+    orange: 'bg-orange-50 border-orange-100',
   };
 
   return (
@@ -449,20 +465,19 @@ const StatCard = ({ icon, title, value, subtitle, trend, color }: StatCardProps)
           <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
           {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           {trend && (
-            <div className={`flex items-center space-x-1 mt-2 text-sm ${
-              trend.isIncrease ? 'text-green-600' : 'text-red-600'
-            }`}>
+            <div
+              className={`flex items-center space-x-1 mt-2 text-sm ${
+                trend.isIncrease ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
               <span>{dealerAnalyticsService.getTrendIcon(trend.changePercentage)}</span>
-              <span className="font-medium">
-                {Math.abs(trend.changePercentage).toFixed(1)}%
-              </span>
+              <span className="font-medium">{Math.abs(trend.changePercentage).toFixed(1)}%</span>
               <span className="text-gray-500">vs período anterior</span>
             </div>
           )}
         </div>
       </div>
     </div>
-    </MainLayout>
   );
 };
 
