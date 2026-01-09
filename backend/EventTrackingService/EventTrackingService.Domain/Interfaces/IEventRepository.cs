@@ -14,12 +14,12 @@ public interface IEventRepository
     /// <summary>
     /// Ingest a single event
     /// </summary>
-    Task<TrackedEvent> IngestEventAsync(TrackedEvent trackedEvent, CancellationToken cancellationToken = default);
+    Task IngestEventAsync(TrackedEvent trackedEvent, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Ingest events in batch (high performance)
     /// </summary>
-    Task<int> IngestBatchAsync(IEnumerable<TrackedEvent> events, CancellationToken cancellationToken = default);
+    Task IngestBatchAsync(IEnumerable<TrackedEvent> events, CancellationToken cancellationToken = default);
     
     // ============================================
     // READ - Query Events
@@ -75,14 +75,14 @@ public interface IEventRepository
     Task<Dictionary<string, long>> CountPageViewsByUrlAsync(DateTime startDate, DateTime endDate, int topN = 100, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Get top search queries
+    /// Get top search queries with metrics (Count, AvgResults, CTR)
     /// </summary>
-    Task<Dictionary<string, long>> GetTopSearchQueriesAsync(DateTime startDate, DateTime endDate, int topN = 100, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, (long Count, double AvgResults, double CTR)>> GetTopSearchQueriesAsync(DateTime startDate, DateTime endDate, int topN = 100, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Get most viewed vehicles
+    /// Get most viewed vehicles with metrics (Title, Views, AvgTime, Contacts, Favorites, ConversionRate)
     /// </summary>
-    Task<Dictionary<Guid, long>> GetMostViewedVehiclesAsync(DateTime startDate, DateTime endDate, int topN = 100, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, (string Title, long Views, double AvgTime, long Contacts, long Favorites, double ConversionRate)>> GetMostViewedVehiclesAsync(DateTime startDate, DateTime endDate, int topN = 100, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get unique visitors count
@@ -101,10 +101,10 @@ public interface IEventRepository
     /// <summary>
     /// Delete events older than retention period
     /// </summary>
-    Task<int> DeleteOldEventsAsync(DateTime olderThan, CancellationToken cancellationToken = default);
+    Task DeleteOldEventsAsync(DateTime olderThan, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Archive old events to cold storage
     /// </summary>
-    Task<int> ArchiveOldEventsAsync(DateTime olderThan, CancellationToken cancellationToken = default);
+    Task ArchiveOldEventsAsync(DateTime olderThan, CancellationToken cancellationToken = default);
 }

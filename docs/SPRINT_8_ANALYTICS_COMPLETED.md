@@ -10,6 +10,7 @@
 ## 📋 Objetivo del Sprint
 
 Implementar sistema completo de analytics y métricas para dealers, permitiendo:
+
 - Tracking de vistas de perfil (page views)
 - Tracking de eventos de contacto (clicks en phone/email/WhatsApp/etc.)
 - Agregación diaria para performance
@@ -28,17 +29,19 @@ Implementar sistema completo de analytics y métricas para dealers, permitiendo:
 **DealerAnalyticsService.Domain** (4 archivos):
 
 - ✅ **ProfileView.cs** - Entidad de tracking de vistas (20+ propiedades)
+
   - DealerId, ViewedAt, ViewerIpAddress, ViewerUserAgent
   - ViewerUserId (opcional si autenticado)
   - ReferrerUrl, ViewedPage, DurationSeconds
   - DeviceType, Browser, OperatingSystem
   - Country, City (geolocation)
   - **Métodos:**
-    * `IsDuplicateView(ipAddress, withinMinutes=30)` - Evita contar refreshes
-    * `IsBounce()` - True si salió en < 10 segundos
-    * `IsEngagedVisit()` - True si estuvo > 2 minutos
+    - `IsDuplicateView(ipAddress, withinMinutes=30)` - Evita contar refreshes
+    - `IsBounce()` - True si salió en < 10 segundos
+    - `IsEngagedVisit()` - True si estuvo > 2 minutos
 
 - ✅ **ContactEvent.cs** - Entidad de tracking de contactos
+
   - DealerId, ClickedAt, ContactType (enum)
   - ViewerIpAddress, ViewerUserId
   - ContactValue (teléfono, email, etc.)
@@ -46,46 +49,48 @@ Implementar sistema completo de analytics y métricas para dealers, permitiendo:
   - Source ("profile", "vehicle_detail", "search_results")
   - DeviceType, ConvertedToInquiry, ConversionDate
   - **Métodos:**
-    * `MarkAsConverted()` - Marca como convertido con timestamp
-    * `GetTimeToConversion()` - TimeSpan desde click hasta inquiry
-    * `IsQuickConversion(minutes=30)` - Check si convirtió rápido
+    - `MarkAsConverted()` - Marca como convertido con timestamp
+    - `GetTimeToConversion()` - TimeSpan desde click hasta inquiry
+    - `IsQuickConversion(minutes=30)` - Check si convirtió rápido
   - **ContactType Enum:** Phone, Email, WhatsApp, Website, SocialMedia
 
 - ✅ **DailyAnalyticsSummary.cs** - Agregación diaria (30+ propiedades)
+
   - **Profile Views:** TotalViews, UniqueVisitors, MobileViews, DesktopViews, TabletViews, BounceCount, EngagedVisits, AverageViewDurationSeconds
   - **Contact Events:** TotalContacts, PhoneClicks, EmailClicks, WhatsAppClicks, WebsiteClicks, SocialMediaClicks, ConvertedInquiries
   - **Location:** TopLocationViews, TopLocationId
   - **Referrers:** TopReferrer, DirectTraffic, SearchEngineTraffic, SocialMediaTraffic
   - **Métodos:**
-    * `GetBounceRate()` - (BounceCount / TotalViews) * 100
-    * `GetEngagementRate()` - (EngagedVisits / TotalViews) * 100
-    * `GetContactConversionRate()` - (TotalContacts / TotalViews) * 100
-    * `GetInquiryConversionRate()` - (ConvertedInquiries / TotalContacts) * 100
-    * `GetTopContactMethod()` - Retorna ContactType más usado
-    * `IsToday()` - Check si es hoy
-    * `Touch()` - Actualiza UpdatedAt
+    - `GetBounceRate()` - (BounceCount / TotalViews) \* 100
+    - `GetEngagementRate()` - (EngagedVisits / TotalViews) \* 100
+    - `GetContactConversionRate()` - (TotalContacts / TotalViews) \* 100
+    - `GetInquiryConversionRate()` - (ConvertedInquiries / TotalContacts) \* 100
+    - `GetTopContactMethod()` - Retorna ContactType más usado
+    - `IsToday()` - Check si es hoy
+    - `Touch()` - Actualiza UpdatedAt
 
 - ✅ **IAnalyticsRepository.cs** - Interface con 19 métodos
   - **Profile Views (7 métodos):**
-    * CreateProfileViewAsync, GetProfileViewsAsync, GetTotalViewsAsync
-    * GetUniqueVisitorsAsync, GetAverageViewDurationAsync
-    * GetViewsByDeviceTypeAsync, GetViewsTimeseriesAsync
+    - CreateProfileViewAsync, GetProfileViewsAsync, GetTotalViewsAsync
+    - GetUniqueVisitorsAsync, GetAverageViewDurationAsync
+    - GetViewsByDeviceTypeAsync, GetViewsTimeseriesAsync
   - **Contact Events (5 métodos):**
-    * CreateContactEventAsync, GetContactEventsAsync
-    * GetTotalContactsAsync, GetContactsByTypeAsync
-    * GetContactConversionRateAsync
+    - CreateContactEventAsync, GetContactEventsAsync
+    - GetTotalContactsAsync, GetContactsByTypeAsync
+    - GetContactConversionRateAsync
   - **Daily Summaries (3 métodos):**
-    * GetOrCreateDailySummaryAsync, UpdateDailySummaryAsync
-    * GetDailySummariesAsync
+    - GetOrCreateDailySummaryAsync, UpdateDailySummaryAsync
+    - GetDailySummariesAsync
   - **Top Performers (2 métodos):**
-    * GetTopDealersByViewsAsync, GetTopDealersByConversionAsync
+    - GetTopDealersByViewsAsync, GetTopDealersByConversionAsync
   - **Real-time (2 métodos):**
-    * GetLiveViewersCountAsync (within 5 min default)
-    * GetMostRecentViewAsync
+    - GetLiveViewersCountAsync (within 5 min default)
+    - GetMostRecentViewAsync
 
 **DealerAnalyticsService.Application** (3 archivos):
 
 - ✅ **AnalyticsDtos.cs** - 15+ DTOs
+
   - AnalyticsDashboardDto (composite)
   - AnalyticsSummaryDto (key metrics)
   - TimeseriesDataPoint (para charts)
@@ -98,41 +103,44 @@ Implementar sistema completo de analytics y métricas para dealers, permitiendo:
   - PeriodComparisonDto (comparación de períodos)
 
 - ✅ **AnalyticsQueries.cs** - 3 MediatR handlers (~430 líneas)
-  
+
   **GetDashboardAnalyticsQuery Handler:**
+
   - Input: DealerId, StartDate, EndDate
   - Output: AnalyticsDashboardDto
   - Lógica:
-    * Fetch DailySummaries del repositorio
-    * Agregar totales (SUM views, visitors, contacts)
-    * Calcular tasas (bounce, engagement, conversion)
-    * Construir timeseries para Line chart
-    * Contact method breakdown con percentages
-    * Device breakdown (mobile/desktop/tablet)
-    * Top referrers (directo, search, social)
-    * Live stats (current viewers, most recent view)
-  
+    - Fetch DailySummaries del repositorio
+    - Agregar totales (SUM views, visitors, contacts)
+    - Calcular tasas (bounce, engagement, conversion)
+    - Construir timeseries para Line chart
+    - Contact method breakdown con percentages
+    - Device breakdown (mobile/desktop/tablet)
+    - Top referrers (directo, search, social)
+    - Live stats (current viewers, most recent view)
+
   **TrackProfileViewCommand Handler:**
+
   - Input: TrackProfileViewRequest
   - Output: ProfileViewDto
   - Lógica:
-    * Parse device type de user agent
-    * Parse browser (Chrome, Firefox, Safari, Edge)
-    * Parse OS (Windows, macOS, Linux, Android, iOS)
-    * Crear ProfileView entity
-    * Guardar en repositorio
-    * **Fire-and-forget**: Async actualizar DailyAnalyticsSummary
+    - Parse device type de user agent
+    - Parse browser (Chrome, Firefox, Safari, Edge)
+    - Parse OS (Windows, macOS, Linux, Android, iOS)
+    - Crear ProfileView entity
+    - Guardar en repositorio
+    - **Fire-and-forget**: Async actualizar DailyAnalyticsSummary
       - Incrementar TotalViews
       - Incrementar device-specific counts
       - Track bounce/engaged visits
-  
+
   **TrackContactEventCommand Handler:**
+
   - Input: TrackContactEventRequest
   - Output: ContactEventDto
   - Lógica:
-    * Crear ContactEvent entity
-    * Guardar en repositorio
-    * **Fire-and-forget**: Async actualizar DailyAnalyticsSummary
+    - Crear ContactEvent entity
+    - Guardar en repositorio
+    - **Fire-and-forget**: Async actualizar DailyAnalyticsSummary
       - Incrementar TotalContacts
       - Incrementar type-specific (PhoneClicks, EmailClicks, etc.)
 
@@ -141,47 +149,54 @@ Implementar sistema completo de analytics y métricas para dealers, permitiendo:
 **DealerAnalyticsService.Infrastructure** (3 archivos):
 
 - ✅ **AnalyticsRepository.cs** - Implementación completa (~200 líneas)
+
   - Implementa los 19 métodos de IAnalyticsRepository
   - Usa EF Core con LINQ queries
   - **Key implementations:**
-    * GetUniqueVisitorsAsync: SELECT DISTINCT ViewerIpAddress
-    * GetViewsTimeseriesAsync: GROUP BY ViewedAt.Date
-    * GetViewsByDeviceTypeAsync: GROUP BY DeviceType
-    * GetContactsByTypeAsync: GROUP BY ContactType
-    * GetOrCreateDailySummaryAsync: FirstOrDefault or create new
-    * GetTopDealersByViewsAsync: GROUP BY DealerId, SUM(TotalViews), ORDER BY DESC
-    * GetLiveViewersCountAsync: ViewedAt >= DateTime.UtcNow.AddMinutes(-5), DISTINCT IP
+    - GetUniqueVisitorsAsync: SELECT DISTINCT ViewerIpAddress
+    - GetViewsTimeseriesAsync: GROUP BY ViewedAt.Date
+    - GetViewsByDeviceTypeAsync: GROUP BY DeviceType
+    - GetContactsByTypeAsync: GROUP BY ContactType
+    - GetOrCreateDailySummaryAsync: FirstOrDefault or create new
+    - GetTopDealersByViewsAsync: GROUP BY DealerId, SUM(TotalViews), ORDER BY DESC
+    - GetLiveViewersCountAsync: ViewedAt >= DateTime.UtcNow.AddMinutes(-5), DISTINCT IP
 
 - ✅ **AnalyticsDbContext.cs** (~50 líneas)
+
   - DbSets: ProfileViews, ContactEvents, DailyAnalyticsSummaries
   - **Índices:**
-    * profile_views: DealerId, ViewedAt, (DealerId + ViewedAt), ViewerIpAddress
-    * contact_events: DealerId, ClickedAt, (DealerId + ClickedAt), ContactType
-    * daily_analytics_summaries: DealerId, Date, (DealerId + Date) UNIQUE
+    - profile_views: DealerId, ViewedAt, (DealerId + ViewedAt), ViewerIpAddress
+    - contact_events: DealerId, ClickedAt, (DealerId + ClickedAt), ContactType
+    - daily_analytics_summaries: DealerId, Date, (DealerId + Date) UNIQUE
 
 - ✅ **Infrastructure.csproj** - EF Core 8.0, Npgsql 8.0
 
 **DealerAnalyticsService.Api** (4 archivos):
 
 - ✅ **AnalyticsController.cs** - 4 endpoints (~80 líneas)
+
   - **GET /api/analytics/dashboard/{dealerId}** [Authorize]
-    * Query params: startDate, endDate (default: last 30 days)
-    * Returns: AnalyticsDashboardDto
-  
+
+    - Query params: startDate, endDate (default: last 30 days)
+    - Returns: AnalyticsDashboardDto
+
   - **POST /api/analytics/track/view** [AllowAnonymous]
-    * Body: TrackProfileViewRequest
-    * Returns: ProfileViewDto
-    * Frontend llama cuando user ve perfil de dealer
-  
+
+    - Body: TrackProfileViewRequest
+    - Returns: ProfileViewDto
+    - Frontend llama cuando user ve perfil de dealer
+
   - **POST /api/analytics/track/contact** [AllowAnonymous]
-    * Body: TrackContactEventRequest
-    * Returns: ContactEventDto
-    * Frontend llama cuando user clickea phone/email/WhatsApp
-  
+
+    - Body: TrackContactEventRequest
+    - Returns: ContactEventDto
+    - Frontend llama cuando user clickea phone/email/WhatsApp
+
   - **GET /health** [AllowAnonymous]
-    * Health check
+    - Health check
 
 - ✅ **Program.cs** - Startup completo (~150 líneas)
+
   - DbContext registration con PostgreSQL
   - MediatR registration
   - Repository DI registration
@@ -192,6 +207,7 @@ Implementar sistema completo de analytics y métricas para dealers, permitiendo:
   - Auto-migration en Development
 
 - ✅ **appsettings.json** - Configuración completa
+
   - ConnectionString: PostgreSQL dealeranalyticsservice database
   - JWT: Key, Issuer, Audience
   - Logging levels
@@ -205,38 +221,42 @@ Implementar sistema completo de analytics y métricas para dealers, permitiendo:
 **DealerAnalyticsService.Tests** (2 archivos):
 
 - ✅ **AnalyticsEntitiesTests.cs** (~400 líneas)
+
   - **ProfileView Tests (7 tests):**
-    * ShouldBeCreated_WithDefaultValues
-    * IsDuplicateView_ShouldReturnTrue_WhenSameIPWithin30Minutes
-    * IsDuplicateView_ShouldReturnFalse_WhenDifferentIP
-    * IsBounce_ShouldReturnTrue_WhenDurationLessThan10Seconds
-    * IsBounce_ShouldReturnFalse_WhenDurationMoreThan10Seconds
-    * IsEngagedVisit_ShouldReturnTrue_WhenDurationMoreThan2Minutes
-    * IsEngagedVisit_ShouldReturnFalse_WhenDurationLessThan2Minutes
-  
+
+    - ShouldBeCreated_WithDefaultValues
+    - IsDuplicateView_ShouldReturnTrue_WhenSameIPWithin30Minutes
+    - IsDuplicateView_ShouldReturnFalse_WhenDifferentIP
+    - IsBounce_ShouldReturnTrue_WhenDurationLessThan10Seconds
+    - IsBounce_ShouldReturnFalse_WhenDurationMoreThan10Seconds
+    - IsEngagedVisit_ShouldReturnTrue_WhenDurationMoreThan2Minutes
+    - IsEngagedVisit_ShouldReturnFalse_WhenDurationLessThan2Minutes
+
   - **ContactEvent Tests (6 tests):**
-    * ShouldBeCreated_WithDefaultValues
-    * MarkAsConverted_ShouldSetConversionFields
-    * GetTimeToConversion_ShouldReturnNull_WhenNotConverted
-    * GetTimeToConversion_ShouldReturnTimeSpan_WhenConverted
-    * IsQuickConversion_ShouldReturnTrue_WhenConvertedWithin30Minutes
-    * IsQuickConversion_ShouldReturnFalse_WhenConvertedAfter30Minutes
-  
+
+    - ShouldBeCreated_WithDefaultValues
+    - MarkAsConverted_ShouldSetConversionFields
+    - GetTimeToConversion_ShouldReturnNull_WhenNotConverted
+    - GetTimeToConversion_ShouldReturnTimeSpan_WhenConverted
+    - IsQuickConversion_ShouldReturnTrue_WhenConvertedWithin30Minutes
+    - IsQuickConversion_ShouldReturnFalse_WhenConvertedAfter30Minutes
+
   - **DailyAnalyticsSummary Tests (11 tests):**
-    * ShouldBeCreated_WithDefaultValues
-    * GetBounceRate_ShouldCalculateCorrectly
-    * GetBounceRate_ShouldReturn0_WhenNoViews
-    * GetEngagementRate_ShouldCalculateCorrectly
-    * GetContactConversionRate_ShouldCalculateCorrectly
-    * GetInquiryConversionRate_ShouldCalculateCorrectly
-    * GetTopContactMethod_ShouldReturnWhatsApp_WhenMostClicks
-    * GetTopContactMethod_ShouldReturnPhone_WhenMostClicks
-    * IsToday_ShouldReturnTrue_WhenDateIsToday
-    * IsToday_ShouldReturnFalse_WhenDateIsNotToday
-    * Touch_ShouldUpdateTimestamp
-  
+
+    - ShouldBeCreated_WithDefaultValues
+    - GetBounceRate_ShouldCalculateCorrectly
+    - GetBounceRate_ShouldReturn0_WhenNoViews
+    - GetEngagementRate_ShouldCalculateCorrectly
+    - GetContactConversionRate_ShouldCalculateCorrectly
+    - GetInquiryConversionRate_ShouldCalculateCorrectly
+    - GetTopContactMethod_ShouldReturnWhatsApp_WhenMostClicks
+    - GetTopContactMethod_ShouldReturnPhone_WhenMostClicks
+    - IsToday_ShouldReturnTrue_WhenDateIsToday
+    - IsToday_ShouldReturnFalse_WhenDateIsNotToday
+    - Touch_ShouldUpdateTimestamp
+
   - **ContactType Enum Test (1 test):**
-    * ContactType_ShouldHaveExpectedValues
+    - ContactType_ShouldHaveExpectedValues
 
 - ✅ **DealerAnalyticsService.Tests.csproj**
   - xUnit 2.6.4
@@ -264,6 +284,7 @@ Total tests: 25
 **1. dealerAnalyticsService.ts** (~260 líneas):
 
 - **Interfaces TypeScript:**
+
   - AnalyticsDashboard (composite)
   - AnalyticsSummary
   - TimeseriesDataPoint
@@ -278,85 +299,97 @@ Total tests: 25
   - ContactType enum
 
 - **Clase DealerAnalyticsService:**
+
   - Constructor con axios baseURL (localhost:18443 o VITE_API_URL)
   - Interceptor JWT automático
-  
+
   - **API Methods:**
-    * `getDashboard(dealerId, startDate?, endDate?)` - Fetch dashboard analytics
-    * `trackView(request)` - Track profile view (anonymous)
-    * `trackContact(request)` - Track contact click (anonymous)
-  
+
+    - `getDashboard(dealerId, startDate?, endDate?)` - Fetch dashboard analytics
+    - `trackView(request)` - Track profile view (anonymous)
+    - `trackContact(request)` - Track contact click (anonymous)
+
   - **Helper Methods:**
-    * `formatDuration(seconds)` - "2m 30s"
-    * `formatPercentage(value)` - "15.5%"
-    * `getDeviceIcon(deviceType)` - 📱/💻/🖥️
-    * `getContactTypeIcon(type)` - 📞/✉️/💬/🌐/📱
-    * `getContactTypeColor(type)` - Tailwind color classes
-    * `getDateRange(days)` - { startDate, endDate }
-    * `formatNumber(value)` - Thousands separator
-    * `getTrendIcon(changePercentage)` - 📈/📉/➡️
-    * `getTrendColor(changePercentage)` - text-green-600/red-600/gray-600
+    - `formatDuration(seconds)` - "2m 30s"
+    - `formatPercentage(value)` - "15.5%"
+    - `getDeviceIcon(deviceType)` - 📱/💻/🖥️
+    - `getContactTypeIcon(type)` - 📞/✉️/💬/🌐/📱
+    - `getContactTypeColor(type)` - Tailwind color classes
+    - `getDateRange(days)` - { startDate, endDate }
+    - `formatNumber(value)` - Thousands separator
+    - `getTrendIcon(changePercentage)` - 📈/📉/➡️
+    - `getTrendColor(changePercentage)` - text-green-600/red-600/gray-600
 
 **2. DealerAnalyticsDashboard.tsx** (~600 líneas):
 
 - **Props:** dealerId: string
 
 - **State:**
+
   - analytics: AnalyticsDashboard | null
   - isLoading: boolean
   - dateRange: '7' | '30' | '90'
   - error: string | null
 
 - **Secciones del Dashboard:**
-  
+
   **1. Header con Date Range Picker:**
+
   - Título: "📊 Analytics & Métricas"
   - Dropdown: Últimos 7/30/90 días
-  
+
   **2. Live Stats Bar (gradient blue-purple):**
+
   - Visitantes Activos (con dot verde animado)
   - Vistas Hoy
   - Contactos Hoy
   - Última Visita (device icon + ciudad + hora)
-  
+
   **3. Summary Stats Grid (4 cards):**
+
   - **Total Vistas** (icon: FiEye)
-    * Valor + únicos
-    * Trend vs período anterior
+    - Valor + únicos
+    - Trend vs período anterior
   - **Contactos** (icon: FiPhone)
-    * Valor + % conversión
+    - Valor + % conversión
   - **Engagement** (icon: FiActivity)
-    * % engagement + bounce rate
+    - % engagement + bounce rate
   - **Tiempo Promedio** (icon: FiClock)
-    * Duración formateada
-  
+    - Duración formateada
+
   **4. Charts Grid (2x2):**
+
   - **Views Trend Chart (Line):**
-    * 2 líneas: Vistas (azul) y Contactos (verde)
-    * Eje X: Fechas del período
-    * Area fill con transparencia
-    * Legend en bottom
-  
+
+    - 2 líneas: Vistas (azul) y Contactos (verde)
+    - Eje X: Fechas del período
+    - Area fill con transparencia
+    - Legend en bottom
+
   - **Contact Method Breakdown (Pie):**
-    * 5 segmentos: Phone, Email, WhatsApp, Website, Social
-    * Colores: blue, purple, green, orange, pink
-    * Legend en right
-  
+
+    - 5 segmentos: Phone, Email, WhatsApp, Website, Social
+    - Colores: blue, purple, green, orange, pink
+    - Legend en right
+
   - **Device Breakdown (Doughnut):**
-    * 3 segmentos: Mobile, Desktop, Tablet
-    * Colores: blue, indigo, violet
-    * Legend en bottom
-  
+
+    - 3 segmentos: Mobile, Desktop, Tablet
+    - Colores: blue, indigo, violet
+    - Legend en bottom
+
   - **Top Referrers (Bars):**
-    * Progress bars con porcentajes
-    * Fuentes: Directo, Search, Social, etc.
-  
+    - Progress bars con porcentajes
+    - Fuentes: Directo, Search, Social, etc.
+
   **5. Contact Methods Detailed Table:**
+
   - Columnas: Método, Clicks, % Total, Convertidos, Tasa Conversión
   - Icons por método
   - Badge color por tasa conversión (verde/amarillo/rojo)
 
 - **Chart.js Integration:**
+
   - Imports: Line, Pie, Doughnut de react-chartjs-2
   - ChartJS.register: CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler, Title, Tooltip, Legend
   - Responsive: true
@@ -385,11 +418,13 @@ Total tests: 25
 #### Rutas Agregadas en App.tsx:
 
 ```tsx
-import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
+import DealerAnalyticsDashboard from "./pages/DealerAnalyticsDashboard";
 
 // ...
 
-{/* Analytics Routes (Sprint 8) */}
+{
+  /* Analytics Routes (Sprint 8) */
+}
 <Route
   path="/dealer/analytics"
   element={
@@ -397,7 +432,7 @@ import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
       <DealerAnalyticsDashboard dealerId="DEALER_ID_PLACEHOLDER" />
     </ProtectedRoute>
   }
-/>
+/>;
 ```
 
 #### Navegación desde DealerDashboard:
@@ -405,7 +440,7 @@ import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
 ```tsx
 // Botón agregado en Acciones Rápidas (después de Editar Perfil Público)
 <button
-  onClick={() => navigate('/dealer/analytics')}
+  onClick={() => navigate("/dealer/analytics")}
   className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-md"
 >
   📊 Ver Analytics & Métricas
@@ -414,44 +449,44 @@ import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
 
 #### Puntos de Acceso para Usuarios:
 
-| Usuario | Acceso                                        | Link                |
-| ------- | --------------------------------------------- | ------------------- |
-| Dealer  | Dashboard → Acciones Rápidas → Ver Analytics  | /dealer/analytics   |
-| Dealer  | Direct URL (si autenticado)                   | /dealer/analytics   |
-| Dealer  | Navbar → User menu → Analytics (TODO: agregar | /dealer/analytics   |
+| Usuario | Acceso                                        | Link              |
+| ------- | --------------------------------------------- | ----------------- |
+| Dealer  | Dashboard → Acciones Rápidas → Ver Analytics  | /dealer/analytics |
+| Dealer  | Direct URL (si autenticado)                   | /dealer/analytics |
+| Dealer  | Navbar → User menu → Analytics (TODO: agregar | /dealer/analytics |
 
 ---
 
 ## 📊 Estadísticas del Código
 
-| Categoría                  | Backend | Frontend | Total       |
-| -------------------------- | ------- | -------- | ----------- |
-| **Archivos Creados**       | 17      | 2        | **19**      |
-| **Líneas de Código**       | ~1,400  | ~860     | **~2,260**  |
-| **Clases/Componentes**     | 18      | 2        | **20**      |
-| **Endpoints REST**         | 4       | -        | **4**       |
-| **Métodos de Repositorio** | 19      | -        | **19**      |
-| **Tests Unitarios**        | 25      | -        | **25**      |
-| **DTOs/Interfaces**        | 15+     | 12       | **27+**     |
-| **MediatR Handlers**       | 3       | -        | **3**       |
+| Categoría                  | Backend | Frontend | Total      |
+| -------------------------- | ------- | -------- | ---------- |
+| **Archivos Creados**       | 17      | 2        | **19**     |
+| **Líneas de Código**       | ~1,400  | ~860     | **~2,260** |
+| **Clases/Componentes**     | 18      | 2        | **20**     |
+| **Endpoints REST**         | 4       | -        | **4**      |
+| **Métodos de Repositorio** | 19      | -        | **19**     |
+| **Tests Unitarios**        | 25      | -        | **25**     |
+| **DTOs/Interfaces**        | 15+     | 12       | **27+**    |
+| **MediatR Handlers**       | 3       | -        | **3**      |
 
 ### Desglose por Capa (Backend)
 
-| Capa               | Archivos | LOC     | Descripción                                |
-| ------------------ | -------- | ------- | ------------------------------------------ |
-| **Domain**         | 4        | ~400    | Entities, Enums, Interfaces                |
-| **Application**    | 3        | ~600    | DTOs, Commands, Queries (MediatR)          |
-| **Infrastructure** | 3        | ~300    | DbContext, Repositories (EF Core)          |
-| **Api**            | 4        | ~280    | Controllers, Program.cs, appsettings       |
-| **Tests**          | 2        | ~450    | xUnit tests con FluentAssertions           |
-| **TOTAL**          | **16**   | **~2,030** | **Backend completo (sin Dockerfile)**  |
+| Capa               | Archivos | LOC        | Descripción                           |
+| ------------------ | -------- | ---------- | ------------------------------------- |
+| **Domain**         | 4        | ~400       | Entities, Enums, Interfaces           |
+| **Application**    | 3        | ~600       | DTOs, Commands, Queries (MediatR)     |
+| **Infrastructure** | 3        | ~300       | DbContext, Repositories (EF Core)     |
+| **Api**            | 4        | ~280       | Controllers, Program.cs, appsettings  |
+| **Tests**          | 2        | ~450       | xUnit tests con FluentAssertions      |
+| **TOTAL**          | **16**   | **~2,030** | **Backend completo (sin Dockerfile)** |
 
 ### Desglose Frontend
 
-| Archivo                          | LOC    | Descripción                               |
-| -------------------------------- | ------ | ----------------------------------------- |
-| **dealerAnalyticsService.ts**    | ~260   | TypeScript service con API methods        |
-| **DealerAnalyticsDashboard.tsx** | ~600   | Dashboard completo con Chart.js           |
+| Archivo                          | LOC      | Descripción                             |
+| -------------------------------- | -------- | --------------------------------------- |
+| **dealerAnalyticsService.ts**    | ~260     | TypeScript service con API methods      |
+| **DealerAnalyticsDashboard.tsx** | ~600     | Dashboard completo con Chart.js         |
 | **TOTAL**                        | **~860** | **Frontend completo (sin instalación)** |
 
 ---
@@ -559,6 +594,7 @@ ContactEvent → Fire-and-forget → Update DailyAnalyticsSummary
 **Problema:** Consultar millones de ProfileView/ContactEvent rows es lento.
 
 **Solución:** DailyAnalyticsSummary (1 row por dealer por día)
+
 - Dashboard queries solo leen ~30-90 rows (según dateRange)
 - Real-time queries (live viewers, recent view) sí consultan ProfileView directamente
 - Trade-off: Dashboard data tiene hasta 1 día de retraso, pero es aceptable
@@ -643,25 +679,28 @@ Total tests: 25
 
 ### Cobertura por Categoría
 
-| Categoría              | Tests | Status |
-| ---------------------- | ----- | ------ |
-| ProfileView Tests      | 7     | ✅ 100% |
-| ContactEvent Tests     | 6     | ✅ 100% |
-| DailyAnalyticsSummary  | 11    | ✅ 100% |
-| ContactType Enum       | 1     | ✅ 100% |
-| **TOTAL**              | **25** | **✅ 100%** |
+| Categoría             | Tests  | Status      |
+| --------------------- | ------ | ----------- |
+| ProfileView Tests     | 7      | ✅ 100%     |
+| ContactEvent Tests    | 6      | ✅ 100%     |
+| DailyAnalyticsSummary | 11     | ✅ 100%     |
+| ContactType Enum      | 1      | ✅ 100%     |
+| **TOTAL**             | **25** | **✅ 100%** |
 
 ### Tests Destacados
 
 **ProfileView.IsDuplicateView:**
+
 - Valida que no cuenta refreshes del mismo IP en 30 min
 - Crítico para analytics precisos
 
 **DailyAnalyticsSummary.GetBounceRate:**
-- Valida cálculo correcto: (BounceCount / TotalViews) * 100
+
+- Valida cálculo correcto: (BounceCount / TotalViews) \* 100
 - Valida return 0 cuando TotalViews = 0 (evita division by zero)
 
 **ContactEvent.GetTimeToConversion:**
+
 - Valida que retorna TimeSpan correcto cuando convertido
 - Valida que retorna null cuando no convertido
 
@@ -752,18 +791,18 @@ spec:
         app: dealeranalyticsservice
     spec:
       containers:
-      - name: dealeranalyticsservice
-        image: ghcr.io/gregorymorenoiem/cardealer-dealeranalyticsservice:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: ConnectionStrings__DefaultConnection
-          value: "Host=postgres;Database=dealeranalyticsservice;Username=postgres;Password=cardealer123"
-        - name: Jwt__Key
-          valueFrom:
-            secretKeyRef:
-              name: jwt-secret
-              key: key
+        - name: dealeranalyticsservice
+          image: ghcr.io/gregorymorenoiem/cardealer-dealeranalyticsservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ConnectionStrings__DefaultConnection
+              value: "Host=postgres;Database=dealeranalyticsservice;Username=postgres;Password=cardealer123"
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: key
 ---
 apiVersion: v1
 kind: Service
@@ -774,8 +813,8 @@ spec:
   selector:
     app: dealeranalyticsservice
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
 ```
 
 ---
@@ -804,19 +843,19 @@ VITE_API_URL=https://api.okla.com.do # Production
 
 ### KPIs Implementados
 
-| KPI                        | Fórmula                                  | Visualización          |
-| -------------------------- | ---------------------------------------- | ---------------------- |
-| **Total Views**            | COUNT(ProfileView)                       | Stats Card + Line Chart |
-| **Unique Visitors**        | COUNT(DISTINCT ViewerIpAddress)          | Stats Card Subtitle     |
-| **Bounce Rate**            | (BounceCount / TotalViews) * 100         | Stats Card              |
-| **Engagement Rate**        | (EngagedVisits / TotalViews) * 100       | Stats Card              |
-| **Contact Conversion Rate** | (TotalContacts / TotalViews) * 100       | Stats Card Subtitle     |
-| **Inquiry Conversion Rate** | (ConvertedInquiries / TotalContacts) * 100 | Table Column           |
-| **Average View Duration**  | AVG(DurationSeconds)                     | Stats Card              |
-| **Device Breakdown**       | GROUP BY DeviceType                      | Doughnut Chart          |
-| **Contact Method Breakdown** | GROUP BY ContactType                     | Pie Chart + Table       |
-| **Top Referrers**          | GROUP BY ReferrerSource                  | Progress Bars           |
-| **Live Viewers**           | COUNT(ViewedAt > NOW() - 5min)           | Live Stats Bar          |
+| KPI                          | Fórmula                                     | Visualización           |
+| ---------------------------- | ------------------------------------------- | ----------------------- |
+| **Total Views**              | COUNT(ProfileView)                          | Stats Card + Line Chart |
+| **Unique Visitors**          | COUNT(DISTINCT ViewerIpAddress)             | Stats Card Subtitle     |
+| **Bounce Rate**              | (BounceCount / TotalViews) \* 100           | Stats Card              |
+| **Engagement Rate**          | (EngagedVisits / TotalViews) \* 100         | Stats Card              |
+| **Contact Conversion Rate**  | (TotalContacts / TotalViews) \* 100         | Stats Card Subtitle     |
+| **Inquiry Conversion Rate**  | (ConvertedInquiries / TotalContacts) \* 100 | Table Column            |
+| **Average View Duration**    | AVG(DurationSeconds)                        | Stats Card              |
+| **Device Breakdown**         | GROUP BY DeviceType                         | Doughnut Chart          |
+| **Contact Method Breakdown** | GROUP BY ContactType                        | Pie Chart + Table       |
+| **Top Referrers**            | GROUP BY ReferrerSource                     | Progress Bars           |
+| **Live Viewers**             | COUNT(ViewedAt > NOW() - 5min)              | Live Stats Bar          |
 
 ### Métricas Avanzadas (Futuras)
 
@@ -834,31 +873,37 @@ VITE_API_URL=https://api.okla.com.do # Production
 ### ✅ Decisiones Correctas
 
 1. **Separar en microservicio independiente:**
+
    - DealerAnalyticsService no depende de DealerManagementService
    - Puede escalar independientemente
    - Cambios en analytics no afectan otros servicios
 
 2. **Fire-and-forget para DailySummary updates:**
+
    - Tracking endpoints responden rápido (< 50ms)
    - No bloquean experiencia del usuario
    - Agregación en background
 
 3. **Anonymous tracking:**
+
    - No requiere login para trackear
    - Captura 100% de vistas, no solo usuarios autenticados
    - Mejor analytics coverage
 
 4. **Daily aggregation strategy:**
+
    - Dashboard queries son rápidas (< 200ms)
    - No consulta millones de rows directamente
    - Trade-off: data hasta 1 día de retraso (aceptable)
 
 5. **User agent parsing:**
+
    - Device/Browser/OS detection automático
    - No depende de frontend enviando info
    - Más confiable
 
 6. **Repository pattern con 19 métodos:**
+
    - Flexible para futuros queries
    - Fácil agregar nuevos métodos sin cambiar interface
    - Mock-friendly para tests
@@ -871,36 +916,43 @@ VITE_API_URL=https://api.okla.com.do # Production
 ### 🔄 Mejoras Futuras
 
 1. **GeoIP Integration:**
+
    - Actualmente Country/City son nullables
    - Integrar MaxMind GeoLite2 o similar
    - Parse IP address → Country, City, Region
 
 2. **Real-time WebSocket:**
+
    - Live stats bar actualiza cada X segundos con polling
    - Usar SignalR para push updates
    - Current viewers actualiza en real-time
 
 3. **Session tracking:**
+
    - Actualmente cada view es independiente
    - Correlacionar views por session
    - Calculate true session duration
 
 4. **Bot detection:**
+
    - Filtrar bots/crawlers (GoogleBot, etc.)
    - Parse robots.txt compliance
    - More accurate human visitor counts
 
 5. **Data retention policy:**
+
    - ProfileView/ContactEvent tables crecen indefinidamente
    - Archivar data > 1 año a cold storage
    - DailySummary mantener siempre
 
 6. **Export functionality:**
+
    - Export dashboard data a CSV/Excel
    - Scheduled reports por email
    - PDF reports para presentaciones
 
 7. **Alerts & Notifications:**
+
    - Alert cuando views caen > 50%
    - Alert cuando conversion rate < threshold
    - Email digest diario/semanal
@@ -917,21 +969,25 @@ VITE_API_URL=https://api.okla.com.do # Production
 ### Sprint 9: Advanced Analytics & ML (PROPUESTO)
 
 1. **Predictive Analytics:**
+
    - ML model para predecir likelihood de conversión
    - Score leads (hot/warm/cold)
    - Optimal pricing suggestions
 
 2. **User Segmentation:**
+
    - Cluster visitors por behavior
    - Personas (car enthusiasts, first-time buyers, etc.)
    - Targeted messaging
 
 3. **Recommendation Engine:**
+
    - "Similar vehicles" basado en views
    - "Users who viewed this also viewed..."
    - Personalized homepage per visitor
 
 4. **Conversion Attribution:**
+
    - Multi-touch attribution model
    - First-touch, last-touch, linear
    - Credit multiple sources correctly
@@ -960,11 +1016,13 @@ VITE_API_URL=https://api.okla.com.do # Production
 ### Database Schema
 
 **Tables:**
+
 - `profile_views` - Individual page views
 - `contact_events` - Contact button clicks
 - `daily_analytics_summaries` - Aggregated daily data
 
 **Indices:**
+
 - DealerId, Date, (DealerId + Date) UNIQUE en daily_analytics_summaries
 - DealerId, ViewedAt, ViewerIpAddress en profile_views
 - DealerId, ClickedAt, ContactType en contact_events
@@ -1061,6 +1119,7 @@ VITE_API_URL=https://api.okla.com.do # Production
 **El sistema de analytics está listo para producción** con la excepción de instalar Chart.js y realizar los commits/push.
 
 Dealers ahora pueden:
+
 1. Ver analytics completos de sus perfiles
 2. Trackear vistas y contactos automáticamente
 3. Analizar tendencias con charts

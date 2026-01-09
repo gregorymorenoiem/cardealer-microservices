@@ -8,8 +8,8 @@ public class SearchEvent : TrackedEvent
     public string SearchQuery { get; set; } = string.Empty;
     public int ResultsCount { get; set; }
     public bool HasResults => ResultsCount > 0;
-    public string? SearchType { get; set; } // "vehicles", "dealers", "general"
-    public List<string> AppliedFilters { get; set; } = new();
+    public string SearchType { get; set; } = "General"; // "vehicles", "dealers", "general"
+    public string? AppliedFilters { get; set; } // JSON string of applied filters
     public string? SortBy { get; set; }
     public int? ClickedPosition { get; set; } // Position of clicked result (if any)
     public Guid? ClickedVehicleId { get; set; }

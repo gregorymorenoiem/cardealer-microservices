@@ -99,7 +99,7 @@ export enum ContactType {
   Email = 2,
   WhatsApp = 3,
   Website = 4,
-  SocialMedia = 5
+  SocialMedia = 5,
 }
 
 // ============================================
@@ -116,8 +116,8 @@ export class DealerAnalyticsService {
       baseURL,
       timeout: 10000,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
 
     // Interceptor para agregar JWT token automáticamente
@@ -163,7 +163,7 @@ export class DealerAnalyticsService {
     const enrichedRequest = {
       ...request,
       viewerUserAgent: navigator.userAgent,
-      viewedPage: window.location.pathname
+      viewedPage: window.location.pathname,
     };
 
     try {
@@ -273,7 +273,7 @@ export class DealerAnalyticsService {
 
     return {
       startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
+      endDate: endDate.toISOString().split('T')[0],
     };
   }
 

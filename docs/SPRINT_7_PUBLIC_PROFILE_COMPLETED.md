@@ -10,6 +10,7 @@
 ## 📋 Objetivo del Sprint
 
 Implementar sistema completo de perfil público para dealers con:
+
 - Página pública SEO-optimizada
 - Editor de perfil con completion tracking
 - Business hours estructurados por sucursal
@@ -26,56 +27,53 @@ Implementar sistema completo de perfil público para dealers con:
 #### 🏗️ Domain Layer (3 archivos modificados/creados)
 
 **Dealer.cs (MODIFICADO - 30+ campos agregados):**
+
 - **Public Profile Fields:**
   - `Slogan` (string, max 100 chars)
   - `AboutUs` (string, rich text)
   - `Specialties` (string[], ej: "SUVs de lujo", "Vehículos eléctricos")
   - `SupportedBrands` (string[], ej: "Toyota", "Honda", "BMW")
-  
 - **Social Media:**
   - `FacebookUrl`, `InstagramUrl`, `TwitterUrl`, `YouTubeUrl`
   - `WhatsAppNumber` (string, formato internacional)
-  
 - **Privacy Settings:**
   - `ShowPhoneOnProfile` (bool) - Show/hide phone in public profile
   - `ShowEmailOnProfile` (bool) - Show/hide email in public profile
-  
 - **Features:**
   - `AcceptsTradeIns` (bool) - Acepta vehículos usados
   - `OffersFinancing` (bool) - Ofrece financiamiento
   - `OffersWarranty` (bool) - Garantías extendidas
   - `OffersHomeDelivery` (bool) - Entrega a domicilio
-  
 - **SEO Metadata:**
   - `MetaTitle`, `MetaDescription`, `MetaKeywords`
   - `Slug` (string, unique) - URL-friendly identifier
-  
 - **Trust Badges:**
   - `IsTrustedDealer` (bool) - Verified by OKLA admin
   - `IsFoundingMember` (bool) - Early Bird program member
   - `TrustedDealerSince` (DateTime?) - Timestamp de verificación
-  
 - **Statistics:**
+
   - `AverageRating` (double) - Promedio de reviews (0-5)
   - `TotalReviews` (int) - Cantidad de reviews recibidos
   - `TotalSales` (int) - Ventas totales históricas
 
 - **Helper Methods:**
   - `GenerateSlug()` - Creates URL-friendly slug from BusinessName
-    * Converts to lowercase
-    * Removes accents (á → a, ñ → n)
-    * Replaces spaces with hyphens
-    * Removes special characters
-    * Example: "Auto Dealer José" → "auto-dealer-jose"
-    
+    - Converts to lowercase
+    - Removes accents (á → a, ñ → n)
+    - Replaces spaces with hyphens
+    - Removes special characters
+    - Example: "Auto Dealer José" → "auto-dealer-jose"
   - `MarkAsTrusted()` - Sets IsTrustedDealer = true with timestamp
   - `RemoveTrustedBadge()` - Clears trusted status
   - `IsProfileComplete()` - Checks if required fields are filled (20 fields)
   - `GetProfileCompletionPercentage()` - Returns 0-100% based on completion
 
 **BusinessHours.cs (NUEVO - 200 líneas):**
+
 - Purpose: Structured business hours per day per location
 - Properties:
+
   - `DealerLocationId` (Guid) - FK to DealerLocation
   - `DayOfWeek` (string) - Monday-Sunday
   - `IsOpen` (bool) - Whether location is open this day
@@ -87,18 +85,18 @@ Implementar sistema completo de perfil público para dealers con:
 
 - Methods:
   - `IsOpenAt(TimeOnly time)` - Checks if open at specific time
-    * Returns false if IsOpen = false
-    * Returns false if time < OpenTime or time > CloseTime
-    * Returns false if time is during break (BreakStart - BreakEnd)
-    * Returns true otherwise
-    
+    - Returns false if IsOpen = false
+    - Returns false if time < OpenTime or time > CloseTime
+    - Returns false if time is during break (BreakStart - BreakEnd)
+    - Returns true otherwise
   - `GetFormattedHours()` - Returns formatted string
-    * Format: "HH:mm - HH:mm" (24-hour)
-    * Example: "08:00 - 18:00"
-    * With break: "08:00 - 12:00, 14:00 - 18:00"
-    * Closed: "Cerrado"
+    - Format: "HH:mm - HH:mm" (24-hour)
+    - Example: "08:00 - 18:00"
+    - With break: "08:00 - 12:00, 14:00 - 18:00"
+    - Closed: "Cerrado"
 
 **DealerLocation.cs (MODIFICADO):**
+
 - Added `BusinessHours` (List<BusinessHours>) - One entry per day of week
 - Added location features:
   - `HasShowroom` (bool)
@@ -112,36 +110,44 @@ Implementar sistema completo de perfil público para dealers con:
 **DealerDtos.cs (MODIFICADO - 15+ DTOs agregados):**
 
 1. **PublicDealerProfileDto:**
+
    - Complete public-facing dealer data
    - Includes: ContactInfo, Features, Locations, SocialMedia, SEO
    - Filters phone/email based on ShowPhone/ShowEmail settings
 
 2. **PublicContactInfo:**
+
    - `Phone`, `Email`, `Website`, `WhatsAppNumber`
    - `ShowPhone`, `ShowEmail` (privacy flags)
 
 3. **DealerFeature:**
+
    - `Name` (string) - ej: "Trade-ins"
    - `Icon` (string) - Emoji or icon class
    - `IsAvailable` (bool)
 
 4. **PublicLocationDto:**
+
    - Location data with `BusinessHoursDto[]`
    - Features: HasShowroom, HasServiceCenter, HasParking
    - Latitude/Longitude for maps
 
 5. **BusinessHoursDto:**
+
    - `DayOfWeek`, `IsOpen`, `OpenTime`, `CloseTime`
    - `BreakStartTime`, `BreakEndTime`, `Notes`
    - `FormattedHours` (pre-computed string)
 
 6. **SocialMediaLinks:**
+
    - `FacebookUrl`, `InstagramUrl`, `TwitterUrl`, `YouTubeUrl`
 
 7. **SEOMetadata:**
+
    - `MetaTitle`, `MetaDescription`, `MetaKeywords`
 
 8. **UpdateProfileRequest:**
+
    - All optional fields for selective updates
    - 20+ properties for profile customization
 
@@ -153,9 +159,11 @@ Implementar sistema completo de perfil público para dealers con:
 **PublicProfileQueries.cs (NUEVO - 3 query handlers):**
 
 1. **GetPublicProfileQuery:**
+
    ```csharp
    public record GetPublicProfileQuery(string Slug) : IRequest<PublicDealerProfileDto?>;
    ```
+
    - Fetches dealer by slug
    - Includes Locations with ThenInclude(BusinessHours)
    - Filters contact info based on ShowPhone/ShowEmail
@@ -163,9 +171,11 @@ Implementar sistema completo de perfil público para dealers con:
    - Returns null if dealer not active
 
 2. **GetTrustedDealersQuery:**
+
    ```csharp
    public record GetTrustedDealersQuery() : IRequest<List<PublicDealerProfileDto>>;
    ```
+
    - Returns all dealers with IsTrustedDealer = true && Status = Active
    - Ordered by TotalSales DESC, then AverageRating DESC
    - Used for "Trusted Dealers" page
@@ -180,6 +190,7 @@ Implementar sistema completo de perfil público para dealers con:
    - Provides recommendations for improvement
 
 **UpdateDealerProfileCommand.cs (NUEVO - 170 líneas):**
+
 ```csharp
 public record UpdateDealerProfileCommand(
     Guid DealerId,
@@ -193,7 +204,6 @@ public record UpdateDealerProfileCommand(
   - Checks for uniqueness
   - Appends suffix (-1, -2, etc.) if collision detected
   - Example: "auto-dealer" → "auto-dealer-1" if exists
-  
 - Updates social media links
 - Updates SEO metadata
 - Sets UpdatedAt timestamp
@@ -202,6 +212,7 @@ public record UpdateDealerProfileCommand(
 #### 🗄️ Infrastructure Layer (3 archivos modificados)
 
 **IDealerRepository.cs (MODIFIED - 6 methods added):**
+
 ```csharp
 Task<Dealer?> GetBySlugAsync(string slug, CancellationToken ct = default);
 Task<List<Dealer>> GetTrustedDealersAsync(CancellationToken ct = default);
@@ -214,6 +225,7 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
 **DealerRepository.cs (MODIFIED - ~60 líneas agregadas):**
 
 - **GetBySlugAsync:**
+
   ```csharp
   .Include(d => d.Locations)
       .ThenInclude(l => l.BusinessHours)
@@ -221,6 +233,7 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
   ```
 
 - **GetTrustedDealersAsync:**
+
   ```csharp
   .Where(d => d.IsTrustedDealer && d.Status == DealerStatus.Active)
   .OrderByDescending(d => d.TotalSales)
@@ -228,6 +241,7 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
   ```
 
 - **GetTopRatedDealersAsync:**
+
   ```csharp
   .OrderByDescending(d => d.AverageRating)
   .ThenByDescending(d => d.TotalReviews)
@@ -243,11 +257,13 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
 **DealerDbContext.cs (MODIFIED):**
 
 - Added `BusinessHours` DbSet:
+
   ```csharp
   public DbSet<BusinessHours> BusinessHours => Set<BusinessHours>();
   ```
 
 - Added 3 indices on Dealer:
+
   ```csharp
   builder.HasIndex(d => d.Slug).IsUnique();
   builder.HasIndex(d => d.IsTrustedDealer);
@@ -270,28 +286,33 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
 **DealersController.cs (MODIFIED - 4 endpoints added):**
 
 1. **GET /api/dealers/public/{slug}** (PUBLIC):
+
    ```csharp
    [HttpGet("public/{slug}")]
    [AllowAnonymous]
    [ProducesResponseType(typeof(PublicDealerProfileDto), 200)]
    public async Task<ActionResult<PublicDealerProfileDto>> GetPublicProfile(string slug)
    ```
+
    - Returns public dealer profile by slug
    - No authentication required
    - Used by PublicDealerProfilePage
 
 2. **GET /api/dealers/trusted** (PUBLIC):
+
    ```csharp
    [HttpGet("trusted")]
    [AllowAnonymous]
    [ProducesResponseType(typeof(List<PublicDealerProfileDto>), 200)]
    public async Task<ActionResult<List<PublicDealerProfileDto>>> GetTrustedDealers()
    ```
+
    - Returns all trusted dealers
    - No authentication required
    - Ordered by TotalSales DESC
 
 3. **PUT /api/dealers/{id}/profile** (AUTHENTICATED):
+
    ```csharp
    [HttpPut("{id}/profile")]
    [Authorize]
@@ -300,6 +321,7 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
        Guid id,
        UpdateProfileRequest request)
    ```
+
    - Updates dealer profile
    - Requires JWT authentication
    - Used by DealerProfileEditorPage
@@ -324,31 +346,38 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
 **DealerPublicProfileTests (10 tests):**
 
 1. `GenerateSlug_ShouldCreateValidSlug_FromBusinessName` ✅
+
    - Input: "Auto Dealer José"
    - Expected: "auto-dealer-jose"
    - Validates lowercase, accent removal, hyphenation
 
 2. `GenerateSlug_ShouldRemoveAccents_FromBusinessName` ✅
+
    - Input: "Máxima Velocidad"
    - Expected: "maxima-velocidad"
    - Validates ñ → n, á → a, etc.
 
 3. `MarkAsTrusted_ShouldSetTrustedBadge` ✅
+
    - Sets IsTrustedDealer = true
    - Sets TrustedDealerSince = DateTime.UtcNow
 
 4. `RemoveTrustedBadge_ShouldClearTrustedStatus` ✅
+
    - Sets IsTrustedDealer = false
    - Clears TrustedDealerSince
 
 5. `IsProfileComplete_ShouldReturnFalse_WhenMissingFields` ✅
+
    - Missing AboutUs → false
    - Missing Slogan → false
 
 6. `IsProfileComplete_ShouldReturnTrue_WhenAllFieldsPresent` ✅
+
    - All 20 required fields filled → true
 
 7. `GetProfileCompletionPercentage_ShouldCalculateCorrectly` ✅
+
    - 7 fields out of 20 = 35%
    - 20 fields out of 20 = 100%
 
@@ -359,22 +388,27 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
 **BusinessHoursTests (6 tests):**
 
 9. `IsOpenAt_ShouldReturnTrue_WhenWithinWorkingHours` ✅
+
    - Open: 08:00 - 18:00
    - Check 10:00 → true
 
 10. `IsOpenAt_ShouldReturnFalse_WhenOutsideWorkingHours` ✅
+
     - Open: 08:00 - 18:00
     - Check 20:00 → false
 
 11. `IsOpenAt_ShouldReturnFalse_WhenDuringBreakTime` ✅
+
     - Open: 08:00 - 18:00, Break: 12:00 - 14:00
     - Check 13:00 → false
 
 12. `IsOpenAt_ShouldReturnFalse_WhenDayIsClosed` ✅
+
     - IsOpen = false
     - Check any time → false
 
 13. `GetFormattedHours_ShouldReturnCerrado_WhenDayIsClosed` ✅
+
     - IsOpen = false
     - Expected: "Cerrado"
 
@@ -390,6 +424,7 @@ Task<bool> SlugExistsAsync(string slug, Guid? excludeDealerId = null, Cancellati
     - Checks List<BusinessHours> property exists
 
 **Test Results:**
+
 ```bash
 Total tests: 25 (8 existing + 17 new)
 Passed: 25 ✅
@@ -400,7 +435,9 @@ Success Rate: 100%
 ```
 
 **Bug Fixes Applied:**
+
 1. **TimeOnly Format Bug:**
+
    - Issue: GetFormattedHours() returned "06:00 PM" but test expected "18:00"
    - Fix: Changed format from `hh\\:mm tt` to `HH\\:mm` for 24-hour format
    - File: BusinessHours.cs, line ~45
@@ -419,6 +456,7 @@ Success Rate: 100%
 **dealerPublicService.ts (300 líneas):**
 
 - **Interfaces (TypeScript):**
+
   - `PublicDealerProfile` - Matches backend DTO
   - `PublicContactInfo` - Contact with privacy flags
   - `DealerFeature` - Feature with name, icon, availability
@@ -430,6 +468,7 @@ Success Rate: 100%
   - `ProfileCompletion` - Completion data
 
 - **API Methods:**
+
   ```typescript
   async getPublicProfile(slug: string): Promise<PublicDealerProfile>
   async getTrustedDealers(): Promise<PublicDealerProfile[]>
@@ -456,7 +495,9 @@ Success Rate: 100%
 **Route:** `/dealers/:slug` (NO AUTH)
 
 **Features:**
+
 - **Banner Section:**
+
   - Full-width banner image
   - Gradient overlay
 
@@ -464,29 +505,31 @@ Success Rate: 100%
   - Logo (32x32, rounded, shadow)
   - Business name (3xl, bold)
   - Badges:
-    * "✓ Dealer Verificado" (blue, if IsTrustedDealer)
-    * "🏆 Miembro Fundador" (amber, if IsFoundingMember)
+    - "✓ Dealer Verificado" (blue, if IsTrustedDealer)
+    - "🏆 Miembro Fundador" (amber, if IsFoundingMember)
   - Slogan (italic, gray-600)
   - Rating stars + reviews count
   - Active listings count
   - Total sales count
   - Location (city, province)
-  
 - **Contact Buttons Row:**
+
   - "Llamar" (green) - if ShowPhone
   - "WhatsApp" (emerald) - if has WhatsApp
   - "Email" (blue) - if ShowEmail
   - "Sitio Web" (gray) - if has website
 
 - **Main Content (2-column grid):**
+
   - **Left Column (lg:col-span-2):**
-    * About Us section (white card, p-6)
-    * Features grid (2 columns):
+
+    - About Us section (white card, p-6)
+    - Features grid (2 columns):
       - Trade-ins (green if available, gray if not)
       - Financing (green if available)
       - Warranty (green if available)
       - Home Delivery (green if available)
-    * Locations section:
+    - Locations section:
       - LocationCard for each location
       - Shows today's open/closed status
       - Today's hours prominently displayed
@@ -495,14 +538,14 @@ Success Rate: 100%
       - Google Maps link
 
   - **Right Column (Sidebar):**
-    * Specialties (blue tags)
-    * Supported Brands (gray tags)
-    * Social Media Links:
+    - Specialties (blue tags)
+    - Supported Brands (gray tags)
+    - Social Media Links:
       - Facebook (blue)
       - Instagram (pink)
       - Twitter (blue-400)
       - YouTube (red)
-    * "Member Since" card (blue gradient)
+    - "Member Since" card (blue gradient)
 
 - **LocationCard Component:**
   - Header: Name + "Sucursal Principal" badge
@@ -514,15 +557,18 @@ Success Rate: 100%
   - "Ver en Google Maps" link
 
 **States:**
+
 - Loading: Spinner centered
 - Error: Red warning icon + error message + "Ver Todos los Vehículos" button
 - Success: Full profile display
 
 **SEO:**
+
 - Sets document.title from MetaTitle or "{BusinessName} - OKLA"
 - Sets meta description from MetaDescription
 
 **Responsive:**
+
 - Mobile: Single column, stacked sections
 - Tablet: 2 columns with sidebar
 - Desktop: Full layout with banner
@@ -534,75 +580,87 @@ Success Rate: 100%
 **Route:** `/dealer/profile/edit` (PROTECTED)
 
 **Features:**
+
 - **Profile Completion Widget:**
+
   - Percentage display (0-100%)
   - Progress bar (blue)
   - Missing fields chips (amber)
 
 - **Success/Error Messages:**
+
   - Green banner with checkmark (auto-hide after 3s)
   - Red banner with alert icon
 
 - **Form Sections (white cards):**
 
   1. **Información Básica:**
+
      - Slogan (input, max 100 chars)
      - Acerca de Nosotros (textarea, 5 rows)
      - Especialidades (comma-separated input)
      - Marcas que Manejamos (comma-separated input)
 
   2. **Imágenes:**
+
      - Logo URL (url input)
      - Banner URL (url input, rec: 1920x400px)
 
   3. **Redes Sociales:**
+
      - Facebook URL
      - Instagram URL
      - WhatsApp (tel input, "+18095551234")
 
   4. **Servicios Ofrecidos:**
+
      - Checkboxes:
-       * Aceptamos Trade-ins
-       * Ofrecemos Financiamiento
-       * Garantía Extendida
-       * Entrega a Domicilio
+       - Aceptamos Trade-ins
+       - Ofrecemos Financiamiento
+       - Garantía Extendida
+       - Entrega a Domicilio
 
   5. **Configuración de Privacidad:**
      - Checkboxes:
-       * Mostrar teléfono en perfil público
-       * Mostrar email en perfil público
+       - Mostrar teléfono en perfil público
+       - Mostrar email en perfil público
 
 - **Actions Row:**
   - "Guardar Cambios" button (blue, primary)
-    * Shows spinner when saving
-    * Disabled during save
+    - Shows spinner when saving
+    - Disabled during save
   - "Ver Perfil Público" button (gray, secondary)
-    * Opens in new tab: /dealers/{slug}
+    - Opens in new tab: /dealers/{slug}
 
 **Form Handling:**
+
 - Selective updates (only sends changed fields)
 - Auto-refresh data after save
 - Success message auto-hides after 3s
 - Error display with red banner
 
 **States:**
+
 - Loading: Spinner centered
 - Error (no dealer): Red warning + "Volver al Dashboard" button
 - Form: All sections rendered with current data
 
 **Validation:**
+
 - URL inputs: type="url"
 - Tel inputs: type="tel"
 - Max length: Slogan (100 chars)
 - Array parsing: Comma-separated → string[]
 
 **Responsive:**
+
 - Mobile: Single column, full width
 - Desktop: Max-width 4xl, centered
 
 #### 🧩 UI Integration (2 archivos modificados)
 
 **App.tsx:**
+
 ```tsx
 // Imports
 import PublicDealerProfilePage from './pages/PublicDealerProfilePage';
@@ -621,10 +679,11 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ```
 
 **DealerDashboard.tsx:**
+
 - Added button in Quick Actions:
   ```tsx
   <button
-    onClick={() => navigate('/dealer/profile/edit')}
+    onClick={() => navigate("/dealer/profile/edit")}
     className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
   >
     ✏️ Editar Perfil Público
@@ -882,6 +941,7 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ### Sprint 8 - Analytics & Métricas
 
 1. **DealerAnalyticsService:**
+
    - Profile views tracking
    - Contact button clicks
    - WhatsApp conversions
@@ -898,6 +958,7 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ### Sprint 9 - Reviews & Ratings
 
 3. **ReviewService:**
+
    - CRUD reviews para dealers
    - Rating calculation (average, weighted)
    - Moderation workflow
@@ -912,6 +973,7 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ### Sprint 10 - Gallery & Media
 
 5. **Photo Gallery:**
+
    - Multiple photos per dealer
    - Gallery slider en public profile
    - Lightbox para fotos full-screen
@@ -925,18 +987,21 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ### Mejoras Corto Plazo
 
 7. **Business Hours Editor:**
+
    - Dedicated page: /dealer/locations/edit
    - Day-by-day editor
    - Copy hours to multiple days
    - Import/export hours
 
 8. **Multiple Locations Manager:**
+
    - CRUD locations (add, edit, delete)
    - Set primary location
    - Google Maps autocomplete
    - Geocoding for lat/long
 
 9. **SEO Enhancements:**
+
    - Auto-generate meta tags from profile
    - Structured data (JSON-LD) for Google
    - OpenGraph tags for social sharing
@@ -955,11 +1020,13 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ### KPIs a Monitorear
 
 1. **Profile Completion:**
+
    - % de dealers con 100% completion
    - Average completion percentage
    - Most skipped fields
 
 2. **Public Profile Engagement:**
+
    - Views per dealer profile
    - Contact button clicks
    - WhatsApp conversions
@@ -967,12 +1034,14 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
    - Website visits
 
 3. **Trust Indicators:**
+
    - % de dealers con Trusted badge
    - Reviews received per dealer
    - Average rating per dealer
    - Response time to inquiries
 
 4. **Business Hours Usage:**
+
    - % de dealers con business hours completos
    - % de locations con horarios
    - Most common opening hours
@@ -997,21 +1066,25 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 ### Pendientes de Implementación
 
 1. **dealerManagementService.getDealerById():**
+
    - ❌ No existe aún en frontend
    - Workaround: DealerProfileEditorPage usa localStorage para dealerId
    - Fix: Crear método en dealerManagementService.ts
 
 2. **Business Hours Editor:**
+
    - ❌ No hay UI para agregar/editar business hours
    - Actualmente: Solo display en public profile
    - Fix: Crear DealerLocationsPage con editor
 
 3. **Image Upload:**
+
    - ❌ Logo y Banner son URLs, no file upload
    - Workaround: Usar URLs externas
    - Fix: Integrar con MediaService para S3 upload
 
 4. **Google Maps Embed:**
+
    - ❌ Solo hay link a Google Maps, no mapa embedded
    - Fix: Integrar Google Maps API con markers
 
@@ -1058,12 +1131,14 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 **Entregables Planificados:**
 
 1. **DealerAnalyticsService (backend):**
+
    - Profile views tracking
    - Contact button clicks
    - Unique visitors count
    - Time-series data
 
 2. **Analytics Dashboard (frontend):**
+
    - Chart.js integration
    - Views trend (last 30 days)
    - Contact conversion rate
