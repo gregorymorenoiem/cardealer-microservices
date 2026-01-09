@@ -47,8 +47,8 @@ import LeadDetail from './pages/LeadDetail';
 // Review System (Sprint 14)
 import SellerReviewsPage from './pages/SellerReviewsPage';
 import WriteReviewPage from './pages/WriteReviewPage';
-// Chatbot Widget (Sprint 16)
-import ChatWidget from './components/chat/ChatWidget';
+// Chatbot (Sprint 17 - OpenAI + WhatsApp + SignalR)
+import ChatWidget from './components/Chatbot/ChatWidget';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -71,6 +71,7 @@ import CRMPage from './pages/dealer/CRMPage';
 import AnalyticsPage from './pages/dealer/AnalyticsPage';
 import DealerOnboardingPage from './pages/dealer/DealerOnboardingPage';
 import CreateSellerPage from './pages/dealer/CreateSellerPage';
+import SellerDashboardPage from './pages/seller/SellerDashboardPage';
 // Common pages (legal, info, help)
 import {
   AboutPage,
@@ -352,6 +353,14 @@ function App() {
           <Route path="/dealer/onboarding" element={<DealerOnboardingPage />} />
           <Route path="/seller/create" element={<CreateSellerPage />} />
           <Route
+            path="/seller/dashboard"
+            element={
+              <ProtectedRoute>
+                <SellerDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/dealer"
             element={
               <ProtectedRoute requireDealer>
@@ -574,6 +583,24 @@ function App() {
             }
           />
 
+          {/* Sprint 17 - Chatbot Conversations (Dealers only) */}
+          <Route
+            path="/dealer/conversations"
+            element={
+              <ProtectedRoute>
+                <DealerDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/hot-leads"
+            element={
+              <ProtectedRoute>
+                <DealerDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* 404 Page */}
           <Route
             path="*"
@@ -591,8 +618,8 @@ function App() {
           />
         </Routes>
 
-        {/* Global Chat Widget (Sprint 16) - Shows on all pages */}
-        <ChatWidget position="bottom-right" primaryColor="#2563eb" />
+        {/* Global Chat Widget (Sprint 17 - OpenAI + WhatsApp) */}
+        <ChatWidget />
       </Router>
     </QueryClientProvider>
   );

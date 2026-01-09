@@ -1,20 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import leadScoringService, {
+import leadScoringService from '@/services/leadScoringService';
+import type {
   LeadDto,
   LeadStatisticsDto,
   LeadTemperature,
   LeadStatus,
 } from '@/services/leadScoringService';
-import {
-  FiSearch,
-  FiFilter,
-  FiDownload,
-  FiChevronRight,
-  FiPhone,
-  FiMail,
-  FiMessageSquare,
-} from 'react-icons/fi';
+import { FiSearch, FiChevronRight, FiPhone, FiMail } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 
 export const LeadsDashboard = () => {
@@ -40,12 +33,7 @@ export const LeadsDashboard = () => {
   // TODO: Obtener dealerId del usuario autenticado
   const dealerId = 'your-dealer-id-here'; // Replace with actual dealer ID from auth context
 
-  useEffect(() => {
-    loadLeads();
-    loadStatistics();
-  }, [page, temperatureFilter, statusFilter]);
-
-  const loadLeads = async () => {
+  const loadLeads = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await leadScoringService.getLeadsByDealer(
@@ -64,16 +52,21 @@ export const LeadsDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dealerId, page, pageSize, temperatureFilter, statusFilter, searchTerm]);
 
-  const loadStatistics = async () => {
+  const loadStatistics = useCallback(async () => {
     try {
       const stats = await leadScoringService.getLeadStatistics(dealerId);
       setStatistics(stats);
     } catch (err: any) {
       console.error('Error loading statistics:', err);
     }
-  };
+  }, [dealerId]);
+
+  useEffect(() => {
+    loadLeads();
+    loadStatistics();
+  }, [loadLeads, loadStatistics]);
 
   const handleSearch = () => {
     setPage(1);

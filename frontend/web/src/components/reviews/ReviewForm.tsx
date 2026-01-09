@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StarRating } from './StarRating';
-import { reviewService, CreateReviewRequest } from '../../services/reviewService';
+import { reviewService } from '../../services/reviewService';
+import type { CreateReviewRequest } from '../../services/reviewService';
 
 interface ReviewFormProps {
   sellerUserId: string;

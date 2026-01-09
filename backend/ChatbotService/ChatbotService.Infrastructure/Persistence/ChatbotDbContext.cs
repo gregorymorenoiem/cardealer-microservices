@@ -5,98 +5,121 @@ namespace ChatbotService.Infrastructure.Persistence;
 
 public class ChatbotDbContext : DbContext
 {
-    public ChatbotDbContext(DbContextOptions<ChatbotDbContext> options) : base(options)
-    {
-    }
+    public ChatbotDbContext(DbContextOptions<ChatbotDbContext> options) : base(options) { }
 
-    public DbSet<ChatConversation> Conversations => Set<ChatConversation>();
-    public DbSet<ChatMessage> Messages => Set<ChatMessage>();
-    public DbSet<ChatbotConfiguration> Configurations => Set<ChatbotConfiguration>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<Message> Messages => Set<Message>();
+    public DbSet<IntentAnalysis> IntentAnalyses => Set<IntentAnalysis>();
+    public DbSet<WhatsAppHandoff> WhatsAppHandoffs => Set<WhatsAppHandoff>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // ChatConversation configuration
-        modelBuilder.Entity<ChatConversation>(entity =>
+        modelBuilder.Entity<Conversation>(entity =>
         {
-            entity.ToTable("chat_conversations");
+            entity.ToTable("conversations");
             entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.SessionId).HasColumnName("session_id").HasMaxLength(100);
-            entity.Property(e => e.VehicleId).HasColumnName("vehicle_id");
-            entity.Property(e => e.VehicleContext).HasColumnName("vehicle_context").HasColumnType("jsonb");
-            entity.Property(e => e.Status).HasColumnName("status").HasConversion<string>();
-            entity.Property(e => e.UserEmail).HasColumnName("user_email").HasMaxLength(256);
-            entity.Property(e => e.UserName).HasColumnName("user_name").HasMaxLength(256);
-            entity.Property(e => e.UserPhone).HasColumnName("user_phone").HasMaxLength(50);
-            entity.Property(e => e.MessageCount).HasColumnName("message_count");
-            entity.Property(e => e.TotalTokensUsed).HasColumnName("total_tokens_used");
-            entity.Property(e => e.EstimatedCost).HasColumnName("estimated_cost").HasPrecision(10, 6);
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            entity.Property(e => e.EndedAt).HasColumnName("ended_at");
-            entity.Property(e => e.EndReason).HasColumnName("end_reason").HasMaxLength(500);
-            entity.Property(e => e.LeadQualification).HasColumnName("lead_qualification").HasConversion<string>();
-            entity.Property(e => e.LeadScore).HasColumnName("lead_score");
-            entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
-
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.UserName).HasMaxLength(200);
+            entity.Property(e => e.UserEmail).HasMaxLength(200);
+            entity.Property(e => e.UserPhone).HasMaxLength(50);
+            
+            entity.Property(e => e.VehicleTitle).HasMaxLength(300);
+            entity.Property(e => e.VehiclePrice).HasColumnType("decimal(18,2)");
+            
+            entity.Property(e => e.DealerName).HasMaxLength(200);
+            entity.Property(e => e.DealerWhatsApp).HasMaxLength(50);
+            
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.LeadScore).HasDefaultValue(0);
+            entity.Property(e => e.LeadTemperature).HasDefaultValue(LeadTemperature.Unknown);
+            
+            entity.Property(e => e.BuyingSignals).HasColumnType("jsonb");
+            entity.Property(e => e.PurchaseTimeframe).HasMaxLength(100);
+            entity.Property(e => e.HandoffNotes).HasMaxLength(500);
+            
             entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.SessionId);
+            entity.HasIndex(e => e.DealerId);
             entity.HasIndex(e => e.VehicleId);
-            entity.HasIndex(e => e.Status);
-            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.LeadScore);
+            entity.HasIndex(e => e.StartedAt);
+            entity.HasIndex(e => new { e.Status, e.LeadTemperature });
+        });
 
-            entity.HasMany(e => e.Messages)
-                .WithOne(m => m.Conversation)
-                .HasForeignKey(m => m.ConversationId)
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.ToTable("messages");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            
+            entity.Property(e => e.Role).IsRequired();
+            entity.Property(e => e.Content).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            
+            entity.Property(e => e.DetectedIntent).HasMaxLength(100);
+            entity.Property(e => e.ExtractedSignals).HasColumnType("jsonb");
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            
+            entity.HasOne(e => e.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(e => e.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // ChatMessage configuration
-        modelBuilder.Entity<ChatMessage>(entity =>
-        {
-            entity.ToTable("chat_messages");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ConversationId).HasColumnName("conversation_id");
-            entity.Property(e => e.Role).HasColumnName("role").HasConversion<string>();
-            entity.Property(e => e.Content).HasColumnName("content");
-            entity.Property(e => e.Type).HasColumnName("type").HasConversion<string>();
-            entity.Property(e => e.TokenCount).HasColumnName("token_count");
-            entity.Property(e => e.ResponseTime).HasColumnName("response_time");
-            entity.Property(e => e.IntentDetected).HasColumnName("intent_detected").HasMaxLength(100);
-            entity.Property(e => e.SentimentScore).HasColumnName("sentiment_score");
-            entity.Property(e => e.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-
+            
             entity.HasIndex(e => e.ConversationId);
-            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.Timestamp);
         });
 
-        // ChatbotConfiguration configuration
-        modelBuilder.Entity<ChatbotConfiguration>(entity =>
+        modelBuilder.Entity<IntentAnalysis>(entity =>
         {
-            entity.ToTable("chatbot_configurations");
+            entity.ToTable("intent_analyses");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            
+            entity.Property(e => e.IntentType).IsRequired();
+            entity.Property(e => e.Confidence).IsRequired();
+            entity.Property(e => e.BuyingSignals).HasColumnType("jsonb");
+            
+            entity.Property(e => e.ExtractedUrgency).HasMaxLength(100);
+            entity.Property(e => e.ExtractedBudget).HasMaxLength(100);
+            entity.Property(e => e.TradeInDetails).HasMaxLength(500);
+            
+            entity.HasIndex(e => e.ConversationId);
+            entity.HasIndex(e => e.MessageId);
+            entity.HasIndex(e => e.IntentType);
+        });
 
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100);
-            entity.Property(e => e.SystemPrompt).HasColumnName("system_prompt");
-            entity.Property(e => e.Model).HasColumnName("model").HasMaxLength(50);
-            entity.Property(e => e.Temperature).HasColumnName("temperature");
-            entity.Property(e => e.MaxTokens).HasColumnName("max_tokens");
-            entity.Property(e => e.MaxConversationMessages).HasColumnName("max_conversation_messages");
-            entity.Property(e => e.IsActive).HasColumnName("is_active");
-            entity.Property(e => e.WelcomeMessage).HasColumnName("welcome_message");
-            entity.Property(e => e.FallbackMessage).HasColumnName("fallback_message");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
-            entity.Ignore(e => e.QuickReplies);
+        modelBuilder.Entity<WhatsAppHandoff>(entity =>
+        {
+            entity.ToTable("whatsapp_handoffs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            
+            entity.Property(e => e.UserName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.UserPhone).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.LeadScore).IsRequired();
+            entity.Property(e => e.LeadTemperature).IsRequired();
+            
+            entity.Property(e => e.ConversationSummary).IsRequired();
+            entity.Property(e => e.BuyingSignals).HasColumnType("jsonb");
+            entity.Property(e => e.VehicleDetails).HasMaxLength(500);
+            
+            entity.Property(e => e.DealerWhatsAppNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.WhatsAppMessageId).HasMaxLength(200);
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            
+            entity.HasOne(e => e.Conversation)
+                .WithMany()
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(e => e.ConversationId);
+            entity.HasIndex(e => e.DealerId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.InitiatedAt);
         });
     }
 }

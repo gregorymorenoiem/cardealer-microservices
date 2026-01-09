@@ -10,6 +10,7 @@ namespace ReviewService.Api.Controllers;
 
 /// <summary>
 /// API para gestión de reviews de vendedores/dealers
+/// Sprint 14: Sistema básico + Sprint 15: Votos, Badges, Solicitudes automáticas
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -389,6 +390,292 @@ public class ReviewsController : ControllerBase
             return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
+
+    #region Sprint 15 - Votos de Utilidad
+
+    /// <summary>
+    /// Sprint 15 - Votar si una review es útil
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <param name="dto">Datos del voto</param>
+    /// <returns>Estadísticas actualizadas</returns>
+    [HttpPost("{reviewId:guid}/vote")]
+    [Authorize]
+    [ProducesResponseType(typeof(VoteResultDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<VoteResultDto>> VoteHelpful(
+        [FromRoute] Guid reviewId,
+        [FromBody] VoteHelpfulDto dto)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var command = new VoteHelpfulCommand
+            {
+                ReviewId = reviewId,
+                UserId = userId,
+                IsHelpful = dto.IsHelpful,
+                UserIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error voting on review {ReviewId}", reviewId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Sprint 15 - Obtener estadísticas de votos de una review
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <returns>Estadísticas de votos</returns>
+    [HttpGet("{reviewId:guid}/vote-stats")]
+    [ProducesResponseType(typeof(ReviewVoteStatsDto), 200)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<ReviewVoteStatsDto>> GetVoteStats([FromRoute] Guid reviewId)
+    {
+        try
+        {
+            // Obtener usuario actual si está autenticado
+            Guid? currentUserId = null;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                currentUserId = userId;
+            }
+
+            var query = new GetReviewVoteStatsQuery
+            {
+                ReviewId = reviewId,
+                CurrentUserId = currentUserId
+            };
+
+            var result = await _mediator.Send(query);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
+
+            return NotFound(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting vote stats for review {ReviewId}", reviewId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    #endregion
+
+    #region Sprint 15 - Badges de Vendedor
+
+    /// <summary>
+    /// Sprint 15 - Obtener badges de un vendedor
+    /// </summary>
+    /// <param name="sellerId">ID del vendedor</param>
+    /// <returns>Lista de badges activos</returns>
+    [HttpGet("seller/{sellerId:guid}/badges")]
+    [ProducesResponseType(typeof(List<SellerBadgeDto>), 200)]
+    public async Task<ActionResult<List<SellerBadgeDto>>> GetSellerBadges([FromRoute] Guid sellerId)
+    {
+        try
+        {
+            var query = new GetSellerBadgesQuery
+            {
+                SellerId = sellerId,
+                OnlyActive = true
+            };
+
+            var result = await _mediator.Send(query);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting badges for seller {SellerId}", sellerId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Sprint 15 - Recalcular badges de un vendedor (admin only)
+    /// </summary>
+    /// <param name="sellerId">ID del vendedor</param>
+    /// <returns>Badges actualizados</returns>
+    [HttpPost("seller/{sellerId:guid}/badges/recalculate")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(BadgeUpdateResultDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<ActionResult<BadgeUpdateResultDto>> RecalculateBadges([FromRoute] Guid sellerId)
+    {
+        try
+        {
+            var command = new UpdateBadgesCommand { SellerId = sellerId };
+            var result = await _mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error recalculating badges for seller {SellerId}", sellerId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    #endregion
+
+    #region Sprint 15 - Solicitudes Automáticas de Review
+
+    /// <summary>
+    /// Sprint 15 - Enviar solicitud de review post-compra
+    /// </summary>
+    /// <param name="dto">Datos de la solicitud</param>
+    /// <returns>Resultado de la solicitud</returns>
+    [HttpPost("requests")]
+    [Authorize(Roles = "Admin,System")]
+    [ProducesResponseType(typeof(ReviewRequestResultDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<ReviewRequestResultDto>> SendReviewRequest([FromBody] CreateReviewRequestDto dto)
+    {
+        try
+        {
+            var command = new SendReviewRequestCommand
+            {
+                BuyerId = dto.BuyerId,
+                SellerId = dto.SellerId,
+                VehicleId = dto.VehicleId,
+                OrderId = dto.OrderId,
+                BuyerEmail = dto.BuyerEmail,
+                BuyerName = dto.BuyerName,
+                VehicleTitle = dto.VehicleTitle,
+                SellerName = dto.SellerName,
+                PurchaseDate = dto.PurchaseDate
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                return CreatedAtAction(nameof(GetPendingRequests), new { buyerId = dto.BuyerId }, result.Value);
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending review request for order {OrderId}", dto.OrderId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Sprint 15 - Obtener solicitudes de review pendientes para un comprador
+    /// </summary>
+    /// <param name="buyerId">ID del comprador</param>
+    /// <returns>Lista de solicitudes pendientes</returns>
+    [HttpGet("requests/buyer/{buyerId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<ReviewRequestDto>), 200)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<ReviewRequestDto>>> GetPendingRequests([FromRoute] Guid buyerId)
+    {
+        try
+        {
+            // Verificar que el usuario autenticado es el mismo que busca
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                if (userId != buyerId && !User.IsInRole("Admin"))
+                {
+                    return Forbid("No tiene permiso para ver estas solicitudes");
+                }
+            }
+
+            var query = new GetPendingReviewRequestsQuery { BuyerId = buyerId };
+            var result = await _mediator.Send(query);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending review requests for buyer {BuyerId}", buyerId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Sprint 15 - Obtener mis solicitudes de review pendientes
+    /// </summary>
+    /// <returns>Lista de solicitudes pendientes del usuario actual</returns>
+    [HttpGet("requests/mine")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<ReviewRequestDto>), 200)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<ReviewRequestDto>>> GetMyPendingRequests()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var query = new GetPendingReviewRequestsQuery { BuyerId = userId };
+            var result = await _mediator.Send(query);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending review requests");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    #endregion
 }
 
 /// <summary>

@@ -1,34 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FiUsers } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import { vehicleService, Vehicle } from '@/services/vehicleService';
+import vehicleService from '@/services/vehicleService';
+import type { Vehicle } from '@/services/vehicleService';
 
 interface AlsoViewedProps {
   vehicleId: string;
   limit?: number;
 }
 
-export const AlsoViewed = ({ vehicleId, limit = 4 }: AlsoViewedProps) => {
+export const AlsoViewed = ({ vehicleId: _vehicleId, limit = 4 }: AlsoViewedProps) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAlsoViewed();
-  }, [vehicleId]);
-
-  const loadAlsoViewed = async () => {
+  const loadAlsoViewed = useCallback(async () => {
     try {
       setLoading(true);
-      // En producción, esto vendría de un endpoint específico
+      // En producción, esto vendría de un endpoint específico basado en _vehicleId
       // Por ahora, simulamos con vehículos populares
-      const result = await vehicleService.getVehicles({ page: 1, pageSize: limit });
+      const result = await vehicleService.getAllVehicles({}, 1, limit);
       setVehicles(result.vehicles.slice(0, limit));
     } catch (err) {
       console.error('Error loading also viewed vehicles:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
+
+  useEffect(() => {
+    loadAlsoViewed();
+  }, [loadAlsoViewed]);
 
   if (loading) {
     return (
@@ -65,7 +66,7 @@ export const AlsoViewed = ({ vehicleId, limit = 4 }: AlsoViewedProps) => {
         {vehicles.map((vehicle) => (
           <Link
             key={vehicle.id}
-            to={`/vehicles/${vehicle.slug || vehicle.id}`}
+            to={`/vehicles/${vehicle.id}`}
             className="group bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden"
           >
             <div className="relative">
@@ -84,9 +85,7 @@ export const AlsoViewed = ({ vehicleId, limit = 4 }: AlsoViewedProps) => {
                 ${vehicle.price?.toLocaleString()}
               </p>
               {vehicle.mileage && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {vehicle.mileage.toLocaleString()} km
-                </p>
+                <p className="text-xs text-gray-500 mt-1">{vehicle.mileage.toLocaleString()} km</p>
               )}
             </div>
           </Link>

@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react';
-import { FiHeart, FiTrendingUp, FiStar } from 'react-icons/fi';
+import { useEffect, useState, useCallback } from 'react';
+import { FiTrendingUp, FiStar } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import {
-  recommendationService,
-  Recommendation,
-  RecommendationType,
-} from '@/services/recommendationService';
-import { vehicleService, Vehicle } from '@/services/vehicleService';
+import { recommendationService, RecommendationType } from '@/services/recommendationService';
+import type { Recommendation } from '@/services/recommendationService';
+import vehicleService from '@/services/vehicleService';
+import type { Vehicle } from '@/services/vehicleService';
 
 export const ForYouSection = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -14,11 +12,7 @@ export const ForYouSection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadRecommendations();
-  }, []);
-
-  const loadRecommendations = async () => {
+  const loadRecommendations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -32,14 +26,18 @@ export const ForYouSection = () => {
       const vehiclesData = await Promise.all(
         vehicleIds.map((id) => vehicleService.getVehicleById(id))
       );
-      setVehicles(vehiclesData.filter((v) => v !== null) as Vehicle[]);
+      setVehicles(vehiclesData.filter((v: Vehicle | null) => v !== null) as Vehicle[]);
     } catch (err: any) {
       console.error('Error loading recommendations:', err);
       setError(err.response?.data?.message || 'Error al cargar recomendaciones');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadRecommendations();
+  }, [loadRecommendations]);
 
   const handleRecommendationClick = async (recommendationId: string) => {
     try {
@@ -83,9 +81,7 @@ export const ForYouSection = () => {
         <h2 className="text-2xl font-bold mb-6">Para ti</h2>
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
           <FiStar className="mx-auto text-gray-400 text-5xl mb-4" />
-          <p className="text-gray-600 text-lg">
-            Aún no tenemos recomendaciones para ti
-          </p>
+          <p className="text-gray-600 text-lg">Aún no tenemos recomendaciones para ti</p>
           <p className="text-gray-500 text-sm mt-2">
             Explora vehículos para que podamos personalizar tu experiencia
           </p>
@@ -108,9 +104,7 @@ export const ForYouSection = () => {
             <FiStar className="text-yellow-500" />
             Para ti
           </h2>
-          <p className="text-gray-600 text-sm mt-1">
-            Basado en tus preferencias y búsquedas
-          </p>
+          <p className="text-gray-600 text-sm mt-1">Basado en tus preferencias y búsquedas</p>
         </div>
         <button
           onClick={loadRecommendations}
@@ -126,7 +120,7 @@ export const ForYouSection = () => {
           return (
             <Link
               key={vehicle.id}
-              to={`/vehicles/${vehicle.slug || vehicle.id}`}
+              to={`/vehicles/${vehicle.id}`}
               onClick={() => handleRecommendationClick(recommendation.id)}
               className="group bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden"
             >
@@ -175,9 +169,7 @@ export const ForYouSection = () => {
                 </div>
 
                 {/* Reason */}
-                <p className="text-gray-500 text-xs italic mb-3">
-                  {recommendation.reason}
-                </p>
+                <p className="text-gray-500 text-xs italic mb-3">{recommendation.reason}</p>
 
                 {/* Specs rápidas */}
                 <div className="flex flex-wrap gap-2 text-xs text-gray-600">

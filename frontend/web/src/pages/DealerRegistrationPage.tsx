@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Building2, FileText, Loader2 } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { dealerManagementService, CreateDealerRequest } from '@/services/dealerManagementService';
+import { dealerManagementService } from '@/services/dealerManagementService';
+import type { CreateDealerRequest } from '@/services/dealerManagementService';
 
 export default function DealerRegistrationPage() {
   const navigate = useNavigate();

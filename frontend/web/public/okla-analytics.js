@@ -26,6 +26,7 @@
     flushIntervalMs: 5000,
     autoTrack: true,
     debug: false,
+    enabled: true, // EventTrackingService is now deployed
   };
 
   let sessionId = null;
@@ -151,7 +152,7 @@
       currentUrl: window.location.href,
       deviceType: getDeviceType(),
       browser: getBrowser(),
-      os: getOS(),
+      operatingSystem: getOS(),
       country: location.country,
       city: location.city,
       eventData: null,
@@ -167,6 +168,12 @@
   // ============================================
 
   function sendEvent(event) {
+    // Skip if EventTrackingService is not deployed yet
+    if (!config.enabled) {
+      log('Analytics disabled - EventTrackingService not deployed');
+      return;
+    }
+
     const url = config.apiUrl + config.trackEndpoint;
 
     log('Sending event:', event);
@@ -184,12 +191,20 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event: event }),
         keepalive: true,
-      }).catch((err) => log('Error sending event:', err));
+      }).catch(() => {
+        // Silently fail - EventTrackingService may not be deployed
+      });
     }
   }
 
   function sendBatch(events) {
     if (events.length === 0) return;
+
+    // Skip if EventTrackingService is not deployed yet
+    if (!config.enabled) {
+      log('Analytics disabled - EventTrackingService not deployed');
+      return;
+    }
 
     const url = config.apiUrl + config.batchEndpoint;
 
@@ -200,7 +215,9 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ events: events }),
       keepalive: true,
-    }).catch((err) => log('Error sending batch:', err));
+    }).catch(() => {
+      // Silently fail - EventTrackingService may not be deployed
+    });
   }
 
   function queueEvent(event) {

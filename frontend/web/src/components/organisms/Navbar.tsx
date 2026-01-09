@@ -18,6 +18,7 @@ import {
   FiLogOut,
   FiSettings,
   FiMessageSquare,
+  FiMessageCircle,
   FiShield,
   FiSearch,
   FiChevronDown,
@@ -27,7 +28,8 @@ import {
   FiBriefcase,
   FiUserCheck,
   FiTarget,
-  FiBarChart3,
+  FiBarChart2,
+  FiBell,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 
@@ -63,27 +65,29 @@ export default function Navbar() {
     setIsUserMenuOpen(false);
   };
 
+  // Links públicos principales (sin duplicar búsqueda - ya está GlobalSearch)
   const navLinks = [
     { href: '/vehicles', label: t('nav.vehicles'), icon: FaCar },
-    { href: '/search', label: 'Buscar', icon: FiSearch },
     { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase },
   ];
 
+  // Links para usuarios autenticados (sin duplicar con dealerNavLinks)
   const userNavLinks = [
     { href: '/favorites', label: 'Favoritos', icon: FiHeart },
     { href: '/comparison', label: 'Comparar', icon: FiGrid },
-    { href: '/alerts', label: 'Alertas', icon: FiBriefcase },
+    { href: '/alerts', label: 'Alertas', icon: FiBell },
     { href: '/my-inquiries', label: 'Mis Consultas', icon: FiMessageSquare },
     { href: '/received-inquiries', label: 'Consultas Recibidas', icon: FiUserCheck },
-    { href: '/dealer/leads', label: 'Mis Leads', icon: FiTarget }, // Sprint 11 - Lead Scoring
   ];
 
-  // Dealer-specific navigation links (Sprint 12 - Advanced Dashboard)
+  // Dealer-specific navigation links (Sprint 12 - Advanced Dashboard + Sprint 17 - Chatbot)
+  // Solo para dealers - incluye Leads aquí, no en userNavLinks
   const dealerNavLinks = [
-    { href: '/dealer/dashboard', label: 'Dashboard', icon: FiGrid },
+    { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiGrid },
     { href: '/dealer/inventory', label: 'Inventario', icon: FaCar },
-    { href: '/dealer/analytics/advanced', label: 'Analytics Avanzado', icon: FiBarChart3 },
+    { href: '/dealer/analytics/advanced', label: 'Analytics', icon: FiBarChart2 },
     { href: '/dealer/leads', label: 'Leads', icon: FiTarget },
+    { href: '/dealer/conversations', label: 'Conversaciones', icon: FiMessageCircle },
   ];
 
   return (
@@ -235,15 +239,6 @@ export default function Navbar() {
             <div className="hidden sm:flex items-center gap-2">
               {isAuthenticated && user ? (
                 <>
-                  {/* Wishlist */}
-                  <Link
-                    to="/wishlist"
-                    className="p-2.5 lg:p-3 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 relative group"
-                    aria-label={t('nav.favorites')}
-                  >
-                    <FiHeart className="w-5 h-5 lg:w-5.5 lg:h-5.5 group-hover:scale-110 transition-transform" />
-                  </Link>
-
                   {/* Notifications - Hidden on small tablets */}
                   <div className="hidden lg:block">
                     <NotificationDropdown />
@@ -317,6 +312,48 @@ export default function Navbar() {
                                 <p className="text-xs text-gray-500 mt-0.5">Panel de control</p>
                               </div>
                             </Link>
+
+                            {/* Convertirse en Vendedor - Solo para usuarios que NO son dealer ni seller */}
+                            {user.accountType !== 'dealer' &&
+                              user.accountType !== 'dealer_employee' &&
+                              user.accountType !== 'seller' && (
+                                <Link
+                                  to="/seller/create"
+                                  className="flex items-center gap-3 px-5 py-3.5 text-sm text-gray-700 hover:bg-purple-50 transition-colors group"
+                                  onClick={() => setIsUserMenuOpen(false)}
+                                >
+                                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <FiUserCheck className="w-5 h-5 text-purple-600" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-purple-700">
+                                      Vender mi Vehículo
+                                    </p>
+                                    <p className="text-xs text-purple-600 mt-0.5">
+                                      Crear perfil de vendedor
+                                    </p>
+                                  </div>
+                                </Link>
+                              )}
+
+                            {/* Seller Profile Link - Solo para vendedores individuales */}
+                            {user.accountType === 'seller' && (
+                              <Link
+                                to="/seller/dashboard"
+                                className="flex items-center gap-3 px-5 py-3.5 text-sm text-gray-700 hover:bg-purple-50 transition-colors group"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                  <FaCar className="w-5 h-5 text-purple-600" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-purple-700">Mis Vehículos</p>
+                                  <p className="text-xs text-purple-600 mt-0.5">
+                                    Gestionar publicaciones
+                                  </p>
+                                </div>
+                              </Link>
+                            )}
 
                             {/* Dealer Profile Link */}
                             {(user.accountType === 'dealer' ||
@@ -651,16 +688,6 @@ export default function Navbar() {
                       <FiGrid className="w-5 h-5 text-blue-600" />
                     </div>
                     <span className="text-base">{t('nav.dashboard')}</span>
-                  </Link>
-                  <Link
-                    to="/wishlist"
-                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 rounded-xl transition-all font-medium group"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FiHeart className="w-5 h-5 text-red-500" />
-                    </div>
-                    <span className="text-base">{t('nav.favorites')}</span>
                   </Link>
                   <Link
                     to="/messages"

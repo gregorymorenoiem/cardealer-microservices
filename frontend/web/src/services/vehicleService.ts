@@ -94,7 +94,7 @@ export interface Vehicle {
   sellerEmail?: string;
   status: 'pending' | 'approved' | 'rejected' | 'sold';
   isFeatured: boolean;
-  isNew?: boolean;  // Added for new/used indication
+  isNew?: boolean; // Added for new/used indication
   createdAt: string;
   updatedAt: string;
   categoryId?: string;
@@ -157,19 +157,19 @@ const parseCustomFields = (customFieldsJson: string | null): Record<string, unkn
  */
 const transformProductToVehicle = (product: BackendProduct): Vehicle => {
   const customFields = parseCustomFields(product.customFieldsJson);
-  
+
   // Get images from the images array or fallback to imageUrl
-  const images: string[] = product.images?.map(img => img.imageUrl) || [];
+  const images: string[] = product.images?.map((img) => img.imageUrl) || [];
   if (product.imageUrl && !images.includes(product.imageUrl)) {
     images.unshift(product.imageUrl);
   }
 
   // Map backend status (number) to frontend status
   const statusMap: Record<number, 'pending' | 'approved' | 'rejected' | 'sold'> = {
-    0: 'pending',   // Draft
-    1: 'approved',  // Active
-    2: 'rejected',  // Inactive
-    3: 'sold',      // Sold
+    0: 'pending', // Draft
+    1: 'approved', // Active
+    2: 'rejected', // Inactive
+    3: 'sold', // Sold
   };
 
   return {
@@ -223,10 +223,10 @@ const transformVehicleToProduct = (vehicle: Partial<Vehicle>): Record<string, un
 
   // Map frontend status to backend status (numeric)
   const statusMap: Record<string, number> = {
-    'pending': 0,   // Draft
-    'approved': 1,  // Active
-    'rejected': 2,  // Inactive
-    'sold': 3,      // Sold
+    pending: 0, // Draft
+    approved: 1, // Active
+    rejected: 2, // Inactive
+    sold: 3, // Sold
   };
 
   return {
@@ -280,9 +280,7 @@ export const getAllVehicles = async (
     }
 
     // VehiclesSaleService returns paginated response: { vehicles: [], totalCount: N }
-    const response = await axios.get(
-      `${VEHICLES_SALE_API_URL}/vehicles?${params.toString()}`
-    );
+    const response = await axios.get(`${VEHICLES_SALE_API_URL}/vehicles?${params.toString()}`);
 
     const data = response.data;
     const vehiclesArray = data.vehicles || [];
@@ -293,9 +291,10 @@ export const getAllVehicles = async (
     return {
       vehicles,
       total: data.totalCount || vehicles.length,
-      page: (data.page !== undefined ? data.page + 1 : page), // Convert 0-based to 1-based
+      page: data.page !== undefined ? data.page + 1 : page, // Convert 0-based to 1-based
       pageSize: data.pageSize || pageSize,
-      totalPages: data.totalPages || Math.ceil((data.totalCount || vehicles.length) / pageSize) || 1,
+      totalPages:
+        data.totalPages || Math.ceil((data.totalCount || vehicles.length) / pageSize) || 1,
     };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.data?.message) {
@@ -318,9 +317,7 @@ export const getFeaturedVehicles = async (limit: number = 6): Promise<Vehicle[]>
 
     const data = response.data;
     const vehiclesArray = data.vehicles || [];
-    return Array.isArray(vehiclesArray)
-      ? vehiclesArray.map(transformBackendVehicleToFrontend)
-      : [];
+    return Array.isArray(vehiclesArray) ? vehiclesArray.map(transformBackendVehicleToFrontend) : [];
   } catch (error) {
     console.error('Error fetching featured vehicles:', error);
     return [];
@@ -333,9 +330,7 @@ export const getFeaturedVehicles = async (limit: number = 6): Promise<Vehicle[]>
 export const getVehicleById = async (id: string): Promise<Vehicle> => {
   try {
     // VehiclesSaleService returns single vehicle object
-    const response = await axios.get(
-      `${VEHICLES_SALE_API_URL}/vehicles/${id}`
-    );
+    const response = await axios.get(`${VEHICLES_SALE_API_URL}/vehicles/${id}`);
 
     if (!response.data) {
       throw new Error('Vehicle not found');
@@ -396,10 +391,7 @@ export const createVehicle = async (vehicleData: Partial<VehicleFormData>): Prom
       status: 0, // 0=Draft, 1=Active/Published
     };
 
-    const response = await axios.post(
-      `${VEHICLES_SALE_API_URL}/vehicles`,
-      backendPayload
-    );
+    const response = await axios.post(`${VEHICLES_SALE_API_URL}/vehicles`, backendPayload);
 
     // Backend returns the created vehicle directly
     return transformBackendVehicleToFrontend(response.data);
@@ -420,7 +412,7 @@ export const createVehicle = async (vehicleData: Partial<VehicleFormData>): Prom
 // Helper mappers
 const mapConditionToEnum = (condition?: string): number => {
   const map: Record<string, number> = {
-    'new': 0,
+    new: 0,
     'used-like-new': 1,
     'used-excellent': 1,
     'used-good': 2,
@@ -431,24 +423,24 @@ const mapConditionToEnum = (condition?: string): number => {
 
 const mapBodyStyleToEnum = (bodyType?: string): number => {
   const map: Record<string, number> = {
-    'sedan': 1,
-    'coupe': 2,
-    'hatchback': 3,
-    'suv': 4,
-    'truck': 5,
-    'van': 6,
-    'wagon': 7,
-    'convertible': 8,
+    sedan: 1,
+    coupe: 2,
+    hatchback: 3,
+    suv: 4,
+    truck: 5,
+    van: 6,
+    wagon: 7,
+    convertible: 8,
   };
   return map[bodyType?.toLowerCase() || ''] ?? 1;
 };
 
 const mapFuelTypeToEnum = (fuelType?: string): number => {
   const map: Record<string, number> = {
-    'gasoline': 0,
-    'diesel': 1,
-    'electric': 2,
-    'hybrid': 3,
+    gasoline: 0,
+    diesel: 1,
+    electric: 2,
+    hybrid: 3,
     'plug-in hybrid': 4,
   };
   return map[fuelType?.toLowerCase() || ''] ?? 0;
@@ -456,19 +448,19 @@ const mapFuelTypeToEnum = (fuelType?: string): number => {
 
 const mapTransmissionToEnum = (transmission?: string): number => {
   const map: Record<string, number> = {
-    'automatic': 0,
-    'manual': 1,
-    'cvt': 2,
-    'dct': 3,
+    automatic: 0,
+    manual: 1,
+    cvt: 2,
+    dct: 3,
   };
   return map[transmission?.toLowerCase() || ''] ?? 0;
 };
 
 const mapDrivetrainToEnum = (drivetrain?: string): number => {
   const map: Record<string, number> = {
-    'fwd': 0,
-    'rwd': 1,
-    'awd': 2,
+    fwd: 0,
+    rwd: 1,
+    awd: 2,
     '4wd': 3,
   };
   return map[drivetrain?.toLowerCase() || ''] ?? 0;
@@ -494,9 +486,10 @@ const extractMpgHighway = (mpg?: string): number | null => {
 
 const transformBackendVehicleToFrontend = (data: any): Vehicle => {
   // Parse CustomFieldsJson if it's a string
-  const customFields = typeof data.customFieldsJson === 'string' 
-    ? JSON.parse(data.customFieldsJson) 
-    : (data.customFieldsJson || {});
+  const customFields =
+    typeof data.customFieldsJson === 'string'
+      ? JSON.parse(data.customFieldsJson)
+      : data.customFieldsJson || {};
 
   // Estimate MPG based on vehicle type if not provided
   const estimateMpg = () => {
@@ -513,7 +506,7 @@ const transformBackendVehicleToFrontend = (data: any): Vehicle => {
     if (fuelType.includes('electric') || fuelType === '4') {
       return { city: 0, highway: 0 }; // Electric - show MPGe differently
     }
-    
+
     // Default estimates for gas vehicles
     return { city: 20, highway: 28 };
   };
@@ -521,28 +514,28 @@ const transformBackendVehicleToFrontend = (data: any): Vehicle => {
   // Transform images - handle S3 URLs
   const images = data.images?.map((img: any) => {
     const url = img.url || '';
-    
+
     // If it's already a full URL (S3, CloudFront, etc.), use it as is
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    
+
     // If it's just a filename or relative path, build full S3 URL
     // Pattern: https://okla-images-2026.s3.us-east-2.amazonaws.com/frontend/assets/vehicles/sale/filename.jpg
     if (url && !url.startsWith('/')) {
       const s3Bucket = import.meta.env.VITE_S3_BUCKET || 'okla-images-2026';
       const s3Region = import.meta.env.VITE_S3_REGION || 'us-east-2';
       const basePath = import.meta.env.VITE_S3_BASE_PATH || 'frontend/assets/vehicles/sale';
-      
+
       // If url already includes the full path, use it
       if (url.startsWith('frontend/')) {
         return `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${url}`;
       }
-      
+
       // Otherwise, prepend the base path
       return `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${basePath}/${url}`;
     }
-    
+
     // Fallback to placeholder
     return url || '/placeholder-car.jpg';
   }) || ['/placeholder-car.jpg'];
@@ -590,7 +583,7 @@ const transformBackendVehicleToFrontend = (data: any): Vehicle => {
     description: data.description,
     features: JSON.parse(data.featuresJson || '[]'),
     images,
-    location: data.city && data.state ? `${data.city}, ${data.state}` : (data.city || ''),
+    location: data.city && data.state ? `${data.city}, ${data.state}` : data.city || '',
     sellerId: data.sellerId || data.dealerId,
     sellerName: data.sellerName || 'Unknown',
     seller: {
@@ -608,7 +601,9 @@ const transformBackendVehicleToFrontend = (data: any): Vehicle => {
   };
 };
 
-const mapBackendStatusToFrontend = (status: number): 'pending' | 'approved' | 'rejected' | 'sold' => {
+const mapBackendStatusToFrontend = (
+  status: number
+): 'pending' | 'approved' | 'rejected' | 'sold' => {
   const map: Record<number, 'pending' | 'approved' | 'rejected' | 'sold'> = {
     0: 'pending',
     1: 'approved',
@@ -649,7 +644,10 @@ export interface VehicleFormData {
 /**
  * Update vehicle listing (legacy - using ProductService)
  */
-export const updateVehicle = async (id: string, vehicleData: Partial<Vehicle>): Promise<Vehicle> => {
+export const updateVehicle = async (
+  id: string,
+  vehicleData: Partial<Vehicle>
+): Promise<Vehicle> => {
   try {
     const token = localStorage.getItem('accessToken');
     const productData = transformVehicleToProduct(vehicleData);
@@ -730,9 +728,7 @@ export const getMyVehicles = async (sellerId: string): Promise<Vehicle[]> => {
 export const getCategories = async (): Promise<Category[]> => {
   try {
     // Categories endpoint returns array directly
-    const response = await axios.get<BackendCategory[]>(
-      `${PRODUCT_API_URL}/Categories`
-    );
+    const response = await axios.get<BackendCategory[]>(`${PRODUCT_API_URL}/Categories`);
 
     return (response.data || []).map(transformCategory);
   } catch (error) {
@@ -746,9 +742,7 @@ export const getCategories = async (): Promise<Category[]> => {
  */
 export const getRootCategories = async (): Promise<Category[]> => {
   try {
-    const response = await axios.get<BackendCategory[]>(
-      `${PRODUCT_API_URL}/Categories/root`
-    );
+    const response = await axios.get<BackendCategory[]>(`${PRODUCT_API_URL}/Categories/root`);
 
     return (response.data || []).map(transformCategory);
   } catch (error) {
@@ -763,9 +757,7 @@ export const getRootCategories = async (): Promise<Category[]> => {
 export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
   try {
     // ProductService returns single object directly
-    const response = await axios.get<BackendCategory>(
-      `${PRODUCT_API_URL}/Categories/slug/${slug}`
-    );
+    const response = await axios.get<BackendCategory>(`${PRODUCT_API_URL}/Categories/slug/${slug}`);
 
     if (!response.data) {
       return null;
@@ -841,7 +833,7 @@ export const rejectVehicle = async (id: string, _reason?: string): Promise<Vehic
 
 export const getPendingVehicles = async (): Promise<Vehicle[]> => {
   const result = await getAllVehicles({}, 1, 100);
-  return result.vehicles.filter(v => v.status === 'pending');
+  return result.vehicles.filter((v) => v.status === 'pending');
 };
 
 export const markAsSold = async (id: string): Promise<Vehicle> => {
@@ -850,7 +842,18 @@ export const markAsSold = async (id: string): Promise<Vehicle> => {
 
 export const getVehicleMakes = async (): Promise<string[]> => {
   // TODO: Implement when backend has makes endpoint or populate from categories
-  return ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'BMW', 'Mercedes-Benz', 'Audi', 'Nissan', 'Hyundai', 'Kia'];
+  return [
+    'Toyota',
+    'Honda',
+    'Ford',
+    'Chevrolet',
+    'BMW',
+    'Mercedes-Benz',
+    'Audi',
+    'Nissan',
+    'Hyundai',
+    'Kia',
+  ];
 };
 
 export const getVehicleModels = async (_make: string): Promise<string[]> => {
@@ -861,9 +864,9 @@ export const getVehicleModels = async (_make: string): Promise<string[]> => {
 export const compareVehicles = async (vehicleIds: string[]): Promise<Vehicle[]> => {
   try {
     console.log('📊 Comparing vehicles:', vehicleIds);
-    
+
     const response = await axios.post(`${VEHICLES_SALE_API_URL}/vehicles/compare`, {
-      vehicleIds
+      vehicleIds,
     });
 
     console.log('✅ Compare response:', response.data);
@@ -888,32 +891,32 @@ const vehicleService = {
   createVehicle,
   updateVehicle,
   deleteVehicle,
-  
+
   // Queries
   getFeaturedVehicles,
   getMyVehicles,
   searchVehicles,
   getSimilarVehicles,
   compareVehicles,
-  
+
   // Categories
   getCategories,
   getRootCategories,
   getCategoryBySlug,
-  
+
   // Favorites (placeholder)
   addToFavorites,
   removeFromFavorites,
   getFavorites,
   isFavorite,
-  
+
   // Admin functions
   getVehicleStats,
   approveVehicle,
   rejectVehicle,
   getPendingVehicles,
   markAsSold,
-  
+
   // Metadata
   getVehicleMakes,
   getVehicleModels,

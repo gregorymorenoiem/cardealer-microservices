@@ -1,15 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { FiSearch, FiX, FiSliders, FiHeart, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
-import VehicleCard from '@/components/organisms/VehicleCard';
-import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
-import Pagination from '@/components/molecules/Pagination';
 
 interface Vehicle {
   id: string;
@@ -39,6 +32,7 @@ export function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     make: '',
     model: '',
@@ -72,7 +66,7 @@ export function SearchPage() {
     }
   }, [filters.make]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -98,11 +92,11 @@ export function SearchPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, currentPage, filters]);
 
   useEffect(() => {
     handleSearch();
-  }, [currentPage, filters]);
+  }, [handleSearch]);
 
   const toggleFavorite = async (vehicleId: string) => {
     const token = localStorage.getItem('authToken');
@@ -156,6 +150,9 @@ export function SearchPage() {
     }).format(price);
   };
 
+  const hasActiveFilters =
+    filters.make || filters.model || filters.yearFrom !== 2000 || filters.priceMin > 0;
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
@@ -165,7 +162,7 @@ export function SearchPage() {
 
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <FiSearch className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <Input
                 placeholder="Buscar por marca, modelo, año..."
                 value={searchQuery}
@@ -178,139 +175,170 @@ export function SearchPage() {
               {loading ? 'Buscando...' : 'Buscar'}
             </Button>
 
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Filtros
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filtros de Búsqueda</SheetTitle>
-                  <SheetDescription>Refina tu búsqueda con estos filtros</SheetDescription>
-                </SheetHeader>
-
-                <div className="space-y-6 mt-6">
-                  {/* Make */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Marca</label>
-                    <Select
-                      value={filters.make}
-                      onValueChange={(value: string) => setFilters({ ...filters, make: value, model: '' })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas las marcas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Todas las marcas</SelectItem>
-                        {makes.map((make) => (
-                          <SelectItem key={make} value={make}>
-                            {make}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Model */}
-                  {filters.make && (
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Modelo</label>
-                      <Select
-                        value={filters.model}
-                        onValueChange={(value: string) => setFilters({ ...filters, model: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Todos los modelos" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Todos los modelos</SelectItem>
-                          {models.map((model) => (
-                            <SelectItem key={model} value={model}>
-                              {model}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* Year Range */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Año: {filters.yearFrom} - {filters.yearTo}
-                    </label>
-                    <Slider
-                      min={2000}
-                      max={new Date().getFullYear()}
-                      step={1}
-                      value={[filters.yearFrom, filters.yearTo]}
-                      onValueChange={([from, to]: number[]) =>
-                        setFilters({ ...filters, yearFrom: from, yearTo: to })
-                      }
-                    />
-                  </div>
-
-                  {/* Price Range */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Precio: {formatPrice(filters.priceMin)} - {formatPrice(filters.priceMax)}
-                    </label>
-                    <Slider
-                      min={0}
-                      max={10000000}
-                      step={100000}
-                      value={[filters.priceMin, filters.priceMax]}
-                      onValueChange={([min, max]: number[]) =>
-                        setFilters({ ...filters, priceMin: min, priceMax: max })
-                      }
-                    />
-                  </div>
-
-                  {/* Mileage */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Kilometraje máximo: {filters.mileageMax.toLocaleString()} km
-                    </label>
-                    <Slider
-                      min={0}
-                      max={300000}
-                      step={10000}
-                      value={[filters.mileageMax]}
-                      onValueChange={([max]: number[]) => setFilters({ ...filters, mileageMax: max })}
-                    />
-                  </div>
-
-                  <Button variant="outline" onClick={clearFilters} className="w-full">
-                    <X className="h-4 w-4 mr-2" />
-                    Limpiar Filtros
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+              <FiSliders className="h-4 w-4 mr-2" />
+              Filtros
+            </Button>
           </div>
 
-          {/* Active Filters */}
-          {(filters.make || filters.model || filters.yearFrom !== 2000 || filters.priceMin > 0) && (
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="mt-4 p-6 bg-white border rounded-lg shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Filtros de Búsqueda</h3>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FiX className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Make */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Marca</label>
+                  <select
+                    value={filters.make}
+                    onChange={(e) => setFilters({ ...filters, make: e.target.value, model: '' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Todas las marcas</option>
+                    {makes.map((make) => (
+                      <option key={make} value={make}>
+                        {make}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Model */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Modelo</label>
+                  <select
+                    value={filters.model}
+                    onChange={(e) => setFilters({ ...filters, model: e.target.value })}
+                    disabled={!filters.make}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">Todos los modelos</option>
+                    {models.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Year From */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Año Desde</label>
+                  <select
+                    value={filters.yearFrom}
+                    onChange={(e) => setFilters({ ...filters, yearFrom: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Array.from(
+                      { length: new Date().getFullYear() - 1999 },
+                      (_, i) => 2000 + i
+                    ).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Year To */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Año Hasta</label>
+                  <select
+                    value={filters.yearTo}
+                    onChange={(e) => setFilters({ ...filters, yearTo: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Array.from(
+                      { length: new Date().getFullYear() - 1999 },
+                      (_, i) => 2000 + i
+                    ).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Price Min */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Precio Mínimo</label>
+                  <Input
+                    type="number"
+                    value={filters.priceMin}
+                    onChange={(e) =>
+                      setFilters({ ...filters, priceMin: parseInt(e.target.value) || 0 })
+                    }
+                    placeholder="0"
+                  />
+                </div>
+
+                {/* Price Max */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Precio Máximo</label>
+                  <Input
+                    type="number"
+                    value={filters.priceMax}
+                    onChange={(e) =>
+                      setFilters({ ...filters, priceMax: parseInt(e.target.value) || 10000000 })
+                    }
+                    placeholder="10,000,000"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <Button onClick={handleSearch}>Aplicar Filtros</Button>
+                <Button variant="outline" onClick={clearFilters}>
+                  <FiX className="h-4 w-4 mr-2" />
+                  Limpiar Filtros
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters Tags */}
+          {hasActiveFilters && (
             <div className="flex flex-wrap gap-2 mt-4">
               {filters.make && (
-                <Badge variant="secondary">
+                <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                   Marca: {filters.make}
-                  <X
-                    className="h-3 w-3 ml-1 cursor-pointer"
+                  <button
+                    className="ml-2 hover:text-blue-600"
                     onClick={() => setFilters({ ...filters, make: '', model: '' })}
-                  />
-                </Badge>
+                  >
+                    <FiX className="h-3 w-3" />
+                  </button>
+                </span>
               )}
               {filters.model && (
-                <Badge variant="secondary">
+                <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                   Modelo: {filters.model}
-                  <X
-                    className="h-3 w-3 ml-1 cursor-pointer"
+                  <button
+                    className="ml-2 hover:text-blue-600"
                     onClick={() => setFilters({ ...filters, model: '' })}
-                  />
-                </Badge>
+                  >
+                    <FiX className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {filters.yearFrom !== 2000 && (
+                <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  Desde: {filters.yearFrom}
+                </span>
+              )}
+              {filters.priceMin > 0 && (
+                <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  Precio mín: {formatPrice(filters.priceMin)}
+                </span>
               )}
             </div>
           )}
@@ -322,17 +350,25 @@ export function SearchPage() {
             <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
             <p className="mt-4 text-gray-600">Buscando vehículos...</p>
           </div>
+        ) : vehicles.length === 0 ? (
+          <div className="text-center py-12">
+            <FiSearch className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              No se encontraron vehículos
+            </h3>
+            <p className="text-gray-500">Intenta ajustar los filtros o buscar otro término</p>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {vehicles.map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                  className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   <div className="relative">
                     <img
-                      src={vehicle.imageUrl}
+                      src={vehicle.imageUrl || '/placeholder-vehicle.jpg'}
                       alt={vehicle.title}
                       className="w-full h-48 object-cover"
                     />
@@ -340,7 +376,7 @@ export function SearchPage() {
                       onClick={() => toggleFavorite(vehicle.id)}
                       className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
                     >
-                      <Heart
+                      <FiHeart
                         className={`h-5 w-5 ${vehicle.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
                       />
                     </button>
@@ -348,7 +384,7 @@ export function SearchPage() {
                   <div className="p-4">
                     <h3 className="font-bold text-lg mb-2">{vehicle.title}</h3>
                     <p className="text-gray-600 text-sm mb-2">
-                      {vehicle.year} • {vehicle.mileage.toLocaleString()} km
+                      {vehicle.year} • {vehicle.mileage?.toLocaleString() || 0} km
                     </p>
                     <p className="text-2xl font-bold text-blue-600">{formatPrice(vehicle.price)}</p>
                     <Button
@@ -364,15 +400,16 @@ export function SearchPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center items-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
+                  <FiChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
                 </Button>
-                <div className="flex items-center px-4">
+                <div className="flex items-center px-4 py-2 bg-gray-100 rounded-lg">
                   Página {currentPage} de {totalPages}
                 </div>
                 <Button
@@ -381,6 +418,7 @@ export function SearchPage() {
                   disabled={currentPage === totalPages}
                 >
                   Siguiente
+                  <FiChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             )}
@@ -390,3 +428,5 @@ export function SearchPage() {
     </MainLayout>
   );
 }
+
+export default SearchPage;

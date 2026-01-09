@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, TrendingUp, Eye, MessageSquare, Car, AlertCircle, Loader2 } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { dealerManagementService, Dealer } from '@/services/dealerManagementService';
+import { dealerManagementService } from '@/services/dealerManagementService';
+import type { Dealer } from '@/services/dealerManagementService';
 
 export default function DealerDashboard() {
   const navigate = useNavigate();

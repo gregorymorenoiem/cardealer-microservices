@@ -4,8 +4,8 @@ using Moq;
 using MediatR;
 using ChatbotService.Domain.Entities;
 using ChatbotService.Domain.Interfaces;
-using ChatbotService.Application.Features.Commands;
-using ChatbotService.Application.Features.Queries;
+using ChatbotService.Application.Features.Conversations.Commands;
+using ChatbotService.Application.Features.Conversations.Queries;
 using ChatbotService.Application.DTOs;
 
 namespace ChatbotService.Tests;

@@ -36,19 +36,9 @@ public class IngestBatchCommandHandler : IRequestHandler<IngestBatchCommand, Bat
             try
             {
                 var dto = request.Events[i];
-                TrackedEvent entity = dto.EventType switch
-                {
-                    "PageView" => MapToPageViewEvent(dto as CreatePageViewEventDto 
-                        ?? throw new InvalidOperationException("PageView event requires PageViewEventDto")),
-                    "Search" => MapToSearchEvent(dto as CreateSearchEventDto 
-                        ?? throw new InvalidOperationException("Search event requires SearchEventDto")),
-                    "VehicleView" => MapToVehicleViewEvent(dto as CreateVehicleViewEventDto 
-                        ?? throw new InvalidOperationException("VehicleView event requires VehicleViewEventDto")),
-                    "Filter" => MapToFilterEvent(dto as CreateFilterEventDto 
-                        ?? throw new InvalidOperationException("Filter event requires FilterEventDto")),
-                    _ => MapToTrackedEvent(dto)
-                };
-
+                // Mapear todos los eventos al tipo base TrackedEvent
+                // El EventData JSON contiene propiedades adicionales específicas del tipo
+                TrackedEvent entity = MapToTrackedEvent(dto);
                 entities.Add(entity);
             }
             catch (Exception ex)

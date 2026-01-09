@@ -69,6 +69,75 @@ export interface CreateReviewRequest {
   comment: string;
 }
 
+export type ReviewSortBy = 'date_desc' | 'date_asc' | 'rating_desc' | 'rating_asc' | 'helpful';
+
+// ========================================
+// SPRINT 15 - DTOs AVANZADOS
+// ========================================
+
+export interface VoteResultDto {
+  success: boolean;
+  message: string;
+  totalHelpfulVotes: number;
+  totalVotes: number;
+  helpfulPercentage: number;
+  userVotedHelpful: boolean;
+}
+
+export interface VoteStatsDto {
+  reviewId: string;
+  helpfulVotes: number;
+  totalVotes: number;
+  helpfulPercentage: number;
+  currentUserVotedHelpful: boolean | null;
+}
+
+export interface SellerBadgeDto {
+  id: string;
+  sellerId: string;
+  badgeType: string;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  isActive: boolean;
+  earnedAt: string;
+  expiresAt?: string;
+}
+
+export interface BadgeUpdateResultDto {
+  sellerId: string;
+  badgesAdded: SellerBadgeDto[];
+  badgesRemoved: string[];
+  totalActiveBadges: number;
+}
+
+export interface ReviewRequestDto {
+  id: string;
+  buyerId: string;
+  sellerId: string;
+  transactionId: string;
+  vehicleId?: string;
+  status: ReviewRequestStatus;
+  sentAt: string;
+  expiresAt: string;
+  completedAt?: string;
+  reviewId?: string;
+}
+
+export type ReviewRequestStatus = 'Sent' | 'Viewed' | 'Completed' | 'Expired' | 'Cancelled';
+
+export interface GetReviewsRequest {
+  sellerId: string;
+  vehicleId?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: ReviewSortBy;
+  minRating?: number;
+  maxRating?: number;
+  verifiedOnly?: boolean;
+}
+
 /**
  * Servicio para interactuar con el ReviewService API
  * Maneja todas las operaciones CRUD de reviews y resúmenes
@@ -202,6 +271,116 @@ export class ReviewService {
         isApproved,
         moderatorNote,
       }),
+    });
+
+    return this.handleResponse<ReviewDto>(response);
+  }
+
+  // ========================================
+  // SPRINT 15 - FUNCIONALIDADES AVANZADAS
+  // ========================================
+
+  /**
+   * Votar si una review fue útil o no
+   * Requiere autenticación
+   */
+  async voteReview(reviewId: string, isHelpful: boolean): Promise<VoteResultDto> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/${reviewId}/vote`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ isHelpful }),
+    });
+
+    return this.handleResponse<VoteResultDto>(response);
+  }
+
+  /**
+   * Obtener estadísticas de votos de una review
+   */
+  async getVoteStats(reviewId: string): Promise<VoteStatsDto> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/${reviewId}/vote-stats`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<VoteStatsDto>(response);
+  }
+
+  /**
+   * Obtener badges de un vendedor
+   */
+  async getSellerBadges(sellerId: string): Promise<SellerBadgeDto[]> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/seller/${sellerId}/badges`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<SellerBadgeDto[]>(response);
+  }
+
+  /**
+   * Recalcular badges de un vendedor (solo admins)
+   */
+  async recalculateBadges(sellerId: string): Promise<BadgeUpdateResultDto> {
+    const response = await fetch(
+      `${this.baseUrl}/api/reviews/seller/${sellerId}/badges/recalculate`,
+      {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      }
+    );
+
+    return this.handleResponse<BadgeUpdateResultDto>(response);
+  }
+
+  /**
+   * Enviar solicitud de review post-compra (admin/system)
+   */
+  async sendReviewRequest(
+    buyerId: string,
+    sellerId: string,
+    transactionId: string
+  ): Promise<ReviewRequestDto> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/requests`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ buyerId, sellerId, transactionId }),
+    });
+
+    return this.handleResponse<ReviewRequestDto>(response);
+  }
+
+  /**
+   * Obtener reviews pendientes para un comprador
+   * Requiere autenticación
+   */
+  async getPendingReviewRequests(buyerId: string): Promise<ReviewRequestDto[]> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/requests/buyer/${buyerId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<ReviewRequestDto[]>(response);
+  }
+
+  /**
+   * Obtener mis reviews pendientes
+   * Requiere autenticación
+   */
+  async getMyPendingRequests(): Promise<ReviewRequestDto[]> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/requests/mine`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<ReviewRequestDto[]>(response);
+  }
+
+  /**
+   * Responder a una review como vendedor
+   * Requiere autenticación como vendedor
+   */
+  async respondToReview(reviewId: string, responseText: string): Promise<ReviewDto> {
+    const response = await fetch(`${this.baseUrl}/api/reviews/${reviewId}/respond`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ responseText }),
     });
 
     return this.handleResponse<ReviewDto>(response);

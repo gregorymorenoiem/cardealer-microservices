@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
@@ -53,22 +54,26 @@ export interface VehicleInteraction {
   source?: string;
 }
 
-export enum RecommendationType {
-  ForYou = 'ForYou',
-  Similar = 'Similar',
-  AlsoViewed = 'AlsoViewed',
-  Popular = 'Popular',
-  Trending = 'Trending',
-  RecentlyViewed = 'RecentlyViewed',
-}
+export const RecommendationType = {
+  ForYou: 'ForYou',
+  Similar: 'Similar',
+  AlsoViewed: 'AlsoViewed',
+  Popular: 'Popular',
+  Trending: 'Trending',
+  RecentlyViewed: 'RecentlyViewed',
+} as const;
 
-export enum InteractionType {
-  View = 'View',
-  Favorite = 'Favorite',
-  Contact = 'Contact',
-  Share = 'Share',
-  Compare = 'Compare',
-}
+export type RecommendationType = (typeof RecommendationType)[keyof typeof RecommendationType];
+
+export const InteractionType = {
+  View: 'View',
+  Favorite: 'Favorite',
+  Contact: 'Contact',
+  Share: 'Share',
+  Compare: 'Compare',
+} as const;
+
+export type InteractionType = (typeof InteractionType)[keyof typeof InteractionType];
 
 export interface TrackInteractionRequest {
   vehicleId: string;
@@ -179,7 +184,11 @@ class RecommendationServiceClass {
   /**
    * Track view de vehículo (helper)
    */
-  async trackVehicleView(vehicleId: string, durationSeconds: number = 0, source: string = 'direct'): Promise<void> {
+  async trackVehicleView(
+    vehicleId: string,
+    durationSeconds: number = 0,
+    source: string = 'direct'
+  ): Promise<void> {
     try {
       await this.trackInteraction({
         vehicleId,

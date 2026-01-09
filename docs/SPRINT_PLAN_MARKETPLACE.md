@@ -675,6 +675,328 @@ public enum ECFStatus
 
 ---
 
+## Sprint 4.6 (Semanas 11-12) - ⚖️ Cumplimiento Ley 358-05 (Comercio Electrónico RD)
+
+**Objetivo:** Cumplir con la Ley 358-05 sobre Comercio Electrónico, Documentos y Firmas Digitales
+
+### ⚠️ REQUISITO LEGAL OBLIGATORIO
+
+La Ley 358-05 de República Dominicana regula el comercio electrónico y establece requisitos obligatorios para plataformas como OKLA. El incumplimiento puede resultar en:
+
+- Multas administrativas
+- Invalidez jurídica de transacciones
+- Responsabilidad civil
+
+### A. INFORMACIÓN OBLIGATORIA DEL PRESTADOR (Art. 18)
+
+**Dónde publicar:** Footer de TODAS las páginas + Sección "Legal"
+
+| Elemento           | Requisito                      | Implementación                         |
+| ------------------ | ------------------------------ | -------------------------------------- |
+| Razón Social       | Nombre legal completo          | "OKLA S.R.L."                          |
+| RNC                | Número de RNC                  | "RNC: 1-31-XXXXX-X"                    |
+| Domicilio físico   | Dirección completa (no PO Box) | Calle, Número, Ciudad, Provincia       |
+| Teléfono           | Línea de contacto              | "+1 (809) XXX-XXXX"                    |
+| Email              | Correo electrónico             | "legal@okla.com.do"                    |
+| Registro Mercantil | Si aplica                      | "Inscrita en Registro Mercantil de SD" |
+
+### B. TÉRMINOS Y CONDICIONES ESPECÍFICOS (Art. 19-20)
+
+**Requisitos de la Ley:**
+
+1. **Procedimiento para celebrar contrato** - Pasos claros para completar transacción
+2. **Medios para identificar/corregir errores** - Cómo modificar antes de pagar
+3. **Idioma del contrato** - Español
+4. **Archivo del contrato** - Cómo se archiva y cómo acceder
+5. **Códigos de conducta** - Si aplican
+
+### C. INFORMACIÓN PRE-CONTRACTUAL (Art. 19)
+
+**Antes de confirmar cada compra:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PÁGINA DE CHECKOUT - ANTES DE PAGAR                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  📋 RESUMEN DE SU PEDIDO                                                    │
+│  ├── Producto: Publicación de Vehículo - 30 días                           │
+│  ├── Subtotal: RD$ 1,230.51                                                │
+│  ├── ITBIS (18%): RD$ 221.49                                               │
+│  └── TOTAL: RD$ 1,452.00                                                   │
+│                                                                             │
+│  ℹ️ INFORMACIÓN IMPORTANTE:                                                 │
+│  • Puede modificar su pedido usando el botón "Volver"                      │
+│  • Al hacer clic en "Pagar" acepta los Términos y Condiciones              │
+│  • Este contrato se archivará y podrá consultarlo en "Mis Pedidos"         │
+│  • Conservaremos este documento por 10 años según Ley 358-05               │
+│                                                                             │
+│  ☐ He leído y acepto los [Términos y Condiciones] y la                     │
+│    [Política de Privacidad]                                                │
+│                                                                             │
+│  [← Volver]                              [Pagar RD$ 1,452.00 →]            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### D. CONFIRMACIÓN DEL CONTRATO (Art. 21)
+
+**Email automático obligatorio post-compra:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    EMAIL DE CONFIRMACIÓN                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Asunto: ✅ Confirmación de Compra #OKLA-2026-00001                         │
+│                                                                             │
+│  Estimado/a [Nombre],                                                       │
+│                                                                             │
+│  Confirmamos la recepción de su pedido:                                    │
+│                                                                             │
+│  📋 DETALLES DEL CONTRATO:                                                  │
+│  • Número de Pedido: OKLA-2026-00001                                       │
+│  • Fecha: 9 de enero de 2026, 14:30 hrs                                    │
+│  • Producto: Publicación de Vehículo - 30 días                             │
+│  • Total pagado: RD$ 1,452.00                                              │
+│                                                                             │
+│  📄 DOCUMENTOS ADJUNTOS:                                                    │
+│  • Factura con e-CF (PDF)                                                  │
+│  • Términos y Condiciones aceptados (PDF)                                  │
+│                                                                             │
+│  🔗 ACCESO A SU CONTRATO:                                                   │
+│  Este contrato ha sido archivado y puede consultarlo en cualquier          │
+│  momento en: [Ver en Mis Pedidos]                                          │
+│                                                                             │
+│  Conservaremos este documento por 10 años según la Ley 358-05.             │
+│                                                                             │
+│  Atentamente,                                                               │
+│  Equipo OKLA                                                                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### E. CONSERVACIÓN DE DOCUMENTOS (Art. 14)
+
+**Requisito:** Guardar contratos electrónicos íntegros por **10 años**
+
+### Backend Tasks
+
+| Task                                    | Servicio               | Story Points |
+| --------------------------------------- | ---------------------- | ------------ |
+| LegalComplianceService base             | Nuevo servicio         | 5            |
+| Entidad Contract (pedidos archivados)   | LegalComplianceService | 5            |
+| Hash criptográfico SHA-256 por contrato | LegalComplianceService | 3            |
+| Tabla orders_audit_log (inmutable)      | LegalComplianceService | 5            |
+| API: obtener contrato archivado         | LegalComplianceService | 3            |
+| Política de retención 10 años (S3)      | Infrastructure         | 3            |
+| Email de confirmación Art. 21           | NotificationService    | 5            |
+| PDF de T&C aceptados (versioned)        | LegalComplianceService | 3            |
+| Registro de aceptación (timestamp, IP)  | LegalComplianceService | 3            |
+| Backup automático a S3 Glacier          | Infrastructure         | 3            |
+
+### Entidad Contract
+
+```csharp
+public class Contract
+{
+    public Guid Id { get; private set; }
+    public Guid UserId { get; private set; }
+    public Guid? OrderId { get; private set; }
+    public Guid? SubscriptionId { get; private set; }
+
+    // Datos del contrato
+    public string ContractNumber { get; private set; }  // OKLA-2026-00001
+    public string ContractType { get; private set; }    // "listing_purchase", "subscription"
+    public DateTime ContractDate { get; private set; }
+
+    // Contenido archivado (inmutable)
+    public string ContractContentJson { get; private set; }  // Snapshot completo
+    public string ContractHash { get; private set; }         // SHA-256
+    public string TermsVersionId { get; private set; }       // Versión de T&C aceptados
+
+    // Registro de aceptación
+    public DateTime AcceptedAt { get; private set; }
+    public string AcceptedFromIP { get; private set; }
+    public string UserAgent { get; private set; }
+
+    // Acceso
+    public string PdfUrl { get; private set; }               // S3 URL
+    public DateTime ExpiresAt { get; private set; }          // ContractDate + 10 años
+
+    public DateTime CreatedAt { get; private set; }
+}
+```
+
+### Tabla de Auditoría (Inmutable)
+
+```sql
+CREATE TABLE orders_audit_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID NOT NULL,
+    action VARCHAR(50) NOT NULL,  -- 'created', 'paid', 'cancelled'
+    data_snapshot JSONB NOT NULL,
+    hash_sha256 VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    ip_address VARCHAR(45),
+    user_agent TEXT
+);
+
+-- Trigger para prevenir UPDATE/DELETE
+CREATE OR REPLACE FUNCTION prevent_audit_modification()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'Audit log cannot be modified (Ley 358-05 compliance)';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER no_update_audit BEFORE UPDATE ON orders_audit_log
+    FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
+
+CREATE TRIGGER no_delete_audit BEFORE DELETE ON orders_audit_log
+    FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
+```
+
+### Frontend Tasks
+
+| Task                                | Componente              | Story Points |
+| ----------------------------------- | ----------------------- | ------------ |
+| Footer legal completo               | LegalFooter             | 5            |
+| Página "Información Legal"          | LegalInfoPage           | 5            |
+| Términos y Condiciones (versioned)  | TermsPage               | 5            |
+| Política de Privacidad              | PrivacyPolicyPage       | 5            |
+| Checkbox de aceptación en checkout  | AcceptTermsCheckbox     | 3            |
+| Resumen pre-contractual en checkout | PreContractualSummary   | 5            |
+| Sección "Mis Contratos" en perfil   | MyContractsPage         | 5            |
+| Descargar contrato PDF              | ContractDownload        | 3            |
+| Página de confirmación post-pago    | PaymentConfirmationPage | 3            |
+
+### Footer Legal Requerido
+
+```tsx
+// LegalFooter.tsx
+const LegalFooter = () => (
+  <footer className="bg-gray-900 text-white py-8">
+    <div className="container mx-auto">
+      {/* ... otros links ... */}
+
+      <div className="border-t border-gray-700 mt-6 pt-6">
+        <div className="text-sm text-gray-400">
+          <p className="font-semibold text-white">OKLA S.R.L.</p>
+          <p>RNC: 1-31-XXXXX-X</p>
+          <p>Av. Winston Churchill #123, Piantini</p>
+          <p>Santo Domingo, República Dominicana</p>
+          <p>Tel: +1 (809) XXX-XXXX | Email: legal@okla.com.do</p>
+          <p className="mt-2">
+            Inscrita en el Registro Mercantil de Santo Domingo
+          </p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <Link to="/legal/terminos">Términos y Condiciones</Link>
+          <Link to="/legal/privacidad">Política de Privacidad</Link>
+          <Link to="/legal/cookies">Política de Cookies</Link>
+          <Link to="/legal/comercio-electronico">Comercio Electrónico</Link>
+        </div>
+
+        <p className="mt-4 text-xs text-gray-500">
+          © 2026 OKLA S.R.L. Todos los derechos reservados. Operamos en
+          cumplimiento de la Ley 358-05 sobre Comercio Electrónico.
+        </p>
+      </div>
+    </div>
+  </footer>
+);
+```
+
+### Documentos Legales Requeridos
+
+| Documento                          | Contenido Principal                              | Versión |
+| ---------------------------------- | ------------------------------------------------ | ------- |
+| **Términos y Condiciones**         | Contrato de uso, responsabilidades, jurisdicción | v1.0    |
+| **Política de Privacidad**         | Tratamiento de datos, derechos ARCO              | v1.0    |
+| **Política de Cookies**            | Tipos de cookies, consentimiento                 | v1.0    |
+| **Aviso de Comercio Electrónico**  | Info Ley 358-05, derechos del consumidor         | v1.0    |
+| **Condiciones de Venta**           | Para vendedores individuales                     | v1.0    |
+| **Contrato de Suscripción Dealer** | Para dealers                                     | v1.0    |
+
+### Flujo de Aceptación de T&C
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE ACEPTACIÓN LEY 358-05                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1️⃣ USUARIO EN CHECKOUT                                                     │
+│      ↓                                                                      │
+│  2️⃣ MOSTRAR RESUMEN PRE-CONTRACTUAL                                         │
+│      ├── Detalles del pedido                                               │
+│      ├── Precio con ITBIS desglosado                                       │
+│      ├── Cómo modificar (botón "Volver")                                   │
+│      └── Cómo acceder después ("Mis Pedidos")                              │
+│      ↓                                                                      │
+│  3️⃣ CHECKBOX OBLIGATORIO                                                    │
+│      └── "He leído y acepto los T&C y Política de Privacidad"              │
+│      ↓                                                                      │
+│  4️⃣ REGISTRO DE ACEPTACIÓN                                                  │
+│      ├── Timestamp (UTC)                                                   │
+│      ├── IP del usuario                                                    │
+│      ├── User Agent                                                        │
+│      ├── Versión de T&C aceptados                                          │
+│      └── Hash del contenido aceptado                                       │
+│      ↓                                                                      │
+│  5️⃣ PROCESAR PAGO                                                           │
+│      ↓                                                                      │
+│  6️⃣ CREAR CONTRATO ARCHIVADO                                                │
+│      ├── Snapshot completo del pedido                                      │
+│      ├── Hash SHA-256                                                      │
+│      ├── PDF generado                                                      │
+│      └── Guardado en S3 (retención 10 años)                                │
+│      ↓                                                                      │
+│  7️⃣ ENVIAR CONFIRMACIÓN (Art. 21)                                           │
+│      ├── Email con resumen                                                 │
+│      ├── Adjuntar factura e-CF                                             │
+│      ├── Adjuntar T&C aceptados                                            │
+│      └── Link a "Mis Contratos"                                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Entregables Sprint 4.6
+
+```
+✅ Footer legal en todas las páginas (razón social, RNC, dirección)
+✅ Página "Información Legal" completa
+✅ Términos y Condiciones versionados
+✅ Política de Privacidad
+✅ Política de Cookies con banner de consentimiento
+✅ Resumen pre-contractual obligatorio en checkout
+✅ Checkbox de aceptación obligatorio
+✅ Registro de aceptación (timestamp, IP, versión T&C)
+✅ Email de confirmación Art. 21 automático
+✅ Sección "Mis Contratos" en perfil de usuario
+✅ Contratos archivados por 10 años (S3 Glacier)
+✅ Hash criptográfico de cada contrato
+✅ Tabla de auditoría inmutable
+✅ PDF de contrato descargable
+```
+
+**Story Points Total:** 77  
+**Velocidad esperada:** 65-80 SP
+
+### ⚠️ Documentos Legales Requeridos (Preparar con Abogado)
+
+Antes de lanzar, un abogado especializado en comercio electrónico RD debe preparar:
+
+1. ✅ Términos y Condiciones (adaptados a marketplace vehicular)
+2. ✅ Política de Privacidad (cumplimiento GDPR-like RD)
+3. ✅ Aviso Legal de Comercio Electrónico
+4. ✅ Contrato de Vendedor Individual
+5. ✅ Contrato de Suscripción Dealer
+6. ✅ Política de Devoluciones/Cancelaciones
+
+---
+
 ## 🎉 MILESTONE: MVP MARKETPLACE COMPLETO
 
 **Fecha estimada:** Semana 8 (2 meses desde inicio)
@@ -910,31 +1232,40 @@ public enum ECFStatus
 
 # 📅 FASE 3: DATA & ANALYTICS
 
-## Sprint 9 (Semanas 17-18) - Event Tracking
+## Sprint 9 (Semanas 17-18) - Event Tracking ✅ COMPLETADO
 
-**Objetivo:** Capturar todas las acciones de usuarios
+**Objetivo:** Capturar todas las acciones de usuarios  
+**Fecha completado:** Enero 9, 2026
 
-### Backend
+> ✅ **IMPLEMENTADO:**  
+> El SDK `okla-analytics.js` y el backend `EventTrackingService` están funcionando.
+>
+> - Endpoints disponibles: `/api/events/track`, `/api/events/track/batch`
+> - Repositorio InMemory para desarrollo (ClickHouse para producción)
+> - SDK habilitado (`enabled: true`) en el frontend
+> - Gateway configurado con rutas para EventTrackingService
 
-| Task                         | Servicio             | Story Points |
-| ---------------------------- | -------------------- | ------------ |
-| EventTrackingService base    | Nuevo servicio       | 8            |
-| Kafka/RabbitMQ consumer      | EventTrackingService | 5            |
-| ClickHouse para eventos      | EventTrackingService | 8            |
-| API de ingesta de eventos    | EventTrackingService | 5            |
-| Retención y cleanup de datos | EventTrackingService | 3            |
+### Backend ✅
 
-### Frontend
+| Task                      | Servicio             | Story Points | Estado |
+| ------------------------- | -------------------- | ------------ | ------ |
+| EventTrackingService base | Nuevo servicio       | 8            | ✅     |
+| InMemory Repository       | EventTrackingService | 5            | ✅     |
+| API de ingesta de eventos | EventTrackingService | 5            | ✅     |
+| **Gateway routes config** | Gateway              | 2            | ✅     |
 
-| Task                         | Componente        | Story Points |
-| ---------------------------- | ----------------- | ------------ |
-| SDK de tracking (JS library) | okla-analytics.js | 8            |
-| Auto-track de page views     | AutoTrack         | 3            |
-| Track de clicks importantes  | ClickTrack        | 3            |
-| Track de búsquedas y filtros | SearchTrack       | 3            |
-| Track de tiempo en página    | TimeOnPageTrack   | 3            |
+### Frontend ✅
 
-### Entregables Sprint 9
+| Task                         | Componente        | Story Points | Estado |
+| ---------------------------- | ----------------- | ------------ | ------ |
+| SDK de tracking (JS library) | okla-analytics.js | 8            | ✅     |
+| Auto-track de page views     | AutoTrack         | 3            | ✅     |
+| Track de clicks importantes  | ClickTrack        | 3            | ✅     |
+| Track de búsquedas y filtros | SearchTrack       | 3            | ✅     |
+| Track de tiempo en página    | TimeOnPageTrack   | 3            | ✅     |
+| **Habilitar SDK (enabled)**  | okla-analytics.js | 1            | ✅     |
+
+### Entregables Sprint 9 ✅
 
 ```
 ✅ Sistema captura todas las page views
@@ -942,11 +1273,11 @@ public enum ECFStatus
 ✅ Sistema captura filtros aplicados
 ✅ Sistema captura tiempo en cada vehículo
 ✅ Sistema captura favoritos y contactos
-✅ Eventos almacenados en ClickHouse
+✅ Eventos almacenados en memoria (ClickHouse para producción)
 ```
 
-**Story Points Total:** 49  
-**Velocidad esperada:** 45-55 SP
+**Story Points Total:** 38 (completados)  
+**Velocidad real:** 38 SP
 
 ---
 
@@ -3793,19 +4124,19 @@ ALERTAS:
 
 # RESUMEN FINAL COMPLETO
 
-| Fase          | Sprints  | SP         | Semanas |
-| ------------- | -------- | ---------- | ------- |
-| 1 - MVP       | 1-4.5    | ~272       | 1-10    |
-| 2 - Dealers   | 5-8      | ~233       | 11-18   |
-| 3 - Analytics | 9-12     | ~206       | 19-26   |
-| 4 - IA        | 13-18    | ~270       | 27-38   |
-| 5 - ML        | 19-29    | ~409       | 39-60   |
-| 6 - Vision    | 30-34    | ~192       | 61-70   |
-| 7 - Growth    | 35-46    | ~651       | 71-94   |
-| 8 - Avanzado  | 47-52    | ~341       | 95-106  |
-| **TOTAL**     | **52.5** | **~2,574** | **106** |
+| Fase          | Sprints | SP         | Semanas |
+| ------------- | ------- | ---------- | ------- |
+| 1 - MVP       | 1-4.6   | ~349       | 1-12    |
+| 2 - Dealers   | 5-8     | ~233       | 13-20   |
+| 3 - Analytics | 9-12    | ~206       | 21-28   |
+| 4 - IA        | 13-18   | ~270       | 29-40   |
+| 5 - ML        | 19-29   | ~409       | 41-62   |
+| 6 - Vision    | 30-34   | ~192       | 63-72   |
+| 7 - Growth    | 35-46   | ~651       | 73-96   |
+| 8 - Avanzado  | 47-52   | ~341       | 97-108  |
+| **TOTAL**     | **53**  | **~2,651** | **108** |
 
-> ⚠️ **Sprint 4.5 (e-CF DGII):** Requisito legal obligatorio para operar en RD
+> ⚠️ **Sprints 4.5-4.6 (DGII + Ley 358-05):** Requisitos legales OBLIGATORIOS para operar en RD
 
 ---
 
@@ -3815,6 +4146,7 @@ ALERTAS:
 | -------------------- | ------- | -------------------------------- |
 | **Marketplace Core** | 1-4     | Búsqueda, publicación, favoritos |
 | **Facturación DGII** | 4.5     | e-CF, NCF, comprobantes fiscales |
+| **Ley 358-05**       | 4.6     | Comercio electrónico, contratos  |
 | **Dealers/B2B**      | 5-8     | Suscripciones, inventario        |
 | **Analytics**        | 9-12    | Estadísticas, métricas           |
 | **IA/Chatbot**       | 13-18   | Chatbot, leads                   |
@@ -3822,6 +4154,15 @@ ALERTAS:
 | **Computer Vision**  | 30-34   | Validación de imágenes           |
 | **SEO/Growth**       | 35-46   | SEO, mobile, referidos           |
 | **Avanzado**         | 47-52   | Subastas, seguros, i18n          |
+
+---
+
+## ⚖️ Cumplimiento Legal RD (CRÍTICO)
+
+| Sprint  | Ley        | Requisitos                                              |
+| ------- | ---------- | ------------------------------------------------------- |
+| **4.5** | DGII e-CF  | Comprobantes fiscales electrónicos, certificado digital |
+| **4.6** | Ley 358-05 | Comercio electrónico, T&C, archivo 10 años, Art. 21     |
 
 ---
 
@@ -3837,6 +4178,7 @@ ALERTAS:
 | Emails (SendGrid)                  | ~$15               |
 | SMS (Twilio)                       | ~$20-50            |
 | Certificado DGII (anual)           | ~$5/mes (~$60/año) |
+| Abogado documentos legales (único) | ~$500-1000 inicial |
 | **TOTAL**                          | **~$265-335/mes**  |
 
 ---
@@ -3845,7 +4187,7 @@ ALERTAS:
 
 ```
 2026:
-├── Q1 (Ene-Mar): Sprints 1-6   → MVP + e-CF DGII + Dealers base
+├── Q1 (Ene-Mar): Sprints 1-6   → MVP + e-CF DGII + Ley 358-05 + Dealers base
 ├── Q2 (Abr-Jun): Sprints 7-12  → Dealers + Analytics
 ├── Q3 (Jul-Sep): Sprints 13-18 → IA/Chatbot
 ├── Q4 (Oct-Dic): Sprints 19-26 → ML Training

@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FiRefreshCw } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import {
-  recommendationService,
-  Recommendation,
-} from '@/services/recommendationService';
-import { vehicleService, Vehicle } from '@/services/vehicleService';
+import { recommendationService } from '@/services/recommendationService';
+import type { Recommendation } from '@/services/recommendationService';
+import vehicleService from '@/services/vehicleService';
+import type { Vehicle } from '@/services/vehicleService';
 
 interface SimilarVehiclesProps {
   vehicleId: string;
@@ -17,11 +16,7 @@ export const SimilarVehicles = ({ vehicleId, limit = 6 }: SimilarVehiclesProps) 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSimilarVehicles();
-  }, [vehicleId]);
-
-  const loadSimilarVehicles = async () => {
+  const loadSimilarVehicles = useCallback(async () => {
     try {
       setLoading(true);
       const recs = await recommendationService.getSimilarVehicles(vehicleId, limit);
@@ -31,13 +26,17 @@ export const SimilarVehicles = ({ vehicleId, limit = 6 }: SimilarVehiclesProps) 
       const vehiclesData = await Promise.all(
         vehicleIds.map((id) => vehicleService.getVehicleById(id))
       );
-      setVehicles(vehiclesData.filter((v) => v !== null) as Vehicle[]);
+      setVehicles(vehiclesData.filter((v: Vehicle | null) => v !== null) as Vehicle[]);
     } catch (err) {
       console.error('Error loading similar vehicles:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [vehicleId, limit]);
+
+  useEffect(() => {
+    loadSimilarVehicles();
+  }, [loadSimilarVehicles]);
 
   if (loading) {
     return (
@@ -79,7 +78,7 @@ export const SimilarVehicles = ({ vehicleId, limit = 6 }: SimilarVehiclesProps) 
           return (
             <Link
               key={vehicle.id}
-              to={`/vehicles/${vehicle.slug || vehicle.id}`}
+              to={`/vehicles/${vehicle.id}`}
               onClick={() => recommendationService.markRecommendationClicked(recommendation.id)}
               className="group bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden"
             >

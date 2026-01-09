@@ -30,15 +30,9 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(IngestEventCommand).Assembly);
 });
 
-// ClickHouse Repository
-var clickHouseConnectionString = builder.Configuration.GetConnectionString("ClickHouse") 
-    ?? "Host=localhost;Port=8123;Database=okla_events;User=default;Password=;Compression=true";
-
-builder.Services.AddScoped<IEventRepository>(provider =>
-{
-    var logger = provider.GetRequiredService<ILogger<ClickHouseEventRepository>>();
-    return new ClickHouseEventRepository(clickHouseConnectionString, logger);
-});
+// Event Repository - Use InMemory for development
+// TODO: Add ClickHouse support when deployed to production
+builder.Services.AddSingleton<IEventRepository, InMemoryEventRepository>();
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -91,10 +85,15 @@ app.MapHealthChecks("/health");
 // RUN APPLICATION
 // ============================================
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://0.0.0.0:{port}");
+// Use ASPNETCORE_URLS if set, otherwise default to port 80 for Docker
+var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+if (string.IsNullOrEmpty(urls))
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
 
-app.Logger.LogInformation("🚀 EventTrackingService starting on port {Port}", port);
-app.Logger.LogInformation("📊 ClickHouse Connection: {Connection}", clickHouseConnectionString.Split(';')[0]);
+app.Logger.LogInformation("🚀 EventTrackingService starting");
+app.Logger.LogInformation("📊 Using {RepositoryType} event repository", "InMemory");
 
 app.Run();

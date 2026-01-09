@@ -1,7 +1,7 @@
 /**
  * HomePage - Vehicle-only marketplace landing page
  * Main landing page focused on vehicle sales
- * 
+ *
  * Now uses REAL DATA from /api/homepagesections/homepage API!
  * Sections are configured in database with assigned vehicles.
  * Images use S3 URLs from the backend.
@@ -11,15 +11,30 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
-import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft, FiChevronRight, FiStar, FiMapPin, FiLoader } from 'react-icons/fi';
+import {
+  FiArrowRight,
+  FiSearch,
+  FiShield,
+  FiMessageCircle,
+  FiZap,
+  FiChevronLeft,
+  FiChevronRight,
+  FiStar,
+  FiMapPin,
+  FiLoader,
+} from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
 import { ForYouSection } from '@/components/recommendations/ForYouSection';
-import { useHomepageSections, type HomepageSection, type HomepageVehicle } from '@/hooks/useHomepageSections';
+import {
+  useHomepageSections,
+  type HomepageSection,
+  type HomepageVehicle,
+} from '@/hooks/useHomepageSections';
 import { generateListingUrl } from '@/utils/seoSlug';
 import type { Vehicle } from '@/data/mockVehicles';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 // Note: Vehicle categories removed - single category (vehicles) in first phase
 
@@ -74,7 +89,10 @@ interface FeaturedListingItem {
 }
 
 // Transform HomepageVehicle to FeaturedListingItem (for FeaturedSection component)
-const transformToFeaturedListing = (vehicle: HomepageVehicle, sectionName: string): FeaturedListingItem => {
+const transformToFeaturedListing = (
+  vehicle: HomepageVehicle,
+  sectionName: string
+): FeaturedListingItem => {
   // Generate consistent pseudo-random rating based on vehicle ID
   const idHash = vehicle.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const rating = 4.5 + (idHash % 50) / 100; // Range: 4.50 - 4.99
@@ -96,33 +114,33 @@ const transformToFeaturedListing = (vehicle: HomepageVehicle, sectionName: strin
 const transformHomepageVehicleToVehicle = (v: HomepageVehicle): Vehicle => {
   // Map bodyStyle from API to bodyType expected by Vehicle type
   const bodyTypeMap: Record<string, Vehicle['bodyType']> = {
-    'Sedan': 'Sedan',
-    'Coupe': 'Coupe',
-    'SUV': 'SUV',
-    'Crossover': 'SUV',
-    'Pickup': 'Truck',
-    'Wagon': 'Wagon',
-    'Hatchback': 'Hatchback',
-    'Van': 'Van',
-    'Convertible': 'Convertible',
-    'SportsCar': 'Coupe',
+    Sedan: 'Sedan',
+    Coupe: 'Coupe',
+    SUV: 'SUV',
+    Crossover: 'SUV',
+    Pickup: 'Truck',
+    Wagon: 'Wagon',
+    Hatchback: 'Hatchback',
+    Van: 'Van',
+    Convertible: 'Convertible',
+    SportsCar: 'Coupe',
   };
 
   // Map fuelType from API
   const fuelTypeMap: Record<string, Vehicle['fuelType']> = {
-    'Gasoline': 'Gasoline',
-    'Diesel': 'Diesel',
-    'Electric': 'Electric',
-    'Hybrid': 'Hybrid',
-    'PlugInHybrid': 'Plug-in Hybrid',
+    Gasoline: 'Gasoline',
+    Diesel: 'Diesel',
+    Electric: 'Electric',
+    Hybrid: 'Hybrid',
+    PlugInHybrid: 'Plug-in Hybrid',
   };
 
   // Map transmission from API
   const transmissionMap: Record<string, Vehicle['transmission']> = {
-    'Automatic': 'Automatic',
-    'Manual': 'Manual',
-    'CVT': 'CVT',
-    'DualClutch': 'Automatic',
+    Automatic: 'Automatic',
+    Manual: 'Manual',
+    CVT: 'CVT',
+    DualClutch: 'Automatic',
   };
 
   // Generate consistent pseudo-random rating
@@ -167,13 +185,13 @@ const transformHomepageVehicleToVehicle = (v: HomepageVehicle): Vehicle => {
 const getCategoryColor = (accentColor: string): string => {
   // Map from API accentColor to Tailwind color
   const colorMap: Record<string, string> = {
-    'blue': 'blue',
-    'emerald': 'emerald',
-    'amber': 'amber',
-    'red': 'red',
-    'green': 'green',
-    'purple': 'purple',
-    'pink': 'pink',
+    blue: 'blue',
+    emerald: 'emerald',
+    amber: 'amber',
+    red: 'red',
+    green: 'green',
+    purple: 'purple',
+    pink: 'pink',
   };
   return colorMap[accentColor] || 'blue';
 };
@@ -214,7 +232,10 @@ interface FeaturedSectionProps {
 
 // Helper para obtener las clases de color de los botones de navegación
 const getAccentClasses = (color: string) => {
-  const colorMap: Record<string, { border: string; text: string; hoverBg: string; link: string; linkHover: string }> = {
+  const colorMap: Record<
+    string,
+    { border: string; text: string; hoverBg: string; link: string; linkHover: string }
+  > = {
     blue: {
       border: 'border-blue-500',
       text: 'text-blue-600',
@@ -247,7 +268,13 @@ const getAccentClasses = (color: string) => {
   return colorMap[color] || colorMap.blue;
 };
 
-const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, listings, viewAllHref, accentColor }) => {
+const FeaturedSection: React.FC<FeaturedSectionProps> = ({
+  title,
+  subtitle,
+  listings,
+  viewAllHref,
+  accentColor,
+}) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -324,7 +351,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
           {listings.map((listing) => {
             const categoryClasses = getCategoryClasses(listing.category);
             const listingUrl = generateListingUrl(listing.id, listing.title); // URL descriptiva SEO-friendly
-            
+
             return (
               <Link
                 key={listing.id}
@@ -340,7 +367,9 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-3 left-3">
-                    <span className={`px-3 py-1 ${categoryClasses.badge} text-white text-xs font-medium rounded-full`}>
+                    <span
+                      className={`px-3 py-1 ${categoryClasses.badge} text-white text-xs font-medium rounded-full`}
+                    >
                       {listing.category}
                     </span>
                   </div>
@@ -360,7 +389,11 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, subtitle, list
                   <div className="flex items-center justify-between">
                     <p className={`text-xl font-bold ${categoryClasses.price}`}>
                       {formatPrice(listing.price)}
-                      {listing.priceLabel && <span className="text-sm font-normal text-gray-500">{listing.priceLabel}</span>}
+                      {listing.priceLabel && (
+                        <span className="text-sm font-normal text-gray-500">
+                          {listing.priceLabel}
+                        </span>
+                      )}
                     </p>
                     <div className="flex items-center gap-1 text-sm">
                       <FiStar className="w-4 h-4 text-amber-400 fill-current" />
@@ -394,9 +427,9 @@ const HomePage: React.FC = () => {
   // REAL DATA FROM /api/homepagesections/homepage
   // Sections and vehicles configured in database
   // =============================================
-  const { 
-    sections, 
-    isLoading, 
+  const {
+    sections,
+    isLoading,
     error,
     carousel,
     sedanes,
@@ -428,17 +461,13 @@ const HomePage: React.FC = () => {
   // Transform section vehicles to FeaturedListingItem format
   const transformSectionVehicles = (section: HomepageSection | undefined) => {
     if (!section || section.vehicles.length === 0) return [];
-    return section.vehicles.map(v => transformToFeaturedListing(v, section.name));
+    return section.vehicles.map((v) => transformToFeaturedListing(v, section.name));
   };
 
   return (
     <MainLayout>
       {/* Hero Carousel */}
-      <HeroCarousel 
-        vehicles={heroVehicles} 
-        autoPlayInterval={5000}
-        showScrollHint={false}
-      />
+      <HeroCarousel vehicles={heroVehicles} autoPlayInterval={5000} showScrollHint={false} />
 
       {/* Featured Listings Grid */}
       <section className="py-6 bg-gradient-to-b from-white to-gray-50">
@@ -451,7 +480,7 @@ const HomePage: React.FC = () => {
               Explora nuestra selección premium de vehículos cuidadosamente verificados
             </p>
           </div>
-          
+
           <FeaturedListingGrid vehicles={gridVehicles} maxItems={9} />
         </div>
       </section>
@@ -487,7 +516,7 @@ const HomePage: React.FC = () => {
           SECCIONES DESDE /api/homepagesections/homepage
           Configuradas en base de datos con vehículos asignados
           ============================================= */}
-      
+
       {/* Sedanes Section */}
       {!isLoading && sedanes && sedanes.vehicles.length > 0 && (
         <FeaturedSection
@@ -579,12 +608,8 @@ const HomePage: React.FC = () => {
                 <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {feature.description}
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{feature.title}</h3>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
               </motion.div>
             ))}
           </div>

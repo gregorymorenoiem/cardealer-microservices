@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import featureStoreService, {
+import featureStoreService from '../services/featureStoreService';
+import type {
   UserFeature,
   VehicleFeature,
   FeatureDefinition,

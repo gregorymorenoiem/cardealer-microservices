@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import userBehaviorService, {
+import userBehaviorService from '../services/userBehaviorService';
+import type {
   UserBehaviorProfile,
   UserAction,
   UserBehaviorSummary,

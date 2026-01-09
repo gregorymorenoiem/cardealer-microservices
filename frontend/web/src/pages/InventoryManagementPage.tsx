@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import inventoryManagementService, {
+import inventoryManagementService from '../services/inventoryManagementService';
+import type {
   InventoryItemDto,
-  InventoryStatus,
   InventoryFilters,
   PagedResultDto,
 } from '../services/inventoryManagementService';
+import { InventoryStatus } from '../services/inventoryManagementService';
 import { FiSearch, FiFilter, FiPlus, FiEye, FiEdit, FiTrash2, FiCheckSquare } from 'react-icons/fi';
 
 interface InventoryManagementPageProps {

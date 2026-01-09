@@ -11,11 +11,8 @@ import {
   FiTwitter,
 } from 'react-icons/fi';
 import { FaWhatsapp, FaYoutube } from 'react-icons/fa';
-import {
-  PublicDealerProfile,
-  PublicLocation,
-  dealerPublicService,
-} from '@/services/dealerPublicService';
+import { dealerPublicService } from '@/services/dealerPublicService';
+import type { PublicDealerProfile, PublicLocation } from '@/services/dealerPublicService';
 import MainLayout from '@/layouts/MainLayout';
 
 export default function PublicDealerProfilePage() {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReviewSummaryDto, RatingDistribution } from '../../services/reviewService';
+import type { ReviewSummaryDto, RatingDistribution } from '../../services/reviewService';
 
 interface RatingDistributionProps {
   summary: ReviewSummaryDto;

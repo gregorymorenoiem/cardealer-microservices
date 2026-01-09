@@ -1,11 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import leadScoringService, {
-  LeadDto,
-  UpdateLeadStatusDto,
-  LeadStatus,
-} from '@/services/leadScoringService';
-import { FiArrowLeft, FiPhone, FiMail, FiMessageSquare, FiEdit, FiSave, FiX } from 'react-icons/fi';
+import leadScoringService from '@/services/leadScoringService';
+import type { LeadDto, UpdateLeadStatusDto, LeadStatus } from '@/services/leadScoringService';
+import { FiArrowLeft, FiPhone, FiMail, FiEdit, FiSave, FiX } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 
 export const LeadDetail = () => {
@@ -22,13 +19,7 @@ export const LeadDetail = () => {
   const [editNotes, setEditNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (leadId) {
-      loadLead();
-    }
-  }, [leadId]);
-
-  const loadLead = async () => {
+  const loadLead = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await leadScoringService.getLeadById(leadId!);
@@ -40,7 +31,13 @@ export const LeadDetail = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [leadId]);
+
+  useEffect(() => {
+    if (leadId) {
+      loadLead();
+    }
+  }, [leadId, loadLead]);
 
   const handleSave = async () => {
     if (!lead) return;
@@ -227,7 +224,7 @@ export const LeadDetail = () => {
                 <p className="text-gray-500 text-center py-8">No hay actividad registrada</p>
               ) : (
                 <div className="space-y-4">
-                  {lead.recentActions.map((action, index) => (
+                  {lead.recentActions.map((action) => (
                     <div
                       key={action.id}
                       className="flex items-start gap-4 pb-4 border-b last:border-b-0"

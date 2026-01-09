@@ -1,207 +1,202 @@
 using Xunit;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 using ChatbotService.Domain.Entities;
+using ChatbotService.Infrastructure.Services;
 
 namespace ChatbotService.Tests;
 
-public class ChatConversationTests
+public class ConversationTests
 {
     [Fact]
-    public void ChatConversation_ShouldBeCreated_WithDefaultValues()
+    public void Conversation_ShouldBeCreated_WithDefaultValues()
     {
         // Arrange & Act
-        var conversation = new ChatConversation
+        var conversation = new Conversation
         {
-            Id = Guid.NewGuid(),
-            SessionId = "test-session-123"
+            UserId = Guid.NewGuid(),
+            UserName = "Test User",
+            VehicleId = Guid.NewGuid(),
+            DealerId = Guid.NewGuid()
         };
 
         // Assert
-        conversation.Id.Should().NotBeEmpty();
         conversation.Status.Should().Be(ConversationStatus.Active);
-        conversation.MessageCount.Should().Be(0);
-        conversation.TotalTokensUsed.Should().Be(0);
-        conversation.EstimatedCost.Should().Be(0);
-        conversation.LeadQualification.Should().Be(LeadQualification.Unknown);
-        conversation.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-    }
-
-    [Fact]
-    public void ChatConversation_AddMessage_ShouldIncrementMessageCount()
-    {
-        // Arrange
-        var conversation = new ChatConversation { Id = Guid.NewGuid() };
-        var message = ChatMessage.CreateUserMessage(conversation.Id, "Hello");
-
-        // Act
-        conversation.AddMessage(message);
-
-        // Assert
-        conversation.MessageCount.Should().Be(1);
-        conversation.Messages.Should().HaveCount(1);
-        conversation.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-    }
-
-    [Fact]
-    public void ChatConversation_EndConversation_ShouldUpdateStatus()
-    {
-        // Arrange
-        var conversation = new ChatConversation { Id = Guid.NewGuid() };
-
-        // Act
-        conversation.EndConversation("User closed chat");
-
-        // Assert
-        conversation.Status.Should().Be(ConversationStatus.Ended);
-        conversation.EndReason.Should().Be("User closed chat");
-        conversation.EndedAt.Should().NotBeNull();
-        conversation.EndedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-    }
-
-    [Fact]
-    public void ChatConversation_UpdateLeadScore_ShouldSetQualification()
-    {
-        // Arrange
-        var conversation = new ChatConversation { Id = Guid.NewGuid() };
-
-        // Act
-        conversation.UpdateLeadScore(0.85, LeadQualification.Hot);
-
-        // Assert
-        conversation.LeadScore.Should().Be(0.85);
-        conversation.LeadQualification.Should().Be(LeadQualification.Hot);
-    }
-
-    [Fact]
-    public void ChatConversation_AddTokenUsage_ShouldAccumulateTokensAndCost()
-    {
-        // Arrange
-        var conversation = new ChatConversation { Id = Guid.NewGuid() };
-
-        // Act
-        conversation.AddTokenUsage(100, 0.001m);
-        conversation.AddTokenUsage(150, 0.0015m);
-
-        // Assert
-        conversation.TotalTokensUsed.Should().Be(250);
-        conversation.EstimatedCost.Should().Be(0.0025m);
+        conversation.LeadScore.Should().Be(0);
+        conversation.LeadTemperature.Should().Be(LeadTemperature.Unknown);
     }
 }
 
-public class ChatMessageTests
+public class LeadScoringEngineTests
 {
+    private readonly LeadScoringEngine _engine;
+
+    public LeadScoringEngineTests()
+    {
+        var mockLogger = new Mock<ILogger<LeadScoringEngine>>();
+        _engine = new LeadScoringEngine(mockLogger.Object);
+    }
+
     [Fact]
-    public void ChatMessage_CreateUserMessage_ShouldHaveCorrectRole()
+    public async Task CalculateLeadScore_ShouldReturnHotLead_ForHighEngagement()
     {
         // Arrange
-        var conversationId = Guid.NewGuid();
+        var conversation = new Conversation
+        {
+            UserId = Guid.NewGuid(),
+            UserName = "Test User",
+            VehicleId = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
+            Messages = new List<Message>()
+        };
+
+        // Add messages with strong buying signals
+        conversation.Messages.Add(new Message
+        {
+            ConversationId = conversation.Id,
+            Role = MessageRole.User,
+            Content = "I need to buy this car TODAY, my budget is ready"
+        });
+
+        conversation.Messages.Add(new Message
+        {
+            ConversationId = conversation.Id,
+            Role = MessageRole.User,
+            Content = "I want to schedule a test drive ASAP and my trade-in is ready"
+        });
 
         // Act
-        var message = ChatMessage.CreateUserMessage(conversationId, "Test message");
+        var score = await _engine.CalculateLeadScoreAsync(conversation);
 
         // Assert
-        message.Id.Should().NotBeEmpty();
-        message.ConversationId.Should().Be(conversationId);
-        message.Role.Should().Be(MessageRole.User);
-        message.Content.Should().Be("Test message");
-        message.Type.Should().Be(MessageType.Text);
-        message.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        score.Should().BeGreaterThanOrEqualTo(85); // HOT lead
     }
 
     [Fact]
-    public void ChatMessage_CreateAssistantMessage_ShouldHaveTokensAndResponseTime()
+    public async Task CalculateLeadScore_ShouldReturnWarmLead_ForModerateEngagement()
     {
         // Arrange
-        var conversationId = Guid.NewGuid();
-        var responseTime = TimeSpan.FromMilliseconds(500);
+        var conversation = new Conversation
+        {
+            UserId = Guid.NewGuid(),
+            UserName = "Test User",
+            VehicleId = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
+            Messages = new List<Message>()
+        };
+
+        conversation.Messages.Add(new Message
+        {
+            ConversationId = conversation.Id,
+            Role = MessageRole.User,
+            Content = "I'm interested in this vehicle, what are the specs?"
+        });
 
         // Act
-        var message = ChatMessage.CreateAssistantMessage(conversationId, "AI response", 50, responseTime);
+        var score = await _engine.CalculateLeadScoreAsync(conversation);
 
         // Assert
-        message.Role.Should().Be(MessageRole.Assistant);
-        message.TokenCount.Should().Be(50);
-        message.ResponseTime.Should().Be(responseTime);
+        score.Should().BeInRange(50, 84); // WARM lead
     }
 
     [Fact]
-    public void ChatMessage_CreateSystemMessage_ShouldHaveSystemRole()
+    public async Task CalculateLeadScore_ShouldReturnColdLead_ForLowEngagement()
     {
         // Arrange
-        var conversationId = Guid.NewGuid();
+        var conversation = new Conversation
+        {
+            UserId = Guid.NewGuid(),
+            UserName = "Test User",
+            VehicleId = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
+            Messages = new List<Message>()
+        };
+
+        conversation.Messages.Add(new Message
+        {
+            ConversationId = conversation.Id,
+            Role = MessageRole.User,
+            Content = "Just browsing"
+        });
 
         // Act
-        var message = ChatMessage.CreateSystemMessage(conversationId, "System notification");
+        var score = await _engine.CalculateLeadScoreAsync(conversation);
 
         // Assert
-        message.Role.Should().Be(MessageRole.System);
-        message.Type.Should().Be(MessageType.System);
-    }
-}
-
-public class ChatbotConfigurationTests
-{
-    [Fact]
-    public void ChatbotConfiguration_ShouldHaveDefaultValues()
-    {
-        // Arrange & Act
-        var config = new ChatbotConfiguration();
-
-        // Assert
-        config.Name.Should().Be("OKLA Assistant");
-        config.Model.Should().Be("gpt-4o-mini");
-        config.Temperature.Should().Be(0.7);
-        config.MaxTokens.Should().Be(500);
-        config.MaxConversationMessages.Should().Be(20);
-        config.IsActive.Should().BeTrue();
-        config.SystemPrompt.Should().NotBeNullOrEmpty();
-        config.SystemPrompt.Should().Contain("OKLA");
-    }
-}
-
-public class EnumTests
-{
-    [Fact]
-    public void ConversationStatus_ShouldHaveExpectedValues()
-    {
-        // Assert
-        Enum.GetValues<ConversationStatus>().Should().HaveCount(4);
-        ConversationStatus.Active.Should().BeDefined();
-        ConversationStatus.Paused.Should().BeDefined();
-        ConversationStatus.Ended.Should().BeDefined();
-        ConversationStatus.TransferredToAgent.Should().BeDefined();
+        score.Should().BeLessThan(50); // COLD lead
     }
 
     [Fact]
-    public void LeadQualification_ShouldHaveExpectedValues()
+    public void DetermineLeadTemperature_Hot_WhenScoreAbove85()
     {
+        // Arrange
+        int score = 90;
+
+        // Act
+        var temperature = _engine.DetermineLeadTemperature(score);
+
         // Assert
-        Enum.GetValues<LeadQualification>().Should().HaveCount(4);
-        LeadQualification.Unknown.Should().BeDefined();
-        LeadQualification.Cold.Should().BeDefined();
-        LeadQualification.Warm.Should().BeDefined();
-        LeadQualification.Hot.Should().BeDefined();
+        temperature.Should().Be(LeadTemperature.Hot);
     }
 
     [Fact]
-    public void MessageRole_ShouldHaveExpectedValues()
+    public void DetermineLeadTemperature_Warm_WhenScoreBetween50And69()
     {
+        // Arrange
+        int score = 60;
+
+        // Act
+        var temperature = _engine.DetermineLeadTemperature(score);
+
         // Assert
-        Enum.GetValues<MessageRole>().Should().HaveCount(3);
-        MessageRole.User.Should().BeDefined();
-        MessageRole.Assistant.Should().BeDefined();
-        MessageRole.System.Should().BeDefined();
+        temperature.Should().Be(LeadTemperature.Warm);
     }
 
     [Fact]
-    public void MessageType_ShouldHaveExpectedValues()
+    public void DetermineLeadTemperature_Cold_WhenScoreBelow50()
     {
+        // Arrange
+        int score = 30;
+
+        // Act
+        var temperature = _engine.DetermineLeadTemperature(score);
+
         // Assert
-        Enum.GetValues<MessageType>().Should().HaveCount(5);
-        MessageType.Text.Should().BeDefined();
-        MessageType.Image.Should().BeDefined();
-        MessageType.System.Should().BeDefined();
-        MessageType.Action.Should().BeDefined();
-        MessageType.QuickReply.Should().BeDefined();
+        temperature.Should().Be(LeadTemperature.Cold);
+    }
+
+    [Fact]
+    public void ShouldTriggerHandoff_True_ForHotLead()
+    {
+        // Arrange
+        var conversation = new Conversation
+        {
+            LeadScore = 90,
+            LeadTemperature = LeadTemperature.Hot
+        };
+
+        // Act
+        var shouldHandoff = _engine.ShouldTriggerHandoff(conversation);
+
+        // Assert
+        shouldHandoff.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldTriggerHandoff_False_ForColdLead()
+    {
+        // Arrange
+        var conversation = new Conversation
+        {
+            LeadScore = 30,
+            LeadTemperature = LeadTemperature.Cold
+        };
+
+        // Act
+        var shouldHandoff = _engine.ShouldTriggerHandoff(conversation);
+
+        // Assert
+        shouldHandoff.Should().BeFalse();
     }
 }

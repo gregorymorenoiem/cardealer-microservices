@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { FiMessageCircle, FiX, FiSend, FiMinimize2, FiMaximize2 } from 'react-icons/fi';
-import { chatbotService, VehicleContext, ChatMessage, QuickReply, Conversation } from '@/services/chatbotService';
+import { chatbotService } from '@/services/chatbotService';
+import type {
+  VehicleContext,
+  ChatMessage,
+  QuickReply,
+  Conversation,
+} from '@/services/chatbotService';
 
 interface ChatWidgetProps {
   vehicleContext?: VehicleContext;
@@ -44,22 +50,20 @@ export default function ChatWidget({
     try {
       // Try SignalR first, fallback to REST
       const token = localStorage.getItem('token');
-      
+
       try {
         await chatbotService.connectSignalR(token || undefined);
-        
+
         // Setup listeners
         chatbotService.onTypingIndicator((indicator) => {
-          if (indicator.conversationId === conversation?.id) {
-            setIsTyping(indicator.isTyping);
-          }
+          setIsTyping(indicator.isTyping);
         });
 
         const newConversation = await chatbotService.startConversationSignalR({
           sessionId: getOrCreateSessionId(),
           vehicleContext,
         });
-        
+
         setConversation(newConversation);
         if (newConversation.messages.length > 0) {
           setMessages(newConversation.messages);
@@ -71,7 +75,7 @@ export default function ChatWidget({
           sessionId: getOrCreateSessionId(),
           vehicleContext,
         });
-        
+
         setConversation(newConversation);
         if (newConversation.messages.length > 0) {
           setMessages(newConversation.messages);
@@ -271,9 +275,18 @@ export default function ChatWidget({
                   <div className="flex items-center gap-2">
                     <div className="bg-white rounded-2xl px-4 py-3 shadow-sm">
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '0ms' }}
+                        />
+                        <span
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '150ms' }}
+                        />
+                        <span
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '300ms' }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -331,9 +344,7 @@ export default function ChatWidget({
                     <FiSend className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 mt-2 text-center">
-                  Powered by OKLA AI 🤖
-                </p>
+                <p className="text-xs text-gray-400 mt-2 text-center">Powered by OKLA AI 🤖</p>
               </div>
             </>
           )}
@@ -372,11 +383,7 @@ function MessageBubble({ message, primaryColor }: MessageBubbleProps) {
         style={isUser ? { backgroundColor: primaryColor } : {}}
       >
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-        <span
-          className={`text-xs mt-1 block ${
-            isUser ? 'text-white/70' : 'text-gray-400'
-          }`}
-        >
+        <span className={`text-xs mt-1 block ${isUser ? 'text-white/70' : 'text-gray-400'}`}>
           {formatTime(message.createdAt)}
         </span>
       </div>
@@ -402,7 +409,11 @@ function formatTime(dateString: string): string {
 function getInitialQuickReplies(vehicleContext?: VehicleContext): QuickReply[] {
   if (vehicleContext) {
     return [
-      { id: '1', label: '📋 Ver más detalles', value: '¿Puedes darme más detalles sobre este vehículo?' },
+      {
+        id: '1',
+        label: '📋 Ver más detalles',
+        value: '¿Puedes darme más detalles sobre este vehículo?',
+      },
       { id: '2', label: '💰 Precio negociable?', value: '¿El precio es negociable?' },
       { id: '3', label: '🚗 Test drive', value: '¿Puedo agendar un test drive?' },
       { id: '4', label: '📞 Contactar vendedor', value: 'Quiero hablar con el vendedor' },

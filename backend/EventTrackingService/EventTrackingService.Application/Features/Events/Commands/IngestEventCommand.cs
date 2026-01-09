@@ -29,19 +29,9 @@ public class IngestEventCommandHandler : IRequestHandler<IngestEventCommand, Eve
     {
         try
         {
-            // Crear la entidad basada en el tipo de evento
-            TrackedEvent entity = request.Event.EventType switch
-            {
-                "PageView" => MapToPageViewEvent(request.Event as CreatePageViewEventDto 
-                    ?? throw new InvalidOperationException("PageView event requires PageViewEventDto")),
-                "Search" => MapToSearchEvent(request.Event as CreateSearchEventDto 
-                    ?? throw new InvalidOperationException("Search event requires SearchEventDto")),
-                "VehicleView" => MapToVehicleViewEvent(request.Event as CreateVehicleViewEventDto 
-                    ?? throw new InvalidOperationException("VehicleView event requires VehicleViewEventDto")),
-                "Filter" => MapToFilterEvent(request.Event as CreateFilterEventDto 
-                    ?? throw new InvalidOperationException("Filter event requires FilterEventDto")),
-                _ => MapToTrackedEvent(request.Event)
-            };
+            // Crear la entidad - todos los eventos se mapean al tipo base TrackedEvent
+            // El EventData JSON contiene propiedades adicionales específicas del tipo
+            TrackedEvent entity = MapToTrackedEvent(request.Event);
 
             // Ingerir el evento
             await _eventRepository.IngestEventAsync(entity, cancellationToken);

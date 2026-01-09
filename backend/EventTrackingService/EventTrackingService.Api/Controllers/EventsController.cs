@@ -24,20 +24,21 @@ public class EventsController : ControllerBase
 
     /// <summary>
     /// Ingerir un solo evento (punto de entrada principal para frontend SDK)
+    /// El SDK envía { event: {...} } así que aceptamos SingleEventDto wrapper
     /// </summary>
-    /// <param name="eventDto">Datos del evento a trackear</param>
+    /// <param name="wrapper">Wrapper con datos del evento a trackear</param>
     /// <returns>Respuesta de ingesta</returns>
     [HttpPost("track")]
     [ProducesResponseType(typeof(EventIngestionResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<EventIngestionResponseDto>> TrackEvent([FromBody] CreateTrackedEventDto eventDto)
+    public async Task<ActionResult<EventIngestionResponseDto>> TrackEvent([FromBody] SingleEventDto wrapper)
     {
-        if (string.IsNullOrEmpty(eventDto.EventType))
+        if (wrapper.Event == null || string.IsNullOrEmpty(wrapper.Event.EventType))
         {
             return BadRequest(new { message = "EventType is required" });
         }
 
-        var command = new IngestEventCommand { Event = eventDto };
+        var command = new IngestEventCommand { Event = wrapper.Event };
         var result = await _mediator.Send(command);
 
         if (!result.Success)
@@ -165,7 +166,7 @@ public class EventsController : ControllerBase
     public async Task<IActionResult> TrackingPixel(
         [FromQuery] string type = "PageView",
         [FromQuery] string? url = null,
-        [FromQuery] string? ref = null)
+        [FromQuery] string? referrer = null)
     {
         try
         {
@@ -180,8 +181,8 @@ public class EventsController : ControllerBase
                 SessionId = sessionId,
                 IpAddress = ip,
                 UserAgent = userAgent,
-                CurrentUrl = url ?? ref ?? "unknown",
-                Referrer = ref,
+                CurrentUrl = url ?? referrer ?? "unknown",
+                Referrer = referrer,
                 DeviceType = "unknown",
                 Browser = "unknown",
                 OperatingSystem = "unknown"

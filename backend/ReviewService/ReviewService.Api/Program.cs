@@ -34,6 +34,11 @@ builder.Services.AddDbContext<ReviewDbContext>(options =>
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewSummaryRepository, ReviewSummaryRepository>();
 builder.Services.AddScoped<IReviewResponseRepository, ReviewResponseRepository>();
+// Sprint 15 - Repositorios adicionales
+builder.Services.AddScoped<IReviewHelpfulVoteRepository, ReviewHelpfulVoteRepository>();
+builder.Services.AddScoped<ISellerBadgeRepository, SellerBadgeRepository>();
+builder.Services.AddScoped<IReviewRequestRepository, ReviewRequestRepository>();
+builder.Services.AddScoped<IFraudDetectionLogRepository, FraudDetectionLogRepository>();
 
 // MediatR
 builder.Services.AddMediatR(cfg => {

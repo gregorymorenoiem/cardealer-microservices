@@ -28,11 +28,11 @@ COPY ServiceDiscovery/ ./ServiceDiscovery/
 # Variables de entorno para desarrollo
 ENV ASPNETCORE_ENVIRONMENT=Development \
     ASPNETCORE_URLS="http://+:80" \
-    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    DOTNET_USE_POLLING_FILE_WATCHER=false \
     NUGET_XMLDOC_MODE=none
 
 # Exponer puerto HTTP
 EXPOSE 80
 
-# Arrancar con hot reload
-ENTRYPOINT ["dotnet", "watch", "run", "--project", "Gateway/Gateway.Api/Gateway.Api.csproj", "--urls", "http://0.0.0.0:80", "--no-restore"]
+# Arrancar con dotnet run (sin hot-reload para evitar ciclos)
+ENTRYPOINT ["dotnet", "run", "--project", "Gateway/Gateway.Api/Gateway.Api.csproj", "--urls", "http://0.0.0.0:80", "--no-build"]

@@ -35,14 +35,14 @@ public record CreateTrackedEventDto
 {
     public string EventType { get; init; } = string.Empty;
     public Guid? UserId { get; init; }
-    public string SessionId { get; init; } = string.Empty;
-    public string IpAddress { get; init; } = string.Empty;
-    public string UserAgent { get; init; } = string.Empty;
+    public string? SessionId { get; init; }
+    public string? IpAddress { get; init; }
+    public string? UserAgent { get; init; }
     public string? Referrer { get; init; }
-    public string CurrentUrl { get; init; } = string.Empty;
-    public string DeviceType { get; init; } = string.Empty;
-    public string Browser { get; init; } = string.Empty;
-    public string OperatingSystem { get; init; } = string.Empty;
+    public string? CurrentUrl { get; init; }
+    public string? DeviceType { get; init; }
+    public string? Browser { get; init; }
+    public string? OperatingSystem { get; init; }
     public string? Country { get; init; }
     public string? City { get; init; }
     public string? EventData { get; init; }
@@ -160,6 +160,14 @@ public record CreateFilterEventDto : CreateTrackedEventDto
     public string FilterOperator { get; init; } = "equals";
     public int ResultsAfterFilter { get; init; }
     public string PageContext { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// DTO wrapper para un solo evento (usado por frontend SDK con sendBeacon)
+/// </summary>
+public record SingleEventDto
+{
+    public CreateTrackedEventDto? Event { get; init; }
 }
 
 /// <summary>

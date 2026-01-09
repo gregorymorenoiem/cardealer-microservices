@@ -118,3 +118,114 @@ public record ReviewFiltersDto
     public DateTime? FromDate { get; init; }
     public DateTime? ToDate { get; init; }
 }
+
+/// <summary>
+/// Sprint 15 - DTO para estadísticas de votos de utilidad
+/// </summary>
+public record ReviewVoteStatsDto
+{
+    public Guid ReviewId { get; init; }
+    public int HelpfulVotes { get; init; }
+    public int TotalVotes { get; init; }
+    public decimal HelpfulPercentage { get; init; }
+    public bool? CurrentUserVotedHelpful { get; init; }
+}
+
+/// <summary>
+/// Sprint 15 - DTO para crear solicitud de review
+/// </summary>
+public record CreateReviewRequestDto
+{
+    public Guid BuyerId { get; init; }
+    public Guid SellerId { get; init; }
+    public Guid VehicleId { get; init; }
+    public Guid OrderId { get; init; }
+    public string BuyerEmail { get; init; } = string.Empty;
+    public string BuyerName { get; init; } = string.Empty;
+    public string VehicleTitle { get; init; } = string.Empty;
+    public string SellerName { get; init; } = string.Empty;
+    public DateTime PurchaseDate { get; init; }
+}
+
+/// <summary>
+/// Sprint 15 - DTO para votar utilidad
+/// </summary>
+public record VoteHelpfulDto
+{
+    public bool IsHelpful { get; init; }
+}
+
+/// <summary>
+/// Sprint 15 - DTO para badge de vendedor
+/// </summary>
+public record SellerBadgeDto
+{
+    public Guid Id { get; init; }
+    public Guid SellerId { get; init; }
+    public string BadgeType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string Icon { get; init; } = string.Empty;
+    public string Color { get; init; } = string.Empty;
+    public DateTime EarnedAt { get; init; }
+    public DateTime? ExpiresAt { get; init; }
+    public bool IsActive { get; init; }
+}
+
+/// <summary>
+/// Sprint 15 - DTO para resultado de cálculo de badges
+/// </summary>
+public record BadgeCalculationResultDto
+{
+    public Guid? SellerId { get; init; }
+    public int ProcessedSellers { get; init; }
+    public int TotalBadgesGranted { get; init; }
+    public int TotalBadgesRevoked { get; init; }
+    public List<SellerBadgeDto> NewBadges { get; init; } = new();
+    public List<string> RevokedBadges { get; init; } = new();
+    public DateTime CalculatedAt { get; init; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Sprint 15 - DTO para resultado de actualización de badges
+/// </summary>
+public record BadgeUpdateResultDto
+{
+    public Guid SellerId { get; init; }
+    public List<SellerBadgeDto> CurrentBadges { get; init; } = new();
+    public List<string> NewBadgesEarned { get; init; } = new();
+    public List<string> BadgesRevoked { get; init; } = new();
+    public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Sprint 15 - DTO para voto de utilidad de review
+/// </summary>
+public record ReviewHelpfulVoteDto
+{
+    public Guid Id { get; init; }
+    public Guid ReviewId { get; init; }
+    public Guid UserId { get; init; }
+    public bool IsHelpful { get; init; }
+    public DateTime VotedAt { get; init; }
+}
+
+/// <summary>
+/// Sprint 15 - DTO para solicitud de review pendiente
+/// </summary>
+public record PendingReviewRequestDto
+{
+    public Guid Id { get; init; }
+    public Guid BuyerId { get; init; }
+    public Guid SellerId { get; init; }
+    public Guid? VehicleId { get; init; }
+    public Guid? OrderId { get; init; }
+    public string BuyerEmail { get; init; } = string.Empty;
+    public string BuyerName { get; init; } = string.Empty;
+    public string VehicleTitle { get; init; } = string.Empty;
+    public string SellerName { get; init; } = string.Empty;
+    public DateTime PurchaseDate { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public int RemindersSent { get; init; }
+    public DateTime? LastReminderSentAt { get; init; }
+}

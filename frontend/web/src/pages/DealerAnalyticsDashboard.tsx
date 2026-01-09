@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Line, Pie, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -12,12 +12,9 @@ import {
   ArcElement,
   Filler,
 } from 'chart.js';
-import {
-  dealerAnalyticsService,
-  AnalyticsDashboard,
-  ContactType,
-} from '../services/dealerAnalyticsService';
-import { FiTrendingUp, FiEye, FiPhone, FiActivity, FiClock } from 'react-icons/fi';
+import { dealerAnalyticsService } from '../services/dealerAnalyticsService';
+import type { AnalyticsDashboard } from '../services/dealerAnalyticsService';
+import { FiEye, FiPhone, FiActivity, FiClock } from 'react-icons/fi';
 import MainLayout from '../layouts/MainLayout';
 
 // Register Chart.js components
@@ -43,24 +40,25 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
   const [dateRange, setDateRange] = useState('30'); // 7, 30, 90 days
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [dealerId, dateRange]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const { startDate, endDate } = dealerAnalyticsService.getDateRange(parseInt(dateRange));
       const data = await dealerAnalyticsService.getDashboard(dealerId, startDate, endDate);
       setAnalytics(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al cargar analytics');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar analytics';
+      setError(errorMessage);
       console.error('Error loading analytics:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dealerId, dateRange]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   if (isLoading) {
     return (

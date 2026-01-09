@@ -3,7 +3,8 @@ import { StarRating } from './StarRating';
 import { RatingDistributionChart } from './RatingDistributionChart';
 import { ReviewsList } from './ReviewsList';
 import { ReviewForm } from './ReviewForm';
-import { reviewService, ReviewSummaryDto } from '../../services/reviewService';
+import { reviewService } from '../../services/reviewService';
+import type { ReviewSummaryDto } from '../../services/reviewService';
 
 interface ReviewsSectionProps {
   sellerUserId: string;

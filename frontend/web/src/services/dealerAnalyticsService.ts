@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 
 // ============================================
 // Sprint 12+ Dealer Analytics DTOs
@@ -179,13 +180,15 @@ export interface TrackContactEventRequest {
   source?: string;
 }
 
-export enum ContactType {
-  Phone = 1,
-  Email = 2,
-  WhatsApp = 3,
-  Website = 4,
-  SocialMedia = 5,
-}
+export const ContactType = {
+  Phone: 1,
+  Email: 2,
+  WhatsApp: 3,
+  Website: 4,
+  SocialMedia: 5,
+} as const;
+
+export type ContactType = (typeof ContactType)[keyof typeof ContactType];
 
 // ============================================
 // SERVICE CLASS
@@ -305,7 +308,10 @@ export class DealerAnalyticsService {
     return response.data;
   }
 
-  async getPerformanceComparison(dealerId: string, periodDays: number): Promise<PerformanceComparison> {
+  async getPerformanceComparison(
+    dealerId: string,
+    periodDays: number
+  ): Promise<PerformanceComparison> {
     const response = await this.api.get(`/api/analytics/performance/${dealerId}`, {
       params: { periodDays },
     });

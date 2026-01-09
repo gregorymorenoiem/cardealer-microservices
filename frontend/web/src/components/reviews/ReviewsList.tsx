@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StarRating } from './StarRating';
-import {
-  reviewService,
-  ReviewDto,
-  ReviewSortBy,
-  GetReviewsRequest,
-} from '../../services/reviewService';
+import { reviewService } from '../../services/reviewService';
+import type { ReviewDto, GetReviewsRequest, ReviewSortBy } from '../../services/reviewService';
 
 interface ReviewsListProps {
   sellerUserId: string;

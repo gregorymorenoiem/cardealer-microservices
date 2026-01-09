@@ -2282,6 +2282,48 @@ services:
       timeout: 10s
       retries: 3
 
+  # ------------------------
+  # EventTrackingService API (Sprint 9)
+  # ------------------------
+  eventtrackingservice:
+    build:
+      context: ./backend
+      dockerfile: EventTrackingService/EventTrackingService.Api/Dockerfile.dev
+    container_name: eventtrackingservice
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:80"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
+      ConnectionStrings__ClickHouse: "Host=localhost;Port=8123;Database=okla_events;User=default;Password=;Compression=true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+    ports:
+      - "15120:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/EventTrackingService:/app/EventTrackingService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   postgres_data: # Nuevo volumen para la base de datos consolidada
   errorservice_data:

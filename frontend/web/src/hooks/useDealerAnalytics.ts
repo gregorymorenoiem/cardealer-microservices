@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
+import { dealerAnalyticsService } from '../services/dealerAnalyticsService';
+import type {
   DashboardSummaryDto,
   ConversionFunnelDto,
   MarketBenchmarkDto,
@@ -8,7 +9,6 @@ import {
   PerformanceComparison,
   FunnelVisualization,
   InsightsSummary,
-  dealerAnalyticsService,
 } from '../services/dealerAnalyticsService';
 
 export interface UseDealerAnalyticsProps {

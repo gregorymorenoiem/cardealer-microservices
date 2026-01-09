@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSave, FiAlertCircle, FiCheck, FiExternalLink } from 'react-icons/fi';
-import {
+import { dealerPublicService } from '@/services/dealerPublicService';
+import type {
   PublicDealerProfile,
   ProfileCompletion,
   UpdateProfileRequest,
-  dealerPublicService,
 } from '@/services/dealerPublicService';
 import { dealerManagementService } from '@/services/dealerManagementService';
 import MainLayout from '@/layouts/MainLayout';
