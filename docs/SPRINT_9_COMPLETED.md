@@ -22,6 +22,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 **EventTrackingService.Domain** (7 archivos):
 
 - ✅ **TrackedEvent.cs** (~70 líneas) - Entidad base con 20+ propiedades:
+
   - Id, EventType, Timestamp, UserId, SessionId
   - IpAddress, UserAgent, Referrer, CurrentUrl
   - DeviceType, Browser, OS, Country, City
@@ -29,18 +30,21 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
   - **Métodos útiles:** IsAuthenticated(), IsMobile(), IsFromCampaign(), GetAge(), IsRecent()
 
 - ✅ **PageViewEvent.cs** (~50 líneas) - Eventos de navegación:
+
   - PageUrl, PageTitle, PreviousUrl
   - ScrollDepth, TimeOnPage
   - IsExit, IsBounce
   - **Métodos:** MarkAsBounce(), MarkAsExit(), SetTimeOnPage(), IsEngaged()
 
 - ✅ **SearchEvent.cs** (~41 líneas) - Eventos de búsqueda:
+
   - SearchQuery, ResultsCount, SearchType
   - AppliedFilters (JSON string), SortBy
   - ClickedPosition, ClickedVehicleId
   - **Métodos:** RecordClick(), IsSuccessful(), IsZeroResults()
 
 - ✅ **VehicleViewEvent.cs** (~60 líneas) - Eventos de vista de vehículo:
+
   - VehicleId, VehicleTitle, VehiclePrice
   - Make, Model, Year
   - TimeSpentSeconds, ViewedImages, ViewedSpecs
@@ -48,6 +52,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
   - **Métodos:** RecordEngagement(), SetTimeSpent(), IsHighIntent(), IsConverted()
 
 - ✅ **FilterEvent.cs** (~35 líneas) - Eventos de filtros:
+
   - FilterType, FilterValue, FilterOperator
   - ResultsAfterFilter, PageContext
   - **Métodos:** IsZeroResults(), IsNarrowingFilter()
@@ -61,6 +66,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 **EventTrackingService.Application** (8 archivos):
 
 - ✅ **EventDtos.cs** (~250 líneas) - 15+ DTOs:
+
   - TrackedEventDto, CreateTrackedEventDto (base)
   - PageViewEventDto, CreatePageViewEventDto
   - SearchEventDto, CreateSearchEventDto
@@ -70,28 +76,33 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
   - EventTypeStatsDto, TopSearchQueryDto, MostViewedVehicleDto, AnalyticsSummaryDto
 
 - ✅ **IngestEventCommand.cs** (~218 líneas) - Comando de ingestión individual:
+
   - Command: IngestEventCommand con CreateTrackedEventDto
   - Handler: Maps DTOs a Domain entities basado en EventType
   - Mappers para cada tipo: TrackedEvent, PageViewEvent, SearchEvent, VehicleViewEvent, FilterEvent
   - **Lógica:** Detecta tipo de evento y crea entidad correspondiente
 
 - ✅ **IngestBatchCommand.cs** (~280 líneas) - Comando de ingestión en lote:
+
   - Command: IngestBatchCommand con List<CreateTrackedEventDto>
   - Handler: Procesamiento bulk con error handling individualizado
   - Returns: BatchIngestionResponseDto con success/failure counts
   - **Performance:** Optimizado para alta tasa de ingesta
 
 - ✅ **GetEventsByTypeQuery.cs** (~60 líneas):
+
   - Query: GetEventsByTypeQuery con EventType, StartDate, EndDate, Limit
   - Handler: Maps TrackedEvent entities a TrackedEventDto
 
 - ✅ **GetAnalyticsSummaryQuery.cs** (~95 líneas):
+
   - Query: GetAnalyticsSummaryQuery con StartDate, EndDate, TopN
   - Handler: Ejecución paralela de 5 métodos de repositorio
   - Calculates: TotalPageViews, UniqueVisitors, ConversionRate, EventsByType, TopSearches, TopVehicles
   - **Dashboard-ready:** Retorna AnalyticsSummaryDto con todas las métricas
 
 - ✅ **GetTopSearchQueriesQuery.cs** (~50 líneas):
+
   - Query: GetTopSearchQueriesQuery con StartDate, EndDate, TopN
   - Handler: Retorna TopSearchQueryDto[] con Count, AvgResultsCount, CTR
 
@@ -102,11 +113,12 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 **EventTrackingService.Infrastructure** (3 archivos):
 
 - ✅ **ClickHouseEventRepository.cs** (~600 líneas):
+
   - **Implementa:** All 18 IEventRepository methods
   - **Connection:** ClickHouseConnection con connection string DI
   - **CREATE Operations:**
-    * IngestEventAsync: Single INSERT con parameterized query
-    * IngestBatchAsync: ClickHouseBulkCopy para alta performance
+    - IngestEventAsync: Single INSERT con parameterized query
+    - IngestBatchAsync: ClickHouseBulkCopy para alta performance
   - **READ Operations:** 9 métodos con SELECT optimizados
   - **AGGREGATIONS:** 5 métodos usando funciones de ClickHouse (countIf, avgIf, uniq, etc.)
   - **RETENTION:** ALTER TABLE DELETE y archive a tabla separada
@@ -120,13 +132,14 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
   - **Indexes:** 4 bloom_filter indexes (user_id, session_id, country, device_type)
   - **Tabla de archivo:** tracked_events_archive (sin TTL)
   - **Materialized Views (3):**
-    * mv_events_by_type_daily: Eventos por tipo y fecha con unique sessions/users
-    * mv_top_searches: Agregaciones de búsquedas con CTR calculation
-    * mv_vehicle_views: Métricas de vistas de vehículos con engagement tracking
+    - mv_events_by_type_daily: Eventos por tipo y fecha con unique sessions/users
+    - mv_top_searches: Agregaciones de búsquedas con CTR calculation
+    - mv_vehicle_views: Métricas de vistas de vehículos con engagement tracking
 
 **EventTrackingService.Api** (5 archivos):
 
 - ✅ **EventsController.cs** (~180 líneas) - 8 REST endpoints:
+
   - POST /api/events/track - Ingesta individual
   - POST /api/events/track/batch - Ingesta en lote
   - GET /api/events/type/{eventType} - Filtrar por tipo
@@ -137,6 +150,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
   - GET /health - Health check
 
 - ✅ **Program.cs** (~70 líneas):
+
   - CORS: AddCors con "AllowAll" policy
   - MediatR: Registers commands/queries
   - ClickHouse: Scoped IEventRepository
@@ -145,6 +159,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
   - Health Checks: /health endpoint
 
 - ✅ **appsettings.json + appsettings.Development.json**:
+
   - ConnectionString: ClickHouse configuration
   - EventTracking Config: BatchSize=100, FlushIntervalSeconds=5, RetentionDays=90, ArchiveAfterDays=30
 
@@ -163,6 +178,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 **Descripción:** Ingerir un evento individual.
 
 **Request Body:**
+
 ```json
 {
   "event": {
@@ -177,6 +193,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -192,6 +209,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 **Descripción:** Ingerir múltiples eventos en una sola llamada (alta performance).
 
 **Request Body:**
+
 ```json
 {
   "events": [
@@ -211,6 +229,7 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 ```
 
 **Response:**
+
 ```json
 {
   "totalEvents": 2,
@@ -227,16 +246,19 @@ Implementar sistema completo de rastreo de eventos (Event Tracking) con ClickHou
 **Descripción:** Obtener eventos filtrados por tipo.
 
 **Query Parameters:**
+
 - `startDate` (DateTime) - Fecha inicio
 - `endDate` (DateTime) - Fecha fin
 - `limit` (int) - Máximo de eventos (default: 1000)
 
 **Example:**
+
 ```
 GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -256,11 +278,13 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 **Descripción:** Dashboard completo con todas las métricas principales.
 
 **Query Parameters:**
+
 - `startDate` (DateTime) - Fecha inicio
 - `endDate` (DateTime) - Fecha fin
 - `topN` (int) - Top N items (default: 10)
 
 **Response:**
+
 ```json
 {
   "startDate": "2026-01-01T00:00:00Z",
@@ -303,11 +327,13 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 **Descripción:** Top búsquedas con métricas de engagement.
 
 **Query Parameters:**
+
 - `startDate` (DateTime)
 - `endDate` (DateTime)
 - `topN` (int) - Default: 20
 
 **Response:**
+
 ```json
 [
   {
@@ -332,11 +358,13 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 **Descripción:** Vehículos más vistos con métricas de conversión.
 
 **Query Parameters:**
+
 - `startDate` (DateTime)
 - `endDate` (DateTime)
 - `topN` (int) - Default: 20
 
 **Response:**
+
 ```json
 [
   {
@@ -358,9 +386,14 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 **Descripción:** 1x1 transparent GIF para tracking sin JavaScript.
 
 **Usage:**
+
 ```html
-<img src="https://api.okla.com.do/api/events/pixel.gif?event=PageView&page=/vehicles" 
-     width="1" height="1" style="display:none" />
+<img
+  src="https://api.okla.com.do/api/events/pixel.gif?event=PageView&page=/vehicles"
+  width="1"
+  height="1"
+  style="display:none"
+/>
 ```
 
 ---
@@ -370,6 +403,7 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 ### Tests Creados (29 tests - 100% passing)
 
 **TrackedEventTests.cs** (8 tests):
+
 - ✅ ShouldBeCreated_WithValidData
 - ✅ IsAuthenticated_ShouldReturnTrue_WhenUserIdExists
 - ✅ IsAuthenticated_ShouldReturnFalse_WhenUserIdIsNull
@@ -380,6 +414,7 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 - ✅ IsRecent_ShouldReturnFalse_WhenOlderThanOneHour
 
 **PageViewEventTests.cs** (8 tests):
+
 - ✅ ShouldBeCreated_WithAllProperties
 - ✅ MarkAsBounce_ShouldSetBounceAndExitFlags
 - ✅ MarkAsExit_ShouldSetExitFlag
@@ -390,6 +425,7 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 - ✅ SetTimeOnPage_ShouldUpdateTimeOnPageProperty
 
 **SearchEventTests.cs** (5 tests):
+
 - ✅ ShouldBeCreated_WithSearchQuery
 - ✅ RecordClick_ShouldSetPositionAndVehicleId
 - ✅ IsSuccessful_ShouldReturnTrue_WhenHasResultsAndClicked
@@ -397,6 +433,7 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 - ✅ IsZeroResults_ShouldReturnTrue_WhenResultsCountIsZero
 
 **VehicleViewEventTests.cs** (7 tests):
+
 - ✅ ShouldBeCreated_WithVehicleDetails
 - ✅ RecordEngagement_ShouldSetAllFlags
 - ✅ SetTimeSpent_ShouldUpdateTimeSpentSeconds
@@ -406,6 +443,7 @@ GET /api/events/type/Search?startDate=2026-01-01&endDate=2026-01-31&limit=100
 - ✅ RecordEngagement_ShouldSetIndividualFlags
 
 **FilterEventTests.cs** (4 tests):
+
 - ✅ ShouldBeCreated_WithFilterDetails
 - ✅ IsZeroResults_ShouldReturnTrue_WhenNoResults
 - ✅ IsNarrowingFilter_ShouldReturnTrue_WhenReducesResultsMoreThan90Percent
@@ -432,16 +470,19 @@ Total tests: 29
 **Características principales:**
 
 1. **Session Management**
+
    - Genera session_id único por sesión (sessionStorage)
    - Persiste user_id en localStorage
    - Auto-renovación de sesión
 
 2. **Device Detection**
+
    - Detecta Desktop / Tablet / Mobile
    - Identifica Browser (Chrome, Firefox, Safari, Edge, IE)
    - Identifica OS (Windows, macOS, Linux, Android, iOS)
 
 3. **Auto-Tracking**
+
    - Page views automáticos en carga de página
    - Tracking de scroll depth (0-100%)
    - Time on page en segundos
@@ -450,12 +491,14 @@ Total tests: 29
    - SPA navigation (history.pushState)
 
 4. **Manual Tracking Methods**
+
    - `trackSearch(params)` - Búsquedas
    - `trackVehicleView(params)` - Vistas de vehículos
    - `trackFilter(params)` - Aplicación de filtros
    - `trackCustom(eventType, data)` - Eventos personalizados
 
 5. **Batch Queue System**
+
    - Queue de eventos en memoria
    - Flush automático cada 5 segundos
    - Flush inmediato al alcanzar batch size (10 eventos)
@@ -498,11 +541,11 @@ declare global {
 // Inicializar SDK
 useEffect(() => {
   window.OklaAnalytics.init({
-    apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+    apiUrl: import.meta.env.VITE_API_URL || "http://localhost:8080",
     batchSize: 10,
     flushIntervalMs: 5000,
     autoTrack: true,
-    debug: true // Solo en development
+    debug: true, // Solo en development
   });
 }, []);
 ```
@@ -531,9 +574,9 @@ const handleSearch = (query: string, filters: any) => {
   window.OklaAnalytics.trackSearch({
     query: query,
     resultsCount: results.length,
-    searchType: 'vehicles',
+    searchType: "vehicles",
     filters: filters,
-    sortBy: sortOption
+    sortBy: sortOption,
   });
 };
 ```
@@ -551,7 +594,7 @@ useEffect(() => {
       make: vehicle.make,
       model: vehicle.model,
       year: vehicle.year,
-      viewSource: 'SearchResults'
+      viewSource: "SearchResults",
     });
   }
 }, [vehicle]);
@@ -560,7 +603,7 @@ useEffect(() => {
 const handleContactClick = () => {
   window.OklaAnalytics.trackVehicleView({
     vehicleId: vehicle.id,
-    clickedContact: true
+    clickedContact: true,
   });
 };
 
@@ -568,7 +611,7 @@ const handleContactClick = () => {
 const handleAddToFavorites = () => {
   window.OklaAnalytics.trackVehicleView({
     vehicleId: vehicle.id,
-    addedToFavorites: true
+    addedToFavorites: true,
   });
 };
 ```
@@ -581,9 +624,9 @@ const handleFilterApply = (filterType: string, filterValue: any) => {
   window.OklaAnalytics.trackFilter({
     filterType: filterType,
     filterValue: filterValue,
-    filterOperator: 'equals',
+    filterOperator: "equals",
     resultsAfterFilter: filteredResults.length,
-    pageContext: 'Search'
+    pageContext: "Search",
   });
 };
 ```
@@ -626,6 +669,7 @@ USE okla_events;
 ### 3. Connection String
 
 **Desarrollo:**
+
 ```json
 {
   "ConnectionStrings": {
@@ -635,6 +679,7 @@ USE okla_events;
 ```
 
 **Producción (Kubernetes):**
+
 ```json
 {
   "ConnectionStrings": {
@@ -674,32 +719,39 @@ SELECT * FROM mv_vehicle_views LIMIT 10;
 ### ClickHouse Optimizations
 
 1. **Partitioning by Month:**
+
    ```sql
    PARTITION BY toYYYYMM(timestamp)
    ```
+
    - Permite queries ultra-rápidas filtrando por mes
    - DROP PARTITION para cleanup rápido
 
 2. **Bloom Filter Indexes:**
+
    ```sql
    INDEX idx_user_id user_id TYPE bloom_filter GRANULARITY 1
    INDEX idx_session_id session_id TYPE bloom_filter GRANULARITY 1
    INDEX idx_country country TYPE bloom_filter GRANULARITY 1
    INDEX idx_device_type device_type TYPE bloom_filter GRANULARITY 1
    ```
+
    - Acelera WHERE conditions en campos indexados
    - Ideal para alta cardinalidad (user_id, session_id)
 
 3. **Materialized Views:**
+
    - **mv_events_by_type_daily:** Pre-agregado de eventos por tipo y día
    - **mv_top_searches:** Agregaciones de búsquedas con CTR pre-calculado
    - **mv_vehicle_views:** Métricas de vehículos pre-computadas
    - **Ventaja:** Queries en milisegundos vs. seconds
 
 4. **TTL Auto-Cleanup:**
+
    ```sql
    TTL timestamp + INTERVAL 90 DAY
    ```
+
    - Borra automáticamente eventos antiguos
    - Sin intervención manual
 
@@ -713,18 +765,20 @@ SELECT * FROM mv_vehicle_views LIMIT 10;
 ### Frontend SDK Optimizations
 
 1. **Batch Queue:**
+
    - Acumula eventos en memoria
    - Envía en lote cada 5 segundos o 10 eventos
    - Reduce requests HTTP 90%
 
 2. **sendBeacon API:**
+
    - Non-blocking HTTP requests
    - No afecta performance de página
    - Funciona incluso al cerrar tab
 
 3. **Passive Event Listeners:**
    ```javascript
-   window.addEventListener('scroll', handler, { passive: true });
+   window.addEventListener("scroll", handler, { passive: true });
    ```
    - No bloquea scrolling
    - Mejora performance de navegación
@@ -735,45 +789,45 @@ SELECT * FROM mv_vehicle_views LIMIT 10;
 
 ### Métricas Disponibles
 
-| Métrica | Descripción | Endpoint |
-|---------|-------------|----------|
-| **Total Page Views** | Vistas de página totales | /analytics/summary |
-| **Unique Visitors** | Visitantes únicos (user_id + session_id) | /analytics/summary |
-| **Conversion Rate** | % de vistas → contacto/favorito | /analytics/summary |
-| **Events by Type** | Distribución de eventos | /analytics/summary |
-| **Top Searches** | Búsquedas más frecuentes | /analytics/top-searches |
-| **Top Vehicles** | Vehículos más vistos | /analytics/most-viewed-vehicles |
-| **CTR** | Click-through rate de búsquedas | /analytics/top-searches |
-| **Avg Time Spent** | Tiempo promedio en vehículo | /analytics/most-viewed-vehicles |
-| **Engagement Rate** | % de scroll > 50% + time > 60s | Custom query |
+| Métrica              | Descripción                              | Endpoint                        |
+| -------------------- | ---------------------------------------- | ------------------------------- |
+| **Total Page Views** | Vistas de página totales                 | /analytics/summary              |
+| **Unique Visitors**  | Visitantes únicos (user_id + session_id) | /analytics/summary              |
+| **Conversion Rate**  | % de vistas → contacto/favorito          | /analytics/summary              |
+| **Events by Type**   | Distribución de eventos                  | /analytics/summary              |
+| **Top Searches**     | Búsquedas más frecuentes                 | /analytics/top-searches         |
+| **Top Vehicles**     | Vehículos más vistos                     | /analytics/most-viewed-vehicles |
+| **CTR**              | Click-through rate de búsquedas          | /analytics/top-searches         |
+| **Avg Time Spent**   | Tiempo promedio en vehículo              | /analytics/most-viewed-vehicles |
+| **Engagement Rate**  | % de scroll > 50% + time > 60s           | Custom query                    |
 
 ### Queries Útiles
 
 ```sql
 -- Tasa de rebote (bounce rate)
-SELECT 
+SELECT
   countIf(is_bounce) / count(*) as bounce_rate
 FROM tracked_events
 WHERE event_type = 'PageView'
   AND timestamp >= today() - 7;
 
 -- Funnel de conversión
-SELECT 
+SELECT
   'Step 1: Search' as step, count(DISTINCT session_id) as sessions
 FROM tracked_events WHERE event_type = 'Search'
 UNION ALL
-SELECT 
+SELECT
   'Step 2: Vehicle View', count(DISTINCT session_id)
 FROM tracked_events WHERE event_type = 'VehicleView'
 UNION ALL
-SELECT 
+SELECT
   'Step 3: Contact', count(DISTINCT session_id)
-FROM tracked_events 
-WHERE event_type = 'VehicleView' 
+FROM tracked_events
+WHERE event_type = 'VehicleView'
   AND JSONExtractBool(event_data, 'clickedContact') = true;
 
 -- Búsquedas sin resultados (oportunidad de mejora)
-SELECT 
+SELECT
   search_query, count(*) as occurrences
 FROM tracked_events
 WHERE event_type = 'Search'
@@ -868,7 +922,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchAnalytics = async () => {
-      const response = await fetch('/api/events/analytics/summary?startDate=2026-01-01&endDate=2026-01-31');
+      const response = await fetch(
+        "/api/events/analytics/summary?startDate=2026-01-01&endDate=2026-01-31"
+      );
       const data = await response.json();
       setAnalytics(data);
     };
@@ -882,7 +938,10 @@ const AdminDashboard = () => {
     <div className="grid grid-cols-4 gap-4">
       <StatCard title="Page Views" value={analytics?.totalPageViews} />
       <StatCard title="Unique Visitors" value={analytics?.uniqueVisitors} />
-      <StatCard title="Conversion Rate" value={`${analytics?.conversionRate}%`} />
+      <StatCard
+        title="Conversion Rate"
+        value={`${analytics?.conversionRate}%`}
+      />
       <EventsChart data={analytics?.eventsByType} />
       <TopSearchesTable searches={analytics?.topSearches} />
       <TopVehiclesTable vehicles={analytics?.topVehicles} />
@@ -895,7 +954,7 @@ const AdminDashboard = () => {
 
 ```sql
 -- Exportar datos para entrenamiento de ML
-SELECT 
+SELECT
   search_query,
   count(*) as search_frequency,
   avg(results_count) as avg_results,
@@ -915,13 +974,13 @@ FORMAT CSVWithNames;
 
 ```sql
 -- Vehículos vistos juntos (collaborative filtering)
-SELECT 
+SELECT
   v1.vehicle_id as vehicle_a,
   v2.vehicle_id as vehicle_b,
   count(DISTINCT v1.session_id) as co_views
 FROM tracked_events v1
-JOIN tracked_events v2 
-  ON v1.session_id = v2.session_id 
+JOIN tracked_events v2
+  ON v1.session_id = v2.session_id
   AND v1.vehicle_id < v2.vehicle_id
 WHERE v1.event_type = 'VehicleView'
   AND v2.event_type = 'VehicleView'
@@ -934,7 +993,7 @@ ORDER BY co_views DESC;
 
 ```sql
 -- Identificar hot leads (usuarios muy interesados)
-SELECT 
+SELECT
   user_id,
   count(DISTINCT vehicle_id) as vehicles_viewed,
   sum(time_spent_seconds) as total_time_spent,
@@ -945,7 +1004,7 @@ WHERE event_type = 'VehicleView'
   AND timestamp >= today() - 7
   AND user_id IS NOT NULL
 GROUP BY user_id
-HAVING vehicles_viewed >= 5 
+HAVING vehicles_viewed >= 5
    AND total_time_spent >= 600
    AND contact_clicks >= 1
 ORDER BY contact_clicks DESC, total_time_spent DESC;
@@ -958,12 +1017,14 @@ ORDER BY contact_clicks DESC, total_time_spent DESC;
 ### Datos Capturados
 
 **PII (Personally Identifiable Information):**
+
 - ❌ Nombre, apellido, email, teléfono NO capturados
 - ✅ UserId (GUID) solo si usuario está autenticado
 - ✅ IpAddress (para geo-location, puede ser enmascarado)
 - ✅ UserAgent (device fingerprinting)
 
 **Anonimización:**
+
 - SessionId es temporal (válido por sesión)
 - UserId es opcional (null para usuarios anónimos)
 - IP masking: Guardar solo primeros 3 octetos (192.168.1.xxx → 192.168.1.0)
@@ -976,8 +1037,8 @@ DELETE FROM tracked_events
 WHERE user_id = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 
 -- Anonimizar datos (alternativa a borrado)
-ALTER TABLE tracked_events 
-UPDATE user_id = NULL 
+ALTER TABLE tracked_events
+UPDATE user_id = NULL
 WHERE user_id = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 ```
 
@@ -988,12 +1049,12 @@ WHERE user_id = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 const CookieConsent = () => {
   const handleAccept = () => {
     window.OklaAnalytics.init({ autoTrack: true });
-    localStorage.setItem('analytics_consent', 'accepted');
+    localStorage.setItem("analytics_consent", "accepted");
   };
 
   const handleDecline = () => {
     window.OklaAnalytics.init({ autoTrack: false });
-    localStorage.setItem('analytics_consent', 'declined');
+    localStorage.setItem("analytics_consent", "declined");
   };
 
   // ...
@@ -1007,26 +1068,31 @@ const CookieConsent = () => {
 ### Sprint 10+ Features
 
 1. **Real-Time Dashboard con WebSockets**
+
    - SignalR hub para eventos en vivo
    - Dashboard actualizado en tiempo real
    - Alertas de anomalías (traffic spikes, errors)
 
 2. **Kafka/RabbitMQ Integration**
+
    - Event streaming para alta escala
    - Desacoplar ingesta de procesamiento
    - Resiliencia ante caídas
 
 3. **ML Models Integration**
+
    - Predicción de conversión (lead scoring)
    - Recomendaciones personalizadas
    - Detección de fraude
 
 4. **A/B Testing Framework**
+
    - Definir experimentos desde backend
    - Track variantes en eventos
    - Análisis estadístico de resultados
 
 5. **Heatmaps & Session Replays**
+
    - Grabar interacciones de usuario
    - Playback de sesiones
    - Click heatmaps visuales
@@ -1102,25 +1168,25 @@ const CookieConsent = () => {
 
 ## 📊 Estadísticas del Código
 
-| Categoría | Backend | Frontend SDK | Total |
-|-----------|---------|--------------|-------|
-| **Archivos Creados** | 24 | 1 | **25** |
-| **Líneas de Código** | ~3,600 | ~500 | **~4,100** |
-| **Clases/Componentes** | 20 | 1 SDK | **21** |
-| **Endpoints REST** | 8 | - | **8** |
-| **Tests Unitarios** | 29 | - | **29** |
-| **Test Coverage** | Domain 100% | - | **Domain 100%** |
+| Categoría              | Backend     | Frontend SDK | Total           |
+| ---------------------- | ----------- | ------------ | --------------- |
+| **Archivos Creados**   | 24          | 1            | **25**          |
+| **Líneas de Código**   | ~3,600      | ~500         | **~4,100**      |
+| **Clases/Componentes** | 20          | 1 SDK        | **21**          |
+| **Endpoints REST**     | 8           | -            | **8**           |
+| **Tests Unitarios**    | 29          | -            | **29**          |
+| **Test Coverage**      | Domain 100% | -            | **Domain 100%** |
 
 ### Desglose por Capa (Backend)
 
-| Capa | Archivos | LOC | Descripción |
-|------|----------|-----|-------------|
-| **Domain** | 7 | ~900 | Entities, Enums, Interfaces |
-| **Application** | 8 | ~1,400 | DTOs, Commands, Queries |
-| **Infrastructure** | 3 | ~800 | Repository, ClickHouse |
-| **API** | 5 | ~350 | Controllers, Program.cs |
-| **Tests** | 6 | ~600 | Unit tests (29 tests) |
-| **TOTAL** | **29** | **~4,050** | **Backend completo** |
+| Capa               | Archivos | LOC        | Descripción                 |
+| ------------------ | -------- | ---------- | --------------------------- |
+| **Domain**         | 7        | ~900       | Entities, Enums, Interfaces |
+| **Application**    | 8        | ~1,400     | DTOs, Commands, Queries     |
+| **Infrastructure** | 3        | ~800       | Repository, ClickHouse      |
+| **API**            | 5        | ~350       | Controllers, Program.cs     |
+| **Tests**          | 6        | ~600       | Unit tests (29 tests)       |
+| **TOTAL**          | **29**   | **~4,050** | **Backend completo**        |
 
 ---
 

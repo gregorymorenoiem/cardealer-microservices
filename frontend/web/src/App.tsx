@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useOklaAnalytics } from './hooks/useOklaAnalytics';
 import HomePage from './pages/HomePage';
 // Vehicle module pages
 import {
@@ -98,6 +99,13 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Initialize OKLA Analytics SDK (Sprint 9 - Event Tracking)
+  useOklaAnalytics({
+    apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+    autoTrack: true,
+    debug: import.meta.env.DEV,
+  });
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
