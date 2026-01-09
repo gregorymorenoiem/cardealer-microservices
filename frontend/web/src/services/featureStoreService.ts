@@ -61,16 +61,16 @@ class FeatureStoreService {
 
   constructor() {
     const apiUrl = import.meta.env.VITE_API_URL || 'https://api.okla.com.do';
-    
+
     this.api = axios.create({
       baseURL: `${apiUrl}/api/features`,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
 
     // Add JWT token interceptor
-    this.api.interceptors.request.use(config => {
+    this.api.interceptors.request.use((config) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -104,7 +104,7 @@ class FeatureStoreService {
   // Feature Definitions
   async getFeatureDefinitions(category?: string): Promise<FeatureDefinition[]> {
     const response = await this.api.get<FeatureDefinition[]>('/definitions', {
-      params: category ? { category } : {}
+      params: category ? { category } : {},
     });
     return response.data;
   }
@@ -112,10 +112,10 @@ class FeatureStoreService {
   // Helper: Get feature type color
   getFeatureTypeColor(featureType: string): string {
     const colors: Record<string, string> = {
-      'Numeric': 'blue',
-      'Categorical': 'green',
-      'Boolean': 'purple',
-      'List': 'orange'
+      Numeric: 'blue',
+      Categorical: 'green',
+      Boolean: 'purple',
+      List: 'orange',
     };
     return colors[featureType] || 'gray';
   }

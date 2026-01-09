@@ -18,21 +18,25 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 ### Backend: UserBehaviorService (10 archivos)
 
 **Domain Layer (3 archivos):**
+
 - ✅ `UserBehaviorProfile.cs` - Perfil completo de comportamiento con preferencias inferidas
 - ✅ `UserAction.cs` - Historial de acciones del usuario
 - ✅ `UserSegment.cs` - Definición de segmentos
 - ✅ `IUserBehaviorRepository.cs` - 13 métodos de repositorio
 
 **Application Layer (3 archivos):**
+
 - ✅ `UserBehaviorDtos.cs` - 6 DTOs
 - ✅ `RecordUserActionCommand.cs` - Registrar acción con auto-actualización de perfil
 - ✅ `GetUserBehaviorProfileQuery.cs` - 3 queries (Profile, Actions, Summary)
 
 **Infrastructure Layer (2 archivos):**
+
 - ✅ `UserBehaviorDbContext.cs` - EF Core con PostgreSQL
 - ✅ `UserBehaviorRepository.cs` - Implementación completa (13+ métodos)
 
 **API Layer (4 archivos):**
+
 - ✅ `UserBehaviorController.cs` - 5 endpoints REST
 - ✅ `Program.cs` - Configuración completa
 - ✅ `appsettings.json` - Connection string PostgreSQL
@@ -40,17 +44,18 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 
 #### 📡 Endpoints REST API - UserBehaviorService
 
-| Método | Endpoint                       | Descripción                       | Auth  |
-| ------ | ------------------------------ | --------------------------------- | ----- |
-| `GET`  | `/api/userbehavior/{userId}`   | Obtener perfil de comportamiento  | ✅    |
-| `GET`  | `/api/userbehavior/{userId}/actions` | Historial de acciones (límite 50) | ✅    |
-| `POST` | `/api/userbehavior/actions`    | Registrar acción (actualiza perfil automáticamente) | ✅    |
-| `GET`  | `/api/userbehavior/summary`    | Resumen agregado de todos los usuarios | ✅ Admin |
-| `GET`  | `/health`                      | Health Check                      | ❌    |
+| Método | Endpoint                             | Descripción                                         | Auth     |
+| ------ | ------------------------------------ | --------------------------------------------------- | -------- |
+| `GET`  | `/api/userbehavior/{userId}`         | Obtener perfil de comportamiento                    | ✅       |
+| `GET`  | `/api/userbehavior/{userId}/actions` | Historial de acciones (límite 50)                   | ✅       |
+| `POST` | `/api/userbehavior/actions`          | Registrar acción (actualiza perfil automáticamente) | ✅       |
+| `GET`  | `/api/userbehavior/summary`          | Resumen agregado de todos los usuarios              | ✅ Admin |
+| `GET`  | `/health`                            | Health Check                                        | ❌       |
 
 #### 🧠 Lógica de Comportamiento
 
 **Engagement Score (0-100):**
+
 - Búsquedas × 1.0
 - Vistas de vehículos × 2.0
 - Favoritos × 3.0
@@ -59,6 +64,7 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 - Normalizado a 0-100
 
 **Purchase Intent Score (0-100):**
+
 - Contactos × 25.0
 - Favoritos × 10.0
 - Comparaciones × 15.0
@@ -66,6 +72,7 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 - Max 100
 
 **Segmentación Automática:**
+
 - **SeriousBuyer:** Intent ≥ 70 + ≥ 2 contactos
 - **Researcher:** Engagement ≥ 60 + ≥ 3 búsquedas
 - **Browser:** ≥ 10 vistas de vehículos
@@ -77,6 +84,7 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 ### Backend: FeatureStoreService (10 archivos)
 
 **Domain Layer (3 archivos):**
+
 - ✅ `UserFeature.cs` - Features de usuarios para ML
 - ✅ `VehicleFeature.cs` - Features de vehículos para ML
 - ✅ `FeatureDefinition.cs` - Metadata de features
@@ -84,15 +92,18 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 - ✅ `IFeatureStoreRepository.cs` - 18 métodos de repositorio
 
 **Application Layer (3 archivos):**
+
 - ✅ `FeatureDtos.cs` - 7 DTOs
 - ✅ `UpsertFeatureCommand.cs` - 2 commands (User, Vehicle)
 - ✅ `GetFeaturesQuery.cs` - 3 queries (UserFeatures, VehicleFeatures, Definitions)
 
 **Infrastructure Layer (2 archivos):**
+
 - ✅ `FeatureStoreDbContext.cs` - EF Core con PostgreSQL
 - ✅ `FeatureStoreRepository.cs` - Implementación completa (18+ métodos)
 
 **API Layer (4 archivos):**
+
 - ✅ `FeaturesController.cs` - 6 endpoints REST
 - ✅ `Program.cs` - Configuración completa
 - ✅ `appsettings.json` - Connection string PostgreSQL
@@ -100,14 +111,14 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 
 #### 📡 Endpoints REST API - FeatureStoreService
 
-| Método | Endpoint                     | Descripción                              | Auth  |
-| ------ | ---------------------------- | ---------------------------------------- | ----- |
-| `GET`  | `/api/features/users/{userId}` | Obtener todas las features de un usuario | ✅    |
-| `POST` | `/api/features/users`        | Crear/actualizar feature de usuario      | ✅    |
-| `GET`  | `/api/features/vehicles/{vehicleId}` | Obtener todas las features de un vehículo | ✅    |
-| `POST` | `/api/features/vehicles`     | Crear/actualizar feature de vehículo     | ✅    |
-| `GET`  | `/api/features/definitions`  | Obtener definiciones de features (filtro por categoría) | ✅    |
-| `GET`  | `/health`                    | Health Check                             | ❌    |
+| Método | Endpoint                             | Descripción                                             | Auth |
+| ------ | ------------------------------------ | ------------------------------------------------------- | ---- |
+| `GET`  | `/api/features/users/{userId}`       | Obtener todas las features de un usuario                | ✅   |
+| `POST` | `/api/features/users`                | Crear/actualizar feature de usuario                     | ✅   |
+| `GET`  | `/api/features/vehicles/{vehicleId}` | Obtener todas las features de un vehículo               | ✅   |
+| `POST` | `/api/features/vehicles`             | Crear/actualizar feature de vehículo                    | ✅   |
+| `GET`  | `/api/features/definitions`          | Obtener definiciones de features (filtro por categoría) | ✅   |
+| `GET`  | `/health`                            | Health Check                                            | ❌   |
 
 #### 🗃️ Tipos de Features
 
@@ -134,6 +145,7 @@ Implementar sistema completo de análisis de comportamiento de usuarios y Featur
 - ✅ `UserAction_CanHaveOptionalFields`
 
 **Resultados:**
+
 ```
 Test Run Successful.
 Total tests: 10
@@ -154,6 +166,7 @@ Total tests: 10
 - ✅ `FeatureBatch_CanBeCompleted`
 
 **Resultados:**
+
 ```
 Test Run Successful.
 Total tests: 8
@@ -167,12 +180,14 @@ Total tests: 8
 ### Frontend: TypeScript Services (2 archivos)
 
 **userBehaviorService.ts (~150 líneas):**
+
 - ✅ Interfaces TypeScript completas
 - ✅ Métodos: `getUserProfile()`, `getUserActions()`, `recordAction()`, `getSummary()`
 - ✅ Helpers: `getSegmentLabel()`, `getSegmentColor()`
 - ✅ JWT token interceptor
 
 **featureStoreService.ts (~130 líneas):**
+
 - ✅ Interfaces TypeScript completas
 - ✅ Métodos: `getUserFeatures()`, `upsertUserFeature()`, `getVehicleFeatures()`, `upsertVehicleFeature()`, `getFeatureDefinitions()`
 - ✅ Helpers: `getFeatureTypeColor()`, `parseFeatureValue()`
@@ -183,6 +198,7 @@ Total tests: 8
 ### Frontend: Páginas React (2 componentes)
 
 **UserBehaviorDashboard.tsx (~280 líneas):**
+
 - ✅ Vista de perfil individual (userId param)
 - ✅ Vista de resumen agregado (sin param)
 - ✅ Stats cards: Segment, Engagement, Intent, Acciones
@@ -194,6 +210,7 @@ Total tests: 8
 - ✅ Responsive design
 
 **FeatureStoreDashboard.tsx (~200 líneas):**
+
 - ✅ Vista de features por entidad (user o vehicle)
 - ✅ Vista de definiciones de features (todas)
 - ✅ Tabla de features con versión, tipo, computed_at, expires_at
@@ -208,6 +225,7 @@ Total tests: 8
 ### UI Integration (✅ COMPLETADA)
 
 **App.tsx - Rutas agregadas:**
+
 ```tsx
 {/* Sprint 10 - User Behavior & Features */}
 <Route path="/admin/user-behavior" element={...} />
@@ -218,15 +236,16 @@ Total tests: 8
 
 **Puntos de acceso para usuarios:**
 
-| Usuario   | Acceso                    | Ruta                                       |
-| --------- | ------------------------- | ------------------------------------------ |
-| **Admin** | Navbar Admin → "User Behavior" | `/admin/user-behavior`                     |
+| Usuario   | Acceso                           | Ruta                                       |
+| --------- | -------------------------------- | ------------------------------------------ |
+| **Admin** | Navbar Admin → "User Behavior"   | `/admin/user-behavior`                     |
 | **Admin** | Ver perfil de usuario específico | `/admin/user-behavior/{userId}`            |
-| **Admin** | Navbar Admin → "Feature Store" | `/admin/feature-store`                     |
-| **Admin** | Ver features de usuario   | `/admin/feature-store/user/{userId}`       |
-| **Admin** | Ver features de vehículo  | `/admin/feature-store/vehicle/{vehicleId}` |
+| **Admin** | Navbar Admin → "Feature Store"   | `/admin/feature-store`                     |
+| **Admin** | Ver features de usuario          | `/admin/feature-store/user/{userId}`       |
+| **Admin** | Ver features de vehículo         | `/admin/feature-store/vehicle/{vehicleId}` |
 
 **Flujo de navegación:**
+
 ```
 Admin Panel (/admin)
     ↓
@@ -255,29 +274,29 @@ Ver features de entidad: /admin/feature-store/user/{userId}
 
 ### Backend
 
-| Servicio              | Domain | Application | Infrastructure | API  | Total |
-| --------------------- | ------ | ----------- | -------------- | ---- | ----- |
-| **UserBehaviorService** | 3      | 3           | 2              | 4    | **12** |
-| **FeatureStoreService** | 3      | 3           | 2              | 4    | **12** |
-| **TOTAL BACKEND**     | 6      | 6           | 4              | 8    | **24** |
+| Servicio                | Domain | Application | Infrastructure | API | Total  |
+| ----------------------- | ------ | ----------- | -------------- | --- | ------ |
+| **UserBehaviorService** | 3      | 3           | 2              | 4   | **12** |
+| **FeatureStoreService** | 3      | 3           | 2              | 4   | **12** |
+| **TOTAL BACKEND**       | 6      | 6           | 4              | 8   | **24** |
 
 **Líneas de código Backend:** ~4,200
 
 ### Frontend
 
-| Tipo        | Archivos | LOC    |
-| ----------- | -------- | ------ |
-| **Services**  | 2        | ~280   |
-| **Pages**     | 2        | ~480   |
+| Tipo               | Archivos | LOC      |
+| ------------------ | -------- | -------- |
+| **Services**       | 2        | ~280     |
+| **Pages**          | 2        | ~480     |
 | **TOTAL FRONTEND** | 4        | **~760** |
 
 ### Tests
 
-| Servicio              | Tests | Resultado |
-| --------------------- | ----- | --------- |
-| **UserBehaviorService.Tests** | 10    | ✅ 100%   |
-| **FeatureStoreService.Tests** | 8     | ✅ 100%   |
-| **TOTAL TESTS**       | **18**    | ✅ **100%** |
+| Servicio                      | Tests  | Resultado   |
+| ----------------------------- | ------ | ----------- |
+| **UserBehaviorService.Tests** | 10     | ✅ 100%     |
+| **FeatureStoreService.Tests** | 8      | ✅ 100%     |
+| **TOTAL TESTS**               | **18** | ✅ **100%** |
 
 **Total de archivos Sprint 10:** 46 archivos
 
@@ -288,6 +307,7 @@ Ver features de entidad: /admin/feature-store/user/{userId}
 ### ✅ Análisis de Comportamiento
 
 1. **Perfil de Usuario:**
+
    - Segmento automático (SeriousBuyer, Researcher, Browser, TireKicker, Casual)
    - Engagement Score (0-100)
    - Purchase Intent Score (0-100)
@@ -295,6 +315,7 @@ Ver features de entidad: /admin/feature-store/user/{userId}
    - Métricas de actividad (búsquedas, vistas, contactos, favoritos)
 
 2. **Historial de Acciones:**
+
    - Tracking completo de todas las acciones (Search, VehicleView, Contact, Favorite, Comparison)
    - Metadata: timestamp, sessionId, deviceType
    - Límite configurable (default: 50 últimas)
@@ -309,6 +330,7 @@ Ver features de entidad: /admin/feature-store/user/{userId}
 ### ✅ Feature Store
 
 1. **User Features:**
+
    - Features personalizados por usuario
    - Tipos: Numeric, Categorical, Boolean, List
    - Versioning automático
@@ -316,11 +338,13 @@ Ver features de entidad: /admin/feature-store/user/{userId}
    - Source tracking (System, Manual, EventPipeline)
 
 2. **Vehicle Features:**
+
    - Features por vehículo (ej: view_count, engagement_rate, popularity_score)
    - Mismos tipos que User Features
    - Útil para sistemas de recomendación
 
 3. **Feature Definitions:**
+
    - Metadata de cada feature (nombre, categoría, descripción)
    - Computation logic (SQL, algoritmo, etc.)
    - Refresh interval (cada cuántas horas recomputar)
@@ -456,12 +480,14 @@ Ve features computados:
 ### Sprint 11: Data Pipeline & ETL (estimado 40 SP)
 
 1. **ETL Service:**
+
    - Cron jobs para agregar eventos diarios
    - Transform: ClickHouse → UserBehaviorService
    - Load: UserBehaviorService → FeatureStoreService
    - Error handling y retry logic
 
 2. **Feature Computation:**
+
    - Batch computation de features
    - Scheduling (daily, hourly, on-demand)
    - Feature versioning automático
@@ -476,6 +502,7 @@ Ve features computados:
 ### Sprint 12: ML Recommendations (estimado 50 SP)
 
 1. **Recommendation Engine:**
+
    - Consume features de FeatureStoreService
    - Modelo collaborative filtering
    - "Vehículos para ti" personalizados
@@ -494,11 +521,13 @@ Ve features computados:
 ### Pendientes de Implementación
 
 1. **UserBehaviorService:**
+
    - ❌ Integración real con EventTrackingService (actualmente independiente)
    - ❌ ETL pipeline automático (manual por ahora)
    - ❌ Inferencia de preferencias más sofisticada (actualmente básica)
 
 2. **FeatureStoreService:**
+
    - ❌ Batch computation jobs no implementados
    - ❌ Feature versioning manual (no hay auto-increment logic)
    - ❌ No hay cleanup de features expirados

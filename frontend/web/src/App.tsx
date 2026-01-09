@@ -36,9 +36,14 @@ import PublicDealerProfilePage from './pages/PublicDealerProfilePage';
 import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 // Analytics Dashboard (Sprint 8)
 import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
+// Advanced Analytics Dashboard (Sprint 12)
+import AdvancedDealerDashboard from './pages/AdvancedDealerDashboard';
 // User Behavior & Features (Sprint 10)
 import UserBehaviorDashboard from './pages/UserBehaviorDashboard';
 import FeatureStoreDashboard from './pages/FeatureStoreDashboard';
+// Lead Scoring (Sprint 11)
+import LeadsDashboard from './pages/LeadsDashboard';
+import LeadDetail from './pages/LeadDetail';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -250,6 +255,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <DealerAnalyticsDashboard dealerId="DEALER_ID_PLACEHOLDER" />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Advanced Analytics Routes (Sprint 12) */}
+          <Route
+            path="/dealer/analytics/advanced"
+            element={
+              <ProtectedRoute>
+                <AdvancedDealerDashboard />
               </ProtectedRoute>
             }
           />
@@ -474,7 +489,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           {/* Sprint 10 - User Behavior & Features */}
           <Route
             path="/admin/user-behavior"
@@ -513,6 +528,24 @@ function App() {
                 <AdminLayout>
                   <FeatureStoreDashboard />
                 </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Sprint 11 - Lead Scoring */}
+          <Route
+            path="/dealer/leads"
+            element={
+              <ProtectedRoute>
+                <LeadsDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/leads/:leadId"
+            element={
+              <ProtectedRoute>
+                <LeadDetail />
               </ProtectedRoute>
             }
           />

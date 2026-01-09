@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DealerAnalyticsService.Domain\DealerAnalyticsService.Domain.csproj" />
+    <ProjectReference Include="..\DealerAnalyticsService.Application\DealerAnalyticsService.Application.csproj" />
   </ItemGroup>
 
 </Project>

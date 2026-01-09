@@ -67,16 +67,16 @@ class UserBehaviorService {
 
   constructor() {
     const apiUrl = import.meta.env.VITE_API_URL || 'https://api.okla.com.do';
-    
+
     this.api = axios.create({
       baseURL: `${apiUrl}/api/userbehavior`,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
 
     // Add JWT token interceptor
-    this.api.interceptors.request.use(config => {
+    this.api.interceptors.request.use((config) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -92,7 +92,7 @@ class UserBehaviorService {
 
   async getUserActions(userId: string, limit: number = 50): Promise<UserAction[]> {
     const response = await this.api.get<UserAction[]>(`/${userId}/actions`, {
-      params: { limit }
+      params: { limit },
     });
     return response.data;
   }
@@ -110,12 +110,12 @@ class UserBehaviorService {
   // Helper: Get segment label in Spanish
   getSegmentLabel(segment: string): string {
     const labels: Record<string, string> = {
-      'SeriousBuyer': 'Comprador Serio',
-      'Researcher': 'Investigador',
-      'Browser': 'Explorador',
-      'TireKicker': 'Curioso',
-      'Casual': 'Casual',
-      'Unknown': 'Desconocido'
+      SeriousBuyer: 'Comprador Serio',
+      Researcher: 'Investigador',
+      Browser: 'Explorador',
+      TireKicker: 'Curioso',
+      Casual: 'Casual',
+      Unknown: 'Desconocido',
     };
     return labels[segment] || segment;
   }
@@ -123,12 +123,12 @@ class UserBehaviorService {
   // Helper: Get segment color
   getSegmentColor(segment: string): string {
     const colors: Record<string, string> = {
-      'SeriousBuyer': 'green',
-      'Researcher': 'blue',
-      'Browser': 'yellow',
-      'TireKicker': 'gray',
-      'Casual': 'purple',
-      'Unknown': 'slate'
+      SeriousBuyer: 'green',
+      Researcher: 'blue',
+      Browser: 'yellow',
+      TireKicker: 'gray',
+      Casual: 'purple',
+      Unknown: 'slate',
     };
     return colors[segment] || 'gray';
   }

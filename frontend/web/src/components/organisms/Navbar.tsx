@@ -26,6 +26,8 @@ import {
   FiGrid,
   FiBriefcase,
   FiUserCheck,
+  FiTarget,
+  FiBarChart3,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 
@@ -73,6 +75,15 @@ export default function Navbar() {
     { href: '/alerts', label: 'Alertas', icon: FiBriefcase },
     { href: '/my-inquiries', label: 'Mis Consultas', icon: FiMessageSquare },
     { href: '/received-inquiries', label: 'Consultas Recibidas', icon: FiUserCheck },
+    { href: '/dealer/leads', label: 'Mis Leads', icon: FiTarget }, // Sprint 11 - Lead Scoring
+  ];
+
+  // Dealer-specific navigation links (Sprint 12 - Advanced Dashboard)
+  const dealerNavLinks = [
+    { href: '/dealer/dashboard', label: 'Dashboard', icon: FiGrid },
+    { href: '/dealer/inventory', label: 'Inventario', icon: FaCar },
+    { href: '/dealer/analytics/advanced', label: 'Analytics Avanzado', icon: FiBarChart3 },
+    { href: '/dealer/leads', label: 'Leads', icon: FiTarget },
   ];
 
   return (
@@ -166,6 +177,25 @@ export default function Navbar() {
                     location.pathname === link.href
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
+                  }`}
+                >
+                  <link.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+
+            {/* Dealer-only navigation links (Sprint 12) */}
+            {isAuthenticated &&
+              user &&
+              (user.accountType === 'dealer' || user.accountType === 'dealer_employee') &&
+              dealerNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={`flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-xl font-semibold text-sm lg:text-base transition-all duration-200 ${
+                    location.pathname === link.href
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 scale-105'
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-emerald-50 hover:scale-105'
                   }`}
                 >
                   <link.icon className="w-4 h-4 lg:w-5 lg:h-5" />
@@ -551,6 +581,26 @@ export default function Navbar() {
                       location.pathname === link.href
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                         : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span className="text-base">{link.label}</span>
+                  </Link>
+                ))}
+
+              {/* Dealer-only navigation links (Sprint 12) */}
+              {isAuthenticated &&
+                user &&
+                (user.accountType === 'dealer' || user.accountType === 'dealer_employee') &&
+                dealerNavLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
+                      location.pathname === link.href
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                        : 'text-gray-700 hover:bg-emerald-50 hover:scale-[1.02]'
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

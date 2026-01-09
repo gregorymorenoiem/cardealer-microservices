@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import featureStoreService, { UserFeature, VehicleFeature, FeatureDefinition } from '../services/featureStoreService';
+import featureStoreService, {
+  UserFeature,
+  VehicleFeature,
+  FeatureDefinition,
+} from '../services/featureStoreService';
 
 export default function FeatureStoreDashboard() {
-  const { entityId, entityType } = useParams<{ entityId?: string; entityType?: 'user' | 'vehicle' }>();
+  const { entityId, entityType } = useParams<{
+    entityId?: string;
+    entityType?: 'user' | 'vehicle';
+  }>();
   const [userFeatures, setUserFeatures] = useState<UserFeature[]>([]);
   const [vehicleFeatures, setVehicleFeatures] = useState<VehicleFeature[]>([]);
   const [definitions, setDefinitions] = useState<FeatureDefinition[]>([]);
@@ -19,7 +26,7 @@ export default function FeatureStoreDashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       if (entityId && entityType === 'user') {
         const features = await featureStoreService.getUserFeatures(entityId);
         setUserFeatures(features);
@@ -30,7 +37,7 @@ export default function FeatureStoreDashboard() {
 
       const defs = await featureStoreService.getFeatureDefinitions();
       setDefinitions(defs);
-      
+
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Error al cargar features');
@@ -39,11 +46,12 @@ export default function FeatureStoreDashboard() {
     }
   };
 
-  const filteredDefinitions = selectedCategory === 'all' 
-    ? definitions 
-    : definitions.filter(d => d.category === selectedCategory);
+  const filteredDefinitions =
+    selectedCategory === 'all'
+      ? definitions
+      : definitions.filter((d) => d.category === selectedCategory);
 
-  const categories = ['all', ...Array.from(new Set(definitions.map(d => d.category)))];
+  const categories = ['all', ...Array.from(new Set(definitions.map((d) => d.category)))];
 
   if (loading) {
     return (
@@ -76,7 +84,7 @@ export default function FeatureStoreDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Feature Store</h1>
           <p className="text-gray-600 mt-2">
-            {entityId 
+            {entityId
               ? `Features para ${entityType === 'user' ? 'Usuario' : 'Vehículo'}: ${entityId}`
               : 'Definiciones de Features para Machine Learning'}
           </p>
@@ -86,18 +94,32 @@ export default function FeatureStoreDashboard() {
         {entityId && displayFeatures.length > 0 && (
           <div className="bg-white rounded-lg shadow mb-8 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Features Activos ({displayFeatures.length})</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Features Activos ({displayFeatures.length})
+              </h2>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Feature</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Version</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Computado</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expira</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Feature
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Valor
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Version
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Computado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Expira
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -106,11 +128,11 @@ export default function FeatureStoreDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {feature.featureName}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {feature.featureValue}
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{feature.featureValue}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full bg-${featureStoreService.getFeatureTypeColor(feature.featureType)}-100 text-${featureStoreService.getFeatureTypeColor(feature.featureType)}-800`}>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full bg-${featureStoreService.getFeatureTypeColor(feature.featureType)}-100 text-${featureStoreService.getFeatureTypeColor(feature.featureType)}-800`}
+                        >
                           {feature.featureType}
                         </span>
                       </td>
@@ -121,7 +143,7 @@ export default function FeatureStoreDashboard() {
                         {new Date(feature.computedAt).toLocaleString('es-DO')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {feature.expiresAt 
+                        {feature.expiresAt
                           ? new Date(feature.expiresAt).toLocaleString('es-DO')
                           : 'Never'}
                       </td>
@@ -137,7 +159,9 @@ export default function FeatureStoreDashboard() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Definiciones de Features ({filteredDefinitions.length})</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Definiciones de Features ({filteredDefinitions.length})
+              </h2>
               <div className="flex gap-2">
                 {categories.map((cat) => (
                   <button
@@ -165,7 +189,9 @@ export default function FeatureStoreDashboard() {
                     <p className="text-sm text-gray-600 mt-1">{def.description}</p>
                   </div>
                   <div className="flex gap-2 items-center">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full bg-${featureStoreService.getFeatureTypeColor(def.featureType)}-100 text-${featureStoreService.getFeatureTypeColor(def.featureType)}-800`}>
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full bg-${featureStoreService.getFeatureTypeColor(def.featureType)}-100 text-${featureStoreService.getFeatureTypeColor(def.featureType)}-800`}
+                    >
                       {def.featureType}
                     </span>
                     {def.isActive ? (
@@ -186,7 +212,9 @@ export default function FeatureStoreDashboard() {
                   </div>
                   <div>
                     <span className="text-gray-500">Refresh:</span>
-                    <span className="ml-2 font-medium text-gray-900">{def.refreshIntervalHours}h</span>
+                    <span className="ml-2 font-medium text-gray-900">
+                      {def.refreshIntervalHours}h
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-500">Updated:</span>
