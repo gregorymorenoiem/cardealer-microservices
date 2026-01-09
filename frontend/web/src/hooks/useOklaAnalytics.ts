@@ -4,7 +4,12 @@
  */
 
 import { useEffect } from 'react';
-import type { OklaAnalyticsConfig, SearchParams, VehicleViewParams, FilterParams } from '../types/okla-analytics';
+import type {
+  OklaAnalyticsConfig,
+  SearchParams,
+  VehicleViewParams,
+  FilterParams,
+} from '../types/okla-analytics';
 
 /**
  * Hook to initialize OKLA Analytics SDK
@@ -23,10 +28,12 @@ export const useOklaAnalytics = (config?: OklaAnalyticsConfig) => {
       };
 
       window.OklaAnalytics.init({ ...defaultConfig, ...config });
-      
+
       console.log('[OKLA Analytics] SDK initialized');
     } else {
-      console.warn('[OKLA Analytics] SDK not loaded. Make sure okla-analytics.js is included in index.html');
+      console.warn(
+        '[OKLA Analytics] SDK not loaded. Make sure okla-analytics.js is included in index.html'
+      );
     }
   }, []);
 };

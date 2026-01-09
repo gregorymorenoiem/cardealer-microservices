@@ -36,6 +36,9 @@ import PublicDealerProfilePage from './pages/PublicDealerProfilePage';
 import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 // Analytics Dashboard (Sprint 8)
 import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
+// User Behavior & Features (Sprint 10)
+import UserBehaviorDashboard from './pages/UserBehaviorDashboard';
+import FeatureStoreDashboard from './pages/FeatureStoreDashboard';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -467,6 +470,48 @@ function App() {
               <ProtectedRoute requireAdmin>
                 <AdminLayout>
                   <CategoriesManagementPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Sprint 10 - User Behavior & Features */}
+          <Route
+            path="/admin/user-behavior"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <UserBehaviorDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/user-behavior/:userId"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <UserBehaviorDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/feature-store"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <FeatureStoreDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/feature-store/:entityType/:entityId"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <FeatureStoreDashboard />
                 </AdminLayout>
               </ProtectedRoute>
             }
