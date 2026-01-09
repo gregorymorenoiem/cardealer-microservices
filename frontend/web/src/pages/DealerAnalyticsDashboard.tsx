@@ -169,21 +169,21 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">📊 Analytics & Métricas</h1>
-          <p className="text-gray-600 mt-1">Panel completo de análisis de rendimiento</p>
+            <p className="text-gray-600 mt-1">Panel completo de análisis de rendimiento</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Período:</label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="7">Últimos 7 días</option>
+              <option value="30">Últimos 30 días</option>
+              <option value="90">Últimos 90 días</option>
+            </select>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Período:</label>
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="7">Últimos 7 días</option>
-            <option value="30">Últimos 30 días</option>
-            <option value="90">Últimos 90 días</option>
-          </select>
-        </div>
-      </div>
 
       {/* Live Stats Bar */}
       {liveStats && (
