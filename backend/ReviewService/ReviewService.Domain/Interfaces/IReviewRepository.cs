@@ -1,49 +1,49 @@
+using ReviewService.Domain.Base;
 using ReviewService.Domain.Entities;
-using CarDealer.Shared.Persistence;
 
 namespace ReviewService.Domain.Interfaces;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Repository para gestión de reviews
-/// &lt;/summary&gt;
-public interface IReviewRepository : IRepository&lt;Review, Guid&gt;
+/// </summary>
+public interface IReviewRepository : IRepository<Review, Guid>
 {
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews de un vendedor con paginación
-    /// &lt;/summary&gt;
-    Task&lt;(IEnumerable&lt;Review&gt; Reviews, int TotalCount)&gt; GetBySellerIdAsync(
+    /// </summary>
+    Task<(IEnumerable<Review> Reviews, int TotalCount)> GetBySellerIdAsync(
         Guid sellerId, 
         int page = 1, 
         int pageSize = 20,
         bool onlyApproved = true);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews de un comprador
-    /// &lt;/summary&gt;
-    Task&lt;IEnumerable&lt;Review&gt;&gt; GetByBuyerIdAsync(Guid buyerId);
+    /// </summary>
+    Task<IEnumerable<Review>> GetByBuyerIdAsync(Guid buyerId);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Verificar si un comprador ya dejó review para un vendedor específico
-    /// &lt;/summary&gt;
-    Task&lt;bool&gt; HasBuyerReviewedSellerAsync(Guid buyerId, Guid sellerId, Guid? vehicleId = null);
+    /// </summary>
+    Task<bool> HasBuyerReviewedSellerAsync(Guid buyerId, Guid sellerId, Guid? vehicleId = null);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener review por OrderId para validar compra verificada
-    /// &lt;/summary&gt;
-    Task&lt;Review?&gt; GetByOrderIdAsync(Guid orderId);
+    /// </summary>
+    Task<Review?> GetByOrderIdAsync(Guid orderId);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews recientes para moderación
-    /// &lt;/summary&gt;
-    Task&lt;IEnumerable&lt;Review&gt;&gt; GetPendingModerationAsync(int limit = 50);
+    /// </summary>
+    Task<IEnumerable<Review>> GetPendingModerationAsync(int limit = 50);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Buscar reviews por contenido (para moderar)
-    /// &lt;/summary&gt;
-    Task&lt;IEnumerable&lt;Review&gt;&gt; SearchByContentAsync(string searchTerm);
+    /// </summary>
+    Task<IEnumerable<Review>> SearchByContentAsync(string searchTerm);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener top reviews (más útiles) para un vendedor
-    /// &lt;/summary&gt;
-    Task&lt;IEnumerable&lt;Review&gt;&gt; GetTopReviewsAsync(Guid sellerId, int limit = 5);
+    /// </summary>
+    Task<IEnumerable<Review>> GetTopReviewsAsync(Guid sellerId, int limit = 5);
 }

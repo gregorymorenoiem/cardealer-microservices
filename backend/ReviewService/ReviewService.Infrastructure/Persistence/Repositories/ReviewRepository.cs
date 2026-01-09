@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using ReviewService.Domain.Entities;
 using ReviewService.Domain.Interfaces;
+using ReviewService.Domain.Base;
 using ReviewService.Infrastructure.Persistence;
-using CarDealer.Shared.Persistence;
 
 namespace ReviewService.Infrastructure.Persistence.Repositories;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Implementación del repositorio para Reviews
-/// &lt;/summary&gt;
-public class ReviewRepository : Repository&lt;Review, Guid&gt;, IReviewRepository
+/// </summary>
+public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
 {
     private readonly ReviewDbContext _context;
 
@@ -18,28 +18,28 @@ public class ReviewRepository : Repository&lt;Review, Guid&gt;, IReviewRepositor
         _context = context;
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews de un vendedor con paginación
-    /// &lt;/summary&gt;
-    public async Task&lt;(IEnumerable&lt;Review&gt; Reviews, int TotalCount)&gt; GetBySellerIdAsync(
+    /// </summary>
+    public async Task<(IEnumerable<Review> Reviews, int TotalCount)> GetBySellerIdAsync(
         Guid sellerId, 
         int page = 1, 
         int pageSize = 20,
         bool onlyApproved = true)
     {
         var query = _context.Reviews
-            .Include(r =&gt; r.Response)
-            .Where(r =&gt; r.SellerId == sellerId);
+            .Include(r => r.Response)
+            .Where(r => r.SellerId == sellerId);
 
         if (onlyApproved)
         {
-            query = query.Where(r =&gt; r.IsApproved);
+            query = query.Where(r => r.IsApproved);
         }
 
         var totalCount = await query.CountAsync();
 
         var reviews = await query
-            .OrderByDescending(r =&gt; r.CreatedAt)
+            .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -47,90 +47,90 @@ public class ReviewRepository : Repository&lt;Review, Guid&gt;, IReviewRepositor
         return (reviews, totalCount);
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews de un comprador
-    /// &lt;/summary&gt;
-    public async Task&lt;IEnumerable&lt;Review&gt;&gt; GetByBuyerIdAsync(Guid buyerId)
+    /// </summary>
+    public async Task<IEnumerable<Review>> GetByBuyerIdAsync(Guid buyerId)
     {
         return await _context.Reviews
-            .Include(r =&gt; r.Response)
-            .Where(r =&gt; r.BuyerId == buyerId)
-            .OrderByDescending(r =&gt; r.CreatedAt)
+            .Include(r => r.Response)
+            .Where(r => r.BuyerId == buyerId)
+            .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Verificar si un comprador ya dejó review para un vendedor específico
-    /// &lt;/summary&gt;
-    public async Task&lt;bool&gt; HasBuyerReviewedSellerAsync(Guid buyerId, Guid sellerId, Guid? vehicleId = null)
+    /// </summary>
+    public async Task<bool> HasBuyerReviewedSellerAsync(Guid buyerId, Guid sellerId, Guid? vehicleId = null)
     {
         var query = _context.Reviews
-            .Where(r =&gt; r.BuyerId == buyerId && r.SellerId == sellerId);
+            .Where(r => r.BuyerId == buyerId && r.SellerId == sellerId);
 
         if (vehicleId.HasValue)
         {
-            query = query.Where(r =&gt; r.VehicleId == vehicleId.Value);
+            query = query.Where(r => r.VehicleId == vehicleId.Value);
         }
 
         return await query.AnyAsync();
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener review por OrderId para validar compra verificada
-    /// &lt;/summary&gt;
-    public async Task&lt;Review?&gt; GetByOrderIdAsync(Guid orderId)
+    /// </summary>
+    public async Task<Review?> GetByOrderIdAsync(Guid orderId)
     {
         return await _context.Reviews
-            .Include(r =&gt; r.Response)
-            .FirstOrDefaultAsync(r =&gt; r.OrderId == orderId);
+            .Include(r => r.Response)
+            .FirstOrDefaultAsync(r => r.OrderId == orderId);
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews recientes para moderación
-    /// &lt;/summary&gt;
-    public async Task&lt;IEnumerable&lt;Review&gt;&gt; GetPendingModerationAsync(int limit = 50)
+    /// </summary>
+    public async Task<IEnumerable<Review>> GetPendingModerationAsync(int limit = 50)
     {
         return await _context.Reviews
-            .Where(r =&gt; !r.IsApproved && r.ModeratedById == null)
-            .OrderBy(r =&gt; r.CreatedAt)
+            .Where(r => !r.IsApproved && r.ModeratedById == null)
+            .OrderBy(r => r.CreatedAt)
             .Take(limit)
             .ToListAsync();
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Buscar reviews por contenido (para moderar)
-    /// &lt;/summary&gt;
-    public async Task&lt;IEnumerable&lt;Review&gt;&gt; SearchByContentAsync(string searchTerm)
+    /// </summary>
+    public async Task<IEnumerable<Review>> SearchByContentAsync(string searchTerm)
     {
         return await _context.Reviews
-            .Where(r =&gt; EF.Functions.ILike(r.Title, $"%{searchTerm}%") ||
+            .Where(r => EF.Functions.ILike(r.Title, $"%{searchTerm}%") ||
                         EF.Functions.ILike(r.Content, $"%{searchTerm}%"))
-            .OrderByDescending(r =&gt; r.CreatedAt)
+            .OrderByDescending(r => r.CreatedAt)
             .Take(100)
             .ToListAsync();
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener top reviews (más útiles) para un vendedor
-    /// &lt;/summary&gt;
-    public async Task&lt;IEnumerable&lt;Review&gt;&gt; GetTopReviewsAsync(Guid sellerId, int limit = 5)
+    /// </summary>
+    public async Task<IEnumerable<Review>> GetTopReviewsAsync(Guid sellerId, int limit = 5)
     {
         return await _context.Reviews
-            .Where(r =&gt; r.SellerId == sellerId && r.IsApproved)
-            .OrderByDescending(r =&gt; r.HelpfulVotes)
-            .ThenByDescending(r =&gt; r.Rating)
-            .ThenByDescending(r =&gt; r.CreatedAt)
+            .Where(r => r.SellerId == sellerId && r.IsApproved)
+            .OrderByDescending(r => r.HelpfulVotes)
+            .ThenByDescending(r => r.Rating)
+            .ThenByDescending(r => r.CreatedAt)
             .Take(limit)
             .ToListAsync();
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Override GetByIdAsync para incluir Response
-    /// &lt;/summary&gt;
-    public override async Task&lt;Review?&gt; GetByIdAsync(Guid id)
+    /// </summary>
+    public override async Task<Review?> GetByIdAsync(Guid id)
     {
         return await _context.Reviews
-            .Include(r =&gt; r.Response)
-            .FirstOrDefaultAsync(r =&gt; r.Id == id);
+            .Include(r => r.Response)
+            .FirstOrDefaultAsync(r => r.Id == id);
     }
 }

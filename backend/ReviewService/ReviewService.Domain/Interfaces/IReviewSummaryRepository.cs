@@ -1,30 +1,30 @@
+using ReviewService.Domain.Base;
 using ReviewService.Domain.Entities;
-using CarDealer.Shared.Persistence;
 
 namespace ReviewService.Domain.Interfaces;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Repository para gestión de estadísticas de reviews
-/// &lt;/summary&gt;
-public interface IReviewSummaryRepository : IRepository&lt;ReviewSummary, Guid&gt;
+/// </summary>
+public interface IReviewSummaryRepository : IRepository<ReviewSummary, Guid>
 {
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener o crear summary para un vendedor
-    /// &lt;/summary&gt;
-    Task&lt;ReviewSummary&gt; GetOrCreateBySellerIdAsync(Guid sellerId);
+    /// </summary>
+    Task<ReviewSummary> GetOrCreateBySellerIdAsync(Guid sellerId);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Actualizar métricas después de agregar/editar/eliminar review
-    /// &lt;/summary&gt;
-    Task&lt;ReviewSummary&gt; RefreshMetricsAsync(Guid sellerId);
+    /// </summary>
+    Task<ReviewSummary> RefreshMetricsAsync(Guid sellerId);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener top sellers por rating
-    /// &lt;/summary&gt;
-    Task&lt;IEnumerable&lt;ReviewSummary&gt;&gt; GetTopRatedSellersAsync(int limit = 10);
+    /// </summary>
+    Task<IEnumerable<ReviewSummary>> GetTopRatedSellersAsync(int limit = 10);
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener sellers con métricas desactualizadas (para job automático)
-    /// &lt;/summary&gt;
-    Task&lt;IEnumerable&lt;ReviewSummary&gt;&gt; GetStaleMetricsAsync(DateTime olderThan);
+    /// </summary>
+    Task<IEnumerable<ReviewSummary>> GetStaleMetricsAsync(DateTime olderThan);
 }

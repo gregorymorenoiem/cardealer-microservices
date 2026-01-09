@@ -2,14 +2,14 @@ using MediatR;
 using ReviewService.Application.Features.Reviews.Queries;
 using ReviewService.Application.DTOs;
 using ReviewService.Domain.Interfaces;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Application.Features.Reviews.Handlers;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Handler para GetSellerReviewsQuery
-/// &lt;/summary&gt;
-public class GetSellerReviewsQueryHandler : IRequestHandler&lt;GetSellerReviewsQuery, Result&lt;PagedReviewsDto&gt;&gt;
+/// </summary>
+public class GetSellerReviewsQueryHandler : IRequestHandler<GetSellerReviewsQuery, Result<PagedReviewsDto>>
 {
     private readonly IReviewRepository _reviewRepository;
 
@@ -18,7 +18,7 @@ public class GetSellerReviewsQueryHandler : IRequestHandler&lt;GetSellerReviewsQ
         _reviewRepository = reviewRepository;
     }
 
-    public async Task&lt;Result&lt;PagedReviewsDto&gt;&gt; Handle(GetSellerReviewsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedReviewsDto>> Handle(GetSellerReviewsQuery request, CancellationToken cancellationToken)
     {
         // Obtener reviews paginadas
         var (reviews, totalCount) = await _reviewRepository.GetBySellerIdAsync(
@@ -28,7 +28,7 @@ public class GetSellerReviewsQueryHandler : IRequestHandler&lt;GetSellerReviewsQ
             request.OnlyApproved);
 
         // Convertir a DTOs
-        var reviewDtos = reviews.Select(r =&gt; new ReviewDto
+        var reviewDtos = reviews.Select(r => new ReviewDto
         {
             Id = r.Id,
             BuyerId = r.BuyerId,
@@ -65,18 +65,18 @@ public class GetSellerReviewsQueryHandler : IRequestHandler&lt;GetSellerReviewsQ
             Page = request.Page,
             PageSize = request.PageSize,
             TotalPages = totalPages,
-            HasNextPage = request.Page &lt; totalPages,
-            HasPreviousPage = request.Page &gt; 1
+            HasNextPage = request.Page < totalPages,
+            HasPreviousPage = request.Page > 1
         };
 
-        return Result&lt;PagedReviewsDto&gt;.Success(result);
+        return Result<PagedReviewsDto>.Success(result);
     }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// Handler para GetReviewSummaryQuery
-/// &lt;/summary&gt;
-public class GetReviewSummaryQueryHandler : IRequestHandler&lt;GetReviewSummaryQuery, Result&lt;ReviewSummaryDto&gt;&gt;
+/// </summary>
+public class GetReviewSummaryQueryHandler : IRequestHandler<GetReviewSummaryQuery, Result<ReviewSummaryDto>>
 {
     private readonly IReviewSummaryRepository _summaryRepository;
 
@@ -85,7 +85,7 @@ public class GetReviewSummaryQueryHandler : IRequestHandler&lt;GetReviewSummaryQ
         _summaryRepository = summaryRepository;
     }
 
-    public async Task&lt;Result&lt;ReviewSummaryDto&gt;&gt; Handle(GetReviewSummaryQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ReviewSummaryDto>> Handle(GetReviewSummaryQuery request, CancellationToken cancellationToken)
     {
         // Obtener o crear summary
         var summary = await _summaryRepository.GetOrCreateBySellerIdAsync(request.SellerId);
@@ -102,14 +102,14 @@ public class GetReviewSummaryQueryHandler : IRequestHandler&lt;GetReviewSummaryQ
             LastReviewDate = summary.LastReviewDate
         };
 
-        return Result&lt;ReviewSummaryDto&gt;.Success(dto);
+        return Result<ReviewSummaryDto>.Success(dto);
     }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// Handler para GetReviewByIdQuery
-/// &lt;/summary&gt;
-public class GetReviewByIdQueryHandler : IRequestHandler&lt;GetReviewByIdQuery, Result&lt;ReviewDto&gt;&gt;
+/// </summary>
+public class GetReviewByIdQueryHandler : IRequestHandler<GetReviewByIdQuery, Result<ReviewDto>>
 {
     private readonly IReviewRepository _reviewRepository;
 
@@ -118,13 +118,13 @@ public class GetReviewByIdQueryHandler : IRequestHandler&lt;GetReviewByIdQuery, 
         _reviewRepository = reviewRepository;
     }
 
-    public async Task&lt;Result&lt;ReviewDto&gt;&gt; Handle(GetReviewByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ReviewDto>> Handle(GetReviewByIdQuery request, CancellationToken cancellationToken)
     {
         var review = await _reviewRepository.GetByIdAsync(request.ReviewId);
 
         if (review == null)
         {
-            return Result&lt;ReviewDto&gt;.Failure("Review no encontrada");
+            return Result<ReviewDto>.Failure("Review no encontrada");
         }
 
         var dto = new ReviewDto
@@ -154,6 +154,6 @@ public class GetReviewByIdQueryHandler : IRequestHandler&lt;GetReviewByIdQuery, 
             } : null
         };
 
-        return Result&lt;ReviewDto&gt;.Success(dto);
+        return Result<ReviewDto>.Success(dto);
     }
 }

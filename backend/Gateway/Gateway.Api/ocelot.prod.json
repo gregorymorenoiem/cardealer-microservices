@@ -616,6 +616,32 @@
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
       }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicleintelligence/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehicleintelligenceservice", "Port": 8080 }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicleintelligence/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/vehicleintelligence/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehicleintelligenceservice", "Port": 8080 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
     }
   ],
   "SwaggerEndPoints": [

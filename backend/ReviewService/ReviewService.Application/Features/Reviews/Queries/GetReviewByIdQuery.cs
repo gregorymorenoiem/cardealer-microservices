@@ -1,13 +1,13 @@
 using MediatR;
 using ReviewService.Application.DTOs;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Application.Features.Reviews.Queries;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Query para obtener una review específica por ID
-/// &lt;/summary&gt;
-public record GetReviewByIdQuery : IRequest&lt;Result&lt;ReviewDto&gt;&gt;
+/// </summary>
+public record GetReviewByIdQuery : IRequest<Result<ReviewDto>>
 {
     public Guid ReviewId { get; init; }
 }

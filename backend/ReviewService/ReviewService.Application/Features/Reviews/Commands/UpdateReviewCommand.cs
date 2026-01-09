@@ -1,13 +1,13 @@
 using MediatR;
 using ReviewService.Application.DTOs;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Application.Features.Reviews.Commands;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Command para actualizar una review existente
-/// &lt;/summary&gt;
-public record UpdateReviewCommand : IRequest&lt;Result&lt;ReviewDto&gt;&gt;
+/// </summary>
+public record UpdateReviewCommand : IRequest<Result<ReviewDto>>
 {
     public Guid ReviewId { get; init; }
     public Guid BuyerId { get; init; } // Para validar que solo el autor puede editar

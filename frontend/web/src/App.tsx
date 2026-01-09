@@ -44,6 +44,8 @@ import FeatureStoreDashboard from './pages/FeatureStoreDashboard';
 // Lead Scoring (Sprint 11)
 import LeadsDashboard from './pages/LeadsDashboard';
 import LeadDetail from './pages/LeadDetail';
+// Chatbot Widget (Sprint 16)
+import ChatWidget from './components/chat/ChatWidget';
 // User pages
 import { UserDashboardPage, MessagesPage, WishlistPage, ProfilePage } from './pages/user';
 // Auth pages
@@ -566,6 +568,9 @@ function App() {
             }
           />
         </Routes>
+        
+        {/* Global Chat Widget (Sprint 16) - Shows on all pages */}
+        <ChatWidget position="bottom-right" primaryColor="#2563eb" />
       </Router>
     </QueryClientProvider>
   );

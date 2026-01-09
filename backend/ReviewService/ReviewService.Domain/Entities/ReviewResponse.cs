@@ -1,35 +1,35 @@
-using CarDealer.Shared.Domain.Base;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Domain.Entities;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Respuesta del vendedor a una review recibida
-/// &lt;/summary&gt;
-public class ReviewResponse : BaseEntity&lt;Guid&gt;
+/// </summary>
+public class ReviewResponse : BaseEntity<Guid>
 {
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID de la review a la que responde
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid ReviewId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID del vendedor que responde
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid SellerId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Contenido de la respuesta
-    /// &lt;/summary&gt;
+    /// </summary>
     public string Content { get; set; } = string.Empty;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Si la respuesta está aprobada
-    /// &lt;/summary&gt;
+    /// </summary>
     public bool IsApproved { get; set; } = true;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Nombre del vendedor (cache)
-    /// &lt;/summary&gt;
+    /// </summary>
     public string SellerName { get; set; } = string.Empty;
 
     // Navigation properties

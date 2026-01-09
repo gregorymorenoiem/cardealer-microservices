@@ -1,98 +1,98 @@
-using CarDealer.Shared.Domain.Base;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Domain.Entities;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Review de un comprador sobre un vendedor/dealer
 /// Sistema estilo Amazon con rating 1-5 estrellas + texto
-/// &lt;/summary&gt;
-public class Review : BaseEntity&lt;Guid&gt;
+/// </summary>
+public class Review : BaseEntity<Guid>
 {
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID del comprador que deja la review
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid BuyerId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID del vendedor que recibe la review
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid SellerId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID del vehículo sobre el que es la review (opcional)
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid? VehicleId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID de la transacción/orden que validó la compra
     /// Para mostrar badge "Compra verificada"
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid? OrderId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Rating de 1 a 5 estrellas
-    /// &lt;/summary&gt;
+    /// </summary>
     public int Rating { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Título de la review (ej: "Excelente servicio")
-    /// &lt;/summary&gt;
+    /// </summary>
     public string Title { get; set; } = string.Empty;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Contenido detallado de la review
-    /// &lt;/summary&gt;
+    /// </summary>
     public string Content { get; set; } = string.Empty;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Si la review está aprobada por moderación
-    /// &lt;/summary&gt;
+    /// </summary>
     public bool IsApproved { get; set; } = true;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Si la review es de una compra verificada
-    /// &lt;/summary&gt;
+    /// </summary>
     public bool IsVerifiedPurchase { get; set; } = false;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Razón de rechazo si IsApproved = false
-    /// &lt;/summary&gt;
+    /// </summary>
     public string? RejectionReason { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID del admin que moderó
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid? ModeratedById { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Fecha de moderación
-    /// &lt;/summary&gt;
+    /// </summary>
     public DateTime? ModeratedAt { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Nombre del comprador (cache para performance)
-    /// &lt;/summary&gt;
+    /// </summary>
     public string BuyerName { get; set; } = string.Empty;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Foto del comprador (cache)
-    /// &lt;/summary&gt;
+    /// </summary>
     public string? BuyerPhotoUrl { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Si la review fue útil para otros usuarios (upvotes)
-    /// &lt;/summary&gt;
+    /// </summary>
     public int HelpfulVotes { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Total de votos recibidos
-    /// &lt;/summary&gt;
+    /// </summary>
     public int TotalVotes { get; set; } = 0;
 
     // Navigation properties
     
-    /// &lt;summary&gt;
+    /// <summary>
     /// Respuesta del vendedor a esta review
-    /// &lt;/summary&gt;
+    /// </summary>
     public ReviewResponse? Response { get; set; }
 }

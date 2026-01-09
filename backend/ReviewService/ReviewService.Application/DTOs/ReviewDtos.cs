@@ -1,8 +1,8 @@
 namespace ReviewService.Application.DTOs;
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para mostrar una review en el frontend
-/// &lt;/summary&gt;
+/// </summary>
 public record ReviewDto
 {
     public Guid Id { get; init; }
@@ -24,9 +24,9 @@ public record ReviewDto
     public ReviewResponseDto? Response { get; init; }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para crear una nueva review
-/// &lt;/summary&gt;
+/// </summary>
 public record CreateReviewDto
 {
     public Guid SellerId { get; init; }
@@ -37,9 +37,9 @@ public record CreateReviewDto
     public string Content { get; init; } = string.Empty;
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para actualizar una review
-/// &lt;/summary&gt;
+/// </summary>
 public record UpdateReviewDto
 {
     public int Rating { get; init; }
@@ -47,9 +47,9 @@ public record UpdateReviewDto
     public string Content { get; init; } = string.Empty;
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para respuesta de vendedor a review
-/// &lt;/summary&gt;
+/// </summary>
 public record ReviewResponseDto
 {
     public Guid Id { get; init; }
@@ -60,35 +60,35 @@ public record ReviewResponseDto
     public DateTime CreatedAt { get; init; }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para crear respuesta de vendedor
-/// &lt;/summary&gt;
+/// </summary>
 public record CreateReviewResponseDto
 {
     public Guid ReviewId { get; init; }
     public string Content { get; init; } = string.Empty;
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para estadísticas de reviews de un vendedor
-/// &lt;/summary&gt;
+/// </summary>
 public record ReviewSummaryDto
 {
     public Guid SellerId { get; init; }
     public int TotalReviews { get; init; }
     public decimal AverageRating { get; init; }
-    public Dictionary&lt;int, int&gt; RatingDistribution { get; init; } = new();
+    public Dictionary<int, int> RatingDistribution { get; init; } = new();
     public decimal PositivePercentage { get; init; }
     public int VerifiedPurchaseReviews { get; init; }
     public DateTime? LastReviewDate { get; init; }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para resultados paginados de reviews
-/// &lt;/summary&gt;
+/// </summary>
 public record PagedReviewsDto
 {
-    public IEnumerable&lt;ReviewDto&gt; Reviews { get; init; } = new List&lt;ReviewDto&gt;();
+    public IEnumerable<ReviewDto> Reviews { get; init; } = new List<ReviewDto>();
     public int TotalCount { get; init; }
     public int Page { get; init; }
     public int PageSize { get; init; }
@@ -97,9 +97,9 @@ public record PagedReviewsDto
     public bool HasPreviousPage { get; init; }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// DTO para filtros de reviews
-/// &lt;/summary&gt;
+/// </summary>
 public record ReviewFiltersDto
 {
     public int? Rating { get; init; }

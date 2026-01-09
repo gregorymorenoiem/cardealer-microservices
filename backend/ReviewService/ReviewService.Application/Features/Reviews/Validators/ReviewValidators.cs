@@ -3,36 +3,36 @@ using ReviewService.Application.Features.Reviews.Commands;
 
 namespace ReviewService.Application.Features.Reviews.Validators;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Validador para CreateReviewCommand
-/// &lt;/summary&gt;
-public class CreateReviewCommandValidator : AbstractValidator&lt;CreateReviewCommand&gt;
+/// </summary>
+public class CreateReviewCommandValidator : AbstractValidator<CreateReviewCommand>
 {
     public CreateReviewCommandValidator()
     {
-        RuleFor(x =&gt; x.BuyerId)
+        RuleFor(x => x.BuyerId)
             .NotEmpty()
             .WithMessage("BuyerId es requerido");
 
-        RuleFor(x =&gt; x.SellerId)
+        RuleFor(x => x.SellerId)
             .NotEmpty()
             .WithMessage("SellerId es requerido");
 
-        RuleFor(x =&gt; x.BuyerId)
-            .NotEqual(x =&gt; x.SellerId)
+        RuleFor(x => x.BuyerId)
+            .NotEqual(x => x.SellerId)
             .WithMessage("No puedes dejarte una review a ti mismo");
 
-        RuleFor(x =&gt; x.Rating)
+        RuleFor(x => x.Rating)
             .InclusiveBetween(1, 5)
             .WithMessage("El rating debe estar entre 1 y 5 estrellas");
 
-        RuleFor(x =&gt; x.Title)
+        RuleFor(x => x.Title)
             .NotEmpty()
             .WithMessage("El título es requerido")
             .MaximumLength(200)
             .WithMessage("El título no puede exceder 200 caracteres");
 
-        RuleFor(x =&gt; x.Content)
+        RuleFor(x => x.Content)
             .NotEmpty()
             .WithMessage("El contenido es requerido")
             .MinimumLength(10)
@@ -40,7 +40,7 @@ public class CreateReviewCommandValidator : AbstractValidator&lt;CreateReviewCom
             .MaximumLength(2000)
             .WithMessage("El contenido no puede exceder 2000 caracteres");
 
-        RuleFor(x =&gt; x.BuyerName)
+        RuleFor(x => x.BuyerName)
             .NotEmpty()
             .WithMessage("El nombre del comprador es requerido")
             .MaximumLength(100)
@@ -48,32 +48,32 @@ public class CreateReviewCommandValidator : AbstractValidator&lt;CreateReviewCom
     }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// Validador para UpdateReviewCommand
-/// &lt;/summary&gt;
-public class UpdateReviewCommandValidator : AbstractValidator&lt;UpdateReviewCommand&gt;
+/// </summary>
+public class UpdateReviewCommandValidator : AbstractValidator<UpdateReviewCommand>
 {
     public UpdateReviewCommandValidator()
     {
-        RuleFor(x =&gt; x.ReviewId)
+        RuleFor(x => x.ReviewId)
             .NotEmpty()
             .WithMessage("ReviewId es requerido");
 
-        RuleFor(x =&gt; x.BuyerId)
+        RuleFor(x => x.BuyerId)
             .NotEmpty()
             .WithMessage("BuyerId es requerido");
 
-        RuleFor(x =&gt; x.Rating)
+        RuleFor(x => x.Rating)
             .InclusiveBetween(1, 5)
             .WithMessage("El rating debe estar entre 1 y 5 estrellas");
 
-        RuleFor(x =&gt; x.Title)
+        RuleFor(x => x.Title)
             .NotEmpty()
             .WithMessage("El título es requerido")
             .MaximumLength(200)
             .WithMessage("El título no puede exceder 200 caracteres");
 
-        RuleFor(x =&gt; x.Content)
+        RuleFor(x => x.Content)
             .NotEmpty()
             .WithMessage("El contenido es requerido")
             .MinimumLength(10)
@@ -83,24 +83,24 @@ public class UpdateReviewCommandValidator : AbstractValidator&lt;UpdateReviewCom
     }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// Validador para ModerateReviewCommand
-/// &lt;/summary&gt;
-public class ModerateReviewCommandValidator : AbstractValidator&lt;ModerateReviewCommand&gt;
+/// </summary>
+public class ModerateReviewCommandValidator : AbstractValidator<ModerateReviewCommand>
 {
     public ModerateReviewCommandValidator()
     {
-        RuleFor(x =&gt; x.ReviewId)
+        RuleFor(x => x.ReviewId)
             .NotEmpty()
             .WithMessage("ReviewId es requerido");
 
-        RuleFor(x =&gt; x.ModeratorId)
+        RuleFor(x => x.ModeratorId)
             .NotEmpty()
             .WithMessage("ModeratorId es requerido");
 
-        RuleFor(x =&gt; x.RejectionReason)
+        RuleFor(x => x.RejectionReason)
             .NotEmpty()
-            .When(x =&gt; !x.IsApproved)
+            .When(x => !x.IsApproved)
             .WithMessage("La razón de rechazo es requerida cuando se rechaza una review")
             .MaximumLength(500)
             .WithMessage("La razón de rechazo no puede exceder 500 caracteres");

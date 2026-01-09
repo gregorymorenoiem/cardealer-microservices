@@ -4,122 +4,122 @@ using ReviewService.Domain.Entities;
 
 namespace ReviewService.Infrastructure.Persistence.Configurations;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Configuración EF Core para ReviewResponse entity
-/// &lt;/summary&gt;
-public class ReviewResponseConfiguration : IEntityTypeConfiguration&lt;ReviewResponse&gt;
+/// </summary>
+public class ReviewResponseConfiguration : IEntityTypeConfiguration<ReviewResponse>
 {
-    public void Configure(EntityTypeBuilder&lt;ReviewResponse&gt; builder)
+    public void Configure(EntityTypeBuilder<ReviewResponse> builder)
     {
         builder.ToTable("review_responses");
 
-        builder.HasKey(rr =&gt; rr.Id);
+        builder.HasKey(rr => rr.Id);
 
-        builder.Property(rr =&gt; rr.Id)
+        builder.Property(rr => rr.Id)
             .ValueGeneratedOnAdd();
 
-        builder.Property(rr =&gt; rr.ReviewId)
+        builder.Property(rr => rr.ReviewId)
             .IsRequired();
 
-        builder.Property(rr =&gt; rr.SellerId)
+        builder.Property(rr => rr.SellerId)
             .IsRequired();
 
-        builder.Property(rr =&gt; rr.Content)
+        builder.Property(rr => rr.Content)
             .IsRequired()
             .HasMaxLength(1000);
 
-        builder.Property(rr =&gt; rr.IsApproved)
+        builder.Property(rr => rr.IsApproved)
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(rr =&gt; rr.SellerName)
+        builder.Property(rr => rr.SellerName)
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(rr =&gt; rr.CreatedAt)
+        builder.Property(rr => rr.CreatedAt)
             .IsRequired();
 
-        builder.Property(rr =&gt; rr.UpdatedAt)
+        builder.Property(rr => rr.UpdatedAt)
             .IsRequired();
 
         // Índices
-        builder.HasIndex(rr =&gt; rr.ReviewId)
+        builder.HasIndex(rr => rr.ReviewId)
             .IsUnique()
             .HasDatabaseName("IX_review_responses_review_id");
 
-        builder.HasIndex(rr =&gt; rr.SellerId)
+        builder.HasIndex(rr => rr.SellerId)
             .HasDatabaseName("IX_review_responses_seller_id");
     }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// Configuración EF Core para ReviewSummary entity
-/// &lt;/summary&gt;
-public class ReviewSummaryConfiguration : IEntityTypeConfiguration&lt;ReviewSummary&gt;
+/// </summary>
+public class ReviewSummaryConfiguration : IEntityTypeConfiguration<ReviewSummary>
 {
-    public void Configure(EntityTypeBuilder&lt;ReviewSummary&gt; builder)
+    public void Configure(EntityTypeBuilder<ReviewSummary> builder)
     {
         builder.ToTable("review_summaries");
 
-        builder.HasKey(rs =&gt; rs.Id);
+        builder.HasKey(rs => rs.Id);
 
-        builder.Property(rs =&gt; rs.Id)
+        builder.Property(rs => rs.Id)
             .ValueGeneratedOnAdd();
 
-        builder.Property(rs =&gt; rs.SellerId)
+        builder.Property(rs => rs.SellerId)
             .IsRequired();
 
-        builder.Property(rs =&gt; rs.TotalReviews)
+        builder.Property(rs => rs.TotalReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.AverageRating)
+        builder.Property(rs => rs.AverageRating)
             .HasColumnType("decimal(3,2)")
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.FiveStarReviews)
+        builder.Property(rs => rs.FiveStarReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.FourStarReviews)
+        builder.Property(rs => rs.FourStarReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.ThreeStarReviews)
+        builder.Property(rs => rs.ThreeStarReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.TwoStarReviews)
+        builder.Property(rs => rs.TwoStarReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.OneStarReviews)
+        builder.Property(rs => rs.OneStarReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.PositivePercentage)
+        builder.Property(rs => rs.PositivePercentage)
             .HasColumnType("decimal(5,2)")
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.VerifiedPurchaseReviews)
+        builder.Property(rs => rs.VerifiedPurchaseReviews)
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(rs =&gt; rs.CreatedAt)
+        builder.Property(rs => rs.CreatedAt)
             .IsRequired();
 
-        builder.Property(rs =&gt; rs.UpdatedAt)
+        builder.Property(rs => rs.UpdatedAt)
             .IsRequired();
 
         // Índices
-        builder.HasIndex(rs =&gt; rs.SellerId)
+        builder.HasIndex(rs => rs.SellerId)
             .IsUnique()
             .HasDatabaseName("IX_review_summaries_seller_id");
 
-        builder.HasIndex(rs =&gt; rs.AverageRating)
+        builder.HasIndex(rs => rs.AverageRating)
             .HasDatabaseName("IX_review_summaries_average_rating");
 
-        builder.HasIndex(rs =&gt; rs.TotalReviews)
+        builder.HasIndex(rs => rs.TotalReviews)
             .HasDatabaseName("IX_review_summaries_total_reviews");
     }
 }

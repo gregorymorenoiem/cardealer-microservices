@@ -1,74 +1,74 @@
-using CarDealer.Shared.Domain.Base;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Domain.Entities;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Estadísticas agregadas de reviews para un vendedor
 /// Para performance y evitar cálculos en tiempo real
-/// &lt;/summary&gt;
-public class ReviewSummary : BaseEntity&lt;Guid&gt;
+/// </summary>
+public class ReviewSummary : BaseEntity<Guid>
 {
-    /// &lt;summary&gt;
+    /// <summary>
     /// ID del vendedor
-    /// &lt;/summary&gt;
+    /// </summary>
     public Guid SellerId { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Total de reviews recibidas
-    /// &lt;/summary&gt;
+    /// </summary>
     public int TotalReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Rating promedio (1.0 - 5.0)
-    /// &lt;/summary&gt;
+    /// </summary>
     public decimal AverageRating { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Cantidad de reviews de 5 estrellas
-    /// &lt;/summary&gt;
+    /// </summary>
     public int FiveStarReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Cantidad de reviews de 4 estrellas
-    /// &lt;/summary&gt;
+    /// </summary>
     public int FourStarReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Cantidad de reviews de 3 estrellas
-    /// &lt;/summary&gt;
+    /// </summary>
     public int ThreeStarReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Cantidad de reviews de 2 estrellas
-    /// &lt;/summary&gt;
+    /// </summary>
     public int TwoStarReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Cantidad de reviews de 1 estrella
-    /// &lt;/summary&gt;
+    /// </summary>
     public int OneStarReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Fecha de la última review recibida
-    /// &lt;/summary&gt;
+    /// </summary>
     public DateTime? LastReviewDate { get; set; }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Porcentaje de reviews positivas (4-5 estrellas)
-    /// &lt;/summary&gt;
+    /// </summary>
     public decimal PositivePercentage { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Total de compras verificadas que tienen review
-    /// &lt;/summary&gt;
+    /// </summary>
     public int VerifiedPurchaseReviews { get; set; } = 0;
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Calcular distribución de ratings
-    /// &lt;/summary&gt;
-    public Dictionary&lt;int, int&gt; GetRatingDistribution()
+    /// </summary>
+    public Dictionary<int, int> GetRatingDistribution()
     {
-        return new Dictionary&lt;int, int&gt;
+        return new Dictionary<int, int>
         {
             { 5, FiveStarReviews },
             { 4, FourStarReviews },
@@ -78,28 +78,28 @@ public class ReviewSummary : BaseEntity&lt;Guid&gt;
         };
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Recalcular todas las métricas basadas en las reviews actuales
-    /// &lt;/summary&gt;
-    public void RecalculateMetrics(IEnumerable&lt;Review&gt; reviews)
+    /// </summary>
+    public void RecalculateMetrics(IEnumerable<Review> reviews)
     {
-        var reviewList = reviews.Where(r =&gt; r.IsApproved).ToList();
+        var reviewList = reviews.Where(r => r.IsApproved).ToList();
         
         TotalReviews = reviewList.Count;
         
-        if (TotalReviews &gt; 0)
+        if (TotalReviews > 0)
         {
-            AverageRating = (decimal)reviewList.Average(r =&gt; r.Rating);
+            AverageRating = (decimal)reviewList.Average(r => r.Rating);
             
-            FiveStarReviews = reviewList.Count(r =&gt; r.Rating == 5);
-            FourStarReviews = reviewList.Count(r =&gt; r.Rating == 4);
-            ThreeStarReviews = reviewList.Count(r =&gt; r.Rating == 3);
-            TwoStarReviews = reviewList.Count(r =&gt; r.Rating == 2);
-            OneStarReviews = reviewList.Count(r =&gt; r.Rating == 1);
+            FiveStarReviews = reviewList.Count(r => r.Rating == 5);
+            FourStarReviews = reviewList.Count(r => r.Rating == 4);
+            ThreeStarReviews = reviewList.Count(r => r.Rating == 3);
+            TwoStarReviews = reviewList.Count(r => r.Rating == 2);
+            OneStarReviews = reviewList.Count(r => r.Rating == 1);
             
             PositivePercentage = (decimal)(FiveStarReviews + FourStarReviews) / TotalReviews * 100;
-            VerifiedPurchaseReviews = reviewList.Count(r =&gt; r.IsVerifiedPurchase);
-            LastReviewDate = reviewList.Max(r =&gt; r.CreatedAt);
+            VerifiedPurchaseReviews = reviewList.Count(r => r.IsVerifiedPurchase);
+            LastReviewDate = reviewList.Max(r => r.CreatedAt);
         }
         else
         {

@@ -4,18 +4,18 @@ using ReviewService.Infrastructure.Persistence.Configurations;
 
 namespace ReviewService.Infrastructure.Persistence;
 
-/// &lt;summary&gt;
+/// <summary>
 /// DbContext para ReviewService
-/// &lt;/summary&gt;
+/// </summary>
 public class ReviewDbContext : DbContext
 {
-    public ReviewDbContext(DbContextOptions&lt;ReviewDbContext&gt; options) : base(options)
+    public ReviewDbContext(DbContextOptions<ReviewDbContext> options) : base(options)
     {
     }
 
-    public DbSet&lt;Review&gt; Reviews { get; set; }
-    public DbSet&lt;ReviewResponse&gt; ReviewResponses { get; set; }
-    public DbSet&lt;ReviewSummary&gt; ReviewSummaries { get; set; }
+    public DbSet<Review> Reviews { get; set; }
+    public DbSet<ReviewResponse> ReviewResponses { get; set; }
+    public DbSet<ReviewSummary> ReviewSummaries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

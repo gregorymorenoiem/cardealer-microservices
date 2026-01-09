@@ -1,15 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using ReviewService.Domain.Entities;
 using ReviewService.Domain.Interfaces;
+using ReviewService.Domain.Base;
 using ReviewService.Infrastructure.Persistence;
-using CarDealer.Shared.Persistence;
+using ReviewService.Infrastructure.Persistence;
 
 namespace ReviewService.Infrastructure.Persistence.Repositories;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Implementación del repositorio para ReviewResponse
-/// &lt;/summary&gt;
-public class ReviewResponseRepository : Repository&lt;ReviewResponse, Guid&gt;, IReviewResponseRepository
+/// </summary>
+public class ReviewResponseRepository : Repository<ReviewResponse, Guid>, IReviewResponseRepository
 {
     private readonly ReviewDbContext _context;
 
@@ -18,34 +19,34 @@ public class ReviewResponseRepository : Repository&lt;ReviewResponse, Guid&gt;, 
         _context = context;
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener respuesta por ReviewId
-    /// &lt;/summary&gt;
-    public async Task&lt;ReviewResponse?&gt; GetByReviewIdAsync(Guid reviewId)
+    /// </summary>
+    public async Task<ReviewResponse?> GetByReviewIdAsync(Guid reviewId)
     {
         return await _context.ReviewResponses
-            .Include(rr =&gt; rr.Review)
-            .FirstOrDefaultAsync(rr =&gt; rr.ReviewId == reviewId);
+            .Include(rr => rr.Review)
+            .FirstOrDefaultAsync(rr => rr.ReviewId == reviewId);
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener todas las respuestas de un vendedor
-    /// &lt;/summary&gt;
-    public async Task&lt;IEnumerable&lt;ReviewResponse&gt;&gt; GetBySellerIdAsync(Guid sellerId)
+    /// </summary>
+    public async Task<IEnumerable<ReviewResponse>> GetBySellerIdAsync(Guid sellerId)
     {
         return await _context.ReviewResponses
-            .Include(rr =&gt; rr.Review)
-            .Where(rr =&gt; rr.SellerId == sellerId)
-            .OrderByDescending(rr =&gt; rr.CreatedAt)
+            .Include(rr => rr.Review)
+            .Where(rr => rr.SellerId == sellerId)
+            .OrderByDescending(rr => rr.CreatedAt)
             .ToListAsync();
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Verificar si una review ya tiene respuesta
-    /// &lt;/summary&gt;
-    public async Task&lt;bool&gt; HasResponseAsync(Guid reviewId)
+    /// </summary>
+    public async Task<bool> HasResponseAsync(Guid reviewId)
     {
         return await _context.ReviewResponses
-            .AnyAsync(rr =&gt; rr.ReviewId == reviewId);
+            .AnyAsync(rr => rr.ReviewId == reviewId);
     }
 }

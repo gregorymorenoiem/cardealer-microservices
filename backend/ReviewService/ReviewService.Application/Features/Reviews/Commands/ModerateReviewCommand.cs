@@ -1,13 +1,13 @@
 using MediatR;
 using ReviewService.Application.DTOs;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Application.Features.Reviews.Commands;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Command para moderar una review (aprobar/rechazar)
-/// &lt;/summary&gt;
-public record ModerateReviewCommand : IRequest&lt;Result&lt;bool&gt;&gt;
+/// </summary>
+public record ModerateReviewCommand : IRequest<Result<bool>>
 {
     public Guid ReviewId { get; init; }
     public Guid ModeratorId { get; init; }

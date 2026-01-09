@@ -8,37 +8,37 @@ using System.Security.Claims;
 
 namespace ReviewService.Api.Controllers;
 
-/// &lt;summary&gt;
+/// <summary>
 /// API para gestión de reviews de vendedores/dealers
-/// &lt;/summary&gt;
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class ReviewsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ILogger&lt;ReviewsController&gt; _logger;
+    private readonly ILogger<ReviewsController> _logger;
 
-    public ReviewsController(IMediator mediator, ILogger&lt;ReviewsController&gt; logger)
+    public ReviewsController(IMediator mediator, ILogger<ReviewsController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener reviews de un vendedor con paginación y filtros
-    /// &lt;/summary&gt;
-    /// &lt;param name="sellerId"&gt;ID del vendedor&lt;/param&gt;
-    /// &lt;param name="page"&gt;Número de página&lt;/param&gt;
-    /// &lt;param name="pageSize"&gt;Tamaño de página&lt;/param&gt;
-    /// &lt;param name="rating"&gt;Filtrar por rating específico&lt;/param&gt;
-    /// &lt;param name="onlyVerified"&gt;Solo compras verificadas&lt;/param&gt;
-    /// &lt;returns&gt;Lista paginada de reviews&lt;/returns&gt;
+    /// </summary>
+    /// <param name="sellerId">ID del vendedor</param>
+    /// <param name="page">Número de página</param>
+    /// <param name="pageSize">Tamaño de página</param>
+    /// <param name="rating">Filtrar por rating específico</param>
+    /// <param name="onlyVerified">Solo compras verificadas</param>
+    /// <returns>Lista paginada de reviews</returns>
     [HttpGet("seller/{sellerId:guid}")]
     [ProducesResponseType(typeof(PagedReviewsDto), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task&lt;ActionResult&lt;PagedReviewsDto&gt;&gt; GetSellerReviews(
+    public async Task<ActionResult<PagedReviewsDto>> GetSellerReviews(
         [FromRoute] Guid sellerId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -78,15 +78,15 @@ public class ReviewsController : ControllerBase
         }
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener estadísticas de reviews de un vendedor
-    /// &lt;/summary&gt;
-    /// &lt;param name="sellerId"&gt;ID del vendedor&lt;/param&gt;
-    /// &lt;returns&gt;Estadísticas agregadas&lt;/returns&gt;
+    /// </summary>
+    /// <param name="sellerId">ID del vendedor</param>
+    /// <returns>Estadísticas agregadas</returns>
     [HttpGet("seller/{sellerId:guid}/summary")]
     [ProducesResponseType(typeof(ReviewSummaryDto), 200)]
     [ProducesResponseType(404)]
-    public async Task&lt;ActionResult&lt;ReviewSummaryDto&gt;&gt; GetReviewSummary([FromRoute] Guid sellerId)
+    public async Task<ActionResult<ReviewSummaryDto>> GetReviewSummary([FromRoute] Guid sellerId)
     {
         try
         {
@@ -107,15 +107,15 @@ public class ReviewsController : ControllerBase
         }
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Obtener una review específica por ID
-    /// &lt;/summary&gt;
-    /// &lt;param name="reviewId"&gt;ID de la review&lt;/param&gt;
-    /// &lt;returns&gt;Datos de la review&lt;/returns&gt;
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <returns>Datos de la review</returns>
     [HttpGet("{reviewId:guid}")]
     [ProducesResponseType(typeof(ReviewDto), 200)]
     [ProducesResponseType(404)]
-    public async Task&lt;ActionResult&lt;ReviewDto&gt;&gt; GetReview([FromRoute] Guid reviewId)
+    public async Task<ActionResult<ReviewDto>> GetReview([FromRoute] Guid reviewId)
     {
         try
         {
@@ -136,17 +136,17 @@ public class ReviewsController : ControllerBase
         }
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Crear una nueva review (requiere autenticación)
-    /// &lt;/summary&gt;
-    /// &lt;param name="dto"&gt;Datos de la review&lt;/param&gt;
-    /// &lt;returns&gt;Review creada&lt;/returns&gt;
+    /// </summary>
+    /// <param name="dto">Datos de la review</param>
+    /// <returns>Review creada</returns>
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(ReviewDto), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task&lt;ActionResult&lt;ReviewDto&gt;&gt; CreateReview([FromBody] CreateReviewDto dto)
+    public async Task<ActionResult<ReviewDto>> CreateReview([FromBody] CreateReviewDto dto)
     {
         try
         {
@@ -188,19 +188,19 @@ public class ReviewsController : ControllerBase
         }
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Actualizar una review existente (solo el autor)
-    /// &lt;/summary&gt;
-    /// &lt;param name="reviewId"&gt;ID de la review&lt;/param&gt;
-    /// &lt;param name="dto"&gt;Nuevos datos&lt;/param&gt;
-    /// &lt;returns&gt;Review actualizada&lt;/returns&gt;
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <param name="dto">Nuevos datos</param>
+    /// <returns>Review actualizada</returns>
     [HttpPut("{reviewId:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(ReviewDto), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task&lt;ActionResult&lt;ReviewDto&gt;&gt; UpdateReview([FromRoute] Guid reviewId, [FromBody] UpdateReviewDto dto)
+    public async Task<ActionResult<ReviewDto>> UpdateReview([FromRoute] Guid reviewId, [FromBody] UpdateReviewDto dto)
     {
         try
         {
@@ -242,18 +242,18 @@ public class ReviewsController : ControllerBase
         }
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Eliminar una review (solo el autor)
-    /// &lt;/summary&gt;
-    /// &lt;param name="reviewId"&gt;ID de la review&lt;/param&gt;
-    /// &lt;returns&gt;Confirmación&lt;/returns&gt;
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <returns>Confirmación</returns>
     [HttpDelete("{reviewId:guid}")]
     [Authorize]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task&lt;ActionResult&gt; DeleteReview([FromRoute] Guid reviewId)
+    public async Task<ActionResult> DeleteReview([FromRoute] Guid reviewId)
     {
         try
         {
@@ -291,20 +291,20 @@ public class ReviewsController : ControllerBase
         }
     }
 
-    /// &lt;summary&gt;
+    /// <summary>
     /// Moderar una review (solo admins)
-    /// &lt;/summary&gt;
-    /// &lt;param name="reviewId"&gt;ID de la review&lt;/param&gt;
-    /// &lt;param name="isApproved"&gt;Aprobar o rechazar&lt;/param&gt;
-    /// &lt;param name="rejectionReason"&gt;Razón de rechazo (opcional)&lt;/param&gt;
-    /// &lt;returns&gt;Confirmación&lt;/returns&gt;
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <param name="isApproved">Aprobar o rechazar</param>
+    /// <param name="rejectionReason">Razón de rechazo (opcional)</param>
+    /// <returns>Confirmación</returns>
     [HttpPost("{reviewId:guid}/moderate")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task&lt;ActionResult&gt; ModerateReview(
+    public async Task<ActionResult> ModerateReview(
         [FromRoute] Guid reviewId,
         [FromQuery] bool isApproved,
         [FromQuery] string? rejectionReason = null)

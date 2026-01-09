@@ -1,12 +1,12 @@
 using MediatR;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Application.Features.Reviews.Commands;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Command para eliminar una review
-/// &lt;/summary&gt;
-public record DeleteReviewCommand : IRequest&lt;Result&lt;bool&gt;&gt;
+/// </summary>
+public record DeleteReviewCommand : IRequest<Result<bool>>
 {
     public Guid ReviewId { get; init; }
     public Guid BuyerId { get; init; } // Para validar que solo el autor puede eliminar

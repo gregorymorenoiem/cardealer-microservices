@@ -1,13 +1,13 @@
 using MediatR;
 using ReviewService.Application.DTOs;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 
 namespace ReviewService.Application.Features.Reviews.Commands;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Command para crear una nueva review
-/// &lt;/summary&gt;
-public record CreateReviewCommand : IRequest&lt;Result&lt;ReviewDto&gt;&gt;
+/// </summary>
+public record CreateReviewCommand : IRequest<Result<ReviewDto>>
 {
     public Guid BuyerId { get; init; }
     public Guid SellerId { get; init; }

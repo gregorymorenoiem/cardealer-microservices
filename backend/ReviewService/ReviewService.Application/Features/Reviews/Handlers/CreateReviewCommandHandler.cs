@@ -3,38 +3,38 @@ using ReviewService.Application.Features.Reviews.Commands;
 using ReviewService.Application.DTOs;
 using ReviewService.Domain.Interfaces;
 using ReviewService.Domain.Entities;
-using CarDealer.Shared.Application.Interfaces;
+using ReviewService.Domain.Base;
 using FluentValidation;
 
 namespace ReviewService.Application.Features.Reviews.Handlers;
 
-/// &lt;summary&gt;
+/// <summary>
 /// Handler para CreateReviewCommand
-/// &lt;/summary&gt;
-public class CreateReviewCommandHandler : IRequestHandler&lt;CreateReviewCommand, Result&lt;ReviewDto&gt;&gt;
+/// </summary>
+public class CreateReviewCommandHandler : IRequestHandler<CreateReviewCommand, Result<ReviewDto>>
 {
     private readonly IReviewRepository _reviewRepository;
     private readonly IReviewSummaryRepository _summaryRepository;
-    private readonly IValidator&lt;CreateReviewCommand&gt; _validator;
+    private readonly IValidator<CreateReviewCommand> _validator;
 
     public CreateReviewCommandHandler(
         IReviewRepository reviewRepository,
         IReviewSummaryRepository summaryRepository,
-        IValidator&lt;CreateReviewCommand&gt; validator)
+        IValidator<CreateReviewCommand> validator)
     {
         _reviewRepository = reviewRepository;
         _summaryRepository = summaryRepository;
         _validator = validator;
     }
 
-    public async Task&lt;Result&lt;ReviewDto&gt;&gt; Handle(CreateReviewCommand request, CancellationToken cancellationToken)
+    public async Task<Result<ReviewDto>> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
     {
         // Validar request
         var validationResult = await _validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
-            var errors = string.Join(", ", validationResult.Errors.Select(e =&gt; e.ErrorMessage));
-            return Result&lt;ReviewDto&gt;.Failure(errors);
+            var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+            return Result<ReviewDto>.Failure(errors);
         }
 
         // Verificar si ya existe una review de este buyer para este seller/vehicle
@@ -43,7 +43,7 @@ public class CreateReviewCommandHandler : IRequestHandler&lt;CreateReviewCommand
 
         if (hasExisting)
         {
-            return Result&lt;ReviewDto&gt;.Failure("Ya has dejado una review para este vendedor/vehículo");
+            return Result<ReviewDto>.Failure("Ya has dejado una review para este vendedor/vehículo");
         }
 
         // Crear nueva review
@@ -90,6 +90,6 @@ public class CreateReviewCommandHandler : IRequestHandler&lt;CreateReviewCommand
             Response = null
         };
 
-        return Result&lt;ReviewDto&gt;.Success(reviewDto);
+        return Result<ReviewDto>.Success(reviewDto);
     }
 }

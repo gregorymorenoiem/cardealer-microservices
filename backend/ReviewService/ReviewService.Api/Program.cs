@@ -23,20 +23,20 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 
 // Entity Framework
-builder.Services.AddDbContext&lt;ReviewDbContext&gt;(options =&gt;
+builder.Services.AddDbContext<ReviewDbContext>(options =>
 {
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        b =&gt; b.MigrationsAssembly("ReviewService.Infrastructure"));
+        b => b.MigrationsAssembly("ReviewService.Infrastructure"));
 });
 
 // Repositories
-builder.Services.AddScoped&lt;IReviewRepository, ReviewRepository&gt;();
-builder.Services.AddScoped&lt;IReviewSummaryRepository, ReviewSummaryRepository&gt;();
-builder.Services.AddScoped&lt;IReviewResponseRepository, ReviewResponseRepository&gt;();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewSummaryRepository, ReviewSummaryRepository>();
+builder.Services.AddScoped<IReviewResponseRepository, ReviewResponseRepository>();
 
 // MediatR
-builder.Services.AddMediatR(cfg =&gt; {
+builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(Assembly.Load("ReviewService.Application"));
 });
 
@@ -53,7 +53,7 @@ var secretKey = jwtSettings["SecretKey"];
 if (!string.IsNullOrEmpty(secretKey))
 {
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =&gt;
+        .AddJwtBearer(options =>
         {
             options.TokenValidationParameters = new TokenValidationParameters
             {
@@ -72,9 +72,9 @@ if (!string.IsNullOrEmpty(secretKey))
 builder.Services.AddAuthorization();
 
 // CORS
-builder.Services.AddCors(options =&gt;
+builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =&gt;
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
@@ -84,11 +84,11 @@ builder.Services.AddCors(options =&gt;
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddEntityFrameworkCoreCheck&lt;ReviewDbContext&gt;();
+    .AddEntityFrameworkCoreCheck<ReviewDbContext>();
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =&gt;
+builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
@@ -131,7 +131,7 @@ builder.Services.AddSwaggerGen(c =&gt;
                     Id = "Bearer"
                 }
             },
-            Array.Empty&lt;string&gt;()
+            Array.Empty<string>()
         }
     });
 });
@@ -142,7 +142,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =&gt;
+    app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReviewService API v1");
         c.RoutePrefix = string.Empty; // Swagger UI en la raíz
@@ -161,7 +161,7 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 // Root endpoint
-app.MapGet("/", () =&gt; new
+app.MapGet("/", () => new
 {
     service = "ReviewService",
     version = "1.0.0",
@@ -183,7 +183,7 @@ app.MapGet("/", () =&gt; new
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService&lt;ReviewDbContext&gt;();
+    var context = scope.ServiceProvider.GetRequiredService<ReviewDbContext>();
     
     try
     {
