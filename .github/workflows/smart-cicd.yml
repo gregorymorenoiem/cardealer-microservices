@@ -56,6 +56,8 @@ jobs:
       alertservice: ${{ steps.filter.outputs.alertservice }}
       # Sprint 2 microservices
       contactservice: ${{ steps.filter.outputs.contactservice }}
+      # Sprint 14 microservices
+      reviewservice: ${{ steps.filter.outputs.reviewservice }}
       gateway: ${{ steps.filter.outputs.gateway }}
       # Shared libraries
       shared: ${{ steps.filter.outputs.shared }}
@@ -125,6 +127,10 @@ jobs:
             contactservice:
               - 'backend/ContactService/**'
               - 'backend/_Shared/**'
+            # Sprint 14 microservices
+            reviewservice:
+              - 'backend/ReviewService/**'
+              - 'backend/_Shared/**'
             gateway:
               - 'backend/Gateway/**'
             # Shared libraries (triggers rebuild of dependent services)
@@ -153,6 +159,7 @@ jobs:
           echo "| ComparisonService | ${{ steps.filter.outputs.comparisonservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AlertService | ${{ steps.filter.outputs.alertservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ContactService | ${{ steps.filter.outputs.contactservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ReviewService | ${{ steps.filter.outputs.reviewservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ steps.filter.outputs.frontend-web }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Shared Libraries | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
@@ -327,6 +334,17 @@ jobs:
     with:
       service-name: contactservice
       service-path: backend/ContactService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  reviewservice:
+    name: ⭐ ReviewService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reviewservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: reviewservice
+      service-path: backend/ReviewService
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 

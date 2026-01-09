@@ -660,14 +660,18 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "vehicleintelligenceservice", "Port": 80 }]
+      "DownstreamHostAndPorts": [
+        { "Host": "vehicleintelligenceservice", "Port": 80 }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/vehicleintelligence/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/vehicleintelligence/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "vehicleintelligenceservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [
+        { "Host": "vehicleintelligenceservice", "Port": 80 }
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },

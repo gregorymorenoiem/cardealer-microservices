@@ -84,8 +84,8 @@ public class CreateReviewCommandHandler : IRequestHandler<CreateReviewCommand, R
             IsVerifiedPurchase = review.IsVerifiedPurchase,
             BuyerName = review.BuyerName,
             BuyerPhotoUrl = review.BuyerPhotoUrl,
-            HelpfulVotes = review.HelpfulVotes,
-            TotalVotes = review.TotalVotes,
+            TrustScore = review.TrustScore,
+            WasAutoRequested = review.WasAutoRequested,
             CreatedAt = review.CreatedAt,
             Response = null
         };

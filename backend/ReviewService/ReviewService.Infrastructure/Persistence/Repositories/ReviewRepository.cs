@@ -133,4 +133,63 @@ public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
             .Include(r => r.Response)
             .FirstOrDefaultAsync(r => r.Id == id);
     }
+
+    /// <summary>
+    /// Sprint 15 - Obtener estadísticas completas de un vendedor
+    /// </summary>
+    public async Task<SellerReviewStats> GetSellerStatsAsync(Guid sellerId, CancellationToken cancellationToken = default)
+    {
+        var reviews = await _context.Reviews
+            .Where(r => r.SellerId == sellerId && r.IsApproved)
+            .ToListAsync(cancellationToken);
+
+        if (!reviews.Any())
+        {
+            return new SellerReviewStats
+            {
+                AverageRating = 0,
+                TotalReviews = 0,
+                ResponseRate = 0,
+                FirstReviewDate = DateTime.UtcNow,
+                LastReviewDate = DateTime.UtcNow
+            };
+        }
+
+        var totalReviews = reviews.Count;
+        var averageRating = reviews.Average(r => r.Rating);
+        var reviewsWithResponse = reviews.Count(r => r.Response != null);
+        var responseRate = totalReviews > 0 ? (decimal)reviewsWithResponse / totalReviews * 100 : 0;
+
+        // Contar total de votos útiles recibidos
+        var totalHelpfulVotes = await _context.ReviewHelpfulVotes
+            .Where(v => reviews.Select(r => r.Id).Contains(v.ReviewId) && v.IsHelpful)
+            .CountAsync(cancellationToken);
+
+        return new SellerReviewStats
+        {
+            AverageRating = (decimal)averageRating,
+            TotalReviews = totalReviews,
+            FiveStarCount = reviews.Count(r => r.Rating == 5),
+            FourStarCount = reviews.Count(r => r.Rating == 4),
+            ThreeStarCount = reviews.Count(r => r.Rating == 3),
+            TwoStarCount = reviews.Count(r => r.Rating == 2),
+            OneStarCount = reviews.Count(r => r.Rating == 1),
+            ResponseRate = responseRate,
+            TotalHelpfulVotes = totalHelpfulVotes,
+            FirstReviewDate = reviews.Min(r => r.CreatedAt),
+            LastReviewDate = reviews.Max(r => r.CreatedAt)
+        };
+    }
+
+    /// <summary>
+    /// Sprint 15 - Obtener lista de vendedores que tienen reviews
+    /// </summary>
+    public async Task<List<Guid>> GetSellersWithReviewsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Reviews
+            .Where(r => r.IsApproved)
+            .Select(r => r.SellerId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
 }

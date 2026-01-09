@@ -44,6 +44,9 @@ import FeatureStoreDashboard from './pages/FeatureStoreDashboard';
 // Lead Scoring (Sprint 11)
 import LeadsDashboard from './pages/LeadsDashboard';
 import LeadDetail from './pages/LeadDetail';
+// Review System (Sprint 14)
+import SellerReviewsPage from './pages/SellerReviewsPage';
+import WriteReviewPage from './pages/WriteReviewPage';
 // Chatbot Widget (Sprint 16)
 import ChatWidget from './components/chat/ChatWidget';
 // User pages
@@ -288,6 +291,25 @@ function App() {
             element={
               <ProtectedRoute>
                 <DealerProfileEditorPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Review System Routes (Sprint 14) */}
+          <Route path="/sellers/:sellerId/reviews" element={<SellerReviewsPage />} />
+          <Route
+            path="/reviews/write/:sellerId"
+            element={
+              <ProtectedRoute>
+                <WriteReviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reviews/write/:sellerId/:vehicleId"
+            element={
+              <ProtectedRoute>
+                <WriteReviewPage />
               </ProtectedRoute>
             }
           />
@@ -568,7 +590,7 @@ function App() {
             }
           />
         </Routes>
-        
+
         {/* Global Chat Widget (Sprint 16) - Shows on all pages */}
         <ChatWidget position="bottom-right" primaryColor="#2563eb" />
       </Router>

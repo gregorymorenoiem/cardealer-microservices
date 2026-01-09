@@ -141,3 +141,22 @@ spec:
       targetPort: 8080
   selector:
     app: errorservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reviewservice
+  namespace: okla
+  labels:
+    app: reviewservice
+    tier: backend
+    sprint: "14"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: reviewservice

@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FiSearch, FiSliders, FiHeart, FiX } from 'react-icons/fi';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
 import VehicleCard from '@/components/organisms/VehicleCard';
 import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
 import Pagination from '@/components/molecules/Pagination';
@@ -193,7 +197,7 @@ export function SearchPage() {
                     <label className="text-sm font-medium mb-2 block">Marca</label>
                     <Select
                       value={filters.make}
-                      onValueChange={(value) => setFilters({ ...filters, make: value, model: '' })}
+                      onValueChange={(value: string) => setFilters({ ...filters, make: value, model: '' })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Todas las marcas" />
@@ -215,7 +219,7 @@ export function SearchPage() {
                       <label className="text-sm font-medium mb-2 block">Modelo</label>
                       <Select
                         value={filters.model}
-                        onValueChange={(value) => setFilters({ ...filters, model: value })}
+                        onValueChange={(value: string) => setFilters({ ...filters, model: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Todos los modelos" />
@@ -242,7 +246,7 @@ export function SearchPage() {
                       max={new Date().getFullYear()}
                       step={1}
                       value={[filters.yearFrom, filters.yearTo]}
-                      onValueChange={([from, to]) =>
+                      onValueChange={([from, to]: number[]) =>
                         setFilters({ ...filters, yearFrom: from, yearTo: to })
                       }
                     />
@@ -258,7 +262,7 @@ export function SearchPage() {
                       max={10000000}
                       step={100000}
                       value={[filters.priceMin, filters.priceMax]}
-                      onValueChange={([min, max]) =>
+                      onValueChange={([min, max]: number[]) =>
                         setFilters({ ...filters, priceMin: min, priceMax: max })
                       }
                     />
@@ -274,7 +278,7 @@ export function SearchPage() {
                       max={300000}
                       step={10000}
                       value={[filters.mileageMax]}
-                      onValueChange={([max]) => setFilters({ ...filters, mileageMax: max })}
+                      onValueChange={([max]: number[]) => setFilters({ ...filters, mileageMax: max })}
                     />
                   </div>
 

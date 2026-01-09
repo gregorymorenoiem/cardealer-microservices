@@ -629,3 +629,67 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
+
+---
+# =============================================================================
+# REVIEW SERVICE (Sprint 14)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reviewservice
+  namespace: okla
+  labels:
+    app: reviewservice
+    tier: backend
+    sprint: "14"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reviewservice
+  template:
+    metadata:
+      labels:
+        app: reviewservice
+    spec:
+      containers:
+        - name: reviewservice
+          image: ghcr.io/gregorymorenoiem/cardealer-reviewservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: reviewservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3

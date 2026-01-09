@@ -16,11 +16,21 @@ public record ReviewDto
     public bool IsVerifiedPurchase { get; init; }
     public string BuyerName { get; init; } = string.Empty;
     public string? BuyerPhotoUrl { get; init; }
-    public int HelpfulVotes { get; init; }
-    public int TotalVotes { get; init; }
     public DateTime CreatedAt { get; init; }
     
-    // Respuesta del vendedor (si existe)
+    // Respuesta del vendedor (Sprint 15 - Nueva funcionalidad)
+    public string? SellerResponse { get; init; }
+    public DateTime? SellerRespondedAt { get; init; }
+    
+    // Votos útiles (Sprint 15 - Nueva funcionalidad)
+    public ReviewVoteStatsDto? VoteStats { get; init; }
+    public bool? UserVotedHelpful { get; init; }  // Para mostrar si el usuario actual votó
+    
+    // Anti-fraude (Sprint 15 - Nueva funcionalidad)
+    public decimal TrustScore { get; init; }
+    public bool WasAutoRequested { get; init; }
+    
+    // Respuesta del vendedor (si existe) - DEPRECATED, use SellerResponse
     public ReviewResponseDto? Response { get; init; }
 }
 

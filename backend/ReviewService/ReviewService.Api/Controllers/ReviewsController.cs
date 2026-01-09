@@ -342,4 +342,56 @@ public class ReviewsController : ControllerBase
             return StatusCode(500, "Error interno del servidor");
         }
     }
+
+    /// <summary>
+    /// Sprint 15 - Vendedor responde a una review
+    /// </summary>
+    /// <param name="reviewId">ID de la review</param>
+    /// <param name="request">Respuesta del vendedor</param>
+    /// <returns>Confirmación</returns>
+    [HttpPost("{reviewId:guid}/respond")]
+    [Authorize]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult> RespondToReview(
+        [FromRoute] Guid reviewId,
+        [FromBody] SellerResponseRequest request)
+    {
+        try
+        {
+            var sellerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(sellerIdClaim) || !Guid.TryParse(sellerIdClaim, out var sellerId))
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var command = new RespondToReviewCommand(reviewId, sellerId, request.ResponseText);
+            await _mediator.Send(command);
+
+            _logger.LogInformation("Seller {SellerId} responded to review {ReviewId}", sellerId, reviewId);
+
+            return Ok(new { message = "Respuesta publicada exitosamente" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error responding to review {ReviewId}", reviewId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
 }
+
+/// <summary>
+/// Request para respuesta de vendedor
+/// </summary>
+public record SellerResponseRequest(string ResponseText);

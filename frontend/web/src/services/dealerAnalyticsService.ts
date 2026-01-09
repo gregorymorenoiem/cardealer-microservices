@@ -1,6 +1,91 @@
 import axios, { AxiosInstance } from 'axios';
 
 // ============================================
+// Sprint 12+ Dealer Analytics DTOs
+// (Used by useDealerAnalytics hook + AdvancedDealerDashboard)
+// ============================================
+
+export type InsightPriority = 'High' | 'Medium' | 'Low';
+
+export interface DashboardSummaryDto {
+  dealerId: string;
+  totalViews: number;
+  uniqueVisitors: number;
+  totalInquiries?: number;
+  convertedLeads?: number;
+  conversionRate: number;
+  totalRevenue?: number;
+  averageResponseTime?: number;
+  customerSatisfactionScore?: number;
+  period?: string;
+}
+
+export interface QuickStats {
+  totalViews: number;
+  viewsGrowth: number;
+  totalContacts: number;
+  contactsGrowth: number;
+  actualSales: number;
+  salesGrowth: number;
+  totalRevenue: number;
+  revenueGrowth: number;
+}
+
+export interface ConversionFunnelDto {
+  views: number;
+  detailViews?: number;
+  inquiries: number;
+  testDrives?: number;
+  purchases: number;
+  overallConversionRate: number;
+}
+
+export interface FunnelVisualization {
+  steps: Array<{ label: string; value: number; rate?: number }>;
+}
+
+export interface MarketBenchmarkDto {
+  category: string;
+  dealerValue: number;
+  marketAverage: number;
+  isAboveAverage: boolean;
+  marketAveragePrice?: number;
+}
+
+export interface DealerInsightDto {
+  id: string;
+  dealerId?: string;
+  type: string;
+  priority: InsightPriority;
+  title: string;
+  description?: string;
+  actionRecommendation?: string;
+  potentialImpact?: string;
+  isRead?: boolean;
+  createdAt?: string;
+}
+
+export interface InsightsSummary {
+  total: number;
+  unread: number;
+  highPriority: number;
+}
+
+export interface PerformanceComparison {
+  periodDays: number;
+  dealer: {
+    conversionRate?: number;
+    averageResponseTime?: number;
+    customerSatisfactionScore?: number;
+  };
+  market: {
+    conversionRate?: number;
+    averageResponseTime?: number;
+    customerSatisfactionScore?: number;
+  };
+}
+
+// ============================================
 // INTERFACES - Analytics DTOs
 // ============================================
 
@@ -123,7 +208,7 @@ export class DealerAnalyticsService {
     // Interceptor para agregar JWT token automáticamente
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -131,6 +216,107 @@ export class DealerAnalyticsService {
       },
       (error) => Promise.reject(error)
     );
+  }
+
+  // ============================================
+  // Sprint 12+ Advanced Dealer Analytics API
+  // ============================================
+
+  async getDashboardSummary(
+    dealerId: string,
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<DashboardSummaryDto> {
+    const params: Record<string, string> = {};
+    if (fromDate) params.fromDate = fromDate.toISOString();
+    if (toDate) params.toDate = toDate.toISOString();
+    const response = await this.api.get(`/api/analytics/dashboard/${dealerId}/summary`, {
+      params,
+    });
+    return response.data;
+  }
+
+  async getQuickStats(dealerId: string): Promise<QuickStats> {
+    const response = await this.api.get(`/api/analytics/dashboard/${dealerId}/quick-stats`);
+    return response.data;
+  }
+
+  async getConversionFunnel(
+    dealerId: string,
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<ConversionFunnelDto> {
+    const params: Record<string, string> = {};
+    if (fromDate) params.fromDate = fromDate.toISOString();
+    if (toDate) params.toDate = toDate.toISOString();
+    const response = await this.api.get(`/api/analytics/funnel/${dealerId}`, { params });
+    return response.data;
+  }
+
+  async getFunnelVisualization(
+    dealerId: string,
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<FunnelVisualization> {
+    const params: Record<string, string> = {};
+    if (fromDate) params.fromDate = fromDate.toISOString();
+    if (toDate) params.toDate = toDate.toISOString();
+    const response = await this.api.get(`/api/analytics/funnel/${dealerId}/visualization`, {
+      params,
+    });
+    return response.data;
+  }
+
+  async getDealerInsights(dealerId: string): Promise<DealerInsightDto[]> {
+    const response = await this.api.get(`/api/analytics/insights/${dealerId}`);
+    return response.data;
+  }
+
+  async getInsightsSummary(dealerId: string): Promise<InsightsSummary> {
+    const response = await this.api.get(`/api/analytics/insights/${dealerId}/summary`);
+    return response.data;
+  }
+
+  async generateInsights(dealerId: string): Promise<void> {
+    await this.api.post(`/api/analytics/insights/${dealerId}/generate`);
+  }
+
+  async markInsightsAsRead(dealerId: string, insightIds: string[]): Promise<void> {
+    await this.api.post(`/api/analytics/insights/${dealerId}/read`, { insightIds });
+  }
+
+  async markInsightAsActedUpon(insightId: string): Promise<void> {
+    await this.api.post(`/api/analytics/insights/${insightId}/acted`);
+  }
+
+  // Convenience methods (used by older tests / UI buttons)
+  async markInsightAsRead(insightId: string): Promise<boolean> {
+    const response = await this.api.post(`/api/analytics/insights/${insightId}/read`);
+    return response.data;
+  }
+
+  async dismissInsight(insightId: string): Promise<boolean> {
+    const response = await this.api.delete(`/api/analytics/insights/${insightId}`);
+    return response.data;
+  }
+
+  async getMarketBenchmarks(): Promise<MarketBenchmarkDto[]> {
+    const response = await this.api.get('/api/analytics/benchmarks');
+    return response.data;
+  }
+
+  async getPerformanceComparison(dealerId: string, periodDays: number): Promise<PerformanceComparison> {
+    const response = await this.api.get(`/api/analytics/performance/${dealerId}`, {
+      params: { periodDays },
+    });
+    return response.data;
+  }
+
+  async recalculateAnalytics(dealerId: string, fromDate: Date, toDate: Date): Promise<void> {
+    await this.api.post(`/api/analytics/dashboard/${dealerId}/recalculate`, {
+      fromDate: fromDate.toISOString(),
+      toDate: toDate.toISOString(),
+    });
   }
 
   // ============================================
@@ -205,6 +391,50 @@ export class DealerAnalyticsService {
    */
   formatPercentage(value: number): string {
     return `${value.toFixed(1)}%`;
+  }
+
+  /**
+   * Format currency (USD, no decimals)
+   */
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  /**
+   * Map insight priority to Tailwind classes
+   */
+  getPriorityColor(priority: InsightPriority): string {
+    switch (priority) {
+      case 'High':
+        return 'text-red-600 bg-red-50';
+      case 'Medium':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'Low':
+        return 'text-green-600 bg-green-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  }
+
+  /**
+   * Simple icon mapping for priorities
+   */
+  getPriorityIcon(priority: InsightPriority): string {
+    switch (priority) {
+      case 'High':
+        return '🚨';
+      case 'Medium':
+        return '⚠️';
+      case 'Low':
+        return '💡';
+      default:
+        return 'ℹ️';
+    }
   }
 
   /**

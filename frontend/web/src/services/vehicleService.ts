@@ -94,6 +94,7 @@ export interface Vehicle {
   sellerEmail?: string;
   status: 'pending' | 'approved' | 'rejected' | 'sold';
   isFeatured: boolean;
+  isNew?: boolean;  // Added for new/used indication
   createdAt: string;
   updatedAt: string;
   categoryId?: string;

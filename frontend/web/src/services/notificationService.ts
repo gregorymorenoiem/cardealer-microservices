@@ -1,25 +1,4 @@
-import axios, { type AxiosInstance } from 'axios';
-
-// API Base URL - Use Gateway
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
-
-// Create axios instance
-const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add request interceptor to include auth token
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from './api';
 
 export interface Notification {
   id: string;
@@ -66,7 +45,7 @@ export const getNotifications = async (
     params.append('pageSize', pageSize.toString());
     if (unreadOnly) params.append('unreadOnly', 'true');
 
-    const response = await apiClient.get(`/api/notifications?${params.toString()}`);
+    const response = await api.get(`/api/notifications?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -77,7 +56,7 @@ export const getNotifications = async (
 // Get unread notification count
 export const getUnreadCount = async (): Promise<number> => {
   try {
-    const response = await apiClient.get(`/api/notifications/unread/count`);
+    const response = await api.get(`/api/notifications/unread/count`);
     return response.data.count;
   } catch (error) {
     console.error('Error fetching unread count:', error);
@@ -88,7 +67,7 @@ export const getUnreadCount = async (): Promise<number> => {
 // Mark notification as read
 export const markAsRead = async (notificationId: string): Promise<void> => {
   try {
-    await apiClient.patch(`/api/notifications/${notificationId}/read`);
+    await api.patch(`/api/notifications/${notificationId}/read`);
   } catch (error) {
     console.error('Error marking notification as read:', error);
     throw new Error('Failed to mark notification as read');
@@ -98,7 +77,7 @@ export const markAsRead = async (notificationId: string): Promise<void> => {
 // Mark all notifications as read
 export const markAllAsRead = async (): Promise<void> => {
   try {
-    await apiClient.patch(`/api/notifications/read-all`);
+    await api.patch(`/api/notifications/read-all`);
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     throw new Error('Failed to mark all notifications as read');
@@ -108,7 +87,7 @@ export const markAllAsRead = async (): Promise<void> => {
 // Delete notification
 export const deleteNotification = async (notificationId: string): Promise<void> => {
   try {
-    await apiClient.delete(`/api/notifications/${notificationId}`);
+    await api.delete(`/api/notifications/${notificationId}`);
   } catch (error) {
     console.error('Error deleting notification:', error);
     throw new Error('Failed to delete notification');
@@ -118,7 +97,7 @@ export const deleteNotification = async (notificationId: string): Promise<void> 
 // Delete all read notifications
 export const deleteAllRead = async (): Promise<void> => {
   try {
-    await apiClient.delete(`/api/notifications/read`);
+    await api.delete(`/api/notifications/read`);
   } catch (error) {
     console.error('Error deleting read notifications:', error);
     throw new Error('Failed to delete read notifications');
@@ -128,7 +107,7 @@ export const deleteAllRead = async (): Promise<void> => {
 // Get notification preferences
 export const getPreferences = async (): Promise<NotificationPreferences> => {
   try {
-    const response = await apiClient.get(`/api/notifications/preferences`);
+    const response = await api.get(`/api/notifications/preferences`);
     return response.data;
   } catch (error) {
     console.error('Error fetching notification preferences:', error);
@@ -141,7 +120,7 @@ export const updatePreferences = async (
   preferences: Partial<NotificationPreferences>
 ): Promise<NotificationPreferences> => {
   try {
-    const response = await apiClient.put(`/api/notifications/preferences`, preferences);
+    const response = await api.put(`/api/notifications/preferences`, preferences);
     return response.data;
   } catch (error) {
     console.error('Error updating notification preferences:', error);
@@ -163,7 +142,7 @@ export const createNotification = async (
   }
 ): Promise<Notification> => {
   try {
-    const response = await apiClient.post(`/api/notifications`, {
+    const response = await api.post(`/api/notifications`, {
       userId,
       ...notification,
     });
@@ -186,7 +165,7 @@ export const sendBulkNotifications = async (
   }
 ): Promise<void> => {
   try {
-    await apiClient.post(`/api/admin/notifications/bulk`, {
+    await api.post(`/api/admin/notifications/bulk`, {
       userIds,
       ...notification,
     });
@@ -206,7 +185,7 @@ export const getNotificationStats = async (): Promise<{
   notificationsByDay: Array<{ date: string; count: number }>;
 }> => {
   try {
-    const response = await apiClient.get(`/api/admin/notifications/stats`);
+    const response = await api.get(`/api/admin/notifications/stats`);
     return response.data;
   } catch (error) {
     console.error('Error fetching notification stats:', error);
@@ -219,7 +198,7 @@ export const subscribePushNotifications = async (
   subscription: PushSubscription
 ): Promise<void> => {
   try {
-    await apiClient.post(`/api/notifications/push/subscribe`, {
+    await api.post(`/api/notifications/push/subscribe`, {
       subscription: subscription.toJSON(),
     });
   } catch (error) {
@@ -231,7 +210,7 @@ export const subscribePushNotifications = async (
 // Unsubscribe from push notifications
 export const unsubscribePushNotifications = async (): Promise<void> => {
   try {
-    await apiClient.post(`/api/notifications/push/unsubscribe`);
+    await api.post(`/api/notifications/push/unsubscribe`);
   } catch (error) {
     console.error('Error unsubscribing from push notifications:', error);
     throw new Error('Failed to unsubscribe from push notifications');
@@ -241,7 +220,7 @@ export const unsubscribePushNotifications = async (): Promise<void> => {
 // Test notification (development)
 export const sendTestNotification = async (): Promise<void> => {
   try {
-    await apiClient.post(`/api/notifications/test`);
+    await api.post(`/api/notifications/test`);
   } catch (error) {
     console.error('Error sending test notification:', error);
     throw new Error('Failed to send test notification');
@@ -252,7 +231,7 @@ export const sendTestNotification = async (): Promise<void> => {
 export const pollNotifications = async (lastFetchTime?: string): Promise<Notification[]> => {
   try {
     const params = lastFetchTime ? `?since=${encodeURIComponent(lastFetchTime)}` : '';
-    const response = await apiClient.get(`/api/notifications/poll${params}`);
+    const response = await api.get(`/api/notifications/poll${params}`);
     return response.data;
   } catch (error) {
     console.error('Error polling notifications:', error);
@@ -270,7 +249,7 @@ export const getNotificationTemplates = async (): Promise<Array<{
   variables: string[];
 }>> => {
   try {
-    const response = await apiClient.get(`/api/admin/notifications/templates`);
+    const response = await api.get(`/api/admin/notifications/templates`);
     return response.data;
   } catch (error) {
     console.error('Error fetching notification templates:', error);
@@ -285,7 +264,7 @@ export const sendFromTemplate = async (
   variables: Record<string, string>
 ): Promise<void> => {
   try {
-    await apiClient.post(`/api/admin/notifications/send-template`, {
+    await api.post(`/api/admin/notifications/send-template`, {
       templateId,
       userIds,
       variables,

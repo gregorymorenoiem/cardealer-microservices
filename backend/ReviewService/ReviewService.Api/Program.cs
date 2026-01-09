@@ -84,7 +84,7 @@ builder.Services.AddCors(options =>
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddEntityFrameworkCoreCheck<ReviewDbContext>();
+    .AddDbContextCheck<ReviewDbContext>();
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

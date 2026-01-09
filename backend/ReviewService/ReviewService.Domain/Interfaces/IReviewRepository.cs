@@ -46,4 +46,32 @@ public interface IReviewRepository : IRepository<Review, Guid>
     /// Obtener top reviews (más útiles) para un vendedor
     /// </summary>
     Task<IEnumerable<Review>> GetTopReviewsAsync(Guid sellerId, int limit = 5);
+
+    /// <summary>
+    /// Obtener estadísticas completas de un vendedor
+    /// </summary>
+    Task<SellerReviewStats> GetSellerStatsAsync(Guid sellerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Obtener lista de vendedores que tienen reviews
+    /// </summary>
+    Task<List<Guid>> GetSellersWithReviewsAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Estadísticas de reviews para un vendedor
+/// </summary>
+public class SellerReviewStats
+{
+    public decimal AverageRating { get; set; }
+    public int TotalReviews { get; set; }
+    public int FiveStarCount { get; set; }
+    public int FourStarCount { get; set; }
+    public int ThreeStarCount { get; set; }
+    public int TwoStarCount { get; set; }
+    public int OneStarCount { get; set; }
+    public decimal ResponseRate { get; set; }
+    public int TotalHelpfulVotes { get; set; }
+    public DateTime FirstReviewDate { get; set; }
+    public DateTime LastReviewDate { get; set; }
 }

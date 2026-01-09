@@ -1,13 +1,21 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Input from '@/components/atoms/Input';
 import Button from '@/components/atoms/Button';
 import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
+import {
+  vehicleIntelligenceService,
+  type PriceSuggestion,
+} from '@/services/vehicleIntelligenceService';
 
 const pricingSchema = z.object({
   price: z.number().min(1, 'Price is required').max(10000000, 'Price is too high'),
-  description: z.string().min(50, 'Description must be at least 50 characters').max(2000, 'Description must be less than 2000 characters'),
+  description: z
+    .string()
+    .min(50, 'Description must be at least 50 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
   location: z.string().min(1, 'Location is required'),
   sellerName: z.string().min(1, 'Your name is required'),
   sellerPhone: z.string().min(10, 'Valid phone number is required'),
@@ -44,6 +52,85 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
 
   const description = watch('description');
   const sellerType = watch('sellerType');
+  const askingPrice = watch('price');
+  const location = watch('location');
+
+  const [suggestion, setSuggestion] = useState<PriceSuggestion | null>(null);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
+
+  const requestBase = useMemo(() => {
+    return {
+      make: data.make,
+      model: data.model,
+      year: data.year,
+      mileage: data.mileage,
+      bodyType: data.bodyType,
+    };
+  }, [data.bodyType, data.make, data.mileage, data.model, data.year]);
+
+  const hasAuth = typeof window !== 'undefined' && Boolean(localStorage.getItem('accessToken'));
+  const canRequestSuggestion =
+    hasAuth &&
+    Boolean(requestBase.make) &&
+    Boolean(requestBase.model) &&
+    typeof requestBase.year === 'number' &&
+    requestBase.year > 1900 &&
+    typeof requestBase.mileage === 'number' &&
+    requestBase.mileage >= 0 &&
+    typeof askingPrice === 'number' &&
+    askingPrice > 0 &&
+    Boolean(location);
+
+  useEffect(() => {
+    if (!hasAuth) {
+      setSuggestion(null);
+      setSuggestionError(null);
+      return;
+    }
+
+    if (!canRequestSuggestion) {
+      setSuggestion(null);
+      setSuggestionError(null);
+      return;
+    }
+
+    let isCancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setSuggestionLoading(true);
+      setSuggestionError(null);
+      try {
+        const result = await vehicleIntelligenceService.getPriceSuggestion({
+          make: requestBase.make as string,
+          model: requestBase.model as string,
+          year: requestBase.year as number,
+          mileage: requestBase.mileage as number,
+          bodyType: requestBase.bodyType ?? null,
+          location: location || null,
+          askingPrice,
+        });
+        if (!isCancelled) {
+          setSuggestion(result);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setSuggestion(null);
+          setSuggestionError(
+            error instanceof Error ? error.message : 'No se pudo calcular la sugerencia de precio'
+          );
+        }
+      } finally {
+        if (!isCancelled) {
+          setSuggestionLoading(false);
+        }
+      }
+    }, 500);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [askingPrice, canRequestSuggestion, hasAuth, location, requestBase]);
 
   const onSubmit = (formData: PricingFormData) => {
     onNext(formData);
@@ -52,9 +139,7 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-2">
-          Pricing & Details
-        </h2>
+        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-2">Pricing & Details</h2>
         <p className="text-gray-600">
           Set your asking price and provide detailed information about your vehicle
         </p>
@@ -77,11 +162,107 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
           />
         </div>
         {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>}
-        
-        <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs text-blue-800">
-            <strong>Pricing Tips:</strong> Research similar vehicles in your area. Price competitively to attract buyers. Consider highlighting any recent maintenance or upgrades.
-          </p>
+
+        {/* Intelligent Pricing (Sprint 18) */}
+        <div className="mt-3 space-y-3">
+          {!hasAuth && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p className="text-xs text-gray-700">
+                Inicia sesión para ver sugerencias de precio inteligentes.
+              </p>
+            </div>
+          )}
+
+          {hasAuth && !canRequestSuggestion && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-800">
+                Completa <strong>Marca</strong>, <strong>Modelo</strong>, <strong>Año</strong>,{' '}
+                <strong>Millaje</strong>, <strong>Precio</strong> y <strong>Ubicación</strong> para
+                calcular tu precio sugerido.
+              </p>
+            </div>
+          )}
+
+          {suggestionLoading && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-800">Calculando sugerencia de precio…</p>
+            </div>
+          )}
+
+          {suggestionError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-xs text-red-700">{suggestionError}</p>
+            </div>
+          )}
+
+          {suggestion && (
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Precio sugerido</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    ${suggestion.suggestedPrice.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Mercado estimado: ${suggestion.marketPrice.toLocaleString()} • Modelo:{' '}
+                    {suggestion.modelVersion}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-700">Tiempo estimado de venta</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    ~{suggestion.estimatedDaysToSell} días
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Confianza: {Math.round(suggestion.confidence * 100)}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
+                    suggestion.deltaPercent > 10
+                      ? 'bg-red-50 text-red-700 border-red-200'
+                      : suggestion.deltaPercent < -10
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
+                  {suggestion.deltaPercent > 0
+                    ? `Tu precio está ${Math.abs(Math.round(suggestion.deltaPercent))}% por encima del mercado`
+                    : `Tu precio está ${Math.abs(Math.round(suggestion.deltaPercent))}% por debajo del mercado`}
+                </span>
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-blue-50 text-blue-700 border-blue-200">
+                  Demanda: {Math.round(suggestion.demandScore)}/100
+                </span>
+              </div>
+
+              {suggestion.sellingTips?.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Consejos para vender más rápido
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {suggestion.sellingTips.slice(0, 5).map((tip) => (
+                      <li key={tip} className="text-sm text-gray-700">
+                        • {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-800">
+              <strong>Pricing Tips:</strong> Research similar vehicles in your area. Price
+              competitively to attract buyers. Consider highlighting any recent maintenance or
+              upgrades.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -98,16 +279,20 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
         />
         <div className="flex justify-between items-center mt-1">
           <div>
-            {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+            {errors.description && (
+              <p className="text-red-500 text-sm">{errors.description.message}</p>
+            )}
           </div>
           <p className={`text-sm ${description.length < 50 ? 'text-red-500' : 'text-gray-500'}`}>
-            {description.length} / 2000 characters {description.length < 50 && `(${50 - description.length} more needed)`}
+            {description.length} / 2000 characters{' '}
+            {description.length < 50 && `(${50 - description.length} more needed)`}
           </p>
         </div>
 
         <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-xs text-blue-800 mb-2">
-            <strong>Description Tips:</strong> A detailed description helps buyers make informed decisions.
+            <strong>Description Tips:</strong> A detailed description helps buyers make informed
+            decisions.
           </p>
           <ul className="text-xs text-blue-800 space-y-1">
             <li>• Mention service history and maintenance records</li>
@@ -128,15 +313,13 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
           error={errors.location?.message}
           required
         />
-        <p className="text-xs text-gray-500 mt-1">
-          City and state where the vehicle is located
-        </p>
+        <p className="text-xs text-gray-500 mt-1">City and state where the vehicle is located</p>
       </div>
 
       {/* Seller Information */}
       <div className="border-t pt-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-        
+
         {/* Seller Type */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -144,24 +327,18 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
           </label>
           <div className="flex gap-4">
             <label className="flex items-center cursor-pointer">
-              <input
-                {...register('sellerType')}
-                type="radio"
-                value="private"
-                className="mr-2"
-              />
-              <span className={`text-sm ${sellerType === 'private' ? 'font-semibold text-primary' : 'text-gray-700'}`}>
+              <input {...register('sellerType')} type="radio" value="private" className="mr-2" />
+              <span
+                className={`text-sm ${sellerType === 'private' ? 'font-semibold text-primary' : 'text-gray-700'}`}
+              >
                 Private Seller
               </span>
             </label>
             <label className="flex items-center cursor-pointer">
-              <input
-                {...register('sellerType')}
-                type="radio"
-                value="dealer"
-                className="mr-2"
-              />
-              <span className={`text-sm ${sellerType === 'dealer' ? 'font-semibold text-primary' : 'text-gray-700'}`}>
+              <input {...register('sellerType')} type="radio" value="dealer" className="mr-2" />
+              <span
+                className={`text-sm ${sellerType === 'dealer' ? 'font-semibold text-primary' : 'text-gray-700'}`}
+              >
                 Dealer
               </span>
             </label>
@@ -198,7 +375,8 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
 
         <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
           <p className="text-xs text-gray-600">
-            Your contact information will be visible to interested buyers. We recommend using a phone number and email you check regularly.
+            Your contact information will be visible to interested buyers. We recommend using a
+            phone number and email you check regularly.
           </p>
         </div>
       </div>

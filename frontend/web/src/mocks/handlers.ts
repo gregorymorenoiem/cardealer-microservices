@@ -1,6 +1,6 @@
 /**
  * MSW Handlers - API Mocking for Tests
- * 
+ *
  * This file contains all the mock handlers for API endpoints
  * used in testing the CarDealer frontend application.
  */
@@ -69,8 +69,8 @@ export const authHandlers = [
   // Login
   http.post(`${API_BASE}/api/auth/login`, async ({ request }) => {
     await delay(100);
-    const body = await request.json() as { email: string; password: string };
-    
+    const body = (await request.json()) as { email: string; password: string };
+
     if (body.email === 'test@example.com' && body.password === 'password123') {
       return HttpResponse.json({
         success: true,
@@ -81,25 +81,22 @@ export const authHandlers = [
         },
       });
     }
-    
-    return HttpResponse.json(
-      { success: false, message: 'Invalid credentials' },
-      { status: 401 }
-    );
+
+    return HttpResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
   }),
 
   // Register
   http.post(`${API_BASE}/api/auth/register`, async ({ request }) => {
     await delay(150);
-    const body = await request.json() as { email: string; password: string; name: string };
-    
+    const body = (await request.json()) as { email: string; password: string; name: string };
+
     if (body.email === 'existing@example.com') {
       return HttpResponse.json(
         { success: false, message: 'Email already exists' },
         { status: 409 }
       );
     }
-    
+
     return HttpResponse.json({
       success: true,
       data: {
@@ -125,14 +122,11 @@ export const authHandlers = [
   // Get current user
   http.get(`${API_BASE}/api/auth/me`, async ({ request }) => {
     const authHeader = request.headers.get('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return HttpResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+      return HttpResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
-    
+
     return HttpResponse.json({
       success: true,
       data: mockUser,
@@ -156,16 +150,17 @@ export const vehicleHandlers = [
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const search = url.searchParams.get('search') || '';
-    
+
     let filteredVehicles = mockVehicles;
-    
+
     if (search) {
-      filteredVehicles = mockVehicles.filter(v => 
-        v.title.toLowerCase().includes(search.toLowerCase()) ||
-        v.make.toLowerCase().includes(search.toLowerCase())
+      filteredVehicles = mockVehicles.filter(
+        (v) =>
+          v.title.toLowerCase().includes(search.toLowerCase()) ||
+          v.make.toLowerCase().includes(search.toLowerCase())
       );
     }
-    
+
     return HttpResponse.json({
       success: true,
       data: {
@@ -181,15 +176,12 @@ export const vehicleHandlers = [
   // Get vehicle by ID
   http.get(`${API_BASE}/api/vehicles/:id`, async ({ params }) => {
     await delay(80);
-    const vehicle = mockVehicles.find(v => v.id === params.id);
-    
+    const vehicle = mockVehicles.find((v) => v.id === params.id);
+
     if (!vehicle) {
-      return HttpResponse.json(
-        { success: false, message: 'Vehicle not found' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ success: false, message: 'Vehicle not found' }, { status: 404 });
     }
-    
+
     return HttpResponse.json({
       success: true,
       data: vehicle,
@@ -199,33 +191,33 @@ export const vehicleHandlers = [
   // Create vehicle
   http.post(`${API_BASE}/api/vehicles`, async ({ request }) => {
     await delay(200);
-    const body = await request.json() as Partial<typeof mockVehicles[0]>;
-    
+    const body = (await request.json()) as Partial<(typeof mockVehicles)[0]>;
+
     const newVehicle = {
       id: `vehicle-${Date.now()}`,
       ...body,
       createdAt: new Date().toISOString(),
     };
-    
-    return HttpResponse.json({
-      success: true,
-      data: newVehicle,
-    }, { status: 201 });
+
+    return HttpResponse.json(
+      {
+        success: true,
+        data: newVehicle,
+      },
+      { status: 201 }
+    );
   }),
 
   // Update vehicle
   http.put(`${API_BASE}/api/vehicles/:id`, async ({ params, request }) => {
     await delay(150);
-    const body = await request.json() as Partial<typeof mockVehicles[0]>;
-    const vehicle = mockVehicles.find(v => v.id === params.id);
-    
+    const body = (await request.json()) as Partial<(typeof mockVehicles)[0]>;
+    const vehicle = mockVehicles.find((v) => v.id === params.id);
+
     if (!vehicle) {
-      return HttpResponse.json(
-        { success: false, message: 'Vehicle not found' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ success: false, message: 'Vehicle not found' }, { status: 404 });
     }
-    
+
     return HttpResponse.json({
       success: true,
       data: { ...vehicle, ...body },
@@ -235,15 +227,12 @@ export const vehicleHandlers = [
   // Delete vehicle
   http.delete(`${API_BASE}/api/vehicles/:id`, async ({ params }) => {
     await delay(100);
-    const vehicle = mockVehicles.find(v => v.id === params.id);
-    
+    const vehicle = mockVehicles.find((v) => v.id === params.id);
+
     if (!vehicle) {
-      return HttpResponse.json(
-        { success: false, message: 'Vehicle not found' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ success: false, message: 'Vehicle not found' }, { status: 404 });
     }
-    
+
     return HttpResponse.json({ success: true }, { status: 204 });
   }),
 ];
@@ -255,14 +244,11 @@ export const dealerHandlers = [
   // Get dealer by ID
   http.get(`${API_BASE}/api/dealers/:id`, async ({ params }) => {
     await delay(80);
-    
+
     if (params.id !== 'dealer-1') {
-      return HttpResponse.json(
-        { success: false, message: 'Dealer not found' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ success: false, message: 'Dealer not found' }, { status: 404 });
     }
-    
+
     return HttpResponse.json({
       success: true,
       data: mockDealer,
@@ -280,12 +266,98 @@ export const dealerHandlers = [
 ];
 
 /**
+ * Test-environment handlers (wildcard localhost ports)
+ * Prevents real network calls from components that use fetch/axios directly.
+ */
+export const testEnvironmentHandlers = [
+  http.get('*/api/maintenance/status', async () => {
+    return HttpResponse.json({
+      isMaintenanceMode: false,
+      maintenanceWindow: null,
+    });
+  }),
+
+  http.options('*/api/vehicles', async () => {
+    return HttpResponse.json({}, { status: 204 });
+  }),
+
+  http.post('*/api/vehicles', async ({ request }) => {
+    await delay(120);
+    const body = (await request.json()) as Record<string, unknown>;
+
+    return HttpResponse.json(
+      {
+        id: `vehicle-test-${Date.now()}`,
+        ...body,
+        images: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
+  }),
+];
+
+/**
+ * Vehicle Intelligence Handlers
+ */
+export const vehicleIntelligenceHandlers = [
+  http.options('*/api/vehicleintelligence/price-suggestion', async () => {
+    return HttpResponse.json({}, { status: 204 });
+  }),
+  http.options('*/api/vehicleintelligence/demand/categories', async () => {
+    return HttpResponse.json({}, { status: 204 });
+  }),
+
+  http.post('*/api/vehicleintelligence/price-suggestion', async ({ request }) => {
+    await delay(120);
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Keep the mock deterministic and simple for UI tests
+    return HttpResponse.json({
+      marketPrice: 24500,
+      suggestedPrice: 23900,
+      deltaPercent: 3,
+      demandScore: 72,
+      estimatedDaysToSell: 18,
+      confidence: 0.74,
+      modelVersion: 'baseline-v1',
+      sellingTips: [
+        'Agrega al menos 15 fotos claras',
+        'Incluye mantenimiento reciente en la descripción',
+        'Considera ajustar el precio si no recibes contactos en 7 días',
+      ],
+    });
+  }),
+
+  http.get('*/api/vehicleintelligence/demand/categories', async ({ request }) => {
+    await delay(80);
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    return HttpResponse.json([
+      { category: 'SUV', demandScore: 86, trend: 'Up', updatedAt: '2026-01-09T10:00:00Z' },
+      { category: 'Sedan', demandScore: 62, trend: 'Stable', updatedAt: '2026-01-09T10:00:00Z' },
+      { category: 'Camioneta', demandScore: 78, trend: 'Up', updatedAt: '2026-01-09T10:00:00Z' },
+      { category: 'Eléctrico', demandScore: 55, trend: 'Down', updatedAt: '2026-01-09T10:00:00Z' },
+    ]);
+  }),
+];
+
+/**
  * All handlers combined
  */
 export const handlers = [
   ...authHandlers,
   ...vehicleHandlers,
   ...dealerHandlers,
+  ...testEnvironmentHandlers,
+  ...vehicleIntelligenceHandlers,
 ];
 
 export default handlers;

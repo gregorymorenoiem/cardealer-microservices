@@ -65,7 +65,7 @@ public class ReviewServiceTests
             UpdatedAt = DateTime.UtcNow
         };
 
-        var reviews = new List&lt;Review&gt;
+        var reviews = new List<Review>
         {
             CreateMockReview(sellerId, 5, true, true),
             CreateMockReview(sellerId, 4, true, false),
@@ -160,7 +160,7 @@ public class ReviewServiceTests
             UpdatedAt = DateTime.UtcNow
         };
 
-        var emptyReviews = new List&lt;Review&gt;();
+        var emptyReviews = new List<Review>();
 
         // Act
         summary.RecalculateMetrics(emptyReviews);
@@ -257,7 +257,7 @@ public class ReviewServiceTests
         };
 
         // 8 total: 3x5★ + 2x4★ + 1x3★ + 1x2★ + 1x1★ = 62.5% positive (5/8)
-        var reviews = new List&lt;Review&gt;
+        var reviews = new List<Review>
         {
             CreateMockReview(sellerId, 5, true),
             CreateMockReview(sellerId, 5, true),

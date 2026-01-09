@@ -41,8 +41,8 @@ public class GetSellerReviewsQueryHandler : IRequestHandler<GetSellerReviewsQuer
             IsVerifiedPurchase = r.IsVerifiedPurchase,
             BuyerName = r.BuyerName,
             BuyerPhotoUrl = r.BuyerPhotoUrl,
-            HelpfulVotes = r.HelpfulVotes,
-            TotalVotes = r.TotalVotes,
+            TrustScore = r.TrustScore,
+            WasAutoRequested = r.WasAutoRequested,
             CreatedAt = r.CreatedAt,
             Response = r.Response != null ? new ReviewResponseDto
             {
@@ -140,8 +140,8 @@ public class GetReviewByIdQueryHandler : IRequestHandler<GetReviewByIdQuery, Res
             IsVerifiedPurchase = review.IsVerifiedPurchase,
             BuyerName = review.BuyerName,
             BuyerPhotoUrl = review.BuyerPhotoUrl,
-            HelpfulVotes = review.HelpfulVotes,
-            TotalVotes = review.TotalVotes,
+            TrustScore = review.TrustScore,
+            WasAutoRequested = review.WasAutoRequested,
             CreatedAt = review.CreatedAt,
             Response = review.Response != null ? new ReviewResponseDto
             {
