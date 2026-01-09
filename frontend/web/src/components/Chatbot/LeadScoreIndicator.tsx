@@ -1,5 +1,5 @@
 import React from 'react';
-import { LeadTemperature, chatbotService } from '@/services/chatbotService';
+import { chatbotService, LeadTemperature } from '@/services/chatbotService';
 import { FiThermometer } from 'react-icons/fi';
 
 interface LeadScoreIndicatorProps {

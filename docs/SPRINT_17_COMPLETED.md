@@ -21,6 +21,7 @@ Implementar sistema completo de chatbot conversacional con **OpenAI GPT-4o-mini*
 #### 🏗️ Arquitectura
 
 **ChatbotService.Domain** (4 entidades + 3 enums):
+
 - ✅ `Entities/Conversation.cs` - Conversación principal con scoring
 - ✅ `Entities/Message.cs` - Mensajes del chat
 - ✅ `Entities/IntentAnalysis.cs` - Análisis de intención con IA
@@ -29,6 +30,7 @@ Implementar sistema completo de chatbot conversacional con **OpenAI GPT-4o-mini*
 - ✅ `Interfaces` - 3 repositorios (Conversation, IntentAnalysis, WhatsAppHandoff)
 
 **ChatbotService.Application** (Commands + Queries):
+
 - ✅ `Commands/StartConversationCommand.cs` - Iniciar chat
 - ✅ `Commands/SendMessageCommand.cs` - Enviar mensaje (con AI response)
 - ✅ `Commands/HandoffToWhatsAppCommand.cs` - Transferir a WhatsApp
@@ -41,6 +43,7 @@ Implementar sistema completo de chatbot conversacional con **OpenAI GPT-4o-mini*
 - ✅ `DTOs/ChatbotDtos.cs` - 14 DTOs (Conversation, Message, Statistics, etc.)
 
 **ChatbotService.Infrastructure** (Servicios core):
+
 - ✅ `Services/OpenAIService.cs` - GPT-4o-mini integration:
   - `AnalyzeIntentAsync()` - Detecta intenciones con JSON mode
   - `GenerateResponseAsync()` - Respuestas conversacionales (temp 0.7)
@@ -63,6 +66,7 @@ Implementar sistema completo de chatbot conversacional con **OpenAI GPT-4o-mini*
 - ✅ `Persistence/ChatbotDbContext.cs` - EF Core con jsonb columns
 
 **ChatbotService.Api** (REST API + SignalR):
+
 - ✅ `Controllers/ConversationsController.cs` - **8 endpoints REST**:
   - `POST /api/conversations` - Iniciar conversación
   - `POST /api/conversations/{id}/messages` - Enviar mensaje
@@ -96,6 +100,7 @@ Implementar sistema completo de chatbot conversacional con **OpenAI GPT-4o-mini*
 **Proyecto:** `backend/_Tests/ChatbotService.Tests/`
 
 **Resultados:**
+
 ```
 Test Run Successful.
 Total tests: 9
@@ -106,19 +111,20 @@ Total tests: 9
 
 **Tests Implementados:**
 
-| #  | Test                                                          | Resultado | Función                                         |
-|----|---------------------------------------------------------------|-----------|-------------------------------------------------|
-| 1  | Conversation_ShouldBeCreated_WithDefaultValues                | ✅ PASS   | Validar creación de entidad Conversation        |
-| 2  | CalculateLeadScore_ShouldReturnHotLead_ForHighEngagement      | ✅ PASS   | Score >= 85 con múltiples señales de compra     |
-| 3  | CalculateLeadScore_ShouldReturnWarmLead_ForModerateEngagement | ✅ PASS   | Score 50-69 con engagement moderado             |
-| 4  | CalculateLeadScore_ShouldReturnColdLead_ForLowEngagement      | ✅ PASS   | Score < 50 con "just browsing"                  |
-| 5  | DetermineLeadTemperature_Hot_WhenScoreAbove85                 | ✅ PASS   | Clasificación HOT correcta                      |
-| 6  | DetermineLeadTemperature_Warm_WhenScoreBetween50And69         | ✅ PASS   | Clasificación WARM correcta                     |
-| 7  | DetermineLeadTemperature_Cold_WhenScoreBelow50                | ✅ PASS   | Clasificación COLD correcta                     |
-| 8  | ShouldTriggerHandoff_True_ForHotLead                          | ✅ PASS   | Trigger automático para HOT leads               |
-| 9  | ShouldTriggerHandoff_False_ForColdLead                        | ✅ PASS   | No trigger para COLD leads                      |
+| #   | Test                                                          | Resultado | Función                                     |
+| --- | ------------------------------------------------------------- | --------- | ------------------------------------------- |
+| 1   | Conversation_ShouldBeCreated_WithDefaultValues                | ✅ PASS   | Validar creación de entidad Conversation    |
+| 2   | CalculateLeadScore_ShouldReturnHotLead_ForHighEngagement      | ✅ PASS   | Score >= 85 con múltiples señales de compra |
+| 3   | CalculateLeadScore_ShouldReturnWarmLead_ForModerateEngagement | ✅ PASS   | Score 50-69 con engagement moderado         |
+| 4   | CalculateLeadScore_ShouldReturnColdLead_ForLowEngagement      | ✅ PASS   | Score < 50 con "just browsing"              |
+| 5   | DetermineLeadTemperature_Hot_WhenScoreAbove85                 | ✅ PASS   | Clasificación HOT correcta                  |
+| 6   | DetermineLeadTemperature_Warm_WhenScoreBetween50And69         | ✅ PASS   | Clasificación WARM correcta                 |
+| 7   | DetermineLeadTemperature_Cold_WhenScoreBelow50                | ✅ PASS   | Clasificación COLD correcta                 |
+| 8   | ShouldTriggerHandoff_True_ForHotLead                          | ✅ PASS   | Trigger automático para HOT leads           |
+| 9   | ShouldTriggerHandoff_False_ForColdLead                        | ✅ PASS   | No trigger para COLD leads                  |
 
 **Coverage:**
+
 - ✅ Creación de conversaciones
 - ✅ Algoritmo de lead scoring con content analysis
 - ✅ Clasificación de temperatura (Hot/Warm/Cold)
@@ -126,6 +132,7 @@ Total tests: 9
 - ✅ Detección de keywords bilingües (inglés/español)
 
 **Dependencias de Testing:**
+
 - xUnit 2.6.4
 - FluentAssertions 6.12.0
 - Moq 4.20.70
@@ -141,6 +148,7 @@ Total tests: 9
 **Ubicación:** `frontend/web/src/services/chatbotService.ts` (470 líneas)
 
 **Interfaces TypeScript:**
+
 - ConversationDto (30+ propiedades)
 - MessageDto
 - StartConversationDto
@@ -150,6 +158,7 @@ Total tests: 9
 - Enums: ConversationStatus, LeadTemperature, MessageRole, MessageType
 
 **Métodos REST API (9):**
+
 1. `startConversation(dto)` - POST /api/conversations
 2. `sendMessage(conversationId, dto)` - POST /api/conversations/{id}/messages
 3. `handoffToWhatsApp(conversationId, dto)` - POST /api/conversations/{id}/handoff
@@ -161,6 +170,7 @@ Total tests: 9
 9. `getStatistics(dealerId)` - GET /api/conversations/statistics/dealer/{dealerId}
 
 **Métodos SignalR (6):**
+
 - `connectToHub()` - Conectar a SignalR con JWT token
 - `disconnectFromHub()` - Desconectar
 - `joinConversation(id)` - Unirse a group
@@ -169,11 +179,13 @@ Total tests: 9
 - `sendTypingIndicator(id)` - Indicador "escribiendo..."
 
 **Event Handlers (3):**
+
 - `onMessageReceived(callback)` - Escuchar nuevos mensajes
 - `onTypingIndicator(callback)` - Escuchar typing indicators
 - `onHandoffRecommended(callback)` - Escuchar recomendaciones de handoff
 
 **Helper Methods (15):**
+
 - `getTemperatureColor()` - Color del badge (red/orange/yellow/blue/gray)
 - `getTemperatureLabel()` - Etiqueta traducida (CALIENTE 🔥, Interesado, Frío)
 - `shouldTriggerHandoff()` - Validar si score >= 85
@@ -181,7 +193,7 @@ Total tests: 9
 - `getConversationSummary()` - Resumen de señales de compra
 - `isActive()` - Validar si conversación activa
 - `isAbandoned()` - Detectar abandono (>30 min sin actividad)
-- `calculateLeadProgress()` - Progreso 0-100% (4 señales * 25%)
+- `calculateLeadProgress()` - Progreso 0-100% (4 señales \* 25%)
 - `getRecommendedAction()` - Recomendación para dealer según score
 - `formatWhatsAppNumber()` - Formato E.164 (+18095551234)
 - `isValidPhone()` - Validar teléfono
@@ -194,6 +206,7 @@ Total tests: 9
 #### 🎨 Componentes React (6 componentes)
 
 **1. ChatWidget.tsx** (Floating Button)
+
 - **Ubicación:** `frontend/web/src/components/Chatbot/ChatWidget.tsx` (80 líneas)
 - **Función:** Botón flotante que abre ChatWindow
 - **Props:** vehicleId, vehicleTitle, vehiclePrice, dealerId, dealerName, dealerWhatsApp
@@ -205,6 +218,7 @@ Total tests: 9
   - Toggle open/close
 
 **2. ChatWindow.tsx** (Ventana Principal)
+
 - **Ubicación:** `frontend/web/src/components/Chatbot/ChatWindow.tsx` (220 líneas)
 - **Función:** Ventana de chat completa con SignalR integration
 - **Props:** vehicleId, vehicleTitle, vehiclePrice, dealerId, dealerName, dealerWhatsApp, conversationId, onClose, onNewMessage
@@ -222,6 +236,7 @@ Total tests: 9
   - Cleanup on unmount (leave group, disconnect hub)
 
 **3. MessageList.tsx** (Lista de Mensajes)
+
 - **Ubicación:** `frontend/web/src/components/Chatbot/MessageList.tsx` (115 líneas)
 - **Función:** Renderizar mensajes con estilos diferenciados
 - **Props:** messages (MessageDto[])
@@ -235,6 +250,7 @@ Total tests: 9
   - Empty state: "Inicia la conversación preguntando..."
 
 **4. MessageInput.tsx** (Input de Texto)
+
 - **Ubicación:** `frontend/web/src/components/Chatbot/MessageInput.tsx` (100 líneas)
 - **Función:** Textarea con botón de envío y typing indicator
 - **Props:** onSend, onTyping, disabled
@@ -247,6 +263,7 @@ Total tests: 9
   - Helper text: "Presiona Enter para enviar..."
 
 **5. LeadScoreIndicator.tsx** (Badge de Score)
+
 - **Ubicación:** `frontend/web/src/components/Chatbot/LeadScoreIndicator.tsx` (80 líneas)
 - **Función:** Badge que muestra score y temperatura
 - **Props:** score, temperature, showLabel?, size? (sm/md/lg)
@@ -262,6 +279,7 @@ Total tests: 9
   - Solo visible para dealers (no para compradores)
 
 **6. WhatsAppHandoffButton.tsx** (Botón de Handoff)
+
 - **Ubicación:** `frontend/web/src/components/Chatbot/WhatsAppHandoffButton.tsx` (70 líneas)
 - **Función:** Botón para iniciar handoff a WhatsApp
 - **Props:** onHandoff, dealerName, leadScore, disabled
@@ -307,17 +325,23 @@ import ChatWidget from './components/Chatbot/ChatWidget';
 #### Navbar Links
 
 **Para Dealers:**
+
 ```tsx
 const dealerNavLinks = [
-  { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiGrid },
-  { href: '/dealer/inventory', label: 'Inventario', icon: FaCar },
-  { href: '/dealer/analytics/advanced', label: 'Analytics', icon: FiBarChart2 },
-  { href: '/dealer/leads', label: 'Leads', icon: FiTarget },
-  { href: '/dealer/conversations', label: 'Conversaciones', icon: FiMessageCircle }, // ← NUEVO ⭐
+  { href: "/dealer/dashboard", label: "Mi Dashboard", icon: FiGrid },
+  { href: "/dealer/inventory", label: "Inventario", icon: FaCar },
+  { href: "/dealer/analytics/advanced", label: "Analytics", icon: FiBarChart2 },
+  { href: "/dealer/leads", label: "Leads", icon: FiTarget },
+  {
+    href: "/dealer/conversations",
+    label: "Conversaciones",
+    icon: FiMessageCircle,
+  }, // ← NUEVO ⭐
 ];
 ```
 
 **Para Compradores:**
+
 - ChatWidget flotante en todas las páginas (bottom-right)
 - Click abre ChatWindow con conversación instantánea
 - No hay link en navbar (es un widget embebido)
@@ -429,12 +453,12 @@ Score final: Clamped entre 0 y 100
 
 ### Rangos de Temperatura
 
-| Temperatura    | Score Range | Color    | Acción Recomendada                    |
-|----------------|-------------|----------|---------------------------------------|
-| **HOT** 🔥     | 85-100      | Rojo     | Contactar por WhatsApp INMEDIATAMENTE |
-| **WARM-HOT**   | 70-84       | Naranja  | Contactar en las próximas 2 horas     |
-| **WARM**       | 50-69       | Amarillo | Seguimiento en 24 horas               |
-| **COLD**       | 0-49        | Azul     | Continuar conversación automática     |
+| Temperatura  | Score Range | Color    | Acción Recomendada                    |
+| ------------ | ----------- | -------- | ------------------------------------- |
+| **HOT** 🔥   | 85-100      | Rojo     | Contactar por WhatsApp INMEDIATAMENTE |
+| **WARM-HOT** | 70-84       | Naranja  | Contactar en las próximas 2 horas     |
+| **WARM**     | 50-69       | Amarillo | Seguimiento en 24 horas               |
+| **COLD**     | 0-49        | Azul     | Continuar conversación automática     |
 
 ### Content Analysis (Bilingual)
 
@@ -444,42 +468,43 @@ El algoritmo escanea TODOS los mensajes de la conversación para detectar keywor
 var allContent = string.Join(" ", conversation.Messages.Select(m => m.Content?.ToLower() ?? ""));
 
 // Detección de urgencia (inglés + español)
-bool hasUrgency = allContent.Contains("hoy") || 
-                  allContent.Contains("today") || 
-                  allContent.Contains("ahora") || 
-                  allContent.Contains("now") || 
-                  allContent.Contains("inmediato") || 
-                  allContent.Contains("urgent") || 
-                  allContent.Contains("need") || 
+bool hasUrgency = allContent.Contains("hoy") ||
+                  allContent.Contains("today") ||
+                  allContent.Contains("ahora") ||
+                  allContent.Contains("now") ||
+                  allContent.Contains("inmediato") ||
+                  allContent.Contains("urgent") ||
+                  allContent.Contains("need") ||
                   allContent.Contains("necesito");
 
 // Detección de presupuesto
-bool hasBudget = allContent.Contains("budget") || 
-                 allContent.Contains("presupuesto") || 
-                 allContent.Contains("ready") || 
-                 allContent.Contains("listo") || 
-                 allContent.Contains("cash") || 
+bool hasBudget = allContent.Contains("budget") ||
+                 allContent.Contains("presupuesto") ||
+                 allContent.Contains("ready") ||
+                 allContent.Contains("listo") ||
+                 allContent.Contains("cash") ||
                  allContent.Contains("financ");
 
 // Detección de trade-in
-bool hasTradeIn = allContent.Contains("trade") || 
-                  allContent.Contains("intercambio") || 
-                  allContent.Contains("cambio") || 
+bool hasTradeIn = allContent.Contains("trade") ||
+                  allContent.Contains("intercambio") ||
+                  allContent.Contains("cambio") ||
                   allContent.Contains("actual");
 
 // Detección de test drive
-bool wantsTestDrive = allContent.Contains("test drive") || 
-                      allContent.Contains("prueba") || 
-                      allContent.Contains("probar") || 
+bool wantsTestDrive = allContent.Contains("test drive") ||
+                      allContent.Contains("prueba") ||
+                      allContent.Contains("probar") ||
                       allContent.Contains("manejo");
 
 // Señales negativas
-bool justBrowsing = allContent.Contains("just browsing") || 
-                    allContent.Contains("solo mirando") || 
+bool justBrowsing = allContent.Contains("just browsing") ||
+                    allContent.Contains("solo mirando") ||
                     allContent.Contains("just looking");
 ```
 
 **Ventajas del Content Analysis:**
+
 1. ✅ No requiere metadata estructurada
 2. ✅ Funciona con conversaciones naturales
 3. ✅ Soporte bilingüe (inglés/español)
@@ -534,6 +559,7 @@ Responde de forma natural y detecta estas señales sutilmente.
 ### Métodos del OpenAIService
 
 **1. AnalyzeIntentAsync (JSON Mode)**
+
 ```csharp
 // Temperature: 0.3 (más determinístico para JSON)
 // Prompt:
@@ -546,6 +572,7 @@ Devuelve JSON con:
 ```
 
 **2. GenerateResponseAsync (Conversational)**
+
 ```csharp
 // Temperature: 0.7 (más creativo y natural)
 // Max Tokens: 500
@@ -557,6 +584,7 @@ Devuelve JSON con:
 ```
 
 **3. SummarizeConversationAsync**
+
 ```csharp
 // Temperature: 0.5 (balance creatividad/precisión)
 // Prompt:
@@ -567,6 +595,7 @@ Devuelve JSON con:
 ```
 
 **4. ExtractBuyingSignalsAsync**
+
 ```csharp
 // Stub implementation (placeholder)
 // TODO: Implementar extracción avanzada de señales con GPT-4o
@@ -575,14 +604,14 @@ Devuelve JSON con:
 
 ### Costos Estimados (GPT-4o-mini)
 
-| Métrica                  | Costo                     |
-|--------------------------|---------------------------|
-| Input (por 1M tokens)    | $0.15                     |
-| Output (por 1M tokens)   | $0.60                     |
-| Conversación típica      | ~500 tokens input + output |
-| Costo por conversación   | ~$0.0003 (0.03 centavos)  |
-| 1,000 conversaciones     | ~$0.30                    |
-| 10,000 conversaciones    | ~$3.00                    |
+| Métrica                | Costo                      |
+| ---------------------- | -------------------------- |
+| Input (por 1M tokens)  | $0.15                      |
+| Output (por 1M tokens) | $0.60                      |
+| Conversación típica    | ~500 tokens input + output |
+| Costo por conversación | ~$0.0003 (0.03 centavos)   |
+| 1,000 conversaciones   | ~$0.30                     |
+| 10,000 conversaciones  | ~$3.00                     |
 
 **Conclusión:** GPT-4o-mini es extremadamente económico para chatbots de ventas.
 
@@ -648,13 +677,13 @@ public string ValidatePhoneNumber(string phone)
 {
     // Eliminar caracteres no numéricos
     var cleaned = Regex.Replace(phone, @"\D", "");
-    
+
     // Si es número dominicano (10 dígitos), agregar código país
     if (cleaned.Length == 10)
     {
         cleaned = "1809" + cleaned;
     }
-    
+
     // Agregar prefijo +
     return "+" + cleaned;
 }
@@ -669,6 +698,7 @@ public string ValidatePhoneNumber(string phone)
 ### Mock Mode (Desarrollo)
 
 Cuando `IsMockMode = true`:
+
 - No se envían mensajes reales a Twilio
 - Se loggea el mensaje en consola
 - Se simula éxito con `Thread.Sleep(500)`
@@ -679,7 +709,7 @@ Cuando `IsMockMode = true`:
 ## 📊 Estadísticas del Código
 
 | Categoría                  | Backend | Frontend | Tests | Total      |
-|----------------------------|---------|----------|-------|------------|
+| -------------------------- | ------- | -------- | ----- | ---------- |
 | **Archivos Creados**       | 23      | 7        | 1     | **31**     |
 | **Líneas de Código**       | ~3,500  | ~1,400   | ~500  | **~5,400** |
 | **Clases/Componentes**     | 18      | 6        | 9     | **33**     |
@@ -691,26 +721,26 @@ Cuando `IsMockMode = true`:
 
 ### Desglose por Capa (Backend)
 
-| Capa               | Archivos | LOC        | Descripción                                       |
-|--------------------|----------|------------|---------------------------------------------------|
-| **Domain**         | 7        | ~900       | Entidades, Enums, Interfaces                      |
-| **Application**    | 10       | ~1,400     | DTOs, Commands, Queries, Handlers                 |
-| **Infrastructure** | 5        | ~1,000     | Repositories, OpenAI, WhatsApp, LeadScoring       |
-| **Api**            | 1        | ~200       | Controllers, ChatHub, Program.cs, appsettings     |
-| **TOTAL**          | **23**   | **~3,500** | **Clean Architecture completa**                   |
+| Capa               | Archivos | LOC        | Descripción                                   |
+| ------------------ | -------- | ---------- | --------------------------------------------- |
+| **Domain**         | 7        | ~900       | Entidades, Enums, Interfaces                  |
+| **Application**    | 10       | ~1,400     | DTOs, Commands, Queries, Handlers             |
+| **Infrastructure** | 5        | ~1,000     | Repositories, OpenAI, WhatsApp, LeadScoring   |
+| **Api**            | 1        | ~200       | Controllers, ChatHub, Program.cs, appsettings |
+| **TOTAL**          | **23**   | **~3,500** | **Clean Architecture completa**               |
 
 ### Desglose Frontend
 
-| Archivo                        | LOC        | Descripción                               |
-|--------------------------------|------------|-------------------------------------------|
-| **chatbotService.ts**          | 470        | API client + SignalR + 15 helpers        |
-| **ChatWidget.tsx**             | 80         | Floating button con unread badge          |
-| **ChatWindow.tsx**             | 220        | Main chat interface con SignalR hooks     |
-| **MessageList.tsx**            | 115        | Renderizado de mensajes con auto-scroll  |
-| **MessageInput.tsx**           | 100        | Textarea con typing indicator             |
-| **LeadScoreIndicator.tsx**     | 80         | Score badge con color coding              |
-| **WhatsAppHandoffButton.tsx**  | 70         | Botón de handoff con loading state        |
-| **TOTAL**                      | **~1,135** | **7 archivos frontend**                   |
+| Archivo                       | LOC        | Descripción                             |
+| ----------------------------- | ---------- | --------------------------------------- |
+| **chatbotService.ts**         | 470        | API client + SignalR + 15 helpers       |
+| **ChatWidget.tsx**            | 80         | Floating button con unread badge        |
+| **ChatWindow.tsx**            | 220        | Main chat interface con SignalR hooks   |
+| **MessageList.tsx**           | 115        | Renderizado de mensajes con auto-scroll |
+| **MessageInput.tsx**          | 100        | Textarea con typing indicator           |
+| **LeadScoreIndicator.tsx**    | 80         | Score badge con color coding            |
+| **WhatsAppHandoffButton.tsx** | 70         | Botón de handoff con loading state      |
+| **TOTAL**                     | **~1,135** | **7 archivos frontend**                 |
 
 ---
 
@@ -832,6 +862,7 @@ kubectl port-forward svc/chatbotservice 5060:8080 -n okla
 ### Variables de Entorno Requeridas
 
 **Backend:**
+
 ```env
 ConnectionStrings__DefaultConnection=Host=postgres;Database=chatbotservice;Username=postgres;Password=your_password
 RabbitMQ__Host=rabbitmq
@@ -850,6 +881,7 @@ JWT__Audience=https://okla.com.do
 ```
 
 **Frontend:**
+
 ```env
 VITE_API_URL=https://api.okla.com.do
 ```
@@ -861,12 +893,14 @@ VITE_API_URL=https://api.okla.com.do
 ### Pendientes de Implementación
 
 1. **Dealer Conversations Dashboard:**
+
    - ❌ Página dedicada para listar conversaciones de dealer
    - ❌ Filtros por temperatura, status, fecha
    - ❌ Búsqueda por comprador o vehículo
    - ❌ Export a CSV/Excel
 
 2. **OpenAI ExtractBuyingSignalsAsync:**
+
    - ❌ Método es stub (placeholder)
    - ✅ Por ahora, LeadScoringEngine hace content analysis básico
    - 🔜 Implementar extracción avanzada con GPT-4o para detectar:
@@ -876,11 +910,13 @@ VITE_API_URL=https://api.okla.com.do
      - Pain points (problema con vehículo actual)
 
 3. **Twilio WhatsApp Sandbox:**
+
    - ⚠️ Twilio sandbox requiere opt-in manual (enviar "join <code>")
    - 🔜 Para producción, necesitas WhatsApp Business Account verificado
    - 🔜 Template messages requieren aprobación de Facebook/Meta
 
 4. **Analytics & Reporting:**
+
    - ❌ Dashboard de métricas de chatbot
    - ❌ Conversion rate (conversaciones → handoffs → ventas)
    - ❌ Tiempo promedio de respuesta
@@ -906,24 +942,28 @@ VITE_API_URL=https://api.okla.com.do
 ### KPIs a Monitorear
 
 **1. Engagement:**
+
 - % de usuarios que inician conversación
 - Promedio de mensajes por conversación
 - Tasa de abandono (conversaciones <3 mensajes)
 - Tiempo promedio de sesión
 
 **2. Lead Generation:**
+
 - % de conversaciones que se convierten en HOT leads (score >= 85)
 - Promedio de score por conversación
 - Distribución de temperatura (Hot/Warm/Cold)
 - Señales de compra más comunes detectadas
 
 **3. Conversión:**
+
 - % de handoffs que resultan en venta
 - Tiempo promedio desde handoff hasta cierre
 - Valor promedio de vehículo comprado por lead HOT
 - ROI del chatbot (ventas generadas vs costo de OpenAI)
 
 **4. Performance:**
+
 - Tiempo de respuesta del asistente (<2 segundos)
 - Uptime del ChatbotService (>99.5%)
 - Tasa de error de OpenAI API (<0.5%)
@@ -932,6 +972,7 @@ VITE_API_URL=https://api.okla.com.do
 ### Proyecciones
 
 **Escenario Conservador (Mes 1):**
+
 - 1,000 conversaciones iniciadas
 - 300 conversaciones con engagement (>3 mensajes) = 30%
 - 50 HOT leads generados (score >= 85) = 5%
@@ -939,10 +980,11 @@ VITE_API_URL=https://api.okla.com.do
 - 5 ventas cerradas = 33% de handoffs
 - Valor promedio por venta: $20,000
 - **Revenue generado: $100,000**
-- Costo OpenAI: ~$3 (1,000 conv * $0.003)
+- Costo OpenAI: ~$3 (1,000 conv \* $0.003)
 - **ROI: 33,333x** 🚀
 
 **Escenario Optimista (Mes 3):**
+
 - 5,000 conversaciones iniciadas
 - 2,000 conversaciones con engagement = 40%
 - 400 HOT leads generados = 8%
@@ -950,7 +992,7 @@ VITE_API_URL=https://api.okla.com.do
 - 80 ventas cerradas = 40% de handoffs
 - Valor promedio por venta: $22,000
 - **Revenue generado: $1,760,000**
-- Costo OpenAI: ~$15 (5,000 conv * $0.003)
+- Costo OpenAI: ~$15 (5,000 conv \* $0.003)
 - **ROI: 117,333x** 🚀🚀🚀
 
 ---
@@ -962,6 +1004,7 @@ VITE_API_URL=https://api.okla.com.do
 **Entregables Planificados:**
 
 1. **Dealer Conversations Dashboard:**
+
    - Lista paginada de conversaciones
    - Filtros avanzados (temperatura, status, fecha, vehículo)
    - Búsqueda por comprador
@@ -969,17 +1012,20 @@ VITE_API_URL=https://api.okla.com.do
    - Export a CSV
 
 2. **Advanced AI Features:**
+
    - Sentiment analysis (detectar frustración, urgencia emocional)
    - Multi-turn context (memoria de conversaciones anteriores)
    - Sugerencias inteligentes de respuesta para dealers
    - A/B testing de prompts
 
 3. **WhatsApp Two-Way Integration:**
+
    - Dealer puede responder desde WhatsApp
    - Respuestas se sincronizan al chat en OKLA
    - Notificaciones push al comprador
 
 4. **Voice Messages:**
+
    - Botón de grabación en MessageInput
    - Speech-to-text con Whisper API
    - Envío como mensaje de texto

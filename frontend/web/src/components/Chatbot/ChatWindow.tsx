@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiMinimize2 } from 'react-icons/fi';
 import { useAuth } from '@/hooks/useAuth';
-import { chatbotService, ConversationDto, MessageDto } from '@/services/chatbotService';
+import { chatbotService, type ConversationDto, type MessageDto } from '@/services/chatbotService';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import LeadScoreIndicator from './LeadScoreIndicator';

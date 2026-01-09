@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { MessageDto, MessageRole, MessageType, chatbotService } from '@/services/chatbotService';
+import {
+  chatbotService,
+  type MessageDto,
+  MessageRole,
+  MessageType,
+} from '@/services/chatbotService';
 import { FiUser, FiCpu, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 interface MessageListProps {
