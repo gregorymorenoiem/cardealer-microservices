@@ -18,6 +18,7 @@ import {
   ContactType
 } from '../services/dealerAnalyticsService';
 import { FiTrendingUp, FiEye, FiPhone, FiActivity, FiClock } from 'react-icons/fi';
+import MainLayout from '../layouts/MainLayout';
 
 // Register Chart.js components
 ChartJS.register(
@@ -63,27 +64,31 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <MainLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </MainLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8 bg-red-50 border border-red-200 rounded-lg">
-        <p className="text-red-600 font-medium">{error}</p>
-        <button
-          onClick={loadAnalytics}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          Reintentar
-        </button>
-      </div>
+      <MainLayout>
+        <div className="p-8 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={loadAnalytics}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </MainLayout>
     );
   }
 
-  if (!analytics) return null;
+  if (!analytics) return <MainLayout><div className="p-8">No hay datos disponibles</div></MainLayout>;
 
   const { summary, viewsTrend, contactMethodBreakdown, deviceBreakdown, topReferrers, liveStats } = analytics;
 
@@ -158,11 +163,12 @@ export const DealerAnalyticsDashboard = ({ dealerId }: DealerAnalyticsDashboardP
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header con Date Range Picker */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">📊 Analytics & Métricas</h1>
+    <MainLayout>
+      <div className="space-y-6">
+        {/* Header con Date Range Picker */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">📊 Analytics & Métricas</h1>
           <p className="text-gray-600 mt-1">Panel completo de análisis de rendimiento</p>
         </div>
         <div className="flex items-center space-x-2">
@@ -456,6 +462,7 @@ const StatCard = ({ icon, title, value, subtitle, trend, color }: StatCardProps)
         </div>
       </div>
     </div>
+    </MainLayout>
   );
 };
 
