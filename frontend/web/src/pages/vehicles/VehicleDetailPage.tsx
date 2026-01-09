@@ -9,6 +9,8 @@ import VehicleSpecs from '@/components/organisms/VehicleSpecs';
 import ContactSellerForm from '@/components/organisms/ContactSellerForm';
 import ReviewsSection from '@/components/organisms/ReviewsSection';
 import SimilarVehicles from '@/components/organisms/SimilarVehicles';
+import { SimilarVehicles as SimilarVehiclesRecommendation } from '@/components/recommendations/SimilarVehicles';
+import { AlsoViewed } from '@/components/recommendations/AlsoViewed';
 import ShareButton from '@/components/molecules/ShareButton';
 import PrintButton from '@/components/atoms/PrintButton';
 import { getVehicleById, type Vehicle } from '@/services/vehicleService';
@@ -17,6 +19,7 @@ import { getReviewStats, getVehicleReviews } from '@/data/mockReviews';
 import { formatPrice } from '@/utils/formatters';
 import { FiHome, FiChevronRight, FiStar, FiMapPin, FiPhone, FiUser, FiHeart, FiLoader, FiAlertCircle, FiWifi, FiWifiOff } from 'react-icons/fi';
 import { useFavorites } from '@/hooks/useFavorites';
+import { recommendationService } from '@/services/recommendationService';
 
 // Extract the ID from SEO-friendly URL
 // Format: /vehicles/{year}-{make}-{model}-{uuid}
@@ -38,6 +41,15 @@ export default function VehicleDetailPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  // Track vehicle view (for recommendations)
+  useEffect(() => {
+    if (vehicle?.id) {
+      recommendationService.trackVehicleView(vehicle.id, 0, 'direct').catch(() => {
+        // Silently fail - no bloquear experiencia del usuario
+      });
+    }
+  }, [vehicle?.id]);
 
   // Fetch vehicle from ProductService
   const {
@@ -289,7 +301,17 @@ export default function VehicleDetailPage() {
             />
           </div>
 
-          {/* Similar Vehicles */}
+          {/* AI-Powered Similar Vehicles - Based on Recommendation Engine */}
+          <div className="mt-8 print:hidden">
+            <SimilarVehiclesRecommendation vehicleId={vehicle.id} limit={6} />
+          </div>
+
+          {/* Users Also Viewed - Collaborative Filtering */}
+          <div className="mt-8 print:hidden">
+            <AlsoViewed vehicleId={vehicle.id} limit={4} />
+          </div>
+
+          {/* Similar Vehicles (Legacy) */}
           <div className="mt-8 print:hidden">
             <SimilarVehicles currentVehicle={vehicle} maxItems={4} />
           </div>

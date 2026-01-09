@@ -1,0 +1,31 @@
+&lt;Project Sdk="Microsoft.NET.Sdk.Web"&gt;
+
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net8.0&lt;/TargetFramework&gt;
+    &lt;Nullable&gt;enable&lt;/Nullable&gt;
+    &lt;ImplicitUsings&gt;enable&lt;/ImplicitUsings&gt;
+    &lt;DockerDefaultTargetOS&gt;Linux&lt;/DockerDefaultTargetOS&gt;
+    &lt;DockerfileContext&gt;..\..\&lt;/DockerfileContext&gt;
+    &lt;GenerateDocumentationFile&gt;true&lt;/GenerateDocumentationFile&gt;
+    &lt;NoWarn&gt;$(NoWarn);1591&lt;/NoWarn&gt;
+  &lt;/PropertyGroup&gt;
+
+  &lt;ItemGroup&gt;
+    &lt;PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" /&gt;
+    &lt;PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" /&gt;
+    &lt;PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0"&gt;
+      &lt;PrivateAssets&gt;all&lt;/PrivateAssets&gt;
+      &lt;IncludeAssets&gt;runtime; build; native; contentfiles; analyzers; buildtransitive&lt;/IncludeAssets&gt;
+    &lt;/PackageReference&gt;
+    &lt;PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" /&gt;
+    &lt;PackageReference Include="Serilog.AspNetCore" Version="8.0.0" /&gt;
+    &lt;PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.0" /&gt;
+  &lt;/ItemGroup&gt;
+
+  &lt;ItemGroup&gt;
+    &lt;ProjectReference Include="..\ReviewService.Application\ReviewService.Application.csproj" /&gt;
+    &lt;ProjectReference Include="..\ReviewService.Infrastructure\ReviewService.Infrastructure.csproj" /&gt;
+    &lt;ProjectReference Include="..\..\CarDealer.Shared\CarDealer.Shared.csproj" /&gt;
+  &lt;/ItemGroup&gt;
+
+&lt;/Project&gt;

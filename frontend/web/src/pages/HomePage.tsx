@@ -15,9 +15,11 @@ import { FiArrowRight, FiSearch, FiShield, FiMessageCircle, FiZap, FiChevronLeft
 import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
+import { ForYouSection } from '@/components/recommendations/ForYouSection';
 import { useHomepageSections, type HomepageSection, type HomepageVehicle } from '@/hooks/useHomepageSections';
 import { generateListingUrl } from '@/utils/seoSlug';
 import type { Vehicle } from '@/data/mockVehicles';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Note: Vehicle categories removed - single category (vehicles) in first phase
 
@@ -405,6 +407,8 @@ const HomePage: React.FC = () => {
     lujo,
   } = useHomepageSections();
 
+  const { isAuthenticated } = useAuth();
+
   // Transform carousel vehicles to Vehicle format for HeroCarousel component
   const heroVehicles = useMemo(() => {
     if (!carousel || carousel.vehicles.length === 0) return [];
@@ -451,6 +455,13 @@ const HomePage: React.FC = () => {
           <FeaturedListingGrid vehicles={gridVehicles} maxItems={9} />
         </div>
       </section>
+
+      {/* For You Section - Personalized Recommendations (Authenticated Users Only) */}
+      {isAuthenticated && (
+        <section className="py-6 bg-white">
+          <ForYouSection />
+        </section>
+      )}
 
       {/* Loading State */}
       {isLoading && (
