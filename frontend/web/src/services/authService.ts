@@ -29,54 +29,54 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 function getAccountTypeFromJwt(token: string): AccountType {
   const payload = decodeJwtPayload(token);
   console.log('🐛 DEBUG JWT payload:', payload);
-  
+
   if (!payload) return 'individual';
-  
+
   // Check for account_type claim (custom claim) - backend sends as integer
   const accountTypeValue = payload['account_type'] || payload['accountType'];
   console.log('🐛 DEBUG accountTypeValue from JWT:', accountTypeValue);
-  
+
   if (accountTypeValue !== undefined) {
-    const accountTypeInt = typeof accountTypeValue === 'string' 
-      ? parseInt(accountTypeValue, 10) 
-      : accountTypeValue;
-    
+    const accountTypeInt =
+      typeof accountTypeValue === 'string' ? parseInt(accountTypeValue, 10) : accountTypeValue;
+
     console.log('🐛 DEBUG accountTypeInt:', accountTypeInt);
-    
+
     // Map backend enum to frontend string
     switch (accountTypeInt) {
-      case 0: 
+      case 0:
         console.log('🎯 Mapping to: guest');
         return 'guest';
-      case 1: 
+      case 1:
         console.log('🎯 Mapping to: individual');
         return 'individual';
-      case 2: 
+      case 2:
         console.log('🎯 Mapping to: dealer');
         return 'dealer';
-      case 3: 
+      case 3:
         console.log('🎯 Mapping to: dealer_employee');
         return 'dealer_employee';
-      case 4: 
+      case 4:
         console.log('🎯 Mapping to: admin');
         return 'admin';
-      case 5: 
+      case 5:
         console.log('🎯 Mapping to: platform_employee');
         return 'platform_employee';
-      default: 
+      default:
         console.log('🎯 Default mapping to: individual');
         return 'individual';
     }
   }
-  
+
   // Check for role claims
-  const roles = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
-                payload['role'] || 
-                payload['roles'] || 
-                [];
-  
+  const roles =
+    payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+    payload['role'] ||
+    payload['roles'] ||
+    [];
+
   const roleList = Array.isArray(roles) ? roles : [roles];
-  
+
   if (roleList.includes('admin') || roleList.includes('Admin')) {
     return 'admin';
   }
@@ -86,13 +86,13 @@ function getAccountTypeFromJwt(token: string): AccountType {
   if (roleList.includes('dealer_employee') || roleList.includes('DealerEmployee')) {
     return 'dealer_employee';
   }
-  
+
   // Check dealerId - if present and not empty, user is a dealer
   const dealerId = payload['dealerId'] || payload['dealer_id'];
   if (dealerId && dealerId !== '') {
     return 'dealer';
   }
-  
+
   return 'individual';
 }
 
@@ -156,20 +156,37 @@ export const authService = {
 
       // Transform backend response to frontend format
       // Get account type from JWT or backend response
-      const accountType = data.accountType 
+      const accountType = data.accountType
         ? (data.accountType as AccountType)
         : getAccountTypeFromJwt(data.accessToken);
-      
-      // Get fullName from JWT claims
+
+      // Get claims from JWT
       const jwtPayload = decodeJwtPayload(data.accessToken);
-      const fullName = jwtPayload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] as string 
-        || data.email.split('@')[0];
+      const fullName =
+        (jwtPayload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] as string) ||
+        data.email.split('@')[0];
+
+      // Extract dealerId from JWT claims (if present and not empty)
+      const rawDealerId = (jwtPayload?.['dealerId'] || jwtPayload?.['dealer_id']) as string | undefined;
+      const dealerId = rawDealerId && rawDealerId.trim() !== '' ? rawDealerId : undefined;
       
+      const roles =
+        jwtPayload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+        jwtPayload?.['role'] ||
+        jwtPayload?.['roles'];
+      const roleList = Array.isArray(roles) ? roles : roles ? [roles] : [];
+
+      console.log('🐛 DEBUG JWT payload (full):', jwtPayload);
+      console.log('🐛 DEBUG extracted dealerId (raw):', rawDealerId, '→ (cleaned):', dealerId);
+      console.log('🐛 DEBUG extracted roles:', roleList);
+
       const user: User = {
         id: data.userId,
         email: data.email,
-        fullName: fullName,
+        name: fullName, // Use 'name' to match User interface
         accountType: accountType,
+        dealerId: dealerId, // Include dealerId from JWT
+        roles: roleList as string[],
         emailVerified: true,
         createdAt: new Date().toISOString(),
       };
@@ -218,7 +235,7 @@ export const authService = {
       const user: User = {
         id: backendData.userId,
         email: backendData.email,
-        fullName: data.fullName,
+        name: data.fullName, // Use 'name' to match User interface
         accountType: data.accountType,
         emailVerified: false, // User needs to verify email
         createdAt: new Date().toISOString(),
@@ -248,7 +265,7 @@ export const authService = {
   async logout(): Promise<void> {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       if (refreshToken) {
         await axios.post(`${AUTH_API_URL}/Auth/logout`, { refreshToken });
       }
@@ -271,8 +288,8 @@ export const authService = {
         throw new Error('No refresh token available');
       }
 
-      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/refresh-token`, { 
-        refreshToken 
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/refresh-token`, {
+        refreshToken,
       });
 
       const { data } = response.data;
@@ -399,7 +416,7 @@ export const authService = {
     const redirectUri = `${window.location.origin}/auth/callback/google`;
     const scope = 'openid email profile';
     const responseType = 'code';
-    
+
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     authUrl.searchParams.append('client_id', googleClientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
@@ -422,7 +439,7 @@ export const authService = {
     const redirectUri = `${window.location.origin}/auth/callback/microsoft`;
     const scope = 'openid email profile';
     const responseType = 'code';
-    
+
     const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
     authUrl.searchParams.append('client_id', microsoftClientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
@@ -434,13 +451,19 @@ export const authService = {
     window.location.href = authUrl.toString();
   },
 
-  async handleOAuthCallback(provider: 'google' | 'microsoft', code: string): Promise<LoginResponse> {
+  async handleOAuthCallback(
+    provider: 'google' | 'microsoft',
+    code: string
+  ): Promise<LoginResponse> {
     try {
-      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/ExternalAuth/callback`, {
-        provider,
-        code,
-        redirectUri: `${window.location.origin}/auth/callback/${provider}`,
-      });
+      const response = await axios.post<BackendAuthResponse>(
+        `${AUTH_API_URL}/ExternalAuth/callback`,
+        {
+          provider,
+          code,
+          redirectUri: `${window.location.origin}/auth/callback/${provider}`,
+        }
+      );
 
       const { data } = response.data;
 
