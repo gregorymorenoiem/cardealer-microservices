@@ -8,6 +8,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import GlobalSearch from './GlobalSearch';
+import UserDebugInfo from '@/components/debug/UserDebugInfo';
 import {
   FiMenu,
   FiX,
@@ -52,13 +53,30 @@ export default function NavbarSimple() {
   // - No autenticado o no-dealer → Landing de marketing
   // - Dealer autenticado → Dashboard directo
   const dealerLink = (() => {
+    // DEBUG: Log para verificar la lógica
+    console.log('🐛 DEBUG dealerLink logic:', {
+      isAuthenticated,
+      user: user
+        ? {
+            email: user.email,
+            accountType: user.accountType,
+            id: user.id,
+            dealerId: user.dealerId,
+          }
+        : null,
+      isDealerCheck:
+        user && (user.accountType === 'dealer' || user.accountType === 'dealer_employee'),
+    });
+
     if (
       isAuthenticated &&
       user &&
       (user.accountType === 'dealer' || user.accountType === 'dealer_employee')
     ) {
+      console.log('🎯 Showing Mi Dashboard for dealer user');
       return { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiBriefcase };
     }
+    console.log('🎯 Showing Para Dealers for non-dealer user');
     return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
   })();
 
@@ -390,6 +408,9 @@ export default function NavbarSimple() {
           </div>
         )}
       </div>
+
+      {/* DEBUG COMPONENT - TEMPORAL */}
+      <UserDebugInfo />
     </nav>
   );
 }

@@ -28,24 +28,44 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  */
 function getAccountTypeFromJwt(token: string): AccountType {
   const payload = decodeJwtPayload(token);
+  console.log('🐛 DEBUG JWT payload:', payload);
+  
   if (!payload) return 'individual';
   
   // Check for account_type claim (custom claim) - backend sends as integer
   const accountTypeValue = payload['account_type'] || payload['accountType'];
+  console.log('🐛 DEBUG accountTypeValue from JWT:', accountTypeValue);
+  
   if (accountTypeValue !== undefined) {
     const accountTypeInt = typeof accountTypeValue === 'string' 
       ? parseInt(accountTypeValue, 10) 
       : accountTypeValue;
     
+    console.log('🐛 DEBUG accountTypeInt:', accountTypeInt);
+    
     // Map backend enum to frontend string
     switch (accountTypeInt) {
-      case 0: return 'guest';
-      case 1: return 'individual';
-      case 2: return 'dealer';
-      case 3: return 'dealer_employee';
-      case 4: return 'admin';
-      case 5: return 'platform_employee';
-      default: return 'individual';
+      case 0: 
+        console.log('🎯 Mapping to: guest');
+        return 'guest';
+      case 1: 
+        console.log('🎯 Mapping to: individual');
+        return 'individual';
+      case 2: 
+        console.log('🎯 Mapping to: dealer');
+        return 'dealer';
+      case 3: 
+        console.log('🎯 Mapping to: dealer_employee');
+        return 'dealer_employee';
+      case 4: 
+        console.log('🎯 Mapping to: admin');
+        return 'admin';
+      case 5: 
+        console.log('🎯 Mapping to: platform_employee');
+        return 'platform_employee';
+      default: 
+        console.log('🎯 Default mapping to: individual');
+        return 'individual';
     }
   }
   
