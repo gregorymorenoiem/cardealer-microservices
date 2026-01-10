@@ -48,9 +48,19 @@ export default function NavbarSimple() {
   };
 
   // Links principales - SOLO LO ESENCIAL
+  // Link inteligente para dealers: 
+  // - No autenticado o no-dealer → Landing de marketing
+  // - Dealer autenticado → Dashboard directo
+  const dealerLink = (() => {
+    if (isAuthenticated && user && (user.accountType === 'dealer' || user.accountType === 'dealer_employee')) {
+      return { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiBriefcase };
+    }
+    return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
+  })();
+
   const mainNavLinks = [
     { href: '/vehicles', label: 'Vehículos', icon: FaCar },
-    { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase },
+    dealerLink,
   ];
 
   // Links del usuario - para el dropdown del perfil
@@ -167,7 +177,15 @@ export default function NavbarSimple() {
                       <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="px-4 py-3 border-b border-gray-100">
                           <p className="font-semibold text-gray-900">{user.name || user.email}</p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
+                                <FiBriefcase className="w-3 h-3" />
+                                Dealer
+                              </span>
+                            )}
+                          </div>
                         </div>
                         
                         <div className="py-2">
