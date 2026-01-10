@@ -24,14 +24,11 @@ import {
   FiUsers,
   FiCalendar,
   FiAlertCircle,
-  FiCheckCircle,
-  FiClock,
   FiStar,
-  FiPhone,
-  FiMail,
   FiBarChart2,
   FiLoader,
   FiRefreshCw,
+  FiEdit,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { Crown, Sparkles } from 'lucide-react';
@@ -238,8 +235,12 @@ export default function DealerHomePage() {
         vehiclesMax: dealerData.maxActiveListings || 50,
       });
     } catch (err: any) {
+      // Si no tiene perfil de dealer (404), mostramos el dashboard con datos vacíos
+      // y un banner para completar el perfil
       if (err.response?.status === 404) {
-        navigate('/dealer/register');
+        console.log('🐛 Dealer profile not found, showing empty dashboard');
+        setDealer(null);
+        setMetrics(mockMetrics);
       } else {
         setError(err.message || 'Error al cargar datos');
       }
@@ -289,12 +290,39 @@ export default function DealerHomePage() {
   return (
     <DealerPortalLayout>
       <div className="p-6 lg:p-8 space-y-8">
+        {/* ==================== BANNER: Complete Profile ==================== */}
+        {!dealer && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-amber-100 rounded-xl">
+                  <FiAlertCircle className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Completa tu perfil de dealer</h3>
+                  <p className="text-gray-600 mt-1">
+                    Para publicar vehículos y acceder a todas las funciones, necesitas completar tu
+                    información de negocio.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/dealer/register"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all whitespace-nowrap"
+              >
+                <FiEdit className="w-4 h-4" />
+                Completar Perfil
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* ==================== HEADER ==================== */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-                ¡Hola, {dealer?.businessName || 'Dealer'}! 👋
+                ¡Hola, {dealer?.businessName || user?.name || 'Dealer'}! 👋
               </h1>
               {dealer?.status && getStatusBadge(dealer.status)}
             </div>

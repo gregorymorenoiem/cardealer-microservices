@@ -551,7 +551,58 @@ const DealerPortalLayout = ({ children }: DealerPortalLayoutProps) => {
       <main
         className={`pt-16 transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}
       >
-        <div className="min-h-[calc(100vh-4rem)]">{children}</div>
+        <div className="min-h-[calc(100vh-4rem)]">
+          {/* Debug Info Panel */}
+          {import.meta.env.DEV && (
+            <div className="mx-4 mt-4 p-4 bg-gray-900 text-green-400 rounded-xl font-mono text-xs">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-yellow-400">🐛</span>
+                <span className="text-white font-bold">DEBUG INFO</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div>
+                  <span className="text-gray-500">Email:</span>{' '}
+                  <span className="text-green-300">{user?.email || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Name:</span>{' '}
+                  <span className="text-green-300">{user?.name || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">AccountType:</span>{' '}
+                  <span className="text-cyan-300">{user?.accountType || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">ID:</span>{' '}
+                  <span className="text-green-300 truncate">{user?.id || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">DealerId:</span>{' '}
+                  <span className={user?.dealerId ? 'text-green-300' : 'text-red-400'}>
+                    {user?.dealerId || '❌ NOT SET'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Roles:</span>{' '}
+                  <span className="text-purple-300">
+                    {user?.roles?.length ? user.roles.join(', ') : 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Plan:</span>{' '}
+                  <span className="text-amber-300">{dealerPlan || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Listings:</span>{' '}
+                  <span className="text-blue-300">
+                    {usage?.activeListings || 0}/{limits?.maxActiveListings || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          {children}
+        </div>
       </main>
     </div>
   );
