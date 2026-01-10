@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { AccountType } from '@/shared/types';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -16,10 +15,10 @@ interface ProtectedRouteProps {
  * Redirige a / si la ruta requiere dealer y el usuario no lo es
  * Guarda la URL original para redirect post-login
  */
-export default function ProtectedRoute({ 
-  children, 
+export default function ProtectedRoute({
+  children,
   requireAdmin = false,
-  requireDealer = false 
+  requireDealer = false,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
@@ -44,9 +43,10 @@ export default function ProtectedRoute({
 
   // Redirect to home if admin required but user is not admin
   if (requireAdmin) {
-    const isAdmin = user?.roles?.includes('admin') || 
-                    user?.accountType === AccountType.ADMIN || 
-                    user?.accountType === AccountType.PLATFORM_EMPLOYEE;
+    const isAdmin =
+      user?.roles?.includes('admin') ||
+      user?.accountType === 'admin' ||
+      user?.accountType === 'platform_employee';
     if (!isAdmin) {
       return <Navigate to="/" replace />;
     }
@@ -54,8 +54,7 @@ export default function ProtectedRoute({
 
   // Redirect to home if dealer required but user is not dealer
   if (requireDealer) {
-    const isDealer = user?.accountType === AccountType.DEALER || 
-                     user?.accountType === AccountType.DEALER_EMPLOYEE;
+    const isDealer = user?.accountType === 'dealer' || user?.accountType === 'dealer_employee';
     if (!isDealer) {
       return <Navigate to="/" replace />;
     }

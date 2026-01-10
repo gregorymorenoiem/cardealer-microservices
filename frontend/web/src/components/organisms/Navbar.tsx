@@ -48,20 +48,21 @@ export default function NavbarSimple() {
   };
 
   // Links principales - SOLO LO ESENCIAL
-  // Link inteligente para dealers: 
+  // Link inteligente para dealers:
   // - No autenticado o no-dealer → Landing de marketing
   // - Dealer autenticado → Dashboard directo
   const dealerLink = (() => {
-    if (isAuthenticated && user && (user.accountType === 'dealer' || user.accountType === 'dealer_employee')) {
+    if (
+      isAuthenticated &&
+      user &&
+      (user.accountType === 'dealer' || user.accountType === 'dealer_employee')
+    ) {
       return { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiBriefcase };
     }
     return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
   })();
 
-  const mainNavLinks = [
-    { href: '/vehicles', label: 'Vehículos', icon: FaCar },
-    dealerLink,
-  ];
+  const mainNavLinks = [{ href: '/vehicles', label: 'Vehículos', icon: FaCar }, dealerLink];
 
   // Links del usuario - para el dropdown del perfil
   const userLinks = [
@@ -102,10 +103,10 @@ export default function NavbarSimple() {
           {/* Desktop Navigation - LIMPIO */}
           <div className="hidden lg:flex items-center gap-4">
             {mainNavLinks.map((link) => {
-              const isActive = 
+              const isActive =
                 location.pathname === link.href ||
                 (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'));
-              
+
               return (
                 <Link
                   key={link.href}
@@ -167,19 +168,25 @@ export default function NavbarSimple() {
                       </p>
                       <p className="text-xs text-gray-500">Mi cuenta</p>
                     </div>
-                    <FiChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    <FiChevronDown
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
 
                   {/* User Dropdown - Compacto */}
                   {isUserMenuOpen && (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)} />
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      />
                       <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="px-4 py-3 border-b border-gray-100">
                           <p className="font-semibold text-gray-900">{user.name || user.email}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                            {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') && (
+                            {(user.accountType === 'dealer' ||
+                              user.accountType === 'dealer_employee') && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
                                 <FiBriefcase className="w-3 h-3" />
                                 Dealer
@@ -187,10 +194,10 @@ export default function NavbarSimple() {
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="py-2">
                           {/* Links contextales según tipo de usuario */}
-                          {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') 
+                          {user.accountType === 'dealer' || user.accountType === 'dealer_employee'
                             ? dealerLinks.map((link) => (
                                 <Link
                                   key={link.href}
@@ -201,7 +208,9 @@ export default function NavbarSimple() {
                                   <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <link.icon className="w-4 h-4 text-emerald-600" />
                                   </div>
-                                  <span className="font-medium text-gray-900 text-sm">{link.label}</span>
+                                  <span className="font-medium text-gray-900 text-sm">
+                                    {link.label}
+                                  </span>
                                 </Link>
                               ))
                             : userLinks.map((link) => (
@@ -214,10 +223,11 @@ export default function NavbarSimple() {
                                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <link.icon className="w-4 h-4 text-blue-600" />
                                   </div>
-                                  <span className="font-medium text-gray-900 text-sm">{link.label}</span>
+                                  <span className="font-medium text-gray-900 text-sm">
+                                    {link.label}
+                                  </span>
                                 </Link>
-                              ))
-                          }
+                              ))}
                         </div>
 
                         <div className="border-t border-gray-200 pt-2">
@@ -280,10 +290,10 @@ export default function NavbarSimple() {
             {/* Navigation Links */}
             <div className="px-3 mb-4 space-y-2">
               {mainNavLinks.map((link) => {
-                const isActive = 
+                const isActive =
                   location.pathname === link.href ||
                   (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'));
-                
+
                 return (
                   <Link
                     key={link.href}
@@ -319,7 +329,7 @@ export default function NavbarSimple() {
               <>
                 <hr className="my-4 border-gray-200" />
                 <div className="px-3 space-y-2">
-                  {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') 
+                  {user.accountType === 'dealer' || user.accountType === 'dealer_employee'
                     ? dealerLinks.map((link) => (
                         <Link
                           key={link.href}
@@ -345,8 +355,7 @@ export default function NavbarSimple() {
                           </div>
                           <span className="text-base">{link.label}</span>
                         </Link>
-                      ))
-                  }
+                      ))}
 
                   <button
                     onClick={() => {

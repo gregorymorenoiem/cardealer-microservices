@@ -249,7 +249,7 @@ function App() {
           <Route
             path="/dealer/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <DealerDashboard />
               </ProtectedRoute>
             }
@@ -259,7 +259,7 @@ function App() {
           <Route
             path="/dealer/analytics"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <DealerAnalyticsDashboard dealerId="DEALER_ID_PLACEHOLDER" />
               </ProtectedRoute>
             }
@@ -269,7 +269,7 @@ function App() {
           <Route
             path="/dealer/analytics/advanced"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <AdvancedDealerDashboard />
               </ProtectedRoute>
             }
@@ -279,7 +279,7 @@ function App() {
           <Route
             path="/dealer/inventory"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <InventoryManagementPage dealerId="DEALER_ID_PLACEHOLDER" />
               </ProtectedRoute>
             }
@@ -290,7 +290,7 @@ function App() {
           <Route
             path="/dealer/profile/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <DealerProfileEditorPage />
               </ProtectedRoute>
             }
@@ -569,7 +569,7 @@ function App() {
           <Route
             path="/dealer/leads"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <LeadsDashboard />
               </ProtectedRoute>
             }
@@ -577,7 +577,7 @@ function App() {
           <Route
             path="/dealer/leads/:leadId"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <LeadDetail />
               </ProtectedRoute>
             }
@@ -587,7 +587,7 @@ function App() {
           <Route
             path="/dealer/conversations"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <DealerDashboardPage />
               </ProtectedRoute>
             }
@@ -595,7 +595,7 @@ function App() {
           <Route
             path="/dealer/hot-leads"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireDealer>
                 <DealerDashboardPage />
               </ProtectedRoute>
             }
