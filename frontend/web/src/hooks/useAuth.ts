@@ -12,55 +12,62 @@ export function useAuth() {
 
   const user = useAuthStore((state) => state.user);
   const accessToken = useAuthStore((state) => state.accessToken);
+  const isAuthenticatedFromStore = useAuthStore((state) => state.isAuthenticated);
   const storeLogin = useAuthStore((state) => state.login);
   const storeLogout = useAuthStore((state) => state.logout);
   const updateUser = useAuthStore((state) => state.updateUser);
 
-  const isAuthenticated = !!user && !!accessToken;
+  const isAuthenticated = isAuthenticatedFromStore();
 
   /**
    * Login con email y password
    */
-  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await authService.login({ email, password, rememberMe });
-      storeLogin(response);
-      return response;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [storeLogin]);
+  const login = useCallback(
+    async (email: string, password: string, rememberMe = false) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await authService.login({ email, password, rememberMe });
+        storeLogin(response);
+        return response;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Login failed';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [storeLogin]
+  );
 
   /**
    * Registro de nuevo usuario
    */
-  const register = useCallback(async (data: {
-    email: string;
-    password: string;
-    fullName: string;
-    userName: string;
-    accountType: 'individual' | 'dealer';
-  }) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await authService.register(data);
-      storeLogin(response);
-      return response;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [storeLogin]);
+  const register = useCallback(
+    async (data: {
+      email: string;
+      password: string;
+      fullName: string;
+      userName: string;
+      accountType: 'individual' | 'dealer';
+    }) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await authService.register(data);
+        storeLogin(response);
+        return response;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Registration failed';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [storeLogin]
+  );
 
   /**
    * Cerrar sesión
@@ -107,7 +114,7 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     error,
-    
+
     // Actions
     login,
     register,

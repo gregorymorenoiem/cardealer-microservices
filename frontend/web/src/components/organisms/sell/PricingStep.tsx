@@ -5,10 +5,8 @@ import { z } from 'zod';
 import Input from '@/components/atoms/Input';
 import Button from '@/components/atoms/Button';
 import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
-import {
-  vehicleIntelligenceService,
-  type PriceSuggestion,
-} from '@/services/vehicleIntelligenceService';
+import vehicleIntelligenceService from '@/services/vehicleIntelligenceService';
+import type { PriceAnalysisDto } from '@/services/vehicleIntelligenceService';
 
 const pricingSchema = z.object({
   price: z.number().min(1, 'Price is required').max(10000000, 'Price is too high'),
@@ -55,7 +53,7 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
   const askingPrice = watch('price');
   const location = watch('location');
 
-  const [suggestion, setSuggestion] = useState<PriceSuggestion | null>(null);
+  const [suggestion, setSuggestion] = useState<PriceAnalysisDto | null>(null);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
@@ -100,14 +98,19 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
       setSuggestionLoading(true);
       setSuggestionError(null);
       try {
-        const result = await vehicleIntelligenceService.getPriceSuggestion({
+        const result = await vehicleIntelligenceService.analyzePricing({
+          vehicleId: crypto.randomUUID(),
           make: requestBase.make as string,
           model: requestBase.model as string,
           year: requestBase.year as number,
           mileage: requestBase.mileage as number,
-          bodyType: requestBase.bodyType ?? null,
-          location: location || null,
-          askingPrice,
+          condition: requestBase.condition || 'Good',
+          fuelType: requestBase.fuelType || 'Gasoline',
+          transmission: requestBase.transmission || 'Automatic',
+          currentPrice: askingPrice,
+          photoCount: 0,
+          viewCount: 0,
+          daysListed: 0,
         });
         if (!isCancelled) {
           setSuggestion(result);
@@ -204,18 +207,22 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
                     ${suggestion.suggestedPrice.toLocaleString()}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Mercado estimado: ${suggestion.marketPrice.toLocaleString()} • Modelo:{' '}
-                    {suggestion.modelVersion}
+                    Rango: ${suggestion.suggestedPriceMin.toLocaleString()} - $
+                    {suggestion.suggestedPriceMax.toLocaleString()}
+                    {' • '}Mercado promedio: ${suggestion.marketAvgPrice.toLocaleString()}
                   </p>
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                   <p className="text-xs text-gray-700">Tiempo estimado de venta</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    ~{suggestion.estimatedDaysToSell} días
+                    ~{suggestion.predictedDaysToSaleAtCurrentPrice} días
                   </p>
                   <p className="text-xs text-gray-500">
-                    Confianza: {Math.round(suggestion.confidence * 100)}%
+                    Con precio sugerido: {suggestion.predictedDaysToSaleAtSuggestedPrice} días
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Confianza: {Math.round(suggestion.confidenceScore)}%
                   </p>
                 </div>
               </div>
@@ -223,31 +230,31 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
               <div className="mt-3 flex flex-wrap gap-2">
                 <span
                   className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
-                    suggestion.deltaPercent > 10
+                    suggestion.pricePosition === 'Above Market'
                       ? 'bg-red-50 text-red-700 border-red-200'
-                      : suggestion.deltaPercent < -10
+                      : suggestion.pricePosition === 'Below Market'
                         ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-amber-50 text-amber-700 border-amber-200'
                   }`}
                 >
-                  {suggestion.deltaPercent > 0
-                    ? `Tu precio está ${Math.abs(Math.round(suggestion.deltaPercent))}% por encima del mercado`
-                    : `Tu precio está ${Math.abs(Math.round(suggestion.deltaPercent))}% por debajo del mercado`}
-                </span>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-blue-50 text-blue-700 border-blue-200">
-                  Demanda: {Math.round(suggestion.demandScore)}/100
+                  {suggestion.pricePosition === 'Above Market'
+                    ? `Tu precio está ${Math.abs(Math.round(suggestion.priceVsMarket * 100))}% por encima del mercado`
+                    : suggestion.pricePosition === 'Below Market'
+                      ? `Tu precio está ${Math.abs(Math.round(suggestion.priceVsMarket * 100))}% por debajo del mercado`
+                      : 'Tu precio está dentro del mercado'}
                 </span>
               </div>
 
-              {suggestion.sellingTips?.length > 0 && (
+              {suggestion.recommendations && suggestion.recommendations.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-sm font-semibold text-gray-900">
-                    Consejos para vender más rápido
-                  </p>
+                  <p className="text-sm font-semibold text-gray-900">Recomendaciones IA</p>
                   <ul className="mt-2 space-y-1">
-                    {suggestion.sellingTips.slice(0, 5).map((tip) => (
-                      <li key={tip} className="text-sm text-gray-700">
-                        • {tip}
+                    {suggestion.recommendations.slice(0, 3).map((rec, idx) => (
+                      <li key={idx} className="text-xs text-gray-700 flex items-start">
+                        <span className="mr-1.5 text-blue-500">•</span>
+                        <span>
+                          <strong>{rec.type}:</strong> {rec.reason}
+                        </span>
                       </li>
                     ))}
                   </ul>

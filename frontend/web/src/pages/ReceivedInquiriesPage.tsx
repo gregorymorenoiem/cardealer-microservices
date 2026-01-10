@@ -58,7 +58,7 @@ export const ReceivedInquiriesPage: React.FC = () => {
   const fetchReceivedInquiries = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch('/api/contactrequests/received', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ export const ReceivedInquiriesPage: React.FC = () => {
 
   const fetchInquiryDetail = async (inquiryId: string) => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/contactrequests/${inquiryId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -101,7 +101,7 @@ export const ReceivedInquiriesPage: React.FC = () => {
 
     setIsSubmittingReply(true);
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/contactrequests/${selectedInquiry.id}/reply`, {
         method: 'POST',
         headers: {

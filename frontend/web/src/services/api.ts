@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { captureError, addBreadcrumb } from '../lib/sentry';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:15095';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
 // Create axios instance
 export const api: AxiosInstance = axios.create({
@@ -19,7 +19,7 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Add breadcrumb for API request
     addBreadcrumb(
       'http',
@@ -30,7 +30,7 @@ api.interceptors.request.use(
       },
       'info'
     );
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -43,7 +43,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
+
     // Capture API errors in Sentry (skip 401 as they're handled)
     if (error.response?.status !== 401) {
       captureError(error as Error, {
@@ -81,7 +81,7 @@ api.interceptors.response.use(
         // Save new tokens
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', newRefreshToken);
-        
+
         addBreadcrumb('auth', 'Token refreshed successfully', undefined, 'info');
 
         // Retry original request with new token

@@ -18,14 +18,8 @@ interface DisplayNotification {
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const {
-    notifications,
-    unreadCount,
-    isLoading,
-    markAsRead,
-    markAllAsRead,
-    isMarkingAllAsRead,
-  } = useNotificationCenter(1, 10);
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, isMarkingAllAsRead } =
+    useNotificationCenter(1, 10);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -69,7 +63,10 @@ const NotificationDropdown = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        <div
+          className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-32px)] bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+          style={{ marginRight: 'max(0px, calc((100% + 384px) - 100vw + 16px))' }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900">
@@ -174,7 +171,9 @@ const NotificationContent = ({ notification }: { notification: DisplayNotificati
 
   return (
     <div className="flex gap-3">
-      <div className="text-2xl flex-shrink-0">{getNotificationIcon(notification.type, notification.icon)}</div>
+      <div className="text-2xl flex-shrink-0">
+        {getNotificationIcon(notification.type, notification.icon)}
+      </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
         <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{notification.message}</p>

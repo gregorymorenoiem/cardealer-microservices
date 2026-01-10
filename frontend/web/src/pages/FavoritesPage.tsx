@@ -36,9 +36,10 @@ export function FavoritesPage() {
   }, []);
 
   const loadFavorites = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
-      window.location.href = '/login?redirect=/favorites';
+      // ProtectedRoute ya se encarga de la redirección, no necesitamos hacerlo aquí
+      setLoading(false);
       return;
     }
 
@@ -58,7 +59,7 @@ export function FavoritesPage() {
   const removeFavorite = async (vehicleId: string) => {
     if (!confirm('¿Estás seguro de eliminar este favorito?')) return;
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     try {
       const response = await fetch(`https://api.okla.com.do/api/favorites/${vehicleId}`, {
         method: 'DELETE',

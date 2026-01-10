@@ -113,9 +113,10 @@ export function ComparisonPage() {
   }, []);
 
   const loadComparisons = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
-      window.location.href = '/login?redirect=/comparison';
+      // ProtectedRoute ya se encarga de la redirección, no necesitamos hacerlo aquí
+      setLoading(false);
       return;
     }
 

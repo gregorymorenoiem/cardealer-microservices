@@ -6,14 +6,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiSearch, 
-  FiX, 
-  FiTruck, 
-  FiClock,
-  FiArrowRight,
-  FiLoader
-} from 'react-icons/fi';
+import { FiSearch, FiX, FiTruck, FiClock, FiArrowRight, FiLoader } from 'react-icons/fi';
 import { generateVehicleUrl } from '@/utils/seoSlug';
 
 interface SearchResult {
@@ -30,29 +23,29 @@ interface SearchResult {
 }
 
 // API Gateway URL - routes to VehiclesSaleService
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 const VEHICLES_API_URL = `${API_URL}/api/vehicles`;
 
 // Real search using VehiclesSaleService API
 const searchVehicles = async (query: string): Promise<SearchResult[]> => {
   if (!query.trim() || query.length < 2) return [];
-  
+
   try {
     const response = await fetch(
-      `${VEHICLES_API_URL}/Vehicles?search=${encodeURIComponent(query)}&pageSize=8&page=1`
+      `${VEHICLES_API_URL}?search=${encodeURIComponent(query)}&pageSize=8&page=1`
     );
-    
+
     if (!response.ok) {
       console.error('Search API error:', response.status);
       return [];
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.vehicles || data.vehicles.length === 0) {
       return [];
     }
-    
+
     // Transform API response to SearchResult format
     return data.vehicles.map((vehicle: any) => {
       // Map bodyStyle enum to readable text
@@ -67,36 +60,37 @@ const searchVehicles = async (query: string): Promise<SearchResult[]> => {
         7: 'Van',
         8: 'Minivan',
         9: 'Convertible',
-        10: 'Deportivo'
+        10: 'Deportivo',
       };
-      
+
       // Map transmission enum
       const transmissionMap: Record<number, string> = {
         0: 'Automático',
         1: 'Manual',
-        2: 'CVT'
+        2: 'CVT',
       };
-      
+
       const bodyStyle = bodyStyleMap[vehicle.bodyStyle] || '';
       const transmission = transmissionMap[vehicle.transmission] || '';
       const mileageText = vehicle.mileage ? `${vehicle.mileage.toLocaleString()} km` : 'Nuevo';
-      
+
       // Build subtitle with available info
       const subtitleParts = [bodyStyle, transmission, mileageText].filter(Boolean);
-      
+
       // Get primary image
-      const primaryImage = vehicle.images?.find((img: any) => img.isPrimary)?.url 
-        || vehicle.images?.[0]?.url 
-        || '/placeholder-car.jpg';
-      
+      const primaryImage =
+        vehicle.images?.find((img: any) => img.isPrimary)?.url ||
+        vehicle.images?.[0]?.url ||
+        '/placeholder-car.jpg';
+
       // Generate SEO-friendly URL
       const vehicleUrl = generateVehicleUrl({
         id: vehicle.id,
         year: vehicle.year,
         make: vehicle.make,
-        model: vehicle.model
+        model: vehicle.model,
       });
-      
+
       return {
         id: vehicle.id,
         type: 'vehicle' as const,
@@ -107,7 +101,7 @@ const searchVehicles = async (query: string): Promise<SearchResult[]> => {
         url: vehicleUrl,
         year: vehicle.year,
         make: vehicle.make,
-        model: vehicle.model
+        model: vehicle.model,
       };
     });
   } catch (error) {
@@ -122,10 +116,10 @@ interface GlobalSearchProps {
   showOnMobile?: boolean;
 }
 
-const GlobalSearch: React.FC<GlobalSearchProps> = ({ 
+const GlobalSearch: React.FC<GlobalSearchProps> = ({
   className = '',
   placeholder = 'Buscar vehículos, propiedades...',
-  showOnMobile = false
+  showOnMobile = false,
 }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -149,13 +143,16 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   }, []);
 
   // Save recent search
-  const saveRecentSearch = useCallback((searchQuery: string) => {
-    if (!searchQuery.trim()) return;
-    
-    const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
-    setRecentSearches(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-  }, [recentSearches]);
+  const saveRecentSearch = useCallback(
+    (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
+
+      const updated = [searchQuery, ...recentSearches.filter((s) => s !== searchQuery)].slice(0, 5);
+      setRecentSearches(updated);
+      localStorage.setItem('recentSearches', JSON.stringify(updated));
+    },
+    [recentSearches]
+  );
 
   // Search debounce - calls VehiclesSaleService API
   useEffect(() => {
@@ -220,10 +217,10 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   };
 
   // Only vehicle results (no properties in this vehicle-only app)
-  const vehicleResults = results.filter(r => r.type === 'vehicle');
+  const vehicleResults = results.filter((r) => r.type === 'vehicle');
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`relative ${showOnMobile ? '' : 'hidden md:block'} ${className}`}
     >
@@ -307,8 +304,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                           className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
                         >
                           {result.image && result.image !== '/placeholder-car.jpg' ? (
-                            <img 
-                              src={result.image} 
+                            <img
+                              src={result.image}
                               alt={result.title}
                               className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
                               onError={(e) => {
@@ -342,7 +339,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   <div className="p-8 text-center">
                     <FiSearch className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">No se encontraron vehículos para "{query}"</p>
-                    <p className="text-sm text-gray-400 mt-1">Intenta con otra marca, modelo o palabra clave</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Intenta con otra marca, modelo o palabra clave
+                    </p>
                   </div>
                 )}
 

@@ -34,7 +34,7 @@ export const MyInquiriesPage: React.FC = () => {
   const fetchMyInquiries = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch('/api/contactrequests/my-inquiries', {
         headers: {
           Authorization: `Bearer ${token}`,

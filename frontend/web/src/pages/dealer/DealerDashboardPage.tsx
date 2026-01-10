@@ -33,10 +33,8 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { crmService } from '@/services/crmService';
 import type { CRMStats } from '@/mocks/crmData';
-import {
-  vehicleIntelligenceService,
-  type CategoryDemandDto,
-} from '@/services/vehicleIntelligenceService';
+// TODO: CategoryDemandDto removido - implementar con DemandPredictionDto
+// import vehicleIntelligenceService from '@/services/vehicleIntelligenceService';
 
 // ============================================================================
 // COMPONENTS
@@ -216,9 +214,10 @@ export default function DealerDashboardPage() {
 
   const [crmStats, setCrmStats] = useState<CRMStats | null>(null);
   const [, setIsLoading] = useState(true);
-  const [categoryDemand, setCategoryDemand] = useState<CategoryDemandDto[] | null>(null);
-  const [categoryDemandLoading, setCategoryDemandLoading] = useState(false);
-  const [categoryDemandError, setCategoryDemandError] = useState<string | null>(null);
+  // TODO: CategoryDemandDto removido - implementar con DemandPredictionDto en futuro sprint
+  // const [categoryDemand, setCategoryDemand] = useState<CategoryDemandDto[] | null>(null);
+  // const [categoryDemandLoading, setCategoryDemandLoading] = useState(false);
+  // const [categoryDemandError, setCategoryDemandError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -229,6 +228,8 @@ export default function DealerDashboardPage() {
           setCrmStats(stats);
         }
 
+        // TODO: Implementar con DemandPredictionDto en futuro sprint
+        /*
         if (user) {
           setCategoryDemandLoading(true);
           setCategoryDemandError(null);
@@ -244,6 +245,7 @@ export default function DealerDashboardPage() {
             setCategoryDemandLoading(false);
           }
         }
+        */
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -432,96 +434,18 @@ export default function DealerDashboardPage() {
           </div>
         </div>
 
-        {/* Category Demand (Sprint 18) */}
+        {/* TODO: Category Demand - Reimplementar con DemandPredictionDto en futuro sprint */}
+        {/*
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Demanda por categoría</h2>
           <p className="text-sm text-gray-500 mb-4">
             Señales del mercado para ayudarte a enfocar inventario y pricing.
           </p>
-
-          {categoryDemandLoading && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-              <p className="text-sm text-gray-700">Cargando demanda…</p>
-            </div>
-          )}
-
-          {categoryDemandError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-700">{categoryDemandError}</p>
-            </div>
-          )}
-
-          {!categoryDemandLoading &&
-            !categoryDemandError &&
-            categoryDemand &&
-            categoryDemand.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500 border-b">
-                      <th className="py-2 pr-4 font-medium">Categoría</th>
-                      <th className="py-2 pr-4 font-medium">Demanda</th>
-                      <th className="py-2 pr-4 font-medium">Tendencia</th>
-                      <th className="py-2 pr-4 font-medium">Actualizado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {categoryDemand.slice(0, 8).map((item) => {
-                      const score = Math.round(item.demandScore);
-                      const demandPillClass =
-                        score >= 75
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : score >= 50
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-red-50 text-red-700 border-red-200';
-
-                      const isUp = String(item.trend).toLowerCase() === 'up';
-                      const isDown = String(item.trend).toLowerCase() === 'down';
-
-                      return (
-                        <tr
-                          key={`${item.category}-${item.updatedAt}`}
-                          className="border-b last:border-b-0"
-                        >
-                          <td className="py-3 pr-4 font-medium text-gray-900">{item.category}</td>
-                          <td className="py-3 pr-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${demandPillClass}`}
-                            >
-                              {score}/100
-                            </span>
-                          </td>
-                          <td className="py-3 pr-4">
-                            <span
-                              className={`inline-flex items-center gap-1 text-sm ${
-                                isUp ? 'text-green-600' : isDown ? 'text-red-600' : 'text-gray-500'
-                              }`}
-                            >
-                              <ArrowUp
-                                className={`h-4 w-4 ${isDown ? 'rotate-180' : ''} ${!isUp && !isDown ? 'opacity-40' : ''}`}
-                              />
-                              {isUp ? 'Subiendo' : isDown ? 'Bajando' : 'Estable'}
-                            </span>
-                          </td>
-                          <td className="py-3 pr-4 text-gray-500">
-                            {new Date(item.updatedAt).toLocaleDateString('es-DO')}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-          {!categoryDemandLoading &&
-            !categoryDemandError &&
-            (!categoryDemand || categoryDemand.length === 0) && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                <p className="text-sm text-gray-700">Aún no hay datos de demanda disponibles.</p>
-              </div>
-            )}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <p className="text-sm text-gray-700">Funcionalidad en desarrollo (Sprint 18+)</p>
+          </div>
         </div>
+        */}
 
         {/* Features Grid */}
         <div>

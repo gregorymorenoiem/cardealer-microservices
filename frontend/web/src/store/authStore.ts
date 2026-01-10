@@ -1,25 +1,25 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { 
-  User, 
-  LoginResponse, 
+import type {
+  User,
+  LoginResponse,
   AccountType,
   DealerPermission,
-  PlatformPermission 
+  PlatformPermission,
 } from '@/shared/types';
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
-  
+
   // Actions
   login: (response: LoginResponse) => void;
   logout: () => void;
   updateUser: (user: User) => void;
   updateTokens: (accessToken: string, refreshToken: string) => void;
   setAccessToken: (token: string) => void;
-  
+
   // Computed getters - Account Type
   isAuthenticated: () => boolean;
   accountType: () => AccountType | null;
@@ -29,18 +29,18 @@ interface AuthState {
   isDealerEmployee: () => boolean;
   isAdmin: () => boolean;
   isPlatformEmployee: () => boolean;
-  
+
   // Computed getters - Dealer specific
   isDealerOwner: () => boolean;
   canManageDealerTeam: () => boolean;
   canAccessDealerPanel: () => boolean;
   hasActiveSubscription: () => boolean;
-  
+
   // Computed getters - Platform specific
   isSuperAdmin: () => boolean;
   canManagePlatformUsers: () => boolean;
   canAccessAdminPanel: () => boolean;
-  
+
   // Permission checkers
   hasDealerPermission: (permission: DealerPermission) => boolean;
   hasPlatformPermission: (permission: PlatformPermission) => boolean;
@@ -60,13 +60,12 @@ export const useAuthStore = create<AuthState>()(
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
         });
-        
-        // Save user email to localStorage for ID mapping between AuthService and UserService
+
+        // Save user email and accessToken to localStorage for compatibility with other services
         if (response.user?.email) {
           localStorage.setItem('userEmail', response.user.email);
         }
-        
-        // Also save accessToken for dealerSellerService
+
         if (response.accessToken) {
           localStorage.setItem('accessToken', response.accessToken);
         }
@@ -78,8 +77,8 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           refreshToken: null,
         });
-        
-        // Clear saved data
+
+        // Clear localStorage data
         localStorage.removeItem('userEmail');
         localStorage.removeItem('accessToken');
       },
@@ -147,10 +146,7 @@ export const useAuthStore = create<AuthState>()(
 
       canAccessDealerPanel: () => {
         const state = get();
-        return (
-          (state.isDealer() || state.isDealerEmployee()) &&
-          state.hasActiveSubscription()
-        );
+        return (state.isDealer() || state.isDealerEmployee()) && state.hasActiveSubscription();
       },
 
       hasActiveSubscription: () => {
@@ -162,10 +158,7 @@ export const useAuthStore = create<AuthState>()(
       // Computed getters - Platform specific
       isSuperAdmin: () => {
         const user = get().user;
-        return (
-          user?.accountType === 'admin' &&
-          user?.platformRole === 'super_admin'
-        );
+        return user?.accountType === 'admin' && user?.platformRole === 'super_admin';
       },
 
       canManagePlatformUsers: () => {

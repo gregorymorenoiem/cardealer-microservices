@@ -48,7 +48,8 @@ export function SearchPage() {
 
   useEffect(() => {
     // Load makes from catalog
-    fetch('https://api.okla.com.do/api/catalog/makes')
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+    fetch(`${API_URL}/api/catalog/makes`)
       .then((res) => res.json())
       .then((data) => setMakes(data))
       .catch(console.error);
@@ -57,7 +58,8 @@ export function SearchPage() {
   useEffect(() => {
     // Load models when make changes
     if (filters.make) {
-      fetch(`https://api.okla.com.do/api/catalog/models/${filters.make}`)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+      fetch(`${API_URL}/api/catalog/models/${filters.make}`)
         .then((res) => res.json())
         .then((data) => setModels(data))
         .catch(console.error);
@@ -82,7 +84,10 @@ export function SearchPage() {
         mileageMax: filters.mileageMax.toString(),
       });
 
-      const response = await fetch(`https://api.okla.com.do/api/vehicles/search?${params}`);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+      const response = await fetch(
+        `${API_URL}/api/vehicles?search=${searchQuery}&page=${currentPage}&pageSize=12`
+      );
       const data = await response.json();
 
       setVehicles(data.items || []);
@@ -99,17 +104,18 @@ export function SearchPage() {
   }, [handleSearch]);
 
   const toggleFavorite = async (vehicleId: string) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
-      window.location.href = '/login?redirect=/search';
+      // ProtectedRoute ya se encarga de la redireción si es necesaria
       return;
     }
 
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
       const vehicle = vehicles.find((v) => v.id === vehicleId);
       const url = vehicle?.isFavorite
-        ? `https://api.okla.com.do/api/favorites/${vehicleId}`
-        : 'https://api.okla.com.do/api/favorites';
+        ? `${API_URL}/api/favorites/${vehicleId}`
+        : `${API_URL}/api/favorites`;
 
       const response = await fetch(url, {
         method: vehicle?.isFavorite ? 'DELETE' : 'POST',

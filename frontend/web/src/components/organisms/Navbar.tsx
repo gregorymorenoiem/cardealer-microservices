@@ -43,6 +43,12 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
 
+  // Helper function to determine dropdown positioning
+  const getDropdownClasses = (menuWidth: number = 320) => {
+    // Use CSS to automatically handle positioning
+    return 'right-0 transform-gpu';
+  };
+
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
@@ -65,29 +71,101 @@ export default function Navbar() {
     setIsUserMenuOpen(false);
   };
 
-  // Links públicos principales (sin duplicar búsqueda - ya está GlobalSearch)
-  const navLinks = [
-    { href: '/vehicles', label: t('nav.vehicles'), icon: FaCar },
+  // NAVEGACIÓN REORGANIZADA - NAVBAR RESPONSIVE PROFESIONAL
+
+  // Links principales - SIEMPRE VISIBLES (máximo 4 para no sobrecargar)
+  const mainNavLinks = [
+    { href: '/', label: 'Inicio', icon: FiGrid },
+    { href: '/vehicles', label: 'Vehículos', icon: FaCar },
     { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase },
   ];
 
-  // Links para usuarios autenticados (sin duplicar con dealerNavLinks)
-  const userNavLinks = [
-    { href: '/favorites', label: 'Favoritos', icon: FiHeart },
-    { href: '/comparison', label: 'Comparar', icon: FiGrid },
-    { href: '/alerts', label: 'Alertas', icon: FiBell },
-    { href: '/my-inquiries', label: 'Mis Consultas', icon: FiMessageSquare },
-    { href: '/received-inquiries', label: 'Consultas Recibidas', icon: FiUserCheck },
+  // Links contextuales para usuarios normales - EN DROPDOWN
+  const userContextualLinks = [
+    {
+      category: 'Mi Actividad',
+      links: [
+        {
+          href: '/favorites',
+          label: 'Favoritos',
+          icon: FiHeart,
+          description: 'Vehículos guardados',
+        },
+        {
+          href: '/comparison',
+          label: 'Comparar',
+          icon: FiGrid,
+          description: 'Comparador de vehículos',
+        },
+        {
+          href: '/alerts',
+          label: 'Alertas',
+          icon: FiBell,
+          description: 'Notificaciones de precios',
+        },
+      ],
+    },
+    {
+      category: 'Comunicación',
+      links: [
+        {
+          href: '/my-inquiries',
+          label: 'Mis Consultas',
+          icon: FiMessageSquare,
+          description: 'Consultas enviadas',
+        },
+        {
+          href: '/received-inquiries',
+          label: 'Consultas Recibidas',
+          icon: FiUserCheck,
+          description: 'Consultas de compradores',
+        },
+      ],
+    },
   ];
 
-  // Dealer-specific navigation links (Sprint 12 - Advanced Dashboard + Sprint 17 - Chatbot)
-  // Solo para dealers - incluye Leads aquí, no en userNavLinks
-  const dealerNavLinks = [
-    { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiGrid },
-    { href: '/dealer/inventory', label: 'Inventario', icon: FaCar },
-    { href: '/dealer/analytics/advanced', label: 'Analytics', icon: FiBarChart2 },
-    { href: '/dealer/leads', label: 'Leads', icon: FiTarget },
-    { href: '/dealer/conversations', label: 'Conversaciones', icon: FiMessageCircle },
+  // Links contextuales para dealers - EN DROPDOWN
+  const dealerContextualLinks = [
+    {
+      category: 'Gestión',
+      links: [
+        {
+          href: '/dealer/dashboard',
+          label: 'Dashboard',
+          icon: FiGrid,
+          description: 'Panel principal',
+        },
+        {
+          href: '/dealer/inventory',
+          label: 'Inventario',
+          icon: FaCar,
+          description: 'Mis vehículos',
+        },
+        {
+          href: '/dealer/leads',
+          label: 'Leads',
+          icon: FiTarget,
+          description: 'Clientes potenciales',
+        },
+      ],
+    },
+    {
+      category: 'Analytics & CRM',
+      links: [
+        {
+          href: '/dealer/analytics/advanced',
+          label: 'Analytics',
+          icon: FiBarChart2,
+          description: 'Estadísticas avanzadas',
+        },
+        {
+          href: '/dealer/conversations',
+          label: 'Conversaciones',
+          icon: FiMessageCircle,
+          description: 'Chatbot y mensajes',
+        },
+      ],
+    },
   ];
 
   return (
@@ -152,71 +230,54 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop/Tablet Navigation */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-xl font-semibold text-sm lg:text-base transition-all duration-200 ${
-                  location.pathname === link.href ||
-                  (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'))
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
-                }`}
-              >
-                <link.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span>{link.label}</span>
-              </Link>
-            ))}
+          {/* Desktop/Tablet Navigation - REORGANIZADO Y COMPACTO */}
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4">
+            {/* Links principales - siempre visibles */}
+            {mainNavLinks.map((link) => {
+              const isActive =
+                location.pathname === link.href ||
+                (link.href === '/vehicles' && location.pathname.startsWith('/vehicles')) ||
+                (link.href === '/' && location.pathname === '/');
 
-            {/* User-only navigation links */}
-            {isAuthenticated &&
-              user &&
-              userNavLinks.map((link) => (
+              return (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-xl font-semibold text-sm lg:text-base transition-all duration-200 ${
-                    location.pathname === link.href
+                  className={`flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-xl font-semibold text-sm xl:text-base transition-all duration-200 ${
+                    isActive
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
                   }`}
                 >
-                  <link.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <link.icon className="w-4 h-4 xl:w-5 xl:h-5" />
                   <span>{link.label}</span>
                 </Link>
-              ))}
+              );
+            })}
+          </div>
 
-            {/* Dealer-only navigation links (Sprint 12) */}
-            {isAuthenticated &&
-              user &&
-              (user.accountType === 'dealer' || user.accountType === 'dealer_employee') &&
-              dealerNavLinks.map((link) => (
+          {/* Tablet Navigation - Compacto */}
+          <div className="hidden md:flex lg:hidden items-center gap-2">
+            {mainNavLinks.slice(0, 2).map((link) => {
+              const isActive =
+                location.pathname === link.href ||
+                (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'));
+
+              return (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-xl font-semibold text-sm lg:text-base transition-all duration-200 ${
-                    location.pathname === link.href
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 scale-105'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-emerald-50 hover:scale-105'
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40'
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <link.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <link.icon className="w-4 h-4" />
                   <span>{link.label}</span>
                 </Link>
-              ))}
-
-            {/* Sell Button - CTA - Solo para usuarios autenticados */}
-            {isAuthenticated && user && (
-              <Link
-                to="/sell"
-                className="flex items-center gap-2 px-5 lg:px-6 py-2.5 ml-2 lg:ml-3 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white rounded-xl font-semibold text-sm lg:text-base shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-200"
-              >
-                <FiPlusCircle className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span>Vender</span>
-              </Link>
-            )}
+              );
+            })}
           </div>
 
           {/* Global Search - Responsive */}
@@ -235,23 +296,137 @@ export default function Navbar() {
               <FiSearch className="w-5 h-5 text-gray-600" />
             </button>
 
-            {/* Tablet/Desktop Auth/User */}
-            <div className="hidden sm:flex items-center gap-2">
+            {/* Right Side Actions - MEJORADO */}
+            <div className="hidden sm:flex items-center gap-2 lg:gap-3">
               {isAuthenticated && user ? (
                 <>
-                  {/* Notifications - Hidden on small tablets */}
+                  {/* Quick Actions - Solo desktop */}
+                  <div className="hidden xl:flex items-center gap-2">
+                    {/* Sell CTA - Más prominente */}
+                    <Link
+                      to="/sell"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 transition-all duration-200"
+                    >
+                      <FiPlusCircle className="w-4 h-4" />
+                      <span>Vender</span>
+                    </Link>
+                  </div>
+
+                  {/* Notifications */}
                   <div className="hidden lg:block">
                     <NotificationDropdown />
                   </div>
 
-                  {/* Messages - Hidden on small tablets */}
+                  {/* Messages */}
                   <Link
                     to="/messages"
-                    className="hidden lg:flex p-2.5 lg:p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
+                    className="hidden lg:flex p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group"
                     aria-label={t('nav.messages')}
                   >
-                    <FiMessageSquare className="w-5 h-5 lg:w-5.5 lg:h-5.5 group-hover:scale-110 transition-transform" />
+                    <FiMessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   </Link>
+
+                  {/* Contextual Navigation Dropdown */}
+                  {(userContextualLinks.length > 0 || dealerContextualLinks.length > 0) && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setIsJoinMenuOpen(!isJoinMenuOpen)}
+                        className="flex items-center gap-2 px-3 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300"
+                      >
+                        <FiGrid className="w-4 h-4" />
+                        <span className="text-sm font-medium hidden lg:block">Más</span>
+                        <FiChevronDown
+                          className={`w-3 h-3 transition-transform duration-200 ${isJoinMenuOpen ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {/* Contextual Links Dropdown */}
+                      {isJoinMenuOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setIsJoinMenuOpen(false)}
+                          />
+                          <div
+                            className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200"
+                            style={{ marginRight: 'max(0px, calc((100% + 320px) - 100vw + 16px))' }}
+                          >
+                            <div className="px-4 py-3 border-b border-gray-100">
+                              <p className="text-sm font-semibold text-gray-900">
+                                Navegación Rápida
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Acceso directo a tus herramientas
+                              </p>
+                            </div>
+
+                            {/* User Contextual Links */}
+                            {(!user.accountType || user.accountType === 'individual') &&
+                              userContextualLinks.map((category, idx) => (
+                                <div key={idx} className="py-2">
+                                  <div className="px-4 py-2">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                      {category.category}
+                                    </p>
+                                  </div>
+                                  {category.links.map((link) => (
+                                    <Link
+                                      key={link.href}
+                                      to={link.href}
+                                      onClick={() => setIsJoinMenuOpen(false)}
+                                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
+                                    >
+                                      <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <link.icon className="w-4 h-4 text-blue-600" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="font-medium text-gray-900 text-sm">
+                                          {link.label}
+                                        </p>
+                                        <p className="text-xs text-gray-500">{link.description}</p>
+                                      </div>
+                                    </Link>
+                                  ))}
+                                </div>
+                              ))}
+
+                            {/* Dealer Contextual Links */}
+                            {(user.accountType === 'dealer' ||
+                              user.accountType === 'dealer_employee') &&
+                              dealerContextualLinks.map((category, idx) => (
+                                <div key={idx} className="py-2">
+                                  <div className="px-4 py-2">
+                                    <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                                      {category.category}
+                                    </p>
+                                  </div>
+                                  {category.links.map((link) => (
+                                    <Link
+                                      key={link.href}
+                                      to={link.href}
+                                      onClick={() => setIsJoinMenuOpen(false)}
+                                      className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors group"
+                                    >
+                                      <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <link.icon className="w-4 h-4 text-emerald-600" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="font-medium text-emerald-900 text-sm">
+                                          {link.label}
+                                        </p>
+                                        <p className="text-xs text-emerald-600">
+                                          {link.description}
+                                        </p>
+                                      </div>
+                                    </Link>
+                                  ))}
+                                </div>
+                              ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {/* User Menu */}
                   <div className="relative ml-2 lg:ml-3">
@@ -282,7 +457,10 @@ export default function Navbar() {
                           className="fixed inset-0 z-10"
                           onClick={() => setIsUserMenuOpen(false)}
                         />
-                        <div className="absolute right-0 mt-3 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div
+                          className="absolute right-0 mt-3 w-72 lg:w-80 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200"
+                          style={{ marginRight: 'max(0px, calc((100% + 320px) - 100vw + 16px))' }}
+                        >
                           <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-blue-50 via-blue-50 to-emerald-50 rounded-t-2xl">
                             <div className="flex items-center gap-4">
                               <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-blue-500 to-emerald-500 rounded-full flex items-center justify-center shadow-xl ring-2 ring-white">
@@ -472,7 +650,10 @@ export default function Navbar() {
                           className="fixed inset-0 z-10"
                           onClick={() => setIsJoinMenuOpen(false)}
                         />
-                        <div className="absolute right-0 mt-3 w-80 lg:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div
+                          className="absolute right-0 mt-3 w-80 lg:w-96 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200"
+                          style={{ marginRight: 'max(0px, calc((100% + 384px) - 100vw + 16px))' }}
+                        >
                           <div className="px-5 py-4 border-b border-gray-100">
                             <p className="text-base font-bold text-gray-900">
                               ¿Cómo quieres vender?
@@ -585,69 +766,45 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Mobile/Tablet Menu */}
+        {/* Mobile/Tablet Menu - REORGANIZADO CON CATEGORÍAS */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 max-h-[calc(100vh-5rem)] overflow-y-auto bg-white shadow-inner">
-            {/* Navigation Links */}
-            <div className="px-3 mb-4 space-y-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
+          <div className="lg:hidden py-4 border-t border-gray-200 max-h-[calc(100vh-4rem)] overflow-y-auto bg-white shadow-inner">
+            {/* Links Principales */}
+            <div className="px-3 mb-4">
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-2">
+                  Navegación
+                </p>
+              </div>
+              <div className="space-y-1">
+                {mainNavLinks.map((link) => {
+                  const isActive =
                     location.pathname === link.href ||
-                    (link.href === '/vehicles' && location.pathname.startsWith('/vehicles'))
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                      : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <link.icon className="w-5 h-5" />
-                  <span className="text-base">{link.label}</span>
-                </Link>
-              ))}
+                    (link.href === '/vehicles' && location.pathname.startsWith('/vehicles')) ||
+                    (link.href === '/' && location.pathname === '/');
 
-              {/* User-only navigation links */}
-              {isAuthenticated &&
-                user &&
-                userNavLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
-                      location.pathname === link.href
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                        : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <link.icon className="w-5 h-5" />
-                    <span className="text-base">{link.label}</span>
-                  </Link>
-                ))}
+                  return (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                          : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
+                      }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <link.icon className="w-5 h-5" />
+                      <span className="text-base">{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
 
-              {/* Dealer-only navigation links (Sprint 12) */}
-              {isAuthenticated &&
-                user &&
-                (user.accountType === 'dealer' || user.accountType === 'dealer_employee') &&
-                dealerNavLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
-                      location.pathname === link.href
-                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                        : 'text-gray-700 hover:bg-emerald-50 hover:scale-[1.02]'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <link.icon className="w-5 h-5" />
-                    <span className="text-base">{link.label}</span>
-                  </Link>
-                ))}
-
-              {/* Sell CTA - Solo para usuarios autenticados */}
-              {isAuthenticated && user && (
+            {/* CTA Vender - Prominente */}
+            {isAuthenticated && user && (
+              <div className="px-3 mb-4">
                 <Link
                   to="/sell"
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/40 font-semibold hover:scale-[1.02] transition-all"
@@ -656,14 +813,122 @@ export default function Navbar() {
                   <FiPlusCircle className="w-5 h-5" />
                   <span className="text-base">Vender mi Vehículo</span>
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
 
-            <hr className="my-4 border-gray-200" />
+            {isAuthenticated && user && <hr className="my-4 border-gray-200" />}
+
+            {/* Links Contextuales por Categorías */}
+            {isAuthenticated && user && (
+              <div className="px-3 space-y-4">
+                {/* User Contextual Links */}
+                {(!user.accountType || user.accountType === 'individual') &&
+                  userContextualLinks.map((category, idx) => (
+                    <div key={idx}>
+                      <div className="mb-2">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-2">
+                          {category.category}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        {category.links.map((link) => (
+                          <Link
+                            key={link.href}
+                            to={link.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                              location.pathname === link.href
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                                : 'text-gray-700 hover:bg-gray-100 hover:scale-[1.02]'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <div
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                location.pathname === link.href ? 'bg-white/20' : 'bg-blue-100'
+                              }`}
+                            >
+                              <link.icon
+                                className={`w-4 h-4 ${
+                                  location.pathname === link.href ? 'text-white' : 'text-blue-600'
+                                }`}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{link.label}</p>
+                              <p
+                                className={`text-xs ${
+                                  location.pathname === link.href
+                                    ? 'text-blue-100'
+                                    : 'text-gray-500'
+                                }`}
+                              >
+                                {link.description}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                {/* Dealer Contextual Links */}
+                {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') &&
+                  dealerContextualLinks.map((category, idx) => (
+                    <div key={idx}>
+                      <div className="mb-2">
+                        <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide px-2">
+                          {category.category}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        {category.links.map((link) => (
+                          <Link
+                            key={link.href}
+                            to={link.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                              location.pathname === link.href
+                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                : 'text-gray-700 hover:bg-emerald-50 hover:scale-[1.02]'
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <div
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                location.pathname === link.href ? 'bg-white/20' : 'bg-emerald-100'
+                              }`}
+                            >
+                              <link.icon
+                                className={`w-4 h-4 ${
+                                  location.pathname === link.href
+                                    ? 'text-white'
+                                    : 'text-emerald-600'
+                                }`}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{link.label}</p>
+                              <p
+                                className={`text-xs ${
+                                  location.pathname === link.href
+                                    ? 'text-emerald-100'
+                                    : 'text-emerald-600'
+                                }`}
+                              >
+                                {link.description}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            {isAuthenticated && user && <hr className="my-4 border-gray-200" />}
 
             {/* User Section */}
             {isAuthenticated && user ? (
               <>
+                {/* User Profile Card */}
                 <div className="px-4 py-4 mx-3 flex items-center gap-4 mb-3 bg-gradient-to-br from-blue-50 via-blue-50 to-emerald-50 rounded-xl shadow-sm">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-blue-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
                     <span className="text-white font-bold text-lg">
@@ -678,7 +943,8 @@ export default function Navbar() {
                   </div>
                 </div>
 
-                <div className="px-3 space-y-1.5">
+                {/* Quick Access Links */}
+                <div className="px-3 space-y-1.5 mb-4">
                   <Link
                     to="/dashboard"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition-all font-medium group"
@@ -707,8 +973,10 @@ export default function Navbar() {
                     <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                       <FiSettings className="w-5 h-5 text-gray-600" />
                     </div>
-                    <span className="text-base">{t('nav.settings')}</span>
+                    <span className="text-base">Perfil</span>
                   </Link>
+                  
+                  {/* Admin Portal */}
                   {(user.roles?.includes('admin') || user.accountType === 'admin') && (
                     <Link
                       to="/admin"
@@ -721,22 +989,11 @@ export default function Navbar() {
                       <span className="text-base">{t('nav.adminPortal')}</span>
                     </Link>
                   )}
-                  {(user.accountType === 'dealer' || user.accountType === 'dealer_employee') && (
-                    <Link
-                      to="/dealer"
-                      className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 rounded-xl transition-all font-medium group"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FaCar className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <span className="text-base">{t('nav.dealerPortal')}</span>
-                    </Link>
-                  )}
                 </div>
 
                 <hr className="my-4 border-gray-200" />
 
+                {/* Logout Button */}
                 <div className="px-3">
                   <button
                     onClick={() => {
@@ -751,6 +1008,7 @@ export default function Navbar() {
                 </div>
               </>
             ) : (
+              /* Login/Register for non-authenticated users */
               <div className="px-4 py-2 space-y-3">
                 <Link
                   to="/login"

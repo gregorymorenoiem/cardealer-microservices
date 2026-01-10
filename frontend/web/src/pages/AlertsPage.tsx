@@ -42,9 +42,10 @@ export function AlertsPage() {
   }, []);
 
   const loadAlerts = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
-      window.location.href = '/login?redirect=/alerts';
+      // ProtectedRoute ya se encarga de la redirección, no necesitamos hacerlo aquí
+      setLoading(false);
       return;
     }
 
@@ -76,7 +77,7 @@ export function AlertsPage() {
   };
 
   const togglePriceAlert = async (alertId: string, isActive: boolean) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     try {
       const response = await fetch(
         `https://api.okla.com.do/api/alerts/price-alerts/${alertId}/toggle`,
@@ -103,7 +104,7 @@ export function AlertsPage() {
   const deletePriceAlert = async (alertId: string) => {
     if (!confirm('¿Eliminar esta alerta?')) return;
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     try {
       const response = await fetch(`https://api.okla.com.do/api/alerts/price-alerts/${alertId}`, {
         method: 'DELETE',
@@ -119,7 +120,7 @@ export function AlertsPage() {
   };
 
   const toggleSavedSearch = async (searchId: string, isActive: boolean) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     try {
       const response = await fetch(
         `https://api.okla.com.do/api/alerts/saved-searches/${searchId}/toggle`,
@@ -146,7 +147,7 @@ export function AlertsPage() {
   const deleteSavedSearch = async (searchId: string) => {
     if (!confirm('¿Eliminar esta búsqueda guardada?')) return;
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     try {
       const response = await fetch(
         `https://api.okla.com.do/api/alerts/saved-searches/${searchId}`,

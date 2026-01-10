@@ -3,13 +3,13 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
 
 vi.mock('@/services/vehicleIntelligenceService', () => ({
-  vehicleIntelligenceService: {
-    getPriceSuggestion: vi.fn(),
-    getCategoryDemand: vi.fn(),
+  default: {
+    analyzePricing: vi.fn(),
+    predictDemand: vi.fn(),
   },
 }));
 
-import { vehicleIntelligenceService } from '@/services/vehicleIntelligenceService';
+import vehicleIntelligenceService from '@/services/vehicleIntelligenceService';
 import PricingStep from './PricingStep';
 
 describe('PricingStep (Sprint 18)', () => {
@@ -17,15 +17,30 @@ describe('PricingStep (Sprint 18)', () => {
     localStorage.setItem('accessToken', 'mock-access-token');
     localStorage.setItem('refreshToken', 'mock-refresh-token');
 
-    vi.mocked(vehicleIntelligenceService.getPriceSuggestion).mockResolvedValueOnce({
-      marketPrice: 28000,
+    vi.mocked(vehicleIntelligenceService.analyzePricing).mockResolvedValueOnce({
+      id: 'test-id',
+      vehicleId: 'test-vehicle-id',
+      currentPrice: 25000,
       suggestedPrice: 29500,
-      deltaPercent: 5.4,
-      demandScore: 72,
-      estimatedDaysToSell: 23,
-      confidence: 0.84,
-      modelVersion: 'v1',
-      sellingTips: ['Publica fotos claras'],
+      suggestedPriceMin: 28000,
+      suggestedPriceMax: 31000,
+      marketAvgPrice: 28000,
+      priceVsMarket: 0.054,
+      pricePosition: 'Fair',
+      predictedDaysToSaleAtCurrentPrice: 23,
+      predictedDaysToSaleAtSuggestedPrice: 18,
+      confidenceScore: 84,
+      analysisDate: new Date().toISOString(),
+      recommendations: [
+        {
+          id: 'rec1',
+          type: 'Fotos',
+          reason: 'Publica fotos claras',
+          impactDescription: 'Aumenta visibilidad',
+          priority: 1,
+        },
+      ],
+      comparables: [],
     });
 
     const baseData: Partial<VehicleFormData> = {
@@ -53,7 +68,7 @@ describe('PricingStep (Sprint 18)', () => {
       expect(screen.getByText('Precio sugerido')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Mercado estimado:/)).toBeInTheDocument();
+    expect(screen.getByText(/Rango:/)).toBeInTheDocument();
     expect(screen.getByText(/Tiempo estimado de venta/)).toBeInTheDocument();
   });
 });

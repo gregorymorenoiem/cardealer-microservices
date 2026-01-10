@@ -25,7 +25,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
 
   useEffect(() => {
     // Check enrollment status
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       fetch(`${API_URL}/api/billing/earlybird/status`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -75,7 +75,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
   }, []);
 
   const handleEnroll = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       window.location.href = '/login?redirect=/earlybird';
       return;
