@@ -66,12 +66,20 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import CategoriesManagementPage from './pages/admin/CategoriesManagementPage';
 // Dealer pages
 import DealerDashboardPage from './pages/dealer/DealerDashboardPage';
+import {
+  DealerHomePage,
+  DealerInventoryPage,
+  DealerLeadsPage,
+  DealerAnalyticsPage,
+  DealerSettingsPage,
+} from './pages/dealer';
 import DealerListingsPage from './pages/dealer/DealerListingsPage';
 import CRMPage from './pages/dealer/CRMPage';
 import AnalyticsPage from './pages/dealer/AnalyticsPage';
 import DealerOnboardingPage from './pages/dealer/DealerOnboardingPage';
 import CreateSellerPage from './pages/dealer/CreateSellerPage';
 import SellerDashboardPage from './pages/seller/SellerDashboardPage';
+import DealerPortalLayout from './layouts/DealerPortalLayout';
 // Common pages (legal, info, help)
 import {
   AboutPage,
@@ -250,7 +258,7 @@ function App() {
             path="/dealer/dashboard"
             element={
               <ProtectedRoute requireDealer>
-                <DealerDashboard />
+                <DealerHomePage />
               </ProtectedRoute>
             }
           />
@@ -260,7 +268,7 @@ function App() {
             path="/dealer/analytics"
             element={
               <ProtectedRoute requireDealer>
-                <DealerAnalyticsDashboard dealerId="DEALER_ID_PLACEHOLDER" />
+                <DealerAnalyticsPage />
               </ProtectedRoute>
             }
           />
@@ -270,7 +278,9 @@ function App() {
             path="/dealer/analytics/advanced"
             element={
               <ProtectedRoute requireDealer>
-                <AdvancedDealerDashboard />
+                <DealerPortalLayout>
+                  <AdvancedDealerDashboard />
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -280,7 +290,7 @@ function App() {
             path="/dealer/inventory"
             element={
               <ProtectedRoute requireDealer>
-                <InventoryManagementPage dealerId="DEALER_ID_PLACEHOLDER" />
+                <DealerInventoryPage />
               </ProtectedRoute>
             }
           />
@@ -291,7 +301,9 @@ function App() {
             path="/dealer/profile/edit"
             element={
               <ProtectedRoute requireDealer>
-                <DealerProfileEditorPage />
+                <DealerPortalLayout>
+                  <DealerProfileEditorPage />
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -349,7 +361,7 @@ function App() {
             }
           />
 
-          {/* Dealer Routes */}
+          {/* Dealer Routes - Using DealerPortalLayout (built-in) */}
           <Route path="/dealer/onboarding" element={<DealerOnboardingPage />} />
           <Route path="/seller/create" element={<CreateSellerPage />} />
           <Route
@@ -364,9 +376,7 @@ function App() {
             path="/dealer"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
-                  <DealerDashboardPage />
-                </DealerLayout>
+                <DealerHomePage />
               </ProtectedRoute>
             }
           />
@@ -374,9 +384,7 @@ function App() {
             path="/dealer/listings"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
-                  <DealerListingsPage />
-                </DealerLayout>
+                <DealerInventoryPage />
               </ProtectedRoute>
             }
           />
@@ -384,9 +392,7 @@ function App() {
             path="/dealer/crm"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
-                  <CRMPage />
-                </DealerLayout>
+                <DealerLeadsPage />
               </ProtectedRoute>
             }
           />
@@ -394,24 +400,14 @@ function App() {
             path="/dealer/appointments"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
-                  <div className="p-6">
-                    <h1 className="text-2xl font-bold">Citas</h1>
-                    <p className="text-gray-500 mt-2">
+                <DealerPortalLayout>
+                  <div className="p-6 lg:p-8">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Citas</h1>
+                    <p className="text-gray-500">
                       Gestión de citas con clientes. Página en desarrollo...
                     </p>
                   </div>
-                </DealerLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dealer/analytics"
-            element={
-              <ProtectedRoute requireDealer>
-                <DealerLayout>
-                  <AnalyticsPage />
-                </DealerLayout>
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -419,9 +415,9 @@ function App() {
             path="/dealer/billing"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
+                <DealerPortalLayout>
                   <BillingDashboardPage />
-                </DealerLayout>
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -429,9 +425,9 @@ function App() {
             path="/dealer/plans"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
+                <DealerPortalLayout>
                   <PlansPage />
-                </DealerLayout>
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -439,14 +435,7 @@ function App() {
             path="/dealer/settings"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLayout>
-                  <div className="p-6">
-                    <h1 className="text-2xl font-bold">Configuración</h1>
-                    <p className="text-gray-500 mt-2">
-                      Configuración de cuenta. Página en desarrollo...
-                    </p>
-                  </div>
-                </DealerLayout>
+                <DealerSettingsPage />
               </ProtectedRoute>
             }
           />
@@ -570,7 +559,7 @@ function App() {
             path="/dealer/leads"
             element={
               <ProtectedRoute requireDealer>
-                <LeadsDashboard />
+                <DealerLeadsPage />
               </ProtectedRoute>
             }
           />
@@ -578,7 +567,9 @@ function App() {
             path="/dealer/leads/:leadId"
             element={
               <ProtectedRoute requireDealer>
-                <LeadDetail />
+                <DealerPortalLayout>
+                  <LeadDetail />
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -588,7 +579,14 @@ function App() {
             path="/dealer/conversations"
             element={
               <ProtectedRoute requireDealer>
-                <DealerDashboardPage />
+                <DealerPortalLayout>
+                  <div className="p-6 lg:p-8">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Conversaciones</h1>
+                    <p className="text-gray-500">
+                      Gestión de conversaciones del chatbot. En desarrollo...
+                    </p>
+                  </div>
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -596,7 +594,24 @@ function App() {
             path="/dealer/hot-leads"
             element={
               <ProtectedRoute requireDealer>
-                <DealerDashboardPage />
+                <DealerLeadsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dealer Inquiries */}
+          <Route
+            path="/dealer/inquiries"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerPortalLayout>
+                  <div className="p-6 lg:p-8">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Consultas</h1>
+                    <p className="text-gray-500">
+                      Gestión de consultas de clientes. En desarrollo...
+                    </p>
+                  </div>
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
