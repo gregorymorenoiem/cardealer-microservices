@@ -1,19 +1,26 @@
 /**
  * CRM TanStack Query Hooks
- * 
+ *
  * Provides hooks for CRM operations: leads, deals, pipelines, activities.
  * Uses crmService.ts for API calls with mock data fallback.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { leadsApi, dealsApi, pipelinesApi, activitiesApi, crmStatsApi } from '@/services/crmService';
-import type { 
-  CreateLeadRequest, 
-  UpdateLeadRequest, 
-  CreateDealRequest, 
+import type { UseQueryResult } from '@tanstack/react-query';
+import {
+  leadsApi,
+  dealsApi,
+  pipelinesApi,
+  activitiesApi,
+  crmStatsApi,
+} from '@/services/crmService';
+import type {
+  CreateLeadRequest,
+  UpdateLeadRequest,
+  CreateDealRequest,
   UpdateDealRequest,
   MoveDealRequest,
-  CloseDealRequest 
+  CloseDealRequest,
 } from '@/services/crmService';
 import type { Lead, Deal, Pipeline, Activity, CRMStats, PipelineStageStats } from '@/mocks/crmData';
 
@@ -60,7 +67,7 @@ export const crmKeys = {
 // LEADS HOOKS
 // ============================================================================
 
-export function useLeads(dealerId?: string, options?: Partial<UseQueryOptions<Lead[]>>) {
+export function useLeads(dealerId?: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.leadsList(dealerId),
     queryFn: () => leadsApi.getAll(dealerId),
@@ -69,7 +76,7 @@ export function useLeads(dealerId?: string, options?: Partial<UseQueryOptions<Le
   });
 }
 
-export function useLead(leadId: string, options?: Partial<UseQueryOptions<Lead | null>>) {
+export function useLead(leadId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.leadsDetail(leadId),
     queryFn: () => leadsApi.getById(leadId),
@@ -78,28 +85,29 @@ export function useLead(leadId: string, options?: Partial<UseQueryOptions<Lead |
   });
 }
 
-export function useLeadsByStatus(status: string, options?: Partial<UseQueryOptions<Lead[]>>) {
+export function useLeadsByStatus(status: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.leadsStatus(status),
     queryFn: async () => {
       const leads = await leadsApi.getAll();
-      return leads.filter(l => l.status === status);
+      return leads.filter((l) => l.status === status);
     },
     staleTime: 60 * 1000,
     ...options,
   });
 }
 
-export function useSearchLeads(query: string, options?: Partial<UseQueryOptions<Lead[]>>) {
+export function useSearchLeads(query: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.leadsSearch(query),
     queryFn: async () => {
       const leads = await leadsApi.getAll();
       const lowerQuery = query.toLowerCase();
-      return leads.filter(l => 
-        l.fullName.toLowerCase().includes(lowerQuery) ||
-        l.email.toLowerCase().includes(lowerQuery) ||
-        l.company?.toLowerCase().includes(lowerQuery)
+      return leads.filter(
+        (l) =>
+          l.fullName.toLowerCase().includes(lowerQuery) ||
+          l.email.toLowerCase().includes(lowerQuery) ||
+          l.company?.toLowerCase().includes(lowerQuery)
       );
     },
     enabled: query.length >= 2,
@@ -107,19 +115,19 @@ export function useSearchLeads(query: string, options?: Partial<UseQueryOptions<
   });
 }
 
-export function useLeadsByAssignedUser(userId: string, options?: Partial<UseQueryOptions<Lead[]>>) {
+export function useLeadsByAssignedUser(userId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.leadsAssigned(userId),
     queryFn: async () => {
       const leads = await leadsApi.getAll();
-      return leads.filter(l => l.assignedToUserId === userId);
+      return leads.filter((l) => l.assignedToUserId === userId);
     },
     enabled: !!userId,
     ...options,
   });
 }
 
-export function useRecentLeads(count: number = 10, options?: Partial<UseQueryOptions<Lead[]>>) {
+export function useRecentLeads(count: number = 10, options?: any) {
   return useQuery({
     queryKey: crmKeys.leadsRecent(count),
     queryFn: async () => {
@@ -135,7 +143,7 @@ export function useRecentLeads(count: number = 10, options?: Partial<UseQueryOpt
 
 export function useCreateLead() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateLeadRequest) => leadsApi.create(data),
     onSuccess: () => {
@@ -147,9 +155,9 @@ export function useCreateLead() {
 
 export function useUpdateLead() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ leadId, data }: { leadId: string; data: UpdateLeadRequest }) => 
+    mutationFn: ({ leadId, data }: { leadId: string; data: UpdateLeadRequest }) =>
       leadsApi.update(leadId, data),
     onSuccess: (_, { leadId }) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
@@ -160,7 +168,7 @@ export function useUpdateLead() {
 
 export function useDeleteLead() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (leadId: string) => leadsApi.delete(leadId),
     onSuccess: () => {
@@ -172,9 +180,9 @@ export function useDeleteLead() {
 
 export function useConvertLead() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ leadId, dealData }: { leadId: string; dealData: CreateDealRequest }) => 
+    mutationFn: ({ leadId, dealData }: { leadId: string; dealData: CreateDealRequest }) =>
       leadsApi.convert(leadId, dealData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
@@ -188,7 +196,7 @@ export function useConvertLead() {
 // DEALS HOOKS
 // ============================================================================
 
-export function useDeals(dealerId?: string, options?: Partial<UseQueryOptions<Deal[]>>) {
+export function useDeals(dealerId?: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.dealsList(dealerId),
     queryFn: () => dealsApi.getAll(dealerId),
@@ -197,7 +205,7 @@ export function useDeals(dealerId?: string, options?: Partial<UseQueryOptions<De
   });
 }
 
-export function useDeal(dealId: string, options?: Partial<UseQueryOptions<Deal | null>>) {
+export function useDeal(dealId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.dealsDetail(dealId),
     queryFn: () => dealsApi.getById(dealId),
@@ -206,7 +214,7 @@ export function useDeal(dealId: string, options?: Partial<UseQueryOptions<Deal |
   });
 }
 
-export function useDealsByPipeline(pipelineId: string, options?: Partial<UseQueryOptions<Deal[]>>) {
+export function useDealsByPipeline(pipelineId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.dealsPipeline(pipelineId),
     queryFn: () => dealsApi.getByPipeline(pipelineId),
@@ -216,7 +224,7 @@ export function useDealsByPipeline(pipelineId: string, options?: Partial<UseQuer
   });
 }
 
-export function useDealsByStage(stageId: string, options?: Partial<UseQueryOptions<Deal[]>>) {
+export function useDealsByStage(stageId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.dealsStage(stageId),
     queryFn: () => dealsApi.getByStage(stageId),
@@ -225,29 +233,28 @@ export function useDealsByStage(stageId: string, options?: Partial<UseQueryOptio
   });
 }
 
-export function useDealsByStatus(status: string, options?: Partial<UseQueryOptions<Deal[]>>) {
+export function useDealsByStatus(status: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.dealsStatus(status),
     queryFn: async () => {
       const deals = await dealsApi.getAll();
-      return deals.filter(d => d.status === status);
+      return deals.filter((d) => d.status === status);
     },
     staleTime: 60 * 1000,
     ...options,
   });
 }
 
-export function useDealsClosingSoon(days: number = 7, options?: Partial<UseQueryOptions<Deal[]>>) {
+export function useDealsClosingSoon(days: number = 7, options?: any) {
   return useQuery({
     queryKey: crmKeys.dealsClosingSoon(days),
     queryFn: async () => {
       const deals = await dealsApi.getAll();
       const threshold = new Date();
       threshold.setDate(threshold.getDate() + days);
-      return deals.filter(d => 
-        d.status === 'Open' && 
-        d.expectedCloseDate && 
-        new Date(d.expectedCloseDate) <= threshold
+      return deals.filter(
+        (d) =>
+          d.status === 'Open' && d.expectedCloseDate && new Date(d.expectedCloseDate) <= threshold
       );
     },
     staleTime: 60 * 1000,
@@ -257,7 +264,7 @@ export function useDealsClosingSoon(days: number = 7, options?: Partial<UseQuery
 
 export function useCreateDeal() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateDealRequest) => dealsApi.create(data),
     onSuccess: () => {
@@ -270,9 +277,9 @@ export function useCreateDeal() {
 
 export function useUpdateDeal() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ dealId, data }: { dealId: string; data: UpdateDealRequest }) => 
+    mutationFn: ({ dealId, data }: { dealId: string; data: UpdateDealRequest }) =>
       dealsApi.update(dealId, data),
     onSuccess: (_, { dealId }) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
@@ -283,9 +290,9 @@ export function useUpdateDeal() {
 
 export function useMoveDeal() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ dealId, data }: { dealId: string; data: MoveDealRequest }) => 
+    mutationFn: ({ dealId, data }: { dealId: string; data: MoveDealRequest }) =>
       dealsApi.move(dealId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
@@ -296,9 +303,9 @@ export function useMoveDeal() {
 
 export function useCloseDeal() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ dealId, data }: { dealId: string; data: CloseDealRequest }) => 
+    mutationFn: ({ dealId, data }: { dealId: string; data: CloseDealRequest }) =>
       dealsApi.close(dealId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
@@ -310,7 +317,7 @@ export function useCloseDeal() {
 
 export function useDeleteDeal() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (dealId: string) => dealsApi.delete(dealId),
     onSuccess: () => {
@@ -325,7 +332,7 @@ export function useDeleteDeal() {
 // PIPELINES HOOKS
 // ============================================================================
 
-export function usePipelines(options?: Partial<UseQueryOptions<Pipeline[]>>) {
+export function usePipelines(options?: any) {
   return useQuery({
     queryKey: crmKeys.pipelinesList(),
     queryFn: () => pipelinesApi.getAll(),
@@ -334,7 +341,7 @@ export function usePipelines(options?: Partial<UseQueryOptions<Pipeline[]>>) {
   });
 }
 
-export function useDefaultPipeline(options?: Partial<UseQueryOptions<Pipeline | null>>) {
+export function useDefaultPipeline(options?: any) {
   return useQuery({
     queryKey: crmKeys.pipelinesDefault(),
     queryFn: () => pipelinesApi.getDefault(),
@@ -343,7 +350,7 @@ export function useDefaultPipeline(options?: Partial<UseQueryOptions<Pipeline | 
   });
 }
 
-export function usePipelineStats(pipelineId: string, options?: Partial<UseQueryOptions<PipelineStageStats[]>>) {
+export function usePipelineStats(pipelineId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.pipelinesStats(pipelineId),
     queryFn: () => pipelinesApi.getWithStats(pipelineId),
@@ -357,7 +364,7 @@ export function usePipelineStats(pipelineId: string, options?: Partial<UseQueryO
 // ACTIVITIES HOOKS
 // ============================================================================
 
-export function useActivities(dealerId?: string, options?: Partial<UseQueryOptions<Activity[]>>) {
+export function useActivities(dealerId?: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.activitiesList(dealerId),
     queryFn: () => activitiesApi.getAll(dealerId),
@@ -366,7 +373,7 @@ export function useActivities(dealerId?: string, options?: Partial<UseQueryOptio
   });
 }
 
-export function useDealActivities(dealId: string, options?: Partial<UseQueryOptions<Activity[]>>) {
+export function useDealActivities(dealId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.activitiesDeal(dealId),
     queryFn: () => activitiesApi.getByDeal(dealId),
@@ -375,7 +382,7 @@ export function useDealActivities(dealId: string, options?: Partial<UseQueryOpti
   });
 }
 
-export function useLeadActivities(leadId: string, options?: Partial<UseQueryOptions<Activity[]>>) {
+export function useLeadActivities(leadId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.activitiesLead(leadId),
     queryFn: () => activitiesApi.getByLead(leadId),
@@ -384,7 +391,7 @@ export function useLeadActivities(leadId: string, options?: Partial<UseQueryOpti
   });
 }
 
-export function useTodaysActivities(options?: Partial<UseQueryOptions<Activity[]>>) {
+export function useTodaysActivities(options?: any) {
   return useQuery({
     queryKey: crmKeys.activitiesToday(),
     queryFn: () => activitiesApi.getToday(),
@@ -394,7 +401,7 @@ export function useTodaysActivities(options?: Partial<UseQueryOptions<Activity[]
   });
 }
 
-export function useOverdueActivities(options?: Partial<UseQueryOptions<Activity[]>>) {
+export function useOverdueActivities(options?: any) {
   return useQuery({
     queryKey: crmKeys.activitiesOverdue(),
     queryFn: () => activitiesApi.getOverdue(),
@@ -407,7 +414,7 @@ export function useOverdueActivities(options?: Partial<UseQueryOptions<Activity[
 // STATS HOOKS
 // ============================================================================
 
-export function useCRMStats(dealerId: string, options?: Partial<UseQueryOptions<CRMStats>>) {
+export function useCRMStats(dealerId: string, options?: any) {
   return useQuery({
     queryKey: crmKeys.stats(dealerId),
     queryFn: () => crmStatsApi.getStats(dealerId),
@@ -461,7 +468,7 @@ export function useKanbanBoard(pipelineId: string) {
   const moveDeal = useMoveDeal();
   const closeDeal = useCloseDeal();
 
-  const selectedPipeline = pipeline.data?.find(p => p.id === pipelineId);
+  const selectedPipeline = pipeline.data?.find((p) => p.id === pipelineId);
 
   return {
     pipeline: selectedPipeline,

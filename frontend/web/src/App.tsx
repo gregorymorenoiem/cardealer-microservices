@@ -69,14 +69,18 @@ import DealerDashboardPage from './pages/dealer/DealerDashboardPage';
 import {
   DealerHomePage,
   DealerInventoryPage,
-  DealerLeadsPage,
+  DealerAddVehiclePage,
   DealerAnalyticsPage,
   DealerSettingsPage,
+  DealerVehicleEditPage,
 } from './pages/dealer';
 import DealerListingsPage from './pages/dealer/DealerListingsPage';
+import DealerSalesPage from './pages/dealer/DealerSalesPage';
+import DealerAlertsPage from './pages/dealer/DealerAlertsPage';
 import CRMPage from './pages/dealer/CRMPage';
 import AnalyticsPage from './pages/dealer/AnalyticsPage';
 import DealerOnboardingPage from './pages/dealer/DealerOnboardingPage';
+import DealerInquiriesPage from './pages/dealer/DealerInquiriesPage';
 import CreateSellerPage from './pages/dealer/CreateSellerPage';
 import SellerDashboardPage from './pages/seller/SellerDashboardPage';
 import DealerPortalLayout from './layouts/DealerPortalLayout';
@@ -258,7 +262,7 @@ function App() {
             path="/dealer/dashboard"
             element={
               <ProtectedRoute requireDealer>
-                <DealerHomePage />
+                <DealerDashboardPage />
               </ProtectedRoute>
             }
           />
@@ -278,8 +282,28 @@ function App() {
             path="/dealer/analytics/advanced"
             element={
               <ProtectedRoute requireDealer>
+                <AdvancedDealerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Sales History Route */}
+          <Route
+            path="/dealer/sales"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerSalesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Alerts Route */}
+          <Route
+            path="/dealer/alerts"
+            element={
+              <ProtectedRoute requireDealer>
                 <DealerPortalLayout>
-                  <AdvancedDealerDashboard />
+                  <DealerAlertsPage />
                 </DealerPortalLayout>
               </ProtectedRoute>
             }
@@ -291,6 +315,22 @@ function App() {
             element={
               <ProtectedRoute requireDealer>
                 <DealerInventoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/inventory/new"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerAddVehiclePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/inventory/:id/edit"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerVehicleEditPage />
               </ProtectedRoute>
             }
           />
@@ -384,7 +424,7 @@ function App() {
             path="/dealer/listings"
             element={
               <ProtectedRoute requireDealer>
-                <DealerInventoryPage />
+                <DealerListingsPage />
               </ProtectedRoute>
             }
           />
@@ -392,7 +432,9 @@ function App() {
             path="/dealer/crm"
             element={
               <ProtectedRoute requireDealer>
-                <DealerLeadsPage />
+                <DealerPortalLayout>
+                  <CRMPage />
+                </DealerPortalLayout>
               </ProtectedRoute>
             }
           />
@@ -427,6 +469,36 @@ function App() {
               <ProtectedRoute requireDealer>
                 <DealerPortalLayout>
                   <PlansPage />
+                </DealerPortalLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/invoices"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerPortalLayout>
+                  <InvoicesPage />
+                </DealerPortalLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/payments"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerPortalLayout>
+                  <PaymentsPage />
+                </DealerPortalLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/payment-methods"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerPortalLayout>
+                  <PaymentMethodsPage />
                 </DealerPortalLayout>
               </ProtectedRoute>
             }
@@ -556,14 +628,6 @@ function App() {
 
           {/* Sprint 11 - Lead Scoring */}
           <Route
-            path="/dealer/leads"
-            element={
-              <ProtectedRoute requireDealer>
-                <DealerLeadsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/dealer/leads/:leadId"
             element={
               <ProtectedRoute requireDealer>
@@ -590,28 +654,13 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/dealer/hot-leads"
-            element={
-              <ProtectedRoute requireDealer>
-                <DealerLeadsPage />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Dealer Inquiries */}
           <Route
             path="/dealer/inquiries"
             element={
               <ProtectedRoute requireDealer>
-                <DealerPortalLayout>
-                  <div className="p-6 lg:p-8">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Consultas</h1>
-                    <p className="text-gray-500">
-                      Gestión de consultas de clientes. En desarrollo...
-                    </p>
-                  </div>
-                </DealerPortalLayout>
+                <DealerInquiriesPage />
               </ProtectedRoute>
             }
           />

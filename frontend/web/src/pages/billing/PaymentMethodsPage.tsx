@@ -1,35 +1,45 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FiArrowLeft, 
-  FiCreditCard, 
+import {
+  FiArrowLeft,
+  FiCreditCard,
   FiPlus,
   FiTrash2,
   FiStar,
   FiCheck,
-  FiAlertCircle
+  FiAlertCircle,
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
-import { usePaymentMethods, useSetDefaultPaymentMethod, useRemovePaymentMethod } from '@/hooks/useBilling';
+import {
+  usePaymentMethods,
+  useSetDefaultPaymentMethod,
+  useRemovePaymentMethod,
+} from '@/hooks/useBilling';
 import { useAuthStore } from '@/store/authStore';
 import { mockPaymentMethods } from '@/mocks/billingData';
 import type { PaymentMethodInfo } from '@/types/billing';
 
 export default function PaymentMethodsPage() {
+  const location = useLocation();
+
+  // Determine if we're in dealer context
+  const isDealerContext = location.pathname.startsWith('/dealer');
+  const routePrefix = isDealerContext ? '/dealer' : '/billing';
+
   // Get user info
   const { user } = useAuthStore();
   const dealerId = user?.dealerId || user?.id || '';
-  
+
   // Use TanStack Query hooks
   const { data: fetchedPaymentMethods } = usePaymentMethods(dealerId);
   const setDefaultMutation = useSetDefaultPaymentMethod();
   const removeMutation = useRemovePaymentMethod();
-  
+
   // Use fetched data or fallback to mocks
   const initialMethods = fetchedPaymentMethods?.length ? fetchedPaymentMethods : mockPaymentMethods;
-  
+
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>(initialMethods);
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -46,8 +56,8 @@ export default function PaymentMethodsPage() {
       await setDefaultMutation.mutateAsync({ dealerId, paymentMethodId: id });
     } catch {
       // Fallback to local state update
-      setPaymentMethods(methods =>
-        methods.map(m => ({
+      setPaymentMethods((methods) =>
+        methods.map((m) => ({
           ...m,
           isDefault: m.id === id,
         }))
@@ -60,7 +70,7 @@ export default function PaymentMethodsPage() {
       await removeMutation.mutateAsync({ dealerId, paymentMethodId: id });
     } catch {
       // Fallback to local state update
-      setPaymentMethods(methods => methods.filter(m => m.id !== id));
+      setPaymentMethods((methods) => methods.filter((m) => m.id !== id));
     }
     setDeleteConfirm(null);
   };
@@ -96,16 +106,17 @@ export default function PaymentMethodsPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <Link to="/billing" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <Link
+              to={isDealerContext ? '/dealer/billing' : '/billing'}
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            >
               <FiArrowLeft className="w-4 h-4 mr-2" />
               Back to Billing
             </Link>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Payment Methods</h1>
-                <p className="text-gray-600 mt-1">
-                  Manage your payment methods for subscriptions
-                </p>
+                <p className="text-gray-600 mt-1">Manage your payment methods for subscriptions</p>
               </div>
               <Button onClick={() => setShowAddModal(true)}>
                 <FiPlus className="w-4 h-4 mr-2" />
@@ -130,7 +141,9 @@ export default function PaymentMethodsPage() {
                   <div className="flex items-center gap-4">
                     {method.type === 'card' && method.card && (
                       <>
-                        <div className={`w-12 h-8 rounded ${getCardBrandIcon(method.card.brand)} flex items-center justify-center text-white text-xs font-bold`}>
+                        <div
+                          className={`w-12 h-8 rounded ${getCardBrandIcon(method.card.brand)} flex items-center justify-center text-white text-xs font-bold`}
+                        >
                           {method.card.brand.substring(0, 4).toUpperCase()}
                         </div>
                         <div>
@@ -155,13 +168,13 @@ export default function PaymentMethodsPage() {
                                 Expired
                               </span>
                             )}
-                            {!isCardExpired(method.card.expMonth, method.card.expYear) && 
+                            {!isCardExpired(method.card.expMonth, method.card.expYear) &&
                               isCardExpiringSoon(method.card.expMonth, method.card.expYear) && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                                <FiAlertCircle className="w-3 h-3 mr-1" />
-                                Expiring Soon
-                              </span>
-                            )}
+                                <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                  <FiAlertCircle className="w-3 h-3 mr-1" />
+                                  Expiring Soon
+                                </span>
+                              )}
                           </div>
                         </div>
                       </>
@@ -193,29 +206,17 @@ export default function PaymentMethodsPage() {
 
                   <div className="flex items-center gap-2">
                     {!method.isDefault && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSetDefault(method.id)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleSetDefault(method.id)}>
                         <FiCheck className="w-4 h-4 mr-1" />
                         Set Default
                       </Button>
                     )}
                     {deleteConfirm === method.id ? (
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(method.id)}
-                        >
+                        <Button variant="danger" size="sm" onClick={() => handleDelete(method.id)}>
                           Confirm
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteConfirm(null)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(null)}>
                           Cancel
                         </Button>
                       </div>
@@ -260,25 +261,27 @@ export default function PaymentMethodsPage() {
                 className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
               >
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Add Payment Method</h2>
-                
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  // Mock adding a new card
-                  const newMethod: PaymentMethodInfo = {
-                    id: `pm_${Date.now()}`,
-                    type: 'card',
-                    isDefault: paymentMethods.length === 0,
-                    card: {
-                      brand: 'Visa',
-                      last4: '1234',
-                      expMonth: 12,
-                      expYear: 2028,
-                    },
-                    createdAt: new Date().toISOString(),
-                  };
-                  setPaymentMethods([...paymentMethods, newMethod]);
-                  setShowAddModal(false);
-                }}>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    // Mock adding a new card
+                    const newMethod: PaymentMethodInfo = {
+                      id: `pm_${Date.now()}`,
+                      type: 'card',
+                      isDefault: paymentMethods.length === 0,
+                      card: {
+                        brand: 'Visa',
+                        last4: '1234',
+                        expMonth: 12,
+                        expYear: 2028,
+                      },
+                      createdAt: new Date().toISOString(),
+                    };
+                    setPaymentMethods([...paymentMethods, newMethod]);
+                    setShowAddModal(false);
+                  }}
+                >
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -304,9 +307,7 @@ export default function PaymentMethodsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          CVC
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
                         <input
                           type="text"
                           placeholder="123"
@@ -357,8 +358,8 @@ export default function PaymentMethodsPage() {
               <div>
                 <p className="text-sm font-medium text-blue-900">Secure Payment Processing</p>
                 <p className="text-sm text-blue-700 mt-1">
-                  All payment information is encrypted using industry-standard 256-bit SSL encryption. 
-                  We never store your full card number on our servers.
+                  All payment information is encrypted using industry-standard 256-bit SSL
+                  encryption. We never store your full card number on our servers.
                 </p>
               </div>
             </div>

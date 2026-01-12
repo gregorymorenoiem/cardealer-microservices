@@ -29,7 +29,9 @@ public class PriceAlertsController : ControllerBase
     public async Task<ActionResult<List<PriceAlertDto>>> GetMyAlerts()
     {
         var userId = GetCurrentUserId();
+        _logger.LogInformation("GetMyAlerts called for UserId: {UserId}", userId);
         var alerts = await _repository.GetByUserIdAsync(userId);
+        _logger.LogInformation("Found {Count} alerts for UserId: {UserId}", alerts.Count, userId);
 
         return Ok(alerts.Select(MapToDto).ToList());
     }
@@ -207,15 +209,25 @@ public class PriceAlertsController : ControllerBase
     // Helper methods
     private Guid GetCurrentUserId()
     {
+        // Log all claims for debugging
+        foreach (var claim in User.Claims)
+        {
+            _logger.LogInformation("JWT Claim: Type={ClaimType}, Value={ClaimValue}", claim.Type, claim.Value);
+        }
+        
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst("sub")?.Value
             ?? User.FindFirst("userId")?.Value;
 
+        _logger.LogInformation("Extracted userIdClaim: {UserIdClaim}", userIdClaim);
+
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
+            _logger.LogWarning("Failed to parse userId from claim: {UserIdClaim}", userIdClaim);
             throw new UnauthorizedAccessException("User not authenticated");
         }
 
+        _logger.LogInformation("Parsed UserId: {UserId}", userId);
         return userId;
     }
 

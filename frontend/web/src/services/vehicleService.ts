@@ -84,6 +84,7 @@ export interface Vehicle {
   transmission: string;
   bodyType: string;
   color: string;
+  interiorColor?: string;
   description: string;
   features: string[];
   images: string[];
@@ -95,10 +96,31 @@ export interface Vehicle {
   status: 'pending' | 'approved' | 'rejected' | 'sold';
   isFeatured: boolean;
   isNew?: boolean; // Added for new/used indication
+  vin?: string;
+  condition?: string;
   createdAt: string;
   updatedAt: string;
   categoryId?: string;
   categoryName?: string;
+  // New fields from VIN decoder and backend
+  trim?: string;
+  doors?: number;
+  seats?: number;
+  drivetrain?: string;
+  engine?: string;
+  horsepower?: number;
+  mpg?: {
+    city: number;
+    highway: number;
+  };
+  seller?: {
+    id: string;
+    name: string;
+    type: string;
+    phone: string;
+    email?: string;
+    rating?: number;
+  };
 }
 
 export interface VehicleFilters {
@@ -124,6 +146,26 @@ export interface PaginatedVehicles {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+// Extended vehicle type for dealer inventory with engagement metrics
+export interface DealerVehicle extends Vehicle {
+  viewCount: number;
+  inquiryCount: number;
+  favoriteCount: number;
+  stockNumber?: string;
+  dealerId: string;
+  publishedAt?: string;
+  soldAt?: string;
+}
+
+export interface DealerInventoryResponse {
+  vehicles: DealerVehicle[];
+  total: number;
+  activeCount: number;
+  pausedCount: number;
+  soldCount: number;
+  draftCount: number;
 }
 
 export interface Category {
@@ -366,29 +408,34 @@ export const createVehicle = async (vehicleData: Partial<VehicleFormData>): Prom
       currency: 'USD',
       make: vehicleData.make,
       model: vehicleData.model,
+      trim: vehicleData.trim || null, // Trim del VIN decode (LE, SE, XLE, Sport)
       year: vehicleData.year,
       vin: vehicleData.vin || '',
       mileage: vehicleData.mileage || 0,
       condition: mapConditionToEnum(vehicleData.condition),
-      bodyStyle: mapBodyStyleToEnum(vehicleData.bodyType),
-      fuelType: mapFuelTypeToEnum(vehicleData.fuelType),
-      transmission: mapTransmissionToEnum(vehicleData.transmission),
-      driveType: mapDrivetrainToEnum(vehicleData.drivetrain),
-      doors: 4, // Could be extracted from form
-      seats: 5, // Could be extracted from form
+      bodyStyle: vehicleData.bodyType ? mapBodyStyleToEnum(vehicleData.bodyType) : null, // Opcional
+      fuelType: vehicleData.fuelType ? mapFuelTypeToEnum(vehicleData.fuelType) : null, // Opcional - VIN no siempre tiene
+      transmission: vehicleData.transmission
+        ? mapTransmissionToEnum(vehicleData.transmission)
+        : null, // Opcional
+      driveType: vehicleData.drivetrain ? mapDrivetrainToEnum(vehicleData.drivetrain) : null, // Opcional
+      doors: vehicleData.doors || 4,
+      seats: vehicleData.seats || 5,
       exteriorColor: vehicleData.exteriorColor || '',
       interiorColor: vehicleData.interiorColor || '',
       city: vehicleData.location || '',
       state: '', // Could be extracted from location
       country: 'USA',
-      horsepower: parseInt(vehicleData.horsepower || '0'),
+      engineSize: vehicleData.engine || null, // 2.5L, 3.0L
+      horsepower: vehicleData.horsepower ? parseInt(vehicleData.horsepower) : null,
       cylinders: extractCylinders(vehicleData.engine),
-      mpgCity: extractMpgCity(vehicleData.mpg),
-      mpgHighway: extractMpgHighway(vehicleData.mpg),
       hasCleanTitle: true,
-      accidentHistory: false,
+      // Seller info from PricingStep
+      sellerName: vehicleData.sellerName || '',
+      sellerPhone: vehicleData.sellerPhone || '',
+      sellerEmail: vehicleData.sellerEmail || '',
+      // Features
       featuresJson: JSON.stringify(vehicleData.features || []),
-      status: 0, // 0=Draft, 1=Active/Published
     };
 
     const response = await axios.post(`${VEHICLES_SALE_API_URL}/vehicles`, backendPayload);
@@ -575,10 +622,10 @@ const transformBackendVehicleToFrontend = (data: any): Vehicle => {
     drivetrain: mapDriveType(data.driveType?.toString() || '0'),
     color: data.exteriorColor,
     interiorColor: data.interiorColor,
-    engine: data.engineSize,
-    horsepower: data.horsepower,
+    engine: data.engineSize || undefined,
+    horsepower: data.horsepower || undefined,
     mpg: estimateMpg(),
-    vin: data.vin || 'N/A',
+    vin: data.vin || undefined,
     condition: mapCondition(data.condition?.toString() || '1'),
     description: data.description,
     features: JSON.parse(data.featuresJson || '[]'),
@@ -586,6 +633,12 @@ const transformBackendVehicleToFrontend = (data: any): Vehicle => {
     location: data.city && data.state ? `${data.city}, ${data.state}` : data.city || '',
     sellerId: data.sellerId || data.dealerId,
     sellerName: data.sellerName || 'Unknown',
+    sellerPhone: data.sellerPhone || undefined,
+    sellerEmail: data.sellerEmail || undefined,
+    // New fields from VIN decoder
+    trim: data.trim || undefined,
+    doors: data.doors || undefined,
+    seats: data.seats || undefined,
     seller: {
       id: data.sellerId || data.dealerId,
       name: data.sellerName || 'Unknown Dealer',
@@ -642,7 +695,8 @@ export interface VehicleFormData {
 }
 
 /**
- * Update vehicle listing (legacy - using ProductService)
+ * Update vehicle listing using VehiclesSaleService
+ * PUT /api/vehicles/{id}
  */
 export const updateVehicle = async (
   id: string,
@@ -650,24 +704,94 @@ export const updateVehicle = async (
 ): Promise<Vehicle> => {
   try {
     const token = localStorage.getItem('accessToken');
-    const productData = transformVehicleToProduct(vehicleData);
 
-    // ProductService returns updated object directly
-    const response = await axios.put<BackendProduct>(
-      `${PRODUCT_API_URL}/Products/${id}`,
-      productData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    // Map frontend Vehicle fields to backend Vehicle entity
+    const backendPayload: Record<string, unknown> = {};
+
+    // Only include fields that are present in vehicleData
+    if (vehicleData.title !== undefined) backendPayload.title = vehicleData.title;
+    if (vehicleData.description !== undefined) backendPayload.description = vehicleData.description;
+    if (vehicleData.price !== undefined) backendPayload.price = vehicleData.price;
+    if (vehicleData.make !== undefined) backendPayload.make = vehicleData.make;
+    if (vehicleData.model !== undefined) backendPayload.model = vehicleData.model;
+    if (vehicleData.year !== undefined) backendPayload.year = vehicleData.year;
+    if (vehicleData.mileage !== undefined) backendPayload.mileage = vehicleData.mileage;
+    if (vehicleData.color !== undefined) backendPayload.exteriorColor = vehicleData.color;
+    if (vehicleData.interiorColor !== undefined)
+      backendPayload.interiorColor = vehicleData.interiorColor;
+    if (vehicleData.location !== undefined) backendPayload.city = vehicleData.location;
+    if (vehicleData.vin !== undefined) backendPayload.vin = vehicleData.vin;
+
+    // Map fuelType string to enum
+    if (vehicleData.fuelType !== undefined) {
+      const fuelTypeMap: Record<string, number> = {
+        Gasoline: 0,
+        Diesel: 1,
+        Electric: 4,
+        Hybrid: 2,
+        PluginHybrid: 3,
+      };
+      backendPayload.fuelType = fuelTypeMap[vehicleData.fuelType] ?? 0;
+    }
+
+    // Map transmission string to enum
+    if (vehicleData.transmission !== undefined) {
+      const transmissionMap: Record<string, number> = {
+        Manual: 0,
+        Automatic: 1,
+        CVT: 2,
+        SemiAutomatic: 3,
+        DualClutch: 4,
+      };
+      backendPayload.transmission = transmissionMap[vehicleData.transmission] ?? 1;
+    }
+
+    // Map bodyType string to enum
+    if (vehicleData.bodyType !== undefined) {
+      const bodyStyleMap: Record<string, number> = {
+        Sedan: 0,
+        Coupe: 1,
+        SUV: 2,
+        Crossover: 3,
+        Pickup: 4,
+        Wagon: 5,
+        Hatchback: 6,
+        Van: 7,
+        Convertible: 8,
+        SportsCar: 9,
+        Truck: 4,
+      };
+      backendPayload.bodyStyle = bodyStyleMap[vehicleData.bodyType] ?? 0;
+    }
+
+    // Map condition string to enum
+    if (vehicleData.condition !== undefined) {
+      const conditionMap: Record<string, number> = {
+        New: 0,
+        Used: 1,
+        'Certified Pre-Owned': 2,
+      };
+      backendPayload.condition = conditionMap[vehicleData.condition] ?? 1;
+    }
+
+    // Map features to JSON
+    if (vehicleData.features !== undefined) {
+      backendPayload.featuresJson = JSON.stringify(vehicleData.features);
+    }
+
+    // VehiclesSaleService PUT endpoint
+    const response = await axios.put(`${VEHICLES_SALE_API_URL}/vehicles/${id}`, backendPayload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.data) {
       throw new Error('Failed to update vehicle');
     }
 
-    return transformProductToVehicle(response.data);
+    return transformBackendVehicleToFrontend(response.data);
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
@@ -720,6 +844,138 @@ export const getMyVehicles = async (sellerId: string): Promise<Vehicle[]> => {
     console.error('Error fetching my vehicles:', error);
     return [];
   }
+};
+
+/**
+ * Get dealer's inventory vehicles with engagement metrics
+ * Uses VehiclesSaleService endpoint: GET /api/vehicles/dealer/{dealerId}
+ */
+export const getDealerVehicles = async (dealerId: string): Promise<DealerInventoryResponse> => {
+  try {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await axios.get(`${VEHICLES_SALE_API_URL}/vehicles/dealer/${dealerId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const vehiclesData = response.data || [];
+    const vehicles: DealerVehicle[] = Array.isArray(vehiclesData)
+      ? vehiclesData.map((v: any) => transformBackendToDealerVehicle(v))
+      : [];
+
+    // Calculate counts by status
+    const activeCount = vehicles.filter((v) => v.status === 'approved').length;
+    const pausedCount = vehicles.filter((v) => v.status === 'pending').length;
+    const soldCount = vehicles.filter((v) => v.status === 'sold').length;
+    const draftCount = vehicles.filter((v) => v.status === 'rejected').length;
+
+    return {
+      vehicles,
+      total: vehicles.length,
+      activeCount,
+      pausedCount,
+      soldCount,
+      draftCount,
+    };
+  } catch (error) {
+    console.error('Error fetching dealer vehicles:', error);
+    return {
+      vehicles: [],
+      total: 0,
+      activeCount: 0,
+      pausedCount: 0,
+      soldCount: 0,
+      draftCount: 0,
+    };
+  }
+};
+
+/**
+ * Transform backend vehicle to DealerVehicle with engagement metrics
+ */
+const transformBackendToDealerVehicle = (data: any): DealerVehicle => {
+  // Get images
+  const images = data.images?.map((img: any) => {
+    const url = img.url || img.imageUrl || '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return url || '/placeholder-car.jpg';
+  }) || ['/placeholder-car.jpg'];
+
+  // Map backend status to frontend
+  // Backend VehicleStatus enum:
+  // 0=Draft, 1=PendingReview, 2=Active, 3=Reserved, 4=Sold, 5=Archived, 6=Rejected
+  const mapStatus = (status: number | string): 'pending' | 'approved' | 'rejected' | 'sold' => {
+    // Handle numeric status
+    const numericMap: Record<number, 'pending' | 'approved' | 'rejected' | 'sold'> = {
+      0: 'rejected', // Draft -> Borrador (use 'rejected' as display key)
+      1: 'pending', // PendingReview -> En Evaluación
+      2: 'approved', // Active -> Publicado
+      3: 'approved', // Reserved -> (treat as published)
+      4: 'sold', // Sold -> Vendido
+      5: 'rejected', // Archived -> (treat as draft)
+      6: 'rejected', // Rejected -> (treat as draft)
+    };
+
+    // Handle string status (in case backend returns status name instead of number)
+    const stringMap: Record<string, 'pending' | 'approved' | 'rejected' | 'sold'> = {
+      draft: 'rejected',
+      pendingreview: 'pending',
+      pending: 'pending',
+      active: 'approved',
+      approved: 'approved',
+      published: 'approved',
+      reserved: 'approved',
+      sold: 'sold',
+      archived: 'rejected',
+      rejected: 'rejected',
+    };
+
+    if (typeof status === 'number') {
+      return numericMap[status] || 'rejected';
+    }
+
+    if (typeof status === 'string') {
+      return stringMap[status.toLowerCase()] || 'rejected';
+    }
+
+    return 'rejected';
+  };
+
+  return {
+    id: data.id,
+    title: data.title || `${data.year} ${data.make} ${data.model}`,
+    make: data.make || '',
+    model: data.model || '',
+    year: data.year || 0,
+    price: data.price || 0,
+    mileage: data.mileage || 0,
+    fuelType: data.fuelType?.toString() || 'Gasoline',
+    transmission: data.transmission?.toString() || 'Automatic',
+    bodyType: data.bodyStyle?.toString() || 'Sedan',
+    color: data.exteriorColor || '',
+    description: data.description || '',
+    features: JSON.parse(data.featuresJson || '[]'),
+    images,
+    location: data.city && data.state ? `${data.city}, ${data.state}` : data.city || '',
+    sellerId: data.sellerId || data.dealerId,
+    sellerName: data.sellerName || 'Dealer',
+    status: mapStatus(data.status),
+    isFeatured: data.isFeatured || false,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    // Engagement metrics
+    viewCount: data.viewCount || 0,
+    inquiryCount: data.inquiryCount || 0,
+    favoriteCount: data.favoriteCount || 0,
+    stockNumber: data.stockNumber,
+    dealerId: data.dealerId,
+    publishedAt: data.publishedAt,
+    soldAt: data.soldAt,
+  };
 };
 
 /**
@@ -840,6 +1096,41 @@ export const markAsSold = async (id: string): Promise<Vehicle> => {
   return updateVehicle(id, { status: 'sold' });
 };
 
+/**
+ * Update vehicle status using backend VehicleStatus enum values directly
+ *
+ * VehicleStatus enum values:
+ * - 0: Draft (not published)
+ * - 1: PendingReview (awaiting moderation)
+ * - 2: Active (published and visible)
+ * - 3: Reserved (in negotiation)
+ * - 4: Sold (sale completed)
+ * - 5: Archived (hidden from public)
+ * - 6: Rejected (failed moderation)
+ */
+export const updateVehicleStatus = async (id: string, status: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('accessToken');
+
+    await axios.put(
+      `${VEHICLES_SALE_API_URL}/vehicles/${id}`,
+      { status },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Error updating vehicle status:', error);
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to update vehicle status');
+  }
+};
+
 export const getVehicleMakes = async (): Promise<string[]> => {
   // TODO: Implement when backend has makes endpoint or populate from categories
   return [
@@ -890,6 +1181,7 @@ const vehicleService = {
   getVehicleById,
   createVehicle,
   updateVehicle,
+  updateVehicleStatus,
   deleteVehicle,
 
   // Queries

@@ -32,6 +32,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
     SELECT 'CREATE DATABASE maintenanceservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'maintenanceservice')\\gexec
     SELECT 'CREATE DATABASE comparisonservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'comparisonservice')\\gexec
     SELECT 'CREATE DATABASE alertservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'alertservice')\\gexec
+    SELECT 'CREATE DATABASE dealermanagementservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'dealermanagementservice')\\gexec
+    SELECT 'CREATE DATABASE leadscoringservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'leadscoringservice')\\gexec
 EOSQL
 
 echo "All databases created successfully!"

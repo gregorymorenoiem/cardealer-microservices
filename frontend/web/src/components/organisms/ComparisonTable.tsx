@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiCheck, FiX } from 'react-icons/fi';
-import type { Vehicle } from '@/data/mockVehicles';
+import type { Vehicle } from '@/services/vehicleService';
 
 interface ComparisonTableProps {
   vehicles: Vehicle[];
@@ -18,28 +18,43 @@ const comparisonRows: ComparisonRow[] = [
   { label: 'Year', category: 'Basic', getValue: (v) => v.year },
   { label: 'Make', category: 'Basic', getValue: (v) => v.make },
   { label: 'Model', category: 'Basic', getValue: (v) => v.model },
-  { label: 'Price', category: 'Basic', getValue: (v) => v.price, format: (v) => `$${Number(v).toLocaleString()}` },
-  { label: 'Condition', category: 'Basic', getValue: (v) => v.isNew ? 'New' : 'Used' },
-  
+  {
+    label: 'Price',
+    category: 'Basic',
+    getValue: (v) => v.price,
+    format: (v) => `$${Number(v).toLocaleString()}`,
+  },
+  { label: 'Condition', category: 'Basic', getValue: (v) => (v.isNew ? 'New' : 'Used') },
+
   // Performance
-  { label: 'Mileage', category: 'Performance', getValue: (v) => v.mileage, format: (v) => `${Number(v).toLocaleString()} mi` },
+  {
+    label: 'Mileage',
+    category: 'Performance',
+    getValue: (v) => v.mileage,
+    format: (v) => `${Number(v).toLocaleString()} mi`,
+  },
   { label: 'Transmission', category: 'Performance', getValue: (v) => v.transmission },
   { label: 'Fuel Type', category: 'Performance', getValue: (v) => v.fuelType },
   { label: 'Engine', category: 'Performance', getValue: (v) => v.engine || 'N/A' },
-  { label: 'Horsepower', category: 'Performance', getValue: (v) => v.horsepower || 'N/A', format: (v) => v === 'N/A' ? 'N/A' : `${v} hp` },
-  
+  {
+    label: 'Horsepower',
+    category: 'Performance',
+    getValue: (v) => v.horsepower || 'N/A',
+    format: (v) => (v === 'N/A' ? 'N/A' : `${v} hp`),
+  },
+
   // Details
   { label: 'Body Type', category: 'Details', getValue: (v) => v.bodyType || 'N/A' },
   { label: 'Drivetrain', category: 'Details', getValue: (v) => v.drivetrain || 'N/A' },
   { label: 'Exterior Color', category: 'Details', getValue: (v) => v.color || 'N/A' },
   { label: 'Interior Color', category: 'Details', getValue: (v) => v.interiorColor || 'N/A' },
-  { 
-    label: 'MPG', 
-    category: 'Details', 
-    getValue: (v) => v.mpg ? `${v.mpg.city}/${v.mpg.highway}` : 'N/A',
-    format: (v) => v === 'N/A' ? 'N/A' : `${v} (city/hwy)`
+  {
+    label: 'MPG',
+    category: 'Details',
+    getValue: (v) => (v.mpg ? `${v.mpg.city}/${v.mpg.highway}` : 'N/A'),
+    format: (v) => (v === 'N/A' ? 'N/A' : `${v} (city/hwy)`),
   },
-  
+
   // Location & Seller
   { label: 'Location', category: 'Other', getValue: (v) => v.location },
   { label: 'Seller', category: 'Other', getValue: (v) => v.seller?.name || 'N/A' },
@@ -77,7 +92,7 @@ export default function ComparisonTable({ vehicles }: ComparisonTableProps) {
           <tbody>
             {categories.map((category) => {
               const categoryRows = comparisonRows.filter((r) => r.category === category);
-              
+
               return (
                 <React.Fragment key={category}>
                   {/* Category Header */}
@@ -89,11 +104,11 @@ export default function ComparisonTable({ vehicles }: ComparisonTableProps) {
                       {category}
                     </td>
                   </tr>
-                  
+
                   {/* Category Rows */}
                   {categoryRows.map((row, index) => {
                     const hasDifference = isDifferent(row);
-                    
+
                     return (
                       <tr
                         key={row.label}
@@ -114,7 +129,7 @@ export default function ComparisonTable({ vehicles }: ComparisonTableProps) {
                         {vehicles.map((vehicle) => {
                           const value = row.getValue(vehicle);
                           const displayValue = row.format ? row.format(value) : String(value);
-                          
+
                           // Determine if this is the "best" value for highlighting
                           const allValues = vehicles.map((v) => row.getValue(v));
                           const isBest = (() => {
@@ -122,7 +137,7 @@ export default function ComparisonTable({ vehicles }: ComparisonTableProps) {
                               return value === Math.min(...allValues.map(Number));
                             }
                             if (row.label === 'Horsepower') {
-                              const numValues = allValues.map(Number).filter(n => !isNaN(n));
+                              const numValues = allValues.map(Number).filter((n) => !isNaN(n));
                               return numValues.length > 0 && value === Math.max(...numValues);
                             }
                             if (row.label === 'Mileage') {
@@ -130,7 +145,7 @@ export default function ComparisonTable({ vehicles }: ComparisonTableProps) {
                             }
                             return false;
                           })();
-                          
+
                           return (
                             <td
                               key={vehicle.id}
@@ -163,37 +178,37 @@ export default function ComparisonTable({ vehicles }: ComparisonTableProps) {
             <tr className="bg-gray-100">
               <td
                 colSpan={vehicles.length + 1}
-                  className="px-6 py-3 text-sm font-bold text-gray-900"
-                >
-                  Features
+                className="px-6 py-3 text-sm font-bold text-gray-900"
+              >
+                Features
+              </td>
+            </tr>
+            <tr className="border-b border-gray-100">
+              <td className="sticky left-0 bg-white z-10 px-6 py-4 text-sm font-medium text-gray-700 align-top">
+                Available Features
+              </td>
+              {vehicles.map((vehicle) => (
+                <td key={vehicle.id} className="px-6 py-4 text-sm text-gray-900 align-top">
+                  {vehicle.features && vehicle.features.length > 0 ? (
+                    <ul className="space-y-1">
+                      {vehicle.features.slice(0, 10).map((feature, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <FiCheck className="text-green-500 flex-shrink-0" size={16} />
+                          <span className="text-xs">{feature}</span>
+                        </li>
+                      ))}
+                      {vehicle.features.length > 10 && (
+                        <li className="text-xs text-gray-500 italic">
+                          +{vehicle.features.length - 10} more features
+                        </li>
+                      )}
+                    </ul>
+                  ) : (
+                    <span className="text-gray-400 italic">No features listed</span>
+                  )}
                 </td>
-              </tr>
-              <tr className="border-b border-gray-100">
-                <td className="sticky left-0 bg-white z-10 px-6 py-4 text-sm font-medium text-gray-700 align-top">
-                  Available Features
-                </td>
-                {vehicles.map((vehicle) => (
-                  <td key={vehicle.id} className="px-6 py-4 text-sm text-gray-900 align-top">
-                    {vehicle.features && vehicle.features.length > 0 ? (
-                      <ul className="space-y-1">
-                        {vehicle.features.slice(0, 10).map((feature, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <FiCheck className="text-green-500 flex-shrink-0" size={16} />
-                            <span className="text-xs">{feature}</span>
-                          </li>
-                        ))}
-                        {vehicle.features.length > 10 && (
-                          <li className="text-xs text-gray-500 italic">
-                            +{vehicle.features.length - 10} more features
-                          </li>
-                        )}
-                      </ul>
-                    ) : (
-                      <span className="text-gray-400 italic">No features listed</span>
-                    )}
-                  </td>
-                ))}
-              </tr>
+              ))}
+            </tr>
           </tbody>
         </table>
       </div>

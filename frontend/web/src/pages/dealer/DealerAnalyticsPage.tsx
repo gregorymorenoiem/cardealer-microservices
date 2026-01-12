@@ -2,6 +2,7 @@
  * DealerAnalyticsPage - Analytics del Dealer con nuevo layout
  */
 
+import { useState, useEffect } from 'react';
 import DealerPortalLayout from '@/layouts/DealerPortalLayout';
 import {
   FiTrendingUp,
@@ -15,22 +16,57 @@ import {
   FiDownload,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
-
-// Mock data para gráficos
-const mockChartData = {
-  views: [120, 150, 180, 220, 195, 280, 320, 290, 350, 380, 420, 450],
-  leads: [12, 15, 18, 22, 19, 28, 32, 29, 35, 38, 42, 45],
-  months: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-};
-
-const topVehicles = [
-  { name: 'Toyota Corolla 2022', views: 450, inquiries: 32, conversion: 12.5 },
-  { name: 'Honda Civic 2021', views: 380, inquiries: 28, conversion: 10.2 },
-  { name: 'BMW X5 2023', views: 320, inquiries: 45, conversion: 18.5 },
-  { name: 'Mercedes C300 2022', views: 280, inquiries: 22, conversion: 8.8 },
-];
+import { useAuthStore } from '@/store/authStore';
+import useDealerAnalytics from '@/hooks/useDealerAnalytics';
 
 export default function DealerAnalyticsPage() {
+  const user = useAuthStore((state) => state.user);
+  const [dateRange, setDateRange] = useState({
+    fromDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+    toDate: new Date(),
+  });
+
+  // Use the custom hook to fetch real data
+  const { dashboardSummary, quickStats, conversionFunnel, isLoading, error, refreshData } =
+    useDealerAnalytics({
+      dealerId: user?.dealerId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', // Use test dealer ID if not available
+      fromDate: dateRange.fromDate,
+      toDate: dateRange.toDate,
+    });
+
+  // Handle date range change
+  const handleDateRangeChange = (days: number) => {
+    setDateRange({
+      fromDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+      toDate: new Date(),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <DealerPortalLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </DealerPortalLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DealerPortalLayout>
+        <div className="p-8 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={refreshData}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </DealerPortalLayout>
+    );
+  }
   return (
     <DealerPortalLayout>
       <div className="p-6 lg:p-8 space-y-6">
@@ -41,11 +77,14 @@ export default function DealerAnalyticsPage() {
             <p className="text-gray-500 mt-1">Analiza el rendimiento de tu negocio</p>
           </div>
           <div className="flex items-center gap-3">
-            <select className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-              <option>Últimos 30 días</option>
-              <option>Últimos 7 días</option>
-              <option>Este mes</option>
-              <option>Este año</option>
+            <select
+              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              onChange={(e) => handleDateRangeChange(Number(e.target.value))}
+            >
+              <option value="30">Últimos 30 días</option>
+              <option value="7">Últimos 7 días</option>
+              <option value="90">Últimos 90 días</option>
+              <option value="365">Este año</option>
             </select>
             <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
               <FiDownload className="w-4 h-4" />
@@ -63,10 +102,12 @@ export default function DealerAnalyticsPage() {
               </div>
               <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
                 <FiTrendingUp className="w-4 h-4" />
-                +23%
+                {quickStats?.viewsGrowth ? `+${quickStats.viewsGrowth.toFixed(1)}%` : '+0%'}
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-1">12,450</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">
+              {quickStats?.totalViews?.toLocaleString() || '0'}
+            </p>
             <p className="text-sm text-gray-500">Vistas Totales</p>
           </div>
 
@@ -77,10 +118,12 @@ export default function DealerAnalyticsPage() {
               </div>
               <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
                 <FiTrendingUp className="w-4 h-4" />
-                +15%
+                {quickStats?.leadsGrowth ? `+${quickStats.leadsGrowth.toFixed(1)}%` : '+0%'}
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-1">185</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">
+              {quickStats?.totalLeads?.toLocaleString() || '0'}
+            </p>
             <p className="text-sm text-gray-500">Leads Generados</p>
           </div>
 
@@ -91,10 +134,12 @@ export default function DealerAnalyticsPage() {
               </div>
               <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
                 <FiTrendingUp className="w-4 h-4" />
-                +8%
+                {quickStats?.contactsGrowth ? `+${quickStats.contactsGrowth.toFixed(1)}%` : '+0%'}
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-1">423</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">
+              {quickStats?.totalContacts?.toLocaleString() || '0'}
+            </p>
             <p className="text-sm text-gray-500">Consultas</p>
           </div>
 
@@ -103,151 +148,140 @@ export default function DealerAnalyticsPage() {
               <div className="p-3 bg-blue-100 rounded-xl">
                 <FaCar className="w-6 h-6 text-blue-600" />
               </div>
-              <div className="flex items-center gap-1 text-red-600 text-sm font-medium">
-                <FiTrendingDown className="w-4 h-4" />
-                -2%
+              <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                <FiTrendingUp className="w-4 h-4" />
+                {quickStats?.salesGrowth ? `+${quickStats.salesGrowth.toFixed(1)}%` : '+0%'}
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-1">18</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">
+              {quickStats?.actualSales?.toLocaleString() || '0'}
+            </p>
             <p className="text-sm text-gray-500">Ventas del Mes</p>
           </div>
         </div>
 
-        {/* Charts Row */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Views Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">Vistas por Mes</h3>
-              <FiEye className="w-5 h-5 text-gray-400" />
-            </div>
-            {/* Simple bar visualization */}
-            <div className="flex items-end justify-between h-48 gap-2">
-              {mockChartData.views.map((value, index) => {
-                const height = (value / Math.max(...mockChartData.views)) * 100;
-                return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                    <div
-                      className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg transition-all hover:from-blue-700 hover:to-blue-500"
-                      style={{ height: `${height}%` }}
-                    />
-                    <span className="text-xs text-gray-400">{mockChartData.months[index]}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Leads Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">Leads por Mes</h3>
-              <FiTarget className="w-5 h-5 text-gray-400" />
-            </div>
-            {/* Simple bar visualization */}
-            <div className="flex items-end justify-between h-48 gap-2">
-              {mockChartData.leads.map((value, index) => {
-                const height = (value / Math.max(...mockChartData.leads)) * 100;
-                return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                    <div
-                      className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-lg transition-all hover:from-emerald-700 hover:to-emerald-500"
-                      style={{ height: `${height}%` }}
-                    />
-                    <span className="text-xs text-gray-400">{mockChartData.months[index]}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Top Vehicles Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900">Vehículos Más Populares</h3>
-          </div>
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                  Vehículo
-                </th>
-                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                  Vistas
-                </th>
-                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                  Consultas
-                </th>
-                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                  Conversión
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {topVehicles.map((vehicle, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm">
-                        {index + 1}
-                      </span>
-                      <span className="font-medium text-gray-900">{vehicle.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-600">
-                    {vehicle.views.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-600">{vehicle.inquiries}</td>
-                  <td className="px-6 py-4 text-center">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        vehicle.conversion > 15
-                          ? 'bg-green-100 text-green-700'
-                          : vehicle.conversion > 10
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {vehicle.conversion}%
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
         {/* Conversion Funnel */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-white">
-          <h3 className="text-lg font-bold mb-6">Embudo de Conversión</h3>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 text-center">
-              <p className="text-4xl font-bold mb-2">12,450</p>
-              <p className="text-blue-200 text-sm">Vistas</p>
+        {conversionFunnel && (
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-white">
+            <h3 className="text-lg font-bold mb-6">Embudo de Conversión</h3>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 text-center">
+                <p className="text-4xl font-bold mb-2">{conversionFunnel.views.toLocaleString()}</p>
+                <p className="text-blue-200 text-sm">Vistas</p>
+              </div>
+              <FiArrowRight className="w-8 h-8 text-blue-300" />
+              <div className="flex-1 text-center">
+                <p className="text-4xl font-bold mb-2">
+                  {conversionFunnel.inquiries.toLocaleString()}
+                </p>
+                <p className="text-blue-200 text-sm">Consultas</p>
+              </div>
+              <FiArrowRight className="w-8 h-8 text-blue-300" />
+              <div className="flex-1 text-center">
+                <p className="text-4xl font-bold mb-2">{conversionFunnel.leads.toLocaleString()}</p>
+                <p className="text-blue-200 text-sm">Leads</p>
+              </div>
+              <FiArrowRight className="w-8 h-8 text-blue-300" />
+              <div className="flex-1 text-center">
+                <p className="text-4xl font-bold mb-2">
+                  {conversionFunnel.closedSales.toLocaleString()}
+                </p>
+                <p className="text-blue-200 text-sm">Ventas</p>
+              </div>
             </div>
-            <FiArrowRight className="w-8 h-8 text-blue-300" />
-            <div className="flex-1 text-center">
-              <p className="text-4xl font-bold mb-2">423</p>
-              <p className="text-blue-200 text-sm">Consultas</p>
-            </div>
-            <FiArrowRight className="w-8 h-8 text-blue-300" />
-            <div className="flex-1 text-center">
-              <p className="text-4xl font-bold mb-2">185</p>
-              <p className="text-blue-200 text-sm">Leads</p>
-            </div>
-            <FiArrowRight className="w-8 h-8 text-blue-300" />
-            <div className="flex-1 text-center">
-              <p className="text-4xl font-bold mb-2">18</p>
-              <p className="text-blue-200 text-sm">Ventas</p>
+            <div className="mt-6 pt-4 border-t border-white/20">
+              <p className="text-center text-blue-200 text-sm">
+                Tasa de conversión global:{' '}
+                <span className="text-white font-bold">
+                  {conversionFunnel.conversionRate.toFixed(2)}%
+                </span>
+              </p>
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <p className="text-center text-blue-200 text-sm">
-              Tasa de conversión global: <span className="text-white font-bold">0.14%</span>
-            </p>
+        )}
+
+        {/* Analytics Summary */}
+        {dashboardSummary && dashboardSummary.analytics && (
+          <div className="grid lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Resumen de Analíticas</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Vistas Totales</span>
+                  <span className="font-bold text-gray-900">
+                    {(dashboardSummary.analytics.totalViews ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Vistas Únicas</span>
+                  <span className="font-bold text-gray-900">
+                    {(dashboardSummary.analytics.uniqueViews ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Tiempo Promedio</span>
+                  <span className="font-bold text-gray-900">
+                    {(dashboardSummary.analytics.averageViewDuration ?? 0).toFixed(1)}s
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Tasa de Conversión</span>
+                  <span className="font-bold text-gray-900">
+                    {(dashboardSummary.analytics.conversionRate ?? 0).toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Precio Promedio</span>
+                  <span className="font-bold text-gray-900">
+                    ${(dashboardSummary.analytics.averageVehiclePrice ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Días en Mercado</span>
+                  <span className="font-bold text-gray-900">
+                    {(dashboardSummary.analytics.averageDaysOnMarket ?? 0).toFixed(0)} días
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Inventario</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Vehículos Activos</span>
+                  <span className="font-bold text-gray-900">
+                    {dashboardSummary.analytics?.activeListings ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Vehículos Vendidos</span>
+                  <span className="font-bold text-gray-900">
+                    {dashboardSummary.analytics?.soldVehicles ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Ingresos Totales</span>
+                  <span className="font-bold text-gray-900">
+                    ${(dashboardSummary.analytics?.totalRevenue ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Precio Promedio</span>
+                  <span className="font-bold text-gray-900">
+                    ${(dashboardSummary.analytics?.averageVehiclePrice ?? 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Días Promedio en Mercado</span>
+                  <span className="font-bold text-blue-600">
+                    {(dashboardSummary.analytics?.averageDaysOnMarket ?? 0).toFixed(0)} días
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </DealerPortalLayout>
   );

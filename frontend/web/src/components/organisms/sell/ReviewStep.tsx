@@ -45,9 +45,7 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-2">
-          Review Your Listing
-        </h2>
+        <h2 className="text-2xl font-bold font-heading text-gray-900 mb-2">Review Your Listing</h2>
         <p className="text-gray-600">
           Please review all information before publishing your listing
         </p>
@@ -93,9 +91,7 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
           <h4 className="text-2xl font-bold text-gray-900 mb-2">
             {data.year} {data.make} {data.model}
           </h4>
-          <p className="text-3xl font-bold text-primary mb-2">
-            {formatPrice(data.price)}
-          </p>
+          <p className="text-3xl font-bold text-primary mb-2">{formatPrice(data.price)}</p>
           <div className="flex items-center gap-4 text-gray-600">
             <span>{formatMileage(data.mileage)} miles</span>
             <span>•</span>
@@ -118,22 +114,28 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
 
         {/* Quick Specs Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Transmission</p>
-            <p className="text-sm font-semibold text-gray-900">{data.transmission}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Fuel Type</p>
-            <p className="text-sm font-semibold text-gray-900">{data.fuelType}</p>
-          </div>
+          {data.transmission && (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Transmission</p>
+              <p className="text-sm font-semibold text-gray-900">{data.transmission}</p>
+            </div>
+          )}
+          {data.fuelType && (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Fuel Type</p>
+              <p className="text-sm font-semibold text-gray-900">{data.fuelType}</p>
+            </div>
+          )}
           <div>
             <p className="text-xs text-gray-500 mb-1">Body Type</p>
             <p className="text-sm font-semibold text-gray-900">{data.bodyType}</p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Drivetrain</p>
-            <p className="text-sm font-semibold text-gray-900">{data.drivetrain}</p>
-          </div>
+          {data.drivetrain && (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Drivetrain</p>
+              <p className="text-sm font-semibold text-gray-900">{data.drivetrain}</p>
+            </div>
+          )}
         </div>
 
         {/* Features */}
@@ -165,9 +167,6 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
             <div className="flex items-center gap-2 text-gray-700">
               <FiUser size={16} className="text-gray-400" />
               <span>{data.sellerName}</span>
-              <span className="px-2 py-0.5 bg-gray-200 rounded text-xs">
-                {data.sellerType === 'dealer' ? 'Dealer' : 'Private Seller'}
-              </span>
             </div>
             <div className="flex items-center gap-2 text-gray-700">
               <FiPhone size={16} className="text-gray-400" />
@@ -194,20 +193,28 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
               <span className="text-gray-600">VIN</span>
               <span className="font-medium text-gray-900">{data.vin}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Engine</span>
-              <span className="font-medium text-gray-900">{data.engine}</span>
-            </div>
+            {data.engine && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Engine</span>
+                <span className="font-medium text-gray-900">{data.engine}</span>
+              </div>
+            )}
             {data.horsepower && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Horsepower</span>
                 <span className="font-medium text-gray-900">{data.horsepower}</span>
               </div>
             )}
-            {data.mpg && (
+            {data.doors && (
               <div className="flex justify-between">
-                <span className="text-gray-600">MPG</span>
-                <span className="font-medium text-gray-900">{data.mpg}</span>
+                <span className="text-gray-600">Doors</span>
+                <span className="font-medium text-gray-900">{data.doors}</span>
+              </div>
+            )}
+            {data.seats && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Seats</span>
+                <span className="font-medium text-gray-900">{data.seats}</span>
               </div>
             )}
             <div className="flex justify-between">
@@ -272,13 +279,18 @@ export default function ReviewStep({ data, onSubmit, onBack, onSaveDraft }: Revi
             className="mt-1"
           />
           <div className="text-sm">
-            <p className="text-gray-900 font-medium mb-1">
-              I agree to the terms and conditions
-            </p>
+            <p className="text-gray-900 font-medium mb-1">I agree to the terms and conditions</p>
             <p className="text-gray-600">
-              By publishing this listing, you confirm that all information provided is accurate and you have the right to sell this vehicle. You agree to our{' '}
-              <a href="#" className="text-primary hover:underline">Terms of Service</a> and{' '}
-              <a href="#" className="text-primary hover:underline">Privacy Policy</a>.
+              By publishing this listing, you confirm that all information provided is accurate and
+              you have the right to sell this vehicle. You agree to our{' '}
+              <a href="#" className="text-primary hover:underline">
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a href="#" className="text-primary hover:underline">
+                Privacy Policy
+              </a>
+              .
             </p>
           </div>
         </label>

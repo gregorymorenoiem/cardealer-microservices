@@ -7,19 +7,24 @@ import { LocalizedContent } from '@/components/common';
 import ImageGallery from '@/components/organisms/ImageGallery';
 import VehicleSpecs from '@/components/organisms/VehicleSpecs';
 import ContactSellerForm from '@/components/organisms/ContactSellerForm';
-import ReviewsSection from '@/components/organisms/ReviewsSection';
 import SimilarVehicles from '@/components/organisms/SimilarVehicles';
-import { SimilarVehicles as SimilarVehiclesRecommendation } from '@/components/recommendations/SimilarVehicles';
-import { AlsoViewed } from '@/components/recommendations/AlsoViewed';
 import ShareButton from '@/components/molecules/ShareButton';
 import PrintButton from '@/components/atoms/PrintButton';
 import { getVehicleById, type Vehicle } from '@/services/vehicleService';
-import { mockVehicles } from '@/data/mockVehicles';
-import { getReviewStats, getVehicleReviews } from '@/data/mockReviews';
 import { formatPrice } from '@/utils/formatters';
-import { FiHome, FiChevronRight, FiStar, FiMapPin, FiPhone, FiUser, FiHeart, FiLoader, FiAlertCircle, FiWifi, FiWifiOff } from 'react-icons/fi';
+import {
+  FiHome,
+  FiChevronRight,
+  FiStar,
+  FiMapPin,
+  FiPhone,
+  FiUser,
+  FiHeart,
+  FiLoader,
+  FiMail,
+} from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import { useFavorites } from '@/hooks/useFavorites';
-import { recommendationService } from '@/services/recommendationService';
 
 // Extract the ID from SEO-friendly URL
 // Format: /vehicles/{year}-{make}-{model}-{uuid}
@@ -37,38 +42,23 @@ export default function VehicleDetailPage() {
   const id = slug ? extractIdFromSlug(slug) : undefined;
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  // Scroll to top when page loads
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
-
-  // Track vehicle view (for recommendations)
-  useEffect(() => {
-    if (vehicle?.id) {
-      recommendationService.trackVehicleView(vehicle.id, 0, 'direct').catch(() => {
-        // Silently fail - no bloquear experiencia del usuario
-      });
-    }
-  }, [vehicle?.id]);
-
-  // Fetch vehicle from ProductService
+  // Fetch vehicle from VehiclesSaleService
   const {
-    data: apiVehicle,
-    isLoading, 
+    data: vehicle,
+    isLoading,
     isError,
-    error,
   } = useQuery({
     queryKey: ['vehicle', id],
     queryFn: () => getVehicleById(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
+    retry: 2,
   });
 
-  // Fallback to mock data if API fails
-  const mockVehicle = mockVehicles.find((v) => v.id === id);
-  const isUsingMockData = isError || !apiVehicle;
-  const vehicle = apiVehicle || mockVehicle;
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // Show loading state
   if (isLoading) {
@@ -92,10 +82,6 @@ export default function VehicleDetailPage() {
 
   const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
   const isLiked = isFavorite(vehicle.id);
-  
-  // Get reviews data
-  const reviewStats = getReviewStats(vehicle.id);
-  const reviews = getVehicleReviews(vehicle.id);
 
   return (
     <MainLayout>
@@ -118,23 +104,9 @@ export default function VehicleDetailPage() {
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900">
-                    {vehicleTitle}
-                  </h1>
-                  {/* Data source indicator */}
-                  <span 
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                      isUsingMockData 
-                        ? 'bg-amber-100 text-amber-700' 
-                        : 'bg-green-100 text-green-700'
-                    }`}
-                    title={isUsingMockData ? 'Using demo data' : 'Live data from ProductService'}
-                  >
-                    {isUsingMockData ? <FiWifiOff size={12} /> : <FiWifi size={12} />}
-                    {isUsingMockData ? 'Demo' : 'Live'}
-                  </span>
-                </div>
+                <h1 className="text-3xl sm:text-4xl font-bold font-heading text-gray-900 mb-2">
+                  {vehicleTitle}
+                </h1>
                 <div className="flex items-center gap-4 text-gray-600">
                   <span className="flex items-center gap-1">
                     <FiMapPin size={16} />
@@ -170,9 +142,7 @@ export default function VehicleDetailPage() {
                   <PrintButton />
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl font-bold text-primary">
-                    {formatPrice(vehicle.price)}
-                  </p>
+                  <p className="text-4xl font-bold text-primary">{formatPrice(vehicle.price)}</p>
                 </div>
               </div>
             </div>
@@ -219,10 +189,7 @@ export default function VehicleDetailPage() {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {vehicle.features.map((feature, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 text-gray-700"
-                      >
+                      <div key={index} className="flex items-center gap-2 text-gray-700">
                         <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                         <span>{feature}</span>
                       </div>
@@ -239,19 +206,25 @@ export default function VehicleDetailPage() {
                 <h3 className="text-xl font-bold font-heading text-gray-900 mb-4">
                   {t('detail.sellerInfo')}
                 </h3>
-                
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <FiUser size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{vehicle.seller.name}</p>
-                      <p className="text-sm text-gray-600">{vehicle.seller.type}</p>
-                    </div>
-                  </div>
 
-                  {vehicle.seller.rating && (
+                <div className="space-y-4 mb-6">
+                  {/* Seller Name & Type */}
+                  {vehicle.seller?.name && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <FiUser size={24} className="text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{vehicle.seller.name}</p>
+                        {vehicle.seller.type && (
+                          <p className="text-sm text-gray-600">{vehicle.seller.type}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rating */}
+                  {vehicle.seller?.rating && vehicle.seller.rating > 0 && (
                     <div className="flex items-center gap-2">
                       <FiStar size={20} className="text-yellow-400 fill-yellow-400" />
                       <span className="font-semibold text-gray-900">{vehicle.seller.rating}</span>
@@ -259,28 +232,67 @@ export default function VehicleDetailPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <FiPhone size={18} />
-                    <a
-                      href={`tel:${vehicle.seller.phone}`}
-                      className="hover:text-primary transition-colors duration-200"
-                    >
-                      {vehicle.seller.phone}
-                    </a>
-                  </div>
+                  {/* Phone */}
+                  {vehicle.seller?.phone && vehicle.seller.phone.trim() !== '' && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <FiPhone size={18} />
+                      <a
+                        href={`tel:${vehicle.seller.phone}`}
+                        className="hover:text-primary transition-colors duration-200"
+                      >
+                        {vehicle.seller.phone}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Email */}
+                  {vehicle.seller?.email && vehicle.seller.email.trim() !== '' && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <FiMail size={18} />
+                      <a
+                        href={`mailto:${vehicle.seller.email}`}
+                        className="hover:text-primary transition-colors duration-200"
+                      >
+                        {vehicle.seller.email}
+                      </a>
+                    </div>
+                  )}
                 </div>
 
-                <Link to={`tel:${vehicle.seller.phone}`}>
-                  <button className="w-full py-3 px-4 bg-secondary text-white rounded-lg hover:bg-secondary-600 transition-colors duration-200 font-medium mb-3">
-                    {t('detail.callSeller')}
-                  </button>
-                </Link>
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {/* Call Button - only show if phone exists */}
+                  {vehicle.seller?.phone && vehicle.seller.phone.trim() !== '' && (
+                    <a href={`tel:${vehicle.seller.phone}`} className="block">
+                      <button className="w-full py-3 px-4 bg-secondary text-white rounded-lg hover:bg-secondary-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2">
+                        <FiPhone size={18} />
+                        {t('detail.callSeller')}
+                      </button>
+                    </a>
+                  )}
 
-                <Link to="/browse">
-                  <button className="w-full py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
-                    {t('detail.backToBrowse')}
-                  </button>
-                </Link>
+                  {/* WhatsApp Button - only show if phone exists */}
+                  {vehicle.seller?.phone && vehicle.seller.phone.trim() !== '' && (
+                    <a
+                      href={`https://wa.me/${vehicle.seller.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola, me interesa el ${vehicle.year} ${vehicle.make} ${vehicle.model} que vi en OKLA.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <button className="w-full py-3 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2">
+                        <FaWhatsapp size={20} />
+                        WhatsApp
+                      </button>
+                    </a>
+                  )}
+
+                  {/* Back to Browse */}
+                  <Link to="/browse" className="block">
+                    <button className="w-full py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+                      {t('detail.backToBrowse')}
+                    </button>
+                  </Link>
+                </div>
               </div>
 
               {/* Contact Form */}
@@ -292,26 +304,7 @@ export default function VehicleDetailPage() {
             </div>
           </div>
 
-          {/* Reviews Section */}
-          <div className="mt-8">
-            <ReviewsSection
-              vehicleId={vehicle.id}
-              stats={reviewStats}
-              reviews={reviews}
-            />
-          </div>
-
-          {/* AI-Powered Similar Vehicles - Based on Recommendation Engine */}
-          <div className="mt-8 print:hidden">
-            <SimilarVehiclesRecommendation vehicleId={vehicle.id} limit={6} />
-          </div>
-
-          {/* Users Also Viewed - Collaborative Filtering */}
-          <div className="mt-8 print:hidden">
-            <AlsoViewed vehicleId={vehicle.id} limit={4} />
-          </div>
-
-          {/* Similar Vehicles (Legacy) */}
+          {/* Similar Vehicles - Using VehiclesSaleService */}
           <div className="mt-8 print:hidden">
             <SimilarVehicles currentVehicle={vehicle} maxItems={4} />
           </div>
@@ -371,4 +364,3 @@ export default function VehicleDetailPage() {
     </MainLayout>
   );
 }
-

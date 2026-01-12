@@ -8,17 +8,90 @@ import type { AxiosInstance } from 'axios';
 
 export type InsightPriority = 'High' | 'Medium' | 'Low';
 
+// Internal type that matches the backend response for conversion funnel
+interface ConversionFunnelApiResponse {
+  id: string;
+  dealerId: string;
+  date: string;
+  totalViews: number;
+  totalContacts: number;
+  testDriveRequests: number;
+  actualSales: number;
+  viewToContactRate: number;
+  contactToTestDriveRate: number;
+  testDriveToSaleRate: number;
+  overallConversionRate: number;
+  averageTimeToSale: number;
+}
+
+export interface MarketBenchmarkDto {
+  id?: string;
+  date?: string;
+  vehicleCategory?: string;
+  priceRange?: string;
+  category: string;
+  dealerValue: number;
+  marketAverage: number;
+  isAboveAverage: boolean;
+  marketAveragePrice?: number;
+  marketAverageDaysOnMarket?: number;
+  marketAverageViews?: number;
+  marketConversionRate?: number;
+}
+
+export interface DealerInsightDto {
+  id: string;
+  dealerId?: string;
+  type: string;
+  priority: InsightPriority;
+  title: string;
+  description?: string;
+  actionRecommendation?: string;
+  potentialImpact?: string | number;
+  confidence?: number;
+  isRead?: boolean;
+  isActedUpon?: boolean;
+  createdAt?: string;
+  expiresAt?: string;
+}
+
+// Analytics object that comes nested in DashboardSummaryDto
+export interface DealerAnalyticsData {
+  id: string;
+  dealerId: string;
+  date: string;
+  totalViews: number;
+  uniqueViews: number;
+  averageViewDuration: number;
+  totalContacts: number;
+  phoneCalls: number;
+  whatsAppMessages: number;
+  emailInquiries: number;
+  testDriveRequests: number;
+  actualSales: number;
+  conversionRate: number;
+  totalRevenue: number;
+  averageVehiclePrice: number;
+  revenuePerView: number;
+  activeListings: number;
+  averageDaysOnMarket: number;
+  soldVehicles: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DashboardSummaryDto {
   dealerId: string;
-  totalViews: number;
-  uniqueVisitors: number;
-  totalInquiries?: number;
-  convertedLeads?: number;
-  conversionRate: number;
-  totalRevenue?: number;
-  averageResponseTime?: number;
-  customerSatisfactionScore?: number;
-  period?: string;
+  fromDate: string;
+  toDate: string;
+  analytics: DealerAnalyticsData;
+  conversionFunnel?: ConversionFunnelApiResponse;
+  benchmarks?: MarketBenchmarkDto[];
+  insights?: DealerInsightDto[];
+  viewsGrowth?: number;
+  contactsGrowth?: number;
+  salesGrowth?: number;
+  revenueGrowth?: number;
 }
 
 export interface QuickStats {
@@ -32,12 +105,13 @@ export interface QuickStats {
   revenueGrowth: number;
 }
 
+// Frontend-friendly format for the component
 export interface ConversionFunnelDto {
   views: number;
-  detailViews?: number;
   inquiries: number;
-  testDrives?: number;
-  purchases: number;
+  leads: number;
+  closedSales: number;
+  conversionRate: number;
   overallConversionRate: number;
 }
 
@@ -45,25 +119,21 @@ export interface FunnelVisualization {
   steps: Array<{ label: string; value: number; rate?: number }>;
 }
 
-export interface MarketBenchmarkDto {
-  category: string;
-  dealerValue: number;
-  marketAverage: number;
-  isAboveAverage: boolean;
-  marketAveragePrice?: number;
+export interface TrendsDailyData {
+  date: string;
+  views: number;
+  uniqueViews: number;
+  contacts: number;
+  sales: number;
+  revenue: number;
 }
 
-export interface DealerInsightDto {
-  id: string;
-  dealerId?: string;
-  type: string;
-  priority: InsightPriority;
-  title: string;
-  description?: string;
-  actionRecommendation?: string;
-  potentialImpact?: string;
-  isRead?: boolean;
-  createdAt?: string;
+export interface TrendsData {
+  dealerId: string;
+  periodDays: number;
+  fromDate: string;
+  toDate: string;
+  dailyData: TrendsDailyData[];
 }
 
 export interface InsightsSummary {
@@ -233,14 +303,14 @@ export class DealerAnalyticsService {
     const params: Record<string, string> = {};
     if (fromDate) params.fromDate = fromDate.toISOString();
     if (toDate) params.toDate = toDate.toISOString();
-    const response = await this.api.get(`/api/analytics/dashboard/${dealerId}/summary`, {
+    const response = await this.api.get(`/api/dashboard/${dealerId}/summary`, {
       params,
     });
     return response.data;
   }
 
   async getQuickStats(dealerId: string): Promise<QuickStats> {
-    const response = await this.api.get(`/api/analytics/dashboard/${dealerId}/quick-stats`);
+    const response = await this.api.get(`/api/dashboard/${dealerId}/quick-stats`);
     return response.data;
   }
 
@@ -252,8 +322,21 @@ export class DealerAnalyticsService {
     const params: Record<string, string> = {};
     if (fromDate) params.fromDate = fromDate.toISOString();
     if (toDate) params.toDate = toDate.toISOString();
-    const response = await this.api.get(`/api/analytics/funnel/${dealerId}`, { params });
-    return response.data;
+    const response = await this.api.get<ConversionFunnelApiResponse>(
+      `/api/conversionfunnel/${dealerId}`,
+      { params }
+    );
+
+    // Transform backend response to frontend-friendly format
+    const data = response.data;
+    return {
+      views: data.totalViews ?? 0,
+      inquiries: data.totalContacts ?? 0,
+      leads: data.testDriveRequests ?? 0,
+      closedSales: data.actualSales ?? 0,
+      conversionRate: data.overallConversionRate ?? 0,
+      overallConversionRate: data.overallConversionRate ?? 0,
+    };
   }
 
   async getFunnelVisualization(
@@ -271,7 +354,7 @@ export class DealerAnalyticsService {
   }
 
   async getDealerInsights(dealerId: string): Promise<DealerInsightDto[]> {
-    const response = await this.api.get(`/api/analytics/insights/${dealerId}`);
+    const response = await this.api.get(`/api/insights/${dealerId}`);
     return response.data;
   }
 
@@ -281,11 +364,11 @@ export class DealerAnalyticsService {
   }
 
   async generateInsights(dealerId: string): Promise<void> {
-    await this.api.post(`/api/analytics/insights/${dealerId}/generate`);
+    await this.api.post(`/api/insights/${dealerId}/generate`);
   }
 
   async markInsightsAsRead(dealerId: string, insightIds: string[]): Promise<void> {
-    await this.api.post(`/api/analytics/insights/${dealerId}/read`, { insightIds });
+    await this.api.put(`/api/insights/${dealerId}/mark-read`, { insightIds });
   }
 
   async markInsightAsActedUpon(insightId: string): Promise<void> {
@@ -304,7 +387,7 @@ export class DealerAnalyticsService {
   }
 
   async getMarketBenchmarks(): Promise<MarketBenchmarkDto[]> {
-    const response = await this.api.get('/api/analytics/benchmarks');
+    const response = await this.api.get('/api/benchmark');
     return response.data;
   }
 
@@ -511,6 +594,16 @@ export class DealerAnalyticsService {
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
     };
+  }
+
+  /**
+   * Get trends data for chart
+   */
+  async getTrends(dealerId: string, periodDays: number = 30): Promise<TrendsData> {
+    const response = await this.api.get(`/api/dashboard/${dealerId}/trends`, {
+      params: { periodDays },
+    });
+    return response.data;
   }
 
   /**

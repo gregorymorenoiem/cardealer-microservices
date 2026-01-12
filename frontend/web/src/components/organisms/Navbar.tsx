@@ -27,6 +27,7 @@ import {
   FiBell,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
+import NotificationDropdown from './NotificationDropdown';
 
 export default function NavbarSimple() {
   const { t } = useTranslation('common');
@@ -53,30 +54,13 @@ export default function NavbarSimple() {
   // - No autenticado o no-dealer → Landing de marketing
   // - Dealer autenticado → Dashboard directo
   const dealerLink = (() => {
-    // DEBUG: Log para verificar la lógica
-    console.log('🐛 DEBUG dealerLink logic:', {
-      isAuthenticated,
-      user: user
-        ? {
-            email: user.email,
-            accountType: user.accountType,
-            id: user.id,
-            dealerId: user.dealerId,
-          }
-        : null,
-      isDealerCheck:
-        user && (user.accountType === 'dealer' || user.accountType === 'dealer_employee'),
-    });
-
     if (
       isAuthenticated &&
       user &&
       (user.accountType === 'dealer' || user.accountType === 'dealer_employee')
     ) {
-      console.log('🎯 Showing Mi Dashboard for dealer user');
       return { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiBriefcase };
     }
-    console.log('🎯 Showing Para Dealers for non-dealer user');
     return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
   })();
 
@@ -94,7 +78,7 @@ export default function NavbarSimple() {
   const dealerLinks = [
     { href: '/dealer/dashboard', label: 'Dashboard', icon: FiGrid },
     { href: '/dealer/inventory', label: 'Inventario', icon: FaCar },
-    { href: '/dealer/leads', label: 'Leads', icon: FiTarget },
+    { href: '/dealer/crm', label: 'Leads', icon: FiTarget },
     { href: '/dealer/analytics', label: 'Analytics', icon: FiBarChart2 },
   ];
 
@@ -168,6 +152,9 @@ export default function NavbarSimple() {
                   <FiPlusCircle className="w-4 h-4" />
                   <span>Vender</span>
                 </Link>
+
+                {/* Notification Bell - Con dropdown */}
+                <NotificationDropdown />
 
                 {/* User Menu - Simplificado */}
                 <div className="relative">

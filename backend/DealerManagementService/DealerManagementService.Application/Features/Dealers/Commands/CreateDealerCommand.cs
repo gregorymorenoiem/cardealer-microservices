@@ -54,8 +54,8 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
             Description = req.Description,
             EstablishedDate = req.EstablishedDate,
             EmployeeCount = req.EmployeeCount,
-            CurrentPlan = DealerPlan.None,
-            MaxActiveListings = 0,
+            CurrentPlan = DealerPlan.Free,
+            MaxActiveListings = 3, // Free plan limit
             CurrentActiveListings = 0,
             CreatedAt = DateTime.UtcNow
         };

@@ -176,14 +176,17 @@ public class VehiclesController : ControllerBase
             VIN = request.VIN,
             Make = request.Make,
             Model = request.Model,
+            Trim = request.Trim,
             Year = request.Year,
             Mileage = request.Mileage,
             MileageUnit = request.MileageUnit ?? MileageUnit.Miles,
             VehicleType = request.VehicleType,
             BodyStyle = request.BodyStyle ?? BodyStyle.Sedan,
-            FuelType = request.FuelType,
-            Transmission = request.Transmission,
-            DriveType = request.DriveType,
+            Doors = request.Doors ?? 4,
+            Seats = request.Seats ?? 5,
+            FuelType = request.FuelType ?? FuelType.Gasoline,
+            Transmission = request.Transmission ?? TransmissionType.Automatic,
+            DriveType = request.DriveType ?? Entities.DriveType.FWD,
             EngineSize = request.EngineSize,
             Cylinders = request.Cylinders,
             Horsepower = request.Horsepower,
@@ -198,8 +201,12 @@ public class VehiclesController : ControllerBase
             Country = request.Country ?? "USA",
             SellerId = request.SellerId ?? Guid.Empty,
             SellerName = request.SellerName ?? string.Empty,
+            SellerPhone = request.SellerPhone,
+            SellerEmail = request.SellerEmail,
+            SellerWhatsApp = request.SellerWhatsApp,
             DealerId = request.DealerId ?? Guid.Empty,
             CategoryId = request.CategoryId,
+            FeaturesJson = request.FeaturesJson ?? "[]",
             HomepageSections = request.HomepageSections ?? HomepageSection.None
         };
 
@@ -358,14 +365,17 @@ public record CreateVehicleRequest
     public string VIN { get; init; } = string.Empty;
     public string Make { get; init; } = string.Empty;
     public string Model { get; init; } = string.Empty;
+    public string? Trim { get; init; } // LE, SE, XLE, Sport
     public int Year { get; init; }
     public int Mileage { get; init; }
     public MileageUnit? MileageUnit { get; init; }
     public VehicleType VehicleType { get; init; }
     public BodyStyle? BodyStyle { get; init; }
-    public FuelType FuelType { get; init; }
-    public TransmissionType Transmission { get; init; }
-    public Entities.DriveType DriveType { get; init; }
+    public int? Doors { get; init; } // Número de puertas (default: 4)
+    public int? Seats { get; init; } // Número de asientos (default: 5)
+    public FuelType? FuelType { get; init; } // Opcional - VIN no siempre tiene datos
+    public TransmissionType? Transmission { get; init; } // Opcional - VIN no siempre tiene datos
+    public Entities.DriveType? DriveType { get; init; } // Opcional - VIN no siempre tiene datos
     public string? EngineSize { get; init; }
     public int? Cylinders { get; init; }
     public int? Horsepower { get; init; }
@@ -380,9 +390,13 @@ public record CreateVehicleRequest
     public string? Country { get; init; }
     public Guid? SellerId { get; init; }
     public string? SellerName { get; init; }
+    public string? SellerPhone { get; init; }
+    public string? SellerEmail { get; init; }
+    public string? SellerWhatsApp { get; init; }
     public Guid? DealerId { get; init; }
     public Guid? CategoryId { get; init; }
     public List<string>? Images { get; init; }
+    public string? FeaturesJson { get; init; } // JSON array de características
 
     /// <summary>
     /// Secciones del homepage donde mostrar este vehículo.

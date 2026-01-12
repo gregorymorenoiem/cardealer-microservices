@@ -18,7 +18,6 @@ const pricingSchema = z.object({
   sellerName: z.string().min(1, 'Your name is required'),
   sellerPhone: z.string().min(10, 'Valid phone number is required'),
   sellerEmail: z.string().email('Valid email is required'),
-  sellerType: z.enum(['private', 'dealer']),
 });
 
 type PricingFormData = z.infer<typeof pricingSchema>;
@@ -44,12 +43,10 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
       sellerName: data.sellerName || '',
       sellerPhone: data.sellerPhone || '',
       sellerEmail: data.sellerEmail || '',
-      sellerType: data.sellerType || 'private',
     },
   });
 
   const description = watch('description');
-  const sellerType = watch('sellerType');
   const askingPrice = watch('price');
   const location = watch('location');
 
@@ -80,7 +77,16 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
     askingPrice > 0 &&
     Boolean(location);
 
+  // TODO: Enable when PricingIntelligenceService is deployed
+  // For now, pricing suggestions are disabled
+  const PRICING_SERVICE_ENABLED = false;
+
   useEffect(() => {
+    // Skip if pricing service is disabled
+    if (!PRICING_SERVICE_ENABLED) {
+      return;
+    }
+
     if (!hasAuth) {
       setSuggestion(null);
       setSuggestionError(null);
@@ -115,12 +121,11 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
         if (!isCancelled) {
           setSuggestion(result);
         }
-      } catch (error) {
+      } catch {
+        // Silently fail - pricing service may not be available yet
         if (!isCancelled) {
           setSuggestion(null);
-          setSuggestionError(
-            error instanceof Error ? error.message : 'No se pudo calcular la sugerencia de precio'
-          );
+          // Don't show error - service is optional
         }
       } finally {
         if (!isCancelled) {
@@ -165,6 +170,21 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
           />
         </div>
         {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>}
+
+        {/* VIN Base Price (MSRP) Suggestion */}
+        {data.vinBasePrice && data.vinBasePrice > 0 && (
+          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-900">💡 MSRP from VIN</p>
+                <p className="text-xs text-blue-700">Original base price when new</p>
+              </div>
+              <p className="text-lg font-bold text-blue-900">
+                ${data.vinBasePrice.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Intelligent Pricing (Sprint 18) */}
         <div className="mt-3 space-y-3">
@@ -327,36 +347,11 @@ export default function PricingStep({ data, onNext, onBack }: PricingStepProps) 
       <div className="border-t pt-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
 
-        {/* Seller Type */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            I am a <span className="text-red-500">*</span>
-          </label>
-          <div className="flex gap-4">
-            <label className="flex items-center cursor-pointer">
-              <input {...register('sellerType')} type="radio" value="private" className="mr-2" />
-              <span
-                className={`text-sm ${sellerType === 'private' ? 'font-semibold text-primary' : 'text-gray-700'}`}
-              >
-                Private Seller
-              </span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input {...register('sellerType')} type="radio" value="dealer" className="mr-2" />
-              <span
-                className={`text-sm ${sellerType === 'dealer' ? 'font-semibold text-primary' : 'text-gray-700'}`}
-              >
-                Dealer
-              </span>
-            </label>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             {...register('sellerName')}
-            label={sellerType === 'dealer' ? 'Dealership Name' : 'Your Name'}
-            placeholder={sellerType === 'dealer' ? 'ABC Motors' : 'John Doe'}
+            label="Your Name"
+            placeholder="John Doe"
             error={errors.sellerName?.message}
             required
           />

@@ -1,7 +1,7 @@
 /**
  * HeroCarousel Component
  * Sprint 4: HeroCarousel Component (Sprint 5.1: Search Separation)
- * 
+ *
  * Premium full-screen carousel for hero section
  * Auto-rotates enterprise/premium tier vehicles
  * 100% visible - no search overlay for maximum ad visibility
@@ -12,7 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, PlayCircle, PauseCircle, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import type { Vehicle } from '@/data/mockVehicles';
+import type { Vehicle } from '@/services/vehicleService';
 import { DestacadoBadge, PremiumBadge, TopDealerBadge } from '@/components/atoms';
 import { generateVehicleUrl } from '@/utils/seoSlug';
 
@@ -23,11 +23,11 @@ interface HeroCarouselProps {
   className?: string;
 }
 
-export default function HeroCarousel({ 
-  vehicles, 
+export default function HeroCarousel({
+  vehicles,
   autoPlayInterval = 5000,
   showScrollHint = true,
-  className = '' 
+  className = '',
 }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -86,11 +86,11 @@ export default function HeroCarousel({
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
-    
+
     if (isLeftSwipe) {
       goToNext();
     } else if (isRightSwipe) {
@@ -105,7 +105,7 @@ export default function HeroCarousel({
   // Render badge based on tier
   const renderBadge = () => {
     if (!currentVehicle.tier || currentVehicle.tier === 'basic') return null;
-    
+
     switch (currentVehicle.tier) {
       case 'enterprise':
         return <TopDealerBadge size="lg" />;
@@ -119,7 +119,7 @@ export default function HeroCarousel({
   };
 
   return (
-    <div 
+    <div
       className={`relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-gray-900 ${className}`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -150,11 +150,7 @@ export default function HeroCarousel({
             <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col justify-center h-full max-w-2xl">
                 {/* Badge */}
-                {renderBadge() && (
-                  <div className="mb-2 sm:mb-4">
-                    {renderBadge()}
-                  </div>
-                )}
+                {renderBadge() && <div className="mb-2 sm:mb-4">{renderBadge()}</div>}
 
                 {/* Title */}
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-2 sm:mb-4 leading-tight">
@@ -187,9 +183,7 @@ export default function HeroCarousel({
                   >
                     Ver Detalles
                   </Link>
-                  <button
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm text-white font-semibold rounded-lg transition-colors duration-200 text-base sm:text-lg border border-white/20 touch-manipulation"
-                  >
+                  <button className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm text-white font-semibold rounded-lg transition-colors duration-200 text-base sm:text-lg border border-white/20 touch-manipulation">
                     Contactar Vendedor
                   </button>
                 </div>
@@ -226,8 +220,8 @@ export default function HeroCarousel({
                   key={index}
                   onClick={() => goToSlide(index)}
                   className={`h-1 rounded-full transition-all duration-300 touch-manipulation ${
-                    index === currentIndex 
-                      ? 'w-8 sm:w-12 bg-white' 
+                    index === currentIndex
+                      ? 'w-8 sm:w-12 bg-white'
                       : 'w-6 sm:w-8 bg-white/40 hover:bg-white/60 active:bg-white/80'
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
@@ -271,7 +265,7 @@ export default function HeroCarousel({
           transition={{
             duration: 1.5,
             repeat: Infinity,
-            repeatType: "reverse",
+            repeatType: 'reverse',
           }}
           className="hidden sm:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
         >

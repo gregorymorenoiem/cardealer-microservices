@@ -94,7 +94,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
             UserId = Guid.Parse(user.Id),
             Email = user.Email!,
             FullName = user.UserName!, // Using UserName as FullName for now
-            RegisteredAt = user.CreatedAt
+            RegisteredAt = user.CreatedAt,
+            Metadata = new Dictionary<string, string>
+            {
+                { "AccountType", ((int)user.AccountType).ToString() } // ← CRÍTICO: Usar AccountType del usuario
+            }
         };
         await _eventPublisher.PublishAsync(userRegisteredEvent, cancellationToken);
 

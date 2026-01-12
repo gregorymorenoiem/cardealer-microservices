@@ -1,7 +1,8 @@
-using DealerManagementService.Application;
+using DealerManagementService.Application.DTOs;
 using DealerManagementService.Domain.Interfaces;
 using DealerManagementService.Infrastructure.Persistence;
 using DealerManagementService.Infrastructure.Persistence.Repositories;
+using DealerManagementService.Infrastructure.Services.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -67,7 +68,11 @@ builder.Services.AddScoped<IDealerDocumentRepository, DealerDocumentRepository>(
 builder.Services.AddScoped<IDealerLocationRepository, DealerLocationRepository>();
 
 // MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Application.DTOs.DealerDto).Assembly));
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DealerDto).Assembly));
+
+// Background Services - Event Consumers
+// Consumer for UserRegisteredEvent from AuthService - auto-creates dealer profiles
+builder.Services.AddHostedService<UserRegisteredEventConsumer>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -122,12 +127,13 @@ if (app.Environment.IsDevelopment())
         var dbContext = scope.ServiceProvider.GetRequiredService<DealerDbContext>();
         try
         {
-            dbContext.Database.Migrate();
+            // Use EnsureCreated for development (creates tables if they don't exist)
+            dbContext.Database.EnsureCreated();
         }
         catch (Exception ex)
         {
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while migrating the database.");
+            logger.LogError(ex, "An error occurred while creating the database.");
         }
     }
 }

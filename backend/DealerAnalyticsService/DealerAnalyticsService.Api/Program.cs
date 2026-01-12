@@ -15,7 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Host=postgres;Database=dealeranalyticsservice;Username=postgres;Password=cardealer123";
 
+// Register both DbContext classes
 builder.Services.AddDbContext<AnalyticsDbContext>(options =>
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.MigrationsAssembly("DealerAnalyticsService.Infrastructure");
+        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+    }));
+
+builder.Services.AddDbContext<DealerAnalyticsService.Infrastructure.Persistence.DealerAnalyticsDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.MigrationsAssembly("DealerAnalyticsService.Infrastructure");
@@ -34,6 +42,10 @@ builder.Services.AddMediatR(cfg =>
 // 3. Repository Pattern DI
 // ============================================
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IDealerAnalyticsRepository, DealerAnalyticsRepository>();
+builder.Services.AddScoped<IConversionFunnelRepository, ConversionFunnelRepository>();
+builder.Services.AddScoped<IMarketBenchmarkRepository, MarketBenchmarkRepository>();
+builder.Services.AddScoped<IDealerInsightRepository, DealerInsightRepository>();
 
 // ============================================
 // 4. CORS Configuration
@@ -115,8 +127,7 @@ builder.Services.AddSwaggerGen(c =>
 // ============================================
 // 7. Health Checks
 // ============================================
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AnalyticsDbContext>();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 

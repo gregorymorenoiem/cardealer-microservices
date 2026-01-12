@@ -1,4 +1,5 @@
 export { default as Button } from './Button';
+export { default as Combobox } from './Combobox';
 export { default as Input } from './Input';
 export { default as Label } from './Label';
 export { default as Spinner } from './Spinner';
@@ -10,6 +11,7 @@ export { default as TopDealerBadge } from './TopDealerBadge';
 export { default as CertificadoBadge } from './CertificadoBadge';
 
 export type { ButtonProps } from './Button';
+export type { ComboboxProps, ComboboxOption } from './Combobox';
 export type { InputProps } from './Input';
 export type { LabelProps } from './Label';
 export type { SpinnerProps } from './Spinner';

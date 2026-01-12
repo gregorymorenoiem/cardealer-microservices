@@ -1,12 +1,12 @@
 /**
  * Messaging TanStack Query Hooks
- * 
+ *
  * Provides hooks for messaging/chat operations between users.
  * Uses messageService.ts for API calls.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UseQueryOptions } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
 import {
   getConversations,
   getConversationById,
@@ -40,11 +40,12 @@ export const messagingKeys = {
   // Conversations
   conversations: () => [...messagingKeys.all, 'conversations'] as const,
   conversationsList: () => [...messagingKeys.conversations(), 'list'] as const,
-  conversationsSearch: (query: string) => [...messagingKeys.conversations(), 'search', query] as const,
+  conversationsSearch: (query: string) =>
+    [...messagingKeys.conversations(), 'search', query] as const,
   conversationDetail: (id: string) => [...messagingKeys.conversations(), 'detail', id] as const,
   // Messages
   messages: () => [...messagingKeys.all, 'messages'] as const,
-  messagesList: (conversationId: string, page?: number) => 
+  messagesList: (conversationId: string, page?: number) =>
     [...messagingKeys.messages(), 'list', conversationId, { page }] as const,
   unreadCount: () => [...messagingKeys.messages(), 'unreadCount'] as const,
   // Users
@@ -59,7 +60,7 @@ export const messagingKeys = {
 // CONVERSATIONS HOOKS
 // ============================================================================
 
-export function useConversations(options?: Partial<UseQueryOptions<Conversation[]>>) {
+export function useConversations(options?: any) {
   return useQuery({
     queryKey: messagingKeys.conversationsList(),
     queryFn: getConversations,
@@ -69,7 +70,7 @@ export function useConversations(options?: Partial<UseQueryOptions<Conversation[
   });
 }
 
-export function useConversation(id: string, options?: Partial<UseQueryOptions<ConversationDetail>>) {
+export function useConversation(id: string, options?: any) {
   return useQuery({
     queryKey: messagingKeys.conversationDetail(id),
     queryFn: () => getConversationById(id),
@@ -80,7 +81,7 @@ export function useConversation(id: string, options?: Partial<UseQueryOptions<Co
   });
 }
 
-export function useSearchConversations(query: string, options?: Partial<UseQueryOptions<Conversation[]>>) {
+export function useSearchConversations(query: string, options?: any) {
   return useQuery({
     queryKey: messagingKeys.conversationsSearch(query),
     queryFn: () => searchConversations(query),
@@ -92,24 +93,24 @@ export function useSearchConversations(query: string, options?: Partial<UseQuery
 
 export function useStartConversation() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ vehicleId, sellerId }: { vehicleId: string; sellerId: string }) => 
+    mutationFn: ({ vehicleId, sellerId }: { vehicleId: string; sellerId: string }) =>
       startConversation(vehicleId, sellerId),
     onSuccess: (newConversation) => {
       queryClient.invalidateQueries({ queryKey: messagingKeys.conversations() });
       // Optionally set the new conversation in cache
-      queryClient.setQueryData(
-        messagingKeys.conversationDetail(newConversation.id),
-        { ...newConversation, messages: [] }
-      );
+      queryClient.setQueryData(messagingKeys.conversationDetail(newConversation.id), {
+        ...newConversation,
+        messages: [],
+      });
     },
   });
 }
 
 export function useDeleteConversation() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (conversationId: string) => deleteConversation(conversationId),
     onSuccess: (_, conversationId) => {
@@ -132,10 +133,10 @@ interface PaginatedMessages {
 }
 
 export function useMessages(
-  conversationId: string, 
-  page: number = 1, 
+  conversationId: string,
+  page: number = 1,
   pageSize: number = 50,
-  options?: Partial<UseQueryOptions<PaginatedMessages>>
+  options?: any
 ) {
   return useQuery({
     queryKey: messagingKeys.messagesList(conversationId, page),
@@ -146,7 +147,7 @@ export function useMessages(
   });
 }
 
-export function useUnreadMessageCount(options?: Partial<UseQueryOptions<number>>) {
+export function useUnreadMessageCount(options?: any) {
   return useQuery({
     queryKey: messagingKeys.unreadCount(),
     queryFn: getUnreadCount,
@@ -158,19 +159,21 @@ export function useUnreadMessageCount(options?: Partial<UseQueryOptions<number>>
 
 export function useSendMessage() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ conversationId, content }: { conversationId: string; content: string }) => 
+    mutationFn: ({ conversationId, content }: { conversationId: string; content: string }) =>
       sendMessage(conversationId, content),
     onMutate: async ({ conversationId, content }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: messagingKeys.conversationDetail(conversationId) });
-      
+      await queryClient.cancelQueries({
+        queryKey: messagingKeys.conversationDetail(conversationId),
+      });
+
       // Snapshot the previous value
       const previousConversation = queryClient.getQueryData<ConversationDetail>(
         messagingKeys.conversationDetail(conversationId)
       );
-      
+
       // Optimistically update
       if (previousConversation) {
         const optimisticMessage: Message = {
@@ -183,7 +186,7 @@ export function useSendMessage() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        
+
         queryClient.setQueryData<ConversationDetail>(
           messagingKeys.conversationDetail(conversationId),
           {
@@ -194,7 +197,7 @@ export function useSendMessage() {
           }
         );
       }
-      
+
       return { previousConversation };
     },
     onError: (_, { conversationId }, context) => {
@@ -215,7 +218,7 @@ export function useSendMessage() {
 
 export function useMarkMessageAsRead() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (messageId: string) => markMessageAsRead(messageId),
     onSuccess: () => {
@@ -226,7 +229,7 @@ export function useMarkMessageAsRead() {
 
 export function useMarkConversationAsRead() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (conversationId: string) => markConversationAsRead(conversationId),
     onSuccess: (_, conversationId) => {
@@ -239,7 +242,7 @@ export function useMarkConversationAsRead() {
 
 export function useDeleteMessage() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (messageId: string) => deleteMessage(messageId),
     onSuccess: () => {
@@ -253,12 +256,7 @@ export function useDeleteMessage() {
 // USER BLOCKING HOOKS
 // ============================================================================
 
-export function useBlockedUsers(options?: Partial<UseQueryOptions<Array<{
-  id: string;
-  name: string;
-  avatar?: string;
-  blockedAt: string;
-}>>>) {
+export function useBlockedUsers(options?: any) {
   return useQuery({
     queryKey: messagingKeys.blockedUsers(),
     queryFn: getBlockedUsers,
@@ -269,7 +267,7 @@ export function useBlockedUsers(options?: Partial<UseQueryOptions<Array<{
 
 export function useBlockUser() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (userId: string) => blockUser(userId),
     onSuccess: () => {
@@ -281,7 +279,7 @@ export function useBlockUser() {
 
 export function useUnblockUser() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (userId: string) => unblockUser(userId),
     onSuccess: () => {
@@ -296,10 +294,14 @@ export function useUnblockUser() {
 
 export function useReportConversation() {
   return useMutation({
-    mutationFn: ({ conversationId, reason, details }: { 
-      conversationId: string; 
-      reason: string; 
-      details?: string; 
+    mutationFn: ({
+      conversationId,
+      reason,
+      details,
+    }: {
+      conversationId: string;
+      reason: string;
+      details?: string;
     }) => reportConversation(conversationId, reason, details),
   });
 }
@@ -327,7 +329,7 @@ interface Report {
   createdAt: string;
 }
 
-export function useMessageStats(options?: Partial<UseQueryOptions<MessageStats>>) {
+export function useMessageStats(options?: any) {
   return useQuery({
     queryKey: messagingKeys.adminStats(),
     queryFn: getMessageStats,
@@ -336,7 +338,7 @@ export function useMessageStats(options?: Partial<UseQueryOptions<MessageStats>>
   });
 }
 
-export function useReportedConversations(options?: Partial<UseQueryOptions<Report[]>>) {
+export function useReportedConversations(options?: any) {
   return useQuery({
     queryKey: messagingKeys.adminReports(),
     queryFn: getReportedConversations,
@@ -411,7 +413,7 @@ export function useChatWindow(conversationId: string) {
     sendTypingIndicator: () => sendTyping.mutate(conversationId),
     markAsRead: markCurrentAsRead,
     blockUser: (userId: string) => blockUserMutation.mutate(userId),
-    reportConversation: (reason: string, details?: string) => 
+    reportConversation: (reason: string, details?: string) =>
       reportMutation.mutate({ conversationId, reason, details }),
     isSending: sendMessageMutation.isPending,
     isBlocking: blockUserMutation.isPending,

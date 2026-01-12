@@ -414,6 +414,143 @@ services:
       retries: 3
 
   # ------------------------
+  # DealerManagementService API
+  # ------------------------
+  dealermanagementservice:
+    build:
+      context: ./backend
+      dockerfile: DealerManagementService/DealerManagementService.Api/Dockerfile.dev
+    container_name: dealermanagementservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=dealermanagementservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+      # Consumer variables (formato alternativo)
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: "guest"
+      RABBITMQ_PASSWORD: "guest"
+    ports:
+      - "15039:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # DealerAnalyticsService API
+  # ------------------------
+  dealeranalyticsservice:
+    build:
+      context: ./backend
+      dockerfile: DealerAnalyticsService/DealerAnalyticsService.Api/Dockerfile.dev
+    container_name: dealeranalyticsservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=dealeranalyticsservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+    ports:
+      - "15041:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
+  # LeadScoringService API
+  # ------------------------
+  leadscoringservice:
+    build:
+      context: ./backend
+      dockerfile: LeadScoringService/LeadScoringService.Api/Dockerfile.dev
+    container_name: leadscoringservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=leadscoringservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
+    ports:
+      - "15055:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ------------------------
   # RoleService Database
   # ------------------------
   roleservice-db:
@@ -1256,10 +1393,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.3"
-          memory: 256M
+          cpus: "0.5"
+          memory: 512M
         reservations:
-          memory: 128M
+          memory: 256M
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80

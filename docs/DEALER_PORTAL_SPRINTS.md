@@ -25,23 +25,23 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 ### ✅ Completado
 
-| Componente | Estado | Descripción |
-|------------|--------|-------------|
-| `DealerPortalLayout` | ✅ | Layout unificado con navbar + sidebar |
-| `DealerHomePage` | ✅ | Dashboard principal con métricas |
-| `DealerInventoryPage` | ✅ | Vista de inventario con grid/list |
-| `DealerLeadsPage` | ✅ | Gestión de leads con temperatura |
-| `DealerAnalyticsPage` | ✅ | Analytics con gráficos |
-| `DealerSettingsPage` | ✅ | Configuración en tabs |
-| Rutas en App.tsx | ✅ | Todas las rutas configuradas |
-| Navbar integration | ✅ | Link "Para Dealers" en navbar principal |
+| Componente            | Estado | Descripción                             |
+| --------------------- | ------ | --------------------------------------- |
+| `DealerPortalLayout`  | ✅     | Layout unificado con navbar + sidebar   |
+| `DealerHomePage`      | ✅     | Dashboard principal con métricas        |
+| `DealerInventoryPage` | ✅     | Vista de inventario con grid/list       |
+| `DealerLeadsPage`     | ✅     | Gestión de leads con temperatura        |
+| `DealerAnalyticsPage` | ✅     | Analytics con gráficos                  |
+| `DealerSettingsPage`  | ✅     | Configuración en tabs                   |
+| Rutas en App.tsx      | ✅     | Todas las rutas configuradas            |
+| Navbar integration    | ✅     | Link "Para Dealers" en navbar principal |
 
 ### 🔄 En Progreso
 
-| Componente | Estado | Descripción |
-|------------|--------|-------------|
-| Backend APIs | 🔄 | Algunos endpoints mock, otros reales |
-| Real-time data | 🔄 | Datos mock en frontend |
+| Componente     | Estado | Descripción                          |
+| -------------- | ------ | ------------------------------------ |
+| Backend APIs   | 🔄     | Algunos endpoints mock, otros reales |
+| Real-time data | 🔄     | Datos mock en frontend               |
 
 ---
 
@@ -53,6 +53,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Story Points:** 21
 
 #### Objetivos
+
 - [x] Crear DealerPortalLayout con navbar y sidebar
 - [x] Implementar DealerHomePage con métricas
 - [x] Crear páginas base (Inventory, Leads, Analytics, Settings)
@@ -60,6 +61,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 - [x] Integrar con sistema de permisos
 
 #### Entregables
+
 - Layout unificado con tema consistente
 - Dashboard con métricas principales
 - Navegación completa funcional
@@ -74,6 +76,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** Sprint DP-1
 
 #### Objetivos
+
 - [ ] CRUD completo de vehículos
 - [ ] Galería de imágenes con drag & drop
 - [ ] Bulk actions (activar, pausar, eliminar)
@@ -82,16 +85,17 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP2-1 | Como dealer, quiero agregar un vehículo con fotos para publicarlo | 8 | Alta |
-| DP2-2 | Como dealer, quiero editar los detalles de mis vehículos | 5 | Alta |
-| DP2-3 | Como dealer, quiero pausar/activar vehículos masivamente | 5 | Media |
-| DP2-4 | Como dealer, quiero importar vehículos desde Excel | 8 | Media |
-| DP2-5 | Como dealer, quiero ver cuántos slots me quedan según mi plan | 3 | Alta |
-| DP2-6 | Como dealer, quiero duplicar un vehículo existente | 5 | Baja |
+| ID    | Historia                                                          | SP  | Prioridad |
+| ----- | ----------------------------------------------------------------- | --- | --------- |
+| DP2-1 | Como dealer, quiero agregar un vehículo con fotos para publicarlo | 8   | Alta      |
+| DP2-2 | Como dealer, quiero editar los detalles de mis vehículos          | 5   | Alta      |
+| DP2-3 | Como dealer, quiero pausar/activar vehículos masivamente          | 5   | Media     |
+| DP2-4 | Como dealer, quiero importar vehículos desde Excel                | 8   | Media     |
+| DP2-5 | Como dealer, quiero ver cuántos slots me quedan según mi plan     | 3   | Alta      |
+| DP2-6 | Como dealer, quiero duplicar un vehículo existente                | 5   | Baja      |
 
 #### Criterios de Aceptación
+
 - [ ] Formulario de vehículo con validación completa
 - [ ] Upload de imágenes hasta 20 por vehículo
 - [ ] Drag & drop para reordenar imágenes
@@ -107,6 +111,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** Sprint DP-1, LeadScoringService (Sprint 11 backend)
 
 #### Objetivos
+
 - [ ] Vista de leads con filtros avanzados
 - [ ] Detalle de lead con historial de contacto
 - [ ] Quick actions (llamar, email, WhatsApp)
@@ -115,16 +120,17 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP3-1 | Como dealer, quiero ver todos mis leads ordenados por temperatura | 5 | Alta |
-| DP3-2 | Como dealer, quiero filtrar leads por fecha, vehículo, estado | 5 | Alta |
-| DP3-3 | Como dealer, quiero ver el historial de interacciones con un lead | 8 | Alta |
-| DP3-4 | Como dealer, quiero contactar un lead con un clic (tel/email/WhatsApp) | 3 | Alta |
-| DP3-5 | Como dealer, quiero asignar leads a mis vendedores | 5 | Media |
-| DP3-6 | Como dealer, quiero mover leads entre etapas del pipeline | 8 | Media |
+| ID    | Historia                                                               | SP  | Prioridad |
+| ----- | ---------------------------------------------------------------------- | --- | --------- |
+| DP3-1 | Como dealer, quiero ver todos mis leads ordenados por temperatura      | 5   | Alta      |
+| DP3-2 | Como dealer, quiero filtrar leads por fecha, vehículo, estado          | 5   | Alta      |
+| DP3-3 | Como dealer, quiero ver el historial de interacciones con un lead      | 8   | Alta      |
+| DP3-4 | Como dealer, quiero contactar un lead con un clic (tel/email/WhatsApp) | 3   | Alta      |
+| DP3-5 | Como dealer, quiero asignar leads a mis vendedores                     | 5   | Media     |
+| DP3-6 | Como dealer, quiero mover leads entre etapas del pipeline              | 8   | Media     |
 
 #### Criterios de Aceptación
+
 - [ ] Lista de leads con badges de temperatura (Hot/Warm/Cold)
 - [ ] Filtros funcionando en tiempo real
 - [ ] Integración con LeadScoringService
@@ -140,6 +146,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** Sprint DP-2, Sprint DP-3
 
 #### Objetivos
+
 - [ ] Dashboard de métricas en tiempo real
 - [ ] Gráficos de tendencias (vistas, leads, conversión)
 - [ ] Top vehículos por performance
@@ -148,16 +155,17 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP4-1 | Como dealer, quiero ver mis métricas clave del mes | 5 | Alta |
-| DP4-2 | Como dealer, quiero gráficos de tendencia de los últimos 6 meses | 8 | Alta |
-| DP4-3 | Como dealer, quiero ver cuáles vehículos tienen mejor conversión | 5 | Alta |
-| DP4-4 | Como dealer, quiero comparar este mes vs el anterior | 5 | Media |
-| DP4-5 | Como dealer, quiero exportar un reporte en PDF | 3 | Media |
-| DP4-6 | Como dealer, quiero ver el funnel de conversión | 3 | Media |
+| ID    | Historia                                                         | SP  | Prioridad |
+| ----- | ---------------------------------------------------------------- | --- | --------- |
+| DP4-1 | Como dealer, quiero ver mis métricas clave del mes               | 5   | Alta      |
+| DP4-2 | Como dealer, quiero gráficos de tendencia de los últimos 6 meses | 8   | Alta      |
+| DP4-3 | Como dealer, quiero ver cuáles vehículos tienen mejor conversión | 5   | Alta      |
+| DP4-4 | Como dealer, quiero comparar este mes vs el anterior             | 5   | Media     |
+| DP4-5 | Como dealer, quiero exportar un reporte en PDF                   | 3   | Media     |
+| DP4-6 | Como dealer, quiero ver el funnel de conversión                  | 3   | Media     |
 
 #### Criterios de Aceptación
+
 - [ ] Datos en tiempo real del backend
 - [ ] Gráficos interactivos con hover tooltips
 - [ ] Filtro de rango de fechas
@@ -173,6 +181,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** BillingService (Sprint 4)
 
 #### Objetivos
+
 - [ ] Vista del plan actual y uso
 - [ ] Upgrade/Downgrade de plan
 - [ ] Historial de facturas
@@ -181,17 +190,18 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP5-1 | Como dealer, quiero ver mi plan actual y lo que incluye | 3 | Alta |
-| DP5-2 | Como dealer, quiero upgrade mi plan para más vehículos | 8 | Alta |
-| DP5-3 | Como dealer, quiero ver mi historial de facturas | 5 | Alta |
-| DP5-4 | Como dealer, quiero agregar/cambiar método de pago | 5 | Alta |
-| DP5-5 | Como dealer, quiero cancelar mi suscripción | 5 | Media |
-| DP5-6 | Como dealer, quiero ver cuánto ahorro con Early Bird | 3 | Baja |
-| DP5-7 | Como dealer, quiero pagar con tarjeta dominicana (AZUL) | 5 | Alta |
+| ID    | Historia                                                | SP  | Prioridad |
+| ----- | ------------------------------------------------------- | --- | --------- |
+| DP5-1 | Como dealer, quiero ver mi plan actual y lo que incluye | 3   | Alta      |
+| DP5-2 | Como dealer, quiero upgrade mi plan para más vehículos  | 8   | Alta      |
+| DP5-3 | Como dealer, quiero ver mi historial de facturas        | 5   | Alta      |
+| DP5-4 | Como dealer, quiero agregar/cambiar método de pago      | 5   | Alta      |
+| DP5-5 | Como dealer, quiero cancelar mi suscripción             | 5   | Media     |
+| DP5-6 | Como dealer, quiero ver cuánto ahorro con Early Bird    | 3   | Baja      |
+| DP5-7 | Como dealer, quiero pagar con tarjeta dominicana (AZUL) | 5   | Alta      |
 
 #### Criterios de Aceptación
+
 - [ ] Checkout con Stripe y AZUL
 - [ ] Cambio de plan inmediato o al próximo ciclo
 - [ ] Facturas descargables en PDF
@@ -207,6 +217,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** RoleService
 
 #### Objetivos
+
 - [ ] Invitar usuarios al dealer
 - [ ] Roles: Admin, Manager, Vendedor
 - [ ] Permisos granulares por sección
@@ -215,15 +226,16 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP6-1 | Como admin, quiero invitar usuarios a mi dealer | 5 | Alta |
-| DP6-2 | Como admin, quiero asignar roles a mis usuarios | 5 | Alta |
-| DP6-3 | Como admin, quiero ver qué hace cada usuario | 5 | Media |
-| DP6-4 | Como admin, quiero desactivar usuarios | 3 | Alta |
-| DP6-5 | Como admin, quiero configurar permisos por sección | 8 | Media |
+| ID    | Historia                                           | SP  | Prioridad |
+| ----- | -------------------------------------------------- | --- | --------- |
+| DP6-1 | Como admin, quiero invitar usuarios a mi dealer    | 5   | Alta      |
+| DP6-2 | Como admin, quiero asignar roles a mis usuarios    | 5   | Alta      |
+| DP6-3 | Como admin, quiero ver qué hace cada usuario       | 5   | Media     |
+| DP6-4 | Como admin, quiero desactivar usuarios             | 3   | Alta      |
+| DP6-5 | Como admin, quiero configurar permisos por sección | 8   | Media     |
 
 #### Criterios de Aceptación
+
 - [ ] Invitación por email funcional
 - [ ] 3 roles predefinidos con permisos diferentes
 - [ ] Log de actividad por usuario
@@ -238,6 +250,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** Sprint DP-1
 
 #### Objetivos
+
 - [ ] CRUD de sucursales
 - [ ] Mapa con ubicaciones
 - [ ] Horarios por sucursal
@@ -245,12 +258,12 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP7-1 | Como dealer, quiero agregar mis sucursales | 5 | Alta |
-| DP7-2 | Como dealer, quiero ver mis sucursales en un mapa | 5 | Media |
-| DP7-3 | Como dealer, quiero configurar horarios por sucursal | 3 | Media |
-| DP7-4 | Como dealer, quiero indicar en qué sucursal está cada vehículo | 5 | Media |
+| ID    | Historia                                                       | SP  | Prioridad |
+| ----- | -------------------------------------------------------------- | --- | --------- |
+| DP7-1 | Como dealer, quiero agregar mis sucursales                     | 5   | Alta      |
+| DP7-2 | Como dealer, quiero ver mis sucursales en un mapa              | 5   | Media     |
+| DP7-3 | Como dealer, quiero configurar horarios por sucursal           | 3   | Media     |
+| DP7-4 | Como dealer, quiero indicar en qué sucursal está cada vehículo | 5   | Media     |
 
 ---
 
@@ -261,6 +274,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** NotificationService
 
 #### Objetivos
+
 - [ ] Centro de notificaciones in-app
 - [ ] Configuración de preferencias
 - [ ] Notificaciones push (PWA)
@@ -268,12 +282,12 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP8-1 | Como dealer, quiero ver todas mis notificaciones | 5 | Alta |
-| DP8-2 | Como dealer, quiero configurar qué notificaciones recibir | 5 | Alta |
-| DP8-3 | Como dealer, quiero notificaciones push en el navegador | 5 | Media |
-| DP8-4 | Como dealer, quiero un resumen diario por email | 3 | Baja |
+| ID    | Historia                                                  | SP  | Prioridad |
+| ----- | --------------------------------------------------------- | --- | --------- |
+| DP8-1 | Como dealer, quiero ver todas mis notificaciones          | 5   | Alta      |
+| DP8-2 | Como dealer, quiero configurar qué notificaciones recibir | 5   | Alta      |
+| DP8-3 | Como dealer, quiero notificaciones push en el navegador   | 5   | Media     |
+| DP8-4 | Como dealer, quiero un resumen diario por email           | 3   | Baja      |
 
 ---
 
@@ -284,6 +298,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Dependencias:** ChatbotService (Sprint 17)
 
 #### Objetivos
+
 - [ ] Ver conversaciones del chatbot
 - [ ] Tomar control de conversaciones
 - [ ] Respuestas predefinidas
@@ -291,13 +306,13 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Historias de Usuario
 
-| ID | Historia | SP | Prioridad |
-|----|----------|-------|-----------|
-| DP9-1 | Como dealer, quiero ver las conversaciones del chatbot con clientes | 8 | Alta |
-| DP9-2 | Como dealer, quiero intervenir en una conversación | 8 | Alta |
-| DP9-3 | Como dealer, quiero respuestas predefinidas para usar | 5 | Media |
-| DP9-4 | Como dealer, quiero continuar conversaciones por WhatsApp | 8 | Media |
-| DP9-5 | Como dealer, quiero ver el score del lead en la conversación | 5 | Media |
+| ID    | Historia                                                            | SP  | Prioridad |
+| ----- | ------------------------------------------------------------------- | --- | --------- |
+| DP9-1 | Como dealer, quiero ver las conversaciones del chatbot con clientes | 8   | Alta      |
+| DP9-2 | Como dealer, quiero intervenir en una conversación                  | 8   | Alta      |
+| DP9-3 | Como dealer, quiero respuestas predefinidas para usar               | 5   | Media     |
+| DP9-4 | Como dealer, quiero continuar conversaciones por WhatsApp           | 8   | Media     |
+| DP9-5 | Como dealer, quiero ver el score del lead en la conversación        | 5   | Media     |
 
 ---
 
@@ -307,6 +322,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 **Story Points:** 13
 
 #### Objetivos
+
 - [ ] Performance optimization
 - [ ] Lazy loading de componentes
 - [ ] Skeleton loaders
@@ -316,30 +332,30 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 #### Tareas
 
-| ID | Tarea | SP |
-|----|-------|-------|
-| DP10-1 | Implementar lazy loading en rutas | 3 |
-| DP10-2 | Agregar skeleton loaders | 3 |
-| DP10-3 | Audit y fix de accessibility | 3 |
-| DP10-4 | Tests E2E con Playwright | 4 |
+| ID     | Tarea                             | SP  |
+| ------ | --------------------------------- | --- |
+| DP10-1 | Implementar lazy loading en rutas | 3   |
+| DP10-2 | Agregar skeleton loaders          | 3   |
+| DP10-3 | Audit y fix de accessibility      | 3   |
+| DP10-4 | Tests E2E con Playwright          | 4   |
 
 ---
 
 ## 📊 Resumen de Sprints
 
-| Sprint | Nombre | Semanas | SP | Estado |
-|--------|--------|---------|-----|--------|
-| DP-1 | Fundamentos del Portal | 1 | 21 | ✅ Completado |
-| DP-2 | Gestión de Inventario | 2 | 34 | ⏳ Próximo |
-| DP-3 | Gestión de Leads | 2 | 34 | 📋 Planificado |
-| DP-4 | Analytics y Reportes | 2 | 29 | 📋 Planificado |
-| DP-5 | Billing y Suscripciones | 2 | 34 | 📋 Planificado |
-| DP-6 | Multi-Usuario y Roles | 2 | 26 | 📋 Planificado |
-| DP-7 | Sucursales y Ubicaciones | 1 | 18 | 📋 Planificado |
-| DP-8 | Notificaciones y Alertas | 1 | 18 | 📋 Planificado |
-| DP-9 | Chatbot y Mensajería | 2 | 34 | 📋 Planificado |
-| DP-10 | Polish y Optimización | 1 | 13 | 📋 Planificado |
-| **TOTAL** | | **16 semanas** | **261 SP** | |
+| Sprint    | Nombre                   | Semanas        | SP         | Estado         |
+| --------- | ------------------------ | -------------- | ---------- | -------------- |
+| DP-1      | Fundamentos del Portal   | 1              | 21         | ✅ Completado  |
+| DP-2      | Gestión de Inventario    | 2              | 34         | ⏳ Próximo     |
+| DP-3      | Gestión de Leads         | 2              | 34         | 📋 Planificado |
+| DP-4      | Analytics y Reportes     | 2              | 29         | 📋 Planificado |
+| DP-5      | Billing y Suscripciones  | 2              | 34         | 📋 Planificado |
+| DP-6      | Multi-Usuario y Roles    | 2              | 26         | 📋 Planificado |
+| DP-7      | Sucursales y Ubicaciones | 1              | 18         | 📋 Planificado |
+| DP-8      | Notificaciones y Alertas | 1              | 18         | 📋 Planificado |
+| DP-9      | Chatbot y Mensajería     | 2              | 34         | 📋 Planificado |
+| DP-10     | Polish y Optimización    | 1              | 13         | 📋 Planificado |
+| **TOTAL** |                          | **16 semanas** | **261 SP** |                |
 
 ---
 
@@ -414,27 +430,29 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 ## 🔗 Dependencias de Backend
 
-| Servicio | Sprint Requerido | Estado |
-|----------|-----------------|--------|
-| DealerManagementService | DP-1 a DP-10 | ✅ Activo |
-| InventoryManagementService | DP-2 | ✅ Activo |
-| LeadScoringService | DP-3 | ✅ Activo |
-| DealerAnalyticsService | DP-4 | 🔄 Parcial |
-| BillingService | DP-5 | ✅ Activo |
-| RoleService | DP-6 | ✅ Activo |
-| NotificationService | DP-8 | ✅ Activo |
-| ChatbotService | DP-9 | 🔄 En desarrollo |
+| Servicio                   | Sprint Requerido | Estado           |
+| -------------------------- | ---------------- | ---------------- |
+| DealerManagementService    | DP-1 a DP-10     | ✅ Activo        |
+| InventoryManagementService | DP-2             | ✅ Activo        |
+| LeadScoringService         | DP-3             | ✅ Activo        |
+| DealerAnalyticsService     | DP-4             | 🔄 Parcial       |
+| BillingService             | DP-5             | ✅ Activo        |
+| RoleService                | DP-6             | ✅ Activo        |
+| NotificationService        | DP-8             | ✅ Activo        |
+| ChatbotService             | DP-9             | 🔄 En desarrollo |
 
 ---
 
 ## 📝 Notas de Implementación
 
 ### Priorización
+
 1. **MVP (Sprints DP-1 a DP-5)**: Core funcional para dealers
 2. **Growth (Sprints DP-6 a DP-8)**: Features de expansión
 3. **Advanced (Sprints DP-9 a DP-10)**: IA y optimización
 
 ### Consideraciones Técnicas
+
 - Usar React Query para cache de datos
 - Implementar optimistic updates
 - Skeleton loaders en todas las vistas
@@ -442,6 +460,7 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 - Lazy loading de rutas pesadas
 
 ### Testing
+
 - Unit tests para hooks y utilities
 - Integration tests para formularios
 - E2E tests para flujos críticos (CRUD, billing)
@@ -456,4 +475,4 @@ Este documento detalla el plan de desarrollo del Portal del Dealer para OKLA Mar
 
 ---
 
-*Última actualización: Enero 2026*
+_Última actualización: Enero 2026_

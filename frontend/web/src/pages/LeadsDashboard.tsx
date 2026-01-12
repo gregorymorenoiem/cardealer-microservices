@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import leadScoringService from '@/services/leadScoringService';
 import type {
   LeadDto,
@@ -7,11 +8,12 @@ import type {
   LeadTemperature,
   LeadStatus,
 } from '@/services/leadScoringService';
-import { FiSearch, FiChevronRight, FiPhone, FiMail } from 'react-icons/fi';
+import { FiSearch, FiChevronRight, FiPhone, FiMail, FiAlertCircle } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 
 export const LeadsDashboard = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
   // Estados
   const [leads, setLeads] = useState<LeadDto[]>([]);
@@ -30,12 +32,19 @@ export const LeadsDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // TODO: Obtener dealerId del usuario autenticado
-  const dealerId = 'your-dealer-id-here'; // Replace with actual dealer ID from auth context
+  // Obtener dealerId del usuario autenticado
+  const dealerId = user?.dealerId;
 
   const loadLeads = useCallback(async () => {
+    if (!dealerId) {
+      setError('No tienes un dealer asociado. Por favor, registra tu negocio primero.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setError(null);
       const response = await leadScoringService.getLeadsByDealer(
         dealerId,
         page,
@@ -48,13 +57,16 @@ export const LeadsDashboard = () => {
       setTotalPages(response.totalPages);
       setTotalCount(response.totalCount);
     } catch (err: any) {
-      setError(err.message || 'Error loading leads');
+      console.error('Error loading leads:', err);
+      setError(err.response?.data?.message || err.message || 'Error cargando leads');
     } finally {
       setIsLoading(false);
     }
   }, [dealerId, page, pageSize, temperatureFilter, statusFilter, searchTerm]);
 
   const loadStatistics = useCallback(async () => {
+    if (!dealerId) return;
+
     try {
       const stats = await leadScoringService.getLeadStatistics(dealerId);
       setStatistics(stats);
@@ -64,9 +76,11 @@ export const LeadsDashboard = () => {
   }, [dealerId]);
 
   useEffect(() => {
-    loadLeads();
-    loadStatistics();
-  }, [loadLeads, loadStatistics]);
+    if (dealerId) {
+      loadLeads();
+      loadStatistics();
+    }
+  }, [loadLeads, loadStatistics, dealerId]);
 
   const handleSearch = () => {
     setPage(1);
@@ -74,8 +88,31 @@ export const LeadsDashboard = () => {
   };
 
   const handleLeadClick = (leadId: string) => {
-    navigate(`/dealer/leads/${leadId}`);
+    navigate(`/dealer/crm/leads/${leadId}`);
   };
+
+  // No dealer ID - show registration prompt
+  if (!dealerId && !isLoading) {
+    return (
+      <MainLayout>
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
+            <FiAlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso a Leads</h2>
+            <p className="text-gray-600 mb-6">
+              Para ver y gestionar tus leads necesitas tener un perfil de dealer registrado.
+            </p>
+            <button
+              onClick={() => navigate('/dealer/register')}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            >
+              Registrar mi Dealer
+            </button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (isLoading && !leads.length) {
     return (

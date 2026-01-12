@@ -1,11 +1,12 @@
 /**
  * Billing Service
- * 
+ *
  * Frontend service for billing and subscription operations.
- * Uses mock data when USE_MOCK_AUTH is true.
+ * Uses real backend data from DealerBillingController.
  */
 
 import { api } from './api';
+import { dealerBillingApi } from './dealerBillingService';
 import {
   plans,
   subscriptionsByDealer,
@@ -18,16 +19,17 @@ import {
   getPlanById,
 } from '@/mocks/billingData';
 import type { PlanConfig, SubscriptionPlan } from '@/types/billing';
-import type { 
-  Subscription, 
-  Invoice, 
-  Payment, 
-  PaymentMethodInfo, 
-  UsageMetrics, 
-  BillingStats 
+import type {
+  Subscription,
+  Invoice,
+  Payment,
+  PaymentMethodInfo,
+  UsageMetrics,
+  BillingStats,
 } from '@/types/billing';
 
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_AUTH !== 'false';
+// Set to false to use real backend data
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_AUTH === 'true';
 
 // ============================================================================
 // TYPES
@@ -58,31 +60,44 @@ export const plansApi = {
   // Get all available plans
   getAll: async (): Promise<PlanConfig[]> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return plans;
     }
-    const response = await api.get<PlanConfig[]>('/billing/plans');
-    return response.data;
+    try {
+      return await dealerBillingApi.getPlans();
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      return plans; // Fallback to mock
+    }
   },
 
   // Get a specific plan
   getById: async (planId: string): Promise<PlanConfig | null> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       return getPlanById(planId) || null;
     }
-    const response = await api.get<PlanConfig>(`/billing/plans/${planId}`);
-    return response.data;
+    try {
+      const allPlans = await dealerBillingApi.getPlans();
+      return allPlans.find((p) => p.id === planId) || null;
+    } catch (error) {
+      console.error('Error fetching plan:', error);
+      return getPlanById(planId) || null;
+    }
   },
 
   // Compare plans (features matrix)
   compare: async (): Promise<PlanConfig[]> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return plans;
     }
-    const response = await api.get<PlanConfig[]>('/billing/plans/compare');
-    return response.data;
+    try {
+      return await dealerBillingApi.getPlans();
+    } catch (error) {
+      console.error('Error fetching plans for compare:', error);
+      return plans;
+    }
   },
 };
 
@@ -94,26 +109,31 @@ export const subscriptionApi = {
   // Get current subscription
   getCurrent: async (dealerId: string): Promise<Subscription | null> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return getSubscriptionByDealerId(dealerId) || null;
     }
-    const response = await api.get<Subscription>('/billing/subscription');
-    return response.data;
+    try {
+      return await dealerBillingApi.getSubscription(dealerId);
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      return getSubscriptionByDealerId(dealerId) || null;
+    }
   },
 
   // Create a new subscription
   create: async (data: CreateSubscriptionRequest): Promise<Subscription> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const plan = getPlanById(data.plan);
       if (!plan) throw new Error('Plan not found');
-      
-      const price = data.cycle === 'monthly' 
-        ? plan.prices.monthly 
-        : data.cycle === 'quarterly' 
-          ? plan.prices.quarterly 
-          : plan.prices.yearly;
-      
+
+      const price =
+        data.cycle === 'monthly'
+          ? plan.prices.monthly
+          : data.cycle === 'quarterly'
+            ? plan.prices.quarterly
+            : plan.prices.yearly;
+
       return {
         id: `sub_${Date.now()}`,
         dealerId: 'current_dealer',
@@ -138,10 +158,10 @@ export const subscriptionApi = {
   // Upgrade subscription
   upgrade: async (data: UpgradeSubscriptionRequest): Promise<Subscription> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const plan = getPlanById(data.plan);
       if (!plan) throw new Error('Plan not found');
-      
+
       return {
         ...subscriptionsByDealer['dealer-pro-001'],
         plan: data.plan as SubscriptionPlan,
@@ -156,7 +176,7 @@ export const subscriptionApi = {
   // Cancel subscription
   cancel: async (reason?: string): Promise<void> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 400));
       console.log('Subscription cancelled:', reason);
       return;
     }
@@ -166,7 +186,7 @@ export const subscriptionApi = {
   // Reactivate subscription
   reactivate: async (): Promise<Subscription> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 400));
       return {
         ...subscriptionsByDealer['dealer-pro-001'],
         status: 'active',
@@ -182,31 +202,57 @@ export const subscriptionApi = {
 // INVOICES API
 // ============================================================================
 
+// Get dealer ID from localStorage or context
+const getDealerId = (): string => {
+  try {
+    // Try multiple storage keys for the token
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('okla_auth_token');
+    if (token) {
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      return decoded.dealerId || decoded.dealer_id || decoded.sub || '';
+    }
+  } catch (e) {
+    console.warn('Could not get dealer ID from token');
+  }
+  return '';
+};
+
 export const invoicesApi = {
   // Get all invoices
   getAll: async (): Promise<Invoice[]> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       return mockInvoices;
     }
-    const response = await api.get<Invoice[]>('/billing/invoices');
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      return await dealerBillingApi.getInvoices(dealerId);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      return mockInvoices;
+    }
   },
 
   // Get invoice by ID
   getById: async (invoiceId: string): Promise<Invoice | null> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return mockInvoices.find(inv => inv.id === invoiceId) || null;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return mockInvoices.find((inv) => inv.id === invoiceId) || null;
     }
-    const response = await api.get<Invoice>(`/billing/invoices/${invoiceId}`);
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      const invoices = await dealerBillingApi.getInvoices(dealerId);
+      return invoices.find((inv) => inv.id === invoiceId) || null;
+    } catch (error) {
+      console.error('Error fetching invoice:', error);
+      return mockInvoices.find((inv) => inv.id === invoiceId) || null;
+    }
   },
 
   // Download invoice PDF
   downloadPdf: async (invoiceId: string): Promise<Blob> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       // Return a mock blob
       return new Blob(['Mock PDF content'], { type: 'application/pdf' });
     }
@@ -219,10 +265,10 @@ export const invoicesApi = {
   // Pay an invoice
   pay: async (invoiceId: string, paymentMethodId?: string): Promise<Payment> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const invoice = mockInvoices.find((inv) => inv.id === invoiceId);
       if (!invoice) throw new Error('Invoice not found');
-      
+
       return {
         id: `pay_${Date.now()}`,
         dealerId: invoice.dealerId,
@@ -256,30 +302,41 @@ export const paymentsApi = {
   // Get all payments
   getAll: async (): Promise<Payment[]> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       return mockPayments;
     }
-    const response = await api.get<Payment[]>('/billing/payments');
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      return await dealerBillingApi.getPayments(dealerId);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      return mockPayments;
+    }
   },
 
   // Get payment by ID
   getById: async (paymentId: string): Promise<Payment | null> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return mockPayments.find(p => p.id === paymentId) || null;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return mockPayments.find((p) => p.id === paymentId) || null;
     }
-    const response = await api.get<Payment>(`/billing/payments/${paymentId}`);
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      const payments = await dealerBillingApi.getPayments(dealerId);
+      return payments.find((p) => p.id === paymentId) || null;
+    } catch (error) {
+      console.error('Error fetching payment:', error);
+      return mockPayments.find((p) => p.id === paymentId) || null;
+    }
   },
 
   // Request refund
   refund: async (paymentId: string, amount?: number, reason?: string): Promise<Payment> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const payment = mockPayments.find(p => p.id === paymentId);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const payment = mockPayments.find((p) => p.id === paymentId);
       if (!payment) throw new Error('Payment not found');
-      
+
       return {
         ...payment,
         status: 'refunded',
@@ -302,17 +359,22 @@ export const paymentMethodsApi = {
   // Get all payment methods
   getAll: async (): Promise<PaymentMethodInfo[]> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return mockPaymentMethods;
     }
-    const response = await api.get<PaymentMethodInfo[]>('/billing/payment-methods');
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      return await dealerBillingApi.getPaymentMethods(dealerId);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      return mockPaymentMethods;
+    }
   },
 
   // Add a new payment method
   add: async (data: AddPaymentMethodRequest): Promise<PaymentMethodInfo> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const newMethod: PaymentMethodInfo = {
         id: `pm_${Date.now()}`,
         type: 'card',
@@ -335,8 +397,8 @@ export const paymentMethodsApi = {
   // Set as default
   setDefault: async (paymentMethodId: string): Promise<void> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      mockPaymentMethods.forEach(pm => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      mockPaymentMethods.forEach((pm) => {
         pm.isDefault = pm.id === paymentMethodId;
       });
       return;
@@ -347,8 +409,8 @@ export const paymentMethodsApi = {
   // Remove a payment method
   remove: async (paymentMethodId: string): Promise<void> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const index = mockPaymentMethods.findIndex(pm => pm.id === paymentMethodId);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const index = mockPaymentMethods.findIndex((pm) => pm.id === paymentMethodId);
       if (index !== -1) {
         mockPaymentMethods.splice(index, 1);
       }
@@ -366,21 +428,31 @@ export const usageApi = {
   // Get current usage metrics
   getMetrics: async (): Promise<UsageMetrics> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return mockUsageMetrics;
     }
-    const response = await api.get<UsageMetrics>('/billing/usage');
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      return await dealerBillingApi.getUsage(dealerId);
+    } catch (error) {
+      console.error('Error fetching usage metrics:', error);
+      return mockUsageMetrics;
+    }
   },
 
   // Get billing stats
   getStats: async (): Promise<BillingStats> => {
     if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return mockBillingStats;
     }
-    const response = await api.get<BillingStats>('/billing/stats');
-    return response.data;
+    try {
+      const dealerId = getDealerId();
+      return await dealerBillingApi.getStats(dealerId);
+    } catch (error) {
+      console.error('Error fetching billing stats:', error);
+      return mockBillingStats;
+    }
   },
 };
 

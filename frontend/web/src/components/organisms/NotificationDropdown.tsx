@@ -21,6 +21,10 @@ const NotificationDropdown = () => {
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, isMarkingAllAsRead } =
     useNotificationCenter(1, 10);
 
+  const handleBellClick = () => {
+    setIsOpen(!isOpen);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,7 +53,7 @@ const NotificationDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       {/* Notification Bell Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleBellClick}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         aria-label="Notifications"
       >

@@ -71,7 +71,7 @@ public class Dealer
     
     // Subscription
     public Guid? SubscriptionId { get; set; } // FK to BillingService
-    public DealerPlan CurrentPlan { get; set; } = DealerPlan.None;
+    public DealerPlan CurrentPlan { get; set; } = DealerPlan.Free;
     public DateTime? SubscriptionStartDate { get; set; }
     public DateTime? SubscriptionEndDate { get; set; }
     public bool IsSubscriptionActive { get; set; }
@@ -201,8 +201,135 @@ public enum VerificationStatus
 
 public enum DealerPlan
 {
-    None = 0,           // No active subscription
-    Starter = 1,        // $49/month - 15 listings
-    Pro = 2,            // $129/month - 50 listings
+    Free = 0,           // Free tier - 3 listings
+    Basic = 1,          // $49/month - 50 listings  
+    Pro = 2,            // $129/month - 200 listings
     Enterprise = 3      // $299/month - Unlimited listings
+}
+
+/// <summary>
+/// Límites y features por plan
+/// </summary>
+public static class DealerPlanLimits
+{
+    public static DealerPlanFeatures GetFeatures(DealerPlan plan)
+    {
+        return plan switch
+        {
+            DealerPlan.Free => new DealerPlanFeatures
+            {
+                MaxListings = 3,
+                MaxImages = 5,
+                MaxFeaturedListings = 0,
+                AnalyticsAccess = false,
+                BulkUpload = false,
+                PrioritySupport = false,
+                CustomBranding = false,
+                ApiAccess = false,
+                LeadManagement = false,
+                EmailAutomation = false,
+                MarketPriceAnalysis = false,
+                AdvancedReporting = false,
+                WhiteLabel = false,
+                DedicatedAccountManager = false
+            },
+            DealerPlan.Basic => new DealerPlanFeatures
+            {
+                MaxListings = 50,
+                MaxImages = 10,
+                MaxFeaturedListings = 3,
+                AnalyticsAccess = true,
+                BulkUpload = true,
+                PrioritySupport = false,
+                CustomBranding = false,
+                ApiAccess = false,
+                LeadManagement = true,
+                EmailAutomation = false,
+                MarketPriceAnalysis = false,
+                AdvancedReporting = false,
+                WhiteLabel = false,
+                DedicatedAccountManager = false
+            },
+            DealerPlan.Pro => new DealerPlanFeatures
+            {
+                MaxListings = 200,
+                MaxImages = 20,
+                MaxFeaturedListings = 10,
+                AnalyticsAccess = true,
+                BulkUpload = true,
+                PrioritySupport = true,
+                CustomBranding = true,
+                ApiAccess = false,
+                LeadManagement = true,
+                EmailAutomation = true,
+                MarketPriceAnalysis = true,
+                AdvancedReporting = true,
+                WhiteLabel = false,
+                DedicatedAccountManager = false
+            },
+            DealerPlan.Enterprise => new DealerPlanFeatures
+            {
+                MaxListings = 999999, // Unlimited
+                MaxImages = 30,
+                MaxFeaturedListings = 999999, // Unlimited
+                AnalyticsAccess = true,
+                BulkUpload = true,
+                PrioritySupport = true,
+                CustomBranding = true,
+                ApiAccess = true,
+                LeadManagement = true,
+                EmailAutomation = true,
+                MarketPriceAnalysis = true,
+                AdvancedReporting = true,
+                WhiteLabel = true,
+                DedicatedAccountManager = true
+            },
+            _ => GetFeatures(DealerPlan.Free)
+        };
+    }
+    
+    public static decimal GetMonthlyPrice(DealerPlan plan)
+    {
+        return plan switch
+        {
+            DealerPlan.Free => 0m,
+            DealerPlan.Basic => 49m,
+            DealerPlan.Pro => 129m,
+            DealerPlan.Enterprise => 299m,
+            _ => 0m
+        };
+    }
+    
+    public static string GetPlanDisplayName(DealerPlan plan)
+    {
+        return plan switch
+        {
+            DealerPlan.Free => "Gratis",
+            DealerPlan.Basic => "Básico",
+            DealerPlan.Pro => "Profesional",
+            DealerPlan.Enterprise => "Empresarial",
+            _ => "Gratis"
+        };
+    }
+}
+
+/// <summary>
+/// Features disponibles por plan
+/// </summary>
+public class DealerPlanFeatures
+{
+    public int MaxListings { get; set; }
+    public int MaxImages { get; set; }
+    public int MaxFeaturedListings { get; set; }
+    public bool AnalyticsAccess { get; set; }
+    public bool BulkUpload { get; set; }
+    public bool PrioritySupport { get; set; }
+    public bool CustomBranding { get; set; }
+    public bool ApiAccess { get; set; }
+    public bool LeadManagement { get; set; }
+    public bool EmailAutomation { get; set; }
+    public bool MarketPriceAnalysis { get; set; }
+    public bool AdvancedReporting { get; set; }
+    public bool WhiteLabel { get; set; }
+    public bool DedicatedAccountManager { get; set; }
 }

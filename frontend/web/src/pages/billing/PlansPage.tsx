@@ -1,15 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FiCheck, 
-  FiX, 
-  FiArrowLeft, 
-  FiZap,
-  FiStar,
-  FiShield,
-  FiHeadphones
-} from 'react-icons/fi';
+import { FiCheck, FiX, FiArrowLeft, FiZap, FiStar, FiShield, FiHeadphones } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import { usePlans, useSubscription } from '@/hooks/useBilling';
@@ -19,16 +11,21 @@ import type { BillingCycle, PlanConfig } from '@/types/billing';
 
 export default function PlansPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
-  
+
+  // Determine if we're in dealer context
+  const isDealerContext = location.pathname.startsWith('/dealer');
+  const routePrefix = isDealerContext ? '/dealer' : '/billing';
+
   // Get user info for subscription lookup
   const { user } = useAuthStore();
   const dealerId = user?.dealerId || user?.id || '';
-  
+
   // Use TanStack Query hooks
   const { data: fetchedPlans, isLoading: isLoadingPlans } = usePlans();
   const { data: currentSubscription, isLoading: isLoadingSub } = useSubscription(dealerId);
-  
+
   // Use fetched plans if available, fallback to mocks
   const plans = fetchedPlans || mockPlans;
   const isLoading = isLoadingPlans || isLoadingSub;
@@ -46,7 +43,7 @@ export default function PlansPage() {
 
   const handleSelectPlan = (planId: string) => {
     // In real app, this would initiate checkout or upgrade flow
-    navigate('/billing/checkout', { state: { planId, billingCycle } });
+    navigate(`${routePrefix}/checkout`, { state: { planId, billingCycle } });
   };
 
   const isCurrentPlan = (planId: string) => {
@@ -84,7 +81,10 @@ export default function PlansPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <Link to="/billing" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <Link
+              to={isDealerContext ? '/dealer/billing' : '/billing'}
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            >
               <FiArrowLeft className="w-4 h-4 mr-2" />
               Back to Billing
             </Link>
@@ -125,11 +125,11 @@ export default function PlansPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={`relative bg-white rounded-2xl shadow-sm border-2 transition-all hover:shadow-lg ${
-                  plan.popular 
-                    ? 'border-primary-500 ring-4 ring-primary-100' 
+                  plan.popular
+                    ? 'border-primary-500 ring-4 ring-primary-100'
                     : isCurrentPlan(plan.id)
-                    ? 'border-green-500'
-                    : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-green-500'
+                      : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 {plan.popular && (
@@ -140,7 +140,7 @@ export default function PlansPage() {
                     </span>
                   </div>
                 )}
-                
+
                 {isCurrentPlan(plan.id) && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <span className="bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -175,13 +175,13 @@ export default function PlansPage() {
                     onClick={() => handleSelectPlan(plan.id)}
                     disabled={isCurrentPlan(plan.id)}
                   >
-                    {isCurrentPlan(plan.id) 
-                      ? 'Current Plan' 
-                      : isUpgrade(plan.id) 
-                      ? 'Upgrade' 
-                      : plan.id === 'free' 
-                      ? 'Get Started' 
-                      : 'Select Plan'}
+                    {isCurrentPlan(plan.id)
+                      ? 'Current Plan'
+                      : isUpgrade(plan.id)
+                        ? 'Upgrade'
+                        : plan.id === 'free'
+                          ? 'Get Started'
+                          : 'Select Plan'}
                   </Button>
 
                   <div className="mt-6 pt-6 border-t border-gray-100">
@@ -190,8 +190,8 @@ export default function PlansPage() {
                       <li className="flex items-center text-sm">
                         <FiCheck className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
                         <span>
-                          {plan.features.listings === 'unlimited' 
-                            ? 'Unlimited listings' 
+                          {plan.features.listings === 'unlimited'
+                            ? 'Unlimited listings'
                             : `${plan.features.listings} listings`}
                         </span>
                       </li>
@@ -254,14 +254,19 @@ export default function PlansPage() {
             <div className="p-6 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-900">Compare All Features</h2>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Feature</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
+                      Feature
+                    </th>
                     {plans.map((plan) => (
-                      <th key={plan.id} className="text-center py-4 px-6 text-sm font-medium text-gray-900">
+                      <th
+                        key={plan.id}
+                        className="text-center py-4 px-6 text-sm font-medium text-gray-900"
+                      >
                         {plan.name}
                       </th>
                     ))}
@@ -307,7 +312,8 @@ export default function PlansPage() {
               <div>
                 <h3 className="text-2xl font-bold">Need a Custom Solution?</h3>
                 <p className="text-gray-300 mt-2">
-                  Contact our sales team for custom pricing, dedicated support, and enterprise features.
+                  Contact our sales team for custom pricing, dedicated support, and enterprise
+                  features.
                 </p>
               </div>
               <div className="flex gap-4">

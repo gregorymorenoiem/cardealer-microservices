@@ -53,8 +53,8 @@ builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
 builder.Services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
 
 // Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"]
-    ?? throw new InvalidOperationException("JWT Secret not configured");
+var jwtSecret = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("JWT Key not configured");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

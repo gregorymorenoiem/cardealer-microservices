@@ -1,7 +1,7 @@
 /**
  * FeaturedListingCard Component
  * Sprint 3: FeaturedListingCard Component
- * 
+ *
  * Enhanced vehicle card with featured listing badges and gradient borders
  * Follows 40% UX balance rule - subtle differentiation
  */
@@ -9,15 +9,10 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Gauge, Calendar, Heart } from 'lucide-react';
 import { useState } from 'react';
-import type { Vehicle } from '@/data/mockVehicles';
+import type { Vehicle } from '@/services/vehicleService';
 import { getCardBorderClass, innerCardClass } from '@/utils/gradientBorders';
 import { generateVehicleUrl } from '@/utils/seoSlug';
-import { 
-  DestacadoBadge, 
-  PremiumBadge, 
-  CertificadoBadge, 
-  TopDealerBadge 
-} from '@/components/atoms';
+import { DestacadoBadge, PremiumBadge, CertificadoBadge, TopDealerBadge } from '@/components/atoms';
 
 interface FeaturedListingCardProps {
   vehicle: Vehicle;
@@ -26,21 +21,21 @@ interface FeaturedListingCardProps {
   className?: string;
 }
 
-export default function FeaturedListingCard({ 
-  vehicle, 
+export default function FeaturedListingCard({
+  vehicle,
   priority = 'normal',
   context = 'grid',
-  className = '' 
+  className = '',
 }: FeaturedListingCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
-  
+
   // Determine which badge to show based on featured status
   const renderBadge = () => {
     if (!vehicle.tier || vehicle.tier === 'basic') return null;
-    
+
     // Smaller badges for mobile
     const badgeSize = priority === 'high' ? 'md' : 'sm';
-    
+
     switch (vehicle.featuredBadge) {
       case 'top-dealer':
         return <TopDealerBadge size={badgeSize} />;
@@ -51,26 +46,32 @@ export default function FeaturedListingCard({
       case 'destacado':
         return <DestacadoBadge size={badgeSize} />;
       default:
-        return vehicle.tier === 'enterprise' ? <TopDealerBadge size={badgeSize} /> :
-               vehicle.tier === 'premium' ? <PremiumBadge size={badgeSize} /> :
-               vehicle.tier === 'featured' ? <DestacadoBadge size={badgeSize} /> :
-               null;
+        return vehicle.tier === 'enterprise' ? (
+          <TopDealerBadge size={badgeSize} />
+        ) : vehicle.tier === 'premium' ? (
+          <PremiumBadge size={badgeSize} />
+        ) : vehicle.tier === 'featured' ? (
+          <DestacadoBadge size={badgeSize} />
+        ) : null;
     }
   };
 
   const borderClass = getCardBorderClass(vehicle.tier);
   const hasBorder = borderClass !== '';
-  
+
   // Generate SEO-friendly URL
   const vehicleUrl = generateVehicleUrl(vehicle);
 
   return (
     <div className={`${borderClass} ${className}`}>
-      <div className={hasBorder ? innerCardClass : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden'}>
-        <Link 
-          to={vehicleUrl}
-          className="block group"
-        >
+      <div
+        className={
+          hasBorder
+            ? innerCardClass
+            : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden'
+        }
+      >
+        <Link to={vehicleUrl} className="block group">
           {/* Image Container */}
           <div className="relative aspect-[4/3] overflow-hidden">
             <img
@@ -79,14 +80,12 @@ export default function FeaturedListingCard({
               loading={priority === 'high' ? 'eager' : 'lazy'}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            
+
             {/* Badge Overlay - Top Right */}
             {renderBadge() && (
-              <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                {renderBadge()}
-              </div>
+              <div className="absolute top-2 sm:top-3 right-2 sm:right-3">{renderBadge()}</div>
             )}
-            
+
             {/* Favorite Button - Top Left */}
             <button
               onClick={(e) => {
@@ -96,8 +95,8 @@ export default function FeaturedListingCard({
               className="absolute top-2 sm:top-3 left-2 sm:left-3 p-1.5 sm:p-2 bg-white/90 hover:bg-white active:bg-white rounded-full shadow-md transition-colors touch-manipulation"
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <Heart 
-                size={18} 
+              <Heart
+                size={18}
                 className="sm:w-5 sm:h-5"
                 fill={isFavorite ? '#ef4444' : 'none'}
                 stroke={isFavorite ? '#ef4444' : '#6b7280'}
@@ -159,18 +158,22 @@ export default function FeaturedListingCard({
               </span>
             </div>
 
-            {/* Seller Info with Rating */}
-            <div className="pt-2 sm:pt-3 border-t border-gray-100">
-              <div className="flex items-center justify-between text-xs sm:text-sm">
-                <span className="text-gray-700 font-medium truncate mr-2">
-                  {vehicle.seller.name}
-                </span>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className="text-yellow-500">★</span>
-                  <span className="text-gray-600">{vehicle.seller.rating.toFixed(1)}</span>
+            {/* Seller Info with Rating - Only show if seller data exists */}
+            {vehicle.seller && vehicle.seller.name && (
+              <div className="pt-2 sm:pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-gray-700 font-medium truncate mr-2">
+                    {vehicle.seller.name}
+                  </span>
+                  {vehicle.seller.rating && vehicle.seller.rating > 0 && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className="text-yellow-500">★</span>
+                      <span className="text-gray-600">{vehicle.seller.rating.toFixed(1)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </Link>
       </div>

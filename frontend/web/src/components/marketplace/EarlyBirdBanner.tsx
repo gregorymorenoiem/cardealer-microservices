@@ -23,7 +23,17 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
   // Deadline: January 31, 2026 23:59:59
   const deadline = new Date('2026-01-31T23:59:59Z');
 
+  // Feature flag: disable Early Bird API calls when billing service is not available
+  const BILLING_SERVICE_ENABLED = false; // Set to true when BillingService is deployed
+
   useEffect(() => {
+    // Skip API call if billing service is not enabled
+    if (!BILLING_SERVICE_ENABLED) {
+      setIsGracePeriod(true); // Hide banner when service unavailable
+      setLoading(false);
+      return;
+    }
+
     // Check enrollment status
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -41,7 +51,7 @@ export const EarlyBirdBanner = ({ onEnroll }: EarlyBirdBannerProps) => {
           setIsGracePeriod(data.isGracePeriod || false);
           setLoading(false);
         })
-        .catch((error) => {
+        .catch(() => {
           // If API is not available, hide the banner to avoid spam
           setIsGracePeriod(true); // Assume grace period if service unavailable
           setLoading(false);

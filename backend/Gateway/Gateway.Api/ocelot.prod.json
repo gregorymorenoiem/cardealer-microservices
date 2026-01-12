@@ -424,14 +424,18 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }]
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 8080 }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/dealers/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 8080 }
+      ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -443,7 +447,32 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/subscriptions/plans",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/subscriptions/plans",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 8080 }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/subscriptions/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT"],
+      "DownstreamPathTemplate": "/api/subscriptions/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 8080 }
+      ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,

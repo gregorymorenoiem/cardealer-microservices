@@ -6,15 +6,20 @@ using Microsoft.AspNetCore.Mvc;
 namespace CRMService.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/crm/[controller]")]
 public class PipelinesController : ControllerBase
 {
     private readonly IPipelineRepository _pipelineRepository;
+    private readonly IDealRepository _dealRepository;
     private readonly ILogger<PipelinesController> _logger;
 
-    public PipelinesController(IPipelineRepository pipelineRepository, ILogger<PipelinesController> logger)
+    public PipelinesController(
+        IPipelineRepository pipelineRepository, 
+        IDealRepository dealRepository,
+        ILogger<PipelinesController> logger)
     {
         _pipelineRepository = pipelineRepository;
+        _dealRepository = dealRepository;
         _logger = logger;
     }
 
@@ -104,5 +109,48 @@ public class PipelinesController : ControllerBase
         _logger.LogInformation("Pipeline {PipelineId} deleted", id);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Get all deals for a pipeline
+    /// </summary>
+    [HttpGet("{id:guid}/deals")]
+    public async Task<ActionResult<IEnumerable<DealDto>>> GetDeals(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!await _pipelineRepository.ExistsAsync(id, cancellationToken))
+            return NotFound("Pipeline not found");
+
+        var deals = await _dealRepository.GetByPipelineAsync(id, cancellationToken);
+        return Ok(deals.Select(DealDto.FromEntity));
+    }
+
+    /// <summary>
+    /// Get pipeline stage statistics (for Kanban board)
+    /// </summary>
+    [HttpGet("{id:guid}/stats")]
+    public async Task<ActionResult<IEnumerable<PipelineStageStatsDto>>> GetStats(Guid id, CancellationToken cancellationToken = default)
+    {
+        var pipeline = await _pipelineRepository.GetByIdWithStagesAsync(id, cancellationToken);
+        if (pipeline == null)
+            return NotFound("Pipeline not found");
+
+        var deals = await _dealRepository.GetByPipelineAsync(id, cancellationToken);
+        var dealDtos = deals.Select(DealDto.FromEntity).ToList();
+
+        var stats = pipeline.Stages.OrderBy(s => s.Order).Select(stage => 
+        {
+            var stageDeals = dealDtos.Where(d => d.StageId == stage.Id).ToList();
+            return new PipelineStageStatsDto
+            {
+                StageId = stage.Id,
+                StageName = stage.Name,
+                Color = stage.Color ?? "#6366F1",
+                Deals = stageDeals,
+                TotalValue = stageDeals.Sum(d => d.Value),
+                Count = stageDeals.Count
+            };
+        }).ToList();
+
+        return Ok(stats);
     }
 }

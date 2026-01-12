@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CRMService.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/crm/[controller]")]
 public class DealsController : ControllerBase
 {
     private readonly IDealRepository _dealRepository;

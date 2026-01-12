@@ -2,7 +2,7 @@
  * VehiclePreviewCard - Muestra un preview en tiempo real del vehículo
  * que el usuario está configurando
  */
-import { FiCalendar, FiActivity, FiDroplet, FiZap, FiSettings } from 'react-icons/fi';
+import { FiCalendar, FiActivity, FiDroplet, FiZap, FiSettings, FiUsers } from 'react-icons/fi';
 
 interface VehiclePreviewData {
   make?: string;
@@ -15,7 +15,8 @@ interface VehiclePreviewData {
   fuelType?: string;
   engine?: string;
   horsepower?: string;
-  mpg?: string;
+  doors?: number;
+  seats?: number;
   condition?: string;
   baseMSRP?: number;
 }
@@ -27,10 +28,12 @@ interface VehiclePreviewCardProps {
 
 export default function VehiclePreviewCard({ data, className = '' }: VehiclePreviewCardProps) {
   const hasBasicInfo = data.make && data.model && data.year;
-  
+
   if (!hasBasicInfo) {
     return (
-      <div className={`bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center ${className}`}>
+      <div
+        className={`bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center ${className}`}
+      >
         <div className="text-gray-400">
           <FiCalendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p className="text-sm">Select make, model, and year to see your vehicle preview</p>
@@ -42,7 +45,9 @@ export default function VehiclePreviewCard({ data, className = '' }: VehiclePrev
   const title = `${data.year} ${data.make} ${data.model}${data.trim ? ` ${data.trim}` : ''}`;
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm ${className}`}>
+    <div
+      className={`bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm ${className}`}
+    >
       {/* Header with gradient */}
       <div className="bg-gradient-to-r from-primary to-primary-dark p-4 text-white">
         <h3 className="font-bold text-lg truncate">{title}</h3>
@@ -58,7 +63,7 @@ export default function VehiclePreviewCard({ data, className = '' }: VehiclePrev
         {/* Color */}
         {data.exteriorColor && (
           <div className="flex items-center gap-3 text-sm">
-            <div 
+            <div
               className="w-5 h-5 rounded-full border-2 border-gray-200"
               style={{ backgroundColor: getColorHex(data.exteriorColor) }}
             />
@@ -79,7 +84,8 @@ export default function VehiclePreviewCard({ data, className = '' }: VehiclePrev
           <div className="flex items-center gap-3 text-sm">
             <FiZap className="w-5 h-5 text-yellow-500" />
             <span className="text-gray-700">
-              {data.engine}{data.horsepower && ` • ${data.horsepower}`}
+              {data.engine}
+              {data.horsepower && ` • ${data.horsepower}`}
             </span>
           </div>
         )}
@@ -92,12 +98,22 @@ export default function VehiclePreviewCard({ data, className = '' }: VehiclePrev
           </div>
         )}
 
-        {/* Fuel & MPG */}
-        {(data.fuelType || data.mpg) && (
+        {/* Fuel Type */}
+        {data.fuelType && (
           <div className="flex items-center gap-3 text-sm">
             <FiDroplet className="w-5 h-5 text-blue-500" />
+            <span className="text-gray-700">{data.fuelType}</span>
+          </div>
+        )}
+
+        {/* Doors & Seats */}
+        {(data.doors || data.seats) && (
+          <div className="flex items-center gap-3 text-sm">
+            <FiUsers className="w-5 h-5 text-gray-400" />
             <span className="text-gray-700">
-              {data.fuelType}{data.mpg && ` • ${data.mpg}`}
+              {data.doors && `${data.doors} doors`}
+              {data.doors && data.seats && ' • '}
+              {data.seats && `${data.seats} seats`}
             </span>
           </div>
         )}
@@ -120,7 +136,7 @@ export default function VehiclePreviewCard({ data, className = '' }: VehiclePrev
           <span className="text-xs font-medium text-primary">{calculateCompletion(data)}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-1.5">
-          <div 
+          <div
             className="bg-primary h-1.5 rounded-full transition-all duration-300"
             style={{ width: `${calculateCompletion(data)}%` }}
           />
@@ -132,10 +148,18 @@ export default function VehiclePreviewCard({ data, className = '' }: VehiclePrev
 
 function calculateCompletion(data: VehiclePreviewData): number {
   const fields = [
-    'make', 'model', 'year', 'trim', 'mileage', 'exteriorColor',
-    'transmission', 'fuelType', 'engine', 'condition'
+    'make',
+    'model',
+    'year',
+    'trim',
+    'mileage',
+    'exteriorColor',
+    'transmission',
+    'fuelType',
+    'engine',
+    'condition',
   ];
-  const filled = fields.filter(f => {
+  const filled = fields.filter((f) => {
     const value = data[f as keyof VehiclePreviewData];
     return value !== undefined && value !== '' && value !== 0;
   }).length;
@@ -144,28 +168,28 @@ function calculateCompletion(data: VehiclePreviewData): number {
 
 function getColorHex(colorName: string): string {
   const colors: Record<string, string> = {
-    'white': '#FFFFFF',
-    'black': '#1a1a1a',
-    'silver': '#C0C0C0',
-    'gray': '#808080',
-    'grey': '#808080',
-    'red': '#DC2626',
-    'blue': '#2563EB',
-    'green': '#16A34A',
-    'yellow': '#EAB308',
-    'orange': '#EA580C',
-    'brown': '#78350F',
-    'beige': '#D4B896',
-    'gold': '#B8860B',
-    'pearl': '#F0EAD6',
-    'midnight': '#191970',
-    'navy': '#000080',
-    'burgundy': '#800020',
-    'champagne': '#F7E7CE',
-    'bronze': '#CD7F32',
-    'copper': '#B87333',
+    white: '#FFFFFF',
+    black: '#1a1a1a',
+    silver: '#C0C0C0',
+    gray: '#808080',
+    grey: '#808080',
+    red: '#DC2626',
+    blue: '#2563EB',
+    green: '#16A34A',
+    yellow: '#EAB308',
+    orange: '#EA580C',
+    brown: '#78350F',
+    beige: '#D4B896',
+    gold: '#B8860B',
+    pearl: '#F0EAD6',
+    midnight: '#191970',
+    navy: '#000080',
+    burgundy: '#800020',
+    champagne: '#F7E7CE',
+    bronze: '#CD7F32',
+    copper: '#B87333',
   };
-  
+
   const lowerColor = colorName.toLowerCase();
   for (const [name, hex] of Object.entries(colors)) {
     if (lowerColor.includes(name)) return hex;

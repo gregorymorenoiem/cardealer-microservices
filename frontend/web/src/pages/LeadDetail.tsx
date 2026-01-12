@@ -76,7 +76,7 @@ export const LeadDetail = () => {
             {error || 'Lead no encontrado'}
           </div>
           <button
-            onClick={() => navigate('/dealer/leads')}
+            onClick={() => navigate('/dealer/crm')}
             className="mt-4 px-4 py-2 text-blue-600 hover:text-blue-800"
           >
             ← Volver a Leads
@@ -92,7 +92,7 @@ export const LeadDetail = () => {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => navigate('/dealer/leads')}
+            onClick={() => navigate('/dealer/crm')}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
           >
             <FiArrowLeft /> Volver a Leads

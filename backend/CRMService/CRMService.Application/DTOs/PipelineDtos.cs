@@ -82,3 +82,16 @@ public record UpdateStageRequest
     public string? Color { get; init; }
     public int? DefaultProbability { get; init; }
 }
+
+/// <summary>
+/// Stats for a pipeline stage (used in Kanban board)
+/// </summary>
+public record PipelineStageStatsDto
+{
+    public Guid StageId { get; init; }
+    public string StageName { get; init; } = string.Empty;
+    public string Color { get; init; } = "#6366F1";
+    public List<DealDto> Deals { get; init; } = new();
+    public decimal TotalValue { get; init; }
+    public int Count { get; init; }
+}

@@ -213,7 +213,7 @@ public class FavoritesController : ControllerBase
             FuelType = vehicle.FuelType.ToString(),
             Transmission = vehicle.Transmission.ToString(),
             BodyStyle = vehicle.BodyStyle.ToString(),
-            PrimaryImageUrl = vehicle.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.S3Url,
+            PrimaryImageUrl = vehicle.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
             SellerName = vehicle.SellerName,
             ViewCount = vehicle.ViewCount,
             FavoriteCount = vehicle.FavoriteCount,

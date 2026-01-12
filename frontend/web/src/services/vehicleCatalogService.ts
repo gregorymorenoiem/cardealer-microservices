@@ -1,6 +1,6 @@
 /**
  * VehicleCatalogService - API client for vehicle catalog (makes, models, trims)
- * 
+ *
  * Consumido por el formulario SellYourCarPage para:
  * 1. Cargar lista de marcas
  * 2. Cargar modelos de una marca
@@ -16,7 +16,7 @@ import axios from 'axios';
 
 // API Gateway URL - routes to VehiclesSaleService catalog endpoints
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-const CATALOG_API_URL = `${API_URL}/api/vehicles/catalog`;
+const CATALOG_API_URL = `${API_URL}/api/catalog`;
 
 const catalogApi = axios.create({
   baseURL: CATALOG_API_URL,
@@ -60,7 +60,7 @@ export interface VehicleTrim {
   name: string;
   slug: string;
   year: number;
-  
+
   // Specs para auto-fill del formulario
   engineSize?: string;
   horsepower?: number;
@@ -68,12 +68,12 @@ export interface VehicleTrim {
   fuelType?: string;
   transmission?: string;
   driveType?: string;
-  
+
   // Fuel economy
   mpgCity?: number;
   mpgHighway?: number;
   mpgCombined?: number;
-  
+
   // Precio de referencia
   baseMSRP?: number;
 }
@@ -122,9 +122,11 @@ export async function getPopularMakes(limit: number = 20): Promise<VehicleMake[]
  */
 export async function searchMakes(query: string): Promise<VehicleMake[]> {
   if (!query || query.length < 2) return [];
-  
+
   try {
-    const response = await catalogApi.get<VehicleMake[]>(`/makes/search?q=${encodeURIComponent(query)}`);
+    const response = await catalogApi.get<VehicleMake[]>(
+      `/makes/search?q=${encodeURIComponent(query)}`
+    );
     return response.data;
   } catch (error) {
     console.error('Error searching makes:', error);
@@ -137,7 +139,9 @@ export async function searchMakes(query: string): Promise<VehicleMake[]> {
  */
 export async function getModelsByMake(makeSlug: string): Promise<VehicleModel[]> {
   try {
-    const response = await catalogApi.get<VehicleModel[]>(`/makes/${encodeURIComponent(makeSlug)}/models`);
+    const response = await catalogApi.get<VehicleModel[]>(
+      `/makes/${encodeURIComponent(makeSlug)}/models`
+    );
     return response.data;
   } catch (error) {
     console.error(`Error fetching models for ${makeSlug}:`, error);
@@ -150,7 +154,7 @@ export async function getModelsByMake(makeSlug: string): Promise<VehicleModel[]>
  */
 export async function searchModels(makeId: string, query: string): Promise<VehicleModel[]> {
   if (!query || query.length < 2) return [];
-  
+
   try {
     const response = await catalogApi.get<VehicleModel[]>(
       `/makes/${makeId}/models/search?q=${encodeURIComponent(query)}`
@@ -181,7 +185,10 @@ export async function getAvailableYears(modelId: string): Promise<number[]> {
  * Obtiene todos los trims con especificaciones para un modelo y año
  * Este es el endpoint principal para auto-llenar el formulario
  */
-export async function getTrimsByModelAndYear(modelId: string, year: number): Promise<VehicleTrim[]> {
+export async function getTrimsByModelAndYear(
+  modelId: string,
+  year: number
+): Promise<VehicleTrim[]> {
   try {
     const response = await catalogApi.get<VehicleTrim[]>(`/models/${modelId}/years/${year}/trims`);
     return response.data;
@@ -236,14 +243,14 @@ export function createSlug(text: string): string {
  */
 export function mapFuelTypeToDisplay(fuelType: string): string {
   const mapping: Record<string, string> = {
-    'Gasoline': 'Gasoline',
-    'Diesel': 'Diesel',
-    'Electric': 'Electric',
-    'Hybrid': 'Hybrid',
-    'PlugInHybrid': 'Plug-in Hybrid',
-    'Hydrogen': 'Hydrogen',
-    'FlexFuel': 'Flex Fuel',
-    'NaturalGas': 'Natural Gas',
+    Gasoline: 'Gasoline',
+    Diesel: 'Diesel',
+    Electric: 'Electric',
+    Hybrid: 'Hybrid',
+    PlugInHybrid: 'Plug-in Hybrid',
+    Hydrogen: 'Hydrogen',
+    FlexFuel: 'Flex Fuel',
+    NaturalGas: 'Natural Gas',
   };
   return mapping[fuelType] || fuelType;
 }
@@ -253,11 +260,11 @@ export function mapFuelTypeToDisplay(fuelType: string): string {
  */
 export function mapTransmissionToDisplay(transmission: string): string {
   const mapping: Record<string, string> = {
-    'Automatic': 'Automatic',
-    'Manual': 'Manual',
-    'CVT': 'CVT',
-    'Automated': 'Semi-Automatic',
-    'DualClutch': 'Dual-Clutch',
+    Automatic: 'Automatic',
+    Manual: 'Manual',
+    CVT: 'CVT',
+    Automated: 'Semi-Automatic',
+    DualClutch: 'Dual-Clutch',
   };
   return mapping[transmission] || transmission;
 }
@@ -267,10 +274,10 @@ export function mapTransmissionToDisplay(transmission: string): string {
  */
 export function mapDriveTypeToDisplay(driveType: string): string {
   const mapping: Record<string, string> = {
-    'FWD': 'FWD',
-    'RWD': 'RWD',
-    'AWD': 'AWD',
-    'FourWD': '4WD',
+    FWD: 'FWD',
+    RWD: 'RWD',
+    AWD: 'AWD',
+    FourWD: '4WD',
   };
   return mapping[driveType] || driveType;
 }
@@ -303,7 +310,7 @@ export function formatMPG(city?: number, highway?: number): string {
 
 // Estos hooks se pueden usar si el proyecto tiene TanStack Query configurado
 // import { useQuery } from '@tanstack/react-query';
-// 
+//
 // export function useMakes() {
 //   return useQuery({
 //     queryKey: ['vehicle-makes'],
@@ -311,7 +318,7 @@ export function formatMPG(city?: number, highway?: number): string {
 //     staleTime: 1000 * 60 * 60, // 1 hora (el catálogo cambia poco)
 //   });
 // }
-// 
+//
 // export function useModelsByMake(makeSlug: string) {
 //   return useQuery({
 //     queryKey: ['vehicle-models', makeSlug],
@@ -320,7 +327,7 @@ export function formatMPG(city?: number, highway?: number): string {
 //     staleTime: 1000 * 60 * 60,
 //   });
 // }
-// 
+//
 // export function useTrims(modelId: string, year: number) {
 //   return useQuery({
 //     queryKey: ['vehicle-trims', modelId, year],

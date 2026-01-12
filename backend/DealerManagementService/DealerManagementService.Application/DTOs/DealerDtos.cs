@@ -307,3 +307,94 @@ public record ProfileCompletionDto(
     List<string> MissingFields,
     List<string> CompletedSections
 );
+
+// ============================================
+// Subscription & Plan DTOs
+// ============================================
+
+public record DealerSubscriptionDto(
+    Guid DealerId,
+    string Plan,
+    string PlanDisplayName,
+    decimal MonthlyPrice,
+    bool IsActive,
+    DateTime? StartDate,
+    DateTime? EndDate,
+    int DaysRemaining,
+    DealerPlanFeaturesDto Features,
+    DealerUsageDto Usage,
+    DealerLimitsDto Limits,
+    bool CanUpgrade,
+    string? NextPlan
+);
+
+public record DealerPlanFeaturesDto(
+    int MaxListings,
+    int MaxImages,
+    int MaxFeaturedListings,
+    bool AnalyticsAccess,
+    bool BulkUpload,
+    bool PrioritySupport,
+    bool CustomBranding,
+    bool ApiAccess,
+    bool LeadManagement,
+    bool EmailAutomation,
+    bool MarketPriceAnalysis,
+    bool AdvancedReporting,
+    bool WhiteLabel,
+    bool DedicatedAccountManager
+);
+
+public record DealerUsageDto(
+    int CurrentListings,
+    int FeaturedListings,
+    int ImagesUsed,
+    int LeadsThisMonth,
+    int EmailsSentThisMonth
+);
+
+public record DealerLimitsDto(
+    int MaxListings,
+    int MaxFeaturedListings,
+    int MaxImages,
+    int MaxLeadsPerMonth,
+    int MaxEmailsPerMonth,
+    bool HasReachedListingLimit,
+    bool HasReachedFeaturedLimit,
+    int RemainingListings,
+    int RemainingFeatured,
+    double ListingsUsagePercent,
+    double FeaturedUsagePercent
+);
+
+public record ChangePlanRequest(
+    string NewPlan
+);
+
+public record ChangePlanResponse(
+    bool Success,
+    string Message,
+    string? PreviousPlan,
+    string NewPlan,
+    DealerSubscriptionDto? Subscription
+);
+
+public record PlanInfoDto(
+    string Plan,
+    string DisplayName,
+    decimal MonthlyPrice,
+    decimal? AnnualPrice,
+    string Description,
+    List<string> Features,
+    List<string> NotIncluded,
+    bool IsPopular,
+    int MaxListings,
+    int MaxImages,
+    int MaxFeaturedListings
+);
+
+public record AllPlansResponse(
+    List<PlanInfoDto> Plans,
+    string CurrentPlan,
+    string? RecommendedPlan
+);

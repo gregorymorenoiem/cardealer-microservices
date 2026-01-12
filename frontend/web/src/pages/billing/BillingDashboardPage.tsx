@@ -1,61 +1,68 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { 
-  FiCreditCard, 
-  FiFileText, 
-  FiTrendingUp, 
+import {
+  FiCreditCard,
+  FiFileText,
+  FiTrendingUp,
   FiSettings,
   FiArrowUpRight,
   FiAlertCircle,
   FiCheckCircle,
   FiClock,
   FiDownload,
-  FiExternalLink
+  FiExternalLink,
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import { useBillingDashboard, usePlans } from '@/hooks/useBilling';
 import { useAuthStore } from '@/store/authStore';
-import {
-  mockSubscription,
-  mockInvoices,
-  mockPayments,
-  mockUsageMetrics,
-  mockBillingStats,
-  formatCurrency,
-  getStatusColor,
-  getPlanById,
-} from '@/mocks/billingData';
+import { formatCurrency, getStatusColor } from '@/mocks/billingData';
 
 export default function BillingDashboardPage() {
   const { t, i18n } = useTranslation('billing');
-  
+  const location = useLocation();
+
+  // Determine if we're in dealer context
+  const isDealerContext = location.pathname.startsWith('/dealer');
+  const routePrefix = isDealerContext ? '/dealer' : '/billing';
+
   // Get user info
   const { user } = useAuthStore();
   const dealerId = user?.dealerId || user?.id || '';
-  
-  // Use TanStack Query hooks
-  const { 
-    subscription: fetchedSubscription,
-    invoices: fetchedInvoices,
-    payments: fetchedPayments,
-    usage: fetchedUsage,
-    stats: fetchedStats,
+
+  // Debug: verificar dealerId
+  console.log('🔍 DEBUG BillingDashboard:', {
+    user,
+    dealerId,
+    hasDealerId: !!dealerId,
+  });
+
+  // Use TanStack Query hooks - datos reales del backend
+  const {
+    subscription,
+    invoices,
+    payments,
+    usage: usageMetrics,
+    stats: billingStats,
     isLoading,
   } = useBillingDashboard(dealerId);
   const { data: plans } = usePlans();
-  
-  // Use fetched data or fallback to mocks
-  const subscription = fetchedSubscription || mockSubscription;
-  const invoices = fetchedInvoices?.length ? fetchedInvoices : mockInvoices;
-  const payments = fetchedPayments?.length ? fetchedPayments : mockPayments;
-  const usageMetrics = fetchedUsage || mockUsageMetrics;
-  const billingStats = fetchedStats || mockBillingStats;
-  
-  const currentPlan = plans?.find(p => p.id === subscription.plan) || getPlanById(subscription.plan);
-  const recentInvoices = invoices.slice(0, 3);
-  const recentPayments = payments.slice(0, 3);
+
+  // Debug: verificar datos recibidos
+  console.log('📊 DEBUG Billing Data:', {
+    subscription,
+    invoices,
+    payments,
+    usageMetrics,
+    billingStats,
+    isLoading,
+  });
+
+  // Get current plan
+  const currentPlan = plans?.find((p) => p.id === subscription?.plan);
+  const recentInvoices = invoices?.slice(0, 3) || [];
+  const recentPayments = payments?.slice(0, 3) || [];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(i18n.language === 'es' ? 'es-MX' : 'en-US', {
@@ -66,7 +73,8 @@ export default function BillingDashboardPage() {
   };
 
   const getDaysUntilBilling = () => {
-    const next = new Date(subscription.nextBillingDate || '');
+    if (!subscription?.nextBillingDate) return 0;
+    const next = new Date(subscription.nextBillingDate);
     const now = new Date();
     const diff = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
@@ -77,6 +85,48 @@ export default function BillingDashboardPage() {
     return Math.min((current / max) * 100, 100);
   };
 
+  // Mostrar loading mientras cargan los datos
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Cargando datos de facturación...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Validar que hay datos de suscripción DESPUÉS de que termine de cargar
+  if (!isLoading && !subscription) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="flex items-center">
+                <FiAlertCircle className="text-yellow-600 text-2xl mr-3" />
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-800">
+                    No hay suscripción activa
+                  </h3>
+                  <p className="text-yellow-700 mt-1">
+                    Por favor, selecciona un plan para comenzar.
+                  </p>
+                </div>
+              </div>
+              <Link to={`${routePrefix}/plans`} className="mt-4 inline-block">
+                <Button variant="primary">Ver Planes Disponibles</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="min-h-screen bg-gray-50 py-8">
@@ -84,9 +134,7 @@ export default function BillingDashboardPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-            <p className="text-gray-600 mt-2">
-              {t('dashboard.subtitle')}
-            </p>
+            <p className="text-gray-600 mt-2">{t('dashboard.subtitle')}</p>
           </div>
 
           {/* Quick Stats */}
@@ -99,16 +147,16 @@ export default function BillingDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">{t('dashboard.currentPlan')}</p>
-                  <p className="text-2xl font-bold text-gray-900 capitalize">
-                    {subscription.plan}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900 capitalize">{subscription.plan}</p>
                 </div>
                 <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
                   <FiCreditCard className="w-6 h-6 text-primary-600" />
                 </div>
               </div>
               <div className="mt-3">
-                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(subscription.status)}`}>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(subscription.status)}`}
+                >
                   {subscription.status}
                 </span>
               </div>
@@ -201,7 +249,7 @@ export default function BillingDashboardPage() {
                         {formatCurrency(subscription.pricePerCycle)}/{subscription.cycle}
                       </p>
                     </div>
-                    <Link to="/billing/plans">
+                    <Link to={`${routePrefix}/plans`}>
                       <Button variant="secondary" size="sm">
                         <FiArrowUpRight className="w-4 h-4 mr-1" />
                         {t('dashboard.upgrade')}
@@ -209,10 +257,12 @@ export default function BillingDashboardPage() {
                     </Link>
                   </div>
                 </div>
-                
+
                 <div className="p-6">
-                  <h3 className="font-medium text-gray-900 mb-4">{t('dashboard.usageThisPeriod')}</h3>
-                  
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    {t('dashboard.usageThisPeriod')}
+                  </h3>
+
                   {/* Listings Usage */}
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
@@ -222,10 +272,10 @@ export default function BillingDashboardPage() {
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-primary-500 rounded-full transition-all"
-                        style={{ 
-                          width: `${usagePercentage(usageMetrics.currentListings, usageMetrics.maxListings)}%` 
+                        style={{
+                          width: `${usagePercentage(usageMetrics.currentListings, usageMetrics.maxListings)}%`,
                         }}
                       />
                     </div>
@@ -240,10 +290,10 @@ export default function BillingDashboardPage() {
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-blue-500 rounded-full transition-all"
-                        style={{ 
-                          width: `${usagePercentage(usageMetrics.currentUsers, usageMetrics.maxUsers)}%` 
+                        style={{
+                          width: `${usagePercentage(usageMetrics.currentUsers, usageMetrics.maxUsers)}%`,
                         }}
                       />
                     </div>
@@ -258,7 +308,7 @@ export default function BillingDashboardPage() {
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-green-500 rounded-full transition-all"
                         style={{ width: '32%' }}
                       />
@@ -270,18 +320,17 @@ export default function BillingDashboardPage() {
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600">{t('dashboard.apiCalls')}</span>
                       <span className="font-medium">
-                        {usageMetrics.apiCalls.toLocaleString()} / {
-                          usageMetrics.apiLimit === 'unlimited' 
-                            ? '∞' 
-                            : usageMetrics.apiLimit.toLocaleString()
-                        }
+                        {usageMetrics.apiCalls.toLocaleString()} /{' '}
+                        {usageMetrics.apiLimit === 'unlimited'
+                          ? '∞'
+                          : usageMetrics.apiLimit.toLocaleString()}
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-purple-500 rounded-full transition-all"
-                        style={{ 
-                          width: `${usagePercentage(usageMetrics.apiCalls, usageMetrics.apiLimit)}%` 
+                        style={{
+                          width: `${usagePercentage(usageMetrics.apiCalls, usageMetrics.apiLimit)}%`,
                         }}
                       />
                     </div>
@@ -298,15 +347,23 @@ export default function BillingDashboardPage() {
               >
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentInvoices')}</h2>
-                    <Link to="/billing/invoices" className="text-sm text-primary-600 hover:text-primary-700">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {t('dashboard.recentInvoices')}
+                    </h2>
+                    <Link
+                      to={`${routePrefix}/invoices`}
+                      className="text-sm text-primary-600 hover:text-primary-700"
+                    >
                       {t('dashboard.viewAll')}
                     </Link>
                   </div>
                 </div>
                 <div className="divide-y divide-gray-100">
                   {recentInvoices.map((invoice) => (
-                    <div key={invoice.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                    <div
+                      key={invoice.id}
+                      className="p-4 flex items-center justify-between hover:bg-gray-50"
+                    >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                           <FiFileText className="w-5 h-5 text-gray-600" />
@@ -321,7 +378,9 @@ export default function BillingDashboardPage() {
                           <p className="font-medium text-gray-900">
                             {formatCurrency(invoice.totalAmount)}
                           </p>
-                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(invoice.status)}`}>
+                          <span
+                            className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(invoice.status)}`}
+                          >
                             {invoice.status.replace('_', ' ')}
                           </span>
                         </div>
@@ -345,22 +404,34 @@ export default function BillingDashboardPage() {
               >
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentPayments')}</h2>
-                    <Link to="/billing/payments" className="text-sm text-primary-600 hover:text-primary-700">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {t('dashboard.recentPayments')}
+                    </h2>
+                    <Link
+                      to={`${routePrefix}/payments`}
+                      className="text-sm text-primary-600 hover:text-primary-700"
+                    >
                       {t('dashboard.viewAll')}
                     </Link>
                   </div>
                 </div>
                 <div className="divide-y divide-gray-100">
                   {recentPayments.map((payment) => (
-                    <div key={payment.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                    <div
+                      key={payment.id}
+                      className="p-4 flex items-center justify-between hover:bg-gray-50"
+                    >
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          payment.status === 'succeeded' ? 'bg-green-100' : 'bg-gray-100'
-                        }`}>
-                          <FiCheckCircle className={`w-5 h-5 ${
-                            payment.status === 'succeeded' ? 'text-green-600' : 'text-gray-600'
-                          }`} />
+                        <div
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            payment.status === 'succeeded' ? 'bg-green-100' : 'bg-gray-100'
+                          }`}
+                        >
+                          <FiCheckCircle
+                            className={`w-5 h-5 ${
+                              payment.status === 'succeeded' ? 'text-green-600' : 'text-gray-600'
+                            }`}
+                          />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
@@ -373,7 +444,9 @@ export default function BillingDashboardPage() {
                         <p className="font-medium text-gray-900">
                           {formatCurrency(payment.amount)}
                         </p>
-                        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(payment.status)}`}>
+                        <span
+                          className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(payment.status)}`}
+                        >
                           {payment.status}
                         </span>
                       </div>
@@ -394,25 +467,25 @@ export default function BillingDashboardPage() {
               >
                 <h3 className="font-semibold text-gray-900 mb-4">{t('dashboard.quickActions')}</h3>
                 <div className="space-y-3">
-                  <Link to="/billing/plans">
+                  <Link to={`${routePrefix}/plans`}>
                     <Button variant="outline" className="w-full justify-start">
                       <FiArrowUpRight className="w-4 h-4 mr-2" />
                       {t('dashboard.upgradePlan')}
                     </Button>
                   </Link>
-                  <Link to="/billing/payment-methods">
+                  <Link to={`${routePrefix}/payment-methods`}>
                     <Button variant="outline" className="w-full justify-start">
                       <FiCreditCard className="w-4 h-4 mr-2" />
                       {t('dashboard.paymentMethods')}
                     </Button>
                   </Link>
-                  <Link to="/billing/invoices">
+                  <Link to={`${routePrefix}/invoices`}>
                     <Button variant="outline" className="w-full justify-start">
                       <FiFileText className="w-4 h-4 mr-2" />
                       {t('dashboard.viewInvoices')}
                     </Button>
                   </Link>
-                  <Link to="/billing/settings">
+                  <Link to={`${routePrefix}/settings`}>
                     <Button variant="outline" className="w-full justify-start">
                       <FiSettings className="w-4 h-4 mr-2" />
                       {t('dashboard.billingSettings')}
@@ -440,7 +513,9 @@ export default function BillingDashboardPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">{t('dashboard.nextBilling')}</span>
-                    <span className="font-medium">{formatDate(subscription.nextBillingDate || '')}</span>
+                    <span className="font-medium">
+                      {formatDate(subscription.nextBillingDate || '')}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">{t('dashboard.currency')}</span>
@@ -457,9 +532,7 @@ export default function BillingDashboardPage() {
                 className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-sm p-6 text-white"
               >
                 <h3 className="font-semibold mb-2">{t('dashboard.needHelp')}</h3>
-                <p className="text-gray-300 text-sm mb-4">
-                  {t('dashboard.supportAvailable')}
-                </p>
+                <p className="text-gray-300 text-sm mb-4">{t('dashboard.supportAvailable')}</p>
                 <Button variant="secondary" size="sm" className="w-full">
                   <FiExternalLink className="w-4 h-4 mr-2" />
                   {t('dashboard.contactSupport')}

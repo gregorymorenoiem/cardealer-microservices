@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '@/components/atoms/Button';
 import type { VehicleFormData } from '@/pages/vehicles/SellYourCarPage';
-import { FiPlus, FiX } from 'react-icons/fi';
+import { FiPlus, FiX, FiCheck } from 'react-icons/fi';
 
 interface FeaturesStepProps {
   data: Partial<VehicleFormData>;
@@ -69,30 +69,44 @@ const featureCategories = {
 };
 
 export default function FeaturesStep({ data, onNext, onBack }: FeaturesStepProps) {
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(data.features || []);
+  // Combine existing features with VIN-detected safety features
+  const initialFeatures = [...(data.features || []), ...(data.vinSafetyFeatures || [])].filter(
+    (v, i, a) => a.indexOf(v) === i
+  ); // Remove duplicates
+
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(initialFeatures);
   const [customFeature, setCustomFeature] = useState('');
   const [customFeatures, setCustomFeatures] = useState<string[]>([]);
+  const vinFeaturesCount = data.vinSafetyFeatures?.length || 0;
+
+  // Auto-select VIN safety features on mount
+  useEffect(() => {
+    if (data.vinSafetyFeatures && data.vinSafetyFeatures.length > 0) {
+      setSelectedFeatures((prev) => {
+        const combined = [...prev, ...data.vinSafetyFeatures!];
+        return combined.filter((v, i, a) => a.indexOf(v) === i);
+      });
+    }
+  }, [data.vinSafetyFeatures]);
 
   const handleFeatureToggle = (feature: string) => {
-    setSelectedFeatures(prev =>
-      prev.includes(feature)
-        ? prev.filter(f => f !== feature)
-        : [...prev, feature]
+    setSelectedFeatures((prev) =>
+      prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]
     );
   };
 
   const handleAddCustomFeature = () => {
     if (customFeature.trim() && !customFeatures.includes(customFeature.trim())) {
       const newFeature = customFeature.trim();
-      setCustomFeatures(prev => [...prev, newFeature]);
-      setSelectedFeatures(prev => [...prev, newFeature]);
+      setCustomFeatures((prev) => [...prev, newFeature]);
+      setSelectedFeatures((prev) => [...prev, newFeature]);
       setCustomFeature('');
     }
   };
 
   const handleRemoveCustomFeature = (feature: string) => {
-    setCustomFeatures(prev => prev.filter(f => f !== feature));
-    setSelectedFeatures(prev => prev.filter(f => f !== feature));
+    setCustomFeatures((prev) => prev.filter((f) => f !== feature));
+    setSelectedFeatures((prev) => prev.filter((f) => f !== feature));
   };
 
   const handleNext = () => {
@@ -102,13 +116,27 @@ export default function FeaturesStep({ data, onNext, onBack }: FeaturesStepProps
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Features & Options
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Features & Options</h2>
         <p className="text-gray-600">
-          Select all features that your vehicle has. This helps buyers find exactly what they're looking for.
+          Select all features that your vehicle has. This helps buyers find exactly what they're
+          looking for.
         </p>
       </div>
+
+      {/* VIN auto-detected features notice */}
+      {vinFeaturesCount > 0 && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <FiCheck className="w-5 h-5 text-green-600" />
+            <p className="text-green-800 font-medium">
+              {vinFeaturesCount} feature{vinFeaturesCount !== 1 ? 's' : ''} auto-selected from VIN
+            </p>
+          </div>
+          <p className="text-sm text-green-700 mt-1">
+            Safety features detected: {data.vinSafetyFeatures?.join(', ')}
+          </p>
+        </div>
+      )}
 
       {/* Selected count */}
       <div className="mb-6 p-4 bg-primary-50 rounded-lg">
@@ -121,11 +149,9 @@ export default function FeaturesStep({ data, onNext, onBack }: FeaturesStepProps
       <div className="space-y-8 mb-8">
         {Object.entries(featureCategories).map(([key, category]) => (
           <div key={key} className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {category.title}
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{category.title}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {category.features.map(feature => (
+              {category.features.map((feature) => (
                 <label
                   key={feature}
                   className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 cursor-pointer transition-colors"
@@ -145,12 +171,8 @@ export default function FeaturesStep({ data, onNext, onBack }: FeaturesStepProps
 
         {/* Custom features section */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            ✨ Custom Features
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Add any additional features not listed above
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">✨ Custom Features</h3>
+          <p className="text-sm text-gray-600 mb-4">Add any additional features not listed above</p>
 
           {/* Add custom feature input */}
           <div className="flex gap-2 mb-4">
@@ -176,7 +198,7 @@ export default function FeaturesStep({ data, onNext, onBack }: FeaturesStepProps
           {/* Custom features list */}
           {customFeatures.length > 0 && (
             <div className="space-y-2">
-              {customFeatures.map(feature => (
+              {customFeatures.map((feature) => (
                 <div
                   key={feature}
                   className="flex items-center justify-between p-3 bg-primary-50 rounded-lg"

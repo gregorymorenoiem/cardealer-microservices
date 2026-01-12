@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import DealerPortalLayout from '@/layouts/DealerPortalLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { dealerManagementService } from '@/services/dealerManagementService';
-import type { Dealer } from '@/services/dealerManagementService';
+import type { Dealer, DealerSubscription } from '@/services/dealerManagementService';
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -29,6 +29,8 @@ import {
   FiLoader,
   FiRefreshCw,
   FiEdit,
+  FiZap,
+  FiLock,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { Crown, Sparkles } from 'lucide-react';
@@ -206,6 +208,7 @@ export default function DealerHomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [dealer, setDealer] = useState<Dealer | null>(null);
+  const [subscription, setSubscription] = useState<DealerSubscription | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>(mockMetrics);
   const [activities] = useState<RecentActivity[]>(mockActivities);
   const [loading, setLoading] = useState(true);
@@ -227,13 +230,25 @@ export default function DealerHomePage() {
       const dealerData = await dealerManagementService.getDealerByUserId(userId);
       setDealer(dealerData);
 
-      // TODO: Cargar métricas reales desde DealerAnalyticsService
-      // Por ahora usamos mock data ajustada
-      setMetrics({
-        ...mockMetrics,
-        vehiclesActive: dealerData.currentActiveListings || 0,
-        vehiclesMax: dealerData.maxActiveListings || 50,
-      });
+      // Cargar suscripción con límites y uso
+      try {
+        const subData = await dealerManagementService.getDealerSubscription(dealerData.id);
+        setSubscription(subData);
+
+        // Usar datos reales de la suscripción
+        setMetrics({
+          ...mockMetrics,
+          vehiclesActive: subData.usage.currentListings,
+          vehiclesMax: subData.limits.maxListings,
+        });
+      } catch (subErr) {
+        console.log('No subscription found, using defaults');
+        setMetrics({
+          ...mockMetrics,
+          vehiclesActive: dealerData.currentActiveListings || 0,
+          vehiclesMax: dealerData.maxActiveListings || 3,
+        });
+      }
     } catch (err: any) {
       // Si no tiene perfil de dealer (404), mostramos el dashboard con datos vacíos
       // y un banner para completar el perfil
@@ -247,6 +262,33 @@ export default function DealerHomePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Plan badge helper
+  const getPlanBadge = () => {
+    if (!subscription) return null;
+
+    const planStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+      Free: { bg: 'bg-gray-100', text: 'text-gray-700', icon: null },
+      Basic: { bg: 'bg-blue-100', text: 'text-blue-700', icon: <FiZap className="w-3 h-3" /> },
+      Pro: { bg: 'bg-purple-100', text: 'text-purple-700', icon: <Crown className="w-3 h-3" /> },
+      Enterprise: {
+        bg: 'bg-amber-100',
+        text: 'text-amber-700',
+        icon: <Sparkles className="w-3 h-3" />,
+      },
+    };
+
+    const style = planStyles[subscription.plan] || planStyles.Free;
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${style.bg} ${style.text}`}
+      >
+        {style.icon}
+        Plan {subscription.planDisplayName}
+      </span>
+    );
   };
 
   if (loading) {
@@ -320,11 +362,12 @@ export default function DealerHomePage() {
         {/* ==================== HEADER ==================== */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
                 ¡Hola, {dealer?.businessName || user?.name || 'Dealer'}! 👋
               </h1>
               {dealer?.status && getStatusBadge(dealer.status)}
+              {getPlanBadge()}
             </div>
             <p className="text-gray-500">
               Aquí tienes un resumen de tu negocio hoy,{' '}
@@ -337,6 +380,15 @@ export default function DealerHomePage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {subscription?.canUpgrade && (
+              <Link
+                to="/dealer/pricing"
+                className="flex items-center gap-2 px-4 py-2.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors border border-purple-200"
+              >
+                <FiZap className="w-4 h-4" />
+                <span className="hidden sm:inline">Mejorar Plan</span>
+              </Link>
+            )}
             <button
               onClick={loadDealerData}
               className="flex items-center gap-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
@@ -346,13 +398,157 @@ export default function DealerHomePage() {
             </button>
             <Link
               to="/dealer/inventory/new"
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all hover:scale-105"
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 ${
+                subscription?.limits.hasReachedListingLimit
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-blue-600/30 hover:shadow-xl'
+              }`}
+              onClick={(e) => {
+                if (subscription?.limits.hasReachedListingLimit) {
+                  e.preventDefault();
+                  alert(
+                    `Has alcanzado el límite de ${subscription.limits.maxListings} publicaciones de tu plan ${subscription.planDisplayName}. Mejora tu plan para publicar más vehículos.`
+                  );
+                }
+              }}
             >
-              <FiPlusCircle className="w-5 h-5" />
+              {subscription?.limits.hasReachedListingLimit ? (
+                <FiLock className="w-5 h-5" />
+              ) : (
+                <FiPlusCircle className="w-5 h-5" />
+              )}
               <span>Publicar Vehículo</span>
             </Link>
           </div>
         </div>
+
+        {/* ==================== SUBSCRIPTION USAGE CARD ==================== */}
+        {subscription && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6"
+          >
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-blue-100 rounded-xl">
+                    <FiBarChart2 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Uso de tu Plan {subscription.planDisplayName}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {subscription.plan === 'Enterprise'
+                        ? 'Publicaciones ilimitadas'
+                        : `${subscription.limits.remainingListings} publicaciones disponibles de ${subscription.limits.maxListings}`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                {subscription.plan !== 'Enterprise' && (
+                  <div className="relative pt-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-blue-700">
+                        {subscription.usage.currentListings} / {subscription.limits.maxListings}{' '}
+                        publicaciones
+                      </span>
+                      <span
+                        className={`text-xs font-semibold ${
+                          subscription.limits.listingsUsagePercent >= 90
+                            ? 'text-red-600'
+                            : subscription.limits.listingsUsagePercent >= 70
+                              ? 'text-amber-600'
+                              : 'text-green-600'
+                        }`}
+                      >
+                        {subscription.limits.listingsUsagePercent.toFixed(0)}%
+                      </span>
+                    </div>
+                    <div className="overflow-hidden h-3 text-xs flex rounded-full bg-blue-200">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${Math.min(subscription.limits.listingsUsagePercent, 100)}%`,
+                        }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center rounded-full ${
+                          subscription.limits.listingsUsagePercent >= 90
+                            ? 'bg-red-500'
+                            : subscription.limits.listingsUsagePercent >= 70
+                              ? 'bg-amber-500'
+                              : 'bg-blue-600'
+                        }`}
+                      />
+                    </div>
+                    {subscription.limits.hasReachedListingLimit && (
+                      <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                        <FiAlertCircle className="w-3 h-3" />
+                        Has alcanzado el límite de tu plan. Mejora para publicar más vehículos.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                    subscription.features.analyticsAccess
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  <FiBarChart2 className="w-4 h-4" />
+                  <span className="text-xs font-medium">Analytics</span>
+                </div>
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                    subscription.features.bulkUpload
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  <FiUsers className="w-4 h-4" />
+                  <span className="text-xs font-medium">Carga Masiva</span>
+                </div>
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                    subscription.features.leadManagement
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  <FiTarget className="w-4 h-4" />
+                  <span className="text-xs font-medium">CRM Leads</span>
+                </div>
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                    subscription.features.prioritySupport
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  <FiStar className="w-4 h-4" />
+                  <span className="text-xs font-medium">Soporte Pro</span>
+                </div>
+              </div>
+
+              {subscription.canUpgrade && (
+                <Link
+                  to="/dealer/pricing"
+                  className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all whitespace-nowrap"
+                >
+                  <FiZap className="w-5 h-5" />
+                  Mejorar a {subscription.nextPlan}
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* ==================== VERIFICATION ALERT ==================== */}
         {dealer?.verificationStatus !== 'Verified' && (
@@ -473,7 +669,7 @@ export default function DealerHomePage() {
               title="Ver Leads"
               description={`${metrics.leadsHot} leads calientes esperan`}
               icon={FiTarget}
-              href="/dealer/leads"
+              href="/dealer/crm"
               gradient="bg-gradient-to-br from-red-500 to-orange-500"
             />
             <QuickAction
@@ -537,7 +733,7 @@ export default function DealerHomePage() {
               <p className="text-3xl font-bold mb-1">{metrics.leadsHot}</p>
               <p className="text-sm opacity-80 mb-4">Listos para contactar</p>
               <Link
-                to="/dealer/leads?temperature=hot"
+                to="/dealer/crm"
                 className="flex items-center justify-center gap-2 w-full py-2.5 bg-white text-red-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
               >
                 Ver Leads

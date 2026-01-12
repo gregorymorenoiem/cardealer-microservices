@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UseQueryOptions } from '@tanstack/react-query';
+
 import {
   getSavedSearches,
   getSavedSearchById,
@@ -62,7 +62,7 @@ export function useVehicleSearch(
   filters: VehicleFilters,
   page: number = 1,
   pageSize: number = 12,
-  options?: Partial<UseQueryOptions<PaginatedVehicles>>
+  options?: any
 ) {
   return useQuery({
     queryKey: searchKeys.vehiclesList(filters, page, pageSize),
@@ -80,7 +80,7 @@ export function useVehicleTextSearch(
   page: number = 1,
   pageSize: number = 12,
   filters?: VehicleFilters,
-  options?: Partial<UseQueryOptions<PaginatedVehicles>>
+  options?: any
 ) {
   return useQuery({
     queryKey: searchKeys.vehiclesSearch(query, page, pageSize),
@@ -98,7 +98,7 @@ export function useVehicleTextSearch(
 /**
  * Hook for fetching all saved searches
  */
-export function useSavedSearches(options?: Partial<UseQueryOptions<SavedSearch[]>>) {
+export function useSavedSearches(options?: any) {
   return useQuery({
     queryKey: searchKeys.savedSearchesList(),
     queryFn: getSavedSearches,
@@ -110,7 +110,7 @@ export function useSavedSearches(options?: Partial<UseQueryOptions<SavedSearch[]
 /**
  * Hook for fetching a single saved search
  */
-export function useSavedSearch(id: string, options?: Partial<UseQueryOptions<SavedSearch>>) {
+export function useSavedSearch(id: string, options?: any) {
   return useQuery({
     queryKey: searchKeys.savedSearchDetail(id),
     queryFn: () => getSavedSearchById(id),
@@ -126,7 +126,7 @@ export function useSavedSearchResults(
   id: string,
   page: number = 1,
   pageSize: number = 12,
-  options?: Partial<UseQueryOptions<PaginatedVehicles>>
+  options?: any
 ) {
   return useQuery({
     queryKey: searchKeys.savedSearchResults(id, page, pageSize),

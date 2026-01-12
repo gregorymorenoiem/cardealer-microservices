@@ -122,6 +122,19 @@
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
+      "DownstreamPathTemplate": "/api/notifications",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/notifications",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "SwaggerKey": "notifications"
+    },
+    {
       "DownstreamPathTemplate": "/api/notifications/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -131,7 +144,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH"],
       "SwaggerKey": "notifications"
     },
     {
@@ -344,6 +357,48 @@
       "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }]
     },
     {
+      "UpstreamPathTemplate": "/api/azul/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/azul/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "host.docker.internal", "Port": 5001 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment/azul/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/payment/azul/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "host.docker.internal", "Port": 5001 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-billing/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/dealer-billing/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "host.docker.internal", "Port": 5001 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/billing/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/billing/{everything}",
@@ -398,18 +453,53 @@
     },
 
     {
+      "UpstreamPathTemplate": "/api/dealer-roles",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-roles",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/employees",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/employees",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/employees/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/employees/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/dealers/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/dealers/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -421,7 +511,196 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/subscriptions/plans",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/subscriptions/plans",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/subscriptions/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT"],
+      "DownstreamPathTemplate": "/api/subscriptions/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/analytics/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/dashboard/{dealerId}/summary",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dashboard/{dealerId}/summary",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/analytics/track/{action}",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/analytics/track/{action}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dashboard/{dealerId}/quick-stats",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dashboard/{dealerId}/quick-stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dashboard/{dealerId}/trends",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dashboard/{dealerId}/trends",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/insights/{dealerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/insights/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/insights/{dealerId}/generate",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/insights/{dealerId}/generate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/benchmark",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/benchmark",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/conversionfunnel/{dealerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/conversionfunnel/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/analytics/funnel/{dealerId}/visualization",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/conversionfunnel/{dealerId}/visualization",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/analytics/insights/{dealerId}/summary",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/insights/{dealerId}/summary",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/analytics/performance/{dealerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dashboard/{dealerId}/performance",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -600,9 +879,6 @@
       "DownstreamPathTemplate": "/api/PriceAlerts",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -615,9 +891,6 @@
       "DownstreamPathTemplate": "/api/PriceAlerts/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -630,9 +903,6 @@
       "DownstreamPathTemplate": "/api/SavedSearches",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -645,9 +915,6 @@
       "DownstreamPathTemplate": "/api/SavedSearches/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -737,6 +1004,105 @@
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "eventtrackingservice", "Port": 80 }]
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/leads/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads/dealer/{dealerId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads/dealer/{dealerId}/statistics",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}/statistics",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads/{leadId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/leads/{leadId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads/{leadId}/status",
+      "UpstreamHttpMethod": ["OPTIONS", "PUT"],
+      "DownstreamPathTemplate": "/api/leads/{leadId}/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/leads",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads/actions",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/leads/actions",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/leads/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/leads/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/leads-service/swagger/{everything}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }]
     }
   ],
   "SwaggerEndPoints": [

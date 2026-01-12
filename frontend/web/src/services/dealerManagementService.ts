@@ -55,7 +55,83 @@ export type VerificationStatus =
   | 'Verified'
   | 'Rejected'
   | 'RequiresMoreInfo';
-export type DealerPlan = 'None' | 'Starter' | 'Pro' | 'Enterprise';
+export type DealerPlan = 'Free' | 'Basic' | 'Pro' | 'Enterprise';
+
+// Subscription Types
+export interface DealerSubscription {
+  dealerId: string;
+  plan: DealerPlan;
+  planDisplayName: string;
+  monthlyPrice: number;
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+  daysRemaining: number;
+  features: DealerPlanFeatures;
+  usage: DealerUsage;
+  limits: DealerLimits;
+  canUpgrade: boolean;
+  nextPlan?: string;
+}
+
+export interface DealerPlanFeatures {
+  maxListings: number;
+  maxImages: number;
+  maxFeaturedListings: number;
+  analyticsAccess: boolean;
+  bulkUpload: boolean;
+  prioritySupport: boolean;
+  customBranding: boolean;
+  apiAccess: boolean;
+  leadManagement: boolean;
+  emailAutomation: boolean;
+  marketPriceAnalysis: boolean;
+  advancedReporting: boolean;
+  whiteLabel: boolean;
+  dedicatedAccountManager: boolean;
+}
+
+export interface DealerUsage {
+  currentListings: number;
+  featuredListings: number;
+  imagesUsed: number;
+  leadsThisMonth: number;
+  emailsSentThisMonth: number;
+}
+
+export interface DealerLimits {
+  maxListings: number;
+  maxFeaturedListings: number;
+  maxImages: number;
+  maxLeadsPerMonth: number;
+  maxEmailsPerMonth: number;
+  hasReachedListingLimit: boolean;
+  hasReachedFeaturedLimit: boolean;
+  remainingListings: number;
+  remainingFeatured: number;
+  listingsUsagePercent: number;
+  featuredUsagePercent: number;
+}
+
+export interface PlanInfo {
+  plan: string;
+  displayName: string;
+  monthlyPrice: number;
+  annualPrice?: number;
+  description: string;
+  features: string[];
+  notIncluded: string[];
+  isPopular: boolean;
+  maxListings: number;
+  maxImages: number;
+  maxFeaturedListings: number;
+}
+
+export interface AllPlansResponse {
+  plans: PlanInfo[];
+  currentPlan: string;
+  recommendedPlan?: string;
+}
 
 export interface CreateDealerRequest {
   userId: string;
@@ -176,6 +252,86 @@ class DealerManagementService {
 
   async verifyDealer(id: string, approved: boolean, rejectionReason?: string): Promise<void> {
     await this.api.post(`/dealers/${id}/verify`, { approved, rejectionReason });
+  }
+
+  // ========================================
+  // Subscription Management
+  // ========================================
+
+  /**
+   * Get all available plans with features and pricing
+   */
+  async getPlans(): Promise<AllPlansResponse> {
+    const response = await this.api.get<AllPlansResponse>('/subscriptions/plans');
+    return response.data;
+  }
+
+  /**
+   * Get dealer subscription with limits and usage
+   */
+  async getDealerSubscription(dealerId: string): Promise<DealerSubscription> {
+    const response = await this.api.get<DealerSubscription>(`/subscriptions/dealer/${dealerId}`);
+    return response.data;
+  }
+
+  /**
+   * Get subscription by user ID
+   */
+  async getSubscriptionByUserId(userId: string): Promise<DealerSubscription> {
+    const response = await this.api.get<DealerSubscription>(`/subscriptions/user/${userId}`);
+    return response.data;
+  }
+
+  /**
+   * Change dealer plan (upgrade/downgrade)
+   */
+  async changePlan(
+    dealerId: string,
+    newPlan: DealerPlan
+  ): Promise<{ success: boolean; message: string; subscription?: DealerSubscription }> {
+    const response = await this.api.post(`/subscriptions/dealer/${dealerId}/change-plan`, {
+      newPlan,
+    });
+    return response.data;
+  }
+
+  /**
+   * Check if dealer can perform an action based on limits
+   */
+  async canPerformAction(
+    dealerId: string,
+    action: 'add_listing' | 'add_featured' | 'bulk_upload' | 'analytics'
+  ): Promise<{
+    allowed: boolean;
+    reason?: string;
+    current: number;
+    limit: number;
+    remaining: number;
+  }> {
+    const response = await this.api.get(
+      `/subscriptions/dealer/${dealerId}/can-action?action=${action}`
+    );
+    return response.data;
+  }
+
+  /**
+   * Increment listings count (call after publishing a vehicle)
+   */
+  async incrementListings(
+    dealerId: string
+  ): Promise<{ currentListings: number; maxListings: number; remaining: number }> {
+    const response = await this.api.post(`/subscriptions/dealer/${dealerId}/increment-listings`);
+    return response.data;
+  }
+
+  /**
+   * Decrement listings count (call after deleting/unpublishing a vehicle)
+   */
+  async decrementListings(
+    dealerId: string
+  ): Promise<{ currentListings: number; maxListings: number; remaining: number }> {
+    const response = await this.api.post(`/subscriptions/dealer/${dealerId}/decrement-listings`);
+    return response.data;
   }
 
   // Plan information (static)

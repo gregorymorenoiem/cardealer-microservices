@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FiArrowLeft, 
+import {
+  FiArrowLeft,
   FiSearch,
   FiFilter,
   FiCheckCircle,
@@ -10,7 +10,7 @@ import {
   FiRefreshCw,
   FiChevronLeft,
   FiChevronRight,
-  FiExternalLink
+  FiExternalLink,
 } from 'react-icons/fi';
 import MainLayout from '@/layouts/MainLayout';
 import { usePayments } from '@/hooks/useBilling';
@@ -19,29 +19,34 @@ import { mockPayments, formatCurrency, getStatusColor } from '@/mocks/billingDat
 import type { PaymentStatus } from '@/types/billing';
 
 export default function PaymentsPage() {
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Determine if we're in dealer context
+  const isDealerContext = location.pathname.startsWith('/dealer');
+  const routePrefix = isDealerContext ? '/dealer' : '/billing';
+
   // Get user info
   const { user } = useAuthStore();
   const dealerId = user?.dealerId || user?.id || '';
-  
+
   // Use TanStack Query hook
   const { data: fetchedPayments } = usePayments(dealerId);
-  
+
   // Use fetched data or fallback to mocks
   const payments = fetchedPayments?.length ? fetchedPayments : mockPayments;
 
   const filteredPayments = payments.filter((payment) => {
-    const matchesSearch = 
+    const matchesSearch =
       payment.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.cardLast4?.includes(searchQuery) ||
       formatCurrency(payment.amount).includes(searchQuery);
-    
+
     const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -90,11 +95,10 @@ export default function PaymentsPage() {
   };
 
   const totalSuccessful = filteredPayments
-    .filter(p => p.status === 'succeeded')
+    .filter((p) => p.status === 'succeeded')
     .reduce((sum, p) => sum + p.amount, 0);
-  
-  const totalRefunded = filteredPayments
-    .reduce((sum, p) => sum + p.refundedAmount, 0);
+
+  const totalRefunded = filteredPayments.reduce((sum, p) => sum + p.refundedAmount, 0);
 
   return (
     <MainLayout>
@@ -102,14 +106,15 @@ export default function PaymentsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <Link to="/billing" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <Link
+              to={isDealerContext ? '/dealer/billing' : '/billing'}
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            >
               <FiArrowLeft className="w-4 h-4 mr-2" />
               Back to Billing
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Payment History</h1>
-            <p className="text-gray-600 mt-1">
-              View all your payment transactions
-            </p>
+            <p className="text-gray-600 mt-1">View all your payment transactions</p>
           </div>
 
           {/* Summary Cards */}
@@ -133,7 +138,7 @@ export default function PaymentsPage() {
               <p className="text-sm text-gray-500">Successful Payments</p>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(totalSuccessful)}</p>
               <p className="text-sm text-gray-500 mt-1">
-                {filteredPayments.filter(p => p.status === 'succeeded').length} transactions
+                {filteredPayments.filter((p) => p.status === 'succeeded').length} transactions
               </p>
             </motion.div>
 
@@ -146,7 +151,7 @@ export default function PaymentsPage() {
               <p className="text-sm text-gray-500">Total Refunded</p>
               <p className="text-2xl font-bold text-purple-600">{formatCurrency(totalRefunded)}</p>
               <p className="text-sm text-gray-500 mt-1">
-                {filteredPayments.filter(p => p.refundedAmount > 0).length} refunds
+                {filteredPayments.filter((p) => p.refundedAmount > 0).length} refunds
               </p>
             </motion.div>
           </div>
@@ -201,12 +206,16 @@ export default function PaymentsPage() {
                           <p className="font-medium text-gray-900">
                             {payment.cardBrand} •••• {payment.cardLast4}
                           </p>
-                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full capitalize ${getStatusColor(payment.status)}`}>
+                          <span
+                            className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full capitalize ${getStatusColor(payment.status)}`}
+                          >
                             {payment.status.replace('_', ' ')}
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5">{payment.description}</p>
-                        <p className="text-xs text-gray-400 mt-1">{formatDate(payment.createdAt)}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatDate(payment.createdAt)}
+                        </p>
                       </div>
                     </div>
 
@@ -221,7 +230,7 @@ export default function PaymentsPage() {
                           </p>
                         )}
                       </div>
-                      
+
                       {payment.receiptUrl && (
                         <a
                           href={payment.receiptUrl}
@@ -246,13 +255,14 @@ export default function PaymentsPage() {
                   )}
 
                   {/* Refund reason */}
-                  {(payment.status === 'refunded' || payment.status === 'partially_refunded') && payment.refundReason && (
-                    <div className="mt-3 p-3 bg-purple-50 rounded-lg">
-                      <p className="text-sm text-purple-800">
-                        <strong>Refund Reason:</strong> {payment.refundReason}
-                      </p>
-                    </div>
-                  )}
+                  {(payment.status === 'refunded' || payment.status === 'partially_refunded') &&
+                    payment.refundReason && (
+                      <div className="mt-3 p-3 bg-purple-50 rounded-lg">
+                        <p className="text-sm text-purple-800">
+                          <strong>Refund Reason:</strong> {payment.refundReason}
+                        </p>
+                      </div>
+                    )}
                 </div>
               ))}
             </div>

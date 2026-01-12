@@ -19,22 +19,18 @@ import {
   FiZap,
   FiChevronLeft,
   FiChevronRight,
-  FiStar,
   FiMapPin,
   FiLoader,
 } from 'react-icons/fi';
-import { FaCar } from 'react-icons/fa';
 import { HeroCarousel } from '@/components/organisms';
 import { FeaturedListingGrid } from '@/components/molecules';
-import { ForYouSection } from '@/components/recommendations/ForYouSection';
 import {
   useHomepageSections,
   type HomepageSection,
   type HomepageVehicle,
 } from '@/hooks/useHomepageSections';
 import { generateListingUrl } from '@/utils/seoSlug';
-import type { Vehicle } from '@/data/mockVehicles';
-import { useAuth } from '@/hooks/useAuth';
+import type { Vehicle } from '@/services/vehicleService';
 
 // Note: Vehicle categories removed - single category (vehicles) in first phase
 
@@ -84,8 +80,6 @@ interface FeaturedListingItem {
   image: string;
   category: string;
   location: string;
-  rating: number;
-  reviews: number;
 }
 
 // Transform HomepageVehicle to FeaturedListingItem (for FeaturedSection component)
@@ -93,11 +87,6 @@ const transformToFeaturedListing = (
   vehicle: HomepageVehicle,
   sectionName: string
 ): FeaturedListingItem => {
-  // Generate consistent pseudo-random rating based on vehicle ID
-  const idHash = vehicle.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const rating = 4.5 + (idHash % 50) / 100; // Range: 4.50 - 4.99
-  const reviews = Math.floor((idHash % 150) + 10);
-
   return {
     id: vehicle.id,
     title: vehicle.name,
@@ -105,8 +94,6 @@ const transformToFeaturedListing = (
     image: vehicle.imageUrl,
     category: sectionName,
     location: 'Santo Domingo', // Default location - API doesn't return this yet
-    rating: Number(rating.toFixed(1)),
-    reviews,
   };
 };
 
@@ -143,10 +130,6 @@ const transformHomepageVehicleToVehicle = (v: HomepageVehicle): Vehicle => {
     DualClutch: 'Automatic',
   };
 
-  // Generate consistent pseudo-random rating
-  const idHash = v.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const sellerRating = parseFloat((4.0 + (idHash % 10) / 10).toFixed(1));
-
   return {
     id: v.id,
     make: v.make,
@@ -161,22 +144,17 @@ const transformHomepageVehicleToVehicle = (v: HomepageVehicle): Vehicle => {
     transmission: transmissionMap[v.transmission] || 'Automatic',
     fuelType: fuelTypeMap[v.fuelType] || 'Gasoline',
     bodyType: bodyTypeMap[v.bodyStyle] || 'Sedan',
-    drivetrain: 'FWD',
-    engine: `${v.make} Engine`,
-    horsepower: 200,
-    mpg: { city: 25, highway: 32 },
+    drivetrain: undefined,
+    engine: undefined,
+    horsepower: undefined,
+    mpg: undefined,
     color: v.exteriorColor || 'Unknown',
-    interiorColor: 'Black',
+    interiorColor: undefined,
     vin: '',
     condition: 'Used',
     features: [],
     description: '',
-    seller: {
-      name: 'Dealer',
-      type: 'Dealer',
-      rating: Number(sellerRating.toFixed(1)),
-      phone: '+1 (555) 000-0000',
-    },
+    seller: undefined, // No fake seller data
     tier: v.isPinned ? 'featured' : 'basic',
   };
 };
@@ -223,8 +201,6 @@ interface FeaturedSectionProps {
     image: string;
     category: string;
     location: string;
-    rating: number;
-    reviews: number;
   }>;
   viewAllHref: string;
   accentColor: string;
@@ -395,11 +371,6 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
                         </span>
                       )}
                     </p>
-                    <div className="flex items-center gap-1 text-sm">
-                      <FiStar className="w-4 h-4 text-amber-400 fill-current" />
-                      <span className="font-medium">{listing.rating.toFixed(1)}</span>
-                      <span className="text-gray-400">({listing.reviews})</span>
-                    </div>
                   </div>
                 </div>
               </Link>
@@ -439,8 +410,6 @@ const HomePage: React.FC = () => {
     destacados,
     lujo,
   } = useHomepageSections();
-
-  const { isAuthenticated } = useAuth();
 
   // Transform carousel vehicles to Vehicle format for HeroCarousel component
   const heroVehicles = useMemo(() => {
@@ -484,13 +453,6 @@ const HomePage: React.FC = () => {
           <FeaturedListingGrid vehicles={gridVehicles} maxItems={9} />
         </div>
       </section>
-
-      {/* For You Section - Personalized Recommendations (Authenticated Users Only) */}
-      {isAuthenticated && (
-        <section className="py-6 bg-white">
-          <ForYouSection />
-        </section>
-      )}
 
       {/* Loading State */}
       {isLoading && (

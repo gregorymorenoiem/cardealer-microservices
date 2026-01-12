@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import MainLayout from '../layouts/MainLayout';
+import { useNavigate } from 'react-router-dom';
+import DealerPortalLayout from '../layouts/DealerPortalLayout';
+import { useAuth } from '../hooks/useAuth';
 import useDealerAnalytics from '../hooks/useDealerAnalytics';
 import {
   FiTrendingUp,
@@ -24,12 +25,17 @@ import { dealerAnalyticsService } from '../services/dealerAnalyticsService';
 
 const AdvancedDealerDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { dealerId } = useParams<{ dealerId: string }>();
+  const { user } = useAuth();
 
-  if (!dealerId) {
-    navigate('/dealer/dashboard');
-    return null;
-  }
+  // Get dealerId from authenticated user
+  const dealerId = user?.dealerId || user?.id;
+
+  // Fix: Move navigate to useEffect to avoid setState during render
+  useEffect(() => {
+    if (!dealerId) {
+      navigate('/dealer/dashboard');
+    }
+  }, [dealerId, navigate]);
 
   // Date range state
   const [dateRange, setDateRange] = useState({
@@ -42,7 +48,7 @@ const AdvancedDealerDashboard: React.FC = () => {
   );
   const [refreshing, setRefreshing] = useState(false);
 
-  // Use custom hook
+  // Use custom hook only if dealerId exists
   const {
     dashboardSummary,
     quickStats,
@@ -59,7 +65,7 @@ const AdvancedDealerDashboard: React.FC = () => {
     markInsightsAsRead,
     markInsightAsActedUpon,
   } = useDealerAnalytics({
-    dealerId,
+    dealerId: dealerId || '',
     fromDate: dateRange.fromDate,
     toDate: dateRange.toDate,
     autoRefresh: true,
@@ -102,16 +108,16 @@ const AdvancedDealerDashboard: React.FC = () => {
 
   if (isLoading && !dashboardSummary) {
     return (
-      <MainLayout>
+      <DealerPortalLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
         </div>
-      </MainLayout>
+      </DealerPortalLayout>
     );
   }
 
   return (
-    <MainLayout>
+    <DealerPortalLayout>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -275,6 +281,7 @@ const AdvancedDealerDashboard: React.FC = () => {
                 dashboardSummary={dashboardSummary}
                 performanceComparison={performanceComparison}
                 isLoading={isLoadingDashboard}
+                dealerId={dealerId || ''}
               />
             )}
 
@@ -303,7 +310,7 @@ const AdvancedDealerDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </DealerPortalLayout>
   );
 };
 
@@ -363,19 +370,273 @@ const OverviewTab: React.FC<{
   dashboardSummary: any;
   performanceComparison: any;
   isLoading: boolean;
-}> = ({ dashboardSummary, performanceComparison, isLoading }) => {
+  dealerId: string;
+}> = ({ dashboardSummary, performanceComparison, isLoading, dealerId }) => {
+  const [trendsData, setTrendsData] = React.useState<any>(null);
+  const [loadingTrends, setLoadingTrends] = React.useState(true);
+
+  React.useEffect(() => {
+    if (dealerId) {
+      setLoadingTrends(true);
+      dealerAnalyticsService
+        .getTrends(dealerId, 30)
+        .then((data) => {
+          setTrendsData(data);
+          setLoadingTrends(false);
+        })
+        .catch((err) => {
+          console.error('Error loading trends:', err);
+          setLoadingTrends(false);
+        });
+    }
+  }, [dealerId]);
+
   if (isLoading) {
     return <div className="animate-pulse h-64 bg-gray-200 rounded"></div>;
   }
 
+  // Calculate chart dimensions
+  const chartWidth = 800;
+  const chartHeight = 240;
+  const paddingLeft = 60;
+  const paddingRight = 20;
+  const paddingTop = 20;
+  const paddingBottom = 40;
+  const graphWidth = chartWidth - paddingLeft - paddingRight;
+  const graphHeight = chartHeight - paddingTop - paddingBottom;
+
+  // Process trends data for the chart
+  const processedData = trendsData?.dailyData || [];
+  const maxViews = Math.max(...processedData.map((d: any) => d.views || 0), 1);
+  const maxContacts = Math.max(...processedData.map((d: any) => d.contacts || 0), 1);
+
+  // Generate SVG path for views
+  const getViewsPath = () => {
+    if (processedData.length === 0) return '';
+    const points = processedData.map((d: any, i: number) => {
+      const x = paddingLeft + (i / Math.max(processedData.length - 1, 1)) * graphWidth;
+      const y = paddingTop + graphHeight - (d.views / maxViews) * graphHeight;
+      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+    });
+    return points.join(' ');
+  };
+
+  // Generate SVG path for contacts
+  const getContactsPath = () => {
+    if (processedData.length === 0) return '';
+    const points = processedData.map((d: any, i: number) => {
+      const x = paddingLeft + (i / Math.max(processedData.length - 1, 1)) * graphWidth;
+      const y = paddingTop + graphHeight - (d.contacts / maxContacts) * graphHeight;
+      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+    });
+    return points.join(' ');
+  };
+
+  // Generate Y-axis labels for views
+  const yAxisLabels = [0, Math.round(maxViews / 2), maxViews];
+
+  // Get date labels (first, middle, last)
+  const getDateLabels = () => {
+    if (processedData.length === 0) return [];
+    const first = processedData[0];
+    const middle = processedData[Math.floor(processedData.length / 2)];
+    const last = processedData[processedData.length - 1];
+    return [
+      {
+        x: paddingLeft,
+        label: new Date(first.date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric' }),
+      },
+      {
+        x: paddingLeft + graphWidth / 2,
+        label: new Date(middle.date).toLocaleDateString('es-DO', {
+          month: 'short',
+          day: 'numeric',
+        }),
+      },
+      {
+        x: paddingLeft + graphWidth,
+        label: new Date(last.date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric' }),
+      },
+    ];
+  };
+
   return (
     <div className="space-y-6">
-      {/* Performance Chart Placeholder */}
+      {/* Performance Chart */}
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Tendencia de Performance</h3>
-        <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
-          <p className="text-gray-500">Gráfico de tendencias - En desarrollo</p>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Tendencia de Performance (Últimos 30 días)</h3>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span className="text-gray-600">Vistas</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span className="text-gray-600">Contactos</span>
+            </div>
+          </div>
         </div>
+
+        {loadingTrends ? (
+          <div className="h-64 bg-gray-100 rounded flex items-center justify-center animate-pulse">
+            <p className="text-gray-500">Cargando gráfico...</p>
+          </div>
+        ) : processedData.length === 0 ? (
+          <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
+            <p className="text-gray-500">No hay datos de tendencias disponibles</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <svg width={chartWidth} height={chartHeight} className="min-w-full">
+              {/* Background grid */}
+              <g className="grid-lines">
+                {yAxisLabels.map((val, i) => {
+                  const y = paddingTop + graphHeight - (val / maxViews) * graphHeight;
+                  return (
+                    <g key={i}>
+                      <line
+                        x1={paddingLeft}
+                        y1={y}
+                        x2={paddingLeft + graphWidth}
+                        y2={y}
+                        stroke="#e5e7eb"
+                        strokeDasharray="4,4"
+                      />
+                      <text
+                        x={paddingLeft - 10}
+                        y={y + 4}
+                        textAnchor="end"
+                        className="text-xs fill-gray-500"
+                      >
+                        {val}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+
+              {/* Views line */}
+              <path
+                d={getViewsPath()}
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth={3}
+                className="drop-shadow-sm"
+              />
+
+              {/* Contacts line */}
+              <path
+                d={getContactsPath()}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth={3}
+                className="drop-shadow-sm"
+              />
+
+              {/* Data points - Views */}
+              {processedData.map((d: any, i: number) => {
+                const x = paddingLeft + (i / Math.max(processedData.length - 1, 1)) * graphWidth;
+                const y = paddingTop + graphHeight - (d.views / maxViews) * graphHeight;
+                return (
+                  <circle
+                    key={`views-${i}`}
+                    cx={x}
+                    cy={y}
+                    r={4}
+                    fill="#3b82f6"
+                    className="hover:r-6 cursor-pointer"
+                  >
+                    <title>{`${new Date(d.date).toLocaleDateString('es-DO')}: ${d.views} vistas`}</title>
+                  </circle>
+                );
+              })}
+
+              {/* Data points - Contacts */}
+              {processedData.map((d: any, i: number) => {
+                const x = paddingLeft + (i / Math.max(processedData.length - 1, 1)) * graphWidth;
+                const y = paddingTop + graphHeight - (d.contacts / maxContacts) * graphHeight;
+                return (
+                  <circle
+                    key={`contacts-${i}`}
+                    cx={x}
+                    cy={y}
+                    r={4}
+                    fill="#22c55e"
+                    className="hover:r-6 cursor-pointer"
+                  >
+                    <title>{`${new Date(d.date).toLocaleDateString('es-DO')}: ${d.contacts} contactos`}</title>
+                  </circle>
+                );
+              })}
+
+              {/* X-axis labels */}
+              {getDateLabels().map((label, i) => (
+                <text
+                  key={i}
+                  x={label.x}
+                  y={chartHeight - 10}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-500"
+                >
+                  {label.label}
+                </text>
+              ))}
+
+              {/* Axes */}
+              <line
+                x1={paddingLeft}
+                y1={paddingTop}
+                x2={paddingLeft}
+                y2={paddingTop + graphHeight}
+                stroke="#d1d5db"
+                strokeWidth={1}
+              />
+              <line
+                x1={paddingLeft}
+                y1={paddingTop + graphHeight}
+                x2={paddingLeft + graphWidth}
+                y2={paddingTop + graphHeight}
+                stroke="#d1d5db"
+                strokeWidth={1}
+              />
+            </svg>
+          </div>
+        )}
+
+        {/* Summary stats below chart */}
+        {processedData.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">
+                {processedData.reduce((sum: number, d: any) => sum + d.views, 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">Total Vistas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">
+                {processedData
+                  .reduce((sum: number, d: any) => sum + d.contacts, 0)
+                  .toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">Total Contactos</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600">
+                {processedData.reduce((sum: number, d: any) => sum + d.sales, 0)}
+              </p>
+              <p className="text-sm text-gray-500">Ventas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-amber-600">
+                {dealerAnalyticsService.formatCurrency(
+                  processedData.reduce((sum: number, d: any) => sum + d.revenue, 0)
+                )}
+              </p>
+              <p className="text-sm text-gray-500">Ingresos</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Analytics Summary */}

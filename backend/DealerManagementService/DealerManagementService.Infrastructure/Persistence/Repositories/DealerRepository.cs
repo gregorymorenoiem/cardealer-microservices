@@ -164,13 +164,8 @@ public class DealerRepository : IDealerRepository
             dealer.IsSubscriptionActive = true;
             
             // Set limits based on plan
-            dealer.MaxActiveListings = plan switch
-            {
-                DealerPlan.Starter => 15,
-                DealerPlan.Pro => 50,
-                DealerPlan.Enterprise => int.MaxValue,
-                _ => 0
-            };
+            var features = DealerPlanLimits.GetFeatures(plan);
+            dealer.MaxActiveListings = features.MaxListings;
             
             dealer.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync(cancellationToken);

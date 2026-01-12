@@ -6,7 +6,16 @@ import type { Recommendation } from '@/services/recommendationService';
 import vehicleService from '@/services/vehicleService';
 import type { Vehicle } from '@/services/vehicleService';
 
+// Feature flag: disable recommendations API calls when service is not available
+// Set to true when RecommendationService is deployed
+const RECOMMENDATIONS_SERVICE_ENABLED = false;
+
 export const ForYouSection = () => {
+  // If service is disabled, don't render anything
+  if (!RECOMMENDATIONS_SERVICE_ENABLED) {
+    return null;
+  }
+
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,8 +37,9 @@ export const ForYouSection = () => {
       );
       setVehicles(vehiclesData.filter((v: Vehicle | null) => v !== null) as Vehicle[]);
     } catch (err: any) {
-      console.error('Error loading recommendations:', err);
-      setError(err.response?.data?.message || 'Error al cargar recomendaciones');
+      // Silently handle errors - service may not be deployed
+      // Don't log to console to avoid spam
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }
@@ -64,36 +74,9 @@ export const ForYouSection = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          <p className="font-semibold">Error</p>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (recommendations.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">Para ti</h2>
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <FiStar className="mx-auto text-gray-400 text-5xl mb-4" />
-          <p className="text-gray-600 text-lg">Aún no tenemos recomendaciones para ti</p>
-          <p className="text-gray-500 text-sm mt-2">
-            Explora vehículos para que podamos personalizar tu experiencia
-          </p>
-          <Link
-            to="/vehicles"
-            className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Ver todos los vehículos
-          </Link>
-        </div>
-      </div>
-    );
+  if (error || recommendations.length === 0) {
+    // Don't render anything if there's an error or no recommendations
+    return null;
   }
 
   return (

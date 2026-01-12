@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using UserService.Domain.Entities;
 using UserService.Domain.Interfaces;
 
 namespace UserService.Api.Controllers;
@@ -35,7 +36,7 @@ public class SellerProfileController : ControllerBase
             Province = user.Province,
             MemberSince = user.CreatedAt,
             IsVerified = user.IsEmailVerified,
-            DealerInfo = user.AccountType == "Dealer" ? new
+            DealerInfo = user.AccountType == AccountType.Dealer ? new
             {
                 BusinessName = user.BusinessName,
                 BusinessPhone = user.BusinessPhone,

@@ -6,7 +6,14 @@ public enum InsightType
     InventoryOptimization,
     MarketingStrategy,
     SeasonalTrend,
-    CompetitorAnalysis
+    CompetitorAnalysis,
+    // Additional types used in seed data
+    Visibility,
+    Conversion,
+    Response,
+    Pricing,
+    Performance,
+    Engagement
 }
 
 public enum InsightPriority

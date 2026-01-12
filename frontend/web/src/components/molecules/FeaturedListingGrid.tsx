@@ -1,13 +1,13 @@
 /**
  * FeaturedListingGrid Component
  * Sprint 3: FeaturedListingCard Component
- * 
+ *
  * Grid layout for featured listings with 40% UX balance enforcement
  * Automatically mixes featured and organic listings
  */
 
 import { useMemo } from 'react';
-import type { Vehicle } from '@/data/mockVehicles';
+import type { Vehicle } from '@/services/vehicleService';
 import FeaturedListingCard from './FeaturedListingCard';
 import { mixFeaturedAndOrganic } from '@/utils/rankingAlgorithm';
 
@@ -22,17 +22,16 @@ interface FeaturedListingGridProps {
 const columnClasses = {
   2: 'grid-cols-1 md:grid-cols-2',
   3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-  4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+  4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
 };
 
-export default function FeaturedListingGrid({ 
-  vehicles, 
+export default function FeaturedListingGrid({
+  vehicles,
   page = 'browse',
   columns = 3,
   maxItems,
-  className = '' 
+  className = '',
 }: FeaturedListingGridProps) {
-  
   // Apply ranking algorithm with 40% rule
   const rankedVehicles = useMemo(() => {
     const mixed = mixFeaturedAndOrganic(vehicles, page);
@@ -47,11 +46,7 @@ export default function FeaturedListingGrid({
   return (
     <div className={`grid ${columnClasses[columns]} gap-4 ${className}`}>
       {rankedVehicles.map((vehicle, index) => (
-        <FeaturedListingCard
-          key={vehicle.id}
-          vehicle={vehicle}
-          priority={getPriority(index)}
-        />
+        <FeaturedListingCard key={vehicle.id} vehicle={vehicle} priority={getPriority(index)} />
       ))}
     </div>
   );

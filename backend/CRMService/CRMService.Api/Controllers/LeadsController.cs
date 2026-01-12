@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CRMService.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/crm/[controller]")]
 public class LeadsController : ControllerBase
 {
     private readonly ILeadRepository _leadRepository;

@@ -15,32 +15,39 @@ export interface VehicleFormData {
   // Step 1: Vehicle Info
   make: string;
   model: string;
+  trim?: string; // LE, SE, XLE, Sport (from VIN decode)
   year: number;
   mileage: number;
   vin: string;
-  transmission: string;
-  fuelType: string;
-  bodyType: string;
-  drivetrain: string;
-  engine: string;
-  horsepower: string;
-  mpg: string;
+  transmission?: string; // Opcional si VIN no tiene datos
+  fuelType?: string; // Opcional si VIN no tiene datos
+  bodyType?: string; // Opcional - VIN no siempre tiene datos
+  drivetrain?: string; // Opcional si VIN no tiene datos
+  engine?: string; // Opcional si VIN no tiene datos
+  horsepower?: string;
+  doors?: number;
+  seats?: number;
   exteriorColor: string;
   interiorColor: string;
   condition: string;
+
+  // Step 3: Features (from FeaturesStep)
   features: string[];
-  
+
+  // VIN-decoded data (auto-filled)
+  vinBasePrice?: number; // MSRP from VIN (for price suggestion)
+  vinSafetyFeatures?: string[]; // Safety features from VIN (for auto-select in FeaturesStep)
+
   // Step 2: Photos
   images: File[];
-  
-  // Step 3: Pricing
+
+  // Step 4: Pricing
   price: number;
   description: string;
   location: string;
   sellerName: string;
   sellerPhone: string;
   sellerEmail: string;
-  sellerType: 'private' | 'dealer';
 }
 
 const steps = [
@@ -66,14 +73,12 @@ export default function SellYourCarPage() {
         return {
           features: [],
           images: [],
-          sellerType: 'private',
         };
       }
     }
     return {
       features: [],
       images: [],
-      sellerType: 'private',
     };
   });
 
@@ -113,7 +118,6 @@ export default function SellYourCarPage() {
       setFormData({
         features: [],
         images: [],
-        sellerType: 'private',
       });
       setCurrentStep(1);
     }
@@ -135,10 +139,10 @@ export default function SellYourCarPage() {
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // Validate required fields
       if (!formData.make || !formData.model || !formData.year || !formData.price) {
         alert('⚠️ Please fill in all required fields (Make, Model, Year, Price)');
@@ -146,13 +150,13 @@ export default function SellYourCarPage() {
       }
 
       console.log('Creating vehicle listing...', formData);
-      
+
       // STEP 1: Upload images to MediaService first
       let uploadedImageUrls: string[] = [];
-      
+
       if (formData.images && formData.images.length > 0) {
         console.log(`📸 Uploading ${formData.images.length} images to MediaService...`);
-        
+
         try {
           const uploadResults = await uploadVehicleImages(
             formData.images,
@@ -160,50 +164,55 @@ export default function SellYourCarPage() {
               console.log(`Uploading image ${current}/${total} - ${progress}%`);
             }
           );
-          
-          uploadedImageUrls = uploadResults.map(result => result.url);
-          
-          console.log(`✅ Successfully uploaded ${uploadedImageUrls.length} images:`, uploadedImageUrls);
-          
+
+          uploadedImageUrls = uploadResults.map((result) => result.url);
+
+          console.log(
+            `✅ Successfully uploaded ${uploadedImageUrls.length} images:`,
+            uploadedImageUrls
+          );
+
           if (uploadedImageUrls.length === 0) {
-            alert('⚠️ No images were uploaded successfully. The listing will be created without photos.');
+            alert(
+              '⚠️ No images were uploaded successfully. The listing will be created without photos.'
+            );
           }
         } catch (uploadError) {
           console.error('Error uploading images:', uploadError);
           const continueWithoutImages = confirm(
             '⚠️ Some images failed to upload. Do you want to continue creating the listing without photos?\n\n' +
-            'You can add photos later by editing the listing.'
+              'You can add photos later by editing the listing.'
           );
-          
+
           if (!continueWithoutImages) {
             return;
           }
         }
       }
-      
+
       // STEP 2: Create vehicle with uploaded image URLs
       const vehiclePayload = {
         ...formData,
         images: uploadedImageUrls, // Replace File[] with string URLs
       };
-      
+
       const createdVehicle = await createVehicle(vehiclePayload as any);
-      
+
       console.log('Vehicle created successfully:', createdVehicle);
-      
+
       // Clear draft after successful submission
       localStorage.removeItem('sell-vehicle-draft');
-      
+
       // Show success message
       const imageCount = uploadedImageUrls.length;
       alert(
         `✅ Vehicle listing created successfully!\n\n` +
-        `ID: ${createdVehicle.id}\n` +
-        `Title: ${createdVehicle.title}\n` +
-        `Images uploaded: ${imageCount}\n\n` +
-        `Redirecting to your listing...`
+          `ID: ${createdVehicle.id}\n` +
+          `Title: ${createdVehicle.title}\n` +
+          `Images uploaded: ${imageCount}\n\n` +
+          `Redirecting to your listing...`
       );
-      
+
       // Redirect to vehicle detail
       setTimeout(() => {
         navigate(`/vehicles/${createdVehicle.id}`);
@@ -211,7 +220,9 @@ export default function SellYourCarPage() {
     } catch (error) {
       console.error('Error creating vehicle listing:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`❌ Error creating listing:\n\n${errorMessage}\n\nPlease try again or contact support if the problem persists.`);
+      alert(
+        `❌ Error creating listing:\n\n${errorMessage}\n\nPlease try again or contact support if the problem persists.`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -306,14 +317,14 @@ export default function SellYourCarPage() {
                           currentStep > step.id
                             ? 'bg-green-500 text-white'
                             : currentStep === step.id
-                            ? 'bg-primary text-white'
-                            : 'bg-gray-200 text-gray-600'
+                              ? 'bg-primary text-white'
+                              : 'bg-gray-200 text-gray-600'
                         }
                       `}
                     >
                       {currentStep > step.id ? <FiCheck size={20} /> : step.id}
                     </div>
-                    
+
                     {/* Label */}
                     <div className="mt-2 text-center">
                       <p
@@ -346,9 +357,7 @@ export default function SellYourCarPage() {
           </div>
 
           {/* Step Content */}
-          <div className="bg-white rounded-xl shadow-card p-6 sm:p-8">
-            {renderStep()}
-          </div>
+          <div className="bg-white rounded-xl shadow-card p-6 sm:p-8">{renderStep()}</div>
 
           {/* Progress Info */}
           <div className="mt-6 text-center text-sm text-gray-600">
@@ -361,11 +370,10 @@ export default function SellYourCarPage() {
       {showDraftModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Continue Your Draft?
-            </h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Continue Your Draft?</h3>
             <p className="text-gray-600 mb-6">
-              We found a saved draft of your vehicle listing. Would you like to continue where you left off?
+              We found a saved draft of your vehicle listing. Would you like to continue where you
+              left off?
             </p>
             <div className="flex gap-3">
               <Button
@@ -394,4 +402,3 @@ export default function SellYourCarPage() {
     </MainLayout>
   );
 }
-

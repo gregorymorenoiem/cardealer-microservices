@@ -1,11 +1,29 @@
 // CRM Mock Data - Based on backend CRMService DTOs
+// Optimized for Dominican Republic market (OKLA)
 
 // ============================================
 // TYPE DEFINITIONS (matching backend contracts)
 // ============================================
 
-export type LeadSource = 'Website' | 'Referral' | 'Phone' | 'WalkIn' | 'SocialMedia' | 'Email' | 'Advertisement' | 'Other';
-export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Won' | 'Lost' | 'Unqualified';
+export type LeadSource =
+  | 'Website'
+  | 'Referral'
+  | 'Phone'
+  | 'WalkIn'
+  | 'SocialMedia'
+  | 'Email'
+  | 'Advertisement'
+  | 'WhatsApp'
+  | 'Other';
+export type LeadStatus =
+  | 'New'
+  | 'Contacted'
+  | 'Qualified'
+  | 'Proposal'
+  | 'Negotiation'
+  | 'Won'
+  | 'Lost'
+  | 'Unqualified';
 export type DealStatus = 'Open' | 'Won' | 'Lost';
 
 export interface Lead {
@@ -268,187 +286,287 @@ export const mockPipelines: Pipeline[] = [
 ];
 
 // ============================================
-// MOCK LEADS - Linked to specific dealers
+// MOCK LEADS - Dominican Republic focused
 // ============================================
 
 export const mockLeads: Lead[] = [
-  // Leads for dealer-free-001 (limited CRM access)
+  // Hot leads - high scores
   {
     id: 'lead-001',
-    firstName: 'Carlos',
-    lastName: 'Mendoza',
-    fullName: 'Carlos Mendoza',
-    email: 'carlos.mendoza@email.com',
-    phone: '+52 55 1234 5678',
-    company: 'Automotriz del Norte',
-    jobTitle: 'Gerente de Compras',
+    firstName: 'Juan Carlos',
+    lastName: 'Rodríguez',
+    fullName: 'Juan Carlos Rodríguez',
+    email: 'jcrodriguez@gmail.com',
+    phone: '+1 809 555 0101',
+    company: 'Inversiones JCR SRL',
+    jobTitle: 'Gerente General',
     source: 'Website',
     status: 'Qualified',
-    score: 85,
-    estimatedValue: 450000,
+    score: 92,
+    estimatedValue: 2500000,
     assignedToUserId: 'user-pro-001',
-    interestedProductId: 'vehicle-001',
+    interestedProductId: 'Toyota Land Cruiser 2024',
     tags: ['SUV', 'Financiamiento', 'Urgente'],
-    notes: 'Cliente interesado en SUV de lujo, tiene presupuesto definido',
-    createdAt: '2025-01-10T10:00:00Z',
-    updatedAt: '2025-01-12T15:30:00Z',
+    notes: 'Cliente interesado en SUV de lujo, tiene presupuesto definido de RD$2.5M',
+    createdAt: '2026-01-08T10:00:00Z',
+    updatedAt: '2026-01-10T15:30:00Z',
   },
   {
     id: 'lead-002',
-    firstName: 'María',
-    lastName: 'González',
-    fullName: 'María González',
-    email: 'maria.gonzalez@email.com',
-    phone: '+52 55 9876 5432',
-    source: 'Referral',
-    status: 'New',
-    score: 45,
-    estimatedValue: 280000,
-    assignedToUserId: 'user-basic-001',
-    tags: ['Sedán', 'Primer auto'],
-    createdAt: '2025-01-14T09:00:00Z',
-    updatedAt: '2025-01-14T09:00:00Z',
+    firstName: 'María Isabel',
+    lastName: 'Santos',
+    fullName: 'María Isabel Santos',
+    email: 'misantos@outlook.com',
+    phone: '+1 809 555 0102',
+    source: 'WhatsApp',
+    status: 'Negotiation',
+    score: 88,
+    estimatedValue: 1800000,
+    assignedToUserId: 'user-pro-001',
+    interestedProductId: 'Honda CR-V 2024',
+    tags: ['SUV', 'Familiar', 'Contado'],
+    notes: 'Busca vehículo familiar, pago de contado',
+    createdAt: '2026-01-05T09:00:00Z',
+    updatedAt: '2026-01-10T11:00:00Z',
   },
   {
     id: 'lead-003',
     firstName: 'Roberto',
-    lastName: 'Sánchez',
-    fullName: 'Roberto Sánchez',
-    email: 'roberto.sanchez@empresa.com',
-    phone: '+52 81 5555 1234',
-    company: 'Transportes RST',
-    jobTitle: 'Director General',
-    source: 'Advertisement',
-    status: 'Negotiation',
-    score: 92,
-    estimatedValue: 2500000,
+    lastName: 'Jiménez',
+    fullName: 'Roberto Jiménez',
+    email: 'rjimenez@empresas.do',
+    phone: '+1 829 555 1234',
+    company: 'Transportes Dominicanos SA',
+    jobTitle: 'Director de Operaciones',
+    source: 'Referral',
+    status: 'Proposal',
+    score: 95,
+    estimatedValue: 8500000,
     assignedToUserId: 'user-enterprise-001',
-    interestedProductId: 'vehicle-fleet',
+    interestedProductId: 'Flotilla Toyota Hilux',
     tags: ['Flotilla', 'Leasing', 'Corporativo'],
-    notes: 'Interesado en renovar flotilla de 10 unidades',
-    createdAt: '2025-01-05T14:00:00Z',
-    updatedAt: '2025-01-15T11:00:00Z',
+    notes: 'Interesado en renovar flotilla de 5 pickups',
+    createdAt: '2026-01-03T14:00:00Z',
+    updatedAt: '2026-01-10T08:00:00Z',
   },
+  // Warm leads - medium scores
   {
     id: 'lead-004',
     firstName: 'Ana',
-    lastName: 'Torres',
-    fullName: 'Ana Torres',
-    email: 'ana.torres@mail.com',
-    phone: '+52 33 7777 8888',
+    lastName: 'Pérez',
+    fullName: 'Ana Pérez',
+    email: 'ana.perez@hotmail.com',
+    phone: '+1 809 555 0103',
     source: 'SocialMedia',
     status: 'Contacted',
-    score: 60,
-    estimatedValue: 350000,
+    score: 68,
+    estimatedValue: 950000,
     assignedToUserId: 'user-pro-001',
-    tags: ['Híbrido', 'Ecológico'],
-    createdAt: '2025-01-13T16:00:00Z',
-    updatedAt: '2025-01-14T10:00:00Z',
+    interestedProductId: 'Hyundai Tucson 2023',
+    tags: ['SUV Compacto', 'Primera compra'],
+    createdAt: '2026-01-07T16:00:00Z',
+    updatedAt: '2026-01-09T10:00:00Z',
   },
   {
     id: 'lead-005',
-    firstName: 'Luis',
-    lastName: 'Ramírez',
-    fullName: 'Luis Ramírez',
-    email: 'luis.ramirez@outlook.com',
-    source: 'Phone',
-    status: 'Proposal',
-    score: 78,
-    estimatedValue: 520000,
+    firstName: 'Luis Miguel',
+    lastName: 'Hernández',
+    fullName: 'Luis Miguel Hernández',
+    email: 'lmhernandez@gmail.com',
+    phone: '+1 849 555 5678',
+    source: 'Website',
+    status: 'Qualified',
+    score: 72,
+    estimatedValue: 1200000,
     assignedToUserId: 'user-pro-001',
-    interestedProductId: 'vehicle-003',
-    tags: ['Deportivo', 'Contado'],
-    createdAt: '2025-01-08T11:00:00Z',
-    updatedAt: '2025-01-15T09:00:00Z',
+    interestedProductId: 'Kia Sportage 2024',
+    tags: ['SUV', 'Financiamiento'],
+    createdAt: '2026-01-06T11:00:00Z',
+    updatedAt: '2026-01-09T15:00:00Z',
   },
   {
     id: 'lead-006',
-    firstName: 'Patricia',
-    lastName: 'López',
-    fullName: 'Patricia López',
-    email: 'patricia.lopez@gmail.com',
-    phone: '+52 55 4444 3333',
-    source: 'WalkIn',
-    status: 'Won',
-    score: 100,
-    estimatedValue: 380000,
+    firstName: 'Carmen',
+    lastName: 'Díaz',
+    fullName: 'Carmen Díaz',
+    email: 'cdiaz@yahoo.com',
+    phone: '+1 809 555 0104',
+    source: 'Advertisement',
+    status: 'New',
+    score: 55,
+    estimatedValue: 750000,
     assignedToUserId: 'user-basic-001',
-    tags: ['Familiar', 'Minivan'],
-    convertedAt: '2025-01-12T14:00:00Z',
-    createdAt: '2025-01-02T10:00:00Z',
-    updatedAt: '2025-01-12T14:00:00Z',
+    interestedProductId: 'Nissan Kicks 2023',
+    tags: ['Crossover', 'Económico'],
+    createdAt: '2026-01-09T09:00:00Z',
+    updatedAt: '2026-01-09T09:00:00Z',
   },
+  // Cold leads - lower scores
   {
     id: 'lead-007',
-    firstName: 'Jorge',
-    lastName: 'Hernández',
-    fullName: 'Jorge Hernández',
-    email: 'jorge.h@protonmail.com',
+    firstName: 'Pedro',
+    lastName: 'Martínez',
+    fullName: 'Pedro Martínez',
+    email: 'pmartinez@email.com',
+    phone: '+1 809 555 0105',
     source: 'Email',
-    status: 'Lost',
+    status: 'New',
     score: 35,
-    estimatedValue: 200000,
+    estimatedValue: 500000,
     assignedToUserId: 'user-basic-001',
+    interestedProductId: 'Toyota Yaris 2022',
     tags: ['Económico', 'Usado'],
-    notes: 'No calificó para financiamiento',
-    createdAt: '2025-01-01T08:00:00Z',
-    updatedAt: '2025-01-10T16:00:00Z',
+    notes: 'Pidió información pero no ha respondido',
+    createdAt: '2026-01-04T08:00:00Z',
+    updatedAt: '2026-01-04T08:00:00Z',
   },
   {
     id: 'lead-008',
     firstName: 'Fernanda',
     lastName: 'Castro',
     fullName: 'Fernanda Castro',
-    email: 'fer.castro@empresa.mx',
-    phone: '+52 222 111 2233',
+    email: 'fcastro@empresa.do',
+    phone: '+1 829 111 2233',
     company: 'Grupo Empresarial FC',
     jobTitle: 'CFO',
     source: 'Referral',
     status: 'Qualified',
-    score: 88,
-    estimatedValue: 1800000,
+    score: 85,
+    estimatedValue: 6500000,
     assignedToUserId: 'user-enterprise-001',
-    interestedProductId: 'vehicle-luxury',
+    interestedProductId: 'Mercedes-Benz GLE 2024',
     tags: ['Premium', 'Ejecutivo', 'Múltiples unidades'],
-    createdAt: '2025-01-11T13:00:00Z',
-    updatedAt: '2025-01-15T08:00:00Z',
+    createdAt: '2026-01-08T13:00:00Z',
+    updatedAt: '2026-01-10T08:00:00Z',
+  },
+  {
+    id: 'lead-009',
+    firstName: 'Miguel Ángel',
+    lastName: 'Reyes',
+    fullName: 'Miguel Ángel Reyes',
+    email: 'mareyes@gmail.com',
+    phone: '+1 809 555 0106',
+    source: 'WalkIn',
+    status: 'Won',
+    score: 100,
+    estimatedValue: 1350000,
+    assignedToUserId: 'user-basic-001',
+    interestedProductId: 'Mazda CX-5 2023',
+    tags: ['SUV', 'Financiado'],
+    convertedAt: '2026-01-08T14:00:00Z',
+    createdAt: '2026-01-02T10:00:00Z',
+    updatedAt: '2026-01-08T14:00:00Z',
+  },
+  {
+    id: 'lead-010',
+    firstName: 'Sofía',
+    lastName: 'Gómez',
+    fullName: 'Sofía Gómez',
+    email: 'sofiag@outlook.com',
+    phone: '+1 849 555 9999',
+    source: 'WhatsApp',
+    status: 'Contacted',
+    score: 45,
+    estimatedValue: 650000,
+    assignedToUserId: 'user-basic-001',
+    tags: ['Económico', 'Primer auto'],
+    notes: 'Estudiante universitaria buscando primer vehículo',
+    createdAt: '2026-01-09T16:00:00Z',
+    updatedAt: '2026-01-10T10:00:00Z',
+  },
+  {
+    id: 'lead-011',
+    firstName: 'Carlos',
+    lastName: 'Mendoza',
+    fullName: 'Carlos Mendoza',
+    email: 'cmendoza@gmail.com',
+    phone: '+1 809 555 0107',
+    source: 'Website',
+    status: 'Lost',
+    score: 25,
+    estimatedValue: 2000000,
+    assignedToUserId: 'user-pro-001',
+    interestedProductId: 'BMW X3 2024',
+    tags: ['Premium'],
+    notes: 'No calificó para financiamiento',
+    createdAt: '2026-01-01T08:00:00Z',
+    updatedAt: '2026-01-06T16:00:00Z',
+  },
+  {
+    id: 'lead-012',
+    firstName: 'Daniela',
+    lastName: 'Vásquez',
+    fullName: 'Daniela Vásquez',
+    email: 'dvasquez@empresa.do',
+    phone: '+1 829 555 7777',
+    company: 'Clínica San Rafael',
+    jobTitle: 'Directora Médica',
+    source: 'Advertisement',
+    status: 'Negotiation',
+    score: 82,
+    estimatedValue: 3200000,
+    assignedToUserId: 'user-pro-001',
+    interestedProductId: 'Audi Q5 2024',
+    tags: ['Premium', 'Profesional'],
+    createdAt: '2026-01-07T10:00:00Z',
+    updatedAt: '2026-01-10T12:00:00Z',
   },
 ];
 
 // ============================================
-// MOCK DEALS - Linked to stages and pipelines
+// MOCK DEALS - Linked to stages and pipelines (RD)
 // ============================================
 
 export const mockDeals: Deal[] = [
-  // Vehicle Sales Pipeline Deals
+  // Vehicle Sales Pipeline Deals - Dominican Republic
   {
     id: 'deal-001',
-    title: 'BMW X5 2024 - Carlos Mendoza',
-    description: 'Venta de BMW X5 xDrive40i, color blanco',
-    value: 1250000,
-    currency: 'MXN',
+    title: 'Toyota Land Cruiser 2024 - Juan Carlos Rodríguez',
+    description: 'Venta de Land Cruiser VX, color negro, financiamiento aprobado',
+    value: 2500000,
+    currency: 'DOP',
     pipelineId: 'pipeline-001',
     pipelineName: 'Venta de Vehículos',
     stageId: 'stage-004',
     stageName: 'Negociación',
     stageColor: '#F59E0B',
     status: 'Open',
-    probability: 75,
-    expectedCloseDate: '2025-01-25T00:00:00Z',
+    probability: 85,
+    expectedCloseDate: '2026-01-25T00:00:00Z',
     leadId: 'lead-001',
     assignedToUserId: 'user-pro-001',
     productId: 'vehicle-001',
-    vin: 'WBAPH5C57BA123456',
-    tags: ['Premium', 'Financiamiento'],
-    createdAt: '2025-01-12T15:30:00Z',
-    updatedAt: '2025-01-15T10:00:00Z',
+    vin: 'JTERU5JR0N5123456',
+    tags: ['SUV Premium', 'Financiamiento'],
+    createdAt: '2026-01-10T15:30:00Z',
+    updatedAt: '2026-01-12T10:00:00Z',
   },
   {
     id: 'deal-002',
-    title: 'Flotilla RST - 10 unidades',
-    description: 'Renovación de flotilla corporativa, 10 Toyota Hilux',
-    value: 4500000,
-    currency: 'MXN',
+    title: 'Flotilla Hilux - Transportes Dominicanos',
+    description: 'Renovación de flotilla corporativa, 5 Toyota Hilux 4x4',
+    value: 8500000,
+    currency: 'DOP',
+    pipelineId: 'pipeline-001',
+    pipelineName: 'Venta de Vehículos',
+    stageId: 'stage-004',
+    stageName: 'Negociación',
+    stageColor: '#F59E0B',
+    status: 'Open',
+    probability: 90,
+    expectedCloseDate: '2026-02-15T00:00:00Z',
+    leadId: 'lead-003',
+    assignedToUserId: 'user-enterprise-001',
+    tags: ['Flotilla', 'Corporativo', 'Leasing'],
+    createdAt: '2026-01-03T14:00:00Z',
+    updatedAt: '2026-01-10T11:00:00Z',
+  },
+  {
+    id: 'deal-003',
+    title: 'Honda CR-V 2024 - María Isabel Santos',
+    description: 'CR-V EX-L, pago de contado, lista para entrega',
+    value: 1800000,
+    currency: 'DOP',
     pipelineId: 'pipeline-001',
     pipelineName: 'Venta de Vehículos',
     stageId: 'stage-004',
@@ -456,62 +574,42 @@ export const mockDeals: Deal[] = [
     stageColor: '#F59E0B',
     status: 'Open',
     probability: 80,
-    expectedCloseDate: '2025-02-15T00:00:00Z',
-    leadId: 'lead-003',
-    assignedToUserId: 'user-enterprise-001',
-    tags: ['Flotilla', 'Corporativo', 'Leasing'],
-    createdAt: '2025-01-05T14:00:00Z',
-    updatedAt: '2025-01-15T11:00:00Z',
-  },
-  {
-    id: 'deal-003',
-    title: 'Toyota Camry Híbrido - Ana Torres',
-    description: 'Camry Híbrido XLE 2024, prueba de manejo programada',
-    value: 680000,
-    currency: 'MXN',
-    pipelineId: 'pipeline-001',
-    pipelineName: 'Venta de Vehículos',
-    stageId: 'stage-003',
-    stageName: 'Prueba de Manejo',
-    stageColor: '#EC4899',
-    status: 'Open',
-    probability: 50,
-    expectedCloseDate: '2025-01-30T00:00:00Z',
-    leadId: 'lead-004',
+    expectedCloseDate: '2026-01-20T00:00:00Z',
+    leadId: 'lead-002',
     assignedToUserId: 'user-pro-001',
-    productId: 'vehicle-camry',
-    tags: ['Híbrido', 'Ecológico'],
-    createdAt: '2025-01-14T10:00:00Z',
-    updatedAt: '2025-01-15T09:00:00Z',
+    productId: 'vehicle-crv',
+    tags: ['SUV', 'Contado'],
+    createdAt: '2026-01-05T09:00:00Z',
+    updatedAt: '2026-01-10T11:00:00Z',
   },
   {
     id: 'deal-004',
-    title: 'Mazda MX-5 - Luis Ramírez',
-    description: 'MX-5 RF Grand Touring, pago de contado',
-    value: 720000,
-    currency: 'MXN',
+    title: 'Audi Q5 2024 - Dra. Daniela Vásquez',
+    description: 'Q5 Premium Plus, financiamiento APAP',
+    value: 3200000,
+    currency: 'DOP',
     pipelineId: 'pipeline-001',
     pipelineName: 'Venta de Vehículos',
     stageId: 'stage-003',
     stageName: 'Prueba de Manejo',
     stageColor: '#EC4899',
     status: 'Open',
-    probability: 60,
-    expectedCloseDate: '2025-01-28T00:00:00Z',
-    leadId: 'lead-005',
+    probability: 65,
+    expectedCloseDate: '2026-01-28T00:00:00Z',
+    leadId: 'lead-012',
     assignedToUserId: 'user-pro-001',
-    productId: 'vehicle-003',
-    vin: 'JM1NDAL78M0123456',
-    tags: ['Deportivo', 'Contado'],
-    createdAt: '2025-01-15T09:00:00Z',
-    updatedAt: '2025-01-15T09:00:00Z',
+    productId: 'vehicle-q5',
+    vin: 'WA1BNAFY5N2123456',
+    tags: ['Premium', 'Profesional'],
+    createdAt: '2026-01-07T10:00:00Z',
+    updatedAt: '2026-01-10T12:00:00Z',
   },
   {
     id: 'deal-005',
-    title: 'Honda Odyssey - Patricia López',
-    description: 'Odyssey Touring, familia numerosa',
-    value: 850000,
-    currency: 'MXN',
+    title: 'Mazda CX-5 2023 - Miguel Ángel Reyes',
+    description: 'CX-5 Signature, financiamiento Banco Popular',
+    value: 1350000,
+    currency: 'DOP',
     pipelineId: 'pipeline-001',
     pipelineName: 'Venta de Vehículos',
     stageId: 'stage-005',
@@ -519,135 +617,106 @@ export const mockDeals: Deal[] = [
     stageColor: '#10B981',
     status: 'Won',
     probability: 100,
-    expectedCloseDate: '2025-01-12T00:00:00Z',
-    actualCloseDate: '2025-01-12T14:00:00Z',
-    leadId: 'lead-006',
+    expectedCloseDate: '2026-01-08T00:00:00Z',
+    actualCloseDate: '2026-01-08T14:00:00Z',
+    leadId: 'lead-009',
     assignedToUserId: 'user-basic-001',
-    productId: 'vehicle-odyssey',
-    vin: '5FNRL6H71MB123456',
-    tags: ['Familiar', 'Financiado'],
-    createdAt: '2025-01-02T10:00:00Z',
-    updatedAt: '2025-01-12T14:00:00Z',
+    productId: 'vehicle-cx5',
+    vin: 'JM3KFBCM5P0123456',
+    tags: ['SUV', 'Financiado'],
+    createdAt: '2026-01-02T10:00:00Z',
+    updatedAt: '2026-01-08T14:00:00Z',
   },
   {
     id: 'deal-006',
-    title: 'Mercedes-Benz S-Class - Fernanda Castro',
-    description: 'S 580 4MATIC, 2 unidades para ejecutivos',
-    value: 5600000,
-    currency: 'MXN',
+    title: 'Mercedes-Benz GLE 2024 - Fernanda Castro',
+    description: 'GLE 450 4MATIC, 2 unidades para ejecutivos del grupo',
+    value: 6500000,
+    currency: 'DOP',
     pipelineId: 'pipeline-001',
     pipelineName: 'Venta de Vehículos',
     stageId: 'stage-002',
     stageName: 'Contactado',
     stageColor: '#8B5CF6',
     status: 'Open',
-    probability: 25,
-    expectedCloseDate: '2025-02-28T00:00:00Z',
+    probability: 70,
+    expectedCloseDate: '2026-02-28T00:00:00Z',
     leadId: 'lead-008',
     assignedToUserId: 'user-enterprise-001',
     tags: ['Premium', 'Ejecutivo', 'Múltiples'],
-    createdAt: '2025-01-11T13:00:00Z',
-    updatedAt: '2025-01-15T08:00:00Z',
-  },
-  // Real Estate Pipeline Deals
-  {
-    id: 'deal-101',
-    title: 'Casa Residencial Polanco',
-    description: 'Casa 4 recámaras, 450m2 construcción',
-    value: 12500000,
-    currency: 'MXN',
-    pipelineId: 'pipeline-002',
-    pipelineName: 'Venta de Inmuebles',
-    stageId: 'stage-103',
-    stageName: 'Oferta Presentada',
-    stageColor: '#8B5CF6',
-    status: 'Open',
-    probability: 60,
-    expectedCloseDate: '2025-02-15T00:00:00Z',
-    assignedToUserId: 'user-enterprise-001',
-    tags: ['Residencial', 'Premium'],
-    createdAt: '2025-01-08T10:00:00Z',
-    updatedAt: '2025-01-15T10:00:00Z',
-  },
-  {
-    id: 'deal-102',
-    title: 'Departamento Santa Fe',
-    description: 'Penthouse 280m2, vista panorámica',
-    value: 8900000,
-    currency: 'MXN',
-    pipelineId: 'pipeline-002',
-    pipelineName: 'Venta de Inmuebles',
-    stageId: 'stage-104',
-    stageName: 'En Notaría',
-    stageColor: '#F59E0B',
-    status: 'Open',
-    probability: 90,
-    expectedCloseDate: '2025-01-22T00:00:00Z',
-    assignedToUserId: 'user-pro-001',
-    tags: ['Penthouse', 'Inversión'],
-    createdAt: '2024-12-15T10:00:00Z',
-    updatedAt: '2025-01-14T16:00:00Z',
+    createdAt: '2026-01-08T13:00:00Z',
+    updatedAt: '2026-01-10T08:00:00Z',
   },
 ];
 
 // ============================================
-// MOCK ACTIVITIES
+// MOCK ACTIVITIES - Dominican Republic
 // ============================================
 
 export const mockActivities: Activity[] = [
   {
     id: 'activity-001',
     type: 'call',
-    title: 'Llamada de seguimiento - Carlos Mendoza',
-    description: 'Confirmar disponibilidad para prueba de manejo',
+    title: 'Llamada de seguimiento - Juan Carlos Rodríguez',
+    description: 'Confirmar disponibilidad para prueba de Land Cruiser',
     dealId: 'deal-001',
     leadId: 'lead-001',
     assignedToUserId: 'user-pro-001',
-    dueDate: '2025-01-16T10:00:00Z',
-    createdAt: '2025-01-15T09:00:00Z',
+    dueDate: '2026-01-13T10:00:00Z',
+    createdAt: '2026-01-12T09:00:00Z',
   },
   {
     id: 'activity-002',
     type: 'meeting',
-    title: 'Presentación Flotilla RST',
-    description: 'Presentación de cotización formal al director',
+    title: 'Presentación Flotilla - Transportes Dominicanos',
+    description: 'Presentación de cotización formal para 5 Toyota Hilux',
     dealId: 'deal-002',
     leadId: 'lead-003',
     assignedToUserId: 'user-enterprise-001',
-    dueDate: '2025-01-18T15:00:00Z',
-    createdAt: '2025-01-15T08:00:00Z',
+    dueDate: '2026-01-15T15:00:00Z',
+    createdAt: '2026-01-10T08:00:00Z',
   },
   {
     id: 'activity-003',
     type: 'task',
-    title: 'Preparar documentación financiamiento',
-    description: 'Solicitar pre-aprobación bancaria para cliente',
-    dealId: 'deal-001',
+    title: 'Preparar documentos financiamiento APAP',
+    description: 'Solicitar pre-aprobación bancaria para Dra. Vásquez',
+    dealId: 'deal-004',
     assignedToUserId: 'user-pro-001',
-    dueDate: '2025-01-17T12:00:00Z',
-    createdAt: '2025-01-15T10:00:00Z',
+    dueDate: '2026-01-14T12:00:00Z',
+    createdAt: '2026-01-12T10:00:00Z',
   },
   {
     id: 'activity-004',
     type: 'email',
-    title: 'Enviar brochure Toyota Camry',
-    description: 'Información completa del modelo híbrido',
-    leadId: 'lead-004',
+    title: 'Enviar brochure Honda CR-V',
+    description: 'Información completa del modelo y financiamiento',
+    leadId: 'lead-002',
     assignedToUserId: 'user-pro-001',
-    dueDate: '2025-01-15T18:00:00Z',
-    completedAt: '2025-01-15T11:30:00Z',
-    createdAt: '2025-01-14T16:00:00Z',
+    dueDate: '2026-01-11T18:00:00Z',
+    completedAt: '2026-01-11T11:30:00Z',
+    createdAt: '2026-01-10T16:00:00Z',
   },
   {
     id: 'activity-005',
     type: 'note',
-    title: 'Notas de reunión con Fernanda',
-    description: 'Interesada en 2 unidades S-Class, solicita descuento por volumen',
+    title: 'Notas de reunión con Fernanda Castro',
+    description: 'Interesada en 2 GLE para ejecutivos de Grupo FC, solicita descuento',
     dealId: 'deal-006',
     leadId: 'lead-008',
     assignedToUserId: 'user-enterprise-001',
-    completedAt: '2025-01-14T14:00:00Z',
-    createdAt: '2025-01-14T14:00:00Z',
+    completedAt: '2026-01-10T14:00:00Z',
+    createdAt: '2026-01-10T14:00:00Z',
+  },
+  {
+    id: 'activity-006',
+    type: 'call',
+    title: 'WhatsApp - María Isabel Santos',
+    description: 'Seguimiento por WhatsApp, coordinar visita al dealer',
+    leadId: 'lead-002',
+    assignedToUserId: 'user-pro-001',
+    dueDate: '2026-01-12T16:00:00Z',
+    createdAt: '2026-01-11T09:00:00Z',
   },
 ];
 
@@ -766,11 +835,11 @@ export const getLeadsByDealer = (dealerId: string): Lead[] => {
     'dealer-pro-001': 'user-pro-001',
     'dealer-enterprise-001': 'user-enterprise-001',
   };
-  
+
   const userId = userIdMap[dealerId];
   if (!userId) return [];
-  
-  return mockLeads.filter(lead => lead.assignedToUserId === userId);
+
+  return mockLeads.filter((lead) => lead.assignedToUserId === userId);
 };
 
 export const getDealsByDealer = (dealerId: string): Deal[] => {
@@ -780,19 +849,19 @@ export const getDealsByDealer = (dealerId: string): Deal[] => {
     'dealer-pro-001': 'user-pro-001',
     'dealer-enterprise-001': 'user-enterprise-001',
   };
-  
+
   const userId = userIdMap[dealerId];
   if (!userId) return [];
-  
-  return mockDeals.filter(deal => deal.assignedToUserId === userId);
+
+  return mockDeals.filter((deal) => deal.assignedToUserId === userId);
 };
 
 export const getDealsByStage = (stageId: string): Deal[] => {
-  return mockDeals.filter(deal => deal.stageId === stageId);
+  return mockDeals.filter((deal) => deal.stageId === stageId);
 };
 
 export const getDealsByPipeline = (pipelineId: string): Deal[] => {
-  return mockDeals.filter(deal => deal.pipelineId === pipelineId);
+  return mockDeals.filter((deal) => deal.pipelineId === pipelineId);
 };
 
 export const getActivitiesByDealer = (dealerId: string): Activity[] => {
@@ -802,29 +871,29 @@ export const getActivitiesByDealer = (dealerId: string): Activity[] => {
     'dealer-pro-001': 'user-pro-001',
     'dealer-enterprise-001': 'user-enterprise-001',
   };
-  
+
   const userId = userIdMap[dealerId];
   if (!userId) return [];
-  
-  return mockActivities.filter(activity => activity.assignedToUserId === userId);
+
+  return mockActivities.filter((activity) => activity.assignedToUserId === userId);
 };
 
 export const getLeadById = (id: string): Lead | undefined => {
-  return mockLeads.find(lead => lead.id === id);
+  return mockLeads.find((lead) => lead.id === id);
 };
 
 export const getDealById = (id: string): Deal | undefined => {
-  return mockDeals.find(deal => deal.id === id);
+  return mockDeals.find((deal) => deal.id === id);
 };
 
 export const getPipelineById = (id: string): Pipeline | undefined => {
-  return mockPipelines.find(pipeline => pipeline.id === id);
+  return mockPipelines.find((pipeline) => pipeline.id === id);
 };
 
 export const getStageById = (pipelineId: string, stageId: string): Stage | undefined => {
   const pipeline = getPipelineById(pipelineId);
   if (!pipeline) return undefined;
-  return pipeline.stages.find(stage => stage.id === stageId);
+  return pipeline.stages.find((stage) => stage.id === stageId);
 };
 
 // Get pipeline stats for Kanban board
@@ -840,9 +909,9 @@ export interface PipelineStageStats {
 export const getPipelineStats = (pipelineId: string): PipelineStageStats[] => {
   const pipeline = getPipelineById(pipelineId);
   if (!pipeline) return [];
-  
-  return pipeline.stages.map(stage => {
-    const deals = mockDeals.filter(deal => deal.stageId === stage.id);
+
+  return pipeline.stages.map((stage) => {
+    const deals = mockDeals.filter((deal) => deal.stageId === stage.id);
     return {
       stageId: stage.id,
       stageName: stage.name,

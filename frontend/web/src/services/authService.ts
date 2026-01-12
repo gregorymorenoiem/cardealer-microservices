@@ -167,9 +167,11 @@ export const authService = {
         data.email.split('@')[0];
 
       // Extract dealerId from JWT claims (if present and not empty)
-      const rawDealerId = (jwtPayload?.['dealerId'] || jwtPayload?.['dealer_id']) as string | undefined;
+      const rawDealerId = (jwtPayload?.['dealerId'] || jwtPayload?.['dealer_id']) as
+        | string
+        | undefined;
       const dealerId = rawDealerId && rawDealerId.trim() !== '' ? rawDealerId : undefined;
-      
+
       const roles =
         jwtPayload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
         jwtPayload?.['role'] ||
