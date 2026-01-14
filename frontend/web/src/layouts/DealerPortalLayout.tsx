@@ -38,6 +38,7 @@ import {
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { Crown, Building2 } from 'lucide-react';
+import NotificationDropdown from '@/components/organisms/NotificationDropdown';
 
 interface DealerPortalLayoutProps {
   children: ReactNode;
@@ -362,10 +363,7 @@ const DealerPortalLayout = ({ children }: DealerPortalLayoutProps) => {
             </Link>
 
             {/* Notifications */}
-            <button className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors">
-              <FiBell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NotificationDropdown />
 
             {/* Help */}
             <button className="hidden sm:flex p-2.5 rounded-xl hover:bg-gray-100 transition-colors">
