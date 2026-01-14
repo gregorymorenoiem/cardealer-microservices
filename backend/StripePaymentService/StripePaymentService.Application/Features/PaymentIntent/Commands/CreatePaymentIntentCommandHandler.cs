@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using StripePaymentService.Application.DTOs;
 using StripePaymentService.Domain.Interfaces;
 using StripePaymentService.Domain.Entities;
@@ -24,7 +24,7 @@ public class CreatePaymentIntentCommandHandler : IRequestHandler<CreatePaymentIn
 
     public async Task<PaymentIntentResponseDto> Handle(CreatePaymentIntentCommand request, CancellationToken cancellationToken)
     {
-        _logger.Information("Creando Payment Intent. Amount: {Amount}", request.Request.Amount);
+        _logger.LogInformation("Creando Payment Intent. Amount: {Amount}", request.Request.Amount);
 
         try
         {
@@ -62,7 +62,7 @@ public class CreatePaymentIntentCommandHandler : IRequestHandler<CreatePaymentIn
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error creando Payment Intent");
+            _logger.LogError(ex, "Error creando Payment Intent");
             throw;
         }
     }

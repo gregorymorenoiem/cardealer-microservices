@@ -45,13 +45,14 @@ public class AzulSubscriptionRepository : IAzulSubscriptionRepository
     }
 
     /// <summary>
-    /// Obtiene suscripción de un usuario
+    /// Obtiene todas las suscripciones de un usuario
     /// </summary>
-    public async Task<AzulSubscription?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<List<AzulSubscription>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.AzulSubscriptions
-            .Where(x => x.UserId == userId && x.Status == "Active")
-            .FirstOrDefaultAsync(cancellationToken);
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
     }
 
     /// <summary>
@@ -92,17 +93,18 @@ public class AzulSubscriptionRepository : IAzulSubscriptionRepository
     /// <summary>
     /// Cancela una suscripción
     /// </summary>
-    public async Task<AzulSubscription> CancelAsync(Guid id, string? reason = null, CancellationToken cancellationToken = default)
+    public async Task<bool> CancelAsync(Guid id, string? reason = null, CancellationToken cancellationToken = default)
     {
         var subscription = await GetByIdAsync(id, cancellationToken);
         if (subscription == null)
-            throw new InvalidOperationException($"Suscripción no encontrada: {id}");
+            return false;
 
         subscription.Status = "Cancelled";
         subscription.CancellationReason = reason ?? "Cancelada por usuario";
         subscription.CancelledAt = DateTime.UtcNow;
 
-        return await UpdateAsync(subscription, cancellationToken);
+        await UpdateAsync(subscription, cancellationToken);
+        return true;
     }
 
     /// <summary>

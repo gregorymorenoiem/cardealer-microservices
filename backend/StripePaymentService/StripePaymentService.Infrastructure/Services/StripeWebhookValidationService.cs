@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using StripePaymentService.Domain.Interfaces;
 
 namespace StripePaymentService.Infrastructure.Services;
@@ -28,7 +28,7 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
     {
         if (string.IsNullOrEmpty(payload) || string.IsNullOrEmpty(signatureHeader))
         {
-            _logger.Warning("Payload o Signature vacío");
+            _logger.LogWarning("Payload o Signature vacío");
             return false;
         }
 
@@ -41,7 +41,7 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
 
             if (string.IsNullOrEmpty(timestamp) || string.IsNullOrEmpty(signature))
             {
-                _logger.Warning("Formato de signature inválido");
+                _logger.LogWarning("Formato de signature inválido");
                 return false;
             }
 
@@ -56,21 +56,21 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
 
                 if (computedSignature != signature)
                 {
-                    _logger.Warning("Signature no coincide");
+                    _logger.LogWarning("Signature no coincide");
                     return false;
                 }
 
                 // Validar que no sea muy antiguo (5 minutos)
                 if (!long.TryParse(timestamp, out var ts))
                 {
-                    _logger.Warning("Timestamp inválido");
+                    _logger.LogWarning("Timestamp inválido");
                     return false;
                 }
 
                 var webhookTime = UnixTimeStampToDateTime(ts);
                 if (DateTime.UtcNow - webhookTime > TimeSpan.FromMinutes(5))
                 {
-                    _logger.Warning("Webhook demasiado antiguo");
+                    _logger.LogWarning("Webhook demasiado antiguo");
                     return false;
                 }
 
@@ -79,7 +79,7 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error validando webhook signature");
+            _logger.LogError(ex, "Error validando webhook signature");
             return false;
         }
     }
@@ -95,7 +95,7 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
         {
             if (string.IsNullOrEmpty(payload))
             {
-                _logger.Warning("Payload vacío");
+                _logger.LogWarning("Payload vacío");
                 return null;
             }
 
@@ -103,7 +103,7 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error extrayendo webhook data");
+            _logger.LogError(ex, "Error extrayendo webhook data");
             return null;
         }
     }

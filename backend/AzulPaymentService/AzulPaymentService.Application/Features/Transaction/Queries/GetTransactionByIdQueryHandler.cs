@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using AzulPaymentService.Application.DTOs;
 using AzulPaymentService.Domain.Interfaces;
 
@@ -26,7 +26,7 @@ public class GetTransactionByIdQueryHandler : IRequestHandler<GetTransactionById
     /// </summary>
     public async Task<ChargeResponseDto> Handle(GetTransactionByIdQuery request, CancellationToken cancellationToken)
     {
-        _logger.Information("Obteniendo transacción {TransactionId}", request.TransactionId);
+        _logger.LogInformation("Obteniendo transacción {TransactionId}", request.TransactionId);
 
         try
         {
@@ -54,7 +54,7 @@ public class GetTransactionByIdQueryHandler : IRequestHandler<GetTransactionById
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al obtener transacción {TransactionId}", request.TransactionId);
+            _logger.LogError(ex, "Error al obtener transacción {TransactionId}", request.TransactionId);
             throw;
         }
     }

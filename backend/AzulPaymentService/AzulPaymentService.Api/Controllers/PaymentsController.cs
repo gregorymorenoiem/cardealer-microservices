@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
 using AzulPaymentService.Application.DTOs;
 using AzulPaymentService.Application.Features.Charge.Commands;
 using AzulPaymentService.Application.Features.Refund.Commands;

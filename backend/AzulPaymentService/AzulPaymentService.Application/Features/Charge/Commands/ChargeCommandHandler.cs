@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using AzulPaymentService.Application.DTOs;
 using AzulPaymentService.Domain.Interfaces;
 using AzulPaymentService.Domain.Entities;
@@ -28,7 +28,7 @@ public class ChargeCommandHandler : IRequestHandler<ChargeCommand, ChargeRespons
     /// </summary>
     public async Task<ChargeResponseDto> Handle(ChargeCommand request, CancellationToken cancellationToken)
     {
-        _logger.Information("Procesando cobro para usuario {UserId}", request.ChargeRequest.UserId);
+        _logger.LogInformation("Procesando cobro para usuario {UserId}", request.ChargeRequest.UserId);
 
         try
         {
@@ -66,7 +66,7 @@ public class ChargeCommandHandler : IRequestHandler<ChargeCommand, ChargeRespons
             // Guardar transacción
             await _transactionRepository.CreateAsync(transaction, cancellationToken);
 
-            _logger.Information("Cobro procesado exitosamente. ID: {TransactionId}", transaction.Id);
+            _logger.LogInformation("Cobro procesado exitosamente. ID: {TransactionId}", transaction.Id);
 
             return new ChargeResponseDto
             {
@@ -84,7 +84,7 @@ public class ChargeCommandHandler : IRequestHandler<ChargeCommand, ChargeRespons
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al procesar cobro para usuario {UserId}", request.ChargeRequest.UserId);
+            _logger.LogError(ex, "Error al procesar cobro para usuario {UserId}", request.ChargeRequest.UserId);
             throw;
         }
     }

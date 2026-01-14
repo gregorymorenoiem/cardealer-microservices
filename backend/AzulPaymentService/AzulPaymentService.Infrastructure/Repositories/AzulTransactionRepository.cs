@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AzulPaymentService.Domain.Entities;
+using AzulPaymentService.Domain.Enums;
 using AzulPaymentService.Domain.Interfaces;
 using AzulPaymentService.Infrastructure.Persistence;
 
@@ -47,7 +48,7 @@ public class AzulTransactionRepository : IAzulTransactionRepository
     /// <summary>
     /// Obtiene transacciones de un usuario con paginación
     /// </summary>
-    public async Task<(List<AzulTransaction> Transactions, int TotalCount)> GetByUserIdAsync(
+    public async Task<(List<AzulTransaction> Transactions, int Total)> GetByUserIdAsync(
         Guid userId, 
         int page = 1, 
         int pageSize = 20, 
@@ -103,7 +104,7 @@ public class AzulTransactionRepository : IAzulTransactionRepository
     /// <summary>
     /// Obtiene transacciones en un rango de fechas con paginación
     /// </summary>
-    public async Task<(List<AzulTransaction> Transactions, int TotalCount)> GetByDateRangeAsync(
+    public async Task<(List<AzulTransaction> Transactions, int Total)> GetByDateRangeAsync(
         DateTime startDate, 
         DateTime endDate, 
         int page = 1, 
@@ -127,14 +128,19 @@ public class AzulTransactionRepository : IAzulTransactionRepository
     /// Obtiene monto total aprobado en un rango de fechas
     /// </summary>
     public async Task<decimal> GetTotalApprovedAmountAsync(
-        DateTime startDate, 
-        DateTime endDate, 
+        DateTime? startDate = null, 
+        DateTime? endDate = null, 
         CancellationToken cancellationToken = default)
     {
-        return await _context.AzulTransactions
-            .Where(x => x.Status == Domain.Enums.TransactionStatus.Approved &&
-                       x.CreatedAt >= startDate &&
-                       x.CreatedAt <= endDate)
-            .SumAsync(x => x.Amount, cancellationToken);
+        var query = _context.AzulTransactions
+            .Where(x => x.Status == TransactionStatus.Approved);
+
+        if (startDate.HasValue)
+            query = query.Where(x => x.CreatedAt >= startDate.Value);
+        
+        if (endDate.HasValue)
+            query = query.Where(x => x.CreatedAt <= endDate.Value);
+
+        return await query.SumAsync(x => x.Amount, cancellationToken);
     }
 }

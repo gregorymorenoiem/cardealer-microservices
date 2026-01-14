@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using StripePaymentService.Application.DTOs;
 using StripePaymentService.Domain.Interfaces;
 
@@ -23,7 +23,7 @@ public class ListSubscriptionsQueryHandler : IRequestHandler<ListSubscriptionsQu
 
     public async Task<List<SubscriptionResponseDto>> Handle(ListSubscriptionsQuery request, CancellationToken cancellationToken)
     {
-        _logger.Information("Listando subscripciones del customer: {CustomerId}, Page: {Page}, PageSize: {PageSize}",
+        _logger.LogInformation("Listando subscripciones del customer: {CustomerId}, Page: {Page}, PageSize: {PageSize}",
             request.CustomerId, request.Page, request.PageSize);
 
         try
@@ -37,22 +37,24 @@ public class ListSubscriptionsQueryHandler : IRequestHandler<ListSubscriptionsQu
                 {
                     SubscriptionId = s.Id,
                     StripeSubscriptionId = s.StripeSubscriptionId,
-                    CustomerId = s.CustomerId,
+                    StripeCustomerId = s.StripeCustomerId.ToString(),
                     Status = s.Status,
                     Currency = s.Currency,
                     Amount = s.Amount,
-                    BillingCycleAnchor = s.BillingCycleAnchor,
-                    CreatedAt = s.CreatedAt,
-                    CanceledAt = s.CanceledAt
+                    BillingInterval = s.BillingInterval,
+                    StartDate = s.StartDate,
+                    NextBillingDate = s.NextBillingDate,
+                    CancelledAt = s.CancelledAt,
+                    TotalPaid = s.TotalPaid
                 })
                 .ToList();
 
-            _logger.Information("Se retornaron {Count} subscripciones", results.Count);
+            _logger.LogInformation("Se retornaron {Count} subscripciones", results.Count);
             return results;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error listando subscripciones del customer: {CustomerId}", request.CustomerId);
+            _logger.LogError(ex, "Error listando subscripciones del customer: {CustomerId}", request.CustomerId);
             throw;
         }
     }

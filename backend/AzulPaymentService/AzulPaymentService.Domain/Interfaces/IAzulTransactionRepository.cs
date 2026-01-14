@@ -1,5 +1,7 @@
 using AzulPaymentService.Domain.Entities;
 
+using AzulPaymentService.Domain.Enums;
+
 namespace AzulPaymentService.Domain.Interfaces;
 
 /// <summary>

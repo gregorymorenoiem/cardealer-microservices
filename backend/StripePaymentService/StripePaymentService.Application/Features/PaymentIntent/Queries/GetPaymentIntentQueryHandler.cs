@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using StripePaymentService.Application.DTOs;
 using StripePaymentService.Domain.Interfaces;
 
@@ -23,14 +23,14 @@ public class GetPaymentIntentQueryHandler : IRequestHandler<GetPaymentIntentQuer
 
     public async Task<PaymentIntentResponseDto?> Handle(GetPaymentIntentQuery request, CancellationToken cancellationToken)
     {
-        _logger.Information("Obteniendo Payment Intent: {PaymentIntentId}", request.PaymentIntentId);
+        _logger.LogInformation("Obteniendo Payment Intent: {PaymentIntentId}", request.PaymentIntentId);
 
         try
         {
             var paymentIntent = await _repository.GetByIdAsync(request.PaymentIntentId, cancellationToken);
             if (paymentIntent == null)
             {
-                _logger.Warning("Payment Intent no encontrado: {PaymentIntentId}", request.PaymentIntentId);
+                _logger.LogWarning("Payment Intent no encontrado: {PaymentIntentId}", request.PaymentIntentId);
                 return null;
             }
 
@@ -48,7 +48,7 @@ public class GetPaymentIntentQueryHandler : IRequestHandler<GetPaymentIntentQuer
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error obteniendo Payment Intent: {PaymentIntentId}", request.PaymentIntentId);
+            _logger.LogError(ex, "Error obteniendo Payment Intent: {PaymentIntentId}", request.PaymentIntentId);
             throw;
         }
     }

@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Serilog;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using AzulPaymentService.Application.DTOs;
 
 namespace AzulPaymentService.Infrastructure.Services;
@@ -40,7 +42,7 @@ public class AzulHttpClient
     {
         try
         {
-            _logger.Information("Procesando cobro en AZUL. Usuario: {UserId}, Monto: {Amount}", request.UserId, request.Amount);
+            _logger.LogInformation("Procesando cobro en AZUL. Usuario: {UserId}, Monto: {Amount}", request.UserId, request.Amount);
 
             var payload = BuildChargePayload(request);
             var signature = GenerateAuthHash(payload);
@@ -56,7 +58,7 @@ public class AzulHttpClient
             var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            _logger.Information("Respuesta AZUL: {StatusCode}", response.StatusCode);
+            _logger.LogInformation("Respuesta AZUL: {StatusCode}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -69,7 +71,7 @@ public class AzulHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al procesar cobro en AZUL");
+            _logger.LogError(ex, "Error al procesar cobro en AZUL");
             throw;
         }
     }
@@ -81,7 +83,7 @@ public class AzulHttpClient
     {
         try
         {
-            _logger.Information("Procesando reembolso en AZUL. Transacción: {AzulTransactionId}, Monto: {Amount}", azulTransactionId, amount);
+            _logger.LogInformation("Procesando reembolso en AZUL. Transacción: {AzulTransactionId}, Monto: {Amount}", azulTransactionId, amount);
 
             var payload = new
             {
@@ -120,7 +122,7 @@ public class AzulHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al procesar reembolso en AZUL");
+            _logger.LogError(ex, "Error al procesar reembolso en AZUL");
             throw;
         }
     }
@@ -132,7 +134,7 @@ public class AzulHttpClient
     {
         try
         {
-            _logger.Information("Creando suscripción en AZUL. Usuario: {UserId}, Plan: {Plan}", request.UserId, request.PlanName);
+            _logger.LogInformation("Creando suscripción en AZUL. Usuario: {UserId}, Plan: {Plan}", request.UserId, request.PlanName);
 
             var payload = BuildSubscriptionPayload(request);
             var signature = GenerateAuthHash(payload);
@@ -159,7 +161,7 @@ public class AzulHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al crear suscripción en AZUL");
+            _logger.LogError(ex, "Error al crear suscripción en AZUL");
             throw;
         }
     }
@@ -171,7 +173,7 @@ public class AzulHttpClient
     {
         try
         {
-            _logger.Information("Cancelando suscripción en AZUL. ID: {AzulSubscriptionId}", azulSubscriptionId);
+            _logger.LogInformation("Cancelando suscripción en AZUL. ID: {AzulSubscriptionId}", azulSubscriptionId);
 
             var payload = new { subscriptionId = azulSubscriptionId };
             var signature = GenerateAuthHash(payload);
@@ -186,7 +188,7 @@ public class AzulHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al cancelar suscripción en AZUL");
+            _logger.LogError(ex, "Error al cancelar suscripción en AZUL");
             throw;
         }
     }

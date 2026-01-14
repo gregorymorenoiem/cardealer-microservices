@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
 using AzulPaymentService.Application.DTOs;
 using AzulPaymentService.Application.Features.Subscription.Commands;
 
@@ -68,7 +69,7 @@ public class SubscriptionsController : ControllerBase
     [HttpGet("{subscriptionId}")]
     [ProducesResponseType(typeof(SubscriptionResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSubscription(
+    public IActionResult GetSubscription(
         Guid subscriptionId,
         CancellationToken cancellationToken)
     {
@@ -96,7 +97,7 @@ public class SubscriptionsController : ControllerBase
     [HttpDelete("{subscriptionId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CancelSubscription(
+    public IActionResult CancelSubscription(
         Guid subscriptionId,
         [FromQuery] string? reason,
         CancellationToken cancellationToken)

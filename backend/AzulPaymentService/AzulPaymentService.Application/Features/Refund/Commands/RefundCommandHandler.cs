@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using AzulPaymentService.Application.DTOs;
 using AzulPaymentService.Domain.Interfaces;
 using AzulPaymentService.Domain.Entities;
@@ -28,7 +28,7 @@ public class RefundCommandHandler : IRequestHandler<RefundCommand, ChargeRespons
     /// </summary>
     public async Task<ChargeResponseDto> Handle(RefundCommand request, CancellationToken cancellationToken)
     {
-        _logger.Information("Procesando reembolso para transacción {TransactionId}", request.RefundRequest.TransactionId);
+        _logger.LogInformation("Procesando reembolso para transacción {TransactionId}", request.RefundRequest.TransactionId);
 
         try
         {
@@ -80,7 +80,7 @@ public class RefundCommandHandler : IRequestHandler<RefundCommand, ChargeRespons
             originalTransaction.Status = TransactionStatus.Refunded;
             await _transactionRepository.UpdateAsync(originalTransaction, cancellationToken);
 
-            _logger.Information("Reembolso procesado exitosamente. ID: {RefundTransactionId}", refundTransaction.Id);
+            _logger.LogInformation("Reembolso procesado exitosamente. ID: {RefundTransactionId}", refundTransaction.Id);
 
             return new ChargeResponseDto
             {
@@ -97,7 +97,7 @@ public class RefundCommandHandler : IRequestHandler<RefundCommand, ChargeRespons
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al procesar reembolso para transacción {TransactionId}", request.RefundRequest.TransactionId);
+            _logger.LogError(ex, "Error al procesar reembolso para transacción {TransactionId}", request.RefundRequest.TransactionId);
             throw;
         }
     }

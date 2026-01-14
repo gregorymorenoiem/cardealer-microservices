@@ -1,3 +1,5 @@
+using AzulPaymentService.Domain.Enums;
+
 namespace AzulPaymentService.Domain.Entities;
 
 /// <summary>

@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Serilog;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using AzulPaymentService.Domain.Interfaces;
 
 namespace AzulPaymentService.Infrastructure.Services;
@@ -43,7 +45,7 @@ public class AzulWebhookValidationService : IAzulWebhookValidationService
 
                 if (!isValid)
                 {
-                    _logger.Warning("Firma de webhook inválida. Esperada: {Expected}, Recibida: {Received}",
+                    _logger.LogWarning("Firma de webhook inválida. Esperada: {Expected}, Recibida: {Received}",
                         computedSignature, signature);
                 }
 
@@ -52,7 +54,7 @@ public class AzulWebhookValidationService : IAzulWebhookValidationService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al validar firma de webhook");
+            _logger.LogError(ex, "Error al validar firma de webhook");
             return false;
         }
     }
@@ -79,7 +81,7 @@ public class AzulWebhookValidationService : IAzulWebhookValidationService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al extraer datos del webhook");
+            _logger.LogError(ex, "Error al extraer datos del webhook");
             return new Dictionary<string, object?>();
         }
     }
@@ -91,7 +93,7 @@ public class AzulWebhookValidationService : IAzulWebhookValidationService
     {
         if (string.IsNullOrEmpty(payload) || string.IsNullOrEmpty(signature))
         {
-            _logger.Warning("Payload o firma vacíos en webhook");
+            _logger.LogWarning("Payload o firma vacíos en webhook");
             return false;
         }
 

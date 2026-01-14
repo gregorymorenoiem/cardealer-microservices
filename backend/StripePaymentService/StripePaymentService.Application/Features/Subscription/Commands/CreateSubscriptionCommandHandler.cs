@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using StripePaymentService.Application.DTOs;
 using StripePaymentService.Domain.Interfaces;
 using StripePaymentService.Domain.Entities;
@@ -27,28 +27,38 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
 
     public async Task<SubscriptionResponseDto> Handle(CreateSubscriptionCommand request, CancellationToken cancellationToken)
     {
-        _logger.Information("Creando Subscripción para Customer: {CustomerId}", request.Request.CustomerId);
+        _logger.LogInformation("Creando Subscripción para Customer: {CustomerId}", request.Request.StripeCustomerId);
 
         try
         {
             // Obtener customer
-            var customer = await _customerRepository.GetByIdAsync(request.Request.CustomerId, cancellationToken);
+            if (!Guid.TryParse(request.Request.StripeCustomerId, out var customerId))
+            {
+                _logger.LogWarning("ID de Customer inválido: {CustomerId}", request.Request.StripeCustomerId);
+                throw new InvalidOperationException($"ID de Customer inválido: {request.Request.StripeCustomerId}");
+            }
+
+            var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
             if (customer == null)
             {
-                _logger.Warning("Customer no encontrado: {CustomerId}", request.Request.CustomerId);
-                throw new InvalidOperationException($"Customer {request.Request.CustomerId} no encontrado");
+                _logger.LogWarning("Customer no encontrado: {CustomerId}", request.Request.StripeCustomerId);
+                throw new InvalidOperationException($"Customer {request.Request.StripeCustomerId} no encontrado");
             }
 
             var subscription = new StripeSubscription
             {
                 Id = Guid.NewGuid(),
-                CustomerId = customer.Id,
-                Currency = request.Request.Currency ?? "USD",
+                StripeCustomerId = customer.Id,
+                StripePriceId = request.Request.StripePriceId,
+                Currency = "usd",
                 Status = "active",
-                BillingCycleAnchor = request.Request.StartDate ?? DateTime.UtcNow.AddDays(request.Request.TrialDays ?? 0),
+                StartDate = request.Request.StartDate ?? DateTime.UtcNow,
+                NextBillingDate = request.Request.StartDate ?? DateTime.UtcNow.AddMonths(1),
+                Amount = 0, // TODO: Get from Stripe Price
+                BillingInterval = "month",
+                Metadata = request.Request.Metadata,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                TrialDays = request.Request.TrialDays ?? 0
+                UpdatedAt = DateTime.UtcNow
             };
 
             // TODO: Llamar a Stripe API para crear subscription
@@ -60,16 +70,18 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
             {
                 SubscriptionId = subscription.Id,
                 StripeSubscriptionId = subscription.StripeSubscriptionId,
-                CustomerId = customer.Id,
+                StripeCustomerId = customer.Id.ToString(),
                 Status = subscription.Status,
+                Amount = subscription.Amount,
                 Currency = subscription.Currency,
-                BillingCycleAnchor = subscription.BillingCycleAnchor,
-                CreatedAt = subscription.CreatedAt
+                BillingInterval = subscription.BillingInterval,
+                StartDate = subscription.StartDate,
+                NextBillingDate = subscription.NextBillingDate
             };
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error creando subscripción");
+            _logger.LogError(ex, "Error creando subscripción");
             throw;
         }
     }

@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace StripePaymentService.Infrastructure.Services;
 
@@ -36,7 +36,7 @@ public class StripeHttpClient
     /// </summary>
     public async Task<PaymentIntentResponse?> CreatePaymentIntentAsync(CreatePaymentIntentRequest request, CancellationToken cancellationToken = default)
     {
-        _logger.Information("Creando Payment Intent en Stripe. Amount: {Amount}", request.Amount);
+        _logger.LogInformation("Creando Payment Intent en Stripe. Amount: {Amount}", request.Amount);
 
         try
         {
@@ -57,18 +57,18 @@ public class StripeHttpClient
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.Error("Error creando Payment Intent: {StatusCode} - {Response}", response.StatusCode, responseContent);
+                _logger.LogError("Error creando Payment Intent: {StatusCode} - {Response}", response.StatusCode, responseContent);
                 return null;
             }
 
             var paymentIntent = JsonSerializer.Deserialize<PaymentIntentResponse>(responseContent);
-            _logger.Information("Payment Intent creado: {PaymentIntentId}", paymentIntent?.Id);
+            _logger.LogInformation("Payment Intent creado: {PaymentIntentId}", paymentIntent?.Id);
 
             return paymentIntent;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Excepción creando Payment Intent");
+            _logger.LogError(ex, "Excepción creando Payment Intent");
             throw;
         }
     }
@@ -78,7 +78,7 @@ public class StripeHttpClient
     /// </summary>
     public async Task<PaymentIntentResponse?> ConfirmPaymentIntentAsync(string paymentIntentId, string paymentMethodId, CancellationToken cancellationToken = default)
     {
-        _logger.Information("Confirmando Payment Intent: {PaymentIntentId}", paymentIntentId);
+        _logger.LogInformation("Confirmando Payment Intent: {PaymentIntentId}", paymentIntentId);
 
         try
         {
@@ -93,7 +93,7 @@ public class StripeHttpClient
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.Error("Error confirmando Payment Intent: {StatusCode}", response.StatusCode);
+                _logger.LogError("Error confirmando Payment Intent: {StatusCode}", response.StatusCode);
                 return null;
             }
 
@@ -101,7 +101,7 @@ public class StripeHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Excepción confirmando Payment Intent: {PaymentIntentId}", paymentIntentId);
+            _logger.LogError(ex, "Excepción confirmando Payment Intent: {PaymentIntentId}", paymentIntentId);
             throw;
         }
     }
@@ -111,7 +111,7 @@ public class StripeHttpClient
     /// </summary>
     public async Task<SubscriptionResponse?> CreateSubscriptionAsync(CreateSubscriptionRequest request, CancellationToken cancellationToken = default)
     {
-        _logger.Information("Creando Subscripción para customer: {CustomerId}", request.CustomerId);
+        _logger.LogInformation("Creando Subscripción para customer: {CustomerId}", request.CustomerId);
 
         try
         {
@@ -129,7 +129,7 @@ public class StripeHttpClient
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.Error("Error creando subscripción: {StatusCode}", response.StatusCode);
+                _logger.LogError("Error creando subscripción: {StatusCode}", response.StatusCode);
                 return null;
             }
 
@@ -137,7 +137,7 @@ public class StripeHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Excepción creando subscripción");
+            _logger.LogError(ex, "Excepción creando subscripción");
             throw;
         }
     }
@@ -147,7 +147,7 @@ public class StripeHttpClient
     /// </summary>
     public async Task<SubscriptionResponse?> CancelSubscriptionAsync(string subscriptionId, CancellationToken cancellationToken = default)
     {
-        _logger.Information("Cancelando subscripción: {SubscriptionId}", subscriptionId);
+        _logger.LogInformation("Cancelando subscripción: {SubscriptionId}", subscriptionId);
 
         try
         {
@@ -156,7 +156,7 @@ public class StripeHttpClient
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.Error("Error cancelando subscripción: {StatusCode}", response.StatusCode);
+                _logger.LogError("Error cancelando subscripción: {StatusCode}", response.StatusCode);
                 return null;
             }
 
@@ -164,7 +164,7 @@ public class StripeHttpClient
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Excepción cancelando subscripción: {SubscriptionId}", subscriptionId);
+            _logger.LogError(ex, "Excepción cancelando subscripción: {SubscriptionId}", subscriptionId);
             throw;
         }
     }

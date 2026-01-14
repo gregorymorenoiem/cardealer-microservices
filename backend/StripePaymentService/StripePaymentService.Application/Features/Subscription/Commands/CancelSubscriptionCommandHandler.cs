@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using StripePaymentService.Domain.Interfaces;
 
 namespace StripePaymentService.Application.Features.Subscription.Commands;
@@ -22,7 +22,7 @@ public class CancelSubscriptionCommandHandler : IRequestHandler<CancelSubscripti
 
     public async Task<bool> Handle(CancelSubscriptionCommand request, CancellationToken cancellationToken)
     {
-        _logger.Information("Cancelando subscripción: {SubscriptionId}, Razón: {Reason}",
+        _logger.LogInformation("Cancelando subscripción: {SubscriptionId}, Razón: {Reason}",
             request.SubscriptionId, request.CancellationReason ?? "No especificada");
 
         try
@@ -30,23 +30,24 @@ public class CancelSubscriptionCommandHandler : IRequestHandler<CancelSubscripti
             var subscription = await _repository.GetByIdAsync(request.SubscriptionId, cancellationToken);
             if (subscription == null)
             {
-                _logger.Warning("Subscripción no encontrada: {SubscriptionId}", request.SubscriptionId);
+                _logger.LogWarning("Subscripción no encontrada: {SubscriptionId}", request.SubscriptionId);
                 throw new InvalidOperationException($"Subscripción {request.SubscriptionId} no encontrada");
             }
 
             // TODO: Llamar a Stripe API para cancelar
             subscription.Status = "canceled";
-            subscription.CanceledAt = DateTime.UtcNow;
+            subscription.CancelledAt = DateTime.UtcNow;
+            subscription.CancellationReason = request.CancellationReason;
             subscription.UpdatedAt = DateTime.UtcNow;
 
             await _repository.UpdateAsync(subscription, cancellationToken);
 
-            _logger.Information("Subscripción cancelada exitosamente: {SubscriptionId}", request.SubscriptionId);
+            _logger.LogInformation("Subscripción cancelada exitosamente: {SubscriptionId}", request.SubscriptionId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error cancelando subscripción: {SubscriptionId}", request.SubscriptionId);
+            _logger.LogError(ex, "Error cancelando subscripción: {SubscriptionId}", request.SubscriptionId);
             throw;
         }
     }

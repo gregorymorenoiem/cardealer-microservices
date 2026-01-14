@@ -40,7 +40,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? "Server=localhost;Database=StripePaymentService;User Id=postgres;Password=postgres";
 
 builder.Services.AddDbContext<StripeDbContext>(options =>
-    options.UseNpgsql(connectionString)
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+    })
 );
 
 // MediatR

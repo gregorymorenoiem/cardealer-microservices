@@ -1,5 +1,5 @@
 using MediatR;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using AzulPaymentService.Application.DTOs;
 using AzulPaymentService.Domain.Interfaces;
 using AzulPaymentService.Domain.Entities;
@@ -28,10 +28,13 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
     /// </summary>
     public async Task<SubscriptionResponseDto> Handle(CreateSubscriptionCommand request, CancellationToken cancellationToken)
     {
-        _logger.Information("Creando suscripción para usuario {UserId}", request.SubscriptionRequest.UserId);
+        _logger.LogInformation("Creando suscripción para usuario {UserId}", request.SubscriptionRequest.UserId);
 
         try
         {
+            // Parsear frecuencia
+            var frequency = Enum.Parse<SubscriptionFrequency>(request.SubscriptionRequest.Frequency);
+            
             // Crear entidad de suscripción
             var subscription = new AzulSubscription
             {
@@ -39,7 +42,7 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
                 UserId = request.SubscriptionRequest.UserId,
                 Amount = request.SubscriptionRequest.Amount,
                 Currency = request.SubscriptionRequest.Currency,
-                Frequency = Enum.Parse<SubscriptionFrequency>(request.SubscriptionRequest.Frequency),
+                Frequency = frequency,
                 Status = "Active",
                 StartDate = request.SubscriptionRequest.StartDate,
                 EndDate = request.SubscriptionRequest.EndDate,
@@ -50,7 +53,7 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
                 CreatedAt = DateTime.UtcNow,
                 NextChargeDate = CalculateNextChargeDate(
                     request.SubscriptionRequest.StartDate, 
-                    request.SubscriptionRequest.Frequency),
+                    frequency),
                 ChargeCount = 0,
                 TotalAmountCharged = 0
             };
@@ -64,7 +67,7 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
             // Guardar suscripción
             await _subscriptionRepository.CreateAsync(subscription, cancellationToken);
 
-            _logger.Information("Suscripción creada exitosamente. ID: {SubscriptionId}", subscription.Id);
+            _logger.LogInformation("Suscripción creada exitosamente. ID: {SubscriptionId}", subscription.Id);
 
             return new SubscriptionResponseDto
             {
@@ -86,7 +89,7 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error al crear suscripción para usuario {UserId}", request.SubscriptionRequest.UserId);
+            _logger.LogError(ex, "Error al crear suscripción para usuario {UserId}", request.SubscriptionRequest.UserId);
             throw;
         }
     }

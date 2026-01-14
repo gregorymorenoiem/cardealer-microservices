@@ -42,7 +42,7 @@ public class WebhooksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> HandleWebhookEvent(
+    public IActionResult HandleWebhookEvent(
         [FromHeader(Name = "X-Signature")] string? signature,
         [FromBody] string rawPayload,
         CancellationToken cancellationToken)

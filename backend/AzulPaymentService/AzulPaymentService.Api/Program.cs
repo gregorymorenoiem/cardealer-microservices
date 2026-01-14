@@ -28,7 +28,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AzulDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
-        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelaySeconds: 5);
+        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
     }));
 
 // Repositories

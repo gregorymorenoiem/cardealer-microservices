@@ -53,7 +53,7 @@ public class SubscriptionResponseDto
     /// <summary>
     /// Próxima fecha de cobro
     /// </summary>
-    public DateTime NextChargeDate { get; set; }
+    public DateTime? NextChargeDate { get; set; }
 
     /// <summary>
     /// Última fecha de cobro exitoso

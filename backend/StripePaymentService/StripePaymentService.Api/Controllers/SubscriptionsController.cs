@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
 using StripePaymentService.Application.DTOs;
 using StripePaymentService.Application.Features.Subscription.Commands;
 using StripePaymentService.Application.Features.Subscription.Queries;
