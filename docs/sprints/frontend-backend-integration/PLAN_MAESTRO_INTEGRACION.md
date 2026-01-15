@@ -10,22 +10,22 @@
 
 Este plan está dividido en **12 sub-planes** manejables, cada uno enfocado en una funcionalidad específica:
 
-| Sprint | Documento | Tokens Est. | Estado | Prioridad |
-|--------|-----------|-------------|--------|-----------|
-| **Sprint 0** | [SPRINT_0_SETUP_INICIAL.md](SPRINT_0_SETUP_INICIAL.md) | ~18,000 | ⚪ Pendiente | 🔴 CRÍTICO |
-| | **+ Migración Assets (16-20h)** | | | 🔴 BLOQUEANTE |
-| **Sprint 1** | [SPRINT_1_CUENTAS_TERCEROS.md](SPRINT_1_CUENTAS_TERCEROS.md) | ~22,000 | ⚪ Pendiente | 🔴 CRÍTICO |
-| **Sprint 2** | [SPRINT_2_AUTH_INTEGRATION.md](SPRINT_2_AUTH_INTEGRATION.md) | ~25,000 | ⚪ Pendiente | 🔴 CRÍTICO |
-| **Sprint 3** | [SPRINT_3_VEHICLE_SERVICE.md](SPRINT_3_VEHICLE_SERVICE.md) | ~28,000 | ⚪ Pendiente | 🟠 Alta |
-| | **+ Seed Catálogo Vehículos (12-16h)** | | | 🔴 CRÍTICO |
-| **Sprint 4** | [SPRINT_4_MEDIA_UPLOAD.md](SPRINT_4_MEDIA_UPLOAD.md) | ~24,000 | ⚪ Pendiente | 🟠 Alta |
-| **Sprint 5** | [SPRINT_5_BILLING_PAYMENTS.md](SPRINT_5_BILLING_PAYMENTS.md) | ~26,000 | ⚪ Pendiente | 🟠 Alta |
-| **Sprint 6** | [SPRINT_6_NOTIFICATIONS.md](SPRINT_6_NOTIFICATIONS.md) | ~23,000 | ⚪ Pendiente | 🟡 Media |
-| **Sprint 7** | [SPRINT_7_MESSAGING_CRM.md](SPRINT_7_MESSAGING_CRM.md) | ~22,000 | ⚪ Pendiente | 🟡 Media |
-| **Sprint 8** | [SPRINT_8_SEARCH_FILTERS.md](SPRINT_8_SEARCH_FILTERS.md) | ~25,000 | ⚪ Pendiente | 🟡 Media |
-| **Sprint 9** | [SPRINT_9_SAVED_SEARCHES.md](SPRINT_9_SAVED_SEARCHES.md) | ~20,000 | ⚪ Pendiente | 🟢 Baja |
-| **Sprint 10** | [SPRINT_10_ADMIN_PANEL.md](SPRINT_10_ADMIN_PANEL.md) | ~27,000 | ⚪ Pendiente | 🟡 Media |
-| **Sprint 11** | [SPRINT_11_TESTING_QA.md](SPRINT_11_TESTING_QA.md) | ~30,000 | ⚪ Pendiente | 🟠 Alta |
+| Sprint        | Documento                                                    | Tokens Est. | Estado       | Prioridad     |
+| ------------- | ------------------------------------------------------------ | ----------- | ------------ | ------------- |
+| **Sprint 0**  | [SPRINT_0_SETUP_INICIAL.md](SPRINT_0_SETUP_INICIAL.md)       | ~18,000     | ⚪ Pendiente | 🔴 CRÍTICO    |
+|               | **+ Migración Assets (16-20h)**                              |             |              | 🔴 BLOQUEANTE |
+| **Sprint 1**  | [SPRINT_1_CUENTAS_TERCEROS.md](SPRINT_1_CUENTAS_TERCEROS.md) | ~22,000     | ⚪ Pendiente | 🔴 CRÍTICO    |
+| **Sprint 2**  | [SPRINT_2_AUTH_INTEGRATION.md](SPRINT_2_AUTH_INTEGRATION.md) | ~25,000     | ⚪ Pendiente | 🔴 CRÍTICO    |
+| **Sprint 3**  | [SPRINT_3_VEHICLE_SERVICE.md](SPRINT_3_VEHICLE_SERVICE.md)   | ~28,000     | ⚪ Pendiente | 🟠 Alta       |
+|               | **+ Seed Catálogo Vehículos (12-16h)**                       |             |              | 🔴 CRÍTICO    |
+| **Sprint 4**  | [SPRINT_4_MEDIA_UPLOAD.md](SPRINT_4_MEDIA_UPLOAD.md)         | ~24,000     | ⚪ Pendiente | 🟠 Alta       |
+| **Sprint 5**  | [SPRINT_5_BILLING_PAYMENTS.md](SPRINT_5_BILLING_PAYMENTS.md) | ~26,000     | ⚪ Pendiente | 🟠 Alta       |
+| **Sprint 6**  | [SPRINT_6_NOTIFICATIONS.md](SPRINT_6_NOTIFICATIONS.md)       | ~23,000     | ⚪ Pendiente | 🟡 Media      |
+| **Sprint 7**  | [SPRINT_7_MESSAGING_CRM.md](SPRINT_7_MESSAGING_CRM.md)       | ~22,000     | ⚪ Pendiente | 🟡 Media      |
+| **Sprint 8**  | [SPRINT_8_SEARCH_FILTERS.md](SPRINT_8_SEARCH_FILTERS.md)     | ~25,000     | ⚪ Pendiente | 🟡 Media      |
+| **Sprint 9**  | [SPRINT_9_SAVED_SEARCHES.md](SPRINT_9_SAVED_SEARCHES.md)     | ~20,000     | ⚪ Pendiente | 🟢 Baja       |
+| **Sprint 10** | [SPRINT_10_ADMIN_PANEL.md](SPRINT_10_ADMIN_PANEL.md)         | ~27,000     | ⚪ Pendiente | 🟡 Media      |
+| **Sprint 11** | [SPRINT_11_TESTING_QA.md](SPRINT_11_TESTING_QA.md)           | ~30,000     | ⚪ Pendiente | 🟠 Alta       |
 
 **Total estimado:** ~290,000 tokens (~15 sesiones de trabajo)
 
@@ -36,6 +36,7 @@ Este plan está dividido en **12 sub-planes** manejables, cada uno enfocado en u
 ### Funcionalidades a Implementar
 
 #### 1️⃣ Autenticación y Usuarios
+
 - ✅ Login/Registro con JWT
 - ✅ OAuth2 (Google, Microsoft)
 - ✅ Gestión de perfiles
@@ -43,6 +44,7 @@ Este plan está dividido en **12 sub-planes** manejables, cada uno enfocado en u
 - ⚪ 2FA/TOTP
 
 #### 2️⃣ Vehículos
+
 - ⚪ CRUD completo de vehículos
 - ⚪ Upload de imágenes (hasta 20 por vehículo)
 - ⚪ Búsqueda avanzada con filtros
@@ -51,35 +53,41 @@ Este plan está dividido en **12 sub-planes** manejables, cada uno enfocado en u
 - ⚪ Comparador de vehículos
 
 #### 3️⃣ Media y Almacenamiento
+
 - ⚪ Upload de imágenes a S3/Azure Blob
 - ⚪ Compresión automática de imágenes
 - ⚪ Progressive loading
 - ⚪ CDN integration
 
 #### 4️⃣ Facturación y Pagos
+
 - ⚪ Suscripciones por planes
 - ⚪ Integración con Stripe
 - ⚪ Gestión de métodos de pago
 - ⚪ Historial de facturas
 
 #### 5️⃣ Notificaciones
+
 - ⚪ Email (SendGrid/SMTP)
 - ⚪ SMS (Twilio)
 - ⚪ Push notifications (Firebase)
 - ⚪ Notificaciones en app
 
 #### 6️⃣ Mensajería y CRM
+
 - ⚪ Chat entre usuarios
 - ⚪ Gestión de leads
 - ⚪ Seguimiento de conversaciones
 
 #### 7️⃣ Búsqueda
+
 - ⚪ Elasticsearch integration
 - ⚪ Autocompletado
 - ⚪ Filtros avanzados
 - ⚪ Búsquedas guardadas
 
 #### 8️⃣ Admin
+
 - ⚪ Dashboard de métricas
 - ⚪ Gestión de usuarios
 - ⚪ Moderación de contenido
@@ -132,18 +140,20 @@ Este plan está dividido en **12 sub-planes** manejables, cada uno enfocado en u
 
 ### Cuentas a Crear (Sprint 1)
 
-| Servicio | Propósito | Costo | Prioridad | Plan |
-|----------|-----------|-------|-----------|------|
-| **Google Cloud Platform** | Google Maps API | $200/mes credit gratis | 🔴 Crítico | Pay-as-you-go |
-| **Firebase** | Push Notifications | Gratis hasta 10K users | 🟠 Alta | Spark (Free) |
-| **Stripe** | Pagos y Suscripciones | 2.9% + $0.30 por transacción | 🔴 Crítico | Pay-as-you-go |
-| **SendGrid** | Email transaccional | 100 emails/día gratis | 🟠 Alta | Free → Essentials $20/mes |
-| **Twilio** | SMS | $15 credit gratis | 🟡 Media | Pay-as-you-go |
-| **AWS S3** | Almacenamiento de imágenes | 5GB gratis primer año | 🔴 Crítico | Free Tier → S3 Standard |
-| **Azure Blob Storage** | Almacenamiento alternativo | 5GB gratis | 🟢 Opcional | Pay-as-you-go |
-| **Sentry** | Error tracking | 5K events/mes gratis | 🟡 Media | Developer (Free) |
+| Servicio                  | Propósito                      | Costo                        | Prioridad   | Plan                      |
+| ------------------------- | ------------------------------ | ---------------------------- | ----------- | ------------------------- |
+| **Google Cloud Platform** | Google Maps API                | $200/mes credit gratis       | 🔴 Crítico  | Pay-as-you-go             |
+| **Firebase**              | Push Notifications             | Gratis hasta 10K users       | 🟠 Alta     | Spark (Free)              |
+| **Stripe**                | Pagos y Suscripciones          | 2.9% + $0.30 por transacción | 🔴 Crítico  | Pay-as-you-go             |
+| **SendGrid**              | Email transaccional            | 100 emails/día gratis        | 🟠 Alta     | Free → Essentials $20/mes |
+| **Twilio**                | SMS                            | $15 credit gratis            | 🟡 Media    | Pay-as-you-go             |
+| **AWS S3**                | Almacenamiento de imágenes     | 5GB gratis primer año        | 🔴 Crítico  | Free Tier → S3 Standard   |
+| **Azure Blob Storage**    | Almacenamiento alternativo     | 5GB gratis                   | 🟢 Opcional | Pay-as-you-go             |
+| **Sentry**                | Error tracking                 | 5K events/mes gratis         | 🟡 Media    | Developer (Free)          |
+| **Elasticsearch**         | Search + Indexación de errores | GRATIS (DOKS)                | 🔴 Crítico  | Self-managed (Helm)       |
+| **Google Analytics 4**    | Web Vitals + Analytics         | Gratis hasta 10M eventos/mes | 🟡 Media    | Free Tier                 |
 
-**Costo mensual estimado:** $50-$150 (según tráfico)
+**Costo mensual estimado:** $50-$200 (según tráfico) + Elasticsearch en DOKS (incluido)
 
 ---
 
@@ -151,29 +161,29 @@ Este plan está dividido en **12 sub-planes** manejables, cada uno enfocado en u
 
 ### Servicios Existentes (Listos)
 
-| Servicio | Puerto | Estado | Endpoints |
-|----------|--------|--------|-----------|
-| Gateway | 18443 | ✅ | Routing + Auth |
-| AuthService | 15085 | ✅ | 11 endpoints |
-| UserService | 15100 | ✅ | Gestión usuarios |
-| RoleService | 15101 | ✅ | Roles y permisos |
-| ProductService | 15006 | ✅ | CRUD productos |
-| ErrorService | 15083 | ✅ | Error logging |
-| NotificationService | 15084 | ✅ | Email, SMS, Push |
-| MediaService | 15007 | ⚠️ | **Necesita endpoints** |
-| BillingService | 15008 | ⚠️ | **Necesita endpoints** |
-| CRMService | 15009 | ⚠️ | **Necesita endpoints** |
-| SearchService | 15010 | ⚠️ | **Necesita endpoints** |
-| AdminService | 15011 | ⚠️ | **Necesita endpoints** |
+| Servicio            | Puerto | Estado | Endpoints              |
+| ------------------- | ------ | ------ | ---------------------- |
+| Gateway             | 18443  | ✅     | Routing + Auth         |
+| AuthService         | 15085  | ✅     | 11 endpoints           |
+| UserService         | 15100  | ✅     | Gestión usuarios       |
+| RoleService         | 15101  | ✅     | Roles y permisos       |
+| ProductService      | 15006  | ✅     | CRUD productos         |
+| ErrorService        | 15083  | ✅     | Error logging          |
+| NotificationService | 15084  | ✅     | Email, SMS, Push       |
+| MediaService        | 15007  | ⚠️     | **Necesita endpoints** |
+| BillingService      | 15008  | ⚠️     | **Necesita endpoints** |
+| CRMService          | 15009  | ⚠️     | **Necesita endpoints** |
+| SearchService       | 15010  | ⚠️     | **Necesita endpoints** |
+| AdminService        | 15011  | ⚠️     | **Necesita endpoints** |
 
 ### Servicios a Crear (Sprint 3)
 
-| Servicio | Propósito | Prioridad |
-|----------|-----------|-----------|
-| **VehicleService** | Gestión específica de vehículos (extiende ProductService) | 🔴 CRÍTICO |
-| **SavedSearchService** | Búsquedas guardadas y alertas | 🟡 Media |
-| **ComparisonService** | Comparador de vehículos | 🟢 Baja |
-| **DealerService** | Gestión de dealers (multi-tenant) | 🟠 Alta |
+| Servicio               | Propósito                                                 | Prioridad  |
+| ---------------------- | --------------------------------------------------------- | ---------- |
+| **VehicleService**     | Gestión específica de vehículos (extiende ProductService) | 🔴 CRÍTICO |
+| **SavedSearchService** | Búsquedas guardadas y alertas                             | 🟡 Media   |
+| **ComparisonService**  | Comparador de vehículos                                   | 🟢 Baja    |
+| **DealerService**      | Gestión de dealers (multi-tenant)                         | 🟠 Alta    |
 
 ---
 
@@ -304,25 +314,25 @@ AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 
 ### KPIs Técnicos
 
-| Métrica | Objetivo | Actual |
-|---------|----------|--------|
-| Response Time (p95) | <500ms | - |
-| Error Rate | <1% | - |
-| API Availability | 99.9% | - |
-| Test Coverage | >80% | - |
-| Build Time | <5min | - |
+| Métrica             | Objetivo | Actual |
+| ------------------- | -------- | ------ |
+| Response Time (p95) | <500ms   | -      |
+| Error Rate          | <1%      | -      |
+| API Availability    | 99.9%    | -      |
+| Test Coverage       | >80%     | -      |
+| Build Time          | <5min    | -      |
 
 ---
 
 ## 🚨 RIESGOS Y MITIGACIONES
 
-| Riesgo | Probabilidad | Impacto | Mitigación |
-|--------|--------------|---------|------------|
-| Costos de APIs externos superan presupuesto | Media | Alto | Implementar rate limiting y caching |
-| Stripe sandbox no disponible | Baja | Alto | Usar mocks como fallback |
-| Problemas de CORS en Gateway | Alta | Medio | Configurar CORS correctamente desde Sprint 0 |
-| JWT tokens expiran durante testing | Alta | Bajo | Aumentar expiración en dev |
-| Elasticsearch consume mucha RAM | Media | Medio | Configurar limits en Docker |
+| Riesgo                                      | Probabilidad | Impacto | Mitigación                                   |
+| ------------------------------------------- | ------------ | ------- | -------------------------------------------- |
+| Costos de APIs externos superan presupuesto | Media        | Alto    | Implementar rate limiting y caching          |
+| Stripe sandbox no disponible                | Baja         | Alto    | Usar mocks como fallback                     |
+| Problemas de CORS en Gateway                | Alta         | Medio   | Configurar CORS correctamente desde Sprint 0 |
+| JWT tokens expiran durante testing          | Alta         | Bajo    | Aumentar expiración en dev                   |
+| Elasticsearch consume mucha RAM             | Media        | Medio   | Configurar limits en Docker                  |
 
 ---
 
