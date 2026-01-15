@@ -2,7 +2,7 @@
 
 **Fecha:** Enero 15, 2026  
 **Duración:** Análisis profundo  
-**Estado:** ✅ COMPLETADO Y DOCUMENTADO  
+**Estado:** ✅ COMPLETADO Y DOCUMENTADO
 
 ---
 
@@ -137,12 +137,14 @@
 ## 📋 CHECKLIST DE ANÁLISIS
 
 ### Vistas Públicas
+
 - [x] HomePage - 90 vehículos en 8 secciones
 - [x] SearchPage - Catálogos y filtros
 - [x] VehicleDetailPage - Specs completos + imágenes
 - [x] PublicDealerProfilePage - Dealer info + reviews
 
 ### Vistas Autenticadas
+
 - [x] FavoritesPage - 50+ favorites
 - [x] ComparisonPage - 5+ comparisons
 - [x] AlertsPage - 15+ price alerts
@@ -151,6 +153,7 @@
 - [x] DealerDashboard - Stats y inventory
 
 ### Dealer Pages
+
 - [x] DealerLandingPage - Estática
 - [x] DealerPricingPage - 3 planes
 - [x] DealerRegistrationPage - Formulario
@@ -162,11 +165,13 @@
 - [x] PricingIntelligencePage - ML data
 
 ### Admin Pages
+
 - [x] AdminDashboard - Stats agregadas
 - [x] ReportedContentPage - Moderation
 - [x] PendingApprovalsPage - Workflow
 
 ### Otros
+
 - [x] Messaging - 15+ conversations
 - [x] Billing - 3 planes
 - [x] Notifications - 200+ notificaciones
@@ -177,56 +182,56 @@
 
 ### Vehículos
 
-| Aspecto | v1.0 | v2.0 | Mejora |
-|---------|------|------|--------|
-| Cantidad | 150 | 150 | - |
-| Specs | Básicos | Completos | +300% |
-| Features | 0 | 8-15 cada uno | NEW |
-| Engine Info | No | Sí | NEW |
-| Distribución | Random | Específica | Targeted |
-| En Secciones | No | 90 asignados | +60% |
+| Aspecto      | v1.0    | v2.0          | Mejora   |
+| ------------ | ------- | ------------- | -------- |
+| Cantidad     | 150     | 150           | -        |
+| Specs        | Básicos | Completos     | +300%    |
+| Features     | 0       | 8-15 cada uno | NEW      |
+| Engine Info  | No      | Sí            | NEW      |
+| Distribución | Random  | Específica    | Targeted |
+| En Secciones | No      | 90 asignados  | +60%     |
 
 ### Dealers
 
-| Aspecto | v1.0 | v2.0 | Mejora |
-|---------|------|------|--------|
-| Cantidad | 30 | 30 | - |
-| Locations | Ninguno | 2-3 cada uno | NEW |
-| Reviews | Ninguno | 5-15 cada uno | NEW |
-| Ratings | Ninguno | 3-5 stars | NEW |
-| Datos | Simple | Completo | +500% |
+| Aspecto   | v1.0    | v2.0          | Mejora |
+| --------- | ------- | ------------- | ------ |
+| Cantidad  | 30      | 30            | -      |
+| Locations | Ninguno | 2-3 cada uno  | NEW    |
+| Reviews   | Ninguno | 5-15 cada uno | NEW    |
+| Ratings   | Ninguno | 3-5 stars     | NEW    |
+| Datos     | Simple  | Completo      | +500%  |
 
 ### Usuarios
 
 | Aspecto | v1.0 | v2.0 | Mejora |
-|---------|------|------|--------|
-| Total | 20 | 42 | +110% |
-| Buyers | 10 | 10 | - |
-| Sellers | 10 | 10 | - |
-| Dealers | 0 | 30 | NEW |
-| Admins | 0 | 2 | NEW |
+| ------- | ---- | ---- | ------ |
+| Total   | 20   | 42   | +110%  |
+| Buyers  | 10   | 10   | -      |
+| Sellers | 10   | 10   | -      |
+| Dealers | 0    | 30   | NEW    |
+| Admins  | 0    | 2    | NEW    |
 
 ### Relaciones
 
-| Aspecto | v1.0 | v2.0 | Mejora |
-|---------|------|------|--------|
-| Favorites | 0 | 50+ | NEW |
-| Alerts | 0 | 15+ | NEW |
-| Comparisons | 0 | 5+ | NEW |
-| Messages | 0 | 100+ | NEW |
-| Reviews | 0 | 150+ | NEW |
-| Activity Logs | 0 | 100+ | NEW |
-| **TOTAL** | **0** | **500+** | **NEW** |
+| Aspecto       | v1.0  | v2.0     | Mejora  |
+| ------------- | ----- | -------- | ------- |
+| Favorites     | 0     | 50+      | NEW     |
+| Alerts        | 0     | 15+      | NEW     |
+| Comparisons   | 0     | 5+       | NEW     |
+| Messages      | 0     | 100+     | NEW     |
+| Reviews       | 0     | 150+     | NEW     |
+| Activity Logs | 0     | 100+     | NEW     |
+| **TOTAL**     | **0** | **500+** | **NEW** |
 
 ### Catálogos
 
-| Aspecto | v1.0 | v2.0 | Mejora |
-|---------|------|------|--------|
-| Makes | Stub | 10 completos | NEW |
-| Models | Stub | 60+ completos | NEW |
-| Years | 15 | 15 | - |
-| Body Styles | Stub | 7 completos | NEW |
-| Fuel Types | Stub | 5 completos | NEW |
+| Aspecto     | v1.0 | v2.0          | Mejora |
+| ----------- | ---- | ------------- | ------ |
+| Makes       | Stub | 10 completos  | NEW    |
+| Models      | Stub | 60+ completos | NEW    |
+| Years       | 15   | 15            | -      |
+| Body Styles | Stub | 7 completos   | NEW    |
+| Fuel Types  | Stub | 5 completos   | NEW    |
 
 ---
 
@@ -235,6 +240,7 @@
 ### HomePage
 
 **Requerimientos:**
+
 - [ ] 8 secciones configuradas
 - [ ] 90 vehículos distribuidos correctamente
 - [ ] Cada sección con maxItems respetado
@@ -242,6 +248,7 @@
 - [ ] Featured vehicles marcados
 
 **Datos Necesarios:**
+
 - 5 vehículos en Carousel Principal
 - 10 sedanes en sección Sedanes
 - 10 SUVs en sección SUVs
@@ -254,6 +261,7 @@
 ### SearchPage
 
 **Requerimientos:**
+
 - [ ] Makes dropdown con 10 opciones
 - [ ] Models cargados dinámicamente
 - [ ] Paginación funcional
@@ -261,6 +269,7 @@
 - [ ] Resultados exactos
 
 **Datos Necesarios:**
+
 - 150 vehículos distribuidos
 - 10 Makes diferentes
 - 60+ Models
@@ -270,12 +279,14 @@
 ### DealerDashboard
 
 **Requerimientos:**
+
 - [ ] Cargar dealer del usuario
 - [ ] Mostrar estadísticas
 - [ ] Listar inventario
 - [ ] Mostrar actividad reciente
 
 **Datos Necesarios:**
+
 - 30 dealers con userId
 - 150 vehículos distribuidos entre dealers
 - Statistics agregadas
@@ -284,12 +295,14 @@
 ### AdminDashboard
 
 **Requerimientos:**
+
 - [ ] Dashboard con stats
 - [ ] Activity logs con paginación
 - [ ] Pending approvals
 - [ ] User management
 
 **Datos Necesarios:**
+
 - 42 usuarios
 - 150 vehículos
 - 100+ activity logs
@@ -390,18 +403,21 @@
 ### Documentos Creados
 
 1. **FRONTEND_DATA_REQUIREMENTS_ANALYSIS.md** (3,500 líneas)
+
    - Análisis de cada vista
    - Endpoints y parámetros
    - Datos necesarios
    - Validación por página
 
 2. **ENDPOINTS_TO_TEST_DATA_MAPPING.md** (2,500 líneas)
+
    - Mapeo endpoints → datos
    - Parámetros detallados
    - Requisitos por servicio
    - Matriz consolidada
 
 3. **SEEDING_PLAN_V2.0.md** (2,000 líneas)
+
    - Plan actualizado
    - Código C# para cada fase
    - Distribución específica
@@ -442,7 +458,7 @@
 
 ## 🎓 CONCLUSIÓN
 
-Este análisis exhaustivo ha identificado **exactamente qué datos necesita cada vista** del frontend para funcionar correctamente. 
+Este análisis exhaustivo ha identificado **exactamente qué datos necesita cada vista** del frontend para funcionar correctamente.
 
 El plan v2.0 es **más específico, orientado a resultados reales** y permitirá:
 
@@ -458,4 +474,3 @@ El plan v2.0 es **más específico, orientado a resultados reales** y permitirá
 **Análisis Completado: 27 Vistas, 32 Endpoints, 500+ Datos Mapeados**
 
 **Estado: 🟢 LISTO PARA IMPLEMENTACIÓN**
-
