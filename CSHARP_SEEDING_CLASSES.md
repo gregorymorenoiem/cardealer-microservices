@@ -271,13 +271,13 @@ public class VehicleBuilder
                 TransmissionType = faker.PickRandom(new[] { "Automatic", "Manual" }),
                 InteriorColor = faker.PickRandom(new[] { "Black", "Tan", "Gray", "Brown" }),
                 Condition = "Used",
-                
+
                 // Especificaciones (si está habilitado)
                 Engine = withCompleteSpecs ? GetEngineSize(make) : "2.0L",
                 Horsepower = withCompleteSpecs ? faker.Random.Int(100, 600) : 200,
                 Torque = withCompleteSpecs ? faker.Random.Int(100, 700) : 150,
                 DriveType = faker.PickRandom(new[] { "FWD", "RWD", "AWD" }),
-                
+
                 // Features
                 Features = GenerateFeatures(faker, featuresPerVehicle)
             };
@@ -413,7 +413,7 @@ public class HomepageSectionAssignmentService
         var vehicles = await _context.Vehicles
             .Where(v => v.Status == "Active")
             .ToListAsync();
-        
+
         var sectionsWithIds = await _context.HomepageSectionConfigs.ToListAsync();
 
         // Asignar vehículos a secciones
@@ -476,7 +476,7 @@ public class ImageBuilder
         for (int i = 0; i < imageCount; i++)
         {
             var isMainImage = i == 0; // Primera imagen es la principal
-            
+
             images.Add(new VehicleImage
             {
                 Id = Guid.NewGuid(),
@@ -927,4 +927,3 @@ backend/_Shared/CarDealer.DataSeeding/
 - [ ] Ejecutar validación completa (Fase 7)
 
 **Total:** 9 clases + 2 mejorar = 11 archivos C#
-

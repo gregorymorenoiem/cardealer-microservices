@@ -12,7 +12,7 @@
 
 ```sql
 -- Verificar Makes (debe ser 10)
-SELECT COUNT(*) as total_makes, 
+SELECT COUNT(*) as total_makes,
        STRING_AGG(DISTINCT "Name", ', ') as makes_list
 FROM catalog_makes;
 
@@ -217,7 +217,7 @@ WHERE "DealerId" NOT IN (SELECT "Id" FROM dealers);
 -- Resultado esperado: 0 (todos deben tener dealer)
 
 -- Vehículos con specs completos
-SELECT 
+SELECT
     COUNT(*) as total_vehicles,
     COUNT(CASE WHEN "Engine" IS NOT NULL THEN 1 END) as with_engine,
     COUNT(CASE WHEN "Horsepower" > 0 THEN 1 END) as with_horsepower,
@@ -291,7 +291,7 @@ WHERE "IsActive" = true;
 -- Resultado esperado: 8 secciones activas
 
 -- Vehículos asignados por sección (debe ser 90 total)
-SELECT 
+SELECT
     hsc."Name",
     hsc."DisplayOrder",
     hsc."MaxItems",
@@ -350,7 +350,7 @@ FROM favorites;
 -- unique_vehicles: ~20-30
 
 -- Favorites por usuario
-SELECT 
+SELECT
     u."Email",
     COUNT(f."Id") as favorite_count
 FROM users u
@@ -383,7 +383,7 @@ FROM price_alerts;
 -- unique_users: 3
 
 -- Alertas por usuario
-SELECT 
+SELECT
     u."Email",
     COUNT(pa."Id") as alert_count
 FROM users u
@@ -410,7 +410,7 @@ FROM dealer_reviews;
 -- avg_rating: ~3.0-3.5
 
 -- Reviews por dealer (distribución)
-SELECT 
+SELECT
     d."BusinessName",
     COUNT(dr."Id") as review_count,
     ROUND(AVG(dr."Rating")::numeric, 2) as avg_rating
@@ -424,7 +424,7 @@ LIMIT 10;
 -- Resultado esperado: Top 10 dealers con más reviews
 
 -- Distribución de ratings
-SELECT 
+SELECT
     "Rating",
     COUNT(*) as count,
     ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM dealer_reviews), 1) as percentage
@@ -450,7 +450,7 @@ FROM activity_logs;
 -- resource_types: 5 (vehicle, dealer, listing, user, alert)
 
 -- Distribución de acciones
-SELECT 
+SELECT
     "Action",
     COUNT(*) as count,
     ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM activity_logs), 1) as percentage
@@ -459,7 +459,7 @@ GROUP BY "Action"
 ORDER BY count DESC;
 
 -- Distribución de recursos
-SELECT 
+SELECT
     "ResourceType",
     COUNT(*) as count
 FROM activity_logs
@@ -525,7 +525,7 @@ SELECT COUNT(*) as total_logs FROM activity_logs;
 
 -- RESUMEN FINAL
 SELECT '=== RESUMEN FINAL ===' as section;
-SELECT 
+SELECT
     (SELECT COUNT(*) FROM catalog_makes) as makes,
     (SELECT COUNT(*) FROM vehicles) as vehicles,
     (SELECT COUNT(*) FROM vehicle_images) as images,
@@ -546,55 +546,55 @@ SELECT
 -- Query para construir un dashboard de estado
 
 WITH stats AS (
-    SELECT 
+    SELECT
         'Catalogs' as category,
         (SELECT COUNT(*) FROM catalog_makes) as expected,
         (SELECT COUNT(*) FROM catalog_makes) as actual,
         CASE WHEN (SELECT COUNT(*) FROM catalog_makes) = 10 THEN '✅' ELSE '❌' END as status
     UNION ALL
-    SELECT 
+    SELECT
         'Models',
         60,
         (SELECT COUNT(*) FROM catalog_models),
         CASE WHEN (SELECT COUNT(*) FROM catalog_models) >= 60 THEN '✅' ELSE '❌' END
     UNION ALL
-    SELECT 
+    SELECT
         'Users',
         42,
         (SELECT COUNT(*) FROM users),
         CASE WHEN (SELECT COUNT(*) FROM users) = 42 THEN '✅' ELSE '❌' END
     UNION ALL
-    SELECT 
+    SELECT
         'Vehicles',
         150,
         (SELECT COUNT(*) FROM vehicles),
         CASE WHEN (SELECT COUNT(*) FROM vehicles) = 150 THEN '✅' ELSE '❌' END
     UNION ALL
-    SELECT 
+    SELECT
         'Images',
         1500,
         (SELECT COUNT(*) FROM vehicle_images),
         CASE WHEN (SELECT COUNT(*) FROM vehicle_images) = 1500 THEN '✅' ELSE '❌' END
     UNION ALL
-    SELECT 
+    SELECT
         'Favorites',
         50,
         (SELECT COUNT(*) FROM favorites),
         CASE WHEN (SELECT COUNT(*) FROM favorites) >= 50 THEN '✅' ELSE '❌' END
     UNION ALL
-    SELECT 
+    SELECT
         'Alerts',
         15,
         (SELECT COUNT(*) FROM price_alerts),
         CASE WHEN (SELECT COUNT(*) FROM price_alerts) >= 15 THEN '✅' ELSE '❌' END
     UNION ALL
-    SELECT 
+    SELECT
         'Reviews',
         150,
         (SELECT COUNT(*) FROM dealer_reviews),
         CASE WHEN (SELECT COUNT(*) FROM dealer_reviews) >= 150 THEN '✅' ELSE '❌' END
 )
-SELECT 
+SELECT
     category,
     expected,
     actual,
@@ -654,4 +654,3 @@ WHERE d."Id" NOT IN (SELECT DISTINCT "DealerId" FROM dealer_locations);
 ---
 
 **Ejecuta estas queries después de completar el seeding para validar que todo se generó correctamente** ✅
-
