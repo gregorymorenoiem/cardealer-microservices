@@ -3,6 +3,7 @@ using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Persistence;
 using VehiclesSaleService.Infrastructure.Repositories;
 using VehiclesSaleService.Infrastructure.Messaging;
+using VehiclesSaleService.Infrastructure.Seeding;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.MultiTenancy;
@@ -76,6 +77,9 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IVehicleCatalogRepository, VehicleCatalogRepository>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+
+// Seeding Service
+builder.Services.AddScoped<DatabaseSeedingService>();
 
 // RabbitMQ Event Publisher
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
