@@ -9,6 +9,7 @@
 ## 📚 Documentos Creados
 
 ### 1. **SEEDING_INTEGRATION_GUIDE.md**
+
 - **Tipo:** Guía de Arquitectura
 - **Contenido:**
   - 📐 Flujo de 5 fases
@@ -22,6 +23,7 @@
 ---
 
 ### 2. **SEEDING_EXECUTION.md**
+
 - **Tipo:** Guía de Ejecución Paso a Paso
 - **Contenido:**
   - ⏱️ Tiempo total: ~85 minutos
@@ -76,11 +78,13 @@ TOTAL: 80 MINUTOS
 ### El Cambio Importante
 
 **ANTES (Incorrecto):**
+
 - Intentar subir imágenes directamente en VehiclesSaleService
 - Problema: Violación de arquitectura de microservicios
 - Resultado: ❌ No funciona
 
 **AHORA (Correcto):**
+
 - MediaService es el responsable de TODAS las imágenes
 - VehiclesSaleService solo almacena referencias (mediaIds)
 - Imagen principal, galería, datos: TODO en MediaService
@@ -90,7 +94,7 @@ TOTAL: 80 MINUTOS
 
 ```
 1. Crear vehículo (SIN imágenes)
-   POST /api/vehicles 
+   POST /api/vehicles
    {title, price, year, ..., images: []}
 
 2. Subir imágenes a MediaService
@@ -110,12 +114,14 @@ TOTAL: 80 MINUTOS
 ## 📝 Scripts Listos para Usar
 
 ### Script 1: seeding-vehicles.sh
+
 - **Ubicación:** `/cardealer-microservices/seeding-vehicles.sh`
 - **Función:** Crear 150 vehículos vía API
 - **Tiempo:** 30 minutos
 - **Uso:** `./seeding-vehicles.sh`
 
 ### Script 2: seeding-images.sh
+
 - **Ubicación:** `/cardealer-microservices/seeding-images.sh`
 - **Función:** Subir 1,500 imágenes a MediaService
 - **Tiempo:** 45 minutos
@@ -123,6 +129,7 @@ TOTAL: 80 MINUTOS
 - **Fuente de imágenes:** picsum.photos (random)
 
 ### Script 3: seed_catalog.sql
+
 - **Ubicación:** `/cardealer-microservices/scripts/seed_catalog.sql`
 - **Función:** Crear catálogo (marcas, modelos, trims)
 - **Tiempo:** 3 minutos
@@ -154,18 +161,21 @@ docker exec postgres_db psql -U postgres -d mediaservice \
 ## 🎯 Próximos Pasos
 
 ### Ahora (Está Listo)
+
 ✅ Documentación completa  
 ✅ Arquitectura definida  
 ✅ Scripts escritos  
 ✅ Ejecutar: Siga `SEEDING_EXECUTION.md`
 
 ### Después (Ejecutar)
+
 ⏳ Ejecutar Fase 1: SQL Catálogo (3 min)
 ⏳ Ejecutar Fase 2: Vehículos via API (30 min)
 ⏳ Ejecutar Fase 3: Imágenes via MediaService (45 min)
 ⏳ Ejecutar Fase 5: Homepage Sections (2 min)
 
 ### Finalmente (Validar)
+
 ⏳ Verificación completa
 ⏳ Frontend testing con datos reales
 ⏳ 150 vehículos + 1,500 imágenes listos
@@ -174,17 +184,17 @@ docker exec postgres_db psql -U postgres -d mediaservice \
 
 ## 📊 Estadísticas Finales
 
-| Elemento | Cantidad | Fuente |
-|----------|----------|--------|
-| **Marcas** | 20 | SQL (Fase 1) |
-| **Modelos** | 35+ | SQL (Fase 1) |
-| **Trims** | 100+ | SQL (Fase 1) |
-| **Vehículos** | 150 | API (Fase 2) |
-| **Imágenes** | 1,500 | MediaService (Fase 3) |
-| **Homepage Secciones** | 8 | SQL (Fase 5) |
-| **Asignaciones** | 90 | SQL (Fase 5) |
-| **Usuarios Dealers** | TBD | Admin panel |
-| **Tiempo Total** | ~85 min | Ejecución |
+| Elemento               | Cantidad | Fuente                |
+| ---------------------- | -------- | --------------------- |
+| **Marcas**             | 20       | SQL (Fase 1)          |
+| **Modelos**            | 35+      | SQL (Fase 1)          |
+| **Trims**              | 100+     | SQL (Fase 1)          |
+| **Vehículos**          | 150      | API (Fase 2)          |
+| **Imágenes**           | 1,500    | MediaService (Fase 3) |
+| **Homepage Secciones** | 8        | SQL (Fase 5)          |
+| **Asignaciones**       | 90       | SQL (Fase 5)          |
+| **Usuarios Dealers**   | TBD      | Admin panel           |
+| **Tiempo Total**       | ~85 min  | Ejecución             |
 
 ---
 
@@ -203,17 +213,20 @@ docker exec postgres_db psql -U postgres -d mediaservice \
 ## 💡 Notas Importantes
 
 ### MediaService es Crítico
+
 - ⭐ MediaService maneja TODAS las imágenes
 - 🔗 VehiclesSaleService solo guarda referencias
 - 📦 Separación limpia de responsabilidades
 - 🚀 Escalable (puede crecer independientemente)
 
 ### Verificación es Obligatoria
+
 - ✅ Siempre verificar con SQL después de cada fase
 - ✅ Antes de pasar a siguiente fase
 - ✅ Números exactos: 20, 35, 100, 150, 1500
 
 ### Troubleshooting
+
 - 🔧 Revisar `SEEDING_EXECUTION.md` sección "Troubleshooting"
 - 🔧 Verificar logs: `docker logs {service}`
 - 🔧 Verificar conectividad: `curl http://localhost:{port}/health`
