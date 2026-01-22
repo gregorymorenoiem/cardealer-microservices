@@ -23,7 +23,7 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg => 
-    cfg.RegisterServicesFromAssemblyContaining<Application.DTOs.InventoryItemDto>());
+    cfg.RegisterServicesFromAssemblyContaining<InventoryManagementService.Application.DTOs.InventoryItemDto>());
 
 // Repositories
 builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();

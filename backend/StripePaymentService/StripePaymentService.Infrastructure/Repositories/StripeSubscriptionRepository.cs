@@ -36,7 +36,7 @@ public class StripeSubscriptionRepository : IStripeSubscriptionRepository
     public async Task<List<StripeSubscription>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         return await _context.Subscriptions
-            .Where(x => x.CustomerId == customerId)
+            .Where(x => x.StripeCustomerId == customerId)
             .Include(x => x.Invoices)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -60,37 +60,47 @@ public class StripeSubscriptionRepository : IStripeSubscriptionRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<decimal> CalculateMrrAsync(CancellationToken cancellationToken = default)
+    public async Task<decimal> GetMRRAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Subscriptions
             .Where(x => x.Status == "active")
             .SumAsync(x => x.Amount, cancellationToken);
     }
 
-    public async Task<bool> CancelAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<int> GetActiveCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Subscriptions
+            .Where(x => x.Status == "active")
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<StripeSubscription> CancelAsync(Guid id, string? reason = null, CancellationToken cancellationToken = default)
     {
         var subscription = await GetByIdAsync(id, cancellationToken);
         if (subscription == null)
-            return false;
+            throw new InvalidOperationException($"Subscription with ID {id} not found");
 
         subscription.Status = "canceled";
         subscription.CanceledAt = DateTime.UtcNow;
         subscription.UpdatedAt = DateTime.UtcNow;
+        if (!string.IsNullOrEmpty(reason))
+            subscription.CancellationReason = reason;
 
-        await UpdateAsync(subscription, cancellationToken);
-        return true;
+        return await UpdateAsync(subscription, cancellationToken);
     }
 
-    public async Task CreateAsync(StripeSubscription entity, CancellationToken cancellationToken = default)
+    public async Task<StripeSubscription> CreateAsync(StripeSubscription entity, CancellationToken cancellationToken = default)
     {
         await _context.Subscriptions.AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        return entity;
     }
 
-    public async Task UpdateAsync(StripeSubscription entity, CancellationToken cancellationToken = default)
+    public async Task<StripeSubscription> UpdateAsync(StripeSubscription entity, CancellationToken cancellationToken = default)
     {
         _context.Subscriptions.Update(entity);
         await _context.SaveChangesAsync(cancellationToken);
+        return entity;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)

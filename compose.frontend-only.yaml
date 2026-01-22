@@ -1,0 +1,3419 @@
+# ============================================================================
+# COMPOSE.YAML - SOLO MICROSERVICIOS REQUERIDOS POR FRONTEND
+# ============================================================================
+#
+# Este archivo levanta SOLO los servicios necesarios para que el frontend
+# funcione completamente:
+#
+# 🔴 CRÍTICOS (4):
+#   - AuthService (15001)
+#   - VehiclesSaleService (15010)
+#   - MediaService (15020)
+#   - Gateway (18443)
+#
+# 🟠 IMPORTANTES (6):
+#   - UserService (15002)
+#   - ContactService (15003)
+#   - NotificationService (15005)
+#   - AdminService (15007)
+#   - ErrorService (5080) - Manejo centralizado de errores
+#   - EventTrackingService (5050) - Analytics y tracking de eventos
+#
+# 🔵 INFRAESTRUCTURA (4):
+#   - PostgreSQL (5433)
+#   - RabbitMQ (5672, 15672)
+#   - Redis (6379)
+#   - Consul (8500)
+#
+# 🔮 OBSERVABILIDAD - FASE 2 (2):
+#   - Seq (5341) - Logs centralizados (Serilog compatible)
+#   - Jaeger (16686, 4317) - Distributed tracing (OpenTelemetry)
+#
+# USAR:
+#   docker-compose -f compose.frontend-only.yaml up -d
+#
+# UIs DE OBSERVABILIDAD:
+#   - Seq UI: http://localhost:5341 (Logs)
+#   - Jaeger UI: http://localhost:16686 (Tracing)
+#   - RabbitMQ UI: http://localhost:15672 (Mensajería)
+#   - Consul UI: http://localhost:8500 (Service Discovery)
+#
+# ============================================================================
+
+services:
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔵 INFRAESTRUCTURA
+  # ──────────────────────────────────────────────────────────────────────
+
+  # PostgreSQL - Base de datos consolidada
+  postgres_db:
+    image: postgres:16
+    container_name: postgres_db
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+        reservations:
+          memory: 512M
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ - Message broker
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # Redis - Caché distribuido
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    ports:
+      - "6379:6379"
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+  # Consul - Service discovery
+  consul:
+    image: hashicorp/consul:1.17
+    container_name: consul
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          memory: 128M
+    ports:
+      - "8500:8500" # HTTP API
+      - "8600:8600/udp" # DNS
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    environment:
+      CONSUL_BIND_INTERFACE: eth0
+    networks:
+      - cargurus-net
+    volumes:
+      - consul_data:/consul/data
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ──────────────────────────────────────────────────────────────────────
+  # � OBSERVABILIDAD (FASE 2)
+  # ──────────────────────────────────────────────────────────────────────
+
+  # Seq - Centralized Logging UI (Serilog compatible)
+  seq:
+    image: datalust/seq:2024.1
+    container_name: seq
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:80" # Web UI + Ingestion
+      - "5342:5341" # API / Ingestion endpoint
+    networks:
+      - cargurus-net
+    volumes:
+      - seq_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "[ -f /data/Documents/metastore.flare ] && exit 0 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Jaeger - Distributed Tracing (OpenTelemetry compatible)
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: jaeger
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686" # Web UI
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+      - "14268:14268" # Jaeger HTTP receiver
+      - "14250:14250" # Jaeger gRPC receiver
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # �🔴 MICROSERVICIOS CRÍTICOS
+  # ──────────────────────────────────────────────────────────────────────
+
+  # AuthService - Puerto 5001 (Autenticación JWT)
+  authservice:
+    build:
+      context: ./backend
+      dockerfile: AuthService/AuthService.Api/Dockerfile.dev
+    container_name: authservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=authservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+      # FASE 2: Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+      Observability__Prometheus__Enabled: "true"
+      ErrorHandling__PublishToErrorService: "true"
+    ports:
+      - "15001:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/AuthService:/app/AuthService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
+      - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
+      - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # VehiclesSaleService - Puerto 5010 (CRUD vehículos)
+  vehiclessaleservice:
+    build:
+      context: ./backend
+      dockerfile: VehiclesSaleService/VehiclesSaleService.Api/Dockerfile.dev
+    container_name: vehiclessaleservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 384M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=vehiclessaleservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+      # FASE 2: Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+      Observability__Prometheus__Enabled: "true"
+      ErrorHandling__PublishToErrorService: "true"
+    ports:
+      - "15010:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      authservice:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    # Usar command para forzar rebuild dentro del contenedor
+    command:
+      [
+        "dotnet",
+        "watch",
+        "run",
+        "--project",
+        "/app/VehiclesSaleService/VehiclesSaleService.Api/VehiclesSaleService.Api.csproj",
+      ]
+    volumes:
+      - ./backend/VehiclesSaleService:/app/VehiclesSaleService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
+      - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
+      - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+      # Volúmenes anónimos para excluir bin/obj de macOS
+      - /app/VehiclesSaleService/VehiclesSaleService.Api/bin
+      - /app/VehiclesSaleService/VehiclesSaleService.Api/obj
+      - /app/VehiclesSaleService/VehiclesSaleService.Domain/bin
+      - /app/VehiclesSaleService/VehiclesSaleService.Domain/obj
+      - /app/VehiclesSaleService/VehiclesSaleService.Application/bin
+      - /app/VehiclesSaleService/VehiclesSaleService.Application/obj
+      - /app/VehiclesSaleService/VehiclesSaleService.Infrastructure/bin
+      - /app/VehiclesSaleService/VehiclesSaleService.Infrastructure/obj
+      - /app/VehiclesSaleService/VehiclesSaleService.Shared/bin
+      - /app/VehiclesSaleService/VehiclesSaleService.Shared/obj
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # MediaService - Puerto 5020 (Gestión de imágenes)
+  mediaservice:
+    build:
+      context: ./backend
+      dockerfile: MediaService/MediaService.Api/Dockerfile.dev
+    container_name: mediaservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=mediaservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+      # S3 Configuration (Local MinIO o AWS)
+      S3__Endpoint: "${S3_ENDPOINT:-http://localhost:9000}"
+      S3__AccessKey: "${S3_ACCESS_KEY:-minioadmin}"
+      S3__SecretKey: "${S3_SECRET_KEY:-minioadmin}"
+      S3__BucketName: "${S3_BUCKET:-okla}"
+    ports:
+      - "15020:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      authservice:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/MediaService:/app/MediaService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🟠 MICROSERVICIOS IMPORTANTES
+  # ──────────────────────────────────────────────────────────────────────
+
+  # UserService - Puerto 5002 (Gestión de usuarios y perfiles)
+  userservice:
+    build:
+      context: ./backend
+      dockerfile: UserService/UserService.Api/Dockerfile.dev
+    container_name: userservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=userservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+      # FASE 2: Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+      Observability__Prometheus__Enabled: "true"
+      ErrorHandling__PublishToErrorService: "true"
+    ports:
+      - "15002:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/UserService:/app/UserService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
+      - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
+      - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+      - ./backend/ServiceDiscovery:/app/ServiceDiscovery
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ContactService - Puerto 5003 (Mensajería entre usuarios)
+  contactservice:
+    build:
+      context: ./backend
+      dockerfile: ContactService/ContactService.Api/Dockerfile.dev
+    container_name: contactservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15003:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    # Sin volúmenes para usar código del build
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # NotificationService - Puerto 5005 (Email/SMS/Push)
+  notificationservice:
+    build:
+      context: ./backend
+      dockerfile: NotificationService/NotificationService.Api/Dockerfile.dev
+    container_name: notificationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=notificationservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15005:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/NotificationService:/app/NotificationService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AdminService - Puerto 5007 (Panel de administración)
+  adminservice:
+    build:
+      context: ./backend
+      dockerfile: AdminService/AdminService.Api/Dockerfile.dev
+    container_name: adminservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=adminservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15007:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/AdminService:/app/AdminService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔐 SERVICIOS ADICIONALES PARA FRONTEND
+  # ──────────────────────────────────────────────────────────────────────
+
+  # ErrorService - Puerto 5080 (Manejo centralizado de errores)
+  errorservice:
+    image: ${DOCKER_REGISTRY-}errorservice:latest
+    build:
+      context: ./backend
+      dockerfile: ErrorService/Dockerfile
+    container_name: errorservice
+    restart: on-failure:3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=errorservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Enabled: "false"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+      # Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+    ports:
+      - "5080:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # EventTrackingService - Puerto 5050 (Analytics y tracking de eventos)
+  eventtrackingservice:
+    build:
+      context: ./backend
+      dockerfile: EventTrackingService/EventTrackingService.Api/Dockerfile.dev
+    container_name: eventtrackingservice
+    restart: on-failure:3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=eventtrackingservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+      # Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+      ErrorHandling__PublishToErrorService: "true"
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      errorservice:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/EventTrackingService:/app/EventTrackingService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # RoleService - Puerto 15101 (Roles y Permisos)
+  roleservice:
+    build:
+      context: ./backend
+      dockerfile: RoleService/RoleService.Api/Dockerfile.dev
+    container_name: roleservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=roleservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15101:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/RoleService:/app/RoleService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # BillingService - Puerto 15107 (Facturación y Pagos)
+  billingservice:
+    build:
+      context: ./backend
+      dockerfile: BillingService/BillingService.Api/Dockerfile.dev
+    container_name: billingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "billingservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Redis__Connection: "redis:6379"
+      Idempotency__Enabled: "true"
+      Idempotency__DefaultTtlSeconds: "86400"
+      Idempotency__ProcessingTimeoutSeconds: "120"
+      Stripe__ApiKey: "${STRIPE_API_KEY:-sk_test_placeholder}"
+      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}"
+      # FASE 2: Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+      Observability__Prometheus__Enabled: "true"
+      ErrorHandling__PublishToErrorService: "true"
+    ports:
+      - "15107:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/BillingService:/app/BillingService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
+      - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
+      - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # DealerManagementService - Puerto 15039 (Gestión de Dealers)
+  dealermanagementservice:
+    build:
+      context: ./backend
+      dockerfile: DealerManagementService/DealerManagementService.Api/Dockerfile.dev
+    container_name: dealermanagementservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "dealermanagementservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15039:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/DealerManagementService:/app/DealerManagementService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # DealerAnalyticsService - Puerto 15041 (Analíticas de Dealers)
+  dealeranalyticsservice:
+    build:
+      context: ./backend
+      dockerfile: DealerAnalyticsService/DealerAnalyticsService.Api/Dockerfile.dev
+    container_name: dealeranalyticsservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealeranalyticsservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15041:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/DealerAnalyticsService:/app/DealerAnalyticsService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # CRMService - Puerto 15106 (CRM y Leads)
+  crmservice:
+    build:
+      context: ./backend
+      dockerfile: CRMService/CRMService.Api/Dockerfile.dev
+    container_name: crmservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=crmservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15106:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/CRMService:/app/CRMService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SearchService - Puerto 15093 (Búsqueda)
+  searchservice:
+    build:
+      context: ./backend
+      dockerfile: SearchService/SearchService.Api/Dockerfile.dev
+    container_name: searchservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=searchservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15093:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/SearchService:/app/SearchService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AlertService - Puerto 5067 (Alertas de Precios)
+  alertservice:
+    build:
+      context: ./backend
+      dockerfile: AlertService/AlertService.Api/Dockerfile.dev
+    container_name: alertservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "alertservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5067:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/AlertService:/app/AlertService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MaintenanceService - Puerto 5061 (Mantenimiento del Sistema)
+  maintenanceservice:
+    build:
+      context: ./backend
+      dockerfile: MaintenanceService/MaintenanceService.Api/Dockerfile.dev
+    container_name: maintenanceservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "maintenanceservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5061:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/MaintenanceService:/app/MaintenanceService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ComparisonService - Puerto 5066 (Comparación de Vehículos)
+  comparisonservice:
+    build:
+      context: ./backend
+      dockerfile: ComparisonService/ComparisonService.Api/Dockerfile.dev
+    container_name: comparisonservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "comparisonservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5066:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/ComparisonService:/app/ComparisonService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ReviewService - Puerto 5059 (Reseñas)
+  reviewservice:
+    build:
+      context: ./backend
+      dockerfile: ReviewService/ReviewService.Api/Dockerfile.dev
+    container_name: reviewservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Kestrel__Endpoints__Http__Url: "http://+:80"
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "reviewservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5059:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/ReviewService:/app/ReviewService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FinanceService - Puerto 15108 (Financiamiento)
+  financeservice:
+    build:
+      context: ./backend
+      dockerfile: FinanceService/FinanceService.Api/Dockerfile.dev
+    container_name: financeservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=financeservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "financeservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=financeservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15108:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/FinanceService:/app/FinanceService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FeatureToggleService - Puerto 15102 (Feature Flags)
+  featuretoggleservice:
+    build:
+      context: ./backend
+      dockerfile: FeatureToggleService/FeatureToggleService.Api/Dockerfile.dev
+    container_name: featuretoggleservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=featuretoggleservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "featuretoggleservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featuretoggleservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15102:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/FeatureToggleService:/app/FeatureToggleService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ReportsService - Puerto 15110 (Reportes)
+  reportsservice:
+    build:
+      context: ./backend
+      dockerfile: ReportsService/ReportsService.Api/Dockerfile.dev
+    container_name: reportsservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "reportsservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15110:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/ReportsService:/app/ReportsService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SchedulerService - Puerto 15111 (Tareas Programadas)
+  schedulerservice:
+    build:
+      context: ./backend
+      dockerfile: SchedulerService/SchedulerService.Api/Dockerfile.dev
+    container_name: schedulerservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "schedulerservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15111:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/SchedulerService:/app/SchedulerService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AuditService - Puerto 15112 (Auditoría)
+  auditservice:
+    build:
+      context: ./backend
+      dockerfile: AuditService/AuditService.Api/Dockerfile.dev
+    container_name: auditservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "auditservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15112:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/AuditService:/app/AuditService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🗄️ CACHE SERVICE (Redis wrapper)
+  # ──────────────────────────────────────────────────────────────────────
+
+  cacheservice:
+    build:
+      context: ./backend
+      dockerfile: CacheService/Dockerfile
+    container_name: cacheservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Redis__ConnectionString: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15120:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  #  APPOINTMENT SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  appointmentservice:
+    build:
+      context: ./backend
+      dockerfile: AppointmentService/Dockerfile
+    container_name: appointmentservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "appointmentservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=appointmentservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15122:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────────────
+  # 📦 INVENTORY MANAGEMENT SERVICE (FIXED ✅)
+  # ──────────────────────────────────────────────────────────────────────
+  inventorymanagementservice:
+    build:
+      context: ./backend
+      dockerfile: InventoryManagementService/Dockerfile
+    container_name: inventorymanagementservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "inventorymanagementservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=inventorymanagementservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15149:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🧾 INVOICING SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  invoicingservice:
+    build:
+      context: ./backend
+      dockerfile: InvoicingService/Dockerfile
+    container_name: invoicingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "invoicingservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=invoicingservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15124:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 📢 MARKETING SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  marketingservice:
+    build:
+      context: ./backend
+      dockerfile: MarketingService/Dockerfile
+    container_name: marketingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "marketingservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=marketingservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15125:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🤖 RECOMMENDATION SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  recommendationservice:
+    build:
+      context: ./backend
+      dockerfile: RecommendationService/Dockerfile
+    container_name: recommendationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "recommendationservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recommendationservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+    ports:
+      - "15126:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🏥 HEALTH CHECK SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  healthcheckservice:
+    build:
+      context: ./backend
+      dockerfile: HealthCheckService/Dockerfile
+    container_name: healthcheckservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15127:80"
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🚦 RATE LIMITING SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  ratelimitingservice:
+    build:
+      context: ./backend
+      dockerfile: RateLimitingService/Dockerfile
+    container_name: ratelimitingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "ratelimitingservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=ratelimitingservice;Username=postgres;Password=password"
+      Redis__ConnectionString: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15128:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🚗 VEHICLE INTELLIGENCE SERVICE (FIXED ✅)
+  # ──────────────────────────────────────────────────────────────────────
+  vehicleintelligenceservice:
+    build:
+      context: ./backend
+      dockerfile: VehicleIntelligenceService/Dockerfile
+    container_name: vehicleintelligenceservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "vehicleintelligenceservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehicleintelligenceservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15147:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 👤 USER BEHAVIOR SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  userbehaviorservice:
+    build:
+      context: ./backend
+      dockerfile: UserBehaviorService/Dockerfile
+    container_name: userbehaviorservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "userbehaviorservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=userbehaviorservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15130:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔍 TRACING SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  tracingservice:
+    build:
+      context: ./backend
+      dockerfile: TracingService/Dockerfile
+    container_name: tracingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15131:80"
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 📝 LOGGING SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  loggingservice:
+    build:
+      context: ./backend
+      dockerfile: LoggingService/Dockerfile
+    container_name: loggingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "loggingservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=loggingservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15132:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 💾 BACKUP DR SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  backupdrservice:
+    build:
+      context: ./backend
+      dockerfile: BackupDRService/Dockerfile
+    container_name: backupdrservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "backupdrservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=backupdrservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15133:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ⚙️ CONFIGURATION SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  configurationservice:
+    build:
+      context: ./backend
+      dockerfile: ConfigurationService/Dockerfile
+    container_name: configurationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "configurationservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=configurationservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15134:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔗 INTEGRATION SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  integrationservice:
+    build:
+      context: ./backend
+      dockerfile: IntegrationService/Dockerfile
+    container_name: integrationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "integrationservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=integrationservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15135:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔑 IDEMPOTENCY SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  idempotencyservice:
+    build:
+      context: ./backend
+      dockerfile: IdempotencyService/Dockerfile
+    container_name: idempotencyservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Redis__ConnectionString: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15136:80"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 📨 MESSAGE BUS SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  messagebusservice:
+    build:
+      context: ./backend
+      dockerfile: MessageBusService/Dockerfile
+    container_name: messagebusservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "messagebusservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=messagebusservice;Username=postgres;Password=password"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15137:80"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 📁 FILE STORAGE SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  filestorageservice:
+    build:
+      context: ./backend
+      dockerfile: FileStorageService/Dockerfile
+    container_name: filestorageservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5012
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "filestorageservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=filestorageservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15138:5012"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:5012/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🚐 VEHICLES RENT SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  # ⚠️ DISABLED - VehiclesRentService has 4 compilation errors (DriveType ambiguity, Transmission missing)
+  # vehiclesrentservice:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: VehiclesRentService/Dockerfile
+  #   container_name: vehiclesrentservice
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #       reservations:
+  #         memory: 256M
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ASPNETCORE_URLS: http://+:80
+  #     DATABASE_HOST: "postgres_db"
+  #     DATABASE_PORT: "5432"
+  #     DATABASE_NAME: "vehiclesrentservice"
+  #     DATABASE_USER: "postgres"
+  #     DATABASE_PASSWORD: "password"
+  #     ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehiclesrentservice;Username=postgres;Password=password"
+  #     Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+  #     RabbitMQ__Host: "rabbitmq"
+  #     RabbitMQ__Port: "5672"
+  #   ports:
+  #     - "15139:80"
+  #   depends_on:
+  #     postgres_db:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - cargurus-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🏠 PROPERTIES SALE SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  # ⚠️ DISABLED - PropertiesSaleService has 14 compilation errors (Property entity mismatches)
+  # propertiessaleservice:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: PropertiesSaleService/Dockerfile
+  #   container_name: propertiessaleservice
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #       reservations:
+  #         memory: 256M
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ASPNETCORE_URLS: http://+:80
+  #     DATABASE_HOST: "postgres_db"
+  #     DATABASE_PORT: "5432"
+  #     DATABASE_NAME: "propertiessaleservice"
+  #     DATABASE_USER: "postgres"
+  #     DATABASE_PASSWORD: "password"
+  #     ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=propertiessaleservice;Username=postgres;Password=password"
+  #     Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+  #     RabbitMQ__Host: "rabbitmq"
+  #     RabbitMQ__Port: "5672"
+  #   ports:
+  #     - "15140:80"
+  #   depends_on:
+  #     postgres_db:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - cargurus-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🏡 PROPERTIES RENT SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  # ⚠️ DISABLED - PropertiesRentService has 11 compilation errors (Property entity mismatches)
+  # propertiesrentservice:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: PropertiesRentService/Dockerfile
+  #   container_name: propertiesrentservice
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #       reservations:
+  #         memory: 256M
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ASPNETCORE_URLS: http://+:80
+  #     DATABASE_HOST: "postgres_db"
+  #     DATABASE_PORT: "5432"
+  #     DATABASE_NAME: "propertiesrentservice"
+  #     DATABASE_USER: "postgres"
+  #     DATABASE_PASSWORD: "password"
+  #     ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=propertiesrentservice;Username=postgres;Password=password"
+  #     Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+  #     RabbitMQ__Host: "rabbitmq"
+  #     RabbitMQ__Port: "5672"
+  #   ports:
+  #     - "15141:80"
+  #   depends_on:
+  #     postgres_db:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - cargurus-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🏢 REAL ESTATE SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  realestateservice:
+    build:
+      context: ./backend
+      dockerfile: RealEstateService/RealEstateService.Api/Dockerfile.dev
+    container_name: realestateservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "realestateservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=realestateservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15142:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🤖 CHATBOT SERVICE (FIXED ✅)
+  # ──────────────────────────────────────────────────────────────────────
+  chatbotservice:
+    build:
+      context: ./backend
+      dockerfile: ChatbotService/Dockerfile
+    container_name: chatbotservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "chatbotservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=chatbotservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      OpenAI__ApiKey: "${OPENAI_API_KEY:-sk-placeholder}"
+    ports:
+      - "15148:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 💳 STRIPE PAYMENT SERVICE (FIXED ✅)
+  # ──────────────────────────────────────────────────────────────────────
+  stripepaymentservice:
+    build:
+      context: ./backend
+      dockerfile: StripePaymentService/Dockerfile
+    container_name: stripepaymentservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "stripepaymentservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=stripepaymentservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Stripe__SecretKey: "${STRIPE_SECRET_KEY:-sk_test_placeholder}"
+      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}"
+      Redis__ConnectionString: "redis:6379"
+      Idempotency__DefaultTTLSeconds: "86400"
+      Idempotency__ProcessingTimeoutSeconds: "120"
+    ports:
+      - "15144:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 💳 AZUL PAYMENT SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  azulpaymentservice:
+    build:
+      context: ./backend
+      dockerfile: AzulPaymentService/Dockerfile
+    container_name: azulpaymentservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "azulpaymentservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=azulpaymentservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Azul__MerchantId: "${AZUL_MERCHANT_ID:-placeholder}"
+      Azul__AuthKey: "${AZUL_AUTH_KEY:-placeholder}"
+      Redis__ConnectionString: "redis:6379"
+      Idempotency__DefaultTTLSeconds: "86400"
+      Idempotency__ProcessingTimeoutSeconds: "120"
+    ports:
+      - "15145:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 📚 API DOCS SERVICE
+  # ──────────────────────────────────────────────────────────────────────
+
+  apidocsservice:
+    build:
+      context: ./backend
+      dockerfile: ApiDocsService/Dockerfile
+    container_name: apidocsservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+    ports:
+      - "15146:80"
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🌐 API GATEWAY (Ocelot)
+  # ──────────────────────────────────────────────────────────────────────
+
+  # Gateway - Puerto 18443 (Enrutamiento y JWT validation)
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: Gateway/Gateway.Api/Dockerfile.dev
+    container_name: gateway
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      Redis__Host: "redis:6379"
+      Redis__Connection: "redis:6379"
+      RateLimiting__Enabled: "true"
+      RateLimiting__DefaultLimit: "100"
+      RateLimiting__DefaultWindowSeconds: "60"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__User: "guest"
+      RabbitMQ__Password: "guest"
+      Consul__Host: "http://consul:8500"
+      # FASE 2: Observability
+      Logging__Seq__ServerUrl: "http://seq:80"
+      Observability__Otlp__Endpoint: "http://jaeger:4317"
+      Observability__SamplingRatio: "1.0"
+      Observability__Prometheus__Enabled: "true"
+      ErrorHandling__PublishToErrorService: "true"
+    ports:
+      - "18443:80"
+    depends_on:
+      authservice:
+        condition: service_healthy
+      vehiclessaleservice:
+        condition: service_healthy
+      mediaservice:
+        condition: service_healthy
+      userservice:
+        condition: service_healthy
+      contactservice:
+        condition: service_healthy
+      notificationservice:
+        condition: service_healthy
+      adminservice:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/Gateway:/app/Gateway
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
+      - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
+      - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+      - ./backend/_Shared/CarDealer.Shared.RateLimiting:/app/_Shared/CarDealer.Shared.RateLimiting
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔒 COMPLIANCE & LEGAL SERVICES
+  # ──────────────────────────────────────────────────────────────────────
+
+  # KYCService - Puerto 15150 (Know Your Customer - Verificación de Identidad)
+  kycservice:
+    build:
+      context: ./backend
+      dockerfile: KYCService/KYCService.Api/Dockerfile.dev
+    container_name: kycservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "kycservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15150:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ComplianceService - Puerto 15151 (Cumplimiento Regulatorio General)
+  complianceservice:
+    build:
+      context: ./backend
+      dockerfile: ComplianceService/ComplianceService.Api/Dockerfile.dev
+    container_name: complianceservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "complianceservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15151:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # EscrowService - Puerto 15152 (Pagos en Custodia)
+  escrowservice:
+    build:
+      context: ./backend
+      dockerfile: EscrowService/EscrowService.Api/Dockerfile.dev
+    container_name: escrowservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "escrowservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=escrowservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15152:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ContractService - Puerto 15153 (Gestión de Contratos)
+  contractservice:
+    build:
+      context: ./backend
+      dockerfile: ContractService/ContractService.Api/Dockerfile.dev
+    container_name: contractservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "contractservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contractservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15153:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # LegalDocumentService - Puerto 15154 (Documentos Legales)
+  legaldocumentservice:
+    build:
+      context: ./backend
+      dockerfile: LegalDocumentService/LegalDocumentService.Api/Dockerfile.dev
+    container_name: legaldocumentservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "legaldocumentservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=legaldocumentservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15154:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # DisputeService - Puerto 15155 (Gestión de Disputas)
+  disputeservice:
+    build:
+      context: ./backend
+      dockerfile: DisputeService/DisputeService.Api/Dockerfile.dev
+    container_name: disputeservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "disputeservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=disputeservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15155:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🧠 DATA & ML SERVICES
+  # ──────────────────────────────────────────────────────────────────────
+
+  # FeatureStoreService - Puerto 15156 (Feature Store para ML)
+  featurestoreservice:
+    build:
+      context: ./backend
+      dockerfile: FeatureStoreService/FeatureStoreService.Api/Dockerfile.dev
+    container_name: featurestoreservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "featurestoreservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featurestoreservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15156:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # LeadScoringService - Puerto 15157 (Scoring de Leads con IA)
+  leadscoringservice:
+    build:
+      context: ./backend
+      dockerfile: LeadScoringService/LeadScoringService.Api/Dockerfile.dev
+    container_name: leadscoringservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "leadscoringservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=leadscoringservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15157:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔗 INTEGRATION SERVICES
+  # ──────────────────────────────────────────────────────────────────────
+
+  # SpyneIntegrationService - Puerto 15158 (Integración con Spyne AI)
+  spyneintegrationservice:
+    build:
+      context: ./backend
+      dockerfile: SpyneIntegrationService/SpyneIntegrationService.Api/Dockerfile.dev
+    container_name: spyneintegrationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "spyneintegrationservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=spyneintegrationservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15158:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RegulatoryAlertService - Puerto 15159 (Alertas Regulatorias)
+  regulatoryalertservice:
+    build:
+      context: ./backend
+      dockerfile: RegulatoryAlertService/RegulatoryAlertService.Api/Dockerfile.dev
+    container_name: regulatoryalertservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "regulatoryalertservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=regulatoryalertservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15159:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ComplianceIntegrationService - Puerto 15160 (Integraciones de Compliance)
+  complianceintegrationservice:
+    build:
+      context: ./backend
+      dockerfile: ComplianceIntegrationService/ComplianceIntegrationService.Api/Dockerfile.dev
+    container_name: complianceintegrationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "complianceintegrationservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceintegrationservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15160:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ReportingService - Puerto 15161 (Reportes Generales)
+  reportingservice:
+    build:
+      context: ./backend
+      dockerfile: ReportingService/ReportingService.Api/Dockerfile.dev
+    container_name: reportingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "reportingservice"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportingservice;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15161:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🌐 FRONTEND WEB (React + Vite)
+  # ──────────────────────────────────────────────────────────────────────
+
+  frontend-web:
+    build:
+      context: ./frontend/web
+      dockerfile: Dockerfile.dev
+    container_name: frontend-web
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          memory: 1G
+    ports:
+      - "3000:5173" # Vite dev server
+    volumes:
+      - ./frontend/web/src:/app/src
+      - ./frontend/web/public:/app/public
+    depends_on:
+      gateway:
+        condition: service_healthy
+      authservice:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=1536
+      - VITE_API_URL=http://localhost:18443
+      - VITE_AUTH_SERVICE_URL=http://localhost:15085/api
+      - VITE_GOOGLE_MAPS_KEY=AIzaSyBHYPOPdUI45VrntYnM173q19BYVQ7k4nY
+      - VITE_PRODUCT_SERVICE_URL=http://localhost:15006/api
+      - VITE_MEDIA_SERVICE_URL=http://localhost:15090/api
+      - VITE_USE_MOCK_AUTH=false
+      - VITE_ENABLE_MSW=false
+      - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-your-google-client-id}
+    restart: on-failure
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:5173'', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on(''error'', () => process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  cargurus-net:
+    driver: bridge
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+  consul_data:
+  # FASE 2: Observability volumes
+  seq_data:

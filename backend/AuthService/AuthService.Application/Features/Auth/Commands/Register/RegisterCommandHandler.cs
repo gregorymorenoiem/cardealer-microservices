@@ -83,12 +83,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         await _verificationTokenRepository.AddAsync(verificationToken);
 
         // CORRECCIÓN: Usar operador de supresión nula (!) ya que sabemos que no son nulos
+        // IMPORTANTE: Solo enviamos email de VERIFICACIÓN aquí
+        // El email de bienvenida se enviará DESPUÉS de que el usuario verifique su email
         await _notificationService.SendEmailConfirmationAsync(user.Email!, verificationToken.Token);
 
-        // Send welcome email
-        await _notificationService.SendWelcomeEmailAsync(user.Email!, user.UserName!);
-
-        // Publish UserRegisteredEvent
+        // Publish UserRegisteredEvent (para analytics/logging, NO para enviar welcome email)
         var userRegisteredEvent = new UserRegisteredEvent
         {
             UserId = Guid.Parse(user.Id),

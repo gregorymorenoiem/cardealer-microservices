@@ -24,6 +24,9 @@ public static class DependencyInjection
         // Secret Provider (reads from ENV vars and Docker secrets)
         services.AddSecretProvider();
         
+        // ✅ CRITICAL: Register NotificationSettings FIRST (required for IOptions<NotificationSettings>)
+        services.Configure<NotificationSettings>(configuration.GetSection("NotificationSettings"));
+        
         // Notification Secrets Configuration (overrides settings from secrets)
         services.AddNotificationSecretsConfiguration(configuration);
 
@@ -47,9 +50,14 @@ public static class DependencyInjection
         services.AddScoped<INotificationLogRepository, EfNotificationLogRepository>();
 
         // External Services (Domain Interfaces)
-        services.AddScoped<IEmailProvider, SendGridEmailService>();
+        // Resend for emails (replacing SendGrid)
+        services.AddHttpClient("Resend");
+        services.AddScoped<IEmailProvider, ResendEmailService>();
         services.AddScoped<ISmsProvider, TwilioSmsService>();
         services.AddScoped<IPushNotificationProvider, FirebasePushService>();
+        
+        // Email Service (adapter que usa IEmailProvider)
+        services.AddScoped<IEmailService, EmailService>();
         
         // Firebase Credential Provider
         services.AddSingleton<FirebaseCredentialProvider>();

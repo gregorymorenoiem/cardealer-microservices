@@ -1,0 +1,39 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Install dotnet-watch and tools
+RUN dotnet tool install --global dotnet-watch \
+    && export PATH="$PATH:/root/.dotnet/tools" \
+    && apt-get update \
+    && apt-get install -y curl
+
+WORKDIR /app
+
+# Copy project files - KYCService
+COPY KYCService/KYCService.Api/KYCService.Api.csproj ./KYCService/KYCService.Api/
+COPY KYCService/KYCService.Application/KYCService.Application.csproj ./KYCService/KYCService.Application/
+COPY KYCService/KYCService.Domain/KYCService.Domain.csproj ./KYCService/KYCService.Domain/
+COPY KYCService/KYCService.Infrastructure/KYCService.Infrastructure.csproj ./KYCService/KYCService.Infrastructure/
+
+# Copy shared project files
+COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
+
+# Restore packages
+RUN dotnet restore "KYCService/KYCService.Api/KYCService.Api.csproj"
+
+# Copy all source code
+COPY . .
+
+# Development environment variables
+ENV ASPNETCORE_ENVIRONMENT=Development \
+    ASPNETCORE_URLS="http://+:80" \
+    DOTNET_MSBUILD_CONFIGURATION=Debug \
+    DOTNET_BUILD_CONFIGURATION=Debug \
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    NUGET_XMLDOC_MODE=none
+
+# Expose HTTP port
+EXPOSE 80
+
+# Start with hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "KYCService/KYCService.Api/KYCService.Api.csproj", "--urls", "http://0.0.0.0:80", "--no-restore"]

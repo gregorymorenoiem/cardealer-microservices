@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 
 // ==========================================
 // INTERFACES & TYPES
@@ -108,12 +109,15 @@ class VehicleIntelligenceService {
 
     // Add auth token interceptor
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     });
+
+    // Add refresh token interceptor for automatic token refresh on 401
+    addRefreshTokenInterceptor(this.api);
   }
 
   // ==========================================

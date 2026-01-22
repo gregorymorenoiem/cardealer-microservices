@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Messaging;
+using VehiclesSaleService.Infrastructure.Persistence;
 using CarDealer.Contracts.Events.Vehicle;
 using Entities = VehiclesSaleService.Domain.Entities;
 
@@ -15,17 +17,20 @@ public class VehiclesController : ControllerBase
     private readonly ICategoryRepository _categoryRepository;
     private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<VehiclesController> _logger;
+    private readonly ApplicationDbContext _context;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
         ICategoryRepository categoryRepository,
         IEventPublisher eventPublisher,
-        ILogger<VehiclesController> logger)
+        ILogger<VehiclesController> logger,
+        ApplicationDbContext context)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
         _eventPublisher = eventPublisher;
         _logger = logger;
+        _context = context;
     }
 
     /// <summary>
@@ -314,6 +319,112 @@ public class VehiclesController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Add images to an existing vehicle
+    /// </summary>
+    [HttpPost("{id:guid}/images")]
+    public async Task<ActionResult<List<VehicleImage>>> AddImages(Guid id, [FromBody] AddVehicleImagesRequest request)
+    {
+        var vehicle = await _context.Vehicles
+            .Include(v => v.Images)
+            .FirstOrDefaultAsync(v => v.Id == id);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        var existingMaxOrder = vehicle.Images.Any() ? vehicle.Images.Max(i => i.SortOrder) : -1;
+        var addedImages = new List<VehicleImage>();
+
+        foreach (var imageDto in request.Images)
+        {
+            existingMaxOrder++;
+            var image = new VehicleImage
+            {
+                Id = Guid.NewGuid(),
+                VehicleId = id,
+                DealerId = vehicle.DealerId,
+                Url = imageDto.Url,
+                ThumbnailUrl = imageDto.ThumbnailUrl ?? imageDto.Url.Replace("/800/", "/200/").Replace("/600", "/150"),
+                Caption = imageDto.Caption,
+                ImageType = imageDto.ImageType ?? ImageType.Exterior,
+                SortOrder = imageDto.SortOrder ?? existingMaxOrder,
+                IsPrimary = imageDto.IsPrimary ?? (!vehicle.Images.Any() && existingMaxOrder == 0),
+                MimeType = imageDto.MimeType ?? "image/jpeg",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            vehicle.Images.Add(image);
+            addedImages.Add(image);
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Added {Count} images to vehicle {VehicleId}", addedImages.Count, id);
+
+        return Ok(addedImages);
+    }
+
+    /// <summary>
+    /// Bulk add images to multiple vehicles (for seeding)
+    /// </summary>
+    [HttpPost("bulk-images")]
+    public async Task<ActionResult<BulkAddImagesResponse>> BulkAddImages([FromBody] BulkAddVehicleImagesRequest request)
+    {
+        var vehicleIds = request.VehicleImages.Select(v => v.VehicleId).Distinct().ToList();
+        var vehicles = await _context.Vehicles
+            .Include(v => v.Images)
+            .Where(v => vehicleIds.Contains(v.Id))
+            .ToListAsync();
+
+        var vehicleDict = vehicles.ToDictionary(v => v.Id);
+        var totalAdded = 0;
+        var errors = new List<string>();
+
+        foreach (var vehicleImages in request.VehicleImages)
+        {
+            if (!vehicleDict.TryGetValue(vehicleImages.VehicleId, out var vehicle))
+            {
+                errors.Add($"Vehicle {vehicleImages.VehicleId} not found");
+                continue;
+            }
+
+            var existingMaxOrder = vehicle.Images.Any() ? vehicle.Images.Max(i => i.SortOrder) : -1;
+
+            foreach (var imageDto in vehicleImages.Images)
+            {
+                existingMaxOrder++;
+                var image = new VehicleImage
+                {
+                    Id = Guid.NewGuid(),
+                    VehicleId = vehicleImages.VehicleId,
+                    DealerId = vehicle.DealerId,
+                    Url = imageDto.Url,
+                    ThumbnailUrl = imageDto.ThumbnailUrl ?? imageDto.Url.Replace("/800/", "/200/").Replace("/600", "/150"),
+                    Caption = imageDto.Caption,
+                    ImageType = imageDto.ImageType ?? ImageType.Exterior,
+                    SortOrder = imageDto.SortOrder ?? existingMaxOrder,
+                    IsPrimary = imageDto.IsPrimary ?? (!vehicle.Images.Any() && existingMaxOrder == 0),
+                    MimeType = imageDto.MimeType ?? "image/jpeg",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                vehicle.Images.Add(image);
+                totalAdded++;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Bulk added {Count} images to {VehicleCount} vehicles", totalAdded, vehicleIds.Count);
+
+        return Ok(new BulkAddImagesResponse
+        {
+            TotalImagesAdded = totalAdded,
+            VehiclesUpdated = vehicleIds.Count - errors.Count,
+            Errors = errors
+        });
+    }
 }
 
 #region Request/Response DTOs
@@ -440,6 +551,41 @@ public record UpdateVehicleRequest
 public record CompareVehiclesRequest
 {
     public List<Guid> VehicleIds { get; init; } = new();
+}
+
+// Image DTOs for adding images to vehicles
+public record VehicleImageDto
+{
+    public required string Url { get; init; }
+    public string? ThumbnailUrl { get; init; }
+    public string? Caption { get; init; }
+    public ImageType? ImageType { get; init; }
+    public int? SortOrder { get; init; }
+    public bool? IsPrimary { get; init; }
+    public string? MimeType { get; init; }
+}
+
+public record AddVehicleImagesRequest
+{
+    public List<VehicleImageDto> Images { get; init; } = new();
+}
+
+public record VehicleImagesEntry
+{
+    public Guid VehicleId { get; init; }
+    public List<VehicleImageDto> Images { get; init; } = new();
+}
+
+public record BulkAddVehicleImagesRequest
+{
+    public List<VehicleImagesEntry> VehicleImages { get; init; } = new();
+}
+
+public record BulkAddImagesResponse
+{
+    public int TotalImagesAdded { get; init; }
+    public int VehiclesUpdated { get; init; }
+    public List<string> Errors { get; init; } = new();
 }
 
 #endregion

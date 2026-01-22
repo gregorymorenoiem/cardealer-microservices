@@ -9,10 +9,6 @@ using Ocelot.Middleware;
 using Ocelot.Provider.Polly;
 using MMLib.SwaggerForOcelot.DependencyInjection;
 using Serilog;
-using Serilog.Enrichers.Span;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
 using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
@@ -21,17 +17,25 @@ using Gateway.Domain.Interfaces;
 using Gateway.Infrastructure.Services;
 using Gateway.Application.UseCases;
 using CarDealer.Shared.Configuration;
-
-// Configurar Serilog con TraceId/SpanId enrichment
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-    .CreateLogger();
+using CarDealer.Shared.RateLimiting.Extensions;
+using CarDealer.Shared.RateLimiting.Models;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog();
+// ============================================================================
+// FASE 2: OBSERVABILITY - Logging centralizado con Serilog + Seq
+// ============================================================================
+builder.UseStandardSerilog("Gateway", options =>
+{
+    options.SeqEnabled = true;
+    options.SeqServerUrl = builder.Configuration["Logging:Seq:ServerUrl"] ?? "http://seq:5341";
+    options.FileEnabled = builder.Configuration.GetValue<bool>("Logging:File:Enabled", false);
+    options.FilePath = builder.Configuration["Logging:File:Path"] ?? "logs/gateway-.log";
+    options.RabbitMQEnabled = false; // Gateway uses direct Seq, not RabbitMQ for logs
+});
 
 // 1. Determinar entorno
 var isDevelopment = builder.Environment.IsDevelopment();
@@ -58,46 +62,33 @@ builder.Services.AddScoped<GetServicesHealthUseCase>();
 builder.Services.AddScoped<RecordRequestMetricsUseCase>();
 builder.Services.AddScoped<RecordDownstreamCallMetricsUseCase>();
 
-// OpenTelemetry
-var serviceName = "Gateway";
-var serviceVersion = "1.0.0";
+// ============================================================================
+// FASE 2: OBSERVABILITY - OpenTelemetry Tracing + Metrics
+// ============================================================================
+builder.Services.AddStandardObservability("Gateway", options =>
+{
+    options.TracingEnabled = true;
+    options.MetricsEnabled = true;
+    options.OtlpEndpoint = builder.Configuration["Observability:Otlp:Endpoint"] ?? "http://jaeger:4317";
+    options.SamplingRatio = builder.Configuration.GetValue<double>("Observability:SamplingRatio", 0.1);
+    options.PrometheusEnabled = builder.Configuration.GetValue<bool>("Observability:Prometheus:Enabled", true);
+    options.ExcludedPaths = new[] { "/health", "/metrics", "/swagger" };
+});
 
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(serviceName, serviceVersion))
-    .WithTracing(tracing =>
-    {
-        tracing
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddSource(serviceName);
-
-        if (builder.Environment.IsDevelopment())
-        {
-            tracing.AddConsoleExporter();
-        }
-        else
-        {
-            tracing.AddOtlpExporter();
-            tracing.SetSampler(new TraceIdRatioBasedSampler(0.1)); // 10% sampling in production
-        }
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddMeter(serviceName);
-
-        if (builder.Environment.IsDevelopment())
-        {
-            metrics.AddConsoleExporter();
-        }
-        else
-        {
-            metrics.AddOtlpExporter();
-        }
-    });
+// ============================================================================
+// FASE 2: OBSERVABILITY - Error Handling centralizado
+// ============================================================================
+builder.Services.AddStandardErrorHandling(options =>
+{
+    options.ServiceName = "Gateway";
+    options.Environment = builder.Environment.EnvironmentName;
+    options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+    options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.IncludeStackTrace = builder.Environment.IsDevelopment();
+});
 
 // 4. CORS configurado para múltiples frontends
 builder.Services.AddCors(options =>
@@ -187,19 +178,65 @@ builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
 builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
 builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
+// 9. Configure Rate Limiting
+var rateLimitEnabled = builder.Configuration.GetValue<bool>("RateLimiting:Enabled", true);
+if (rateLimitEnabled)
+{
+    builder.Services.AddRateLimiting(options =>
+    {
+        options.Enabled = true;
+        options.RedisConnection = builder.Configuration["Redis:Connection"] ?? "localhost:6379";
+        options.DefaultLimit = builder.Configuration.GetValue<int>("RateLimiting:DefaultLimit", 100);
+        options.DefaultWindowSeconds = builder.Configuration.GetValue<int>("RateLimiting:DefaultWindowSeconds", 60);
+        options.KeyPrefix = "gateway:ratelimit";
+        options.ExcludedPaths = new List<string>
+        {
+            "/health",
+            "/swagger",
+            "/metrics",
+            "/.well-known"
+        };
+        
+        // Add default API policies
+        options.AddDefaultApiPolicies();
+        
+        Log.Information("Rate Limiting configured with Redis: {RedisConnection}", options.RedisConnection);
+    });
+}
+else
+{
+    Log.Warning("Rate Limiting is DISABLED. API is unprotected against abuse.");
+}
+
 var app = builder.Build();
 
-// 7. Middleware pipeline
-// CORS debe ir primero antes de cualquier otro middleware
+// ============================================================================
+// MIDDLEWARE PIPELINE
+// ============================================================================
+
+// FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
+app.UseGlobalErrorHandling();
+
+// FASE 2: Request Logging con enrichment de TraceId, UserId, CorrelationId
+app.UseRequestLogging();
+
+// CORS debe ir primero antes de cualquier otro middleware de routing
 app.UseCors("ReactPolicy");
 
-// 8. Health check middleware BEFORE Ocelot to intercept /health requests
+// Rate Limiting middleware (before all other processing)
+if (rateLimitEnabled)
+{
+    app.UseRateLimiting();
+    Log.Information("Rate Limiting middleware enabled");
+}
+
+// Health check middleware BEFORE Ocelot to intercept /health requests
 app.UseHealthCheckMiddleware();
 
-// 9. Use routing for other endpoints
+// Use routing for other endpoints
 app.UseRouting();
 
-// 9.1 Authentication and Authorization middleware
+// Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 

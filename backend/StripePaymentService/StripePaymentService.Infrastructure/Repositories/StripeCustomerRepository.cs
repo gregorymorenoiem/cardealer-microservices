@@ -58,26 +58,30 @@ public class StripeCustomerRepository : IStripeCustomerRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<StripeCustomer>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<(List<StripeCustomer> Items, int TotalCount)> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Customers
+        var totalCount = await _context.Customers.CountAsync(cancellationToken);
+        var items = await _context.Customers
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Include(x => x.PaymentMethods)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
+        return (items, totalCount);
     }
 
-    public async Task CreateAsync(StripeCustomer entity, CancellationToken cancellationToken = default)
+    public async Task<StripeCustomer> CreateAsync(StripeCustomer entity, CancellationToken cancellationToken = default)
     {
         await _context.Customers.AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        return entity;
     }
 
-    public async Task UpdateAsync(StripeCustomer entity, CancellationToken cancellationToken = default)
+    public async Task<StripeCustomer> UpdateAsync(StripeCustomer entity, CancellationToken cancellationToken = default)
     {
         _context.Customers.Update(entity);
         await _context.SaveChangesAsync(cancellationToken);
+        return entity;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)

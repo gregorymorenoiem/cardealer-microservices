@@ -15,6 +15,7 @@ public record CreateInventoryItemCommand : IRequest<InventoryItemDto>
     public string? InternalNotes { get; init; }
     public string? Location { get; init; }
     public int? StockNumber { get; init; }
+    public string? VIN { get; init; }
     public decimal? CostPrice { get; init; }
     public decimal ListPrice { get; init; }
     public decimal? TargetPrice { get; init; }
@@ -44,6 +45,7 @@ public class CreateInventoryItemHandler : IRequestHandler<CreateInventoryItemCom
             InternalNotes = request.InternalNotes,
             Location = request.Location,
             StockNumber = request.StockNumber,
+            VIN = request.VIN,
             CostPrice = request.CostPrice,
             ListPrice = request.ListPrice,
             TargetPrice = request.TargetPrice,

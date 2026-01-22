@@ -16,6 +16,15 @@ public class StripeSubscription
     public Guid StripeCustomerId { get; set; }
 
     /// <summary>
+    /// Alias for StripeCustomerId (for EF Core navigation)
+    /// </summary>
+    public Guid CustomerId
+    {
+        get => StripeCustomerId;
+        set => StripeCustomerId = value;
+    }
+
+    /// <summary>
     /// Relación con StripeCustomer
     /// </summary>
     public StripeCustomer? Customer { get; set; }
@@ -74,6 +83,20 @@ public class StripeSubscription
     /// Fecha de cancelación
     /// </summary>
     public DateTime? CancelledAt { get; set; }
+
+    /// <summary>
+    /// Alias for CancelledAt (American spelling)
+    /// </summary>
+    public DateTime? CanceledAt
+    {
+        get => CancelledAt;
+        set => CancelledAt = value;
+    }
+
+    /// <summary>
+    /// Billing cycle anchor date
+    /// </summary>
+    public DateTime? BillingCycleAnchor { get; set; }
 
     /// <summary>
     /// Total de facturas pagadas

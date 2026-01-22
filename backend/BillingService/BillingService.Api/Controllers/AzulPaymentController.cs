@@ -1,5 +1,6 @@
 using BillingService.Application.DTOs.Azul;
 using BillingService.Application.Services;
+using CarDealer.Shared.Idempotency.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BillingService.Api.Controllers;
@@ -20,6 +21,7 @@ public class AzulPaymentController : ControllerBase
     }
 
     [HttpPost("initiate")]
+    [Idempotent(RequireKey = true, KeyPrefix = "azul-initiate")]
     public IActionResult InitiatePayment([FromBody] InitiateAzulPaymentRequest request)
     {
         try

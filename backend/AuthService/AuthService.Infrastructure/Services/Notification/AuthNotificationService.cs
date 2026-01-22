@@ -61,7 +61,7 @@ public class AuthNotificationService : IAuthNotificationService
 
     public async Task SendEmailConfirmationAsync(string email, string confirmationToken)
     {
-        var confirmUrl = $"{_settings.FrontendBaseUrl}/confirm-email?token={confirmationToken}";
+        var confirmUrl = $"{_settings.FrontendBaseUrl}/verify-email?token={confirmationToken}";
 
         if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
         {

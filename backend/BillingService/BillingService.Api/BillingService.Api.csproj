@@ -21,6 +21,12 @@
     <ProjectReference Include="../BillingService.Application/BillingService.Application.csproj" />
     <ProjectReference Include="../BillingService.Infrastructure/BillingService.Infrastructure.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Idempotency/CarDealer.Shared.Idempotency.csproj" />
+    <!-- FASE 2: Observability Libraries -->
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
   </ItemGroup>
 
 </Project>

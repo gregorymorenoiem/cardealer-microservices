@@ -3,23 +3,14 @@
  * Connects via API Gateway to VehiclesSaleService /api/homepagesections
  */
 
-import axios from 'axios';
+import api from './api';
 
 // ============================================================
 // API CONFIGURATION
 // ============================================================
 
-// API Gateway URL - routes to VehiclesSaleService
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
-const HOMEPAGE_SECTIONS_API_URL = `${API_URL}/api/homepagesections`;
-
-const sectionsApi = axios.create({
-  baseURL: HOMEPAGE_SECTIONS_API_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Use api instance with refresh token interceptor
+const sectionsApi = api;
 
 // ============================================================
 // API TYPES (matching backend HomepageSectionWithVehiclesDto)
@@ -69,7 +60,7 @@ export interface HomepageSectionDto {
  */
 export const getHomepageSections = async (): Promise<HomepageSectionDto[]> => {
   try {
-    const response = await sectionsApi.get<HomepageSectionDto[]>('/homepage');
+    const response = await sectionsApi.get<HomepageSectionDto[]>('/api/homepagesections/homepage');
     return response.data;
   } catch (error) {
     console.error('Error fetching homepage sections:', error);
@@ -81,9 +72,11 @@ export const getHomepageSections = async (): Promise<HomepageSectionDto[]> => {
  * Get a specific section by slug with its vehicles
  * Uses endpoint: GET /api/homepagesections/{slug}
  */
-export const getHomepageSectionBySlug = async (slug: string): Promise<HomepageSectionDto | null> => {
+export const getHomepageSectionBySlug = async (
+  slug: string
+): Promise<HomepageSectionDto | null> => {
   try {
-    const response = await sectionsApi.get<HomepageSectionDto>(`/${slug}`);
+    const response = await sectionsApi.get<HomepageSectionDto>(`/api/homepagesections/${slug}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching section ${slug}:`, error);
@@ -97,7 +90,7 @@ export const getHomepageSectionBySlug = async (slug: string): Promise<HomepageSe
  */
 export const getAllSectionConfigs = async (): Promise<HomepageSectionDto[]> => {
   try {
-    const response = await sectionsApi.get<HomepageSectionDto[]>('/');
+    const response = await sectionsApi.get<HomepageSectionDto[]>('/api/homepagesections');
     return response.data;
   } catch (error) {
     console.error('Error fetching section configs:', error);

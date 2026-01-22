@@ -3,9 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using VehicleIntelligenceService.Application.Features.Demand.Queries;
 using VehicleIntelligenceService.Application.Features.Pricing.Queries;
-using VehicleIntelligenceService.Domain.Entities;
 using VehicleIntelligenceService.Domain.Interfaces;
 using VehicleIntelligenceService.Infrastructure.Persistence;
 using VehicleIntelligenceService.Infrastructure.Persistence.Repositories;
@@ -23,17 +21,16 @@ builder.Services.AddDbContext<VehicleIntelligenceDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Repositories
-builder.Services.AddScoped<IPriceSuggestionRepository, PriceSuggestionRepository>();
-builder.Services.AddScoped<ICategoryDemandRepository, CategoryDemandRepository>();
+builder.Services.AddScoped<IPriceAnalysisRepository, PriceAnalysisRepository>();
+builder.Services.AddScoped<IDemandPredictionRepository, DemandPredictionRepository>();
 
 // Services
-builder.Services.AddScoped<IVehiclePricingEngine, VehiclePricingEngine>();
+builder.Services.AddScoped<IPricingEngine, PricingEngine>();
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(GetPriceSuggestionQuery).Assembly);
-    cfg.RegisterServicesFromAssembly(typeof(GetDemandByCategoryQuery).Assembly);
 });
 
 // JWT Authentication
@@ -83,12 +80,12 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "VehicleIntelligenceService API",
         Version = "v1",
-        Description = "API para sugerencias de pricing, demanda y tiempo estimado de venta (Sprint 18)"
+        Description = "API para sugerencias de pricing, demanda y tiempo estimado de venta"
     });
 });
 
 // Health Checks
-builder.Services.AddHealthChecks().AddDbContextCheck<VehicleIntelligenceDbContext>("database");
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -105,27 +102,13 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Ensure database schema exists (many services in this repo don't ship migrations)
+// Ensure database schema exists
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<VehicleIntelligenceDbContext>();
     try
     {
         await db.Database.EnsureCreatedAsync();
-
-        // Seed baseline demand categories if empty
-        if (!await db.CategoryDemandSnapshots.AnyAsync())
-        {
-            db.CategoryDemandSnapshots.AddRange(
-                new CategoryDemandSnapshot { Category = "SUV", DemandScore = 78, Trend = "up" },
-                new CategoryDemandSnapshot { Category = "Sedan", DemandScore = 60, Trend = "stable" },
-                new CategoryDemandSnapshot { Category = "Camioneta", DemandScore = 82, Trend = "up" },
-                new CategoryDemandSnapshot { Category = "Deportivo", DemandScore = 65, Trend = "stable" },
-                new CategoryDemandSnapshot { Category = "Electrico", DemandScore = 70, Trend = "up" }
-            );
-            await db.SaveChangesAsync();
-        }
-
         Console.WriteLine("✅ VehicleIntelligenceService database ready");
     }
     catch (Exception ex)
@@ -135,4 +118,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-

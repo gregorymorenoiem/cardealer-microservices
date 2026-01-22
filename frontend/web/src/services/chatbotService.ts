@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import * as signalR from '@microsoft/signalr';
+import { addRefreshTokenInterceptor } from './api';
 
 // ============================================================================
 // INTERFACES - Mapean DTOs del backend
@@ -160,7 +161,7 @@ export class ChatbotService {
 
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('accessToken');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -168,6 +169,9 @@ export class ChatbotService {
       },
       (error) => Promise.reject(error)
     );
+
+    // Add refresh token interceptor for automatic token refresh on 401
+    addRefreshTokenInterceptor(this.axiosInstance);
   }
 
   // REST API METHODS

@@ -6,12 +6,37 @@ using DealerManagementService.Infrastructure.Services.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using Serilog;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
+const string ServiceName = "DealerManagementService";
+const string ServiceVersion = "1.0.0";
 
-// Add services to the container
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// Bootstrap logger
+Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+
+    // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+    builder.UseStandardSerilog(ServiceName);
+
+    // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
+    builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
+
+    // ============= ERROR HANDLING (→ ErrorService) =============
+    builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+    // ============= AUDIT (→ AuditService via RabbitMQ) =============
+    builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // Add services to the container
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
 
 // Swagger
 builder.Services.AddSwaggerGen(c =>
@@ -90,52 +115,63 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Health Checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString, name: "database");
+    // Health Checks
+    builder.Services.AddHealthChecks()
+        .AddNpgSql(connectionString, name: "database");
 
-// Logging
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
+    var app = builder.Build();
 
-var app = builder.Build();
+    // ============= MIDDLEWARE =============
+    // Global exception handling (first in pipeline)
+    app.UseGlobalErrorHandling();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    // Audit middleware
+    app.UseAuditMiddleware();
+
+    // Configure the HTTP request pipeline
+    if (app.Environment.IsDevelopment())
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dealer Management Service API v1");
-        c.RoutePrefix = string.Empty;
-    });
-}
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dealer Management Service API v1");
+            c.RoutePrefix = string.Empty;
+        });
+    }
 
-app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseCors();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-app.MapControllers();
-app.MapHealthChecks("/health");
+    app.MapControllers();
+    app.MapHealthChecks("/health");
 
-// Auto-migrate database on startup (development only)
-if (app.Environment.IsDevelopment())
-{
-    using (var scope = app.Services.CreateScope())
+    // Auto-migrate database on startup (development only)
+    if (app.Environment.IsDevelopment())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<DealerDbContext>();
-        try
+        using (var scope = app.Services.CreateScope())
         {
-            // Use EnsureCreated for development (creates tables if they don't exist)
-            dbContext.Database.EnsureCreated();
-        }
-        catch (Exception ex)
-        {
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while creating the database.");
+            var dbContext = scope.ServiceProvider.GetRequiredService<DealerDbContext>();
+            try
+            {
+                dbContext.Database.EnsureCreated();
+                Log.Information("Database created/verified for {ServiceName}", ServiceName);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while creating the database for {ServiceName}", ServiceName);
+            }
         }
     }
-}
 
-app.Run();
+    Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}

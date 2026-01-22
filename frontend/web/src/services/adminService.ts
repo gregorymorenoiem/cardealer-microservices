@@ -1,6 +1,31 @@
-import axios from 'axios';
+import axios, { type AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 
 const ADMIN_API_URL = import.meta.env.VITE_ADMIN_SERVICE_URL || 'http://localhost:5007/api';
+
+// Create axios instance with interceptors
+const adminApi: AxiosInstance = axios.create({
+  baseURL: ADMIN_API_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor - Add auth token
+adminApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add refresh token interceptor for automatic token refresh on 401
+addRefreshTokenInterceptor(adminApi);
 
 export interface DashboardStats {
   totalUsers: number;
@@ -73,7 +98,7 @@ export interface SystemSettings {
 // Get dashboard statistics
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const response = await axios.get(`${ADMIN_API_URL}/admin/dashboard/stats`);
+    const response = await adminApi.get(`/admin/dashboard/stats`);
     return response.data;
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -109,7 +134,7 @@ export const getActivityLogs = async (
       });
     }
 
-    const response = await axios.get(`${ADMIN_API_URL}/admin/activity-logs?${params.toString()}`);
+    const response = await adminApi.get(`/admin/activity-logs?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching activity logs:', error);
@@ -147,7 +172,7 @@ export const getUsers = async (
       });
     }
 
-    const response = await axios.get(`${ADMIN_API_URL}/admin/users?${params.toString()}`);
+    const response = await adminApi.get(`/admin/users?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -158,7 +183,7 @@ export const getUsers = async (
 // Get user by ID
 export const getUserById = async (id: string): Promise<User> => {
   try {
-    const response = await axios.get(`${ADMIN_API_URL}/admin/users/${id}`);
+    const response = await adminApi.get(`/admin/users/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -169,7 +194,7 @@ export const getUserById = async (id: string): Promise<User> => {
 // Update user (admin)
 export const updateUser = async (id: string, updates: Partial<User>): Promise<User> => {
   try {
-    const response = await axios.put(`${ADMIN_API_URL}/admin/users/${id}`, updates);
+    const response = await adminApi.put(`/admin/users/${id}`, updates);
     return response.data;
   } catch (error) {
     console.error('Error updating user:', error);
@@ -180,7 +205,7 @@ export const updateUser = async (id: string, updates: Partial<User>): Promise<Us
 // Delete user (admin)
 export const deleteUser = async (id: string): Promise<void> => {
   try {
-    await axios.delete(`${ADMIN_API_URL}/admin/users/${id}`);
+    await adminApi.delete(`/admin/users/${id}`);
   } catch (error) {
     console.error('Error deleting user:', error);
     throw new Error('Failed to delete user');
@@ -190,7 +215,7 @@ export const deleteUser = async (id: string): Promise<void> => {
 // Ban user
 export const banUser = async (id: string, reason: string, duration?: number): Promise<void> => {
   try {
-    await axios.post(`${ADMIN_API_URL}/admin/users/${id}/ban`, { reason, duration });
+    await adminApi.post(`/admin/users/${id}/ban`, { reason, duration });
   } catch (error) {
     console.error('Error banning user:', error);
     throw new Error('Failed to ban user');
@@ -200,7 +225,7 @@ export const banUser = async (id: string, reason: string, duration?: number): Pr
 // Unban user
 export const unbanUser = async (id: string): Promise<void> => {
   try {
-    await axios.post(`${ADMIN_API_URL}/admin/users/${id}/unban`);
+    await adminApi.post(`/admin/users/${id}/unban`);
   } catch (error) {
     console.error('Error unbanning user:', error);
     throw new Error('Failed to unban user');
@@ -233,7 +258,7 @@ export const getReportedContent = async (
       });
     }
 
-    const response = await axios.get(`${ADMIN_API_URL}/admin/reports?${params.toString()}`);
+    const response = await adminApi.get(`/admin/reports?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching reported content:', error);
@@ -248,7 +273,7 @@ export const reviewReport = async (
   notes?: string
 ): Promise<ReportedContent> => {
   try {
-    const response = await axios.post(`${ADMIN_API_URL}/admin/reports/${id}/review`, {
+    const response = await adminApi.post(`/admin/reports/${id}/review`, {
       action,
       notes,
     });
@@ -262,7 +287,7 @@ export const reviewReport = async (
 // Get system settings
 export const getSystemSettings = async (): Promise<SystemSettings> => {
   try {
-    const response = await axios.get(`${ADMIN_API_URL}/admin/settings`);
+    const response = await adminApi.get(`/admin/settings`);
     return response.data;
   } catch (error) {
     console.error('Error fetching system settings:', error);
@@ -271,9 +296,11 @@ export const getSystemSettings = async (): Promise<SystemSettings> => {
 };
 
 // Update system settings
-export const updateSystemSettings = async (settings: Partial<SystemSettings>): Promise<SystemSettings> => {
+export const updateSystemSettings = async (
+  settings: Partial<SystemSettings>
+): Promise<SystemSettings> => {
   try {
-    const response = await axios.put(`${ADMIN_API_URL}/admin/settings`, settings);
+    const response = await adminApi.put(`/admin/settings`, settings);
     return response.data;
   } catch (error) {
     console.error('Error updating system settings:', error);
@@ -297,7 +324,7 @@ export const getRevenueStats = async (
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
-    const response = await axios.get(`${ADMIN_API_URL}/admin/revenue?${params.toString()}`);
+    const response = await adminApi.get(`/admin/revenue?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching revenue stats:', error);
@@ -312,8 +339,8 @@ export const exportData = async (
   filters?: Record<string, unknown>
 ): Promise<Blob> => {
   try {
-    const response = await axios.post(
-      `${ADMIN_API_URL}/admin/export`,
+    const response = await adminApi.post(
+      `/admin/export`,
       { dataType, filters },
       {
         params: { format },
@@ -334,7 +361,7 @@ export const sendSystemNotification = async (
   targetUsers?: 'all' | 'verified' | 'admins'
 ): Promise<void> => {
   try {
-    await axios.post(`${ADMIN_API_URL}/admin/notifications/send`, {
+    await adminApi.post(`/admin/notifications/send`, {
       title,
       message,
       targetUsers: targetUsers || 'all',
@@ -355,7 +382,7 @@ export const getPlatformStats = async (): Promise<{
   conversionRate: number;
 }> => {
   try {
-    const response = await axios.get(`${ADMIN_API_URL}/admin/stats/platform`);
+    const response = await adminApi.get(`/admin/stats/platform`);
     return response.data;
   } catch (error) {
     console.error('Error fetching platform stats:', error);

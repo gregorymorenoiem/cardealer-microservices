@@ -24,6 +24,11 @@
   <ItemGroup>
     <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Idempotency/CarDealer.Shared.Idempotency.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
     <ProjectReference Include="../StripePaymentService.Domain/StripePaymentService.Domain.csproj" />
     <ProjectReference Include="../StripePaymentService.Application/StripePaymentService.Application.csproj" />
     <ProjectReference Include="../StripePaymentService.Infrastructure/StripePaymentService.Infrastructure.csproj" />

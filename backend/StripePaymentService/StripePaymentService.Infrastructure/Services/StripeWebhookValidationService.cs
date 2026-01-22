@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using StripePaymentService.Domain.Interfaces;
 
@@ -24,13 +25,15 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public bool ValidateWebhookSignature(string payload, string signatureHeader)
+    public bool ValidateWebhookSignature(string payload, string signatureHeader, string endpointSecret)
     {
         if (string.IsNullOrEmpty(payload) || string.IsNullOrEmpty(signatureHeader))
         {
             _logger.LogWarning("Payload o Signature vacío");
             return false;
         }
+
+        var secret = string.IsNullOrEmpty(endpointSecret) ? _webhookSecret : endpointSecret;
 
         try
         {
@@ -49,7 +52,7 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
             var signedContent = $"{timestamp}.{payload}";
 
             // HMAC-SHA256
-            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_webhookSecret)))
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
             {
                 var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signedContent));
                 var computedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
@@ -84,27 +87,52 @@ public class StripeWebhookValidationService : IStripeWebhookValidationService
         }
     }
 
-    public bool IsAuthenticStripeWebhook(string payload, string signatureHeader)
+    public bool IsAuthenticStripeWebhook(string payload, string signatureHeader, string endpointSecret)
     {
-        return ValidateWebhookSignature(payload, signatureHeader);
+        return ValidateWebhookSignature(payload, signatureHeader, endpointSecret);
     }
 
-    public string? ExtractWebhookData(string payload)
+    public Dictionary<string, object?> ExtractWebhookData(string payload)
     {
+        var result = new Dictionary<string, object?>();
+        
         try
         {
             if (string.IsNullOrEmpty(payload))
             {
                 _logger.LogWarning("Payload vacío");
-                return null;
+                return result;
             }
 
-            return payload;
+            using var document = JsonDocument.Parse(payload);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("id", out var id))
+                result["id"] = id.GetString();
+            
+            if (root.TryGetProperty("type", out var type))
+                result["type"] = type.GetString();
+            
+            if (root.TryGetProperty("created", out var created))
+                result["created"] = created.GetInt64();
+            
+            if (root.TryGetProperty("livemode", out var livemode))
+                result["livemode"] = livemode.GetBoolean();
+            
+            if (root.TryGetProperty("data", out var data))
+            {
+                if (data.TryGetProperty("object", out var dataObject))
+                {
+                    result["data_object"] = dataObject.GetRawText();
+                }
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error extrayendo webhook data");
-            return null;
+            return result;
         }
     }
 

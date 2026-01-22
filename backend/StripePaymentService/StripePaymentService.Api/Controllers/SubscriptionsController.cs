@@ -33,18 +33,18 @@ public class SubscriptionsController : ControllerBase
         [FromBody] CreateSubscriptionRequestDto request,
         CancellationToken cancellationToken)
     {
-        _logger.Information("POST /subscriptions - CustomerId: {CustomerId}", request.CustomerId);
+        _logger.LogInformation("POST /subscriptions - StripeCustomerId: {StripeCustomerId}", request.StripeCustomerId);
 
         try
         {
             var command = new CreateSubscriptionCommand(request);
             var result = await _mediator.Send(command, cancellationToken);
 
-            return CreatedAtAction(nameof(GetSubscriptions), new { customerId = request.CustomerId }, result);
+            return CreatedAtAction(nameof(GetSubscriptions), new { customerId = request.StripeCustomerId }, result);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error creando subscripción");
+            _logger.LogError(ex, "Error creando subscripción");
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -59,7 +59,7 @@ public class SubscriptionsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        _logger.Information("GET /subscriptions - CustomerId: {CustomerId}, Page: {Page}", customerId, page);
+        _logger.LogInformation("GET /subscriptions - CustomerId: {CustomerId}, Page: {Page}", customerId, page);
 
         try
         {
@@ -70,7 +70,7 @@ public class SubscriptionsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error listando subscripciones");
+            _logger.LogError(ex, "Error listando subscripciones");
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -84,7 +84,7 @@ public class SubscriptionsController : ControllerBase
         [FromQuery] string? reason,
         CancellationToken cancellationToken)
     {
-        _logger.Information("DELETE /subscriptions/{Id} - Reason: {Reason}", id, reason ?? "No especificada");
+        _logger.LogInformation("DELETE /subscriptions/{Id} - Reason: {Reason}", id, reason ?? "No especificada");
 
         try
         {
@@ -95,7 +95,7 @@ public class SubscriptionsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error cancelando subscripción: {Id}", id);
+            _logger.LogError(ex, "Error cancelando subscripción: {Id}", id);
             return BadRequest(new { error = ex.Message });
         }
     }

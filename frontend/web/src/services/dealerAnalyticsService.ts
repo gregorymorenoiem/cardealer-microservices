@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 
 // ============================================
 // Sprint 12+ Dealer Analytics DTOs
@@ -289,6 +290,9 @@ export class DealerAnalyticsService {
       },
       (error) => Promise.reject(error)
     );
+
+    // Add refresh token interceptor for automatic token refresh on 401
+    addRefreshTokenInterceptor(this.api);
   }
 
   // ============================================

@@ -33,8 +33,8 @@ public class ComparisonsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         var comparisons = await _comparisonRepository.GetByUserIdAsync(userId);
-
-        return Ok(comparisons.Select(MapToDto));
+        
+        return Ok(comparisons.Select(c => MapToDto(c)));
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ public class ComparisonsController : ControllerBase
     public async Task<ActionResult<ComparisonDetailDto>> GetByShareToken(string shareToken)
     {
         var comparison = await _comparisonRepository.GetByShareTokenAsync(shareToken);
-
+        
         if (comparison == null)
             return NotFound();
 
@@ -108,7 +108,7 @@ public class ComparisonsController : ControllerBase
         try
         {
             var userId = GetCurrentUserId();
-            var comparison = new Comparison(
+            var comparison = new VehicleComparison(
                 userId,
                 request.Name,
                 request.VehicleIds,
@@ -258,7 +258,7 @@ public class ComparisonsController : ControllerBase
     // Helper methods
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst("sub")?.Value 
             ?? User.FindFirst("userId")?.Value;
 
@@ -279,8 +279,8 @@ public class ComparisonsController : ControllerBase
             try
             {
                 // Call VehiclesSaleService
-                var vehiclesServiceUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") 
-                    ?? "http://vehiclessaleservice:8080";
+                var vehiclesServiceUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL")
+                    ?? "http://vehiclessaleservice:80";
                 
                 var response = await _httpClient.GetAsync($"{vehiclesServiceUrl}/api/vehicles/{vehicleId}");
                 
@@ -302,7 +302,7 @@ public class ComparisonsController : ControllerBase
         return vehicles;
     }
 
-    private static ComparisonDto MapToDto(Comparison comparison)
+    private static ComparisonDto MapToDto(VehicleComparison comparison)
     {
         return new ComparisonDto
         {
@@ -311,7 +311,7 @@ public class ComparisonsController : ControllerBase
             VehicleIds = comparison.VehicleIds,
             VehicleCount = comparison.VehicleIds.Count,
             CreatedAt = comparison.CreatedAt,
-            UpdatedAt = comparison.UpdatedAt,
+            UpdatedAt = comparison.UpdatedAt ?? comparison.CreatedAt,
             IsPublic = comparison.IsPublic,
             HasShareLink = comparison.ShareToken != null
         };

@@ -3,24 +3,15 @@
  * Connects via API Gateway to VehiclesSaleService microservice
  */
 
-import axios from 'axios';
+import api from './api';
 import { getVehicleSaleImageUrl } from '@utils/s3ImageUrl';
 
 // ============================================================
 // API CONFIGURATION
 // ============================================================
 
-// API Gateway URL - routes to VehiclesSaleService
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
-const VEHICLES_API_URL = `${API_URL}/api/vehicles`;
-
-const vehiclesApi = axios.create({
-  baseURL: VEHICLES_API_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Use api instance with refresh token interceptor
+const vehiclesApi = api;
 
 // ============================================================
 // BACKEND TYPES (matching VehiclesSaleService schema)
@@ -190,12 +181,12 @@ const BODY_STYLE_MAP: Record<number, string> = {
   3: 'Wagon',
   4: 'SUV',
   5: 'Crossover',
-  6: 'Pickup',      // Fixed: was incorrectly 'Convertible'
+  6: 'Pickup', // Fixed: was incorrectly 'Convertible'
   7: 'Van',
   8: 'Minivan',
   9: 'Convertible', // Fixed: was incorrectly 'Minivan'
-  10: 'SportsCar',  // Fixed: was incorrectly 'Sports'
-  99: 'Other',      // Fixed: was incorrectly 11:'Luxury', 12:'Other'
+  10: 'SportsCar', // Fixed: was incorrectly 'Sports'
+  99: 'Other', // Fixed: was incorrectly 11:'Luxury', 12:'Other'
 };
 
 const FUEL_TYPE_MAP: Record<number, string> = {
@@ -247,12 +238,11 @@ const STATUS_MAP: Record<number, VehicleListing['status']> = {
  */
 const transformVehicle = (vehicle: ApiVehicle): VehicleListing => {
   // Transform images: photoId -> full S3 URL
-  const images = vehicle.images.map(img => getVehicleSaleImageUrl(img.url));
-  
+  const images = vehicle.images.map((img) => getVehicleSaleImageUrl(img.url));
+
   // Get primary image (first one or placeholder)
-  const primaryImage = images.length > 0 
-    ? images[0] 
-    : getVehicleSaleImageUrl('placeholder-vehicle');
+  const primaryImage =
+    images.length > 0 ? images[0] : getVehicleSaleImageUrl('placeholder-vehicle');
 
   return {
     id: vehicle.id,
@@ -310,8 +300,10 @@ export const getVehicles = async (
       if (filters.search) params.append('search', filters.search);
     }
 
-    const response = await vehiclesApi.get<ApiVehiclesResponse>(`?${params.toString()}`);
-    
+    const response = await vehiclesApi.get<ApiVehiclesResponse>(
+      `/api/vehicles?${params.toString()}`
+    );
+
     return {
       vehicles: response.data.vehicles.map(transformVehicle),
       total: response.data.totalCount,
@@ -330,7 +322,7 @@ export const getVehicles = async (
  */
 export const getVehicleById = async (id: string): Promise<VehicleListing | null> => {
   try {
-    const response = await vehiclesApi.get<ApiVehicle>(`/${id}`);
+    const response = await vehiclesApi.get<ApiVehicle>(`/api/vehicles/${id}`);
     return transformVehicle(response.data);
   } catch (error) {
     console.error(`Error fetching vehicle ${id}:`, error);
@@ -343,7 +335,9 @@ export const getVehicleById = async (id: string): Promise<VehicleListing | null>
  */
 export const getFeaturedVehicles = async (limit: number = 6): Promise<VehicleListing[]> => {
   try {
-    const response = await vehiclesApi.get<ApiVehiclesResponse>(`?pageSize=${limit}&featured=true`);
+    const response = await vehiclesApi.get<ApiVehiclesResponse>(
+      `/api/vehicles?pageSize=${limit}&featured=true`
+    );
     return response.data.vehicles.map(transformVehicle);
   } catch (error) {
     console.error('Error fetching featured vehicles:', error);
@@ -357,7 +351,9 @@ export const getFeaturedVehicles = async (limit: number = 6): Promise<VehicleLis
  */
 export const getLatestVehicles = async (limit: number = 6): Promise<VehicleListing[]> => {
   try {
-    const response = await vehiclesApi.get<ApiVehiclesResponse>(`?pageSize=${limit}&sortBy=createdAt&sortDesc=true`);
+    const response = await vehiclesApi.get<ApiVehiclesResponse>(
+      `/api/vehicles?pageSize=${limit}&sortBy=createdAt&sortDesc=true`
+    );
     return response.data.vehicles.map(transformVehicle);
   } catch (error) {
     console.error('Error fetching latest vehicles:', error);
@@ -422,7 +418,7 @@ export interface VehicleModel {
  */
 export const getVehicleMakes = async (): Promise<VehicleMake[]> => {
   try {
-    const response = await vehiclesApi.get<VehicleMake[]>('/catalog/makes');
+    const response = await vehiclesApi.get<VehicleMake[]>('/api/vehicles/catalog/makes');
     return response.data;
   } catch (error) {
     console.error('Error fetching vehicle makes:', error);
@@ -435,7 +431,9 @@ export const getVehicleMakes = async (): Promise<VehicleMake[]> => {
  */
 export const getVehicleModels = async (makeId: string): Promise<VehicleModel[]> => {
   try {
-    const response = await vehiclesApi.get<VehicleModel[]>(`/catalog/makes/${makeId}/models`);
+    const response = await vehiclesApi.get<VehicleModel[]>(
+      `/api/vehicles/catalog/makes/${makeId}/models`
+    );
     return response.data;
   } catch (error) {
     console.error(`Error fetching models for make ${makeId}:`, error);

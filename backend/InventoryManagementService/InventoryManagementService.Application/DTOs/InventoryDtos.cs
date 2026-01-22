@@ -64,6 +64,7 @@ public record CreateInventoryItemRequest
     public string? InternalNotes { get; init; }
     public string? Location { get; init; }
     public int? StockNumber { get; init; }
+    public string? VIN { get; init; }
     public decimal? CostPrice { get; init; }
     public decimal ListPrice { get; init; }
     public decimal? TargetPrice { get; init; }
@@ -85,6 +86,8 @@ public record UpdateInventoryItemRequest
     public decimal? TargetPrice { get; init; }
     public decimal? MinAcceptablePrice { get; init; }
     public bool? IsNegotiable { get; init; }
+    public bool? IsFeatured { get; init; }
+    public int? Priority { get; init; }
     public List<string>? Tags { get; init; }
 }
 

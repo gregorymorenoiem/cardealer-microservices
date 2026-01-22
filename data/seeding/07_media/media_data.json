@@ -1,0 +1,613 @@
+{
+  "_description": "Datos de MediaService: Vehicle Images (500 - 5 per vehicle x 100 vehicles), User Avatars (20), Dealer Logos (20)",
+  "_note": "Las imágenes físicas están en data/vehicle_images/ con 301 carpetas disponibles",
+  "vehicleImages": [
+    {
+      "id": "img-v001-1",
+      "vehicleId": "v001",
+      "url": "/vehicle_images/001/image_1.jpg",
+      "type": "Primary",
+      "order": 1,
+      "alt": "Toyota Camry 2024 - Vista frontal"
+    },
+    {
+      "id": "img-v001-2",
+      "vehicleId": "v001",
+      "url": "/vehicle_images/001/image_2.jpg",
+      "type": "Exterior",
+      "order": 2,
+      "alt": "Toyota Camry 2024 - Vista lateral"
+    },
+    {
+      "id": "img-v001-3",
+      "vehicleId": "v001",
+      "url": "/vehicle_images/001/image_3.jpg",
+      "type": "Exterior",
+      "order": 3,
+      "alt": "Toyota Camry 2024 - Vista trasera"
+    },
+    {
+      "id": "img-v001-4",
+      "vehicleId": "v001",
+      "url": "/vehicle_images/001/image_4.jpg",
+      "type": "Interior",
+      "order": 4,
+      "alt": "Toyota Camry 2024 - Interior"
+    },
+    {
+      "id": "img-v001-5",
+      "vehicleId": "v001",
+      "url": "/vehicle_images/001/image_5.jpg",
+      "type": "Interior",
+      "order": 5,
+      "alt": "Toyota Camry 2024 - Dashboard"
+    },
+    {
+      "id": "img-v002-1",
+      "vehicleId": "v002",
+      "url": "/vehicle_images/002/image_1.jpg",
+      "type": "Primary",
+      "order": 1,
+      "alt": "Honda Accord 2023 - Vista frontal"
+    },
+    {
+      "id": "img-v002-2",
+      "vehicleId": "v002",
+      "url": "/vehicle_images/002/image_2.jpg",
+      "type": "Exterior",
+      "order": 2,
+      "alt": "Honda Accord 2023 - Vista lateral"
+    },
+    {
+      "id": "img-v002-3",
+      "vehicleId": "v002",
+      "url": "/vehicle_images/002/image_3.jpg",
+      "type": "Exterior",
+      "order": 3,
+      "alt": "Honda Accord 2023 - Vista trasera"
+    },
+    {
+      "id": "img-v002-4",
+      "vehicleId": "v002",
+      "url": "/vehicle_images/002/image_4.jpg",
+      "type": "Interior",
+      "order": 4,
+      "alt": "Honda Accord 2023 - Interior"
+    },
+    {
+      "id": "img-v002-5",
+      "vehicleId": "v002",
+      "url": "/vehicle_images/002/image_5.jpg",
+      "type": "Interior",
+      "order": 5,
+      "alt": "Honda Accord 2023 - Dashboard"
+    },
+    {
+      "id": "img-v003-1",
+      "vehicleId": "v003",
+      "url": "/vehicle_images/003/image_1.jpg",
+      "type": "Primary",
+      "order": 1,
+      "alt": "Mercedes-Benz C-Class 2023 - Vista frontal"
+    },
+    {
+      "id": "img-v003-2",
+      "vehicleId": "v003",
+      "url": "/vehicle_images/003/image_2.jpg",
+      "type": "Exterior",
+      "order": 2,
+      "alt": "Mercedes-Benz C-Class 2023 - Vista lateral"
+    },
+    {
+      "id": "img-v003-3",
+      "vehicleId": "v003",
+      "url": "/vehicle_images/003/image_3.jpg",
+      "type": "Exterior",
+      "order": 3,
+      "alt": "Mercedes-Benz C-Class 2023 - Vista trasera"
+    },
+    {
+      "id": "img-v003-4",
+      "vehicleId": "v003",
+      "url": "/vehicle_images/003/image_4.jpg",
+      "type": "Interior",
+      "order": 4,
+      "alt": "Mercedes-Benz C-Class 2023 - Interior"
+    },
+    {
+      "id": "img-v003-5",
+      "vehicleId": "v003",
+      "url": "/vehicle_images/003/image_5.jpg",
+      "type": "Interior",
+      "order": 5,
+      "alt": "Mercedes-Benz C-Class 2023 - Dashboard"
+    },
+    {
+      "id": "img-v004-1",
+      "vehicleId": "v004",
+      "url": "/vehicle_images/004/image_1.jpg",
+      "type": "Primary",
+      "order": 1,
+      "alt": "BMW 3 Series 2024 - Vista frontal"
+    },
+    {
+      "id": "img-v004-2",
+      "vehicleId": "v004",
+      "url": "/vehicle_images/004/image_2.jpg",
+      "type": "Exterior",
+      "order": 2,
+      "alt": "BMW 3 Series 2024 - Vista lateral"
+    },
+    {
+      "id": "img-v004-3",
+      "vehicleId": "v004",
+      "url": "/vehicle_images/004/image_3.jpg",
+      "type": "Exterior",
+      "order": 3,
+      "alt": "BMW 3 Series 2024 - Vista trasera"
+    },
+    {
+      "id": "img-v004-4",
+      "vehicleId": "v004",
+      "url": "/vehicle_images/004/image_4.jpg",
+      "type": "Interior",
+      "order": 4,
+      "alt": "BMW 3 Series 2024 - Interior"
+    },
+    {
+      "id": "img-v004-5",
+      "vehicleId": "v004",
+      "url": "/vehicle_images/004/image_5.jpg",
+      "type": "Interior",
+      "order": 5,
+      "alt": "BMW 3 Series 2024 - Dashboard"
+    },
+    {
+      "id": "img-v005-1",
+      "vehicleId": "v005",
+      "url": "/vehicle_images/005/image_1.jpg",
+      "type": "Primary",
+      "order": 1,
+      "alt": "Audi A4 2023 - Vista frontal"
+    },
+    {
+      "id": "img-v005-2",
+      "vehicleId": "v005",
+      "url": "/vehicle_images/005/image_2.jpg",
+      "type": "Exterior",
+      "order": 2,
+      "alt": "Audi A4 2023 - Vista lateral"
+    },
+    {
+      "id": "img-v005-3",
+      "vehicleId": "v005",
+      "url": "/vehicle_images/005/image_3.jpg",
+      "type": "Exterior",
+      "order": 3,
+      "alt": "Audi A4 2023 - Vista trasera"
+    },
+    {
+      "id": "img-v005-4",
+      "vehicleId": "v005",
+      "url": "/vehicle_images/005/image_4.jpg",
+      "type": "Interior",
+      "order": 4,
+      "alt": "Audi A4 2023 - Interior"
+    },
+    {
+      "id": "img-v005-5",
+      "vehicleId": "v005",
+      "url": "/vehicle_images/005/image_5.jpg",
+      "type": "Interior",
+      "order": 5,
+      "alt": "Audi A4 2023 - Dashboard"
+    }
+  ],
+  "_vehicleImagesGenerator": {
+    "_note": "Los siguientes son templates para generar las 500 imágenes (100 vehicles x 5 images)",
+    "pattern": {
+      "id": "img-v{vehicleNumber:03d}-{imageNumber}",
+      "vehicleId": "v{vehicleNumber:03d}",
+      "url": "/vehicle_images/{folderNumber:03d}/image_{imageNumber}.jpg",
+      "types": ["Primary", "Exterior", "Exterior", "Interior", "Interior"],
+      "altPattern": "{make} {model} {year} - {viewType}"
+    },
+    "ranges": {
+      "vehicles": "001 to 100",
+      "imagesPerVehicle": 5,
+      "totalImages": 500,
+      "availableFolders": 301
+    }
+  },
+  "userAvatars": [
+    {
+      "id": "avatar-0001",
+      "userId": "user-0001-0000-0000-000000000001",
+      "url": "/avatars/user_0001.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-06-01T10:00:00Z"
+    },
+    {
+      "id": "avatar-0002",
+      "userId": "user-0002-0000-0000-000000000002",
+      "url": "/avatars/user_0002.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-07-15T14:00:00Z"
+    },
+    {
+      "id": "avatar-0003",
+      "userId": "user-0003-0000-0000-000000000003",
+      "url": "/avatars/user_0003.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-05-20T09:00:00Z"
+    },
+    {
+      "id": "avatar-0004",
+      "userId": "user-0004-0000-0000-000000000004",
+      "url": "/avatars/user_0004.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-08-01T16:00:00Z"
+    },
+    {
+      "id": "avatar-0005",
+      "userId": "user-0005-0000-0000-000000000005",
+      "url": "/avatars/user_0005.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-04-10T11:00:00Z"
+    },
+    {
+      "id": "avatar-0006",
+      "userId": "user-0006-0000-0000-000000000006",
+      "url": null,
+      "type": "Default",
+      "uploadedAt": null
+    },
+    {
+      "id": "avatar-0007",
+      "userId": "user-0007-0000-0000-000000000007",
+      "url": "/avatars/user_0007.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-09-05T13:00:00Z"
+    },
+    {
+      "id": "avatar-0008",
+      "userId": "user-0008-0000-0000-000000000008",
+      "url": null,
+      "type": "Default",
+      "uploadedAt": null
+    },
+    {
+      "id": "avatar-0009",
+      "userId": "user-0009-0000-0000-000000000009",
+      "url": "/avatars/user_0009.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-10-20T15:00:00Z"
+    },
+    {
+      "id": "avatar-0010",
+      "userId": "user-0010-0000-0000-000000000010",
+      "url": "/avatars/user_0010.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-11-01T10:00:00Z"
+    },
+    {
+      "id": "avatar-0025",
+      "userId": "user-0025-0000-0000-000000000025",
+      "url": "/avatars/dealer_owner_0001.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "avatar-0026",
+      "userId": "user-0026-0000-0000-000000000026",
+      "url": "/avatars/dealer_owner_0002.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-03-01T10:00:00Z"
+    },
+    {
+      "id": "avatar-0027",
+      "userId": "user-0027-0000-0000-000000000027",
+      "url": "/avatars/dealer_owner_0003.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-06-15T10:00:00Z"
+    },
+    {
+      "id": "avatar-0055",
+      "userId": "user-0055-0000-0000-000000000055",
+      "url": "/avatars/admin_0001.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-01-01T08:00:00Z"
+    },
+    {
+      "id": "avatar-0056",
+      "userId": "user-0056-0000-0000-000000000056",
+      "url": "/avatars/admin_0002.jpg",
+      "type": "Profile",
+      "uploadedAt": "2024-01-05T09:00:00Z"
+    }
+  ],
+  "dealerLogos": [
+    {
+      "id": "logo-0001",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "url": "/logos/dealer_0001_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0001-banner",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "url": "/logos/dealer_0001_banner.jpg",
+      "type": "Banner",
+      "uploadedAt": "2024-01-15T10:05:00Z"
+    },
+    {
+      "id": "logo-0002",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "url": "/logos/dealer_0002_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-03-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0002-banner",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "url": "/logos/dealer_0002_banner.jpg",
+      "type": "Banner",
+      "uploadedAt": "2024-03-01T10:05:00Z"
+    },
+    {
+      "id": "logo-0003",
+      "dealerId": "dealer-0003-0000-0000-000000000003",
+      "url": "/logos/dealer_0003_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-06-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0004",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "url": "/logos/dealer_0004_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-02-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0004-banner",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "url": "/logos/dealer_0004_banner.jpg",
+      "type": "Banner",
+      "uploadedAt": "2024-02-01T10:05:00Z"
+    },
+    {
+      "id": "logo-0005",
+      "dealerId": "dealer-0005-0000-0000-000000000005",
+      "url": "/logos/dealer_0005_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-04-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0006",
+      "dealerId": "dealer-0006-0000-0000-000000000006",
+      "url": "/logos/dealer_0006_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-07-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0007",
+      "dealerId": "dealer-0007-0000-0000-000000000007",
+      "url": "/logos/dealer_0007_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-05-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0008",
+      "dealerId": "dealer-0008-0000-0000-000000000008",
+      "url": "/logos/dealer_0008_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0008-banner",
+      "dealerId": "dealer-0008-0000-0000-000000000008",
+      "url": "/logos/dealer_0008_banner.jpg",
+      "type": "Banner",
+      "uploadedAt": "2024-01-01T10:05:00Z"
+    },
+    {
+      "id": "logo-0009",
+      "dealerId": "dealer-0009-0000-0000-000000000009",
+      "url": "/logos/dealer_0009_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0010",
+      "dealerId": "dealer-0010-0000-0000-000000000010",
+      "url": "/logos/dealer_0010_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-03-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0011",
+      "dealerId": "dealer-0011-0000-0000-000000000011",
+      "url": "/logos/dealer_0011_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-04-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0012",
+      "dealerId": "dealer-0012-0000-0000-000000000012",
+      "url": "/logos/dealer_0012_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-05-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0013",
+      "dealerId": "dealer-0013-0000-0000-000000000013",
+      "url": null,
+      "type": "Default",
+      "uploadedAt": null
+    },
+    {
+      "id": "logo-0014",
+      "dealerId": "dealer-0014-0000-0000-000000000014",
+      "url": "/logos/dealer_0014_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-09-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0015",
+      "dealerId": "dealer-0015-0000-0000-000000000015",
+      "url": "/logos/dealer_0015_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-11-25T10:00:00Z"
+    },
+    {
+      "id": "logo-0016",
+      "dealerId": "dealer-0016-0000-0000-000000000016",
+      "url": "/logos/dealer_0016_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-01-20T10:00:00Z"
+    },
+    {
+      "id": "logo-0016-banner",
+      "dealerId": "dealer-0016-0000-0000-000000000016",
+      "url": "/logos/dealer_0016_banner.jpg",
+      "type": "Banner",
+      "uploadedAt": "2024-01-20T10:05:00Z"
+    },
+    {
+      "id": "logo-0017",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "url": "/logos/dealer_0017_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-06-01T10:00:00Z"
+    },
+    {
+      "id": "logo-0018",
+      "dealerId": "dealer-0018-0000-0000-000000000018",
+      "url": "/logos/dealer_0018_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-07-15T10:00:00Z"
+    },
+    {
+      "id": "logo-0019",
+      "dealerId": "dealer-0019-0000-0000-000000000019",
+      "url": null,
+      "type": "Default",
+      "uploadedAt": null
+    },
+    {
+      "id": "logo-0020",
+      "dealerId": "dealer-0020-0000-0000-000000000020",
+      "url": "/logos/dealer_0020_logo.png",
+      "type": "Primary",
+      "uploadedAt": "2024-03-01T10:00:00Z"
+    }
+  ],
+  "dealerDocuments": [
+    {
+      "id": "doc-0001",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "type": "RNC",
+      "url": "/documents/dealer_0001_rnc.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-01-15T10:00:00Z",
+      "verifiedAt": "2024-01-16T14:00:00Z"
+    },
+    {
+      "id": "doc-0002",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "type": "BusinessLicense",
+      "url": "/documents/dealer_0001_license.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-01-15T10:05:00Z",
+      "verifiedAt": "2024-01-16T14:00:00Z"
+    },
+    {
+      "id": "doc-0003",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "type": "RNC",
+      "url": "/documents/dealer_0002_rnc.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-03-01T10:00:00Z",
+      "verifiedAt": "2024-03-02T11:00:00Z"
+    },
+    {
+      "id": "doc-0004",
+      "dealerId": "dealer-0003-0000-0000-000000000003",
+      "type": "RNC",
+      "url": "/documents/dealer_0003_rnc.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-06-15T10:00:00Z",
+      "verifiedAt": "2024-06-16T09:00:00Z"
+    },
+    {
+      "id": "doc-0005",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "type": "RNC",
+      "url": "/documents/dealer_0004_rnc.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-02-01T10:00:00Z",
+      "verifiedAt": "2024-02-02T10:00:00Z"
+    },
+    {
+      "id": "doc-0006",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "type": "BusinessLicense",
+      "url": "/documents/dealer_0004_license.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-02-01T10:05:00Z",
+      "verifiedAt": "2024-02-02T10:00:00Z"
+    },
+    {
+      "id": "doc-0007",
+      "dealerId": "dealer-0013-0000-0000-000000000013",
+      "type": "RNC",
+      "url": "/documents/dealer_0013_rnc.pdf",
+      "status": "Pending",
+      "uploadedAt": "2025-01-10T15:00:00Z"
+    },
+    {
+      "id": "doc-0008",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "type": "RNC",
+      "url": "/documents/dealer_0017_rnc.pdf",
+      "status": "Rejected",
+      "uploadedAt": "2024-06-01T10:00:00Z",
+      "rejectedAt": "2024-06-02T14:00:00Z",
+      "rejectionReason": "Document illegible"
+    },
+    {
+      "id": "doc-0009",
+      "dealerId": "dealer-0019-0000-0000-000000000019",
+      "type": "RNC",
+      "url": "/documents/dealer_0019_rnc.pdf",
+      "status": "UnderReview",
+      "uploadedAt": "2025-01-05T10:00:00Z"
+    },
+    {
+      "id": "doc-0010",
+      "dealerId": "dealer-0020-0000-0000-000000000020",
+      "type": "RNC",
+      "url": "/documents/dealer_0020_rnc.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-03-01T10:00:00Z",
+      "verifiedAt": "2024-03-02T09:00:00Z"
+    },
+    {
+      "id": "doc-0011",
+      "dealerId": "dealer-0020-0000-0000-000000000020",
+      "type": "EquipmentCertification",
+      "url": "/documents/dealer_0020_cert.pdf",
+      "status": "Verified",
+      "uploadedAt": "2024-03-01T10:10:00Z",
+      "verifiedAt": "2024-03-02T09:00:00Z"
+    }
+  ],
+  "_imageTypeCovered": {
+    "vehicleImageTypes": ["Primary", "Exterior", "Interior"],
+    "avatarTypes": ["Profile", "Default"],
+    "logoTypes": ["Primary", "Banner", "Default"],
+    "documentTypes": ["RNC", "BusinessLicense", "EquipmentCertification"],
+    "documentStatuses": ["Verified", "Pending", "Rejected", "UnderReview"]
+  }
+}

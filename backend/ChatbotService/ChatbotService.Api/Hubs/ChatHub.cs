@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using MediatR;
-using ChatbotService.Application.Features.Commands;
-using ChatbotService.Application.Features.Queries;
+using ChatbotService.Application.Features.Conversations.Commands;
+using ChatbotService.Application.Features.Conversations.Queries;
 using ChatbotService.Application.DTOs;
 
 namespace ChatbotService.Api.Hubs;
@@ -74,7 +74,7 @@ public class ChatHub : Hub
     /// <summary>
     /// Send a message and receive AI response
     /// </summary>
-    public async Task<SendMessageResponseDto> SendMessage(SendMessageDto request)
+    public async Task<ChatbotResponseDto> SendMessage(SendMessageDto request)
     {
         // Notify typing indicator
         await Clients.Group(request.ConversationId.ToString())
@@ -98,11 +98,11 @@ public class ChatHub : Hub
             await Clients.Group(request.ConversationId.ToString())
                 .SendAsync("NewMessage", response);
 
-            // If should transfer to agent, notify
-            if (response.ShouldTransferToAgent)
+            // If should handoff to agent, notify
+            if (response.ShouldHandoff)
             {
                 await Clients.Group(request.ConversationId.ToString())
-                    .SendAsync("TransferToAgent", new { ConversationId = request.ConversationId, Reason = response.TransferReason });
+                    .SendAsync("TransferToAgent", new { ConversationId = request.ConversationId, Reason = response.HandoffReason });
             }
 
             return response;

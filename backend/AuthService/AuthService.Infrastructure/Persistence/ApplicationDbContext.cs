@@ -13,6 +13,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<VerificationToken> VerificationTokens { get; set; } = null!;
     public DbSet<TwoFactorAuth> TwoFactorAuths { get; set; } = null!;
+    public DbSet<UserSession> UserSessions { get; set; } = null!;
+    public DbSet<LoginHistory> LoginHistories { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -22,6 +24,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
         builder.ApplyConfiguration(new RefreshTokenConfiguration());
         builder.ApplyConfiguration(new VerificationTokenConfiguration());
         builder.ApplyConfiguration(new TwoFactorAuthConfiguration());
+        builder.ApplyConfiguration(new UserSessionConfiguration());
+        builder.ApplyConfiguration(new LoginHistoryConfiguration());
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

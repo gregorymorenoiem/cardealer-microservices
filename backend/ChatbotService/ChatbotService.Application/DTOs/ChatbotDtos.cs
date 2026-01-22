@@ -104,3 +104,72 @@ public record ChatbotResponseDto(
     bool ShouldHandoff,
     string? HandoffReason
 );
+
+// Additional DTOs needed for API
+public record CreateConversationDto(
+    Guid UserId,
+    string? SessionId,
+    Guid? VehicleId,
+    string? UserEmail,
+    string? UserName,
+    string? UserPhone,
+    VehicleContextDto? VehicleContext
+);
+
+public record VehicleContextDto(
+    Guid VehicleId,
+    string? Make,
+    string? Model,
+    int? Year,
+    decimal? Price,
+    string? Condition,
+    string? ImageUrl
+);
+
+public record SendMessageDto(
+    Guid ConversationId,
+    string Content,
+    VehicleContextDto? VehicleContext
+);
+
+public record SendMessageResponseDto(
+    MessageDto UserMessage,
+    MessageDto BotMessage,
+    ConversationDto Conversation,
+    bool ShouldHandoff,
+    string? HandoffReason,
+    int LeadScore
+);
+
+public record ConversationSummaryDto(
+    Guid Id,
+    Guid UserId,
+    string? UserName,
+    Guid? VehicleId,
+    string? VehicleTitle,
+    int MessageCount,
+    LeadTemperature LeadTemperature,
+    DateTime StartedAt,
+    string? LastMessage
+);
+
+public record ChatAnalyticsDto(
+    int TotalConversations,
+    int ActiveConversations,
+    int HandedOffConversations,
+    int HotLeads,
+    int WarmLeads,
+    int ColdLeads,
+    double AverageLeadScore,
+    double ConversionRate,
+    TimeSpan AverageConversationDuration,
+    Dictionary<string, int> TopIntents,
+    Dictionary<string, int> TopBuyingSignals,
+    List<ConversationSummaryDto> RecentHotLeads
+);
+
+// SignalR DTOs
+public record TypingIndicatorDto(
+    Guid ConversationId,
+    bool IsTyping
+);

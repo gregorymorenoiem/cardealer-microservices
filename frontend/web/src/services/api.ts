@@ -1,7 +1,57 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { captureError, addBreadcrumb } from '../lib/sentry';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+
+/**
+ * Add refresh token interceptor to any axios instance
+ * This allows any service to have automatic token refresh capability
+ */
+export function addRefreshTokenInterceptor(axiosInstance: AxiosInstance): void {
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError) => {
+      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+      // If 401 and not already retried, try to refresh token
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (!refreshToken) {
+            throw new Error('No refresh token available');
+          }
+
+          // Call refresh token endpoint
+          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
+            refreshToken,
+          });
+
+          const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+
+          // Save new tokens
+          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('refreshToken', newRefreshToken);
+
+          // Retry original request with new token
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          }
+          return axiosInstance(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed - logout user
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+}
 
 // Create axios instance
 export const api: AxiosInstance = axios.create({

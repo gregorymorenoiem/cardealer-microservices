@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using ChatbotService.Application.Features.Commands;
-using ChatbotService.Application.Features.Queries;
+using ChatbotService.Application.Features.Conversations.Commands;
+using ChatbotService.Application.Features.Conversations.Queries;
 using ChatbotService.Application.DTOs;
 
 namespace ChatbotService.Api.Controllers;
@@ -78,11 +78,11 @@ public class ChatController : ControllerBase
     /// Send a message (alternative to SignalR for REST clients)
     /// </summary>
     [HttpPost("conversations/{conversationId:guid}/messages")]
-    [ProducesResponseType(typeof(SendMessageResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ChatbotResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<SendMessageResponseDto>> SendMessage(
+    public async Task<ActionResult<ChatbotResponseDto>> SendMessage(
         Guid conversationId,
-        [FromBody] SendMessageRequest request)
+        [FromBody] ChatSendMessageRequest request)
     {
         try
         {
@@ -128,12 +128,14 @@ public class ChatController : ControllerBase
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null)
     {
-        var query = new GetChatAnalyticsQuery(from, to);
+        var startDate = from ?? DateTime.UtcNow.AddMonths(-1);
+        var endDate = to ?? DateTime.UtcNow;
+        var query = new GetChatAnalyticsQuery(startDate, endDate);
         var analytics = await _mediator.Send(query);
         return Ok(analytics);
     }
 }
 
 // Request DTOs
-public record SendMessageRequest(string Content, VehicleContextDto? VehicleContext);
+public record ChatSendMessageRequest(string Content, VehicleContextDto? VehicleContext);
 public record EndConversationRequest(string Reason);

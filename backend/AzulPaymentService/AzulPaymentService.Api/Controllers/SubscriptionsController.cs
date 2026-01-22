@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using AzulPaymentService.Application.DTOs;
+using CarDealer.Shared.Idempotency.Attributes;
 using AzulPaymentService.Application.Features.Subscription.Commands;
 
 namespace AzulPaymentService.Api.Controllers;
@@ -32,6 +33,7 @@ public class SubscriptionsController : ControllerBase
     /// <response code="400">Datos inválidos</response>
     /// <response code="401">No autenticado</response>
     [HttpPost]
+    [Idempotent]
     [ProducesResponseType(typeof(SubscriptionResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

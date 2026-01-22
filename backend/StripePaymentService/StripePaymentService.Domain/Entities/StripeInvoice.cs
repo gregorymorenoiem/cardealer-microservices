@@ -16,6 +16,15 @@ public class StripeInvoice
     public Guid StripeSubscriptionId { get; set; }
 
     /// <summary>
+    /// Alias for StripeSubscriptionId (for EF Core navigation)
+    /// </summary>
+    public Guid SubscriptionId
+    {
+        get => StripeSubscriptionId;
+        set => StripeSubscriptionId = value;
+    }
+
+    /// <summary>
     /// Relación con StripeSubscription
     /// </summary>
     public StripeSubscription? Subscription { get; set; }

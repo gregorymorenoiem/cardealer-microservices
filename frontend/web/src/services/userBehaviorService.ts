@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 
 // Types
 export interface UserBehaviorProfile {
@@ -78,12 +79,15 @@ class UserBehaviorService {
 
     // Add JWT token interceptor
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     });
+
+    // Add refresh token interceptor for automatic token renewal
+    addRefreshTokenInterceptor(this.api);
   }
 
   async getUserProfile(userId: string): Promise<UserBehaviorProfile> {

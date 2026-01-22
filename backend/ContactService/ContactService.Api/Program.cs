@@ -6,13 +6,39 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CarDealer.Shared.MultiTenancy;
+using Serilog;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
+const string ServiceName = "ContactService";
+const string ServiceVersion = "1.0.0";
 
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Bootstrap logger
+Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+
+    // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+    builder.UseStandardSerilog(ServiceName);
+
+    // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
+    builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
+
+    // ============= ERROR HANDLING (→ ErrorService) =============
+    builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+    // ============= AUDIT (→ AuditService via RabbitMQ) =============
+    builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // Add services to the container.
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+    builder.Services.AddHttpContextAccessor(); // Required for TenantContext
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -55,41 +81,57 @@ builder.Services.AddCors(options =>
 });
 
 // Health Checks
-builder.Services.AddHealthChecks()
-    .AddDbContext<ApplicationDbContext>();
+builder.Services.AddHealthChecks();
 
-var app = builder.Build();
+    var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    // ============= MIDDLEWARE =============
+    // Global exception handling (first in pipeline)
+    app.UseGlobalErrorHandling();
 
-app.UseCors("AllowFrontend");
-app.UseAuthentication();
-app.UseAuthorization();
+    // Audit middleware
+    app.UseAuditMiddleware();
 
-app.MapControllers();
-app.MapHealthChecks("/health");
-
-// Auto-migrate database
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
     {
-        context.Database.Migrate();
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-    }
-}
 
-app.Run();
+    app.UseCors("AllowFrontend");
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.MapHealthChecks("/health");
+
+    // Auto-migrate database
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        try
+        {
+            context.Database.Migrate();
+            Log.Information("Database migration completed for {ServiceName}", ServiceName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while migrating the database for {ServiceName}", ServiceName);
+        }
+    }
+
+    Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Make Program class accessible for integration tests
 public partial class Program { }

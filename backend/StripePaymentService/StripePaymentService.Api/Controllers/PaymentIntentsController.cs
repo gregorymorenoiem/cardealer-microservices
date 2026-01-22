@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
+using CarDealer.Shared.Idempotency.Attributes;
 using StripePaymentService.Application.DTOs;
 using StripePaymentService.Application.Features.PaymentIntent.Commands;
 using StripePaymentService.Application.Features.PaymentIntent.Queries;
@@ -29,11 +30,12 @@ public class PaymentIntentsController : ControllerBase
     /// Crear un nuevo Payment Intent
     /// </summary>
     [HttpPost]
+    [Idempotent(RequireKey = true, KeyPrefix = "stripe-payment-intent")]
     public async Task<ActionResult<PaymentIntentResponseDto>> CreatePaymentIntent(
         [FromBody] CreatePaymentIntentRequestDto request,
         CancellationToken cancellationToken)
     {
-        _logger.Information("POST /paymentintents - Amount: {Amount}", request.Amount);
+        _logger.LogInformation("POST /paymentintents - Amount: {Amount}", request.Amount);
 
         try
         {
@@ -44,7 +46,7 @@ public class PaymentIntentsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error creando Payment Intent");
+            _logger.LogError(ex, "Error creando Payment Intent");
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -57,7 +59,7 @@ public class PaymentIntentsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        _logger.Information("GET /paymentintents/{Id}", id);
+        _logger.LogInformation("GET /paymentintents/{Id}", id);
 
         try
         {
@@ -71,7 +73,7 @@ public class PaymentIntentsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error obteniendo Payment Intent: {Id}", id);
+            _logger.LogError(ex, "Error obteniendo Payment Intent: {Id}", id);
             return BadRequest(new { error = ex.Message });
         }
     }

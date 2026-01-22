@@ -3,6 +3,7 @@ namespace NotificationService.Shared;
 public class NotificationSettings
 {
     public SendGridSettings SendGrid { get; set; } = new();
+    public ResendSettings Resend { get; set; } = new();
     public TwilioSettings Twilio { get; set; } = new();
     public FirebaseSettings Firebase { get; set; } = new();
     public string TemplatesPath { get; set; } = "Templates";
@@ -19,6 +20,13 @@ public class SendGridSettings
     public string FromName { get; set; } = string.Empty;
     public bool EnableTracking { get; set; } = true;
     public string WebhookSecret { get; set; } = string.Empty;
+}
+
+public class ResendSettings
+{
+    public string ApiKey { get; set; } = string.Empty;
+    public string FromEmail { get; set; } = string.Empty;
+    public string FromName { get; set; } = string.Empty;
 }
 
 public class TwilioSettings

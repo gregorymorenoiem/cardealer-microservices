@@ -14,6 +14,9 @@ ENV DOTNET_USE_POLLING_FILE_WATCHER=1
 # Copy shared projects
 COPY _Shared/CarDealer.Shared/ /app/_Shared/CarDealer.Shared/
 COPY _Shared/CarDealer.Contracts/ /app/_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared.Logging/ /app/_Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.ErrorHandling/ /app/_Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/ /app/_Shared/CarDealer.Shared.Observability/
 
 # Copy service projects
 COPY VehiclesSaleService/VehiclesSaleService.Domain/ /app/VehiclesSaleService/VehiclesSaleService.Domain/
@@ -24,13 +27,13 @@ COPY VehiclesSaleService/VehiclesSaleService.Api/ /app/VehiclesSaleService/Vehic
 
 WORKDIR /app/VehiclesSaleService/VehiclesSaleService.Api
 
-# Restore and build
+# Restore and publish (publish includes all dependencies)
 RUN dotnet restore
-RUN dotnet build -c Debug
+RUN dotnet publish -c Debug -o /app/publish
 
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
-ENTRYPOINT ["dotnet", "run", "--no-build"]
+ENTRYPOINT ["dotnet", "/app/publish/VehiclesSaleService.Api.dll"]

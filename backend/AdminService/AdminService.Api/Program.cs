@@ -6,12 +6,37 @@ using ServiceDiscovery.Infrastructure.Services;
 using AdminService.Api.Middleware;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
+using Serilog;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration;
+const string ServiceName = "AdminService";
+const string ServiceVersion = "1.0.0";
 
-// Add secret provider for secure configuration
-builder.Services.AddSecretProvider();
+// Bootstrap logger
+Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    var configuration = builder.Configuration;
+
+    // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+    builder.UseStandardSerilog(ServiceName);
+
+    // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
+    builder.Services.AddStandardObservability(configuration, ServiceName, ServiceVersion);
+
+    // ============= ERROR HANDLING (→ ErrorService) =============
+    builder.Services.AddStandardErrorHandling(configuration, ServiceName);
+
+    // ============= AUDIT (→ AuditService via RabbitMQ) =============
+    builder.Services.AddAuditPublisher(configuration);
+
+    // Add secret provider for secure configuration
+    builder.Services.AddSecretProvider();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -59,24 +84,41 @@ builder.Services.AddHttpClient<IErrorServiceClient, ErrorServiceClient>(client =
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-var app = builder.Build();
+    var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // ============= MIDDLEWARE =============
+    // Global exception handling (first in pipeline)
+    app.UseGlobalErrorHandling();
+
+    // Audit middleware
+    app.UseAuditMiddleware();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+
+    // Service Discovery Auto-Registration
+    app.UseMiddleware<ServiceRegistrationMiddleware>();
+
+    app.MapControllers();
+
+    // Health Check Endpoint
+    app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = ServiceName }));
+
+    Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
-
-app.MapControllers();
-
-// Health Check Endpoint
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "AdminService" }));
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}

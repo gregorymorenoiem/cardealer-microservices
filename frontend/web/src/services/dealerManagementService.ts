@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
@@ -203,12 +204,15 @@ class DealerManagementService {
 
     // Add auth token interceptor
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     });
+
+    // Add refresh token interceptor for automatic token renewal
+    addRefreshTokenInterceptor(this.api);
   }
 
   // Dealer CRUD

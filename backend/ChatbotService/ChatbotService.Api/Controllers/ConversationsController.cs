@@ -51,7 +51,7 @@ public class ConversationsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ChatbotResponseDto>> SendMessage([FromBody] SendMessageRequest request)
     {
-        var command = new SendMessageCommand(request.ConversationId, request.Message);
+        var command = new SendMessageCommand(request.ConversationId, request.Message, null);
         var response = await _mediator.Send(command);
         return Ok(response);
     }

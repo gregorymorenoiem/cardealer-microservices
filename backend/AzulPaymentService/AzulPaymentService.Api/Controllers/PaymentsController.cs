@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using AzulPaymentService.Application.DTOs;
+using CarDealer.Shared.Idempotency.Attributes;
 using AzulPaymentService.Application.Features.Charge.Commands;
 using AzulPaymentService.Application.Features.Refund.Commands;
 using AzulPaymentService.Application.Features.Transaction.Queries;
@@ -35,6 +36,7 @@ public class PaymentsController : ControllerBase
     /// <response code="401">No autenticado</response>
     /// <response code="500">Error del servidor</response>
     [HttpPost("charge")]
+    [Idempotent]
     [ProducesResponseType(typeof(ChargeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -103,6 +105,7 @@ public class PaymentsController : ControllerBase
     /// <response code="200">Reembolso procesado</response>
     /// <response code="400">Datos inválidos</response>
     [HttpPost("refund")]
+    [Idempotent]
     [ProducesResponseType(typeof(ChargeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ProcessRefund(

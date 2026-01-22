@@ -12,8 +12,13 @@ RUN dotnet tool install --global dotnet-watch \
 
 WORKDIR /app
 
-# 2) Copia y restaura sólo el csproj de la API
+# 2) Copia y restaura sólo el csproj de la API y dependencias
 COPY AuthService/AuthService.Api/AuthService.Api.csproj ./AuthService/AuthService.Api/
+COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj ./_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj ./_Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj ./_Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj ./_Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj ./_Shared/CarDealer.Shared.Observability/
 RUN dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
 
 # 3) Copia el resto del código fuente

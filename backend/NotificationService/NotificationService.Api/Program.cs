@@ -25,6 +25,11 @@ using NotificationService.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+
+const string ServiceName = "NotificationService";
+const string ServiceVersion = "1.0.0";
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -64,6 +69,13 @@ builder.Services.AddCors(options =>
 
 // ✅ USAR DEPENDENCY INJECTION DE INFRASTRUCTURE (INCLUYE RABBITMQ)
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ============= TRANSVERSAL SERVICES =============
+// Error Handling (→ ErrorService)
+builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+// Audit (→ AuditService via RabbitMQ)
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 // ========== SERVICE DISCOVERY ==========
 
@@ -251,6 +263,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Global Error Handling (first in pipeline)
+app.UseGlobalErrorHandling();
+
+// Audit middleware
+app.UseAuditMiddleware();
 
 // Enable CORS
 app.UseCors();

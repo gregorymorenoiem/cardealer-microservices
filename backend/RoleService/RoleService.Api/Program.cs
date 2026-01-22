@@ -12,6 +12,7 @@ using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Audit.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -293,6 +294,9 @@ builder.Services.AddOpenTelemetry()
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("RoleService");
 
+// Configurar Audit Publisher
+builder.Services.AddAuditPublisher(builder.Configuration);
+
 // Configurar Rate Limiting
 var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<RateLimitingConfiguration>()
     ?? new RateLimitingConfiguration();
@@ -340,6 +344,9 @@ app.UseMiddleware<ResponseCaptureMiddleware>();
 
 // Middleware para manejo de errores
 app.UseErrorHandling();
+
+// Middleware para auditoría
+app.UseAuditMiddleware();
 
 app.MapControllers();
 

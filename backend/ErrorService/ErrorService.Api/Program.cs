@@ -12,6 +12,7 @@ using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Audit.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -177,13 +178,26 @@ builder.Services.AddSingleton<ErrorService.Application.Metrics.ErrorServiceMetri
 builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
     new ErrorService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
 
-// Event Publisher for RabbitMQ (con DLQ integrado)
-builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-builder.Services.AddSingleton<IEventPublisher>(sp =>
-    sp.GetRequiredService<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+// RabbitMQ Configuration - Conditional based on Enabled flag
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
 
-// Background Service para procesar DLQ
-builder.Services.AddHostedService<ErrorService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+if (rabbitMqEnabled)
+{
+    // RabbitMQ enabled - use real implementations with DLQ
+    Log.Information("🐰 RabbitMQ ENABLED - Using real messaging implementations");
+    builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+    builder.Services.AddSingleton<IEventPublisher>(sp =>
+        sp.GetRequiredService<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+    
+    // Background Service para procesar DLQ
+    builder.Services.AddHostedService<ErrorService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+}
+else
+{
+    // RabbitMQ disabled - use NoOp implementation
+    Log.Information("🚫 RabbitMQ DISABLED - Using NoOp messaging implementation (events will be logged only)");
+    builder.Services.AddSingleton<IEventPublisher, ErrorService.Infrastructure.Messaging.NoOpEventPublisher>();
+}
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
@@ -245,6 +259,9 @@ builder.Services.AddOpenTelemetry()
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("ErrorService");
 
+// Configurar Audit Publisher
+builder.Services.AddAuditPublisher(builder.Configuration);
+
 // Configurar Rate Limiting
 var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<RateLimitingConfiguration>()
     ?? new RateLimitingConfiguration();
@@ -254,8 +271,16 @@ builder.Services.AddCustomRateLimiting(rateLimitingConfig);
 builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
 builder.Services.Configure<ErrorServiceRabbitMQSettings>(builder.Configuration.GetSection("ErrorService"));
 
-// Registrar el consumidor RabbitMQ como hosted service
-builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+// Registrar el consumidor RabbitMQ como hosted service (solo si RabbitMQ está habilitado)
+if (rabbitMqEnabled)
+{
+    builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+    Log.Information("🐰 RabbitMQErrorConsumer registered as hosted service");
+}
+else
+{
+    Log.Information("🚫 RabbitMQErrorConsumer NOT registered - RabbitMQ is disabled");
+}
 
 var app = builder.Build();
 
@@ -288,6 +313,9 @@ app.UseMiddleware<ResponseCaptureMiddleware>();
 
 // Middleware para manejo de errores
 app.UseErrorHandling();
+
+// Middleware para auditoría
+app.UseAuditMiddleware();
 
 app.MapControllers();
 

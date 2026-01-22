@@ -21,6 +21,11 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using MediaService.Api.Middleware;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+
+const string ServiceName = "MediaService";
+const string ServiceVersion = "1.0.0";
 
 // Configurar Serilog con TraceId/SpanId enrichment
 Log.Logger = new LoggerConfiguration()
@@ -41,6 +46,13 @@ builder.Services.AddSwaggerGen();
 // Add application and infrastructure services
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ============= TRANSVERSAL SERVICES =============
+// Error Handling (→ ErrorService)
+builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+// Audit (→ AuditService via RabbitMQ)
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 // ========== SERVICE DISCOVERY ==========
 
@@ -171,7 +183,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Use custom middleware
+// Global error handling (first in pipeline)
+app.UseGlobalErrorHandling();
+
+// Audit middleware
+app.UseAuditMiddleware();
+
+// Use custom middleware (legacy - can be removed if using StandardErrorHandling)
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthorization();

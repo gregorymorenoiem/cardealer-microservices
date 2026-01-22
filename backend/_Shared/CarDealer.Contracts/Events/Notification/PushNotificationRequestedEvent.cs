@@ -28,7 +28,7 @@ public class PushNotificationRequestedEvent : EventBase
     /// <summary>
     /// Optional data payload for the push notification
     /// </summary>
-    public Dictionary<string, string>? Data { get; set; }
+    public Dictionary<string, object>? Data { get; set; }
 
     /// <summary>
     /// Optional image URL for rich notifications

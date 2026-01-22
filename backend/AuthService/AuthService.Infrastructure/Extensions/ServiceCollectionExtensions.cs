@@ -159,8 +159,20 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalTokenValidator, ExternalTokenValidator>();
         services.AddScoped<IExternalAuthService, ExternalAuthService>();
 
-        // Configuration
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        // Configuration - JwtSettings needs secrets merged in
+        // Get base settings from config, then override with secrets
+        services.Configure<JwtSettings>(options =>
+        {
+            var baseSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+            var (key, issuer, audience) = AuthSecretsConfiguration.GetJwtSettings(configuration);
+            
+            options.Key = key;
+            options.Issuer = issuer;
+            options.Audience = audience;
+            options.ExpiresMinutes = baseSettings.ExpiresMinutes > 0 ? baseSettings.ExpiresMinutes : 60;
+            options.RefreshTokenExpiresDays = baseSettings.RefreshTokenExpiresDays > 0 ? baseSettings.RefreshTokenExpiresDays : 7;
+            options.ClockSkewMinutes = baseSettings.ClockSkewMinutes > 0 ? baseSettings.ClockSkewMinutes : 5;
+        });
         services.Configure<SecuritySettings>(configuration.GetSection("Security"));
         services.Configure<CacheSettings>(configuration.GetSection("Cache"));
         services.Configure<RateLimitSettings>(configuration.GetSection("Security:RateLimit"));

@@ -9,7 +9,7 @@ import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import OAuthButtons from '@/components/auth/OAuthButtons';
-import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
+import { FiMail, FiLock, FiAlertCircle, FiInfo, FiCheckCircle } from 'react-icons/fi';
 
 // Validation schema
 const loginSchema = z.object({
@@ -20,12 +20,32 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+// Extended response type for 2FA
+interface LoginResponse {
+  requiresTwoFactor?: boolean;
+  sessionToken?: string;
+  twoFactorType?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  user?: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    accountType: string;
+  };
+}
+
 export default function LoginPage() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const location = useLocation();
   const storeLogin = useAuthStore((state) => state.login);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+
+  // Get success message from navigation state (e.g., after email verification)
+  const successMessage = location.state?.message as string | undefined;
 
   const {
     register,
@@ -41,31 +61,60 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setApiError(null);
-      
+      setShowEmailVerification(false);
+
       // Call backend auth service
-      const response = await authService.login({
+      const response: LoginResponse = await authService.login({
         email: data.email,
         password: data.password,
         rememberMe: data.rememberMe,
       });
-      
+
+      // Check if 2FA is required
+      if (response.requiresTwoFactor && response.sessionToken) {
+        // Store session token and redirect to 2FA verification
+        sessionStorage.setItem('twoFactorSessionToken', response.sessionToken);
+        sessionStorage.setItem('twoFactorType', response.twoFactorType || 'totp');
+        sessionStorage.setItem(
+          'pendingRedirect',
+          (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard'
+        );
+        navigate('/verify-2fa', { replace: true });
+        return;
+      }
+
       // Update auth store with response
-      storeLogin(response);
-      
+      storeLogin(response as any);
+
       // Redirect based on account type
       let defaultPath = '/dashboard';
-      if (response.user.accountType === 'admin') {
+      if (response.user?.accountType === 'admin') {
         defaultPath = '/admin';
-      } else if (response.user.accountType === 'dealer' || response.user.accountType === 'dealer_employee') {
+      } else if (
+        response.user?.accountType === 'dealer' ||
+        response.user?.accountType === 'dealer_employee'
+      ) {
         defaultPath = '/dealer';
       }
-      
+
       // Redirect to the page they tried to visit or default
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || defaultPath;
+      const from =
+        (location.state as { from?: { pathname: string } })?.from?.pathname || defaultPath;
       navigate(from, { replace: true });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setApiError(error.message || 'Invalid email or password. Please try again.');
+        const errorMessage = error.message || '';
+
+        // Check for email verification required error
+        if (
+          errorMessage.toLowerCase().includes('email') &&
+          errorMessage.toLowerCase().includes('verif')
+        ) {
+          setShowEmailVerification(true);
+          setApiError('Your email address has not been verified. Please check your inbox.');
+        } else {
+          setApiError(errorMessage || 'Invalid email or password. Please try again.');
+        }
       } else {
         setApiError('An unexpected error occurred. Please try again.');
       }
@@ -96,13 +145,17 @@ export default function LoginPage() {
     <div className="w-full">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold font-heading text-gray-900 mb-2">
-          {t('login.title')}
-        </h1>
-        <p className="text-gray-600">
-          {t('login.subtitle')}
-        </p>
+        <h1 className="text-3xl font-bold font-heading text-gray-900 mb-2">{t('login.title')}</h1>
+        <p className="text-gray-600">{t('login.subtitle')}</p>
       </div>
+
+      {/* Success Message (e.g., after email verification) */}
+      {successMessage && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+          <FiCheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
+          <p className="text-sm text-green-800">{successMessage}</p>
+        </div>
+      )}
 
       {/* API Error Alert */}
       {apiError && (
@@ -110,6 +163,15 @@ export default function LoginPage() {
           <FiAlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
             <p className="text-sm text-red-800">{apiError}</p>
+            {showEmailVerification && (
+              <button
+                type="button"
+                onClick={() => authService.resendVerificationEmail()}
+                className="text-sm text-red-700 underline mt-2 hover:text-red-900"
+              >
+                Resend verification email
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -160,13 +222,7 @@ export default function LoginPage() {
         </div>
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          fullWidth
-          isLoading={isSubmitting}
-        >
+        <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting}>
           {t('login.signIn')}
         </Button>
       </form>

@@ -1,10 +1,11 @@
 /**
  * Dealer & Seller API Service
- * 
+ *
  * Connects to UserService endpoints for managing dealers and sellers
  */
 
 import axios, { type AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 import type {
   Dealer,
   CreateDealerRequest,
@@ -42,6 +43,9 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Add refresh token interceptor for automatic token refresh on 401
+addRefreshTokenInterceptor(apiClient);
+
 // ============================================================================
 // DEALER API
 // ============================================================================
@@ -77,7 +81,7 @@ export const dealerApi = {
         // If not found, it might be an AuthService ID
         // Get user email from localStorage (set during login)
         const userEmail = localStorage.getItem('userEmail');
-        
+
         if (!userEmail) {
           throw new Error('User email not found. Please login again.');
         }
@@ -135,7 +139,7 @@ export const dealerApi = {
   getActiveModules: async (dealerId: string): Promise<DealerModuleSubscription[]> => {
     const response = await apiClient.get<string[]>(`/api/dealers/${dealerId}/active-modules`);
     // Backend returns string[], convert to DealerModuleSubscription[]
-    return response.data.map(moduleName => ({
+    return response.data.map((moduleName) => ({
       moduleId: moduleName,
       moduleName: moduleName,
       isActive: true,
@@ -146,7 +150,9 @@ export const dealerApi = {
    * Subscribe to module
    */
   subscribeToModule: async (dealerId: string, moduleCode: string) => {
-    const response = await apiClient.post(`/api/dealers/${dealerId}/modules/${moduleCode}/subscribe`);
+    const response = await apiClient.post(
+      `/api/dealers/${dealerId}/modules/${moduleCode}/subscribe`
+    );
     return response.data;
   },
 
@@ -154,14 +160,21 @@ export const dealerApi = {
    * Unsubscribe from module
    */
   unsubscribeFromModule: async (dealerId: string, moduleCode: string) => {
-    const response = await apiClient.post(`/api/dealers/${dealerId}/modules/${moduleCode}/unsubscribe`);
+    const response = await apiClient.post(
+      `/api/dealers/${dealerId}/modules/${moduleCode}/unsubscribe`
+    );
     return response.data;
   },
 
   /**
    * Register new dealer (onboarding flow)
    */
-  register: async (data: { dealerId?: string; email: string; businessName: string; phone: string }) => {
+  register: async (data: {
+    dealerId?: string;
+    email: string;
+    businessName: string;
+    phone: string;
+  }) => {
     const response = await apiClient.post('/api/dealers/register', data);
     return response.data;
   },
@@ -202,7 +215,7 @@ export const sellerApi = {
         // If not found, it might be an AuthService ID
         // Get user email from localStorage (set during login)
         const userEmail = localStorage.getItem('userEmail');
-        
+
         if (!userEmail) {
           throw new Error('User email not found. Please login again.');
         }
@@ -250,7 +263,10 @@ export const sellerApi = {
    * Verify or reject seller (Admin only)
    */
   verify: async (sellerId: string, data: VerifySellerRequest): Promise<{ message: string }> => {
-    const response = await apiClient.post<{ message: string }>(`/api/sellers/${sellerId}/verify`, data);
+    const response = await apiClient.post<{ message: string }>(
+      `/api/sellers/${sellerId}/verify`,
+      data
+    );
     return response.data;
   },
 };

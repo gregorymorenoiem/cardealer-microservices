@@ -1,6 +1,6 @@
 /**
  * Dealer Service - Fetches dealers with their vehicle listings for map visualization
- * 
+ *
  * This service aggregates vehicles by dealer and provides location data
  * for displaying dealers on Google Maps
  */
@@ -8,10 +8,10 @@
 import axios from 'axios';
 
 // API Gateway URL - routes to VehiclesSaleService
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 const VEHICLES_API_BASE = `${API_URL}/api`;
-// Fallback to direct service if Gateway fails
-const VEHICLES_DIRECT_URL = 'http://localhost:15070/api';
+// Using Gateway for all requests
+const VEHICLES_DIRECT_URL = `${API_URL}/api`;
 
 // ============================================================
 // INTERFACES
@@ -103,7 +103,7 @@ interface BackendVehicleImage {
 // Default coordinates for Dominican Republic (Santo Domingo)
 const DEFAULT_LOCATION = {
   latitude: 18.4861,
-  longitude: -69.9312
+  longitude: -69.9312,
 };
 
 // ============================================================
@@ -118,10 +118,10 @@ const generateLocationOffset = (index: number): { lat: number; lng: number } => 
   const row = Math.floor(index / 5);
   const col = index % 5;
   const baseOffset = 0.015; // ~1.6km between points
-  
+
   return {
     lat: (row - 2) * baseOffset + (Math.random() - 0.5) * 0.005,
-    lng: (col - 2) * baseOffset + (Math.random() - 0.5) * 0.005
+    lng: (col - 2) * baseOffset + (Math.random() - 0.5) * 0.005,
   };
 };
 
@@ -132,7 +132,7 @@ const getPrimaryImage = (images: BackendVehicleImage[] | undefined): string => {
   if (!images || images.length === 0) {
     return 'https://via.placeholder.com/400x300?text=No+Image';
   }
-  const primary = images.find(img => img.isPrimary);
+  const primary = images.find((img) => img.isPrimary);
   return primary?.url || images[0]?.url || 'https://via.placeholder.com/400x300?text=No+Image';
 };
 
@@ -146,7 +146,7 @@ const transformVehicleToListing = (vehicle: BackendVehicle): DealerListing => {
     price: vehicle.price,
     image: getPrimaryImage(vehicle.images),
     category: 'vehicle',
-    featured: vehicle.isFeatured
+    featured: vehicle.isFeatured,
   };
 };
 
@@ -165,16 +165,16 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
         page: 1,
         pageSize: 500,
         sortBy: 'CreatedAt',
-        sortDescending: true
+        sortDescending: true,
       },
-      timeout: 10000 // 10 second timeout
+      timeout: 10000, // 10 second timeout
     });
     return response.data?.vehicles || response.data || [];
   };
 
   try {
     let vehicles: BackendVehicle[] = [];
-    
+
     // Try Gateway first, fallback to direct service
     try {
       vehicles = await fetchVehicles(VEHICLES_API_BASE);
@@ -182,7 +182,7 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
       console.warn('⚠️ Gateway failed, trying direct service...', gatewayError);
       vehicles = await fetchVehicles(VEHICLES_DIRECT_URL);
     }
-    
+
     console.log(`✅ Fetched ${Array.isArray(vehicles) ? vehicles.length : 0} vehicles`);
 
     if (!Array.isArray(vehicles) || vehicles.length === 0) {
@@ -191,11 +191,14 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
     }
 
     // Group vehicles by dealer
-    const dealerMap = new Map<string, { dealer: Partial<DealerLocation>; vehicles: BackendVehicle[] }>();
+    const dealerMap = new Map<
+      string,
+      { dealer: Partial<DealerLocation>; vehicles: BackendVehicle[] }
+    >();
 
     vehicles.forEach((vehicle: BackendVehicle) => {
       const dealerId = vehicle.dealerId || vehicle.sellerId;
-      
+
       if (!dealerMap.has(dealerId)) {
         dealerMap.set(dealerId, {
           dealer: {
@@ -205,12 +208,12 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
             city: vehicle.city || 'Santo Domingo',
             state: vehicle.state || 'Distrito Nacional',
             latitude: vehicle.latitude ?? undefined,
-            longitude: vehicle.longitude ?? undefined
+            longitude: vehicle.longitude ?? undefined,
           },
-          vehicles: []
+          vehicles: [],
         });
       }
-      
+
       dealerMap.get(dealerId)!.vehicles.push(vehicle);
     });
 
@@ -222,7 +225,7 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
       // Calculate location - use vehicle coordinates or generate offset
       let latitude = data.dealer.latitude || DEFAULT_LOCATION.latitude;
       let longitude = data.dealer.longitude || DEFAULT_LOCATION.longitude;
-      
+
       // If no specific coordinates, add offset to spread dealers
       if (!data.dealer.latitude || !data.dealer.longitude) {
         const offset = generateLocationOffset(index);
@@ -231,9 +234,7 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
       }
 
       // Get featured listings (up to 6 for display)
-      const featuredListings = data.vehicles
-        .slice(0, 6)
-        .map(transformVehicleToListing);
+      const featuredListings = data.vehicles.slice(0, 6).map(transformVehicleToListing);
 
       // Create dealer location object
       const dealer: DealerLocation = {
@@ -250,7 +251,7 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
         longitude,
         activeListings: data.vehicles.length,
         featuredListings,
-        isVerified: data.vehicles.length > 5 // Verified if has 5+ listings
+        isVerified: data.vehicles.length > 5, // Verified if has 5+ listings
       };
 
       dealers.push(dealer);
@@ -261,7 +262,7 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
     return dealers;
   } catch (error) {
     console.error('❌ Error fetching dealers with vehicles:', error);
-    
+
     // Return empty array on error - let UI handle empty state
     return [];
   }
@@ -277,7 +278,7 @@ export const getDealerById = async (dealerId: string): Promise<DealerLocation | 
     );
 
     const vehicles = response.data || [];
-    
+
     if (vehicles.length === 0) {
       return null;
     }
@@ -299,7 +300,7 @@ export const getDealerById = async (dealerId: string): Promise<DealerLocation | 
       longitude: firstVehicle.longitude || DEFAULT_LOCATION.longitude,
       activeListings: vehicles.length,
       featuredListings,
-      isVerified: vehicles.length > 5
+      isVerified: vehicles.length > 5,
     };
   } catch (error) {
     console.error('❌ Error fetching dealer by ID:', error);
@@ -313,7 +314,7 @@ export const getDealerById = async (dealerId: string): Promise<DealerLocation | 
 
 const dealerService = {
   getDealersWithVehicles,
-  getDealerById
+  getDealerById,
 };
 
 export default dealerService;

@@ -8,7 +8,6 @@ using UserService.Shared.Middleware;
 using UserService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
@@ -24,24 +23,30 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using UserService.Api.Middleware;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Secret Provider for externalized secrets
 builder.Services.AddSecretProvider();
 
-// Configurar Serilog con enriquecimiento de TraceId
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan() // Agregar TraceId, SpanId de OpenTelemetry
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
-    .CreateLogger();
-builder.Host.UseSerilog();
+// ============================================================================
+// FASE 2: OBSERVABILITY - Logging centralizado con Serilog + Seq
+// ============================================================================
+builder.UseStandardSerilog("UserService", options =>
+{
+    options.SeqEnabled = true;
+    options.SeqServerUrl = builder.Configuration["Logging:Seq:ServerUrl"] ?? "http://seq:5341";
+    options.FileEnabled = builder.Configuration.GetValue<bool>("Logging:File:Enabled", false);
+    options.FilePath = builder.Configuration["Logging:File:Path"] ?? "logs/userservice-.log";
+    options.RabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+    options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+});
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -267,54 +272,33 @@ builder.Services.AddMediatR(cfg =>
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-// Configurar OpenTelemetry
-var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "UserService";
-var serviceVersion = builder.Configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0";
-var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
+// ============================================================================
+// FASE 2: OBSERVABILITY - OpenTelemetry Tracing + Metrics
+// ============================================================================
+builder.Services.AddStandardObservability("UserService", options =>
+{
+    options.TracingEnabled = true;
+    options.MetricsEnabled = true;
+    options.OtlpEndpoint = builder.Configuration["Observability:Otlp:Endpoint"] ?? "http://jaeger:4317";
+    options.SamplingRatio = builder.Configuration.GetValue<double>("Observability:SamplingRatio", builder.Environment.IsProduction() ? 0.1 : 1.0);
+    options.PrometheusEnabled = builder.Configuration.GetValue<bool>("Observability:Prometheus:Enabled", true);
+    options.ExcludedPaths = new[] { "/health", "/metrics", "/swagger" };
+});
 
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource
-        .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
-        .AddAttributes(new Dictionary<string, object>
-        {
-            ["deployment.environment"] = builder.Environment.EnvironmentName,
-            ["service.namespace"] = "cardealer"
-        }))
-    .WithTracing(tracing => tracing
-        .SetSampler(new ParentBasedSampler(
-            // Estrategia de muestreo basada en ratio
-            // En producción: captura 10% de traces normales, 100% de errores
-            new TraceIdRatioBasedSampler(
-                builder.Environment.IsProduction() ? 0.1 : 1.0))) // Dev: 100%, Prod: 10%
-        .AddAspNetCoreInstrumentation(options =>
-        {
-            options.RecordException = true;
-            options.Filter = context =>
-            {
-                // Filtrar health checks para reducir ruido
-                return !context.Request.Path.StartsWithSegments("/health");
-            };
-        })
-        .AddHttpClientInstrumentation(options =>
-        {
-            options.RecordException = true;
-        })
-        .AddSource("UserService.*")
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri(otlpEndpoint);
-        }))
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddMeter("UserService.*")
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri(otlpEndpoint);
-        }));
-
-// Configurar el manejo de errores
-builder.Services.AddErrorHandling("UserService");
+// ============================================================================
+// FASE 2: OBSERVABILITY - Error Handling centralizado
+// ============================================================================
+builder.Services.AddStandardErrorHandling(options =>
+{
+    options.ServiceName = "UserService";
+    options.Environment = builder.Environment.EnvironmentName;
+    options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+    options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.IncludeStackTrace = builder.Environment.IsDevelopment();
+});
 
 // Configurar Rate Limiting
 var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<RateLimitingConfiguration>()
@@ -331,9 +315,17 @@ builder.Services.Configure<UserServiceRabbitMQSettings>(builder.Configuration.Ge
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-app.UseSerilogRequestLogging();
+// ============================================================================
+// MIDDLEWARE PIPELINE
+// ============================================================================
 
+// FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
+app.UseGlobalErrorHandling();
+
+// FASE 2: Request Logging con enrichment de TraceId, UserId, CorrelationId
+app.UseRequestLogging();
+
+// Swagger en desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -359,11 +351,10 @@ if (consulEnabled)
     app.UseMiddleware<ServiceRegistrationMiddleware>();
 }
 
-// Middleware para capturar respuestas
+// Middleware para capturar respuestas (ResponseCaptureMiddleware local)
 app.UseMiddleware<ResponseCaptureMiddleware>();
 
-// Middleware para manejo de errores
-app.UseErrorHandling();
+// NOTA: ErrorHandling local reemplazado por UseGlobalErrorHandling() de Fase 2
 
 app.MapControllers();
 

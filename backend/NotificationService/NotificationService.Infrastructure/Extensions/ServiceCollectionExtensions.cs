@@ -27,7 +27,7 @@ public static class ServiceCollectionExtensions
         services.Configure<RabbitMQSettings>(configuration.GetSection("RabbitMQ"));
         services.Configure<NotificationServiceRabbitMQSettings>(configuration.GetSection("NotificationService"));
         
-        // ✅ NotificationSettings Configuration (for SendGrid, Twilio, Firebase)
+        // ✅ NotificationSettings Configuration (for Resend, Twilio, Firebase)
         services.Configure<NotificationSettings>(configuration.GetSection("NotificationSettings"));
 
         // ✅ Register Repositories
@@ -38,9 +38,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationLogRepository, EfNotificationLogRepository>();
 
         // ✅ Register External Providers (Email, SMS, Push)
-        services.AddScoped<IEmailProvider, SendGridEmailService>();
+        // Resend for emails (replacing SendGrid)
+        services.AddHttpClient("Resend");
+        services.AddScoped<IEmailProvider, ResendEmailService>();
         services.AddScoped<ISmsProvider, TwilioSmsService>();
         services.AddScoped<IPushNotificationProvider, FirebasePushService>();
+        
+        // ✅ Email Service (adapter que usa IEmailProvider)
+        services.AddScoped<IEmailService, EmailService>();
 
         // ✅ Register Template Engine
         services.AddScoped<ITemplateEngine, TemplateEngine>();

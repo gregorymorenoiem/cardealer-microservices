@@ -17,40 +17,53 @@ export enum AccountType {
   DEALER = 'dealer',
   DEALER_EMPLOYEE = 'dealer_employee',
   ADMIN = 'admin',
-  PLATFORM_EMPLOYEE = 'platform_employee'
+  PLATFORM_EMPLOYEE = 'platform_employee',
 }
 
 /**
  * Roles específicos para empleados de dealers
  */
 export enum DealerRole {
-  OWNER = 'owner',                    // Acceso total al dealer
-  MANAGER = 'manager',                // Gestión completa excepto billing
-  SALES_MANAGER = 'sales_manager',    // Gestión de ventas y leads
+  OWNER = 'owner', // Acceso total al dealer
+  MANAGER = 'manager', // Gestión completa excepto billing
+  SALES_MANAGER = 'sales_manager', // Gestión de ventas y leads
   INVENTORY_MANAGER = 'inventory_manager', // Gestión de inventario
-  SALESPERSON = 'salesperson',        // Solo leads asignados
-  VIEWER = 'viewer'                   // Solo lectura
+  SALESPERSON = 'salesperson', // Solo leads asignados
+  VIEWER = 'viewer', // Solo lectura
 }
 
 /**
+ * Roles específicos para administradores de la plataforma.
+ * Alineado con AdminRole del backend (AdminService.Domain.Enums.AdminRole).
+ */
+export enum AdminRole {
+  SUPER_ADMIN = 'super_admin', // Acceso total a todo
+  PLATFORM_ADMIN = 'platform_admin', // Configuración, mantenimiento, homepage
+  MODERATION_ADMIN = 'moderation_admin', // Aprobar/rechazar listings, verificar dealers
+  SUPPORT_ADMIN = 'support_admin', // Soporte al cliente, tickets
+  ANALYTICS_ADMIN = 'analytics_admin', // Solo lectura de analytics/reportes
+}
+
+/**
+ * @deprecated Use AdminRole instead. Mantener por compatibilidad.
  * Roles específicos para empleados de plataforma
  */
 export enum PlatformRole {
-  SUPER_ADMIN = 'super_admin',        // Acceso total
-  ADMIN = 'admin',                    // Gestión de usuarios y dealers
-  MODERATOR = 'moderator',            // Moderación de contenido
-  SUPPORT = 'support',                // Soporte técnico
-  ANALYST = 'analyst'                 // Solo lectura de analytics
+  SUPER_ADMIN = 'super_admin', // Acceso total
+  ADMIN = 'admin', // Gestión de usuarios y dealers
+  MODERATOR = 'moderator', // Moderación de contenido
+  SUPPORT = 'support', // Soporte técnico
+  ANALYST = 'analyst', // Solo lectura de analytics
 }
 
 /**
  * Planes de suscripción para dealers
  */
 export enum DealerPlan {
-  FREE = 'free',         // Plan gratuito inicial (3 listings, sin analytics)
-  BASIC = 'basic',       // 5 listings, analytics básicos
-  PRO = 'pro',           // 25 listings, analytics avanzados, bulk upload
-  ENTERPRISE = 'enterprise' // Ilimitado, API access, white label
+  FREE = 'free', // Plan gratuito inicial (3 listings, sin analytics)
+  BASIC = 'basic', // 5 listings, analytics básicos
+  PRO = 'pro', // 25 listings, analytics avanzados, bulk upload
+  ENTERPRISE = 'enterprise', // Ilimitado, API access, white label
 }
 
 /**
@@ -63,26 +76,26 @@ export enum DealerPermission {
   EDIT_LISTING = 'dealer:inventory:edit',
   DELETE_LISTING = 'dealer:inventory:delete',
   BULK_UPLOAD = 'dealer:inventory:bulk',
-  
+
   // Leads
   VIEW_ALL_LEADS = 'dealer:leads:view:all',
   VIEW_ASSIGNED_LEADS = 'dealer:leads:view:assigned',
   ASSIGN_LEADS = 'dealer:leads:assign',
   EDIT_LEADS = 'dealer:leads:edit',
-  
+
   // Team Management
   INVITE_EMPLOYEES = 'dealer:team:invite',
   MANAGE_EMPLOYEES = 'dealer:team:manage',
   ASSIGN_ROLES = 'dealer:team:assign_roles',
-  
+
   // Analytics
   VIEW_ANALYTICS = 'dealer:analytics:view',
   EXPORT_REPORTS = 'dealer:analytics:export',
-  
+
   // Billing
   VIEW_BILLING = 'dealer:billing:view',
   MANAGE_SUBSCRIPTION = 'dealer:billing:manage',
-  
+
   // Settings
   EDIT_DEALER_PROFILE = 'dealer:settings:edit',
   MANAGE_BRANDING = 'dealer:settings:branding',
@@ -97,20 +110,20 @@ export enum PlatformPermission {
   EDIT_USERS = 'platform:users:edit',
   DELETE_USERS = 'platform:users:delete',
   SUSPEND_USERS = 'platform:users:suspend',
-  
+
   // Dealer Management
   VIEW_DEALERS = 'platform:dealers:view',
   APPROVE_DEALERS = 'platform:dealers:approve',
   SUSPEND_DEALERS = 'platform:dealers:suspend',
-  
+
   // Content Moderation
   MODERATE_LISTINGS = 'platform:content:moderate',
   DELETE_LISTINGS = 'platform:content:delete',
-  
+
   // System Config
   MANAGE_SETTINGS = 'platform:settings:manage',
   VIEW_ANALYTICS = 'platform:analytics:view',
-  
+
   // Support
   ACCESS_SUPPORT_TICKETS = 'platform:support:access',
   IMPERSONATE_USER = 'platform:support:impersonate',
@@ -120,13 +133,13 @@ export enum VehicleStatus {
   AVAILABLE = 'available',
   SOLD = 'sold',
   PENDING = 'pending',
-  RESERVED = 'reserved'
+  RESERVED = 'reserved',
 }
 
 export enum TransmissionType {
   MANUAL = 'manual',
   AUTOMATIC = 'automatic',
-  SEMI_AUTOMATIC = 'semi_automatic'
+  SEMI_AUTOMATIC = 'semi_automatic',
 }
 
 export enum FuelType {
@@ -134,7 +147,7 @@ export enum FuelType {
   DIESEL = 'diesel',
   ELECTRIC = 'electric',
   HYBRID = 'hybrid',
-  PLUG_IN_HYBRID = 'plug_in_hybrid'
+  PLUG_IN_HYBRID = 'plug_in_hybrid',
 }
 
 export enum BodyType {
@@ -145,7 +158,7 @@ export enum BodyType {
   CONVERTIBLE = 'convertible',
   WAGON = 'wagon',
   PICKUP = 'pickup',
-  VAN = 'van'
+  VAN = 'van',
 }
 
 // ============================================================================
@@ -156,18 +169,18 @@ export enum BodyType {
  * Features disponibles por plan de dealer
  */
 export interface DealerPlanFeatures {
-  maxListings: number;              // Máximo de vehículos publicados
-  maxImages: number;                // Imágenes por vehículo
-  analyticsAccess: boolean;         // Acceso a analytics dashboard
-  marketPriceAnalysis: boolean;     // Análisis de precios de mercado
-  bulkUpload: boolean;              // Carga masiva CSV/Excel
-  featuredListings: number;         // Publicaciones destacadas permitidas
-  leadManagement: boolean;          // CRM de leads
-  emailAutomation: boolean;         // Secuencias de email
-  customBranding: boolean;          // Logo y colores personalizados
-  apiAccess: boolean;               // Acceso a API
-  prioritySupport: boolean;         // Soporte prioritario
-  whatsappIntegration: boolean;     // Integración WhatsApp Business
+  maxListings: number; // Máximo de vehículos publicados
+  maxImages: number; // Imágenes por vehículo
+  analyticsAccess: boolean; // Acceso a analytics dashboard
+  marketPriceAnalysis: boolean; // Análisis de precios de mercado
+  bulkUpload: boolean; // Carga masiva CSV/Excel
+  featuredListings: number; // Publicaciones destacadas permitidas
+  leadManagement: boolean; // CRM de leads
+  emailAutomation: boolean; // Secuencias de email
+  customBranding: boolean; // Logo y colores personalizados
+  apiAccess: boolean; // Acceso a API
+  prioritySupport: boolean; // Soporte prioritario
+  whatsappIntegration: boolean; // Integración WhatsApp Business
 }
 
 /**
@@ -239,13 +252,13 @@ export interface DealerSubscription {
   plan: DealerPlan;
   status: 'active' | 'canceled' | 'expired' | 'trial';
   startDate: string;
-  endDate?: string;                  // null si es FREE (permanente)
-  trialEndDate?: string;             // Para trials de planes pagados
+  endDate?: string; // null si es FREE (permanente)
+  trialEndDate?: string; // Para trials de planes pagados
   features: DealerPlanFeatures;
   usage: {
-    currentListings: number;         // Listados actuales
-    listingsThisMonth: number;       // Listados publicados este mes
-    featuredUsed: number;            // Featured listings usados
+    currentListings: number; // Listados actuales
+    listingsThisMonth: number; // Listados publicados este mes
+    featuredUsed: number; // Featured listings usados
   };
 }
 
@@ -326,28 +339,28 @@ export interface User {
   phone?: string;
   avatar?: string;
   accountType: AccountType;
-  
+
   // Dealer subscription (solo si accountType = DEALER)
   subscription?: DealerSubscription;
-  
+
   // Platform-level (si es admin o platform employee)
   platformRole?: PlatformRole;
   platformPermissions?: PlatformPermission[];
-  
+
   // Dealer-level (si es dealer o dealer employee)
   dealerId?: string;
   dealerRole?: DealerRole;
   dealerPermissions?: DealerPermission[];
   dealer?: DealerInfo;
-  
+
   // Employee metadata
-  employerUserId?: string;    // ID del que lo contrató (dealer owner o admin)
-  createdBy?: string;         // Usuario que creó esta cuenta
-  
+  employerUserId?: string; // ID del que lo contrató (dealer owner o admin)
+  createdBy?: string; // Usuario que creó esta cuenta
+
   // Legacy fields (mantener compatibilidad)
   roles: string[];
   permissions?: string[];
-  
+
   emailVerified: boolean;
   phoneVerified: boolean;
   twoFactorEnabled: boolean;
@@ -476,16 +489,16 @@ export interface Vehicle {
   licensePlate?: string;
   images: VehicleImage[];
   features: string[];
-  
+
   // Dealer-specific fields
   dealerId?: string;
   dealerInfo?: DealerInfo;
-  acquisitionCost?: number;    // Costo de adquisición (privado)
-  daysInInventory?: number;    // Días en inventario
+  acquisitionCost?: number; // Costo de adquisición (privado)
+  daysInInventory?: number; // Días en inventario
   viewCount?: number;
   leadCount?: number;
   isFeatured?: boolean;
-  
+
   location: Address;
   createdAt: string;
   updatedAt: string;

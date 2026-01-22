@@ -40,34 +40,32 @@ public class EmailVerificationService : IEmailVerificationService
 
         await _verificationTokenRepository.AddAsync(verificationToken);
     }
-    public async Task<bool> VerifyAsync(string token)
+    public async Task<EmailVerificationResult> VerifyAsync(string token)
     {
         var verificationToken = await _verificationTokenRepository.GetByTokenAndTypeAsync(
             token, VerificationTokenType.EmailVerification);
 
         if (verificationToken == null || !verificationToken.IsValid())
-            return false;
+            return new EmailVerificationResult(false);
 
         var user = await _userRepository.GetByIdAsync(verificationToken.UserId);
         if (user == null)
-            return false;
+            return new EmailVerificationResult(false);
 
-        // Verificar el token usando Identity
-        var result = await _userManager.ConfirmEmailAsync(user, token);
+        // Marcar el token como usado
+        verificationToken.MarkAsUsed();
+        await _verificationTokenRepository.UpdateAsync(verificationToken);
 
-        if (result.Succeeded)
-        {
-            // Marcar el token como usado
-            verificationToken.MarkAsUsed();
-            await _verificationTokenRepository.UpdateAsync(verificationToken);
+        // Confirmar el email en la entidad de usuario
+        user.ConfirmEmail();
+        await _userRepository.UpdateAsync(user);
 
-            // Confirmar el email en la entidad de usuario
-            user.ConfirmEmail();
-            await _userRepository.UpdateAsync(user);
-
-            return true;
-        }
-
-        return false;
+        // Retornar éxito con datos del usuario para enviar email de bienvenida
+        return new EmailVerificationResult(
+            Success: true,
+            UserId: user.Id,
+            Email: user.Email,
+            UserName: user.UserName
+        );
     }
 }

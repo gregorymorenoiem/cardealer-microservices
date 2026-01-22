@@ -23,5 +23,5 @@ public class SmsNotificationRequestedEvent : EventBase
     /// <summary>
     /// Additional data for tracking
     /// </summary>
-    public Dictionary<string, string>? Data { get; set; }
+    public Dictionary<string, object>? Data { get; set; }
 }

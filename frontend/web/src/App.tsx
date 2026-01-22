@@ -56,6 +56,12 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
+import EmailVerificationPendingPage from './pages/auth/EmailVerificationPendingPage';
+import TwoFactorVerifyPage from './pages/auth/TwoFactorVerifyPage';
+// User Security Settings
+import SecuritySettingsPage from './pages/user/SecuritySettingsPage';
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import PendingApprovalsPage from './pages/admin/PendingApprovalsPage';
@@ -64,6 +70,14 @@ import AdminListingsPage from './pages/admin/AdminListingsPage';
 import AdminReportsPage from './pages/admin/AdminReportsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import CategoriesManagementPage from './pages/admin/CategoriesManagementPage';
+import KYCAdminReviewPage from './pages/admin/KYCAdminReviewPage';
+// RBAC - Roles & Permissions Management
+import RolesManagementPage from './pages/admin/RolesManagementPage';
+import PermissionsManagementPage from './pages/admin/PermissionsManagementPage';
+import RoleDetailPage from './pages/admin/RoleDetailPage';
+// KYC pages
+import KYCVerificationPage from './pages/kyc/KYCVerificationPage';
+import KYCStatusPage from './pages/kyc/KYCStatusPage';
 // Dealer pages
 import DealerDashboardPage from './pages/dealer/DealerDashboardPage';
 import {
@@ -247,6 +261,46 @@ function App() {
             }
           />
           <Route path="/auth/callback/:provider" element={<OAuthCallbackPage />} />
+          <Route
+            path="/reset-password"
+            element={
+              <AuthLayout>
+                <ResetPasswordPage />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <AuthLayout>
+                <VerifyEmailPage />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/verify-email-pending"
+            element={
+              <AuthLayout>
+                <EmailVerificationPendingPage />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/verify-2fa"
+            element={
+              <AuthLayout>
+                <TwoFactorVerifyPage />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/settings/security"
+            element={
+              <ProtectedRoute>
+                <SecuritySettingsPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Payment Routes (Sprint 4 - AZUL) */}
           <Route path="/payment/azul" element={<AzulPaymentPage />} />
@@ -579,6 +633,76 @@ function App() {
               <ProtectedRoute requireAdmin>
                 <AdminLayout>
                   <CategoriesManagementPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* RBAC - Roles & Permissions Management */}
+          <Route
+            path="/admin/roles"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <RolesManagementPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/roles/:id"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <RoleDetailPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/permissions"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <PermissionsManagementPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* KYC Routes */}
+          <Route
+            path="/kyc/verify"
+            element={
+              <ProtectedRoute>
+                <KYCVerificationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kyc/status"
+            element={
+              <ProtectedRoute>
+                <KYCStatusPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/kyc"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <KYCAdminReviewPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/kyc/:profileId"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <KYCAdminReviewPage />
                 </AdminLayout>
               </ProtectedRoute>
             }

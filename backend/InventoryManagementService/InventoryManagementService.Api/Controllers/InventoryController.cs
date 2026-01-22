@@ -30,7 +30,7 @@ public class InventoryController : ControllerBase
         [FromQuery] Guid dealerId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] InventoryStatus? status = null,
+        [FromQuery] string? status = null,
         [FromQuery] string? searchTerm = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDescending = false)
@@ -261,4 +261,13 @@ public class InventoryController : ControllerBase
             return StatusCode(500, new { message = "Internal server error" });
         }
     }
+}
+
+/// <summary>
+/// Request for bulk updating item status
+/// </summary>
+public class BulkUpdateStatusRequest
+{
+    public List<Guid> ItemIds { get; set; } = new();
+    public string Status { get; set; } = string.Empty;
 }

@@ -1,7 +1,9 @@
 import axios from 'axios';
 import type { User, AccountType } from '@/types';
 
-const AUTH_API_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:15085/api';
+// Use Gateway URL for all API calls
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+const AUTH_API_URL = `${API_BASE_URL}/api/auth`;
 
 /**
  * Decode JWT token payload (without verification)
@@ -143,7 +145,7 @@ interface BackendAuthResponse {
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/login`, {
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/login`, {
         email: credentials.email,
         password: credentials.password,
       });
@@ -221,7 +223,7 @@ export const authService = {
   async register(data: RegisterData): Promise<LoginResponse> {
     try {
       // Backend only expects: userName, email, password
-      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/register`, {
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/register`, {
         userName: data.userName,
         email: data.email,
         password: data.password,
@@ -269,7 +271,7 @@ export const authService = {
       const refreshToken = localStorage.getItem('refreshToken');
 
       if (refreshToken) {
-        await axios.post(`${AUTH_API_URL}/Auth/logout`, { refreshToken });
+        await axios.post(`${AUTH_API_URL}/logout`, { refreshToken });
       }
     } catch (error) {
       console.error('Error during logout:', error);
@@ -290,7 +292,7 @@ export const authService = {
         throw new Error('No refresh token available');
       }
 
-      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/Auth/refresh-token`, {
+      const response = await axios.post<BackendAuthResponse>(`${AUTH_API_URL}/refresh-token`, {
         refreshToken,
       });
 
@@ -320,7 +322,7 @@ export const authService = {
 
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await axios.get(`${AUTH_API_URL}/auth/me`);
+      const response = await axios.get(`${AUTH_API_URL}/me`);
       return response.data;
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -330,7 +332,7 @@ export const authService = {
 
   async updateProfile(updates: Partial<User>): Promise<User> {
     try {
-      const response = await axios.put(`${AUTH_API_URL}/auth/profile`, updates);
+      const response = await axios.put(`${AUTH_API_URL}/profile`, updates);
       return response.data;
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -340,7 +342,7 @@ export const authService = {
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/auth/change-password`, {
+      await axios.post(`${AUTH_API_URL}/change-password`, {
         currentPassword,
         newPassword,
       });
@@ -355,7 +357,7 @@ export const authService = {
 
   async forgotPassword(email: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/Auth/forgot-password`, { email });
+      await axios.post(`${AUTH_API_URL}/forgot-password`, { email });
     } catch (error) {
       console.error('Error sending password reset email:', error);
       throw new Error('Failed to send password reset email');
@@ -364,9 +366,10 @@ export const authService = {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/Auth/reset-password`, {
+      await axios.post(`${AUTH_API_URL}/reset-password`, {
         token,
         newPassword,
+        confirmPassword: newPassword,
       });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -379,7 +382,7 @@ export const authService = {
 
   async verifyEmail(token: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/Auth/verify-email`, { token });
+      await axios.post(`${AUTH_API_URL}/verify-email`, { token });
     } catch (error) {
       console.error('Error verifying email:', error);
       throw new Error('Failed to verify email');
@@ -388,7 +391,7 @@ export const authService = {
 
   async resendVerificationEmail(): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/auth/resend-verification`);
+      await axios.post(`${AUTH_API_URL}/resend-verification`);
     } catch (error) {
       console.error('Error resending verification email:', error);
       throw new Error('Failed to resend verification email');

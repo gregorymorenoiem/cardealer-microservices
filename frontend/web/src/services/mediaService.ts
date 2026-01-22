@@ -3,9 +3,13 @@
  * Port: 15090
  */
 
-import axios from 'axios';
+import api from './api';
 
-const MEDIA_SERVICE_URL = import.meta.env.VITE_MEDIA_SERVICE_URL || 'http://localhost:15090';
+// Use api instance with refresh token interceptor
+const axios = api;
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+const MEDIA_SERVICE_URL = `${API_BASE_URL}/api/media`;
 
 export interface UploadResponse {
   id: string;
@@ -70,7 +74,7 @@ export const uploadVehicleImages = async (
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    
+
     try {
       const result = await uploadVehicleImage(file, (progress) => {
         if (onProgress) {

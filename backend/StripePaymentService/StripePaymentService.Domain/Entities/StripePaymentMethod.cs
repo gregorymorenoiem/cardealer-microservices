@@ -16,6 +16,15 @@ public class StripePaymentMethod
     public Guid StripeCustomerId { get; set; }
 
     /// <summary>
+    /// Alias for StripeCustomerId (for EF Core navigation)
+    /// </summary>
+    public Guid CustomerId
+    {
+        get => StripeCustomerId;
+        set => StripeCustomerId = value;
+    }
+
+    /// <summary>
     /// Relación con StripeCustomer
     /// </summary>
     public StripeCustomer? Customer { get; set; }
@@ -34,6 +43,15 @@ public class StripePaymentMethod
     /// Marca de la tarjeta (Visa, Mastercard, etc.)
     /// </summary>
     public string? CardBrand { get; set; }
+
+    /// <summary>
+    /// Alias for CardBrand
+    /// </summary>
+    public string? Brand
+    {
+        get => CardBrand;
+        set => CardBrand = value;
+    }
 
     /// <summary>
     /// Últimos 4 dígitos

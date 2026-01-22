@@ -722,6 +722,7 @@ services:
       - errorservice
       - authservice
       - notificationservice
+      - redis
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:80"
@@ -729,6 +730,9 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
+      Redis__ConnectionString: "redis:6379"
+      RateLimiting__EnableRateLimiting: "true"
+      RateLimiting__FailOpen: "true"
     volumes:
       # Solo montar Gateway y _Shared para evitar reinicios por cambios en otros servicios
       - ./backend/Gateway:/app/Gateway
@@ -795,11 +799,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
       DOTNET_USE_POLLING_FILE_WATCHER_INTERVAL: "4000"
       Database__Provider: "PostgreSQL"
-      Database__Host: postgres_db
-      Database__Port: "5432"
-      Database__Database: mediaservice
-      Database__Username: postgres
-      Database__Password: password
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=mediaservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=mediaservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
@@ -807,8 +807,10 @@ services:
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Enabled: "true"
+      RabbitMQ__HostName: "rabbitmq"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
       RabbitMQ__Username: "guest"
       RabbitMQ__Password: "guest"
       RabbitMQ__VirtualHost: "/"
@@ -994,6 +996,9 @@ services:
       Database__AutoMigrate: "true"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Database=billingservice;Username=postgres;Password=password"
       ConnectionStrings__Redis: "redis:6379"
+      Redis__ConnectionString: "redis:6379"
+      Idempotency__DefaultTTLSeconds: "86400"
+      Idempotency__ProcessingTimeoutSeconds: "120"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "CarGurus-Dev"
@@ -2734,12 +2739,17 @@ services:
       RabbitMQ__Password: "guest"
       Azul__StoreId: "${AZUL_STORE_ID:-demo}"
       Azul__ApiKey: "${AZUL_API_KEY:-demo-key}"
+      Redis__ConnectionString: "redis:6379"
+      Idempotency__DefaultTTLSeconds: "86400"
+      Idempotency__ProcessingTimeoutSeconds: "120"
     ports:
       - "5035:80"
     depends_on:
       postgres_db:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - cargurus-net
@@ -2784,8 +2794,64 @@ services:
       Stripe__ApiKey: "${STRIPE_API_KEY:-sk_test_demo}"
       Stripe__PublishableKey: "${STRIPE_PUBLISHABLE_KEY:-pk_test_demo}"
       Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_demo}"
+      Redis__ConnectionString: "redis:6379"
+      Idempotency__DefaultTTLSeconds: "86400"
+      Idempotency__ProcessingTimeoutSeconds: "120"
     ports:
       - "5036:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    volumes:
+      - ./backend/StripePaymentService:/app/StripePaymentService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SpyneIntegrationService - AI Image Processing Integration
+  spyneintegrationservice:
+    build:
+      context: ./backend/SpyneIntegrationService
+      dockerfile: Dockerfile.dev
+    container_name: spyneintegrationservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=spyneintegrationservice;Username=postgres;Password=password"
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Database=spyneintegrationservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      SpyneApi__BaseUrl: "https://api.spyne.ai/api"
+      SpyneApi__ApiKey: "${SPYNE_API_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbnRlcnByaXNlSWQiOiIwOTg3ODAwZjEiLCJ0ZWFtSWQiOiI5ZDJjMjVmNTQ2IiwidXNlcklkIjoiYTQ1ZGE3MWEiLCJzZWNyZXRLZXkiOiI2OTFlZWM3MjFiZDg0YzMwOWEwZTE0NzBiYjljZjIxYiIsImlhdCI6MTc2ODk1MzQ1OCwiZXhwIjoxODYzNTYxNDU4fQ.d08jh3rlDG7sE46b1wpVai5Hy5L3ZAW_iv4Xm81AiGk}"
+      SpyneApi__TimeoutSeconds: "120"
+      SpyneApi__RetryCount: "3"
+    ports:
+      - "15070:80"
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -2794,7 +2860,7 @@ services:
     networks:
       - cargurus-net
     volumes:
-      - ./backend/StripePaymentService:/app/StripePaymentService
+      - ./backend/SpyneIntegrationService:/app/SpyneIntegrationService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
       - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
     healthcheck:

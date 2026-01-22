@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using ComparisonService.Domain.Entities;
-using CarDealer.Shared.MultiTenancy;
 
 namespace ComparisonService.Infrastructure.Persistence;
 
-public class ApplicationDbContext : MultiTenantDbContext
+public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -23,6 +22,7 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt);
             entity.Property(e => e.ShareToken).HasMaxLength(50);
+            entity.Property(e => e.IsPublic).IsRequired().HasDefaultValue(false);
             
             // Store VehicleIds as JSON for better query support
             entity.Property(e => e.VehicleIds)

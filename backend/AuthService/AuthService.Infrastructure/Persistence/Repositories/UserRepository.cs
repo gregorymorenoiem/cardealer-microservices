@@ -171,4 +171,24 @@ public class UserRepository : IUserRepository
         return await _userManager.Users.ToListAsync(cancellationToken);
     }
 
+    // Implementación de métodos de seguridad para IUserRepository
+    public async Task<bool> VerifyPasswordAsync(ApplicationUser user, string password)
+    {
+        return await _userManager.CheckPasswordAsync(user, password);
+    }
+
+    public async Task ChangePasswordAsync(ApplicationUser user, string newPassword, CancellationToken cancellationToken = default)
+    {
+        // Generar token de reset para cambiar sin contraseña actual
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        
+        if (!result.Succeeded)
+        {
+            throw new DomainException($"Failed to change password: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+
+        user.MarkAsUpdated();
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }

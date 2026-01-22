@@ -15,6 +15,9 @@ WORKDIR /app
 COPY Gateway/Gateway.Api/Gateway.Api.csproj ./Gateway/Gateway.Api/
 COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj ./_Shared/CarDealer.Contracts/
 COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj ./_Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj ./_Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj ./_Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj ./_Shared/CarDealer.Shared.Observability/
 COPY ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
 COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
 

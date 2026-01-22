@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import { addRefreshTokenInterceptor } from './api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
@@ -131,12 +132,15 @@ class InventoryManagementService {
 
     // Interceptor para agregar JWT token
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     });
+
+    // Add refresh token interceptor for automatic token refresh on 401
+    addRefreshTokenInterceptor(this.api);
   }
 
   /**

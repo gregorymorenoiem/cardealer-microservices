@@ -15,13 +15,16 @@ public class WebhooksController : ControllerBase
 {
     private readonly StripeWebhookValidationService _webhookService;
     private readonly ILogger<WebhooksController> _logger;
+    private readonly IConfiguration _configuration;
 
     public WebhooksController(
         StripeWebhookValidationService webhookService,
-        ILogger<WebhooksController> logger)
+        ILogger<WebhooksController> logger,
+        IConfiguration configuration)
     {
         _webhookService = webhookService ?? throw new ArgumentNullException(nameof(webhookService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
     /// <summary>
@@ -35,12 +38,13 @@ public class WebhooksController : ControllerBase
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync();
             var signatureHeader = Request.Headers["Stripe-Signature"].ToString();
+            var webhookSecret = _configuration["Stripe:WebhookSecret"] ?? "";
 
-            _logger.Information("Webhook recibido de Stripe");
+            _logger.LogInformation("Webhook recibido de Stripe");
 
-            if (!_webhookService.ValidateWebhookSignature(payload, signatureHeader))
+            if (!_webhookService.ValidateWebhookSignature(payload, signatureHeader, webhookSecret))
             {
-                _logger.Warning("Validación de webhook fallida");
+                _logger.LogWarning("Validación de webhook fallida");
                 return Unauthorized();
             }
 
@@ -52,12 +56,12 @@ public class WebhooksController : ControllerBase
             // - invoice.payment_succeeded
             // - invoice.payment_failed
 
-            _logger.Information("Webhook procesado exitosamente");
+            _logger.LogInformation("Webhook procesado exitosamente");
             return Ok();
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error procesando webhook");
+            _logger.LogError(ex, "Error procesando webhook");
             return StatusCode(500, new { error = "Error procesando webhook" });
         }
     }

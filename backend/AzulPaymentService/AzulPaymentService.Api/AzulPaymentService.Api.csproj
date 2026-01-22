@@ -23,6 +23,11 @@
   <ItemGroup>
     <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Idempotency/CarDealer.Shared.Idempotency.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
     <ProjectReference Include="../AzulPaymentService.Domain/AzulPaymentService.Domain.csproj" />
     <ProjectReference Include="../AzulPaymentService.Application/AzulPaymentService.Application.csproj" />
     <ProjectReference Include="../AzulPaymentService.Infrastructure/AzulPaymentService.Infrastructure.csproj" />

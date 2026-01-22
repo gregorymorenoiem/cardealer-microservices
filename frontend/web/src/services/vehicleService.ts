@@ -1,7 +1,10 @@
-import axios from 'axios';
+import api from './api';
 
 // API Gateway URL (routes to appropriate microservices)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+
+// Use api instance with refresh token interceptor
+const axios = api;
 
 // VehiclesSaleService via Gateway - base path without /vehicles
 const VEHICLES_SALE_API_URL = `${API_URL}/api`;

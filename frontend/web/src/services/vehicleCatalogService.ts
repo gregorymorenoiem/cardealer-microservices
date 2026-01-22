@@ -8,23 +8,14 @@
  * 4. Cargar trims con especificaciones completas para auto-fill
  */
 
-import axios from 'axios';
+import api from './api';
 
 // ============================================================
 // API CONFIGURATION
 // ============================================================
 
-// API Gateway URL - routes to VehiclesSaleService catalog endpoints
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-const CATALOG_API_URL = `${API_URL}/api/catalog`;
-
-const catalogApi = axios.create({
-  baseURL: CATALOG_API_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Use api instance with refresh token interceptor
+const catalogApi = api;
 
 // ============================================================
 // TYPES
@@ -96,7 +87,7 @@ export interface CatalogStats {
  */
 export async function getAllMakes(): Promise<VehicleMake[]> {
   try {
-    const response = await catalogApi.get<VehicleMake[]>('/makes');
+    const response = await catalogApi.get<VehicleMake[]>('/api/catalog/makes');
     return response.data;
   } catch (error) {
     console.error('Error fetching makes:', error);
@@ -109,7 +100,9 @@ export async function getAllMakes(): Promise<VehicleMake[]> {
  */
 export async function getPopularMakes(limit: number = 20): Promise<VehicleMake[]> {
   try {
-    const response = await catalogApi.get<VehicleMake[]>(`/makes/popular?take=${limit}`);
+    const response = await catalogApi.get<VehicleMake[]>(
+      `/api/catalog/makes/popular?take=${limit}`
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching popular makes:', error);
@@ -125,7 +118,7 @@ export async function searchMakes(query: string): Promise<VehicleMake[]> {
 
   try {
     const response = await catalogApi.get<VehicleMake[]>(
-      `/makes/search?q=${encodeURIComponent(query)}`
+      `/api/catalog/makes/search?q=${encodeURIComponent(query)}`
     );
     return response.data;
   } catch (error) {
@@ -140,7 +133,7 @@ export async function searchMakes(query: string): Promise<VehicleMake[]> {
 export async function getModelsByMake(makeSlug: string): Promise<VehicleModel[]> {
   try {
     const response = await catalogApi.get<VehicleModel[]>(
-      `/makes/${encodeURIComponent(makeSlug)}/models`
+      `/api/catalog/makes/${encodeURIComponent(makeSlug)}/models`
     );
     return response.data;
   } catch (error) {
@@ -157,7 +150,7 @@ export async function searchModels(makeId: string, query: string): Promise<Vehic
 
   try {
     const response = await catalogApi.get<VehicleModel[]>(
-      `/makes/${makeId}/models/search?q=${encodeURIComponent(query)}`
+      `/api/catalog/makes/${makeId}/models/search?q=${encodeURIComponent(query)}`
     );
     return response.data;
   } catch (error) {
@@ -171,7 +164,7 @@ export async function searchModels(makeId: string, query: string): Promise<Vehic
  */
 export async function getAvailableYears(modelId: string): Promise<number[]> {
   try {
-    const response = await catalogApi.get<number[]>(`/models/${modelId}/years`);
+    const response = await catalogApi.get<number[]>(`/api/catalog/models/${modelId}/years`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching years for model ${modelId}:`, error);
@@ -190,7 +183,9 @@ export async function getTrimsByModelAndYear(
   year: number
 ): Promise<VehicleTrim[]> {
   try {
-    const response = await catalogApi.get<VehicleTrim[]>(`/models/${modelId}/years/${year}/trims`);
+    const response = await catalogApi.get<VehicleTrim[]>(
+      `/api/catalog/models/${modelId}/years/${year}/trims`
+    );
     return response.data;
   } catch (error) {
     console.error(`Error fetching trims for model ${modelId} year ${year}:`, error);
@@ -203,7 +198,7 @@ export async function getTrimsByModelAndYear(
  */
 export async function getTrimById(trimId: string): Promise<VehicleTrim | null> {
   try {
-    const response = await catalogApi.get<VehicleTrim>(`/trims/${trimId}`);
+    const response = await catalogApi.get<VehicleTrim>(`/api/catalog/trims/${trimId}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching trim ${trimId}:`, error);
@@ -216,7 +211,7 @@ export async function getTrimById(trimId: string): Promise<VehicleTrim | null> {
  */
 export async function getCatalogStats(): Promise<CatalogStats | null> {
   try {
-    const response = await catalogApi.get<CatalogStats>('/stats');
+    const response = await catalogApi.get<CatalogStats>('/api/catalog/stats');
     return response.data;
   } catch (error) {
     console.error('Error fetching catalog stats:', error);

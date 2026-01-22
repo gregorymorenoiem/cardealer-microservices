@@ -1,35 +1,50 @@
 using MediatR;
 using FluentValidation;
 using Serilog;
-using Serilog.Events;
 using Microsoft.EntityFrameworkCore;
+using CarDealer.Shared.Idempotency.Extensions;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
 using AzulPaymentService.Application.Validators;
 using AzulPaymentService.Domain.Interfaces;
 using AzulPaymentService.Infrastructure.Persistence;
 using AzulPaymentService.Infrastructure.Repositories;
 using AzulPaymentService.Infrastructure.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+const string ServiceName = "AzulPaymentService";
+const string ServiceVersion = "1.0.0";
 
-// ============= LOGGING =============
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .WriteTo.Console()
-    .WriteTo.File("logs/azul-payment-.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+// Bootstrap logger for startup
+Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
 
-builder.Host.UseSerilog();
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-// ============= SERVICES =============
-// Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+    builder.UseStandardSerilog(ServiceName);
 
-builder.Services.AddDbContext<AzulDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
-        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
-    }));
+    // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
+    builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
+
+    // ============= ERROR HANDLING (→ ErrorService) =============
+    builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+    // ============= AUDIT (→ AuditService via RabbitMQ) =============
+    builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // ============= SERVICES =============
+    // Database
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+    builder.Services.AddDbContext<AzulDbContext>(options =>
+        options.UseNpgsql(connectionString, npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+        }));
 
 // Repositories
 builder.Services.AddScoped<IAzulTransactionRepository, AzulTransactionRepository>();
@@ -106,51 +121,80 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AzulDbContext>("Database");
 
-// ============= BUILD =============
-var app = builder.Build();
-
-// ============= MIDDLEWARE =============
-if (app.Environment.IsDevelopment())
+// Idempotency for payment protection
+var idempotencyEnabled = builder.Configuration.GetValue<bool>("Idempotency:Enabled", true);
+if (idempotencyEnabled)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    builder.Services.AddIdempotency(options =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AZUL Payment Service V1");
+        options.Enabled = true;
+        options.RedisConnection = builder.Configuration["Redis:Connection"] ?? "localhost:6379";
+        options.HeaderName = "X-Idempotency-Key";
+        options.DefaultTtlSeconds = 86400;
+        options.RequireIdempotencyKey = true;
+        options.KeyPrefix = "azul:idempotency";
+        options.ValidateRequestHash = true;
+        options.ProcessingTimeoutSeconds = 120;
     });
+    Log.Information("Idempotency enabled for AzulPaymentService");
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowApiGateway");
-app.UseAuthentication();
-app.UseAuthorization();
+// ============= BUILD =============
+    var app = builder.Build();
 
-app.MapControllers();
-app.MapHealthChecks("/health");
+    // ============= MIDDLEWARE =============
+    // Global exception handling (first in pipeline)
+    app.UseGlobalErrorHandling();
 
-// ============= DATABASE MIGRATION =============
-try
-{
-    using (var scope = app.Services.CreateScope())
+    // Audit middleware for automatic request auditing
+    app.UseAuditMiddleware();
+
+    if (app.Environment.IsDevelopment())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AzulDbContext>();
-        dbContext.Database.Migrate();
-        Log.Information("Database migration completed");
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "AZUL Payment Service V1");
+        });
     }
-}
-catch (Exception ex)
-{
-    Log.Fatal(ex, "Error during database migration");
-}
 
-// ============= RUN =============
-try
-{
-    Log.Information("Starting AzulPaymentService");
+    app.UseHttpsRedirection();
+    app.UseCors("AllowApiGateway");
+
+    // Idempotency middleware
+    if (idempotencyEnabled)
+    {
+        app.UseIdempotency();
+    }
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.MapHealthChecks("/health");
+
+    // ============= DATABASE MIGRATION =============
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AzulDbContext>();
+            dbContext.Database.Migrate();
+            Log.Information("Database migration completed for {ServiceName}", ServiceName);
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Error during database migration for {ServiceName}", ServiceName);
+    }
+
+    // ============= RUN =============
+    Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
     app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", ServiceName);
 }
 finally
 {

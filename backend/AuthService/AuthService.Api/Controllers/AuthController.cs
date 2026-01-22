@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using AuthService.Application.DTOs.Auth;
+using CarDealer.Shared.Audit.Attributes;
+using CarDealer.Shared.Audit.Models;
 
 namespace AuthService.Api.Controllers;
 
@@ -23,6 +25,7 @@ public class AuthController : ControllerBase
     public AuthController(IMediator mediator) => _mediator = mediator;
 
     [HttpPost("register")]
+    [Audit("AUTH_REGISTER", "Register", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var command = new RegisterCommand(request.UserName, request.Email, request.Password);
@@ -31,6 +34,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [Audit("AUTH_LOGIN", "Login", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var command = new LoginCommand(request.Email, request.Password);
@@ -39,6 +43,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("forgot-password")]
+    [Audit("AUTH_FORGOT_PASSWORD", "ForgotPassword", ResourceType = "User", Severity = AuditSeverity.Info)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         var command = new ForgotPasswordCommand(request.Email);
@@ -47,14 +52,34 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("reset-password")]
+    [Audit("AUTH_RESET_PASSWORD", "ResetPassword", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
+        // DEBUG: Log incoming request details
+        var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AuthController>>();
+        logger.LogInformation("ResetPassword request received - Token: {TokenLength} chars, NewPassword: {PasswordLength} chars, ConfirmPassword: {ConfirmLength} chars",
+            request.Token?.Length ?? 0,
+            request.NewPassword?.Length ?? 0,
+            request.ConfirmPassword?.Length ?? 0);
+        
+        if (string.IsNullOrEmpty(request.Token))
+        {
+            logger.LogWarning("ResetPassword failed: Token is null or empty");
+            return BadRequest(ApiResponse.Fail("Token is required"));
+        }
+        if (string.IsNullOrEmpty(request.NewPassword))
+        {
+            logger.LogWarning("ResetPassword failed: NewPassword is null or empty");
+            return BadRequest(ApiResponse.Fail("New password is required"));
+        }
+        
         var command = new ResetPasswordCommand(request.Token, request.NewPassword, request.ConfirmPassword);
         var result = await _mediator.Send(command);
         return Ok(ApiResponse<ResetPasswordResponse>.Ok(result));
     }
 
     [HttpPost("verify-email")]
+    [Audit("AUTH_VERIFY_EMAIL", "VerifyEmail", ResourceType = "User", Severity = AuditSeverity.Info)]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
     {
         var command = new VerifyEmailCommand(request.Token);
@@ -64,6 +89,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]  // RefreshToken NO debe requerir autorización (ese es su propósito)
+    [Audit("AUTH_REFRESH_TOKEN", "RefreshToken", ResourceType = "Token", Severity = AuditSeverity.Debug)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         var command = new RefreshTokenCommand(request.RefreshToken);
@@ -81,6 +107,7 @@ public class AuthController : ControllerBase
     /// <response code="401">Token de acceso inválido o expirado</response>
     [HttpPost("logout")]
     [Authorize]
+    [Audit("AUTH_LOGOUT", "Logout", ResourceType = "User", Severity = AuditSeverity.Info)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

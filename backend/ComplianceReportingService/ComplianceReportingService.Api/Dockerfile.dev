@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS development
+WORKDIR /src
+
+# Copiar archivos de proyecto
+COPY ComplianceReportingService.Domain/*.csproj ./ComplianceReportingService.Domain/
+COPY ComplianceReportingService.Application/*.csproj ./ComplianceReportingService.Application/
+COPY ComplianceReportingService.Infrastructure/*.csproj ./ComplianceReportingService.Infrastructure/
+COPY ComplianceReportingService.Api/*.csproj ./ComplianceReportingService.Api/
+
+# Restaurar dependencias
+RUN dotnet restore ComplianceReportingService.Api/ComplianceReportingService.Api.csproj
+
+# Copiar código fuente
+COPY . .
+
+WORKDIR /src/ComplianceReportingService.Api
+
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+# Hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--no-launch-profile"]

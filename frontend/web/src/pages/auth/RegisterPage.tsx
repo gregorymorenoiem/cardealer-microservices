@@ -26,25 +26,29 @@ const getPasswordStrength = (password: string): { score: number; label: string; 
 };
 
 // Validation schema
-const registerSchema = z.object({
-  username: z.string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/\d/, 'Password must contain at least one number'),
-  confirmPassword: z.string(),
-  terms: z.boolean().refine(val => val === true, {
-    message: 'You must accept the terms and conditions',
-  }),
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const registerSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, 'Username must be at least 3 characters')
+      .max(20, 'Username must be less than 20 characters')
+      .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+    email: z.string().email('Please enter a valid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/\d/, 'Password must contain at least one number'),
+    confirmPassword: z.string(),
+    terms: z.boolean().refine((val) => val === true, {
+      message: 'You must accept the terms and conditions',
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -82,7 +86,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setApiError(null);
-      
+
       // Call register service with backend-expected format
       const response = await authService.register({
         email: data.email,
@@ -91,14 +95,12 @@ export default function RegisterPage() {
         userName: data.username,
         accountType: 'individual',
       });
-      
-      // Update auth store
-      login(response);
-      
-      // Show success message and redirect
-      navigate('/dashboard', { 
+
+      // Don't login yet - user needs to verify email first
+      // Navigate to verification pending page
+      navigate('/verify-email-pending', {
         replace: true,
-        state: { message: 'Account created successfully! Welcome to CarDealer.' }
+        state: { email: data.email },
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -116,9 +118,7 @@ export default function RegisterPage() {
         <h1 className="text-3xl font-bold font-heading text-gray-900 mb-2">
           {t('register.title')}
         </h1>
-        <p className="text-gray-600">
-          {t('register.subtitle')}
-        </p>
+        <p className="text-gray-600">{t('register.subtitle')}</p>
       </div>
 
       {/* API Error Alert */}
@@ -171,17 +171,21 @@ export default function RegisterPage() {
             required
             fullWidth
           />
-          
+
           {/* Password Strength Indicator */}
           {password && (
             <div className="mt-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-600">{t('register.passwordStrength')}:</span>
-                <span className={`text-xs font-medium ${
-                  passwordStrength.label === 'Weak' ? 'text-red-600' :
-                  passwordStrength.label === 'Medium' ? 'text-yellow-600' :
-                  'text-green-600'
-                }`}>
+                <span
+                  className={`text-xs font-medium ${
+                    passwordStrength.label === 'Weak'
+                      ? 'text-red-600'
+                      : passwordStrength.label === 'Medium'
+                        ? 'text-yellow-600'
+                        : 'text-green-600'
+                  }`}
+                >
                   {t(`register.strength.${passwordStrength.label.toLowerCase()}`)}
                 </span>
               </div>
@@ -219,26 +223,18 @@ export default function RegisterPage() {
               {t('register.agreeToTerms')}{' '}
               <Link to="/terms" className="text-primary hover:text-primary-600 font-medium">
                 {t('register.termsOfService')}
-              </Link>
-              {' '}{t('register.and')}{' '}
+              </Link>{' '}
+              {t('register.and')}{' '}
               <Link to="/privacy" className="text-primary hover:text-primary-600 font-medium">
                 {t('register.privacyPolicy')}
               </Link>
             </span>
           </label>
-          {errors.terms && (
-            <p className="mt-1 text-xs text-red-600">{errors.terms.message}</p>
-          )}
+          {errors.terms && <p className="mt-1 text-xs text-red-600">{errors.terms.message}</p>}
         </div>
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          fullWidth
-          isLoading={isSubmitting}
-        >
+        <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting}>
           {t('register.createAccount')}
         </Button>
       </form>
@@ -247,9 +243,7 @@ export default function RegisterPage() {
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
         <FiCheckCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
         <div className="flex-1">
-          <p className="text-sm text-blue-800">
-            {t('register.verificationNotice')}
-          </p>
+          <p className="text-sm text-blue-800">{t('register.verificationNotice')}</p>
         </div>
       </div>
 

@@ -18,6 +18,8 @@ public record UpdateInventoryItemCommand : IRequest<InventoryItemDto>
     public decimal? TargetPrice { get; init; }
     public decimal? MinAcceptablePrice { get; init; }
     public bool? IsNegotiable { get; init; }
+    public bool? IsFeatured { get; init; }
+    public int? Priority { get; init; }
     public List<string>? Tags { get; init; }
 }
 
@@ -43,6 +45,8 @@ public class UpdateInventoryItemHandler : IRequestHandler<UpdateInventoryItemCom
         if (request.TargetPrice.HasValue) item.TargetPrice = request.TargetPrice;
         if (request.MinAcceptablePrice.HasValue) item.MinAcceptablePrice = request.MinAcceptablePrice;
         if (request.IsNegotiable.HasValue) item.IsNegotiable = request.IsNegotiable.Value;
+        if (request.IsFeatured.HasValue) item.IsFeatured = request.IsFeatured.Value;
+        if (request.Priority.HasValue) item.Priority = request.Priority.Value;
         if (request.Tags != null) item.Tags = request.Tags;
 
         item.UpdatedAt = DateTime.UtcNow;

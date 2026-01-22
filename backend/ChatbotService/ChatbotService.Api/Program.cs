@@ -46,14 +46,15 @@ builder.Services.AddDbContext<ChatbotDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(ChatbotService.Application.Features.Commands.CreateConversationCommand).Assembly));
+    cfg.RegisterServicesFromAssembly(typeof(ChatbotService.Application.Features.Conversations.Commands.CreateConversationCommand).Assembly));
 
 // Repositories
-builder.Services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
-builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
 
-// Chatbot Service
-builder.Services.AddHttpClient<IChatbotService, OpenAIChatbotService>();
+// Services
+builder.Services.AddScoped<ILeadScoringEngine, LeadScoringEngine>();
+builder.Services.AddHttpClient<IOpenAIService, OpenAIService>();
+builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 
 // SignalR
 builder.Services.AddSignalR();
