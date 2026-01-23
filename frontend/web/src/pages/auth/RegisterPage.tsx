@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
+import OAuthButtons from '@/components/auth/OAuthButtons';
 import { FiMail, FiLock, FiUser, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 // Password strength checker
@@ -107,6 +108,47 @@ export default function RegisterPage() {
         setApiError(error.message || 'Registration failed. Please try again.');
       } else {
         setApiError('An unexpected error occurred. Please try again.');
+      }
+    }
+  };
+
+  // OAuth handlers
+  const handleGoogleLogin = async () => {
+    try {
+      await authService.loginWithGoogle();
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    }
+  };
+
+  const handleMicrosoftLogin = async () => {
+    try {
+      await authService.loginWithMicrosoft();
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    try {
+      await authService.loginWithFacebook();
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      await authService.loginWithApple();
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
       }
     }
   };
@@ -238,6 +280,15 @@ export default function RegisterPage() {
           {t('register.createAccount')}
         </Button>
       </form>
+
+      {/* OAuth Buttons */}
+      <OAuthButtons
+        onGoogleClick={handleGoogleLogin}
+        onMicrosoftClick={handleMicrosoftLogin}
+        onFacebookClick={handleFacebookLogin}
+        onAppleClick={handleAppleLogin}
+        disabled={isSubmitting}
+      />
 
       {/* Email Verification Notice */}
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">

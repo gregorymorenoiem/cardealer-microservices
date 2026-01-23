@@ -7,5 +7,6 @@ public record LoginResponse(
     string RefreshToken,
     DateTime ExpiresAt,
     bool RequiresTwoFactor = false,
-    string? TempToken = null
+    string? TempToken = null,
+    string? TwoFactorType = null // "authenticator", "sms", or "email"
 );

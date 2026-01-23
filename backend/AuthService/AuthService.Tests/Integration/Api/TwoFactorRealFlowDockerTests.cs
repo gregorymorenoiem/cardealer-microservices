@@ -58,7 +58,7 @@ public class TwoFactorRealFlowDockerTests : IClassFixture<DockerWebApplicationFa
         // Arrange
         var (token, userId) = await GetAuthTokenAndUserIdAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var request = new Enable2FARequest(userId, TwoFactorAuthType.Authenticator);
+        var request = new Enable2FARequest(TwoFactorAuthType.Authenticator);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/enable", request);
@@ -85,7 +85,7 @@ public class TwoFactorRealFlowDockerTests : IClassFixture<DockerWebApplicationFa
             // Arrange
             var (token, userId) = await GetAuthTokenAndUserIdAsync();
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var request = new Enable2FARequest(userId, type);
+            var request = new Enable2FARequest(type);
 
             // Act
             var response = await _client.PostAsJsonAsync("/api/TwoFactor/enable", request);

@@ -139,6 +139,32 @@ namespace RoleService.Infrastructure.External
             }
         }
 
+        public async Task LogPermissionCreatedAsync(Guid permissionId, string permissionName, string performedBy)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                var auditLog = new
+                {
+                    EntityType = "Permission",
+                    EntityId = permissionId.ToString(),
+                    Action = "Created",
+                    PerformedBy = performedBy,
+                    Details = $"Permission created: {permissionName}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Audit log sent for permission creation: {PermissionId}", permissionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for permission creation: {PermissionId}", permissionId);
+            }
+        }
+
         public async Task LogPermissionRemovedAsync(Guid roleId, Guid permissionId, string performedBy)
         {
             try

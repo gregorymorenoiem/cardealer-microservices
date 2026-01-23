@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<TwoFactorAuth> TwoFactorAuths { get; set; } = null!;
     public DbSet<UserSession> UserSessions { get; set; } = null!;
     public DbSet<LoginHistory> LoginHistories { get; set; } = null!;
+    public DbSet<TrustedDevice> TrustedDevices { get; set; } = null!; // US-18.4
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,6 +27,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
         builder.ApplyConfiguration(new TwoFactorAuthConfiguration());
         builder.ApplyConfiguration(new UserSessionConfiguration());
         builder.ApplyConfiguration(new LoginHistoryConfiguration());
+        builder.ApplyConfiguration(new TrustedDeviceConfiguration()); // US-18.4
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

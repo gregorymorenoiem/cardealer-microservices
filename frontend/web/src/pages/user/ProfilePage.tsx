@@ -10,14 +10,23 @@ import { FiUser, FiMail, FiSave, FiAlertCircle, FiCheckCircle } from 'react-icon
 
 // Validation schema
 const profileSchema = z.object({
-  username: z.string()
+  username: z
+    .string()
     .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters')
+    .max(50, 'Username must be less than 50 characters')
     .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   email: z.string().email('Please enter a valid email address'),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  phone: z.string().optional(),
+  firstName: z.string().max(100, 'First name must be less than 100 characters').optional(),
+  lastName: z.string().max(100, 'Last name must be less than 100 characters').optional(),
+  phone: z
+    .string()
+    .max(20, 'Phone number must be less than 20 characters')
+    .regex(
+      /^[\d\s\-\+\(\)]*$/,
+      'Phone number can only contain digits, spaces, and symbols like +, -, (, )'
+    )
+    .optional()
+    .or(z.literal('')),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -51,8 +60,8 @@ export default function ProfilePage() {
       setErrorMessage(null);
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Update user in store
       updateUser({
         ...user!,
@@ -84,9 +93,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold font-heading text-gray-900">
-            Mi Perfil
-          </h1>
+          <h1 className="text-3xl font-bold font-heading text-gray-900">Mi Perfil</h1>
         </div>
 
         {/* Success Message */}
@@ -117,17 +124,11 @@ export default function ProfilePage() {
               <FiUser className="text-primary" size={32} />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                {user?.name || 'User'}
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">{user?.name || 'User'}</h2>
               <p className="text-gray-600 text-sm">{user?.email}</p>
             </div>
             {!isEditing && (
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => setIsEditing(true)}
-              >
+              <Button variant="outline" size="md" onClick={() => setIsEditing(true)}>
                 {t('profile.edit')}
               </Button>
             )}
@@ -224,15 +225,11 @@ export default function ProfilePage() {
 
         {/* Account Stats Card (Optional) */}
         <div className="mt-6 bg-white rounded-lg shadow-card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('profile.accountInfo')}
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.accountInfo')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div>
               <p className="text-sm text-gray-600 mb-1">Member Since</p>
-              <p className="text-lg font-semibold text-gray-900">
-                N/A
-              </p>
+              <p className="text-lg font-semibold text-gray-900">N/A</p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Listings</p>
@@ -250,4 +247,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

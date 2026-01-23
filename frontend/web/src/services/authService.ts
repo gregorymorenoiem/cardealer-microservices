@@ -4,6 +4,7 @@ import type { User, AccountType } from '@/types';
 // Use Gateway URL for all API calls
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 const AUTH_API_URL = `${API_BASE_URL}/api/auth`;
+const EXTERNAL_AUTH_API_URL = `${API_BASE_URL}/api/ExternalAuth`;
 
 /**
  * Decode JWT token payload (without verification)
@@ -117,6 +118,10 @@ interface LoginResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+  // 2FA fields (when requiresTwoFactor is true)
+  requiresTwoFactor?: boolean;
+  sessionToken?: string;
+  twoFactorType?: string;
 }
 
 interface RefreshTokenResponse {
@@ -129,12 +134,20 @@ interface BackendAuthResponse {
   success: boolean;
   data: {
     userId: string;
+    userName?: string;
     email: string;
     accessToken: string;
     refreshToken: string;
     expiresAt: string;
     requiresTwoFactor: boolean;
     tempToken: string | null;
+    twoFactorType: string | null; // "authenticator", "sms", or "email"
+    accountType?: string; // optional, may come from JWT
+    // Profile data from OAuth providers
+    firstName?: string;
+    lastName?: string;
+    profilePictureUrl?: string;
+    isNewUser?: boolean;
   };
   error: string | null;
 }
@@ -156,7 +169,20 @@ export const authService = {
         throw new Error('Invalid response from server');
       }
 
-      // Transform backend response to frontend format
+      // Check if 2FA is required
+      if (data.requiresTwoFactor) {
+        // Return 2FA response - login not complete yet
+        return {
+          user: {} as User, // Empty user, will be populated after 2FA
+          accessToken: '',
+          refreshToken: '',
+          requiresTwoFactor: true,
+          sessionToken: data.tempToken || '',
+          twoFactorType: data.twoFactorType || 'authenticator',
+        };
+      }
+
+      // Normal login flow (no 2FA or 2FA already completed)
       // Get account type from JWT or backend response
       const accountType = data.accountType
         ? (data.accountType as AccountType)
@@ -255,6 +281,8 @@ export const authService = {
       localStorage.setItem('accessToken', backendData.accessToken);
       localStorage.setItem('refreshToken', backendData.refreshToken);
       localStorage.setItem('userId', backendData.userId);
+      // Store email for potential verification resend
+      localStorage.setItem('pendingVerificationEmail', data.email);
 
       return loginResponse;
     } catch (error) {
@@ -269,9 +297,18 @@ export const authService = {
   async logout(): Promise<void> {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
+      const accessToken = localStorage.getItem('accessToken');
 
-      if (refreshToken) {
-        await axios.post(`${AUTH_API_URL}/logout`, { refreshToken });
+      if (refreshToken && accessToken) {
+        await axios.post(
+          `${AUTH_API_URL}/logout`,
+          { refreshToken },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
       }
     } catch (error) {
       console.error('Error during logout:', error);
@@ -389,9 +426,14 @@ export const authService = {
     }
   },
 
-  async resendVerificationEmail(): Promise<void> {
+  async resendVerificationEmail(email?: string): Promise<void> {
     try {
-      await axios.post(`${AUTH_API_URL}/resend-verification`);
+      // If email not provided, try to get it from localStorage (stored during registration)
+      const userEmail = email || localStorage.getItem('pendingVerificationEmail');
+      if (!userEmail) {
+        throw new Error('Email address not found. Please try registering again.');
+      }
+      await axios.post(`${AUTH_API_URL}/resend-verification`, { email: userEmail });
     } catch (error) {
       console.error('Error resending verification email:', error);
       throw new Error('Failed to resend verification email');
@@ -410,65 +452,101 @@ export const authService = {
     return !!this.getAccessToken();
   },
 
-  // OAuth2 methods
-  async loginWithGoogle(): Promise<void> {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!googleClientId) {
-      throw new Error('Google Client ID not configured');
+  // ========================================
+  // OAuth2 methods - Uses Backend API for authorization URLs
+  // AUTH-EXT-001: Google Login
+  // AUTH-EXT-002: Facebook Login
+  // AUTH-EXT-003: Apple Login
+  // AUTH-EXT-008: Microsoft Login
+  // ========================================
+
+  /**
+   * Generic OAuth login method - calls backend to get authorization URL
+   * More secure: credentials stay on backend
+   */
+  async initiateOAuthLogin(provider: 'google' | 'microsoft' | 'facebook' | 'apple'): Promise<void> {
+    try {
+      const redirectUri = `${window.location.origin}/auth/callback/${provider}`;
+
+      // Backend response format: { data: { authorizationUrl: string }, success: boolean }
+      const response = await axios.post<{
+        data: { authorizationUrl: string };
+        success: boolean;
+        error?: string;
+      }>(`${EXTERNAL_AUTH_API_URL}/login`, {
+        provider,
+        redirectUri,
+      });
+
+      const authUrl = response.data?.data?.authorizationUrl;
+      if (authUrl) {
+        // Redirect to provider's OAuth page
+        window.location.href = authUrl;
+      } else {
+        throw new Error(`Failed to get authorization URL for ${provider}`);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message =
+          error.response.data?.error || error.response.data?.message || `${provider} login failed`;
+        throw new Error(message);
+      }
+      throw new Error(`Failed to initiate ${provider} login. Please try again.`);
     }
+  },
 
-    // Construct OAuth URL
-    const redirectUri = `${window.location.origin}/auth/callback/google`;
-    const scope = 'openid email profile';
-    const responseType = 'code';
+  async loginWithGoogle(): Promise<void> {
+    // First try backend API, fallback to client-side if VITE_GOOGLE_CLIENT_ID is set
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.append('client_id', googleClientId);
-    authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('response_type', responseType);
-    authUrl.searchParams.append('scope', scope);
-    authUrl.searchParams.append('access_type', 'offline');
-    authUrl.searchParams.append('prompt', 'consent');
+    if (googleClientId) {
+      // Client-side OAuth (legacy support)
+      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      const scope = 'openid email profile';
+      const responseType = 'code';
 
-    // Redirect to Google OAuth
-    window.location.href = authUrl.toString();
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.append('client_id', googleClientId);
+      authUrl.searchParams.append('redirect_uri', redirectUri);
+      authUrl.searchParams.append('response_type', responseType);
+      authUrl.searchParams.append('scope', scope);
+      authUrl.searchParams.append('access_type', 'offline');
+      authUrl.searchParams.append('prompt', 'consent');
+
+      window.location.href = authUrl.toString();
+    } else {
+      // Use backend API
+      await this.initiateOAuthLogin('google');
+    }
   },
 
   async loginWithMicrosoft(): Promise<void> {
-    const microsoftClientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
-    if (!microsoftClientId) {
-      throw new Error('Microsoft Client ID not configured');
-    }
+    // Use backend API for OAuth authorization URL
+    await this.initiateOAuthLogin('microsoft');
+  },
 
-    // Construct OAuth URL
-    const redirectUri = `${window.location.origin}/auth/callback/microsoft`;
-    const scope = 'openid email profile';
-    const responseType = 'code';
+  async loginWithFacebook(): Promise<void> {
+    // Use backend API for OAuth authorization URL
+    await this.initiateOAuthLogin('facebook');
+  },
 
-    const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
-    authUrl.searchParams.append('client_id', microsoftClientId);
-    authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('response_type', responseType);
-    authUrl.searchParams.append('scope', scope);
-    authUrl.searchParams.append('response_mode', 'query');
-
-    // Redirect to Microsoft OAuth
-    window.location.href = authUrl.toString();
+  async loginWithApple(): Promise<void> {
+    // Use backend API for OAuth authorization URL
+    await this.initiateOAuthLogin('apple');
   },
 
   async handleOAuthCallback(
-    provider: 'google' | 'microsoft',
-    code: string
+    provider: 'google' | 'microsoft' | 'facebook' | 'apple',
+    code: string,
+    idToken?: string // Apple provides id_token
   ): Promise<LoginResponse> {
     try {
-      const response = await axios.post<BackendAuthResponse>(
-        `${AUTH_API_URL}/ExternalAuth/callback`,
-        {
-          provider,
-          code,
-          redirectUri: `${window.location.origin}/auth/callback/${provider}`,
-        }
-      );
+      const response = await axios.post<BackendAuthResponse>(`${EXTERNAL_AUTH_API_URL}/callback`, {
+        provider,
+        code,
+        idToken,
+        redirectUri: `${window.location.origin}/auth/callback/${provider}`,
+      });
 
       const { data } = response.data;
 
@@ -480,7 +558,14 @@ export const authService = {
       const user: User = {
         id: data.userId,
         email: data.email,
-        fullName: data.email.split('@')[0],
+        name: data.userName,
+        fullName:
+          data.firstName && data.lastName
+            ? `${data.firstName} ${data.lastName}`
+            : data.email.split('@')[0],
+        firstName: data.firstName,
+        lastName: data.lastName,
+        avatar: data.profilePictureUrl,
         accountType: 'individual',
         emailVerified: true,
         createdAt: new Date().toISOString(),
@@ -506,4 +591,154 @@ export const authService = {
       throw new Error('OAuth authentication failed. Please try again.');
     }
   },
+
+  // ========================================
+  // LINKED ACCOUNTS (External Providers)
+  // AUTH-EXT-005: Link Account
+  // AUTH-EXT-006: Unlink Account
+  // AUTH-EXT-007: List Linked Accounts
+  // ========================================
+
+  async getLinkedAccounts(): Promise<LinkedAccount[]> {
+    try {
+      const response = await axios.get<{ data: LinkedAccount[] }>(
+        `${EXTERNAL_AUTH_API_URL}/linked-accounts`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+      return response.data.data || [];
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to get linked accounts';
+        throw new Error(message);
+      }
+      throw new Error('Failed to get linked accounts');
+    }
+  },
+
+  /**
+   * AUTH-EXT-005: Link an external OAuth provider to the current user's account
+   * @param provider - The OAuth provider (google, microsoft, facebook, apple)
+   * @param idToken - The ID token received from the OAuth flow
+   * @returns LinkAccountResponse with success status and new tokens
+   */
+  async linkExternalAccount(
+    provider: 'google' | 'microsoft' | 'facebook' | 'apple',
+    idToken: string
+  ): Promise<LinkAccountResponse> {
+    try {
+      const response = await axios.post<{
+        data: LinkAccountResponse;
+        metadata: Record<string, unknown>;
+      }>(
+        `${EXTERNAL_AUTH_API_URL}/link-account`,
+        {
+          provider,
+          idToken,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+
+      const result = response.data.data;
+
+      // Update tokens in localStorage if new tokens were returned
+      if (result.accessToken) {
+        localStorage.setItem('accessToken', result.accessToken);
+      }
+      if (result.refreshToken) {
+        localStorage.setItem('refreshToken', result.refreshToken);
+      }
+
+      return result;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to link account';
+        throw new Error(message);
+      }
+      throw new Error('Failed to link account. Please try again.');
+    }
+  },
+
+  /**
+   * AUTH-EXT-006: Unlink an external OAuth provider from the current user's account
+   * Security: User must have a password set before unlinking
+   * @param provider - The OAuth provider to unlink
+   * @returns UnlinkAccountResponse with success status
+   */
+  async unlinkExternalAccount(provider: string): Promise<UnlinkAccountResponse> {
+    try {
+      const response = await axios.delete<{ data: UnlinkAccountResponse }>(
+        `${EXTERNAL_AUTH_API_URL}/unlink-account`,
+        {
+          data: { provider },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to unlink account';
+        throw new Error(message);
+      }
+      throw new Error('Failed to unlink account. Please try again.');
+    }
+  },
+
+  // Start OAuth flow for linking (different from login - requires auth)
+  async startLinkAccount(provider: 'google' | 'microsoft' | 'facebook' | 'apple'): Promise<void> {
+    // Store that we're linking, not logging in
+    sessionStorage.setItem('oauth_mode', 'link');
+
+    switch (provider) {
+      case 'google':
+        await this.loginWithGoogle();
+        break;
+      case 'microsoft':
+        await this.loginWithMicrosoft();
+        break;
+      case 'facebook':
+        await this.loginWithFacebook();
+        break;
+      case 'apple':
+        await this.loginWithApple();
+        break;
+    }
+  },
 };
+
+// Type for linked external accounts (AUTH-EXT-007 response)
+export interface LinkedAccount {
+  provider: string;
+  providerUserId: string;
+  email: string;
+  name?: string;
+  linkedAt: string;
+}
+
+// Response from linking an external account (AUTH-EXT-005)
+export interface LinkAccountResponse {
+  userId: string;
+  userName: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  isNewUser: boolean;
+}
+
+// Response from unlinking an external account (AUTH-EXT-006)
+export interface UnlinkAccountResponse {
+  success: boolean;
+  message: string;
+  provider: string;
+  unlinkedAt: string;
+}

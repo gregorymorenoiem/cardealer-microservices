@@ -101,6 +101,18 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/auth/2fa/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/TwoFactor/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 8080 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/auth-service/swagger/{everything}",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/swagger/{everything}",

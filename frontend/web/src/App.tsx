@@ -78,6 +78,7 @@ import RoleDetailPage from './pages/admin/RoleDetailPage';
 // KYC pages
 import KYCVerificationPage from './pages/kyc/KYCVerificationPage';
 import KYCStatusPage from './pages/kyc/KYCStatusPage';
+import BiometricVerificationPage from './pages/kyc/BiometricVerificationPage';
 // Dealer pages
 import DealerDashboardPage from './pages/dealer/DealerDashboardPage';
 import {
@@ -676,6 +677,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <KYCVerificationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kyc/biometric-verify"
+            element={
+              <ProtectedRoute>
+                <BiometricVerificationPage />
               </ProtectedRoute>
             }
           />

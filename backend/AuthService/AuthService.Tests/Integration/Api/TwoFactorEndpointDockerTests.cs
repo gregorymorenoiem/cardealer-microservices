@@ -22,7 +22,7 @@ public class TwoFactorEndpointDockerTests : IClassFixture<DockerWebApplicationFa
     public async Task Enable2FA_WithoutAuthentication_WithDocker_ReturnsUnauthorized()
     {
         // Arrange
-        var request = new Enable2FARequest("user-id", TwoFactorAuthType.Authenticator);
+        var request = new Enable2FARequest(TwoFactorAuthType.Authenticator);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/enable", request);

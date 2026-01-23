@@ -5,6 +5,7 @@ using AuthService.Application.Features.Auth.Commands.ResetPassword;
 using AuthService.Application.Features.Auth.Commands.RefreshToken;
 using AuthService.Application.Features.Auth.Commands.Logout;
 using AuthService.Application.Features.Auth.Commands.VerifyEmail;
+using AuthService.Application.Features.Auth.Commands.ResendVerification;
 using AuthService.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -83,6 +84,15 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
     {
         var command = new VerifyEmailCommand(request.Token);
+        await _mediator.Send(command);
+        return Ok(ApiResponse.Ok());
+    }
+
+    [HttpPost("resend-verification")]
+    [Audit("AUTH_RESEND_VERIFICATION", "ResendVerification", ResourceType = "User", Severity = AuditSeverity.Info)]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
+    {
+        var command = new ResendVerificationCommand(request.Email);
         await _mediator.Send(command);
         return Ok(ApiResponse.Ok());
     }

@@ -1,6 +1,6 @@
 /**
  * Common Components Index
- * 
+ *
  * Exports reusable components used across the application
  */
 
@@ -11,3 +11,7 @@ export type { MultiLangText } from './LocalizedContent';
 // Media upload components
 export { ImageDropZone } from './ImageDropZone';
 export type { ImageDropZoneProps, ImagePreview } from './ImageDropZone';
+
+// Dialog components
+export { default as ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogVariant } from './ConfirmDialog';

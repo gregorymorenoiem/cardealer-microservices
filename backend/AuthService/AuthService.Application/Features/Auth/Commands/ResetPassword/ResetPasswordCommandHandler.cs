@@ -13,17 +13,23 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordResetTokenService _tokenService;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAuthNotificationService _notificationService;
     private readonly ILogger<ResetPasswordCommandHandler> _logger;
 
     public ResetPasswordCommandHandler(
       IUserRepository userRepository,
       IPasswordHasher passwordHasher,
       IPasswordResetTokenService tokenService,
+      IRefreshTokenRepository refreshTokenRepository,
+      IAuthNotificationService notificationService,
       ILogger<ResetPasswordCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _refreshTokenRepository = refreshTokenRepository;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -50,30 +56,52 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
                 throw new NotFoundException("User not found.");
             }
 
-            // <--- CORRECCIÓN: Pasa la contraseña en texto plano y el hasher.
-            // La entidad ApplicationUser se encarga de hashear y verificar.
-            user.UpdatePassword(request.NewPassword, _passwordHasher);
+            // Actualizar contraseña
+            user.UpdatePassword(request.NewPassword, _passwordHasher);
             await _userRepository.UpdateAsync(user);
 
-            // Invalidar token
-            await _tokenService.InvalidateTokenAsync(email);
+            // Invalidar token de reset
+            await _tokenService.InvalidateTokenAsync(email);
 
-            _logger.LogInformation("Password reset successfully for user {Email}", email);
+            // 🔐 SEGURIDAD: Revocar TODOS los refresh tokens del usuario
+            // Esto cierra todas las sesiones activas (OWASP recomendación)
+            await _refreshTokenRepository.RevokeAllForUserAsync(
+                user.Id.ToString(), 
+                "password_reset", 
+                cancellationToken);
+            _logger.LogInformation("All refresh tokens revoked for user {UserId} due to password reset", user.Id);
 
-            return new ResetPasswordResponse(true, "Password reset successfully.");
+            // 📧 Enviar email de confirmación de cambio de contraseña
+            try
+            {
+                await _notificationService.SendPasswordChangedConfirmationAsync(email);
+                _logger.LogInformation("Password change confirmation email sent to {Email}", email);
+            }
+            catch (Exception emailEx)
+            {
+                // No fallar el proceso si el email no se envía
+                _logger.LogWarning(emailEx, "Failed to send password change confirmation email to {Email}", email);
+            }
+
+            _logger.LogInformation("Password reset completed successfully for user {UserId}", user.Id);
+
+            return new ResetPasswordResponse(
+                Message: "Password has been reset successfully.",
+                Success: true
+            );
         }
-        catch (AppException) // Excepciones como BadRequest, NotFound
-        {
+        catch (BadRequestException)
+        {
             throw;
         }
-        catch (DomainException ex) // Ej: "La nueva contraseña no puede ser igual a la anterior"
+        catch (NotFoundException)
         {
-            throw new BadRequestException(ex.Message);
+            throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resetting password with token");
-            throw new ServiceUnavailableException("An error occurred while resetting your password.");
+            _logger.LogError(ex, "Unexpected error during password reset");
+            throw;
         }
     }
 }

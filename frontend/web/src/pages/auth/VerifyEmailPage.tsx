@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
+import Input from '@/components/atoms/Input';
 import { FiAlertCircle, FiCheckCircle, FiMail, FiLoader } from 'react-icons/fi';
 
 type VerificationStatus = 'verifying' | 'success' | 'error' | 'expired' | 'already_verified';
@@ -12,11 +13,16 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const emailFromUrl = searchParams.get('email');
 
   const [status, setStatus] = useState<VerificationStatus>('verifying');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendEmail, setResendEmail] = useState(
+    emailFromUrl || localStorage.getItem('pendingVerificationEmail') || ''
+  );
+  const [showEmailInput, setShowEmailInput] = useState(false);
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -56,14 +62,20 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   const handleResendVerification = async () => {
+    if (!resendEmail) {
+      setShowEmailInput(true);
+      return;
+    }
+
     setIsResending(true);
     setResendSuccess(false);
 
     try {
-      await authService.resendVerificationEmail();
+      await authService.resendVerificationEmail(resendEmail);
       setResendSuccess(true);
     } catch (error) {
       console.error('Failed to resend verification email:', error);
+      setErrorMessage('Failed to resend verification email. Please try again.');
     } finally {
       setIsResending(false);
     }
@@ -169,19 +181,34 @@ export default function VerifyEmailPage() {
                 </p>
               </div>
             ) : (
-              <Button
-                variant="primary"
-                fullWidth
-                onClick={handleResendVerification}
-                isLoading={isResending}
-              >
-                {t('verifyEmail.resendEmail', 'Resend Verification Email')}
-              </Button>
+              <div className="space-y-4">
+                <Input
+                  type="email"
+                  label={t('verifyEmail.emailLabel', 'Your Email Address')}
+                  placeholder="email@example.com"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  fullWidth
+                />
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={handleResendVerification}
+                  isLoading={isResending}
+                  disabled={!resendEmail}
+                >
+                  {t('verifyEmail.resendEmail', 'Resend Verification Email')}
+                </Button>
+              </div>
             )}
 
             <p className="mt-4 text-sm text-gray-500">
               {t('verifyEmail.checkSpam', "Don't forget to check your spam folder!")}
             </p>
+
+            <Button variant="outline" fullWidth onClick={() => navigate('/login')} className="mt-3">
+              {t('verifyEmail.backToLogin', 'Back to Login')}
+            </Button>
           </div>
         );
 
@@ -214,14 +241,25 @@ export default function VerifyEmailPage() {
                   </p>
                 </div>
               ) : (
-                <Button
-                  variant="primary"
-                  fullWidth
-                  onClick={handleResendVerification}
-                  isLoading={isResending}
-                >
-                  {t('verifyEmail.resendEmail', 'Resend Verification Email')}
-                </Button>
+                <div className="space-y-4">
+                  <Input
+                    type="email"
+                    label={t('verifyEmail.emailLabel', 'Your Email Address')}
+                    placeholder="email@example.com"
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    fullWidth
+                  />
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    onClick={handleResendVerification}
+                    isLoading={isResending}
+                    disabled={!resendEmail}
+                  >
+                    {t('verifyEmail.resendEmail', 'Resend Verification Email')}
+                  </Button>
+                </div>
               )}
 
               <Button variant="outline" fullWidth onClick={() => navigate('/login')}>

@@ -89,6 +89,30 @@
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }]
     },
     {
+      "UpstreamPathTemplate": "/api/auth/2fa/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/TwoFactor/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ExternalAuth/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/ExternalAuth/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/auth/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/auth/{everything}",

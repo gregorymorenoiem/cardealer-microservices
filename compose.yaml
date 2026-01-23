@@ -252,7 +252,7 @@ services:
       NotificationSettings__SendGrid__FromEmail: "gregorymoreno.iem@gmail.com"
       NotificationSettings__SendGrid__FromName: "CarGurus Dev"
       NotificationSettings__Twilio__AccountSid: "AC19fec9dd3df70a34f6252c9ef649a532"
-      NotificationSettings__Twilio__AuthToken: "2221beebc69b7251062f2b10d7ed75e6"
+      NotificationSettings__Twilio__AuthToken: "57f89cf572d4a8a4c474156b3827cc09"
       NotificationSettings__Twilio__FromNumber: "+13476622382"
       NotificationSettings__Firebase__ServiceAccountKeyPath: "/app/firebase-service-account.json"
       NotificationSettings__Firebase__ProjectId: "cargurus-dev"

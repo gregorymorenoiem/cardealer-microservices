@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using FluentValidation;
 using KYCService.Infrastructure.Persistence;
 using KYCService.Infrastructure.Repositories;
+using KYCService.Infrastructure;
 using KYCService.Domain.Interfaces;
 using KYCService.Application.Validators;
 using System.Text;
@@ -64,6 +65,18 @@ builder.Services.AddScoped<IKYCVerificationRepository, KYCVerificationRepository
 builder.Services.AddScoped<IKYCRiskAssessmentRepository, KYCRiskAssessmentRepository>();
 builder.Services.AddScoped<ISuspiciousTransactionReportRepository, SuspiciousTransactionReportRepository>();
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
+
+// External Services (JCE, OCR, Face Comparison)
+if (builder.Environment.IsDevelopment())
+{
+    // En desarrollo, usar simulación
+    builder.Services.AddKYCInfrastructureDevelopment(builder.Configuration);
+}
+else
+{
+    // En producción, usar servicios reales
+    builder.Services.AddKYCInfrastructureProduction(builder.Configuration);
+}
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "default-development-key-change-in-production-min-32-chars";

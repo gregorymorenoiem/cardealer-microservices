@@ -8,9 +8,15 @@ using AuthService.Application.DTOs.Auth;
 using AuthService.Domain.Interfaces;
 using CarDealer.Contracts.Events.Auth;
 using AuthService.Application.Common.Interfaces;
+using AuthService.Domain.Enums;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 
 namespace AuthService.Application.Features.Auth.Commands.Login;
 
+/// <summary>
+/// US-18.3: Login handler with CAPTCHA verification after 2 failed attempts.
+/// </summary>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 {
     private readonly IUserRepository _userRepository;
@@ -19,6 +25,16 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IEventPublisher _eventPublisher;
     private readonly IRequestContext _requestContext;
+    private readonly ITwoFactorService _twoFactorService;
+    private readonly ICaptchaService _captchaService;
+    private readonly IDistributedCache _cache;
+    private readonly IAuthNotificationService _notificationService;
+    private readonly ILogger<LoginCommandHandler> _logger;
+
+    private const int CAPTCHA_REQUIRED_AFTER_ATTEMPTS = 2;
+    private const int SECURITY_ALERT_THRESHOLD = 3;
+    private const int MAX_FAILED_ATTEMPTS = 5;
+    private const int LOCKOUT_MINUTES = 30;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
@@ -26,7 +42,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
         IEventPublisher eventPublisher,
-        IRequestContext requestContext)
+        IRequestContext requestContext,
+        ITwoFactorService twoFactorService,
+        ICaptchaService captchaService,
+        IDistributedCache cache,
+        IAuthNotificationService notificationService,
+        ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -34,19 +55,64 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         _refreshTokenRepository = refreshTokenRepository;
         _eventPublisher = eventPublisher;
         _requestContext = requestContext;
+        _twoFactorService = twoFactorService;
+        _captchaService = captchaService;
+        _cache = cache;
+        _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken)
-                   ?? throw new UnauthorizedException("Invalid credentials.");
+        // US-18.3: Check if CAPTCHA is required based on failed attempts
+        var failedAttemptsKey = $"login_failed:{request.Email.ToLowerInvariant()}";
+        var failedAttemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        var failedAttempts = 0;
+        if (!string.IsNullOrEmpty(failedAttemptsStr))
+        {
+            int.TryParse(failedAttemptsStr, out failedAttempts);
+        }
+
+        if (_captchaService.IsCaptchaRequired(failedAttempts))
+        {
+            if (string.IsNullOrEmpty(request.CaptchaToken))
+            {
+                throw new BadRequestException("CAPTCHA verification required. Please complete the CAPTCHA challenge.");
+            }
+
+            var captchaValid = await _captchaService.VerifyAsync(
+                request.CaptchaToken, 
+                "login", 
+                _requestContext.IpAddress);
+
+            if (!captchaValid)
+            {
+                _logger.LogWarning("CAPTCHA verification failed for {Email}. Score: {Score}", 
+                    request.Email, _captchaService.LastScore);
+                throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+            }
+        }
+
+        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        
+        if (user == null)
+        {
+            await TrackFailedLoginAttemptAsync(request.Email, null, cancellationToken);
+            throw new UnauthorizedException("Invalid credentials.");
+        }
 
         // Verificar que PasswordHash no sea nulo
         if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
             throw new UnauthorizedException("Invalid credentials.");
+        }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
+        {
+            await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
             throw new UnauthorizedException("Invalid credentials.");
+        }
 
         if (!user.EmailConfirmed)
             throw new UnauthorizedException("Please verify your email before logging in.");
@@ -54,11 +120,36 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         if (user.IsLockedOut())
             throw new UnauthorizedException("Account is temporarily locked. Please try again later.");
 
+        // Clear failed attempts on successful password verification
+        await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
+
         // Verificar si requiere 2FA
         if (user.IsTwoFactorEnabled)
         {
             // Generar token temporal para 2FA
             var tempToken = _jwtGenerator.GenerateTempToken(user.Id);
+            
+            // Determinar el tipo de 2FA y obtener el string para el frontend
+            string twoFactorTypeString = "authenticator"; // default
+            
+            if (user.TwoFactorAuth != null)
+            {
+                var twoFactorType = user.TwoFactorAuth.PrimaryMethod;
+                
+                // Map enum to string for frontend
+                twoFactorTypeString = twoFactorType switch
+                {
+                    TwoFactorAuthType.SMS => "sms",
+                    TwoFactorAuthType.Email => "email",
+                    _ => "authenticator"
+                };
+                
+                // Enviar código 2FA automáticamente para SMS y Email
+                if (twoFactorType == TwoFactorAuthType.SMS || twoFactorType == TwoFactorAuthType.Email)
+                {
+                    await _twoFactorService.SendTwoFactorCodeAsync(user.Id, twoFactorType);
+                }
+            }
 
             return new LoginResponse(
                 user.Id,
@@ -67,7 +158,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 string.Empty, // No refresh token yet
                 DateTime.UtcNow.AddMinutes(5), // Short expiration for 2FA
                 true, // requiresTwoFactor
-                tempToken
+                tempToken,
+                twoFactorTypeString // Include 2FA type for frontend
             );
         }
 
@@ -106,5 +198,58 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             expiresAt,
             false // requiresTwoFactor
         );
+    }
+
+    /// <summary>
+    /// US-18.2/18.3: Track failed login attempts for CAPTCHA requirement and security alerts.
+    /// Sends security alerts after SECURITY_ALERT_THRESHOLD attempts.
+    /// </summary>
+    private async Task TrackFailedLoginAttemptAsync(string email, string? userEmail, CancellationToken cancellationToken)
+    {
+        var failedAttemptsKey = $"login_failed:{email.ToLowerInvariant()}";
+        var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        
+        int attempts = 1;
+        if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
+        {
+            attempts = existing + 1;
+        }
+
+        // Update failed attempts counter
+        await _cache.SetStringAsync(failedAttemptsKey, attempts.ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(LOCKOUT_MINUTES)
+        }, cancellationToken);
+
+        _logger.LogWarning("Failed login attempt {Attempts} for {Email} from IP {IP}", 
+            attempts, email, _requestContext.IpAddress);
+
+        // US-18.2: Send security alert after 3+ failed attempts
+        if (attempts >= SECURITY_ALERT_THRESHOLD && !string.IsNullOrEmpty(userEmail))
+        {
+            try
+            {
+                var alert = new SecurityAlertDto(
+                    AlertType: "FailedLoginAttempts",
+                    IpAddress: _requestContext.IpAddress,
+                    AttemptCount: attempts,
+                    Timestamp: DateTime.UtcNow,
+                    DeviceInfo: _requestContext.UserAgent
+                );
+                await _notificationService.SendSecurityAlertAsync(userEmail, alert);
+                _logger.LogInformation("Security alert sent to {Email} after {Attempts} failed login attempts", 
+                    userEmail, attempts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send security alert for {Email}", email);
+            }
+        }
+
+        // Log when CAPTCHA will be required
+        if (attempts == CAPTCHA_REQUIRED_AFTER_ATTEMPTS)
+        {
+            _logger.LogInformation("CAPTCHA will be required for next login attempt from {Email}", email);
+        }
     }
 }

@@ -40,6 +40,11 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
     // Account type for role-based access
     public AccountType AccountType { get; set; } = AccountType.Individual;
 
+    // Profile information
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+
     // Nuevas propiedades para autenticación externa
     public ExternalAuthProvider? ExternalAuthProvider { get; private set; }
     public string? ExternalUserId { get; private set; }
@@ -164,7 +169,10 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         string userName,
         string email,
         ExternalAuthProvider provider,
-        string externalUserId)
+        string externalUserId,
+        string? firstName = null,
+        string? lastName = null,
+        string? profilePictureUrl = null)
     {
         if (string.IsNullOrWhiteSpace(userName))
             throw new DomainException("Username cannot be empty");
@@ -180,7 +188,10 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
             ExternalAuthProvider = provider,
             ExternalUserId = externalUserId,
             EmailConfirmed = true, // Los emails de proveedores externos están confirmados
-            SecurityStamp = Guid.NewGuid().ToString()
+            SecurityStamp = Guid.NewGuid().ToString(),
+            FirstName = firstName,
+            LastName = lastName,
+            ProfilePictureUrl = profilePictureUrl
         };
 
         user.AddDomainEvent(new UserRegisteredEvent(user.Id, user.Email, user.UserName!));

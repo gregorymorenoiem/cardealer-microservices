@@ -140,6 +140,15 @@
           "Microsoft.Extensions.Primitives": "8.0.0"
         }
       },
+      "Microsoft.IdentityModel.Tokens": {
+        "type": "Direct",
+        "requested": "[8.0.2, )",
+        "resolved": "8.0.2",
+        "contentHash": "X58KyDBpGJZcCfmSgbkxJLLxd04eMFVaJlMEbRCyWL1X44n6kMxRyK6UTS1zgi5DHikeyiZj8bi7+p0kfPepLg==",
+        "dependencies": {
+          "Microsoft.IdentityModel.Logging": "8.0.2"
+        }
+      },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
         "type": "Direct",
         "requested": "[8.0.11, )",
@@ -578,14 +587,6 @@
         "dependencies": {
           "Microsoft.IdentityModel.Protocols": "7.0.3",
           "System.IdentityModel.Tokens.Jwt": "7.0.3"
-        }
-      },
-      "Microsoft.IdentityModel.Tokens": {
-        "type": "Transitive",
-        "resolved": "8.0.2",
-        "contentHash": "X58KyDBpGJZcCfmSgbkxJLLxd04eMFVaJlMEbRCyWL1X44n6kMxRyK6UTS1zgi5DHikeyiZj8bi7+p0kfPepLg==",
-        "dependencies": {
-          "Microsoft.IdentityModel.Logging": "8.0.2"
         }
       },
       "Microsoft.SqlServer.Server": {

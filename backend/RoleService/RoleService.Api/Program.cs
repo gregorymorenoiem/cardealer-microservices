@@ -125,27 +125,65 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Configurar políticas de autorización
+// Configurar políticas de autorización RBAC
 builder.Services.AddAuthorization(options =>
 {
-    // Política para acceso general al RoleService
+    // Política para acceso general al RoleService (lectura)
     options.AddPolicy("RoleServiceAccess", policy =>
     {
         policy.RequireAuthenticatedUser();
-        policy.RequireClaim("service", "RoleService", "all");
     });
 
-    // Política para operaciones administrativas
-    options.AddPolicy("RoleServiceAdmin", policy =>
+    // Política para gestión de roles (admin:manage-roles)
+    options.AddPolicy("ManageRoles", policy =>
     {
         policy.RequireAuthenticatedUser();
-        policy.RequireClaim("role", "admin", "RoleService-admin");
+        policy.RequireAssertion(context =>
+        {
+            // SuperAdmin tiene acceso total
+            if (context.User.HasClaim("role", "SuperAdmin"))
+                return true;
+            
+            // Admin puede gestionar roles
+            if (context.User.HasClaim("role", "Admin"))
+                return true;
+            
+            // Verificar claim específico de permiso
+            if (context.User.HasClaim("permission", "admin:manage-roles"))
+                return true;
+            
+            return false;
+        });
     });
 
-    // Política para solo lectura
-    options.AddPolicy("RoleServiceRead", policy =>
+    // Política para gestión de permisos (solo SuperAdmin)
+    options.AddPolicy("ManagePermissions", policy =>
     {
         policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+        {
+            // Solo SuperAdmin puede gestionar permisos
+            if (context.User.HasClaim("role", "SuperAdmin"))
+                return true;
+            
+            // Verificar claim específico de permiso
+            if (context.User.HasClaim("permission", "admin:manage-permissions"))
+                return true;
+            
+            return false;
+        });
+    });
+
+    // Política para operaciones administrativas generales
+    options.AddPolicy("AdminAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+        {
+            return context.User.HasClaim("role", "SuperAdmin") ||
+                   context.User.HasClaim("role", "Admin") ||
+                   context.User.HasClaim("permission", "admin:access");
+        });
     });
 });
 
@@ -170,12 +208,27 @@ builder.Services.AddScoped<IPermissionRepository, RoleService.Infrastructure.Rep
 builder.Services.AddScoped<IRolePermissionRepository, RoleService.Infrastructure.Repositories.EfRolePermissionRepository>();
 builder.Services.AddScoped<IRoleLogRepository, RoleService.Infrastructure.Persistence.EfRoleLogRepository>();
 
-// Error Reporter Service
-builder.Services.AddScoped<IErrorReporter, RoleService.Infrastructure.Services.ErrorReporter>();
-
 // User Context Service
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<RoleService.Application.Interfaces.IUserContextService, RoleService.Infrastructure.Services.UserContextService>();
+
+// Permission Cache Service (usando Redis si está disponible, sino memoria)
+var redisConnection = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrEmpty(redisConnection))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "RoleService:";
+    });
+    Log.Information("Using Redis for permission caching: {RedisConnection}", redisConnection);
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+    Log.Warning("Redis not configured - using in-memory cache for permissions (not recommended for production)");
+}
+builder.Services.AddScoped<RoleService.Application.Interfaces.IPermissionCacheService, RoleService.Infrastructure.Services.PermissionCacheService>();
 
 // External Service Clients
 builder.Services.AddHttpClient<RoleService.Application.Interfaces.IAuditServiceClient, RoleService.Infrastructure.External.AuditServiceClient>(client =>

@@ -4,7 +4,10 @@ using AuthService.Domain.Interfaces.Services;
 using AuthService.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using AuthService.Application.Common.Interfaces;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.ExternalAuthCallback;
 
@@ -15,19 +18,25 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ILogger<ExternalAuthCallbackCommandHandler> _logger;
     private readonly IRequestContext _requestContext;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public ExternalAuthCallbackCommandHandler(
         IExternalAuthService externalAuthService,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
         ILogger<ExternalAuthCallbackCommandHandler> logger,
-        IRequestContext requestContext)
+        IRequestContext requestContext,
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory)
     {
         _externalAuthService = externalAuthService;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
         _requestContext = requestContext;
+        _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<ExternalAuthResponse> Handle(ExternalAuthCallbackCommand request, CancellationToken cancellationToken)
@@ -81,7 +90,10 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
                 accessToken,
                 refreshTokenValue,
                 expiresAt,
-                isNewUser
+                isNewUser,
+                user.FirstName,
+                user.LastName,
+                user.ProfilePictureUrl
             );
         }
         catch (Exception ex)
@@ -94,14 +106,168 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
 
     private async Task<string> ExchangeCodeForIdToken(ExternalAuthProvider provider, string code, string? redirectUri)
     {
-        // This would make a server-side call to the provider's token endpoint
-        // The actual implementation depends on the OAuth provider configuration
         _logger.LogInformation("Exchanging code for ID token for provider {Provider}", provider);
 
-        // For now, throw not implemented - this should be configured per provider
-        await Task.CompletedTask;
-        throw new NotImplementedException(
-            $"OAuth code exchange for provider {provider} requires provider-specific configuration. " +
-            "Please implement the token exchange logic for your OAuth provider.");
+        return provider switch
+        {
+            ExternalAuthProvider.Google => await ExchangeGoogleCode(code, redirectUri),
+            ExternalAuthProvider.Microsoft => await ExchangeMicrosoftCode(code, redirectUri),
+            ExternalAuthProvider.Facebook => await ExchangeFacebookCode(code, redirectUri),
+            ExternalAuthProvider.Apple => await ExchangeAppleCode(code, redirectUri),
+            _ => throw new NotImplementedException($"OAuth code exchange for provider {provider} is not implemented.")
+        };
+    }
+
+    private async Task<string> ExchangeGoogleCode(string code, string? redirectUri)
+    {
+        var clientId = _configuration["Authentication:Google:ClientId"];
+        var clientSecret = _configuration["Authentication:Google:ClientSecret"];
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            throw new InvalidOperationException("Google OAuth credentials are not configured");
+
+        var client = _httpClientFactory.CreateClient();
+        var tokenEndpoint = "https://oauth2.googleapis.com/token";
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["code"] = code,
+            ["client_id"] = clientId,
+            ["client_secret"] = clientSecret,
+            ["redirect_uri"] = redirectUri ?? "",
+            ["grant_type"] = "authorization_code"
+        });
+
+        var response = await client.PostAsync(tokenEndpoint, content);
+        var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Google token exchange failed: {Response}", json);
+            throw new Exception($"Google OAuth token exchange failed: {json}");
+        }
+
+        using var doc = JsonDocument.Parse(json);
+        var idToken = doc.RootElement.GetProperty("id_token").GetString();
+
+        if (string.IsNullOrEmpty(idToken))
+            throw new Exception("Google did not return an id_token");
+
+        _logger.LogInformation("Successfully exchanged Google code for ID token");
+        return idToken;
+    }
+
+    private async Task<string> ExchangeMicrosoftCode(string code, string? redirectUri)
+    {
+        var clientId = _configuration["Authentication:Microsoft:ClientId"];
+        var clientSecret = _configuration["Authentication:Microsoft:ClientSecret"];
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            throw new InvalidOperationException("Microsoft OAuth credentials are not configured");
+
+        var client = _httpClientFactory.CreateClient();
+        var tokenEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["code"] = code,
+            ["client_id"] = clientId,
+            ["client_secret"] = clientSecret,
+            ["redirect_uri"] = redirectUri ?? "",
+            ["grant_type"] = "authorization_code",
+            ["scope"] = "openid email profile"
+        });
+
+        var response = await client.PostAsync(tokenEndpoint, content);
+        var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Microsoft token exchange failed: {Response}", json);
+            throw new Exception($"Microsoft OAuth token exchange failed: {json}");
+        }
+
+        using var doc = JsonDocument.Parse(json);
+        var idToken = doc.RootElement.GetProperty("id_token").GetString();
+
+        if (string.IsNullOrEmpty(idToken))
+            throw new Exception("Microsoft did not return an id_token");
+
+        _logger.LogInformation("Successfully exchanged Microsoft code for ID token");
+        return idToken;
+    }
+
+    private async Task<string> ExchangeFacebookCode(string code, string? redirectUri)
+    {
+        var clientId = _configuration["Authentication:Facebook:AppId"];
+        var clientSecret = _configuration["Authentication:Facebook:AppSecret"];
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            throw new InvalidOperationException("Facebook OAuth credentials are not configured");
+
+        var client = _httpClientFactory.CreateClient();
+        
+        // Facebook returns access_token, not id_token, so we need to get user info
+        var tokenEndpoint = $"https://graph.facebook.com/v18.0/oauth/access_token?" +
+            $"client_id={clientId}&redirect_uri={Uri.EscapeDataString(redirectUri ?? "")}" +
+            $"&client_secret={clientSecret}&code={code}";
+
+        var response = await client.GetAsync(tokenEndpoint);
+        var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Facebook token exchange failed: {Response}", json);
+            throw new Exception($"Facebook OAuth token exchange failed: {json}");
+        }
+
+        using var doc = JsonDocument.Parse(json);
+        var accessToken = doc.RootElement.GetProperty("access_token").GetString();
+
+        if (string.IsNullOrEmpty(accessToken))
+            throw new Exception("Facebook did not return an access_token");
+
+        _logger.LogInformation("Successfully exchanged Facebook code for access token");
+        // For Facebook, we return the access_token which will be used to get user info
+        return accessToken;
+    }
+
+    private async Task<string> ExchangeAppleCode(string code, string? redirectUri)
+    {
+        var clientId = _configuration["Authentication:Apple:ClientId"];
+        var clientSecret = _configuration["Authentication:Apple:ClientSecret"];
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            throw new InvalidOperationException("Apple OAuth credentials are not configured");
+
+        var client = _httpClientFactory.CreateClient();
+        var tokenEndpoint = "https://appleid.apple.com/auth/token";
+
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["code"] = code,
+            ["client_id"] = clientId,
+            ["client_secret"] = clientSecret,
+            ["redirect_uri"] = redirectUri ?? "",
+            ["grant_type"] = "authorization_code"
+        });
+
+        var response = await client.PostAsync(tokenEndpoint, content);
+        var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Apple token exchange failed: {Response}", json);
+            throw new Exception($"Apple OAuth token exchange failed: {json}");
+        }
+
+        using var doc = JsonDocument.Parse(json);
+        var idToken = doc.RootElement.GetProperty("id_token").GetString();
+
+        if (string.IsNullOrEmpty(idToken))
+            throw new Exception("Apple did not return an id_token");
+
+        _logger.LogInformation("Successfully exchanged Apple code for ID token");
+        return idToken;
     }
 }

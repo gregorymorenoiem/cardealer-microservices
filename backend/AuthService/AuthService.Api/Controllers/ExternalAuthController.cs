@@ -84,10 +84,17 @@ public class ExternalAuthController : ControllerBase
     }
 
     /// <summary>
-    /// Link external account to existing user
+    /// Link external account to existing user (AUTH-EXT-005)
+    /// Allows authenticated users to connect an OAuth provider to their account.
+    /// User can only have one external provider linked at a time.
     /// </summary>
+    /// <param name="request">Provider and ID token from OAuth flow</param>
+    /// <returns>New tokens with updated claims</returns>
     [HttpPost("link-account")]
     [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<ExternalAuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ExternalAuthResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ExternalAuthResponse>), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<ExternalAuthResponse>>> LinkAccount(
         [FromBody] ExternalAuthRequest request)
     {
@@ -105,12 +112,14 @@ public class ExternalAuthController : ControllerBase
             var command = new LinkExternalAccountCommand(userId, request.Provider, request.IdToken);
             var result = await _mediator.Send(command);
 
-            _logger.LogInformation("External account linked successfully for user {UserId}", userId);
+            _logger.LogInformation("External account linked successfully for user {UserId}, provider {Provider}",
+                userId, request.Provider);
 
             return Ok(ApiResponse<ExternalAuthResponse>.Ok(result, new Dictionary<string, object>
             {
                 ["isLinked"] = true,
-                ["provider"] = request.Provider
+                ["provider"] = request.Provider,
+                ["linkedAt"] = DateTime.UtcNow
             }));
         }
         catch (Exception ex)
@@ -121,38 +130,46 @@ public class ExternalAuthController : ControllerBase
     }
 
     /// <summary>
-    /// Unlink external account from user
+    /// Unlink external account from user (AUTH-EXT-006)
+    /// Security: Requires user to have a password set before unlinking
     /// </summary>
+    /// <param name="request">The provider to unlink</param>
+    /// <returns>Success response with unlink details</returns>
     [HttpDelete("unlink-account")]
     [Authorize]
-    public async Task<ActionResult<ApiResponse>> UnlinkAccount([FromBody] UnlinkExternalAccountRequest request)
+    [ProducesResponseType(typeof(ApiResponse<UnlinkExternalAccountResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<UnlinkExternalAccountResponse>>> UnlinkAccount(
+        [FromBody] UnlinkExternalAccountRequest request)
     {
         try
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(ApiResponse.Fail("User not authenticated"));
+                return Unauthorized(ApiResponse<UnlinkExternalAccountResponse>.Fail("User not authenticated"));
             }
 
             _logger.LogInformation("Unlinking external account for user {UserId} with provider {Provider}",
                 userId, request.Provider);
 
             var command = new UnlinkExternalAccountCommand(userId, request.Provider);
-            await _mediator.Send(command);
+            var result = await _mediator.Send(command);
 
-            _logger.LogInformation("External account unlinked successfully for user {UserId}", userId);
+            _logger.LogInformation("External account unlinked successfully for user {UserId}, provider {Provider}",
+                userId, request.Provider);
 
-            return Ok(ApiResponse.Ok(new Dictionary<string, object>
+            return Ok(ApiResponse<UnlinkExternalAccountResponse>.Ok(result, new Dictionary<string, object>
             {
-                ["message"] = $"External account from {request.Provider} unlinked successfully",
-                ["provider"] = request.Provider
+                ["provider"] = result.Provider,
+                ["unlinkedAt"] = result.UnlinkedAt
             }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to unlink external account for user");
-            return BadRequest(ApiResponse.Fail(ex.Message));
+            return BadRequest(ApiResponse<UnlinkExternalAccountResponse>.Fail(ex.Message));
         }
     }
 

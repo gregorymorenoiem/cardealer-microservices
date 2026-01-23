@@ -128,6 +128,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
+        services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>(); // US-18.4
+        services.AddScoped<IUserSessionRepository, UserSessionRepository>(); // Sessions management
 
         // Services
         services.AddSingleton<Microsoft.AspNetCore.Identity.IPasswordHasher<object>, Microsoft.AspNetCore.Identity.PasswordHasher<object>>();
@@ -146,11 +148,24 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITwoFactorService, TwoFactorService>();
         services.AddScoped<IQRCodeService, QRCodeService>();
 
-        // External Services
+        // US-18.3: CAPTCHA Service (Google reCAPTCHA v3)
+        services.AddHttpClient<ICaptchaService, CaptchaService>()
+            .AddPolicyHandler(GetRetryPolicy());
+
+        // US-18.4: Device Fingerprinting Service
+        services.AddScoped<IDeviceFingerprintService, DeviceFingerprintService>();
+
+        // US-18.5: Security Audit Service for SIEM integration
+        services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+
+        // External Services - NotificationServiceClient
         services.AddHttpClient<NotificationServiceClient>()
             .AddPolicyHandler(GetRetryPolicy())
             .AddPolicyHandler(GetCircuitBreakerPolicy());
         services.Configure<NotificationServiceSettings>(configuration.GetSection("NotificationService"));
+        
+        // Register INotificationService interface (for SMS 2FA)
+        services.AddScoped<INotificationService>(sp => sp.GetRequiredService<NotificationServiceClient>());
 
         // External Authentication Services
         services.AddHttpClient<ExternalTokenValidator>()

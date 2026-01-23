@@ -32,6 +32,31 @@ public class Enable2FACommandHandler : IRequestHandler<Enable2FACommand, Enable2
         if (user.IsTwoFactorEnabled)
             throw new BadRequestException("Two-factor authentication is already enabled.");
 
+        // Validar requisitos según el tipo de 2FA
+        switch (request.Type)
+        {
+            case TwoFactorAuthType.SMS:
+                // Para SMS, el usuario DEBE tener teléfono verificado
+                if (string.IsNullOrEmpty(user.PhoneNumber))
+                    throw new BadRequestException("Phone number is required for SMS two-factor authentication. Please add a phone number first.");
+                if (!user.PhoneNumberConfirmed)
+                    throw new BadRequestException("Phone number must be verified before enabling SMS two-factor authentication. Please verify your phone number first.");
+                break;
+
+            case TwoFactorAuthType.Email:
+                // Para Email, el usuario DEBE tener email verificado (ya es requisito para login, pero validamos por seguridad)
+                if (!user.EmailConfirmed)
+                    throw new BadRequestException("Email must be verified before enabling Email two-factor authentication.");
+                break;
+
+            case TwoFactorAuthType.Authenticator:
+                // Authenticator no requiere validaciones adicionales
+                break;
+
+            default:
+                throw new BadRequestException("Invalid two-factor authentication type.");
+        }
+
         string secret = string.Empty;
         string qrCodeUri = string.Empty;
         List<string> recoveryCodes;
@@ -50,9 +75,6 @@ public class Enable2FACommandHandler : IRequestHandler<Enable2FACommand, Enable2
                 secret = await _twoFactorService.GenerateEmailCodeAsync(user.Id);
                 qrCodeUri = string.Empty;
                 break;
-
-            default:
-                throw new BadRequestException("Invalid two-factor authentication type.");
         }
 
         // Generar códigos de recuperación

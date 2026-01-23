@@ -1,4 +1,8 @@
 using AuthService.Application.DTOs.Security;
+using AuthService.Application.Features.Auth.Commands.ChangePassword;
+using AuthService.Application.Features.Auth.Commands.RevokeSession;
+using AuthService.Application.Features.Auth.Commands.RevokeAllSessions;
+using AuthService.Application.Features.Auth.Queries.GetActiveSessions;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Shared;
 using Microsoft.AspNetCore.Authorization;
@@ -6,12 +10,13 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using AuthService.Domain.Entities;
 using MediatR;
+using FluentValidation;
 
 namespace AuthService.Api.Controllers;
 
 /// <summary>
 /// Controller for managing user security settings
-/// Proceso: AUTH-LOG-001, AUTH-PWD, SEC-2FA
+/// Proceso: AUTH-SEC-001, AUTH-SEC-002, AUTH-SEC-003, AUTH-SEC-004
 /// </summary>
 [ApiController]
 [Route("api/auth/security")]
@@ -22,17 +27,20 @@ public class SecurityController : ControllerBase
     private readonly IUserSessionRepository _sessionRepository;
     private readonly ILoginHistoryRepository _loginHistoryRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IMediator _mediator;
 
     public SecurityController(
         ILogger<SecurityController> logger,
         IUserSessionRepository sessionRepository,
         ILoginHistoryRepository loginHistoryRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IMediator mediator)
     {
         _logger = logger;
         _sessionRepository = sessionRepository;
         _loginHistoryRepository = loginHistoryRepository;
         _userRepository = userRepository;
+        _mediator = mediator;
     }
 
     /// <summary>
@@ -113,187 +121,327 @@ public class SecurityController : ControllerBase
 
     /// <summary>
     /// Change user password
-    /// Proceso: AUTH-PWD-001
+    /// Proceso: AUTH-SEC-001
+    /// 
+    /// Security measures:
+    /// - Requires valid current password
+    /// - Validates password complexity (8+ chars, upper, lower, number, special)
+    /// - Prevents password reuse (new != current)
+    /// - Revokes all active sessions
+    /// - Revokes all refresh tokens
+    /// - Sends email notification
     /// </summary>
+    /// <remarks>
+    /// Password requirements:
+    /// - Minimum 8 characters
+    /// - At least one uppercase letter (A-Z)
+    /// - At least one lowercase letter (a-z)
+    /// - At least one number (0-9)
+    /// - At least one special character (!@#$%^&amp;*(),.?":{}|&lt;&gt;_-+=[]\/~`)
+    /// - Cannot be the same as current password
+    /// - Cannot contain common passwords (password123, qwerty, etc.)
+    /// - Cannot contain more than 3 consecutive identical characters
+    /// </remarks>
     [HttpPost("change-password")]
     [ProducesResponseType(typeof(ApiResponse<ChangePasswordResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<ApiResponse<ChangePasswordResponse>>> ChangePassword(
         [FromBody] ChangePasswordRequest request,
         CancellationToken cancellationToken)
     {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("Password change attempt without valid authentication");
+            return Unauthorized(ApiResponse<ChangePasswordResponse>.Fail("User not authenticated"));
+        }
+
+        _logger.LogInformation(
+            "AUTH-SEC-001: Password change initiated for user {UserId} from IP {IpAddress}",
+            userId, GetClientIpAddress());
+
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(ApiResponse<ChangePasswordResponse>.Fail("User not authenticated"));
-            }
-
-            // Validar que las contraseñas coincidan
-            if (request.NewPassword != request.ConfirmPassword)
-            {
-                return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("Passwords do not match"));
-            }
-
-            // Validar fortaleza de contraseña
-            if (request.NewPassword.Length < 8)
-            {
-                return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("Password must be at least 8 characters"));
-            }
-
-            if (!request.NewPassword.Any(char.IsUpper))
-            {
-                return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("Password must contain at least one uppercase letter"));
-            }
-
-            if (!request.NewPassword.Any(char.IsDigit))
-            {
-                return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("Password must contain at least one number"));
-            }
-
-            // Obtener usuario
-            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user == null)
-            {
-                return NotFound(ApiResponse<ChangePasswordResponse>.Fail("User not found"));
-            }
-
-            // Verificar contraseña actual
-            var passwordValid = await _userRepository.VerifyPasswordAsync(user, request.CurrentPassword);
-            if (!passwordValid)
-            {
-                return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("Current password is incorrect"));
-            }
-
-            // Cambiar contraseña
-            await _userRepository.ChangePasswordAsync(user, request.NewPassword, cancellationToken);
-
-            _logger.LogInformation("Password changed successfully for user {UserId}", userId);
-
-            // Registrar en historial
-            var loginHistory = new LoginHistory(
-                userId: userId,
-                deviceInfo: GetDeviceFromUserAgent(),
-                browser: GetBrowserFromUserAgent(),
-                operatingSystem: GetOsFromUserAgent(),
-                ipAddress: GetClientIpAddress(),
-                success: true,
-                method: LoginMethod.Password
+            // Crear comando con información de contexto para auditoría
+            var command = new ChangePasswordCommand(
+                UserId: userId,
+                CurrentPassword: request.CurrentPassword,
+                NewPassword: request.NewPassword,
+                ConfirmPassword: request.ConfirmPassword,
+                IpAddress: GetClientIpAddress(),
+                UserAgent: GetUserAgentString()
             );
-            await _loginHistoryRepository.AddAsync(loginHistory, cancellationToken);
 
-            return Ok(ApiResponse<ChangePasswordResponse>.Ok(new ChangePasswordResponse(
-                Success: true,
-                Message: "Password changed successfully"
-            )));
+            // Ejecutar a través de MediatR (incluye validación con FluentValidation)
+            var result = await _mediator.Send(command, cancellationToken);
+
+            _logger.LogInformation(
+                "AUTH-SEC-001: Password changed successfully for user {UserId}",
+                userId);
+
+            return Ok(ApiResponse<ChangePasswordResponse>.Ok(result));
+        }
+        catch (ValidationException validationEx)
+        {
+            var errors = validationEx.Errors
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            _logger.LogWarning(
+                "AUTH-SEC-001: Password change validation failed for user {UserId}: {Errors}",
+                userId, string.Join(", ", errors));
+
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(
+                string.Join("; ", errors)));
+        }
+        catch (Exception ex) when (ex.Message.Contains("incorrect") || 
+                                   ex.Message.Contains("wrong") ||
+                                   ex.Message.Contains("invalid", StringComparison.OrdinalIgnoreCase))
+        {
+            // Errores de contraseña actual incorrecta
+            _logger.LogWarning(
+                "AUTH-SEC-001: Password change failed - invalid current password for user {UserId}",
+                userId);
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex) when (ex.Message.Contains("different") ||
+                                   ex.Message.Contains("same") ||
+                                   ex.Message.Contains("common") ||
+                                   ex.Message.Contains("locked"))
+        {
+            // Otros errores de validación de negocio
+            _logger.LogWarning(
+                "AUTH-SEC-001: Password change business rule violation for user {UserId}: {Message}",
+                userId, ex.Message);
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error changing password");
-            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(ex.Message));
+            _logger.LogError(
+                ex,
+                "AUTH-SEC-001: Unexpected error during password change for user {UserId}",
+                userId);
+            return StatusCode(500, ApiResponse<ChangePasswordResponse>.Fail(
+                "An unexpected error occurred. Please try again later."));
         }
     }
 
     /// <summary>
     /// Get active sessions for the current user
+    /// Proceso: AUTH-SEC-002
+    /// 
+    /// Returns a list of all active sessions with device info, location, and activity status.
+    /// IPs are partially masked for privacy. Current session is marked.
     /// </summary>
+    /// <remarks>
+    /// Security features:
+    /// - Only returns sessions belonging to the authenticated user
+    /// - IP addresses are partially masked (e.g., 192.168.1.***)
+    /// - Strings are sanitized to prevent XSS
+    /// - Current session is marked for UI differentiation
+    /// </remarks>
     [HttpGet("sessions")]
-    [ProducesResponseType(typeof(List<ActiveSessionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GetActiveSessionsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<List<ActiveSessionDto>>> GetActiveSessions(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<GetActiveSessionsResponse>>> GetActiveSessions(
+        CancellationToken cancellationToken)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized();
+            _logger.LogWarning("AUTH-SEC-002: Attempt to get sessions without authentication");
+            return Unauthorized(ApiResponse<GetActiveSessionsResponse>.Fail("User not authenticated"));
         }
 
-        _logger.LogInformation("Getting active sessions for user {UserId}", userId);
+        _logger.LogInformation(
+            "AUTH-SEC-002: Getting active sessions for user {UserId} from IP {IpAddress}",
+            userId, GetClientIpAddress());
 
-        var sessions = await _sessionRepository.GetActiveSessionsByUserIdAsync(userId, cancellationToken);
-        var currentSessionId = GetCurrentSessionId();
+        try
+        {
+            var query = new GetActiveSessionsQuery(
+                UserId: userId,
+                CurrentSessionId: GetCurrentSessionId()
+            );
 
-        var sessionDtos = sessions.Select(s => new ActiveSessionDto(
-            Id: s.Id.ToString(),
-            Device: s.DeviceInfo,
-            Browser: s.Browser,
-            Location: s.Location ?? GetLocationString(s.City, s.Country),
-            IpAddress: s.IpAddress,
-            LastActive: s.LastActiveAt.ToString("o"),
-            IsCurrent: s.Id.ToString() == currentSessionId
-        )).ToList();
+            var result = await _mediator.Send(query, cancellationToken);
 
-        return Ok(sessionDtos);
+            if (!result.Success)
+            {
+                return StatusCode(500, ApiResponse<GetActiveSessionsResponse>.Fail(
+                    result.Message ?? "Error retrieving sessions"));
+            }
+
+            return Ok(ApiResponse<GetActiveSessionsResponse>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AUTH-SEC-002: Error getting sessions for user {UserId}", userId);
+            return StatusCode(500, ApiResponse<GetActiveSessionsResponse>.Fail(
+                "An error occurred while retrieving sessions."));
+        }
     }
 
     /// <summary>
-    /// Revoke a specific session
+    /// Revoke a specific session (remote logout)
+    /// Proceso: AUTH-SEC-003
+    /// 
+    /// Terminates a specific session and invalidates its refresh token.
+    /// The device will be logged out on next request.
     /// </summary>
+    /// <remarks>
+    /// Security features:
+    /// - Verifies session belongs to the authenticated user (prevents IDOR)
+    /// - Returns 404 even for sessions of other users (prevents enumeration)
+    /// - Revokes associated refresh token
+    /// - Logs security audit trail
+    /// </remarks>
+    /// <param name="sessionId">The GUID of the session to revoke</param>
     [HttpDelete("sessions/{sessionId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<RevokeSessionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> RevokeSession(string sessionId, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<RevokeSessionResponse>>> RevokeSession(
+        string sessionId,
+        CancellationToken cancellationToken)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized();
+            _logger.LogWarning(
+                "AUTH-SEC-003: Attempt to revoke session {SessionId} without authentication",
+                sessionId);
+            return Unauthorized(ApiResponse<RevokeSessionResponse>.Fail("User not authenticated"));
         }
 
-        if (!Guid.TryParse(sessionId, out var sessionGuid))
+        _logger.LogInformation(
+            "AUTH-SEC-003: Session revocation request from user {UserId} for session {SessionId}",
+            userId, sessionId);
+
+        try
         {
-            return BadRequest(new { Message = "Invalid session ID format" });
-        }
+            var command = new RevokeSessionCommand(
+                UserId: userId,
+                SessionId: sessionId,
+                CurrentSessionId: GetCurrentSessionId(),
+                IpAddress: GetClientIpAddress(),
+                UserAgent: GetUserAgentString()
+            );
 
-        var session = await _sessionRepository.GetByIdAsync(sessionGuid, cancellationToken);
-        if (session == null)
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+            {
+                return BadRequest(ApiResponse<RevokeSessionResponse>.Fail(result.Message));
+            }
+
+            return Ok(ApiResponse<RevokeSessionResponse>.Ok(result));
+        }
+        catch (ValidationException validationEx)
         {
-            return NotFound(new { Message = "Session not found" });
+            var errors = validationEx.Errors.Select(e => e.ErrorMessage).ToList();
+            _logger.LogWarning(
+                "AUTH-SEC-003: Validation failed for session revocation: {Errors}",
+                string.Join(", ", errors));
+            return BadRequest(ApiResponse<RevokeSessionResponse>.Fail(string.Join("; ", errors)));
         }
-
-        // Verificar que la sesión pertenece al usuario
-        if (session.UserId != userId)
+        catch (Exception ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {
-            return Forbid();
+            return NotFound(ApiResponse<RevokeSessionResponse>.Fail("Session not found."));
         }
-
-        await _sessionRepository.RevokeSessionAsync(sessionGuid, "User revoked session", cancellationToken);
-        
-        _logger.LogInformation("Session {SessionId} revoked for user {UserId}", sessionId, userId);
-
-        return Ok(new { Message = "Session revoked successfully" });
+        catch (Exception ex) when (ex.Message.Contains("Invalid", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(ApiResponse<RevokeSessionResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "AUTH-SEC-003: Error revoking session {SessionId} for user {UserId}",
+                sessionId, userId);
+            return StatusCode(500, ApiResponse<RevokeSessionResponse>.Fail(
+                "An error occurred while revoking the session."));
+        }
     }
 
     /// <summary>
-    /// Revoke all sessions except the current one
+    /// Revoke all sessions (sign out from all devices)
+    /// Proceso: AUTH-SEC-004
+    /// 
+    /// Terminates all active sessions and refresh tokens.
+    /// By default, keeps the current session active.
     /// </summary>
+    /// <remarks>
+    /// Security features:
+    /// - Option to keep current session (default: true)
+    /// - Revokes all associated refresh tokens
+    /// - Sends security alert email to user
+    /// - Logs audit trail with count of revoked sessions
+    /// 
+    /// Use cases:
+    /// - User suspects account compromise
+    /// - User lost a device
+    /// - Periodic security hygiene
+    /// </remarks>
+    /// <param name="keepCurrentSession">Keep the current session active (default: true)</param>
     [HttpPost("sessions/revoke-all")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<RevokeAllSessionsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult> RevokeAllSessions(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<RevokeAllSessionsResponse>>> RevokeAllSessions(
+        [FromQuery] bool keepCurrentSession = true,
+        CancellationToken cancellationToken = default)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized();
+            _logger.LogWarning("AUTH-SEC-004: Attempt to revoke all sessions without authentication");
+            return Unauthorized(ApiResponse<RevokeAllSessionsResponse>.Fail("User not authenticated"));
         }
 
-        var currentSessionId = GetCurrentSessionId();
-        Guid? exceptSessionId = null;
-        
-        if (!string.IsNullOrEmpty(currentSessionId) && Guid.TryParse(currentSessionId, out var guid))
+        _logger.LogInformation(
+            "AUTH-SEC-004: Revoke all sessions request from user {UserId}. KeepCurrent: {KeepCurrent}",
+            userId, keepCurrentSession);
+
+        try
         {
-            exceptSessionId = guid;
+            var command = new RevokeAllSessionsCommand(
+                UserId: userId,
+                CurrentSessionId: GetCurrentSessionId(),
+                KeepCurrentSession: keepCurrentSession,
+                RevokeRefreshTokens: true,
+                IpAddress: GetClientIpAddress(),
+                UserAgent: GetUserAgentString()
+            );
+
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+            {
+                return StatusCode(500, ApiResponse<RevokeAllSessionsResponse>.Fail(result.Message));
+            }
+
+            _logger.LogInformation(
+                "AUTH-SEC-004: Successfully revoked {Count} sessions for user {UserId}",
+                result.SessionsRevoked, userId);
+
+            return Ok(ApiResponse<RevokeAllSessionsResponse>.Ok(result));
         }
-
-        await _sessionRepository.RevokeAllUserSessionsAsync(userId, exceptSessionId, "User revoked all sessions", cancellationToken);
-        
-        _logger.LogInformation("All sessions revoked for user {UserId} except current", userId);
-
-        return Ok(new { Message = "All other sessions revoked successfully" });
+        catch (ValidationException validationEx)
+        {
+            var errors = validationEx.Errors.Select(e => e.ErrorMessage).ToList();
+            return BadRequest(ApiResponse<RevokeAllSessionsResponse>.Fail(string.Join("; ", errors)));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "AUTH-SEC-004: Error revoking all sessions for user {UserId}",
+                userId);
+            return StatusCode(500, ApiResponse<RevokeAllSessionsResponse>.Fail(
+                "An error occurred while revoking sessions."));
+        }
     }
 
     /// <summary>
@@ -413,6 +561,11 @@ public class SecurityController : ControllerBase
         }
         
         return ip ?? "Unknown";
+    }
+
+    private string GetUserAgentString()
+    {
+        return Request.Headers.UserAgent.ToString();
     }
 
     #endregion

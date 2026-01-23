@@ -74,12 +74,22 @@ export default function LoginPage() {
       if (response.requiresTwoFactor && response.sessionToken) {
         // Store session token and redirect to 2FA verification
         sessionStorage.setItem('twoFactorSessionToken', response.sessionToken);
-        sessionStorage.setItem('twoFactorType', response.twoFactorType || 'totp');
+        sessionStorage.setItem('twoFactorType', response.twoFactorType || 'authenticator');
         sessionStorage.setItem(
           'pendingRedirect',
           (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard'
         );
-        navigate('/verify-2fa', { replace: true });
+
+        // Navigate with state for better UX
+        navigate('/verify-2fa', {
+          replace: true,
+          state: {
+            sessionToken: response.sessionToken,
+            email: data.email,
+            twoFactorType:
+              response.twoFactorType === 'sms' ? 2 : response.twoFactorType === 'email' ? 3 : 1, // 1=Authenticator, 2=SMS, 3=Email
+          },
+        });
         return;
       }
 
@@ -134,6 +144,26 @@ export default function LoginPage() {
   const handleMicrosoftLogin = async () => {
     try {
       await authService.loginWithMicrosoft();
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    try {
+      await authService.loginWithFacebook();
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      await authService.loginWithApple();
     } catch (error) {
       if (error instanceof Error) {
         setApiError(error.message);
@@ -231,6 +261,8 @@ export default function LoginPage() {
       <OAuthButtons
         onGoogleClick={handleGoogleLogin}
         onMicrosoftClick={handleMicrosoftLogin}
+        onFacebookClick={handleFacebookLogin}
+        onAppleClick={handleAppleLogin}
         disabled={isSubmitting}
       />
 

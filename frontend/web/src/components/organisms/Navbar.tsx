@@ -25,6 +25,7 @@ import {
   FiTarget,
   FiBarChart2,
   FiBell,
+  FiShield,
 } from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import NotificationDropdown from './NotificationDropdown';
@@ -70,8 +71,10 @@ export default function NavbarSimple() {
   const userLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: FiGrid },
     { href: '/favorites', label: 'Favoritos', icon: FiHeart },
+    { href: '/kyc/status', label: 'Verificar Identidad', icon: FiShield },
     { href: '/messages', label: 'Mensajes', icon: FiMessageSquare },
-    { href: '/profile', label: 'Perfil', icon: FiSettings },
+    { href: '/settings/security', label: 'Seguridad', icon: FiSettings },
+    { href: '/profile', label: 'Perfil', icon: FiUser },
   ];
 
   // Links para dealers - para el dropdown del perfil

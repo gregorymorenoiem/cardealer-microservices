@@ -133,5 +133,29 @@ public class TwoFactorAuth
         return false;
     }
 
+    /// <summary>
+    /// Updates recovery codes with a new set.
+    /// Called when user exhausts all codes and system auto-regenerates.
+    /// </summary>
+    public void UpdateRecoveryCodes(List<string> newCodes)
+    {
+        RecoveryCodes = newCodes ?? throw new ArgumentNullException(nameof(newCodes));
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Resets authenticator with a new secret and recovery codes.
+    /// Called when user loses their authenticator device and uses all recovery codes.
+    /// </summary>
+    public void ResetAuthenticator(string newSecret, List<string> newRecoveryCodes)
+    {
+        if (PrimaryMethod != TwoFactorAuthType.Authenticator)
+            throw new InvalidOperationException("Cannot reset authenticator for non-authenticator 2FA");
+        
+        Secret = newSecret ?? throw new ArgumentNullException(nameof(newSecret));
+        RecoveryCodes = newRecoveryCodes ?? throw new ArgumentNullException(nameof(newRecoveryCodes));
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public bool HasRecoveryCodes => RecoveryCodes.Any();
 }

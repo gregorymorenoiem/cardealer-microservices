@@ -16,7 +16,8 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(u => u.NormalizedUserName).HasMaxLength(256);
         builder.Property(u => u.Email).IsRequired().HasMaxLength(256);
         builder.Property(u => u.NormalizedEmail).HasMaxLength(256);
-        builder.Property(u => u.PasswordHash).IsRequired().HasMaxLength(1024);
+        // PasswordHash is optional for external OAuth users (Google, Facebook, etc.)
+        builder.Property(u => u.PasswordHash).IsRequired(false).HasMaxLength(1024);
         builder.Property(u => u.SecurityStamp).HasMaxLength(1024);
         builder.Property(u => u.ConcurrencyStamp).HasMaxLength(1024);
         builder.Property(u => u.PhoneNumber).HasMaxLength(20);
@@ -24,6 +25,11 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(u => u.UpdatedAt);
         builder.Property(u => u.AccessFailedCount).HasDefaultValue(0);
         builder.Property(u => u.LockoutEnabled).HasDefaultValue(true);
+
+        // Profile information
+        builder.Property(u => u.FirstName).HasMaxLength(100);
+        builder.Property(u => u.LastName).HasMaxLength(100);
+        builder.Property(u => u.ProfilePictureUrl).HasMaxLength(500);
 
         // Configurar relaciones
         builder.HasMany(u => u.RefreshTokens)

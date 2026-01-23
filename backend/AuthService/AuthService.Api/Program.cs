@@ -159,6 +159,9 @@ builder.Services.AddSingleton<AuthServiceMetrics>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Load("AuthService.Application")));
 builder.Services.AddValidatorsFromAssembly(Assembly.Load("AuthService.Application"));
 
+// HttpClientFactory for OAuth providers (Google, Microsoft, Facebook, Apple)
+builder.Services.AddHttpClient();
+
 // Settings (JwtSettings is configured in AddInfrastructure with secrets merged in)
 builder.Services.Configure<NotificationServiceSettings>(builder.Configuration.GetSection("NotificationService"));
 

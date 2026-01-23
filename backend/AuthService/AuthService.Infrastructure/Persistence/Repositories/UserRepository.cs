@@ -24,12 +24,18 @@ public class UserRepository : IUserRepository
 
     public async Task<ApplicationUser?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        return await _userManager.FindByIdAsync(id);
+        // Include TwoFactorAuth to properly evaluate IsTwoFactorEnabled
+        return await _context.Users
+            .Include(u => u.TwoFactorAuth)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<ApplicationUser?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        return await _userManager.FindByEmailAsync(email);
+        // Include TwoFactorAuth to properly evaluate IsTwoFactorEnabled
+        return await _context.Users
+            .Include(u => u.TwoFactorAuth)
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpperInvariant(), cancellationToken);
     }
 
     public async Task<ApplicationUser?> GetByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default)
