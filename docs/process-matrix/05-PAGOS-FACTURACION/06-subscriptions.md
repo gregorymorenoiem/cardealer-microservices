@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                   | Total | Implementado | Pendiente | Estado         |
+| ---------------------------- | ----- | ------------ | --------- | -------------- |
+| **Controllers**              | 1     | 0            | 1         | 🔴 Pendiente   |
+| **SUB-CREATE-\*** (Crear)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **SUB-UPGRADE-\*** (Upgrade) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SUB-CANCEL-\*** (Cancelar) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SUB-RENEW-\*** (Renovar)   | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SUB-TRIAL-\*** (Trial)     | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                    | 0     | 0            | 18        | 🔴 Pendiente   |
+| **TOTAL**                    | 17    | 0            | 17        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

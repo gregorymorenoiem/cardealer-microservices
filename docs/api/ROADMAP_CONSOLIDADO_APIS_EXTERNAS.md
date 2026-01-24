@@ -42,13 +42,16 @@ Este roadmap consolida la evolución de todas las APIs externas (third-party) in
 - ✅ 94% tasa de éxito en pagos
 - 🚧 Reducir errores en 30%
 
-#### Stripe 🔴
+#### Stripe �
 
 - [x] Subscriptions para dealers
 - [x] Early Bird Program activo
 - [x] Webhooks funcionando
-- [ ] Stripe Connect para marketplace
-- [ ] Split payments
+- [x] ~~Stripe Connect~~ DESCARTADO (no aplica al modelo)
+- [x] ~~Split payments~~ DESCARTADO (no aplica al modelo)
+
+> **NOTA:** Stripe Connect fue descartado porque OKLA es plataforma de publicidad,
+> no marketplace transaccional. Los dealers PAGAN a OKLA, no reciben pagos.
 
 **Hitos:**
 
@@ -114,18 +117,22 @@ Este roadmap consolida la evolución de todas las APIs externas (third-party) in
 - 🎯 <2s latencia promedio
 - 🎯 Subscriptions con AZUL activas
 
-#### Stripe 🔴
+#### Stripe �
 
-- [ ] Stripe Connect producción
-- [ ] Dealer onboarding (KYC)
-- [ ] Split payments funcionando
-- [ ] Comisiones automáticas
-- [ ] Billing Portal para dealers
+- [x] ~~Stripe Connect producción~~ DESCARTADO
+- [x] ~~Dealer onboarding (KYC)~~ DESCARTADO
+- [x] ~~Split payments funcionando~~ DESCARTADO
+- [x] ~~Comisiones automáticas~~ DESCARTADO
+- [ ] Billing Portal para dealers (gestión de suscripción)
+
+> **IMPORTANTE:** Las tareas de Stripe Connect se descartaron.
+> OKLA no procesa pagos de vehículos ni cobra comisiones por ventas.
+> El único uso de Stripe es como backup para cobrar suscripciones.
 
 **KPIs:**
 
 - 🎯 100+ dealers suscritos
-- 🎯 $15K MRR
+- 🎯 RD$750K MRR (aprox. $15K USD)
 - 🎯 <5% churn rate
 
 #### S3/Spaces 🟡
@@ -345,8 +352,11 @@ Este roadmap consolida la evolución de todas las APIs externas (third-party) in
 
 - ✅ Early Bird Program generó 23 dealers suscritos en 1 semana
 - ✅ Idempotencia con Redis previno 100+ pagos duplicados
-- ⚠️ Necesitamos Stripe Connect urgente para marketplace
+- ✅ ~~Stripe Connect~~ DESCARTADO - No aplica al modelo de negocio
 - ⚠️ Thumbnails on-demand mejor que on-upload (performance)
+
+> **LECCIÓN:** OKLA es plataforma de publicidad, no marketplace transaccional.
+> Los dealers PAGAN a OKLA por suscripciones. No procesamos pagos de vehículos.
 
 ---
 
@@ -354,14 +364,12 @@ Este roadmap consolida la evolución de todas las APIs externas (third-party) in
 
 ### Prioridad CRÍTICA 🔴
 
-1. **Stripe Connect** (Sprint 18)
-
-   - Onboarding de dealers
-   - Split payments
-   - Testing exhaustivo
+1. **AZUL Recurring Payments** (Sprint 18)
+   - Cobros automáticos mensuales
+   - Retry automático de pagos fallidos
+   - Notificación antes de cobro
 
 2. **AZUL Circuit Breaker** (Sprint 18)
-
    - Implementar con Polly
    - Fallback a Stripe
    - Monitoreo
@@ -374,7 +382,6 @@ Este roadmap consolida la evolución de todas las APIs externas (third-party) in
 ### Prioridad MEDIA 🟡
 
 4. **S3 Image Variants** (Sprint 19)
-
    - Múltiples tamaños
    - Responsive images
    - WebP support

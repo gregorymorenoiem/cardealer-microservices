@@ -1,5 +1,7 @@
 using DealerAnalyticsService.Application.Features.Analytics.Queries;
+using DealerAnalyticsService.Application.Services;
 using DealerAnalyticsService.Domain.Interfaces;
+using DealerAnalyticsService.Infrastructure.Messaging;
 using DealerAnalyticsService.Infrastructure.Persistence;
 using DealerAnalyticsService.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -46,6 +48,37 @@ builder.Services.AddScoped<IDealerAnalyticsRepository, DealerAnalyticsRepository
 builder.Services.AddScoped<IConversionFunnelRepository, ConversionFunnelRepository>();
 builder.Services.AddScoped<IMarketBenchmarkRepository, MarketBenchmarkRepository>();
 builder.Services.AddScoped<IDealerInsightRepository, DealerInsightRepository>();
+
+// Advanced Analytics Repositories
+builder.Services.AddScoped<IDealerSnapshotRepository, DealerSnapshotRepository>();
+builder.Services.AddScoped<IVehiclePerformanceRepository, VehiclePerformanceRepository>();
+builder.Services.AddScoped<ILeadFunnelRepository, LeadFunnelRepository>();
+builder.Services.AddScoped<IDealerBenchmarkRepository, DealerBenchmarkRepository>();
+builder.Services.AddScoped<IDealerAlertRepository, DealerAlertRepository>();
+builder.Services.AddScoped<IInventoryAgingRepository, InventoryAgingRepository>();
+
+// ============================================
+// 3.5. Event Publishing (RabbitMQ)
+// ============================================
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+if (rabbitMqEnabled)
+{
+    builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
+}
+else
+{
+    builder.Services.AddSingleton<IEventPublisher, NullEventPublisher>();
+}
+
+// ============================================
+// 3.6. Background Services
+// ============================================
+var enableBackgroundJobs = builder.Configuration.GetValue<bool>("Analytics:EnableBackgroundJobs", true);
+if (enableBackgroundJobs)
+{
+    builder.Services.AddHostedService<DailySnapshotService>();
+    builder.Services.AddHostedService<AlertAnalysisService>();
+}
 
 // ============================================
 // 4. CORS Configuration

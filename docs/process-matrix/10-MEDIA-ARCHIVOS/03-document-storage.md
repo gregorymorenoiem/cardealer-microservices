@@ -6,6 +6,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente   | Total | Implementado | Pendiente | Estado |
+| ------------ | ----- | ------------ | --------- | ------ |
+| Controllers  | 1     | 0            | 1         | 🔴     |
+| DOC-STORE-\* | 5     | 0            | 5         | 🔴     |
+| DOC-SEC-\*   | 4     | 0            | 4         | 🔴     |
+| DOC-AUD-\*   | 3     | 0            | 3         | 🔴     |
+| DOC-RET-\*   | 3     | 0            | 3         | 🔴     |
+| Tests        | 0     | 0            | 10        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

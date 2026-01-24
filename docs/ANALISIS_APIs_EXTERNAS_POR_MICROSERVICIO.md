@@ -34,30 +34,36 @@ Se han identificado **15+ APIs externas** distribuidas en **25+ microservicios**
 
 - **Documentación:** [payments/STRIPE_API_DOCUMENTATION.md](api/payments/STRIPE_API_DOCUMENTATION.md)
 - **Roadmap:** [payments/STRIPE_ROADMAP.md](api/payments/STRIPE_ROADMAP.md)
-- **Estado:** ✅ Producción
+- **Estado:** ✅ Producción (Backup)
 - **Servicios que lo usan:**
   - StripePaymentService (dedicado)
   - BillingService (integrado)
 - **Funcionalidades:**
   - Payment Intents (pagos únicos)
   - Subscriptions (suscripciones mensuales)
-  - Connect (para dealers)
+  - ~~Connect (para dealers)~~ DESCARTADO - No aplica al modelo
   - Webhooks (confirmación pagos)
 - **Costo:** $50/mes + comisiones
+- **Uso:** Backup para tarjetas internacionales (Azul es DEFAULT)
 
-#### ✅ 2. **AZUL API** (Banco Popular RD)
+> **NOTA:** Stripe Connect fue descartado. OKLA no procesa pagos de vehículos.
+> Los dealers PAGAN a OKLA por suscripciones, no reciben pagos a través de la plataforma.
+
+#### ✅ 2. **AZUL API** (Banco Popular RD) ⭐ DEFAULT
 
 - **Documentación:** [payments/AZUL_API_DOCUMENTATION.md](api/payments/AZUL_API_DOCUMENTATION.md)
 - **Roadmap:** [payments/AZUL_ROADMAP.md](api/payments/AZUL_ROADMAP.md)
-- **Estado:** ✅ Producción
+- **Estado:** ✅ Producción (PRINCIPAL)
 - **Servicios que lo usan:**
   - AzulPaymentService (dedicado)
   - BillingService (integrado)
 - **Funcionalidades:**
-  - Transacciones con tarjetas RD
-  - OTP de seguridad
+  - Cobrar suscripciones a dealers (OKLA es el merchant)
+  - Cobrar publicaciones a sellers individuales
+  - OTP de seguridad / 3D Secure
   - Webhooks de transacciones
 - **Costo:** $0 (comisión 2.5%)
+- **Uso:** Pasarela DEFAULT para tarjetas dominicanas
 
 ---
 

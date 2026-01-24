@@ -441,29 +441,35 @@
 
 ## 11. Pagos y Facturación
 
-### 💳 **Stripe Connect** ✅ INTEGRADO PARCIALMENTE
+### 💳 **Stripe** ✅ INTEGRADO PARCIALMENTE
 
-- **Qué hace:** Procesamiento de pagos + marketplace
+- **Qué hace:** Procesamiento de pagos (backup para tarjetas internacionales)
 - **Costo:** 2.9% + $0.30 por transacción
-- **Beneficio para Dealers:**
-  - Depósitos automáticos
-  - Split payments (tú vs dealer)
-  - Subscripciones mensuales
+- **Uso en OKLA:**
+  - ✅ Cobrar suscripciones a dealers (RD$2,900-14,900/mes)
+  - ✅ Backup para tarjetas internacionales (si Azul falla)
+  - ❌ ~~Split payments~~ NO APLICA (OKLA no procesa pagos de vehículos)
 - **ROI:** 0% fraude con 3D Secure
-- **Website:** https://stripe.com/connect
+- **Website:** https://stripe.com/
 - **Status:** ✅ Implementado para subscripciones
 
-### 🏦 **AZUL (Banco Popular RD)** ✅ INTEGRADO PARCIALMENTE
+> **NOTA:** Stripe Connect NO se usará. OKLA es plataforma de publicidad,
+> no marketplace transaccional. Los dealers PAGAN a OKLA, no reciben pagos.
 
-- **Qué hace:** Pasarela de pagos dominicana
+### 🏦 **AZUL (Banco Popular RD)** ✅ INTEGRADO - DEFAULT
+
+- **Qué hace:** Pasarela de pagos dominicana (PRINCIPAL)
 - **Costo:** 2.5% + RD$5 por transacción
-- **Beneficio para Dealers:**
-  - Tarjetas dominicanas aceptadas
-  - Depósitos en 24-48h
-  - Sin cargos ocultos
-- **ROI:** 40% más conversiones locales
+- **Uso en OKLA:**
+  - ✅ Cobrar suscripciones a dealers (OKLA es el merchant)
+  - ✅ Cobrar publicaciones a sellers individuales
+  - ✅ Depósitos en cuenta de OKLA en 24-48h
+- **ROI:** 40% más conversiones con tarjetas dominicanas
 - **Website:** https://azul.com.do/
-- **Status:** ✅ Implementado para subscripciones
+- **Status:** ✅ Implementado como pasarela DEFAULT
+
+> **MODELO DE NEGOCIO:** OKLA recibe pagos de dealers/sellers por publicidad.
+> Las transacciones de vehículos ocurren FUERA de OKLA (directo comprador-vendedor).
 
 ---
 

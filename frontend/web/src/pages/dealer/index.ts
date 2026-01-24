@@ -15,6 +15,12 @@ export { default as AnalyticsPage } from './AnalyticsPage';
 export { default as DealerProfilePage } from './DealerProfilePage';
 export { default as SellerProfilePage } from './SellerProfilePage';
 export { default as DealerOnboardingPage } from './DealerOnboardingPage';
+// New Onboarding V2 Flow (Azul Integration)
+export { default as DealerOnboardingPageV2 } from './DealerOnboardingPageV2';
+export { default as DealerEmailVerificationPage } from './DealerEmailVerificationPage';
+export { default as DealerDocumentsPage } from './DealerDocumentsPage';
+export { default as DealerPaymentSetupPage } from './DealerPaymentSetupPage';
+export { default as DealerOnboardingStatusPage } from './DealerOnboardingStatusPage';
 export { default as CreateSellerPage } from './CreateSellerPage';
 export { default as DealerVehicleEditPage } from './DealerVehicleEditPage';
 export { default as DealerInquiriesPage } from './DealerInquiriesPage';

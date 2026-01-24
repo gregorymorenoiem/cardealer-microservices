@@ -339,6 +339,7 @@ class DealerManagementService {
   }
 
   // Plan information (static)
+  // Precios en Pesos Dominicanos (DOP)
   getPlanInfo(): DealerPlanInfo[] {
     const isEarlyBird = this.isEarlyBirdActive();
 
@@ -346,23 +347,23 @@ class DealerManagementService {
       {
         name: 'Starter',
         displayName: 'Dealer Starter',
-        price: 49,
-        earlyBirdPrice: 39,
-        maxListings: 15,
+        price: 2900, // RD$2,900/mes
+        earlyBirdPrice: 2320, // RD$2,320/mes (-20%)
+        maxListings: 10,
         features: [
-          'Hasta 15 vehículos activos',
+          'Hasta 10 vehículos activos',
           'Galería de fotos (hasta 20 por vehículo)',
           'Panel de control básico',
           'Estadísticas de vistas',
           'Formulario de contacto',
-          'Badge "Dealer Verificado"',
+          'Soporte por email',
         ],
       },
       {
-        name: 'Pro',
-        displayName: 'Dealer Pro',
-        price: 129,
-        earlyBirdPrice: 103,
+        name: 'Professional',
+        displayName: 'Dealer Professional',
+        price: 5900, // RD$5,900/mes
+        earlyBirdPrice: 4720, // RD$4,720/mes (-20%)
         maxListings: 50,
         features: [
           'Hasta 50 vehículos activos',
@@ -370,28 +371,28 @@ class DealerManagementService {
           'Panel de control avanzado',
           'Estadísticas detalladas',
           'Import masivo (CSV/Excel)',
-          'Múltiples sucursales',
+          'Badge "Dealer Verificado" ✓',
           'Prioridad en búsquedas',
-          'Badge "Dealer Pro"',
+          'Soporte prioritario',
         ],
         recommended: true,
       },
       {
         name: 'Enterprise',
         displayName: 'Dealer Enterprise',
-        price: 299,
-        earlyBirdPrice: 239,
+        price: 14900, // RD$14,900/mes
+        earlyBirdPrice: 11920, // RD$11,920/mes (-20%)
         maxListings: 'Ilimitado',
         features: [
           '✨ Vehículos ILIMITADOS',
-          'Galería de fotos ilimitadas',
-          'Panel ejecutivo completo',
-          'Analytics avanzado con IA',
+          'Múltiples sucursales',
           'API de integración',
-          'Soporte prioritario 24/7',
+          'Analytics avanzado con IA',
           'Gerente de cuenta dedicado',
+          'Soporte prioritario 24/7',
           'Branding personalizado',
           'Badge "Premium Dealer"',
+          'Leads prioritarios',
         ],
       },
     ];

@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente   | Total | Implementado | Pendiente | Estado |
+| ------------ | ----- | ------------ | --------- | ------ |
+| Controllers  | 2     | 0            | 2         | 🔴     |
+| MEDIA-IMG-\* | 6     | 0            | 6         | 🔴     |
+| MEDIA-VID-\* | 5     | 0            | 5         | 🔴     |
+| MEDIA-DOC-\* | 3     | 0            | 3         | 🔴     |
+| MEDIA-360-\* | 4     | 0            | 4         | 🔴     |
+| Tests        | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

@@ -1,5 +1,22 @@
 # ⭐ Review Service - Matriz de Procesos
 
+---
+
+## 📊 Resumen de Implementación
+
+| Componente                     | Total | Implementado | Pendiente | Estado         |
+| ------------------------------ | ----- | ------------ | --------- | -------------- |
+| **Controllers**                | 2     | 0            | 2         | 🔴 Pendiente   |
+| **REV-CRUD-\*** (CRUD Reviews) | 5     | 0            | 5         | 🔴 Pendiente   |
+| **REV-VOTE-\*** (Votos)        | 3     | 0            | 3         | 🔴 Pendiente   |
+| **REV-MOD-\*** (Moderación)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **REV-BADGE-\*** (Badges)      | 3     | 0            | 3         | 🔴 Pendiente   |
+| **REV-STAT-\*** (Estadísticas) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                      | 0     | 0            | 18        | 🔴 Pendiente   |
+| **TOTAL**                      | 20    | 0            | 20        | 🔴 0% Completo |
+
+---
+
 ## 📋 Información General
 
 | Aspecto           | Detalle                                                                                                                         |

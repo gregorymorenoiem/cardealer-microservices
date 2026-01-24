@@ -8,7 +8,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 2     | 0            | 2         | 🔴     |
+| REV-CREATE-\* | 4     | 0            | 4         | 🔴     |
+| REV-MOD-\*    | 4     | 0            | 4         | 🔴     |
+| REV-AGGR-\*   | 3     | 0            | 3         | 🔴     |
+| REV-RESP-\*   | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                                                          |
 | ----------------- | ------------------------------------------------------------------------------ |

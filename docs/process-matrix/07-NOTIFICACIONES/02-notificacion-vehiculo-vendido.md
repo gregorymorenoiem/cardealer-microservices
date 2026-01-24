@@ -7,6 +7,19 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                     | Total | Implementado | Pendiente | Estado         |
+| ------------------------------ | ----- | ------------ | --------- | -------------- |
+| **SOLD-DETECT-\*** (Detección) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SOLD-NOTIFY-\*** (Notificar) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **SOLD-ALT-\*** (Alternativas) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **SOLD-TRACK-\*** (Tracking)   | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                      | 0     | 0            | 12        | 🔴 Pendiente   |
+| **TOTAL**                      | 14    | 0            | 14        | 🔴 0% Completo |
+
+---
+
 ## 📋 Información General
 
 | Campo             | Valor                                                    |

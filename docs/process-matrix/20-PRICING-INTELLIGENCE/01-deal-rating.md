@@ -8,7 +8,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente   | Total | Implementado | Pendiente | Estado |
+| ------------ | ----- | ------------ | --------- | ------ |
+| Controllers  | 1     | 0            | 1         | 🔴     |
+| DEAL-CALC-\* | 5     | 0            | 5         | 🔴     |
+| DEAL-ML-\*   | 4     | 0            | 4         | 🔴     |
+| DEAL-HIST-\* | 3     | 0            | 3         | 🔴     |
+| DEAL-DISP-\* | 3     | 0            | 3         | 🔴     |
+| Tests        | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                 |
 | ----------------- | ------------------------------------- |

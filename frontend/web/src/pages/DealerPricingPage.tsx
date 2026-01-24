@@ -4,6 +4,16 @@ import MainLayout from '@/layouts/MainLayout';
 import { dealerManagementService } from '@/services/dealerManagementService';
 import { useState, useEffect } from 'react';
 
+// Format price in Dominican Pesos
+const formatDOP = (amount: number): string => {
+  return new Intl.NumberFormat('es-DO', {
+    style: 'currency',
+    currency: 'DOP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 export default function DealerPricingPage() {
   const plans = dealerManagementService.getPlanInfo();
   const isEarlyBird = dealerManagementService.isEarlyBirdActive();
@@ -70,21 +80,23 @@ export default function DealerPricingPage() {
                     {isEarlyBird ? (
                       <>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-4xl font-bold text-blue-600">
-                            ${plan.earlyBirdPrice}
+                          <span className="text-3xl font-bold text-blue-600">
+                            {formatDOP(plan.earlyBirdPrice)}
                           </span>
                           <span className="text-gray-500">/mes</span>
                         </div>
                         <div className="text-sm text-gray-500 line-through">
-                          ${plan.price}/mes precio regular
+                          {formatDOP(plan.price)}/mes precio regular
                         </div>
                         <div className="text-sm text-green-600 font-semibold mt-1">
-                          ¡Ahorras ${plan.price - plan.earlyBirdPrice}/mes de por vida!
+                          ¡Ahorras {formatDOP(plan.price - plan.earlyBirdPrice)}/mes de por vida!
                         </div>
                       </>
                     ) : (
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-blue-600">${plan.price}</span>
+                        <span className="text-3xl font-bold text-blue-600">
+                          {formatDOP(plan.price)}
+                        </span>
                         <span className="text-gray-500">/mes</span>
                       </div>
                     )}

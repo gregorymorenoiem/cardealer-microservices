@@ -4,11 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dealerApi } from '@/services/dealerSellerService';
-import type {
-  CreateDealerRequest,
-  UpdateDealerRequest,
-  VerifyDealerRequest,
-} from '@/types/dealer';
+import type { CreateDealerRequest, UpdateDealerRequest, VerifyDealerRequest } from '@/types/dealer';
 import { toast } from 'react-hot-toast';
 
 // Query keys
@@ -149,6 +145,25 @@ export const useSubscribeToModule = () => {
 };
 
 /**
+ * Hook to unsubscribe from a module
+ */
+export const useUnsubscribeFromModule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ dealerId, moduleCode }: { dealerId: string; moduleCode: string }) =>
+      dealerApi.unsubscribeFromModule(dealerId, moduleCode),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: dealerKeys.modules(variables.dealerId) });
+      toast.success('Module deactivated');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to unsubscribe from module');
+    },
+  });
+};
+
+/**
  * Hook to register a new dealer (onboarding)
  */
 export const useRegisterDealer = () => {
@@ -175,7 +190,7 @@ export const useDealerManagement = (dealerId?: string, ownerUserId?: string) => 
   const dealerByOwnerQuery = useDealerByOwner(ownerUserId);
   const subscriptionQuery = useDealerSubscription(dealerId);
   const modulesQuery = useDealerModules(dealerId);
-  
+
   const createMutation = useCreateDealer();
   const updateMutation = useUpdateDealer();
   const verifyMutation = useVerifyDealer();
@@ -190,18 +205,18 @@ export const useDealerManagement = (dealerId?: string, ownerUserId?: string) => 
     dealer,
     subscription: subscriptionQuery.data,
     modules: modulesQuery.data,
-    
+
     // States
     isLoading,
     error,
     isSubscriptionLoading: subscriptionQuery.isLoading,
     isModulesLoading: modulesQuery.isLoading,
-    
+
     // Mutations
     createDealer: createMutation.mutateAsync,
     updateDealer: updateMutation.mutateAsync,
     verifyDealer: verifyMutation.mutateAsync,
-    
+
     // Mutation states
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

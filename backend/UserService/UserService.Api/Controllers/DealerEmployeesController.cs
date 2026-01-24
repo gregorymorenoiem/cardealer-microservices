@@ -1,30 +1,24 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using UserService.Domain.Entities;
-using UserService.Domain.Interfaces;
-using UserService.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using UserService.Application.DTOs;
+using UserService.Application.UseCases.DealerEmployees;
 
 namespace UserService.Api.Controllers;
 
 /// <summary>
-/// Controller for managing dealer team members (employees)
+/// Controller for managing dealer employees (team members)
 /// </summary>
 [ApiController]
 [Route("api/dealers/{dealerId}/employees")]
+[Produces("application/json")]
 public class DealerEmployeesController : ControllerBase
 {
-    private readonly IDealerEmployeeRepository _employeeRepository;
-    private readonly ApplicationDbContext _context;
+    private readonly IMediator _mediator;
     private readonly ILogger<DealerEmployeesController> _logger;
 
-    public DealerEmployeesController(
-        IDealerEmployeeRepository employeeRepository,
-        ApplicationDbContext context,
-        ILogger<DealerEmployeesController> logger)
+    public DealerEmployeesController(IMediator mediator, ILogger<DealerEmployeesController> logger)
     {
-        _employeeRepository = employeeRepository;
-        _context = context;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -35,62 +29,30 @@ public class DealerEmployeesController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<DealerEmployeeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<DealerEmployeeDto>>> GetEmployees(Guid dealerId)
     {
-        var employees = await _context.DealerEmployees
-            .Where(e => e.DealerId == dealerId)
-            .Include(e => e.User)
-            .OrderByDescending(e => e.InvitationDate)
-            .ToListAsync();
-
-        var dtos = employees.Select(e => new DealerEmployeeDto
-        {
-            Id = e.Id,
-            UserId = e.UserId,
-            DealerId = e.DealerId,
-            Name = e.User?.FullName ?? "Sin nombre",
-            Email = e.User?.Email ?? "Sin email",
-            Role = e.DealerRole.ToString(),
-            Status = e.Status.ToString(),
-            InvitationDate = e.InvitationDate,
-            ActivationDate = e.ActivationDate,
-            AvatarUrl = e.User?.ProfilePicture
-        }).ToList();
-
-        return Ok(dtos);
+        _logger.LogInformation("Getting employees for dealer {DealerId}", dealerId);
+        var result = await _mediator.Send(new GetDealerEmployeesQuery(dealerId));
+        return Ok(result);
     }
 
     /// <summary>
-    /// Get an employee by ID
+    /// Get a specific employee
     /// </summary>
     [HttpGet("{employeeId}")]
     [ProducesResponseType(typeof(DealerEmployeeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DealerEmployeeDto>> GetEmployee(Guid dealerId, Guid employeeId)
     {
-        var employee = await _context.DealerEmployees
-            .Where(e => e.Id == employeeId && e.DealerId == dealerId)
-            .Include(e => e.User)
-            .FirstOrDefaultAsync();
+        _logger.LogInformation("Getting employee {EmployeeId} for dealer {DealerId}", employeeId, dealerId);
+        var result = await _mediator.Send(new GetDealerEmployeeQuery(dealerId, employeeId));
 
-        if (employee == null)
+        if (result == null)
             return NotFound(new { error = "Employee not found" });
 
-        return Ok(new DealerEmployeeDto
-        {
-            Id = employee.Id,
-            UserId = employee.UserId,
-            DealerId = employee.DealerId,
-            Name = employee.User?.FullName ?? "Sin nombre",
-            Email = employee.User?.Email ?? "Sin email",
-            Role = employee.DealerRole.ToString(),
-            Status = employee.Status.ToString(),
-            InvitationDate = employee.InvitationDate,
-            ActivationDate = employee.ActivationDate,
-            AvatarUrl = employee.User?.ProfilePicture
-        });
+        return Ok(result);
     }
 
     /// <summary>
-    /// Invite a new team member
+    /// Invite a new employee to the dealer team
     /// </summary>
     [HttpPost("invite")]
     [ProducesResponseType(typeof(DealerEmployeeInvitationDto), StatusCodes.Status201Created)]
@@ -99,108 +61,44 @@ public class DealerEmployeesController : ControllerBase
         Guid dealerId,
         [FromBody] InviteEmployeeRequest request)
     {
-        // Check if user already exists by email
-        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-        
-        // Check if invitation already exists
-        var existingInvitation = await _context.DealerEmployeeInvitations
-            .FirstOrDefaultAsync(i => i.DealerId == dealerId && i.Email == request.Email && i.Status == InvitationStatus.Pending);
-        
-        if (existingInvitation != null)
-            return BadRequest(new { error = "Ya existe una invitación pendiente para este email" });
+        _logger.LogInformation("Inviting employee {Email} for dealer {DealerId}", request.Email, dealerId);
 
-        // Check if already an employee
-        if (existingUser != null)
-        {
-            var existingEmployee = await _context.DealerEmployees
-                .FirstOrDefaultAsync(e => e.UserId == existingUser.Id && e.DealerId == dealerId && e.Status == EmployeeStatus.Active);
-            
-            if (existingEmployee != null)
-                return BadRequest(new { error = "Este usuario ya es miembro del equipo" });
-        }
+        var command = new SendInvitationCommand(
+            DealerId: dealerId,
+            Email: request.Email,
+            Role: request.Role,
+            Permissions: request.Permissions,
+            InvitedBy: request.InvitedBy
+        );
 
-        // Parse role
-        if (!Enum.TryParse<DealerRole>(request.Role, true, out var role))
-            role = DealerRole.Salesperson;
+        var result = await _mediator.Send(command);
 
-        // Create invitation
-        var invitation = new DealerEmployeeInvitation
-        {
-            Id = Guid.NewGuid(),
-            DealerId = dealerId,
-            Email = request.Email,
-            DealerRole = role,
-            Permissions = request.Permissions ?? "[]",
-            InvitedBy = request.InvitedBy,
-            Status = InvitationStatus.Pending,
-            InvitationDate = DateTime.UtcNow,
-            ExpirationDate = DateTime.UtcNow.AddDays(7),
-            Token = Guid.NewGuid().ToString("N")
-        };
-
-        await _context.DealerEmployeeInvitations.AddAsync(invitation);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Invitation sent to {Email} for dealer {DealerId}", request.Email, dealerId);
-
-        // TODO: Send invitation email via NotificationService
-
-        return CreatedAtAction(nameof(GetEmployee), new { dealerId, employeeId = invitation.Id }, new DealerEmployeeInvitationDto
-        {
-            Id = invitation.Id,
-            Email = invitation.Email,
-            Role = invitation.DealerRole.ToString(),
-            Status = invitation.Status.ToString(),
-            InvitationDate = invitation.InvitationDate,
-            ExpirationDate = invitation.ExpirationDate
-        });
+        return CreatedAtAction(nameof(GetEmployee), new { dealerId, employeeId = result.Id }, result);
     }
 
     /// <summary>
-    /// Update employee role
+    /// Update employee role and permissions
     /// </summary>
     [HttpPut("{employeeId}/role")]
-    [ProducesResponseType(typeof(DealerEmployeeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<DealerEmployeeDto>> UpdateEmployeeRole(
+    public async Task<ActionResult> UpdateEmployeeRole(
         Guid dealerId,
         Guid employeeId,
         [FromBody] UpdateEmployeeRoleRequest request)
     {
-        var employee = await _context.DealerEmployees
-            .Where(e => e.Id == employeeId && e.DealerId == dealerId)
-            .Include(e => e.User)
-            .FirstOrDefaultAsync();
+        _logger.LogInformation("Updating role for employee {EmployeeId} in dealer {DealerId}", employeeId, dealerId);
 
-        if (employee == null)
-            return NotFound(new { error = "Employee not found" });
+        var command = new UpdateEmployeeCommand(
+            DealerId: dealerId,
+            EmployeeId: employeeId,
+            Role: request.Role,
+            Status: null
+        );
 
-        if (Enum.TryParse<DealerRole>(request.Role, true, out var role))
-        {
-            employee.DealerRole = role;
-        }
+        await _mediator.Send(command);
 
-        if (request.Permissions != null)
-        {
-            employee.Permissions = System.Text.Json.JsonSerializer.Serialize(request.Permissions);
-        }
-
-        await _context.SaveChangesAsync();
-        _logger.LogInformation("Updated role for employee {EmployeeId} to {Role}", employeeId, request.Role);
-
-        return Ok(new DealerEmployeeDto
-        {
-            Id = employee.Id,
-            UserId = employee.UserId,
-            DealerId = employee.DealerId,
-            Name = employee.User?.FullName ?? "Sin nombre",
-            Email = employee.User?.Email ?? "Sin email",
-            Role = employee.DealerRole.ToString(),
-            Status = employee.Status.ToString(),
-            InvitationDate = employee.InvitationDate,
-            ActivationDate = employee.ActivationDate,
-            AvatarUrl = employee.User?.ProfilePicture
-        });
+        return NoContent();
     }
 
     /// <summary>
@@ -211,16 +109,9 @@ public class DealerEmployeesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> RemoveEmployee(Guid dealerId, Guid employeeId)
     {
-        var employee = await _context.DealerEmployees
-            .FirstOrDefaultAsync(e => e.Id == employeeId && e.DealerId == dealerId);
+        _logger.LogInformation("Removing employee {EmployeeId} from dealer {DealerId}", employeeId, dealerId);
 
-        if (employee == null)
-            return NotFound(new { error = "Employee not found" });
-
-        employee.Status = EmployeeStatus.Suspended;
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Employee {EmployeeId} removed from dealer {DealerId}", employeeId, dealerId);
+        await _mediator.Send(new RemoveEmployeeCommand(dealerId, employeeId));
 
         return NoContent();
     }
@@ -232,20 +123,9 @@ public class DealerEmployeesController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<DealerEmployeeInvitationDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<DealerEmployeeInvitationDto>>> GetInvitations(Guid dealerId)
     {
-        var invitations = await _context.DealerEmployeeInvitations
-            .Where(i => i.DealerId == dealerId && i.Status == InvitationStatus.Pending)
-            .OrderByDescending(i => i.InvitationDate)
-            .ToListAsync();
-
-        return Ok(invitations.Select(i => new DealerEmployeeInvitationDto
-        {
-            Id = i.Id,
-            Email = i.Email,
-            Role = i.DealerRole.ToString(),
-            Status = i.Status.ToString(),
-            InvitationDate = i.InvitationDate,
-            ExpirationDate = i.ExpirationDate
-        }));
+        _logger.LogInformation("Getting invitations for dealer {DealerId}", dealerId);
+        var result = await _mediator.Send(new GetInvitationsQuery(dealerId));
+        return Ok(result);
     }
 
     /// <summary>
@@ -256,14 +136,9 @@ public class DealerEmployeesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> CancelInvitation(Guid dealerId, Guid invitationId)
     {
-        var invitation = await _context.DealerEmployeeInvitations
-            .FirstOrDefaultAsync(i => i.Id == invitationId && i.DealerId == dealerId);
+        _logger.LogInformation("Cancelling invitation {InvitationId} for dealer {DealerId}", invitationId, dealerId);
 
-        if (invitation == null)
-            return NotFound(new { error = "Invitation not found" });
-
-        invitation.Status = InvitationStatus.Revoked;
-        await _context.SaveChangesAsync();
+        await _mediator.Send(new CancelInvitationCommand(dealerId, invitationId));
 
         return NoContent();
     }
@@ -277,42 +152,42 @@ public class DealerEmployeesController : ControllerBase
     {
         var roles = new List<RoleDefinitionDto>
         {
-            new RoleDefinitionDto
+            new()
             {
                 Id = "Owner",
                 Name = "Propietario",
                 Description = "Control total del dealer",
                 Permissions = new[] { "all" }
             },
-            new RoleDefinitionDto
+            new()
             {
                 Id = "Admin",
                 Name = "Administrador",
                 Description = "Gestión completa excepto facturación",
                 Permissions = new[] { "inventory", "leads", "users", "reports", "settings" }
             },
-            new RoleDefinitionDto
+            new()
             {
                 Id = "SalesManager",
                 Name = "Gerente de Ventas",
                 Description = "Gestión de ventas y equipo de vendedores",
                 Permissions = new[] { "inventory", "leads", "sales_team", "reports" }
             },
-            new RoleDefinitionDto
+            new()
             {
                 Id = "Salesperson",
                 Name = "Vendedor",
                 Description = "Gestión de leads y vehículos asignados",
                 Permissions = new[] { "inventory_view", "leads_assigned", "own_stats" }
             },
-            new RoleDefinitionDto
+            new()
             {
                 Id = "InventoryManager",
                 Name = "Gestor de Inventario",
                 Description = "Gestión del inventario de vehículos",
                 Permissions = new[] { "inventory", "photos", "pricing" }
             },
-            new RoleDefinitionDto
+            new()
             {
                 Id = "Viewer",
                 Name = "Solo Lectura",
@@ -325,31 +200,7 @@ public class DealerEmployeesController : ControllerBase
     }
 }
 
-// DTOs
-public class DealerEmployeeDto
-{
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid DealerId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public DateTime InvitationDate { get; set; }
-    public DateTime? ActivationDate { get; set; }
-    public string? AvatarUrl { get; set; }
-}
-
-public class DealerEmployeeInvitationDto
-{
-    public Guid Id { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public DateTime InvitationDate { get; set; }
-    public DateTime ExpirationDate { get; set; }
-}
-
+// Request DTOs
 public class InviteEmployeeRequest
 {
     public string Email { get; set; } = string.Empty;

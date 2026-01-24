@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente   | Total | Implementado | Pendiente | Estado |
+| ------------ | ----- | ------------ | --------- | ------ |
+| Controllers  | 2     | 0            | 2         | 🔴     |
+| WAR-REQ-\*   | 4     | 0            | 4         | 🔴     |
+| WAR-INSP-\*  | 5     | 0            | 5         | 🔴     |
+| WAR-CERT-\*  | 4     | 0            | 4         | 🔴     |
+| WAR-CLAIM-\* | 4     | 0            | 4         | 🔴     |
+| Tests        | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                                    |
 | ----------------- | -------------------------------------------------------- |

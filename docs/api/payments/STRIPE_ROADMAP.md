@@ -9,13 +9,13 @@
 
 ## 📅 Timeline General
 
-| Fase       | Periodo | Estado         | Descripción              |
-| ---------- | ------- | -------------- | ------------------------ |
-| **Fase 1** | Q4 2025 | ✅ Completado  | Setup básico + Payments  |
-| **Fase 2** | Q1 2026 | ✅ Completado  | Subscriptions + Webhooks |
-| **Fase 3** | Q1 2026 | 🚧 En Progreso | Dealers + Connect        |
-| **Fase 4** | Q2 2026 | 📝 Planificado | Advanced features        |
-| **Fase 5** | Q3 2026 | 📝 Planificado | Optimizaciones           |
+| Fase       | Periodo | Estado         | Descripción                       |
+| ---------- | ------- | -------------- | --------------------------------- |
+| **Fase 1** | Q4 2025 | ✅ Completado  | Setup básico + Payments           |
+| **Fase 2** | Q1 2026 | ✅ Completado  | Subscriptions + Webhooks          |
+| **Fase 3** | Q1 2026 | ❌ Descartado  | ~~Connect~~ (No aplica al modelo) |
+| **Fase 4** | Q2 2026 | 📝 Planificado | Advanced features                 |
+| **Fase 5** | Q3 2026 | 📝 Planificado | Optimizaciones                    |
 
 ---
 
@@ -102,39 +102,55 @@
 
 ---
 
-## 🚧 Fase 3: Dealers & Connect (Q1 2026) - EN PROGRESO
+## ❌ Fase 3: DESCARTADA - Stripe Connect NO APLICA
 
-### Objetivos
+> **⚠️ ACLARACIÓN IMPORTANTE DEL MODELO DE NEGOCIO:**
+>
+> OKLA es una plataforma de **PUBLICIDAD**, no un marketplace transaccional.
+>
+> - **Dealers PAGAN a OKLA** por suscripciones mensuales (RD$2,900-14,900/mes)
+> - **La venta del vehículo es EXTERNA** a OKLA (dealer ↔ comprador directo)
+> - **OKLA NO procesa pagos de vehículos** ni cobra comisiones por venta
+>
+> Por lo tanto, **Stripe Connect NO es necesario** ya que:
+>
+> - No hay split payments entre OKLA y dealers
+> - No hay transferencias a dealers por ventas
+> - Los dealers son CLIENTES que pagan, no comerciantes que reciben
 
-- Stripe Connect para marketplace
-- Dealers reciben pagos directos
-- Comisión de plataforma
+### ❌ Entregables CANCELADOS (No aplican al modelo de negocio)
 
-### Entregables
+Los siguientes items fueron planificados incorrectamente y se descartan:
 
-#### 3.1 Stripe Connect Setup 🚧
+- ~~Stripe Connect account~~
+- ~~Onboarding de dealers (KYC para pagos)~~
+- ~~Split payments (70% dealer, 30% plataforma)~~
+- ~~Direct charges / Destination charges~~
+- ~~Transferir fondos a dealers~~
+- ~~Dashboard de earnings para dealers~~
+- ~~Comisiones por venta~~
 
-- [ ] Crear Stripe Connect account
-- [ ] Onboarding de dealers (KYC)
-- [ ] Verificar bank account info
-- [ ] Configurar split payments (70% dealer, 30% plataforma)
+### ✅ Modelo Correcto de Pagos OKLA
 
-#### 3.2 Payment Transfers 🚧
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                   FLUJO DE PAGOS OKLA                              │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   DEALER ───[Paga suscripción]───> OKLA (via Azul/Stripe)         │
+│           RD$2,900-14,900/mes                                       │
+│                                                                     │
+│   COMPRADOR ───[Paga vehículo]───> DEALER (EXTERNO a OKLA)        │
+│              Transacción directa, fuera de la plataforma           │
+│                                                                     │
+│   OKLA recibe ingresos SOLO de suscripciones de dealers           │
+│   OKLA NO participa en transacciones de vehículos                  │
+│                                                                     │
+└────────────────────────────────────────────────────────────────────┘
+```
 
-- [ ] Direct charges (plataforma cobra, transfiere a dealer)
-- [ ] Destination charges (dealer cobra, comisión a plataforma)
-- [ ] Transferir fondos a dealers
-- [ ] Dashboard de earnings para dealers
-
-#### 3.3 Comisiones 🚧
-
-- [ ] Calcular comisión por venta (ej: 5%)
-- [ ] Retener comisión en cada transacción
-- [ ] Reportes de comisiones
-- [ ] Invoices de comisiones a dealers
-
-**Sprint:** Sprint 18 - Stripe Connect  
-**Fecha estimada:** Febrero 2026
+**Estado:** ❌ DESCARTADO  
+**Razón:** No aplica al modelo de negocio de OKLA
 
 ---
 
@@ -233,14 +249,14 @@
 
 ### KPIs por Fase
 
-| Fase       | KPI                        | Target | Actual    |
-| ---------- | -------------------------- | ------ | --------- |
-| **Fase 1** | Tasa de éxito de pagos     | >95%   | 98% ✅    |
-| **Fase 2** | Dealers suscritos          | 50+    | 23 🚧     |
-| **Fase 2** | MRR                        | $5,000 | $2,500 🚧 |
-| **Fase 3** | Split payments funcionando | 100%   | -         |
-| **Fase 4** | Churn rate                 | <5%    | -         |
-| **Fase 5** | Fraud rate                 | <0.5%  | -         |
+| Fase       | KPI                    | Target | Actual        |
+| ---------- | ---------------------- | ------ | ------------- |
+| **Fase 1** | Tasa de éxito de pagos | >95%   | 98% ✅        |
+| **Fase 2** | Dealers suscritos      | 50+    | 23 🚧         |
+| **Fase 2** | MRR                    | $5,000 | $2,500 🚧     |
+| **Fase 3** | ~~Split payments~~     | N/A    | ❌ Descartado |
+| **Fase 4** | Churn rate             | <5%    | -             |
+| **Fase 5** | Fraud rate             | <0.5%  | -             |
 
 ---
 
@@ -249,16 +265,19 @@
 ### Inmediato (Sprint 18)
 
 1. ✅ Verificar que Stripe está funcionando correctamente
-2. 🚧 Implementar Stripe Connect para dealers
-3. 🚧 Configurar onboarding de dealers (KYC)
-4. 🚧 Testing de split payments en sandbox
+2. ✅ Migrar cobros de suscripciones a Azul (default para tarjetas RD)
+3. 📝 Mantener Stripe como backup para tarjetas internacionales
+4. 📝 Optimizar experiencia de checkout
 
 ### Corto Plazo (Febrero 2026)
 
-1. Deploy de Stripe Connect a producción
-2. Primeros dealers usando Connect
-3. Dashboard de earnings para dealers
-4. Documentación para dealers
+1. Implementar Stripe Checkout como alternativa
+2. Agregar Apple Pay y Google Pay
+3. Billing Portal para dealers
+4. Documentación actualizada
+
+> **NOTA:** Stripe Connect fue descartado porque OKLA no procesa transacciones
+> de vehículos. Los dealers PAGAN a OKLA por publicidad, no reciben pagos.
 
 ### Mediano Plazo (Q2 2026)
 
@@ -290,13 +309,12 @@
 
 ## ⚠️ Riesgos y Mitigación
 
-| Riesgo                       | Probabilidad | Impacto | Mitigación                         |
-| ---------------------------- | ------------ | ------- | ---------------------------------- |
-| **Pagos fallidos**           | Media        | Alto    | Dunning strategy, retry automático |
-| **Fraude con tarjetas**      | Baja         | Alto    | Stripe Radar, 3D Secure            |
-| **Churn alto de dealers**    | Media        | Alto    | Billing Portal, customer success   |
-| **Connect onboarding lento** | Alta         | Medio   | Simplificar KYC, soporte dedicado  |
-| **Downtime de Stripe**       | Muy Baja     | Alto    | Fallback a AZUL, queue de pagos    |
+| Riesgo                    | Probabilidad | Impacto | Mitigación                         |
+| ------------------------- | ------------ | ------- | ---------------------------------- |
+| **Pagos fallidos**        | Media        | Alto    | Dunning strategy, retry automático |
+| **Fraude con tarjetas**   | Baja         | Alto    | Stripe Radar, 3D Secure            |
+| **Churn alto de dealers** | Media        | Alto    | Billing Portal, customer success   |
+| **Downtime de Stripe**    | Muy Baja     | Alto    | Fallback a AZUL, queue de pagos    |
 
 ---
 

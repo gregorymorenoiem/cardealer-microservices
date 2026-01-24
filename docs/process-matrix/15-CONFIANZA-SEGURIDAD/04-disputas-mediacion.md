@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente      | Total | Implementado | Pendiente | Estado |
+| --------------- | ----- | ------------ | --------- | ------ |
+| Controllers     | 2     | 0            | 2         | 🔴     |
+| DISP-CREATE-\*  | 4     | 0            | 4         | 🔴     |
+| DISP-MEDIATE-\* | 5     | 0            | 5         | 🔴     |
+| DISP-RESOLVE-\* | 4     | 0            | 4         | 🔴     |
+| DISP-ESCAL-\*   | 3     | 0            | 3         | 🔴     |
+| Tests           | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                                          |
 | ----------------- | -------------------------------------------------------------- |

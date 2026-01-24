@@ -7,6 +7,20 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                        | Total | Implementado | Pendiente | Estado  |
+| --------------------------------- | ----- | ------------ | --------- | ------- |
+| **IDEMP-HEADER-\*** (Headers)     | 3     | 3            | 0         | ✅ 100% |
+| **IDEMP-STORE-\*** (Storage)      | 4     | 4            | 0         | ✅ 100% |
+| **IDEMP-CHECK-\*** (Verificación) | 3     | 3            | 0         | ✅ 100% |
+| **IDEMP-WEBHOOK-\*** (Webhooks)   | 3     | 3            | 0         | ✅ 100% |
+| **IDEMP-CLEANUP-\*** (Limpieza)   | 2     | 2            | 0         | ✅ 100% |
+| **Tests**                         | 15    | 15           | 0         | ✅ 100% |
+| **TOTAL**                         | 30    | 30           | 0         | ✅ 100% |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

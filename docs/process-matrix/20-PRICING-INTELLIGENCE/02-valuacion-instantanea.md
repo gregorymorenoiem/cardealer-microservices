@@ -8,7 +8,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente     | Total | Implementado | Pendiente | Estado |
+| -------------- | ----- | ------------ | --------- | ------ |
+| Controllers    | 1     | 0            | 1         | 🔴     |
+| VAL-CALC-\*    | 4     | 0            | 4         | 🔴     |
+| VAL-ML-\*      | 4     | 0            | 4         | 🔴     |
+| VAL-LEAD-\*    | 3     | 0            | 3         | 🔴     |
+| VAL-CONVERT-\* | 3     | 0            | 3         | 🔴     |
+| Tests          | 0     | 0            | 10        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                            |
 | ----------------- | -------------------------------- |

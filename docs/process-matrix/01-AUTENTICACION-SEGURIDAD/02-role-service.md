@@ -3,7 +3,27 @@
 > **Servicio:** RoleService  
 > **Puerto:** 15107  
 > **Base de Datos:** role_db  
-> **Última actualización:** Enero 21, 2026
+> **Última actualización:** Enero 21, 2026  
+> **Estado de Implementación:** 🟡 En Progreso
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente              | Total | Implementado | Pendiente | Estado  |
+| ----------------------- | ----- | ------------ | --------- | ------- |
+| **Controllers**         | 3     | 3            | 0         | ✅ 100% |
+| **Procesos (ROLE-\*)**  | 5     | 0            | 5         | 🔴 0%   |
+| **Procesos (PERM-\*)**  | 2     | 0            | 2         | 🔴 0%   |
+| **Procesos (RPERM-\*)** | 3     | 0            | 3         | 🔴 0%   |
+| **Tests Unitarios**     | 0     | 0            | 10        | 🔴 0%   |
+
+### Leyenda de Estados
+
+- ✅ **IMPLEMENTADO Y PROBADO**: Código completo con tests
+- 🟢 **IMPLEMENTADO**: Código completo, falta testing
+- 🟡 **EN PROGRESO**: Implementación parcial
+- 🔴 **PENDIENTE**: No implementado
 
 ---
 

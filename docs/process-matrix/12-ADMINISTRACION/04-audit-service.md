@@ -1,5 +1,32 @@
 # 📋 AuditService - Matriz de Procesos
 
+> **Servicio:** AuditService  
+> **Puerto:** 5045  
+> **Base de Datos:** PostgreSQL (audit_db) / Elasticsearch (opcional)  
+> **Tecnología:** .NET 8, MediatR, Entity Framework Core  
+> **Última actualización:** Enero 23, 2026  
+> **Estado de Implementación:** 🟢 Implementado
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente              | Total | Implementado | Pendiente | Estado  |
+| ----------------------- | ----- | ------------ | --------- | ------- |
+| **Controllers**         | 2     | 2            | 0         | ✅ 100% |
+| **Procesos (AUDIT-\*)** | 5     | 5            | 0         | ✅ 100% |
+| **Consumers RabbitMQ**  | 3     | 3            | 0         | ✅ 100% |
+| **Tests Unitarios**     | 12    | 10           | 2         | 🟡 83%  |
+
+### Leyenda de Estados
+
+- ✅ **IMPLEMENTADO Y PROBADO**: Código completo con tests
+- 🟢 **IMPLEMENTADO**: Código completo, falta testing
+- 🟡 **EN PROGRESO**: Implementación parcial
+- 🔴 **PENDIENTE**: No implementado
+
+---
+
 ## 📋 Información General
 
 | Aspecto           | Detalle                                                                                                                             |

@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 1     | 0            | 1         | 🔴     |
+| ONB-STATUS-\* | 3     | 0            | 3         | 🔴     |
+| ONB-PREF-\*   | 3     | 0            | 3         | 🔴     |
+| ONB-STEP-\*   | 4     | 0            | 4         | 🔴     |
+| ONB-GUIDE-\*  | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 10        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                          |
 | ----------------- | ---------------------------------------------- |

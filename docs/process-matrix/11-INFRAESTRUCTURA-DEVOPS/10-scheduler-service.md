@@ -1,5 +1,21 @@
 # ⏰ SchedulerService - Matriz de Procesos
 
+---
+
+## 📊 Resumen de Implementación
+
+| Componente                    | Total | Implementado | Pendiente | Estado         |
+| ----------------------------- | ----- | ------------ | --------- | -------------- |
+| **Controllers**               | 2     | 0            | 2         | 🔴 Pendiente   |
+| **SCHED-JOB-\*** (Jobs CRUD)  | 5     | 0            | 5         | 🔴 Pendiente   |
+| **SCHED-EXEC-\*** (Ejecución) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **SCHED-CRON-\*** (Cron)      | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SCHED-HIST-\*** (Historial) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                     | 0     | 0            | 18        | 🔴 Pendiente   |
+| **TOTAL**                     | 17    | 0            | 17        | 🔴 0% Completo |
+
+---
+
 ## 📋 Información General
 
 | Aspecto           | Detalle                                                                                                                                               |

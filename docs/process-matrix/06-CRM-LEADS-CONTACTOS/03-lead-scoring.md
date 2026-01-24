@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 1     | 0            | 1         | 🔴     |
+| SCORE-CALC-\* | 5     | 0            | 5         | 🔴     |
+| SCORE-ML-\*   | 4     | 0            | 4         | 🔴     |
+| SCORE-RULE-\* | 6     | 0            | 6         | 🔴     |
+| SCORE-SEG-\*  | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

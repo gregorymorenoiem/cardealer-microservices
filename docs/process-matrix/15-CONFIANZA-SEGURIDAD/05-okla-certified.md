@@ -8,7 +8,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 2     | 0            | 2         | 🔴     |
+| CERT-APPLY-\* | 4     | 0            | 4         | 🔴     |
+| CERT-INSP-\*  | 5     | 0            | 5         | 🔴     |
+| CERT-BADGE-\* | 3     | 0            | 3         | 🔴     |
+| CERT-RENEW-\* | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                                                            |
 | ----------------- | -------------------------------------------------------------------------------- |

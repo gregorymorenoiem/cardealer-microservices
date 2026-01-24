@@ -1,6 +1,21 @@
 # 📦 InventoryManagementService - Matriz de Procesos
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente  | Total | Implementado | Pendiente | Estado |
+| ----------- | ----- | ------------ | --------- | ------ |
+| Controllers | 1     | 0            | 1         | 🔴     |
+| INV-ITEM-\* | 6     | 0            | 6         | 🔴     |
+| INV-BULK-\* | 4     | 0            | 4         | 🔴     |
+| INV-STAT-\* | 5     | 0            | 5         | 🔴     |
+| INV-LOC-\*  | 3     | 0            | 3         | 🔴     |
+| Tests       | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Aspecto           | Detalle                                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |

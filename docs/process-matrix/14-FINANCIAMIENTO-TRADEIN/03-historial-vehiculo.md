@@ -7,7 +7,23 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 1     | 0            | 1         | 🔴     |
+| HIST-OWN-\*   | 4     | 0            | 4         | 🔴     |
+| HIST-ACC-\*   | 4     | 0            | 4         | 🔴     |
+| HIST-MAINT-\* | 3     | 0            | 3         | 🔴     |
+| HIST-KM-\*    | 3     | 0            | 3         | 🔴     |
+| HIST-LEG-\*   | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                                         |
 | ----------------- | ------------------------------------------------------------- |

@@ -7,6 +7,20 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                       | Total | Implementado | Pendiente | Estado       |
+| -------------------------------- | ----- | ------------ | --------- | ------------ |
+| **MQ-PUB-\*** (Publishers)       | 5     | 5            | 0         | ✅ 100%      |
+| **MQ-SUB-\*** (Subscribers)      | 5     | 5            | 0         | ✅ 100%      |
+| **MQ-DLQ-\*** (Dead Letter)      | 4     | 4            | 0         | ✅ 100%      |
+| **MQ-RETRY-\*** (Retry Policies) | 3     | 3            | 0         | ✅ 100%      |
+| **MQ-SAGA-\*** (Sagas)           | 4     | 0            | 4         | 🔴 Pendiente |
+| **Tests**                        | 20    | 17           | 3         | 🟢 85%       |
+| **TOTAL**                        | 41    | 34           | 7         | 🟢 83%       |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

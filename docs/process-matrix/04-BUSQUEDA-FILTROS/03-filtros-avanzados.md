@@ -8,6 +8,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                           | Total | Implementado | Pendiente | Estado         |
+| ------------------------------------ | ----- | ------------ | --------- | -------------- |
+| **FILTER-PRICE-\*** (Precio)         | 4     | 0            | 4         | 🔴 Pendiente   |
+| **FILTER-MAKE-\*** (Marca/Modelo)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **FILTER-COND-\*** (Condición)       | 3     | 0            | 3         | 🔴 Pendiente   |
+| **FILTER-LOC-\*** (Ubicación)        | 3     | 0            | 3         | 🔴 Pendiente   |
+| **FILTER-FEAT-\*** (Características) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **FILTER-ADV-\*** (Avanzados)        | 5     | 0            | 5         | 🔴 Pendiente   |
+| **Tests**                            | 0     | 0            | 20        | 🔴 Pendiente   |
+| **TOTAL**                            | 23    | 0            | 23        | 🔴 0% Completo |
+
+---
+
 ## 📋 Información General
 
 | Campo             | Valor                                     |

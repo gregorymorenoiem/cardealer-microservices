@@ -3,11 +3,86 @@
 > **Servicio:** EscrowService  
 > **Puerto:** 5047  
 > **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟡 PLANIFICADO (Fase 2)
+> **Estado:** ❌ **DESCARTADO - NO APLICA AL MODELO DE NEGOCIO**
 
 ---
 
-## 1. Información General
+## ⚠️ IMPORTANTE: SERVICIO DESCARTADO
+
+### Razón de Descarte
+
+Este servicio fue planificado asumiendo incorrectamente que OKLA sería un **marketplace transaccional** donde la plataforma procesaría pagos de vehículos entre compradores y vendedores.
+
+### Modelo Correcto de OKLA
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   MODELO DE NEGOCIO OKLA                               │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│   OKLA ES UNA PLATAFORMA DE PUBLICIDAD, NO UN MARKETPLACE              │
+│   ═══════════════════════════════════════════════════════              │
+│                                                                        │
+│   ✅ Dealers PAGAN a OKLA: Suscripción mensual RD$2,900-14,900        │
+│   ✅ Sellers PAGAN a OKLA: Publicación única RD$1,500                  │
+│                                                                        │
+│   ❌ OKLA NO procesa pagos de vehículos                                │
+│   ❌ OKLA NO retiene dinero de compradores                             │
+│   ❌ OKLA NO transfiere dinero a vendedores                            │
+│   ❌ OKLA NO cobra comisión por ventas                                 │
+│                                                                        │
+│   LA TRANSACCIÓN DEL VEHÍCULO OCURRE DIRECTAMENTE:                     │
+│   Comprador ───[Paga en efectivo/banco]───> Vendedor                  │
+│                                                                        │
+│   OKLA solo conecta compradores con vendedores (publicidad)            │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Por qué Escrow NO aplica
+
+| Característica de Escrow     | Por qué NO aplica a OKLA                  |
+| ---------------------------- | ----------------------------------------- |
+| Retener dinero del comprador | OKLA no recibe dinero de compradores      |
+| Liberar fondos al vendedor   | OKLA no transfiere dinero a vendedores    |
+| Disputas de transacción      | Las disputas son entre comprador-vendedor |
+| Comisión por transacción     | OKLA cobra suscripción fija, no comisión  |
+| Verificación de entrega      | La entrega es entre comprador-vendedor    |
+
+### Alternativas para Compradores
+
+Si OKLA quisiera ofrecer protección a compradores en el futuro, las opciones serían:
+
+1. **Partnership con servicio de escrow externo** (ej: Escrow.com)
+2. **Verificación pre-compra** (inspección mecánica, historial)
+3. **Garantía OKLA** (cobertura limitada post-venta)
+
+Pero ninguna de estas implica que OKLA procese pagos de vehículos.
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente                  | Total | Implementado | Pendiente | Estado                |
+| --------------------------- | ----- | ------------ | --------- | --------------------- |
+| **Controllers**             | 1     | 0            | 0         | ❌ DESCARTADO         |
+| **ESC-CREATE-\*** (Crear)   | 4     | 0            | 0         | ❌ DESCARTADO         |
+| **ESC-FUND-\*** (Fondos)    | 4     | 0            | 0         | ❌ DESCARTADO         |
+| **ESC-REL-\*** (Liberar)    | 4     | 0            | 0         | ❌ DESCARTADO         |
+| **ESC-DISP-\*** (Disputas)  | 4     | 0            | 0         | ❌ DESCARTADO         |
+| **ESC-REF-\*** (Reembolsos) | 3     | 0            | 0         | ❌ DESCARTADO         |
+| **TOTAL**                   | 20    | 0            | 0         | ❌ NO SE IMPLEMENTARÁ |
+
+---
+
+## 📚 Documentación Histórica (Solo Referencia)
+
+> **NOTA:** El contenido a continuación se mantiene solo como referencia histórica.
+> Este servicio NO se implementará.
+
+---
+
+## 1. Información General (DESCARTADO)
 
 ### 1.1 Descripción
 

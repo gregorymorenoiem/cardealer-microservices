@@ -7,6 +7,22 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                       | Total | Implementado | Pendiente | Estado         |
+| -------------------------------- | ----- | ------------ | --------- | -------------- |
+| **SD-REG-\*** (Registro)         | 4     | 0            | 4         | 🔴 Pendiente   |
+| **SD-DISC-\*** (Descubrimiento)  | 4     | 0            | 4         | 🔴 Pendiente   |
+| **SD-HEALTH-\*** (Health Checks) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SD-LB-\*** (Load Balancing)    | 3     | 0            | 3         | 🔴 Pendiente   |
+| **SD-DNS-\*** (DNS)              | 2     | 0            | 2         | 🔴 Pendiente   |
+| **Tests**                        | 0     | 0            | 15        | 🔴 Pendiente   |
+| **TOTAL**                        | 16    | 0            | 16        | 🔴 0% Completo |
+
+> **Nota:** Actualmente usando Kubernetes DNS nativo. Consul es opcional para entornos no-K8s.
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente  | Total | Implementado | Pendiente | Estado |
+| ----------- | ----- | ------------ | --------- | ------ |
+| Controllers | 1     | 0            | 1         | 🔴     |
+| FIN-CALC-\* | 5     | 0            | 5         | 🔴     |
+| FIN-BANK-\* | 4     | 0            | 4         | 🔴     |
+| FIN-PRE-\*  | 4     | 0            | 4         | 🔴     |
+| FIN-RATE-\* | 3     | 0            | 3         | 🔴     |
+| Tests       | 0     | 0            | 10        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                            |
 | ----------------- | ------------------------------------------------ |

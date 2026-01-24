@@ -8,6 +8,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente   | Total | Implementado | Pendiente | Estado |
+| ------------ | ----- | ------------ | --------- | ------ |
+| Controllers  | 2     | 0            | 2         | 🔴     |
+| REP-GEN-\*   | 6     | 0            | 6         | 🔴     |
+| REP-SCHED-\* | 5     | 0            | 5         | 🔴     |
+| REP-DASH-\*  | 4     | 0            | 4         | 🔴     |
+| REP-EXP-\*   | 5     | 0            | 5         | 🔴     |
+| Tests        | 0     | 0            | 15        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

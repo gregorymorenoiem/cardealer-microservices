@@ -2,9 +2,49 @@
 
 > **Servicio:** AzulPaymentService  
 > **Puerto:** 5025  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 23, 2026  
 > **Estado:** 🟢 ACTIVO  
 > **Proveedor:** AZUL (Banco Popular Dominicano)
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente  | Total | Implementado | Pendiente | Estado  |
+| ----------- | ----- | ------------ | --------- | ------- |
+| Controllers | 2     | 2            | 0         | ✅ 100% |
+| AZUL-PAY-\* | 8     | 4            | 4         | 🟡 50%  |
+| AZUL-SUB-\* | 4     | 2            | 2         | 🟡 50%  |
+| AZUL-WH-\*  | 5     | 1            | 4         | 🟡 20%  |
+| Frontend    | 3     | 3            | 0         | ✅ 100% |
+| Tests       | 12    | 6            | 6         | 🟡 50%  |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+> ⚠️ **IMPORTANTE: Modelo de Negocio**
+>
+> OKLA es el **COMERCIANTE** (Merchant) que recibe pagos.
+> Los dealers son **CLIENTES** que pagan a OKLA por suscripciones.
+>
+> ```
+> ┌──────────────────────────────────────────────────────────────────┐
+> │                      FLUJO DE PAGO                               │
+> ├──────────────────────────────────────────────────────────────────┤
+> │                                                                  │
+> │   DEALER ───[Paga RD$2,900-14,900/mes]───> OKLA (Merchant)      │
+> │      │                                        │                  │
+> │      │ Tarjeta Visa/MC                       │ Cuenta Azul      │
+> │      │                                        │ de OKLA          │
+> │      ▼                                        ▼                  │
+> │   ┌─────────────────────────────────────────────────────────┐   │
+> │   │              AZUL (Banco Popular)                       │   │
+> │   │   - Valida tarjeta                                      │   │
+> │   │   - Procesa cobro                                       │   │
+> │   │   - Deposita a OKLA (24-48h)                           │   │
+> │   └─────────────────────────────────────────────────────────┘   │
+> │                                                                  │
+> └──────────────────────────────────────────────────────────────────┘
+> ```
 
 ---
 
@@ -514,8 +554,111 @@ azul_refund_amount_total
 
 ---
 
+## 12. Integración con Dealer Onboarding
+
+### 12.1 Uso Principal: Suscripciones de Dealers
+
+El servicio AzulPaymentService se utiliza principalmente para cobrar suscripciones mensuales a los dealers:
+
+| Plan         | Precio/Mes | Precio Early Bird | Límite Vehículos |
+| ------------ | ---------- | ----------------- | ---------------- |
+| Starter      | RD$2,900   | RD$2,320 (-20%)   | 10               |
+| Professional | RD$5,900   | RD$4,720 (-20%)   | 50               |
+| Enterprise   | RD$14,900  | RD$11,920 (-20%)  | Ilimitado        |
+
+### 12.2 Flujo de Suscripción
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO: Dealer Paga Suscripción                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  1. Dealer llega a /dealer/onboarding/payment-setup                     │
+│  2. Frontend muestra plan seleccionado (precio en DOP)                  │
+│  3. Si Early Bird: aplica 20% descuento + 90 días trial                 │
+│  4. Dealer ingresa datos de tarjeta                                     │
+│  5. Frontend valida (Luhn, fecha expiración, CVV)                       │
+│  6. POST /api/azul-payment/subscriptions                                │
+│  7. AzulPaymentService:                                                 │
+│     a. Crea registro de suscripción                                     │
+│     b. Si Early Bird: startDate = hoy + 90 días                         │
+│     c. Llama API AZUL para tokenizar/cobro inicial                      │
+│     d. Retorna subscriptionId                                           │
+│  8. Frontend guarda IDs en dealer onboarding                            │
+│  9. Redirect a status page                                              │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 12.3 Request de Suscripción
+
+```json
+{
+  "userId": "dealer-uuid",
+  "amount": 4720,
+  "currency": "DOP",
+  "frequency": "Monthly",
+  "startDate": "2026-04-23T00:00:00Z",
+  "planName": "Professional",
+  "customerEmail": "dealer@empresa.com.do",
+  "customerPhone": "8095550100",
+  "invoiceReference": "DEALER-uuid-timestamp",
+  "paymentMethod": "CreditCard",
+  "cardNumber": "4111111111111111",
+  "cardExpiryMonth": "12",
+  "cardExpiryYear": "2028",
+  "cardCVV": "123",
+  "cardholderName": "JUAN CARLOS RODRIGUEZ"
+}
+```
+
+### 12.4 Response de Suscripción
+
+```json
+{
+  "subscriptionId": "sub_local_uuid",
+  "azulSubscriptionId": "sub_azul_abc123",
+  "status": "Active",
+  "amount": 4720,
+  "currency": "DOP",
+  "frequency": "Monthly",
+  "nextChargeDate": "2026-04-23T00:00:00Z",
+  "startDate": "2026-01-23T00:00:00Z",
+  "cardLastFour": "1111",
+  "cardBrand": "Visa",
+  "planName": "Professional",
+  "createdAt": "2026-01-23T10:30:00Z"
+}
+```
+
+### 12.5 Campos Guardados en DealerOnboarding
+
+Después del pago exitoso, se actualizan estos campos en la entidad `DealerOnboarding`:
+
+```csharp
+// El dealer es CLIENTE, no comerciante
+public string? AzulCustomerId { get; set; }      // = subscriptionId
+public string? AzulSubscriptionId { get; set; }  // = azulSubscriptionId
+public string? AzulCardToken { get; set; }       // Token para renovaciones
+```
+
+### 12.6 Renovación Automática
+
+El sistema de suscripciones debe manejar renovaciones mensuales:
+
+1. **Scheduler Job:** Ejecuta diariamente a las 6:00 AM
+2. **Busca:** Suscripciones con nextChargeDate = hoy
+3. **Para cada una:**
+   - Intenta cobrar usando cardToken
+   - Si éxito: actualiza nextChargeDate + 30 días
+   - Si falla: marca como PastDue, envía notificación
+4. **Retry:** 3 intentos en 5 días antes de suspender
+
+---
+
 ## 📚 Referencias
 
 - [AZUL Developer Portal](https://developer.azul.com.do/)
 - [01-billing-service.md](01-billing-service.md) - Facturación principal
 - [02-stripe-payment.md](02-stripe-payment.md) - Pagos internacionales
+- [04-dealer-onboarding.md](../02-USUARIOS-DEALERS/04-dealer-onboarding.md) - Onboarding de dealers

@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                       | Total | Implementado | Pendiente | Estado         |
+| -------------------------------- | ----- | ------------ | --------- | -------------- |
+| **Controllers**                  | 2     | 0            | 2         | 🔴 Pendiente   |
+| **CHAT-NLU-\*** (Procesamiento)  | 5     | 0            | 5         | 🔴 Pendiente   |
+| **CHAT-INTENT-\*** (Intenciones) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **CHAT-RESP-\*** (Respuestas)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **CHAT-WA-\*** (WhatsApp)        | 4     | 0            | 4         | 🔴 Pendiente   |
+| **CHAT-ESCAL-\*** (Escalamiento) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                        | 0     | 0            | 20        | 🔴 Pendiente   |
+| **TOTAL**                        | 22    | 0            | 22        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

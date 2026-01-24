@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente     | Total | Implementado | Pendiente | Estado |
+| -------------- | ----- | ------------ | --------- | ------ |
+| Controllers    | 1     | 0            | 1         | 🔴     |
+| WISH-CREATE-\* | 3     | 0            | 3         | 🔴     |
+| WISH-SHARE-\*  | 3     | 0            | 3         | 🔴     |
+| WISH-VOTE-\*   | 3     | 0            | 3         | 🔴     |
+| WISH-NOTIF-\*  | 2     | 0            | 2         | 🔴     |
+| Tests          | 0     | 0            | 8         | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                            |
 | ----------------- | -------------------------------- |

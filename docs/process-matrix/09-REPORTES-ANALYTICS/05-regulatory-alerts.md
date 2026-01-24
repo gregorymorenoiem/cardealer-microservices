@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 1     | 0            | 1         | 🔴     |
+| REG-MON-\*    | 5     | 0            | 5         | 🔴     |
+| REG-ALERT-\*  | 4     | 0            | 4         | 🔴     |
+| REG-SCRAPE-\* | 4     | 0            | 4         | 🔴     |
+| REG-NOTIF-\*  | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

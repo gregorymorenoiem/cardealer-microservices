@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                         | Total | Implementado | Pendiente | Estado         |
+| ---------------------------------- | ----- | ------------ | --------- | -------------- |
+| **Controllers**                    | 2     | 0            | 2         | 🔴 Pendiente   |
+| **APPT-BOOK-\*** (Reservar)        | 4     | 0            | 4         | 🔴 Pendiente   |
+| **APPT-AVAIL-\*** (Disponibilidad) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **APPT-REMIND-\*** (Recordatorios) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **APPT-CANCEL-\*** (Cancelación)   | 3     | 0            | 3         | 🔴 Pendiente   |
+| **APPT-SYNC-\*** (Calendario)      | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                          | 0     | 0            | 18        | 🔴 Pendiente   |
+| **TOTAL**                          | 19    | 0            | 19        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

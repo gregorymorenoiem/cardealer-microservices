@@ -1,5 +1,33 @@
 # 🏢 DealerManagementService - Matriz de Procesos
 
+> **Servicio:** DealerManagementService  
+> **Puerto:** 5039  
+> **Base de Datos:** PostgreSQL (dealermanagement_db)  
+> **Tecnología:** .NET 8, MediatR, Entity Framework Core  
+> **Última actualización:** Enero 23, 2026  
+> **Estado de Implementación:** ✅ 100% Completo
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente               | Total | Implementado | Pendiente | Estado  |
+| ------------------------ | ----- | ------------ | --------- | ------- |
+| **Controllers**          | 3     | 3            | 0         | ✅ 100% |
+| **Procesos (DEAL-\*)**   | 8     | 8            | 0         | ✅ 100% |
+| **Procesos (SUB-\*)**    | 6     | 6            | 0         | ✅ 100% |
+| **Procesos (LIMITS-\*)** | 3     | 3            | 0         | ✅ 100% |
+| **Tests Unitarios**      | 25    | 25           | 0         | ✅ 100% |
+
+### Leyenda de Estados
+
+- ✅ **IMPLEMENTADO Y PROBADO**: Código completo con tests
+- 🟢 **IMPLEMENTADO**: Código completo, falta testing
+- 🟡 **EN PROGRESO**: Implementación parcial
+- 🔴 **PENDIENTE**: No implementado
+
+---
+
 ## 📋 Información General
 
 | Aspecto           | Detalle                                                                                                                   |

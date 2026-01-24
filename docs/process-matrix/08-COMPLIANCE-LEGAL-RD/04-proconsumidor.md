@@ -7,6 +7,20 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                     | Total | Implementado | Pendiente | Estado         |
+| ------------------------------ | ----- | ------------ | --------- | -------------- |
+| **CONS-INFO-\*** (Información) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **CONS-GAR-\*** (Garantías)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **CONS-QUEJA-\*** (Quejas)     | 4     | 0            | 4         | 🔴 Pendiente   |
+| **CONS-DEV-\*** (Devoluciones) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **CONS-REP-\*** (Reportes)     | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                      | 0     | 0            | 15        | 🔴 Pendiente   |
+| **TOTAL**                      | 17    | 0            | 17        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

@@ -45,6 +45,7 @@ namespace UserService.Domain.Interfaces
 
     public interface IDealerEmployeeRepository
     {
+        // Employee operations
         Task<DealerEmployee?> GetByIdAsync(Guid id);
         Task<IEnumerable<DealerEmployee>> GetByDealerIdAsync(Guid dealerId);
         Task<DealerEmployee?> GetByUserIdAndDealerIdAsync(Guid userId, Guid dealerId);
@@ -52,5 +53,12 @@ namespace UserService.Domain.Interfaces
         Task UpdateAsync(DealerEmployee employee);
         Task DeleteAsync(Guid id);
         Task<int> CountByDealerIdAsync(Guid dealerId);
+
+        // Invitation operations
+        Task<DealerEmployeeInvitation?> GetInvitationByIdAsync(Guid dealerId, Guid invitationId);
+        Task<DealerEmployeeInvitation?> GetPendingInvitationByEmailAsync(Guid dealerId, string email);
+        Task<IEnumerable<DealerEmployeeInvitation>> GetPendingInvitationsAsync(Guid dealerId);
+        Task<DealerEmployeeInvitation> AddInvitationAsync(DealerEmployeeInvitation invitation);
+        Task UpdateInvitationAsync(DealerEmployeeInvitation invitation);
     }
 }

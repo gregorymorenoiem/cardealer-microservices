@@ -176,7 +176,10 @@ builder.Services.AddScoped<IRoleRepository, UserService.Infrastructure.Persisten
 builder.Services.AddScoped<IDealerRepository, UserService.Infrastructure.Persistence.DealerRepository>();
 builder.Services.AddScoped<ISellerProfileRepository, UserService.Infrastructure.Persistence.SellerProfileRepository>();
 builder.Services.AddScoped<IIdentityDocumentRepository, UserService.Infrastructure.Persistence.IdentityDocumentRepository>();
-builder.Services.AddScoped<IDealerEmployeeRepository, UserService.Infrastructure.Persistence.DealerEmployeeRepository>();
+builder.Services.AddScoped<IDealerEmployeeRepository, UserService.Infrastructure.Persistence.Repositories.DealerEmployeeRepository>();
+builder.Services.AddScoped<IDealerOnboardingRepository, UserService.Infrastructure.Persistence.Repositories.DealerOnboardingRepository>();
+builder.Services.AddScoped<IDealerModuleRepository, UserService.Infrastructure.Persistence.Repositories.DealerModuleRepository>();
+builder.Services.AddScoped<IModuleRepository, UserService.Infrastructure.Persistence.Repositories.ModuleRepository>();
 builder.Services.AddScoped<IUserOnboardingRepository, UserService.Infrastructure.Repositories.UserOnboardingRepository>();
 builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
 

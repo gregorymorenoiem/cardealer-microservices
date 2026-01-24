@@ -1,6 +1,21 @@
 # 🏢 Propiedades en Renta - Matriz de Procesos
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente     | Total | Implementado | Pendiente | Estado |
+| -------------- | ----- | ------------ | --------- | ------ |
+| Controllers    | 2     | 0            | 2         | 🔴     |
+| PROP-RENT-\*   | 8     | 0            | 8         | 🔴     |
+| PROP-CAT-\*    | 4     | 0            | 4         | 🔴     |
+| PROP-SEARCH-\* | 5     | 0            | 5         | 🔴     |
+| PROP-FEAT-\*   | 3     | 0            | 3         | 🔴     |
+| Tests          | 0     | 0            | 15        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Aspecto           | Detalle                                                                                     |
 | ----------------- | ------------------------------------------------------------------------------------------- |

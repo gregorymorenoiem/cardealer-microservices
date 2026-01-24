@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente       | Total | Implementado | Pendiente | Estado |
+| ---------------- | ----- | ------------ | --------- | ------ |
+| Controllers      | 1     | 0            | 1         | 🔴     |
+| STRIPE-PAY-\*    | 8     | 0            | 8         | 🔴     |
+| STRIPE-SUB-\*    | 6     | 0            | 6         | 🔴     |
+| STRIPE-WH-\*     | 5     | 0            | 5         | 🔴     |
+| STRIPE-WALLET-\* | 4     | 0            | 4         | 🔴     |
+| Tests            | 0     | 0            | 15        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

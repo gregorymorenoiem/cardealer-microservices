@@ -3,24 +3,46 @@
 > **Servicio:** RecommendationService  
 > **Puerto:** 5055  
 > **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Estado:** 🟢 ACTIVO  
+> **Estado de Implementación:** 🟡 En Progreso
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente            | Total | Implementado | Pendiente | Estado  |
+| --------------------- | ----- | ------------ | --------- | ------- |
+| **Controllers**       | 2     | 2            | 0         | ✅ 100% |
+| **Procesos (REC-\*)** | 5     | 3            | 2         | 🟡 60%  |
+| **Procesos (ML-\*)**  | 4     | 2            | 2         | 🟡 50%  |
+| **Tests Unitarios**   | 12    | 8            | 4         | 🟡 67%  |
+
+### Leyenda de Estados
+
+- ✅ **IMPLEMENTADO Y PROBADO**: Código completo con tests
+- 🟢 **IMPLEMENTADO**: Código completo, falta testing
+- 🟡 **EN PROGRESO**: Implementación parcial
+- 🔴 **PENDIENTE**: No implementado
 
 ---
 
 ## 1. Información General
 
 ### 1.1 Descripción
+
 Sistema de recomendaciones personalizadas basado en Machine Learning para OKLA. Analiza el comportamiento del usuario, historial de búsquedas, favoritos e interacciones para sugerir vehículos relevantes.
 
 ### 1.2 Dependencias
-| Servicio | Propósito |
-|----------|-----------|
-| UserBehaviorService | Datos de comportamiento |
-| VehiclesSaleService | Información de vehículos |
-| FeatureStoreService | Features para ML |
-| EventTrackingService | Eventos de usuario |
+
+| Servicio             | Propósito                |
+| -------------------- | ------------------------ |
+| UserBehaviorService  | Datos de comportamiento  |
+| VehiclesSaleService  | Información de vehículos |
+| FeatureStoreService  | Features para ML         |
+| EventTrackingService | Eventos de usuario       |
 
 ### 1.3 Algoritmos
+
 - **Collaborative Filtering**: Usuarios similares
 - **Content-Based**: Características de vehículos
 - **Hybrid**: Combinación de ambos
@@ -30,22 +52,23 @@ Sistema de recomendaciones personalizadas basado en Machine Learning para OKLA. 
 
 ## 2. Endpoints API
 
-| Método | Endpoint | Descripción | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/api/recommendations/for-you` | Recomendaciones personalizadas | ✅ | User |
-| `GET` | `/api/recommendations/similar/{vehicleId}` | Vehículos similares | ❌ | - |
-| `POST` | `/api/recommendations/generate` | Forzar regeneración | ✅ | User |
-| `POST` | `/api/recommendations/{id}/viewed` | Marcar como vista | ✅ | User |
-| `POST` | `/api/recommendations/{id}/clicked` | Marcar como clickeada | ✅ | User |
-| `GET` | `/api/recommendations/preferences` | Preferencias del usuario | ✅ | User |
-| `GET` | `/api/interactions` | Historial de interacciones | ✅ | User |
-| `POST` | `/api/interactions` | Registrar interacción | ✅ | User |
+| Método | Endpoint                                   | Descripción                    | Auth | Roles |
+| ------ | ------------------------------------------ | ------------------------------ | ---- | ----- |
+| `GET`  | `/api/recommendations/for-you`             | Recomendaciones personalizadas | ✅   | User  |
+| `GET`  | `/api/recommendations/similar/{vehicleId}` | Vehículos similares            | ❌   | -     |
+| `POST` | `/api/recommendations/generate`            | Forzar regeneración            | ✅   | User  |
+| `POST` | `/api/recommendations/{id}/viewed`         | Marcar como vista              | ✅   | User  |
+| `POST` | `/api/recommendations/{id}/clicked`        | Marcar como clickeada          | ✅   | User  |
+| `GET`  | `/api/recommendations/preferences`         | Preferencias del usuario       | ✅   | User  |
+| `GET`  | `/api/interactions`                        | Historial de interacciones     | ✅   | User  |
+| `POST` | `/api/interactions`                        | Registrar interacción          | ✅   | User  |
 
 ---
 
 ## 3. Entidades y Enums
 
 ### 3.1 RecommendationType (Enum)
+
 ```csharp
 public enum RecommendationType
 {
@@ -61,6 +84,7 @@ public enum RecommendationType
 ```
 
 ### 3.2 InteractionType (Enum)
+
 ```csharp
 public enum InteractionType
 {
@@ -77,6 +101,7 @@ public enum InteractionType
 ```
 
 ### 3.3 Recommendation (Entidad)
+
 ```csharp
 public class Recommendation
 {
@@ -97,11 +122,12 @@ public class Recommendation
 ```
 
 ### 3.4 UserPreference (Entidad)
+
 ```csharp
 public class UserPreference
 {
     public Guid UserId { get; set; }
-    
+
     // Preferencias extraídas
     public List<string> PreferredMakes { get; set; }
     public List<string> PreferredBodyTypes { get; set; }
@@ -112,7 +138,7 @@ public class UserPreference
     public int MaxMileage { get; set; }
     public List<string> PreferredColors { get; set; }
     public List<string> PreferredFeatures { get; set; }
-    
+
     // Metadata
     public int TotalInteractions { get; set; }
     public DateTime LastUpdated { get; set; }
@@ -126,36 +152,38 @@ public class UserPreference
 
 ### 4.1 REC-001: Obtener Recomendaciones Personalizadas
 
-| Campo | Valor |
-|-------|-------|
-| **ID** | REC-001 |
-| **Nombre** | For You - Recomendaciones Personalizadas |
-| **Actor** | Usuario autenticado |
-| **Trigger** | GET /api/recommendations/for-you |
+| Campo       | Valor                                    |
+| ----------- | ---------------------------------------- |
+| **ID**      | REC-001                                  |
+| **Nombre**  | For You - Recomendaciones Personalizadas |
+| **Actor**   | Usuario autenticado                      |
+| **Trigger** | GET /api/recommendations/for-you         |
 
 #### Flujo del Proceso
 
-| Paso | Acción | Sistema | Validación |
-|------|--------|---------|------------|
-| 1 | Usuario solicita recomendaciones | Frontend | Token JWT válido |
-| 2 | Extraer UserId del token | RecommendationService | Claim presente |
-| 3 | Verificar cache de recomendaciones | Redis | TTL no expirado |
-| 4 | Si no hay cache, obtener preferencias | Database | UserPreference |
-| 5 | Obtener interacciones recientes | UserBehaviorService | Últimos 30 días |
-| 6 | Consultar FeatureStore | FeatureStoreService | Embeddings de usuario |
-| 7 | Ejecutar modelo ML | ML Model | Score predictions |
-| 8 | Filtrar vehículos no disponibles | VehiclesSaleService | Status = Active |
-| 9 | Ordenar por score | RecommendationService | DESC |
-| 10 | Guardar en cache | Redis | TTL 1 hora |
-| 11 | Retornar top N | Response | limit parámetro |
+| Paso | Acción                                | Sistema               | Validación            |
+| ---- | ------------------------------------- | --------------------- | --------------------- |
+| 1    | Usuario solicita recomendaciones      | Frontend              | Token JWT válido      |
+| 2    | Extraer UserId del token              | RecommendationService | Claim presente        |
+| 3    | Verificar cache de recomendaciones    | Redis                 | TTL no expirado       |
+| 4    | Si no hay cache, obtener preferencias | Database              | UserPreference        |
+| 5    | Obtener interacciones recientes       | UserBehaviorService   | Últimos 30 días       |
+| 6    | Consultar FeatureStore                | FeatureStoreService   | Embeddings de usuario |
+| 7    | Ejecutar modelo ML                    | ML Model              | Score predictions     |
+| 8    | Filtrar vehículos no disponibles      | VehiclesSaleService   | Status = Active       |
+| 9    | Ordenar por score                     | RecommendationService | DESC                  |
+| 10   | Guardar en cache                      | Redis                 | TTL 1 hora            |
+| 11   | Retornar top N                        | Response              | limit parámetro       |
 
 #### Request
+
 ```
 GET /api/recommendations/for-you?limit=10
 Authorization: Bearer {token}
 ```
 
 #### Response
+
 ```json
 {
   "recommendations": [
@@ -188,63 +216,64 @@ Authorization: Bearer {token}
 
 ### 4.2 REC-002: Vehículos Similares
 
-| Campo | Valor |
-|-------|-------|
-| **ID** | REC-002 |
-| **Nombre** | Similar Vehicles |
-| **Actor** | Cualquier usuario |
+| Campo       | Valor                                        |
+| ----------- | -------------------------------------------- |
+| **ID**      | REC-002                                      |
+| **Nombre**  | Similar Vehicles                             |
+| **Actor**   | Cualquier usuario                            |
 | **Trigger** | GET /api/recommendations/similar/{vehicleId} |
 
 #### Flujo del Proceso
 
-| Paso | Acción | Sistema | Validación |
-|------|--------|---------|------------|
-| 1 | Usuario ve un vehículo | Frontend | VehicleId válido |
-| 2 | Obtener features del vehículo | VehiclesSaleService | Make, Model, Year, etc. |
-| 3 | Consultar embeddings del vehículo | FeatureStoreService | Vector de características |
-| 4 | Buscar vecinos más cercanos | ML Model | KNN algorithm |
-| 5 | Excluir vehículo actual | Filter | vehicleId != source |
-| 6 | Filtrar solo activos | VehiclesSaleService | Status = Active |
-| 7 | Calcular similarity score | Algorithm | Cosine similarity |
-| 8 | Ordenar por similaridad | RecommendationService | DESC |
-| 9 | Retornar top N | Response | limit parámetro |
+| Paso | Acción                            | Sistema               | Validación                |
+| ---- | --------------------------------- | --------------------- | ------------------------- |
+| 1    | Usuario ve un vehículo            | Frontend              | VehicleId válido          |
+| 2    | Obtener features del vehículo     | VehiclesSaleService   | Make, Model, Year, etc.   |
+| 3    | Consultar embeddings del vehículo | FeatureStoreService   | Vector de características |
+| 4    | Buscar vecinos más cercanos       | ML Model              | KNN algorithm             |
+| 5    | Excluir vehículo actual           | Filter                | vehicleId != source       |
+| 6    | Filtrar solo activos              | VehiclesSaleService   | Status = Active           |
+| 7    | Calcular similarity score         | Algorithm             | Cosine similarity         |
+| 8    | Ordenar por similaridad           | RecommendationService | DESC                      |
+| 9    | Retornar top N                    | Response              | limit parámetro           |
 
 #### Criterios de Similaridad
 
-| Factor | Peso | Descripción |
-|--------|------|-------------|
-| Marca | 25% | Misma marca = +25 |
-| Modelo | 20% | Mismo modelo = +20 |
-| Año | 15% | Diferencia máx 2 años |
-| Precio | 20% | ±20% del precio |
-| Tipo carrocería | 10% | SUV, Sedan, etc. |
-| Características | 10% | Features similares |
+| Factor          | Peso | Descripción           |
+| --------------- | ---- | --------------------- |
+| Marca           | 25%  | Misma marca = +25     |
+| Modelo          | 20%  | Mismo modelo = +20    |
+| Año             | 15%  | Diferencia máx 2 años |
+| Precio          | 20%  | ±20% del precio       |
+| Tipo carrocería | 10%  | SUV, Sedan, etc.      |
+| Características | 10%  | Features similares    |
 
 ---
 
 ### 4.3 REC-003: Registrar Interacción
 
-| Campo | Valor |
-|-------|-------|
-| **ID** | REC-003 |
-| **Nombre** | Track User Interaction |
-| **Actor** | Usuario autenticado |
+| Campo       | Valor                  |
+| ----------- | ---------------------- |
+| **ID**      | REC-003                |
+| **Nombre**  | Track User Interaction |
+| **Actor**   | Usuario autenticado    |
 | **Trigger** | POST /api/interactions |
 
 #### Flujo del Proceso
 
-| Paso | Acción | Sistema | Validación |
-|------|--------|---------|------------|
-| 1 | Usuario interactúa con vehículo | Frontend | Evento capturado |
-| 2 | Enviar interacción | API | Async (fire & forget) |
-| 3 | Validar datos | RecommendationService | VehicleId existe |
-| 4 | Enriquecer con contexto | RecommendationService | Device, location, etc. |
-| 5 | Guardar interacción | Database | Interaction entity |
-| 6 | Publicar evento | RabbitMQ | interaction.created |
-| 7 | Actualizar UserPreferences | Async Job | Recalcular preferencias |
-| 8 | Invalidar cache | Redis | Forzar regeneración |
+| Paso | Acción                          | Sistema               | Validación              |
+| ---- | ------------------------------- | --------------------- | ----------------------- |
+| 1    | Usuario interactúa con vehículo | Frontend              | Evento capturado        |
+| 2    | Enviar interacción              | API                   | Async (fire & forget)   |
+| 3    | Validar datos                   | RecommendationService | VehicleId existe        |
+| 4    | Enriquecer con contexto         | RecommendationService | Device, location, etc.  |
+| 5    | Guardar interacción             | Database              | Interaction entity      |
+| 6    | Publicar evento                 | RabbitMQ              | interaction.created     |
+| 7    | Actualizar UserPreferences      | Async Job             | Recalcular preferencias |
+| 8    | Invalidar cache                 | Redis                 | Forzar regeneración     |
 
 #### Request
+
 ```json
 {
   "vehicleId": "uuid",
@@ -262,40 +291,41 @@ Authorization: Bearer {token}
 
 ### 4.4 REC-004: Generar Recomendaciones (Batch)
 
-| Campo | Valor |
-|-------|-------|
-| **ID** | REC-004 |
-| **Nombre** | Generate Recommendations Batch |
-| **Actor** | Sistema (Scheduled Job) |
-| **Trigger** | Cron: cada 4 horas |
+| Campo       | Valor                          |
+| ----------- | ------------------------------ |
+| **ID**      | REC-004                        |
+| **Nombre**  | Generate Recommendations Batch |
+| **Actor**   | Sistema (Scheduled Job)        |
+| **Trigger** | Cron: cada 4 horas             |
 
 #### Flujo del Proceso
 
-| Paso | Acción | Sistema | Validación |
-|------|--------|---------|------------|
-| 1 | Job scheduled inicia | SchedulerService | Cron expression |
-| 2 | Obtener usuarios activos | Database | LastLogin < 7 días |
-| 3 | Por cada usuario (paralelo) | Loop | Max 100 concurrentes |
-| 4 | Obtener interacciones | UserBehaviorService | Últimos 30 días |
-| 5 | Calcular UserPreference | ML Pipeline | Feature extraction |
-| 6 | Ejecutar modelo de recomendación | ML Model | TensorFlow/ONNX |
-| 7 | Generar top 50 | Algorithm | Score + diversidad |
-| 8 | Guardar recomendaciones | Database | Batch insert |
-| 9 | Actualizar cache | Redis | Pre-warm |
-| 10 | Publicar métricas | Prometheus | recommendations_generated |
+| Paso | Acción                           | Sistema             | Validación                |
+| ---- | -------------------------------- | ------------------- | ------------------------- |
+| 1    | Job scheduled inicia             | SchedulerService    | Cron expression           |
+| 2    | Obtener usuarios activos         | Database            | LastLogin < 7 días        |
+| 3    | Por cada usuario (paralelo)      | Loop                | Max 100 concurrentes      |
+| 4    | Obtener interacciones            | UserBehaviorService | Últimos 30 días           |
+| 5    | Calcular UserPreference          | ML Pipeline         | Feature extraction        |
+| 6    | Ejecutar modelo de recomendación | ML Model            | TensorFlow/ONNX           |
+| 7    | Generar top 50                   | Algorithm           | Score + diversidad        |
+| 8    | Guardar recomendaciones          | Database            | Batch insert              |
+| 9    | Actualizar cache                 | Redis               | Pre-warm                  |
+| 10   | Publicar métricas                | Prometheus          | recommendations_generated |
 
 ---
 
 ### 4.5 REC-005: Obtener Preferencias de Usuario
 
-| Campo | Valor |
-|-------|-------|
-| **ID** | REC-005 |
-| **Nombre** | Get User Preferences |
-| **Actor** | Usuario autenticado |
+| Campo       | Valor                                |
+| ----------- | ------------------------------------ |
+| **ID**      | REC-005                              |
+| **Nombre**  | Get User Preferences                 |
+| **Actor**   | Usuario autenticado                  |
 | **Trigger** | GET /api/recommendations/preferences |
 
 #### Response
+
 ```json
 {
   "userId": "uuid",
@@ -319,11 +349,7 @@ Authorization: Bearer {token}
     "confidenceScore": 0.87,
     "lastUpdated": "2026-01-21T08:00:00Z"
   },
-  "topSearches": [
-    "toyota rav4 2023",
-    "honda crv",
-    "hyundai tucson"
-  ]
+  "topSearches": ["toyota rav4 2023", "honda crv", "hyundai tucson"]
 }
 ```
 
@@ -351,7 +377,7 @@ Predicción para User A en Veh3:
 
 ```
 Vehicle Features Vector:
-[make_encoded, model_encoded, year_normalized, price_normalized, 
+[make_encoded, model_encoded, year_normalized, price_normalized,
  mileage_normalized, bodytype_onehot, features_embedding]
 
 User Profile = Average(Liked_Vehicles_Vectors)
@@ -381,13 +407,13 @@ Con ajuste por:
 
 ### 6.1 Políticas de Recomendación
 
-| Regla | Valor |
-|-------|-------|
-| Máximo por marca | 30% del total |
-| Mínimo interacciones para ML | 5 |
-| Cold start (nuevos usuarios) | Trending + Popular |
-| Refresh rate | Cada 4 horas batch, 1h cache |
-| Expiración recomendaciones | 24 horas |
+| Regla                        | Valor                        |
+| ---------------------------- | ---------------------------- |
+| Máximo por marca             | 30% del total                |
+| Mínimo interacciones para ML | 5                            |
+| Cold start (nuevos usuarios) | Trending + Popular           |
+| Refresh rate                 | Cada 4 horas batch, 1h cache |
+| Expiración recomendaciones   | 24 horas                     |
 
 ### 6.2 Diversidad de Resultados
 
@@ -397,12 +423,12 @@ public List<Recommendation> ApplyDiversity(List<Recommendation> recs)
 {
     var result = new List<Recommendation>();
     var makeCount = new Dictionary<string, int>();
-    
+
     foreach (var rec in recs.OrderByDescending(r => r.Score))
     {
         var make = rec.Vehicle.Make;
         if (!makeCount.ContainsKey(make)) makeCount[make] = 0;
-        
+
         if (makeCount[make] < maxPerMake)
         {
             result.Add(rec);
@@ -415,35 +441,35 @@ public List<Recommendation> ApplyDiversity(List<Recommendation> recs)
 
 ### 6.3 Cold Start Strategy
 
-| Interacciones | Estrategia |
-|---------------|------------|
-| 0 | Popular en tu ciudad |
-| 1-5 | Trending + Content-based básico |
-| 6-20 | Híbrido con peso content-based |
-| 20+ | Híbrido completo |
+| Interacciones | Estrategia                      |
+| ------------- | ------------------------------- |
+| 0             | Popular en tu ciudad            |
+| 1-5           | Trending + Content-based básico |
+| 6-20          | Híbrido con peso content-based  |
+| 20+           | Híbrido completo                |
 
 ---
 
 ## 7. Manejo de Errores
 
-| Código | Error | Mensaje | Acción |
-|--------|-------|---------|--------|
-| 400 | InvalidVehicleId | "Vehicle not found" | Verificar ID |
-| 401 | Unauthorized | "Authentication required" | Login |
-| 404 | NoRecommendations | "No recommendations available" | Cold start fallback |
-| 503 | MLServiceUnavailable | "Recommendation service temporarily unavailable" | Retry |
+| Código | Error                | Mensaje                                          | Acción              |
+| ------ | -------------------- | ------------------------------------------------ | ------------------- |
+| 400    | InvalidVehicleId     | "Vehicle not found"                              | Verificar ID        |
+| 401    | Unauthorized         | "Authentication required"                        | Login               |
+| 404    | NoRecommendations    | "No recommendations available"                   | Cold start fallback |
+| 503    | MLServiceUnavailable | "Recommendation service temporarily unavailable" | Retry               |
 
 ---
 
 ## 8. Eventos RabbitMQ
 
-| Evento | Exchange | Descripción | Payload |
-|--------|----------|-------------|---------|
-| `recommendation.generated` | `recommendation.events` | Nuevas recomendaciones | `{ userId, count }` |
-| `recommendation.viewed` | `recommendation.events` | Recomendación vista | `{ recId, vehicleId }` |
-| `recommendation.clicked` | `recommendation.events` | Recomendación clickeada | `{ recId, vehicleId }` |
-| `interaction.created` | `recommendation.events` | Nueva interacción | `{ userId, vehicleId, type }` |
-| `preference.updated` | `recommendation.events` | Preferencias actualizadas | `{ userId, changes }` |
+| Evento                     | Exchange                | Descripción               | Payload                       |
+| -------------------------- | ----------------------- | ------------------------- | ----------------------------- |
+| `recommendation.generated` | `recommendation.events` | Nuevas recomendaciones    | `{ userId, count }`           |
+| `recommendation.viewed`    | `recommendation.events` | Recomendación vista       | `{ recId, vehicleId }`        |
+| `recommendation.clicked`   | `recommendation.events` | Recomendación clickeada   | `{ recId, vehicleId }`        |
+| `interaction.created`      | `recommendation.events` | Nueva interacción         | `{ userId, vehicleId, type }` |
+| `preference.updated`       | `recommendation.events` | Preferencias actualizadas | `{ userId, changes }`         |
 
 ---
 
@@ -451,12 +477,12 @@ public List<Recommendation> ApplyDiversity(List<Recommendation> recs)
 
 ### 9.1 KPIs de Negocio
 
-| Métrica | Fórmula | Target |
-|---------|---------|--------|
-| CTR | Clicks / Views | > 5% |
-| Conversion Rate | Contacts / Clicks | > 10% |
-| Diversity Index | Unique Makes / Total Recs | > 0.4 |
-| Coverage | Users with Recs / Total Users | > 95% |
+| Métrica         | Fórmula                       | Target |
+| --------------- | ----------------------------- | ------ |
+| CTR             | Clicks / Views                | > 5%   |
+| Conversion Rate | Contacts / Clicks             | > 10%  |
+| Diversity Index | Unique Makes / Total Recs     | > 0.4  |
+| Coverage        | Users with Recs / Total Users | > 95%  |
 
 ### 9.2 Prometheus Metrics
 
@@ -480,6 +506,7 @@ recommendation_cache_misses_total
 ## 10. Configuración
 
 ### 10.1 appsettings.json
+
 ```json
 {
   "Recommendations": {

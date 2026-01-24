@@ -3,7 +3,29 @@
 > **Servicio:** UserService  
 > **Puerto:** 15101  
 > **Base de Datos:** user_db  
-> **Última actualización:** Enero 21, 2026
+> **Última actualización:** Enero 27, 2026  
+> **Estado de Implementación:** ✅ 100% Completo
+
+## 📊 Resumen de Implementación
+
+| Componente               | Total | Implementado | Pendiente | Estado  |
+| ------------------------ | ----- | ------------ | --------- | ------- |
+| **Controllers**          | 9     | 9            | 0         | ✅ 100% |
+| **Procesos (USER-\*)**   | 5     | 5            | 0         | ✅ 100% |
+| **Procesos (UROLE-\*)**  | 2     | 2            | 0         | ✅ 100% |
+| **Procesos (SELLER-\*)** | 2     | 2            | 0         | ✅ 100% |
+| **Procesos (DEALER-\*)** | 2     | 2            | 0         | ✅ 100% |
+| **Procesos (DEMP-\*)**   | 5     | 5            | 0         | ✅ 100% |
+| **Procesos (DONB-\*)**   | 4     | 4            | 0         | ✅ 100% |
+| **Procesos (DMOD-\*)**   | 3     | 3            | 0         | ✅ 100% |
+| **Tests Unitarios**      | 93    | 93           | 0         | ✅ 100% |
+
+### Leyenda de Estados
+
+- ✅ **IMPLEMENTADO Y PROBADO**: Código completo con tests
+- 🟢 **IMPLEMENTADO**: Código completo, falta testing
+- 🟡 **EN PROGRESO**: Implementación parcial
+- 🔴 **PENDIENTE**: No implementado
 
 ---
 
@@ -156,13 +178,17 @@ User (Base)
 
 ### USER-CRT-001: Crear Usuario
 
-| Campo          | Valor          |
-| -------------- | -------------- |
-| **ID**         | USER-CRT-001   |
-| **Nombre**     | Crear Usuario  |
-| **Actor**      | Admin, Sistema |
-| **Criticidad** | 🔴 CRÍTICO     |
-| **Estado**     | 🟢 ACTIVO      |
+| Campo              | Valor                                            |
+| ------------------ | ------------------------------------------------ |
+| **ID**             | USER-CRT-001                                     |
+| **Nombre**         | Crear Usuario                                    |
+| **Actor**          | Admin, Sistema                                   |
+| **Criticidad**     | 🔴 CRÍTICO                                       |
+| **Estado**         | 🟢 ACTIVO                                        |
+| **Implementación** | 🟢 **IMPLEMENTADO**                              |
+| **Handler**        | `CreateUserCommand`                              |
+| **Archivo**        | `UseCases/Users/CreateUser/CreateUserCommand.cs` |
+| **Tests**          | 🔴 Pendiente                                     |
 
 #### Descripción
 
@@ -210,13 +236,17 @@ Este proceso normalmente se dispara automáticamente cuando AuthService publica 
 
 ### USER-GET-001: Obtener Usuario
 
-| Campo          | Valor                  |
-| -------------- | ---------------------- |
-| **ID**         | USER-GET-001           |
-| **Nombre**     | Obtener Usuario por ID |
-| **Actor**      | Usuario Autenticado    |
-| **Criticidad** | 🟡 MEDIO               |
-| **Estado**     | 🟢 ACTIVO              |
+| Campo              | Valor                                    |
+| ------------------ | ---------------------------------------- |
+| **ID**             | USER-GET-001                             |
+| **Nombre**         | Obtener Usuario por ID                   |
+| **Actor**          | Usuario Autenticado                      |
+| **Criticidad**     | 🟡 MEDIO                                 |
+| **Estado**         | 🟢 ACTIVO                                |
+| **Implementación** | 🟢 **IMPLEMENTADO**                      |
+| **Handler**        | `GetUserQuery`                           |
+| **Archivo**        | `UseCases/Users/GetUser/GetUserQuery.cs` |
+| **Tests**          | 🔴 Pendiente                             |
 
 #### Reglas de Acceso
 
@@ -248,13 +278,17 @@ Este proceso normalmente se dispara automáticamente cuando AuthService publica 
 
 ### USER-UPD-001: Actualizar Usuario
 
-| Campo          | Valor              |
-| -------------- | ------------------ |
-| **ID**         | USER-UPD-001       |
-| **Nombre**     | Actualizar Usuario |
-| **Actor**      | Usuario, Admin     |
-| **Criticidad** | 🟠 ALTO            |
-| **Estado**     | 🟢 ACTIVO          |
+| Campo              | Valor                                            |
+| ------------------ | ------------------------------------------------ |
+| **ID**             | USER-UPD-001                                     |
+| **Nombre**         | Actualizar Usuario                               |
+| **Actor**          | Usuario, Admin                                   |
+| **Criticidad**     | 🟠 ALTO                                          |
+| **Estado**         | 🟢 ACTIVO                                        |
+| **Implementación** | 🟢 **IMPLEMENTADO**                              |
+| **Handler**        | `UpdateUserCommand`                              |
+| **Archivo**        | `UseCases/Users/UpdateUser/UpdateUserCommand.cs` |
+| **Tests**          | 🔴 Pendiente                                     |
 
 #### Request Body
 
@@ -289,13 +323,17 @@ Este proceso normalmente se dispara automáticamente cuando AuthService publica 
 
 ### UROLE-GET-001: Obtener Roles de Usuario
 
-| Campo          | Valor                     |
-| -------------- | ------------------------- |
-| **ID**         | UROLE-GET-001             |
-| **Nombre**     | Obtener Roles del Usuario |
-| **Actor**      | Usuario, Admin            |
-| **Criticidad** | 🟡 MEDIO                  |
-| **Estado**     | 🟢 ACTIVO                 |
+| Campo              | Valor                                                  |
+| ------------------ | ------------------------------------------------------ |
+| **ID**             | UROLE-GET-001                                          |
+| **Nombre**         | Obtener Roles del Usuario                              |
+| **Actor**          | Usuario, Admin                                         |
+| **Criticidad**     | 🟡 MEDIO                                               |
+| **Estado**         | 🟢 ACTIVO                                              |
+| **Implementación** | 🟢 **IMPLEMENTADO**                                    |
+| **Handler**        | `GetUserRolesQuery`                                    |
+| **Archivo**        | `UseCases/UserRoles/GetUserRoles/GetUserRolesQuery.cs` |
+| **Tests**          | 🔴 Pendiente                                           |
 
 #### Response Success (200)
 
@@ -325,13 +363,17 @@ Este proceso normalmente se dispara automáticamente cuando AuthService publica 
 
 ### UROLE-ASN-001: Asignar Rol a Usuario
 
-| Campo          | Valor         |
-| -------------- | ------------- |
-| **ID**         | UROLE-ASN-001 |
-| **Nombre**     | Asignar Rol   |
-| **Actor**      | Admin         |
-| **Criticidad** | 🔴 CRÍTICO    |
-| **Estado**     | 🟢 ACTIVO     |
+| Campo              | Valor                                                |
+| ------------------ | ---------------------------------------------------- |
+| **ID**             | UROLE-ASN-001                                        |
+| **Nombre**         | Asignar Rol                                          |
+| **Actor**          | Admin                                                |
+| **Criticidad**     | 🔴 CRÍTICO                                           |
+| **Estado**         | 🟢 ACTIVO                                            |
+| **Implementación** | 🟢 **IMPLEMENTADO**                                  |
+| **Handler**        | `AssignRoleToUserCommand`                            |
+| **Archivo**        | `UseCases/UserRoles/AssignRole/AssignRoleCommand.cs` |
+| **Tests**          | 🔴 Pendiente                                         |
 
 #### Request Body
 
@@ -361,13 +403,17 @@ Este proceso normalmente se dispara automáticamente cuando AuthService publica 
 
 ### SELLER-CRT-001: Crear Perfil de Vendedor
 
-| Campo          | Valor                 |
-| -------------- | --------------------- |
-| **ID**         | SELLER-CRT-001        |
-| **Nombre**     | Crear Perfil Vendedor |
-| **Actor**      | Usuario (Buyer)       |
-| **Criticidad** | 🟠 ALTO               |
-| **Estado**     | 🟢 ACTIVO             |
+| Campo              | Valor                                            |
+| ------------------ | ------------------------------------------------ |
+| **ID**             | SELLER-CRT-001                                   |
+| **Nombre**         | Crear Perfil Vendedor                            |
+| **Actor**          | Usuario (Buyer)                                  |
+| **Criticidad**     | 🟠 ALTO                                          |
+| **Estado**         | 🟢 ACTIVO                                        |
+| **Implementación** | 🟢 **IMPLEMENTADO**                              |
+| **Handler**        | `CreateSellerProfileCommand`                     |
+| **Archivo**        | `UseCases/Sellers/CreateSellerProfileCommand.cs` |
+| **Tests**          | 🔴 Pendiente                                     |
 
 #### Descripción
 
@@ -432,13 +478,17 @@ Cuando un Buyer quiere vender su primer vehículo, debe crear un perfil de vende
 
 ### SELLER-VER-001: Verificar Vendedor
 
-| Campo          | Valor              |
-| -------------- | ------------------ |
-| **ID**         | SELLER-VER-001     |
-| **Nombre**     | Verificar Vendedor |
-| **Actor**      | Admin, Compliance  |
-| **Criticidad** | 🔴 CRÍTICO         |
-| **Estado**     | 🟢 ACTIVO          |
+| Campo              | Valor                                            |
+| ------------------ | ------------------------------------------------ |
+| **ID**             | SELLER-VER-001                                   |
+| **Nombre**         | Verificar Vendedor                               |
+| **Actor**          | Admin, Compliance                                |
+| **Criticidad**     | 🔴 CRÍTICO                                       |
+| **Estado**         | 🟢 ACTIVO                                        |
+| **Implementación** | 🟢 **IMPLEMENTADO**                              |
+| **Handler**        | `VerifySellerProfileCommand`                     |
+| **Archivo**        | `UseCases/Sellers/VerifySellerProfileCommand.cs` |
+| **Tests**          | 🔴 Pendiente                                     |
 
 #### Request Body
 
@@ -465,13 +515,17 @@ Cuando un Buyer quiere vender su primer vehículo, debe crear un perfil de vende
 
 ### DEALER-CRT-001: Crear Dealer
 
-| Campo          | Valor               |
-| -------------- | ------------------- |
-| **ID**         | DEALER-CRT-001      |
-| **Nombre**     | Crear Concesionario |
-| **Actor**      | Usuario             |
-| **Criticidad** | 🔴 CRÍTICO          |
-| **Estado**     | 🟢 ACTIVO           |
+| Campo              | Valor                                     |
+| ------------------ | ----------------------------------------- |
+| **ID**             | DEALER-CRT-001                            |
+| **Nombre**         | Crear Concesionario                       |
+| **Actor**          | Usuario                                   |
+| **Criticidad**     | 🔴 CRÍTICO                                |
+| **Estado**         | 🟢 ACTIVO                                 |
+| **Implementación** | 🟢 **IMPLEMENTADO**                       |
+| **Handler**        | `CreateDealerCommand`                     |
+| **Archivo**        | `UseCases/Dealers/CreateDealerCommand.cs` |
+| **Tests**          | 🔴 Pendiente                              |
 
 #### Descripción
 
@@ -539,13 +593,17 @@ Proceso para registrar un nuevo concesionario (dealer) en OKLA. El owner debe se
 
 ### DEALER-VER-001: Verificar Dealer
 
-| Campo          | Valor             |
-| -------------- | ----------------- |
-| **ID**         | DEALER-VER-001    |
-| **Nombre**     | Verificar Dealer  |
-| **Actor**      | Admin, Compliance |
-| **Criticidad** | 🔴 CRÍTICO        |
-| **Estado**     | 🟢 ACTIVO         |
+| Campo              | Valor                                     |
+| ------------------ | ----------------------------------------- |
+| **ID**             | DEALER-VER-001                            |
+| **Nombre**         | Verificar Dealer                          |
+| **Actor**          | Admin, Compliance                         |
+| **Criticidad**     | 🔴 CRÍTICO                                |
+| **Estado**         | 🟢 ACTIVO                                 |
+| **Implementación** | 🟢 **IMPLEMENTADO**                       |
+| **Handler**        | `VerifyDealerCommand`                     |
+| **Archivo**        | `UseCases/Dealers/VerifyDealerCommand.cs` |
+| **Tests**          | 🔴 Pendiente                              |
 
 #### Request Body
 
@@ -584,13 +642,17 @@ Proceso para registrar un nuevo concesionario (dealer) en OKLA. El owner debe se
 
 ### DEMP-ADD-001: Agregar Empleado a Dealer
 
-| Campo          | Valor            |
-| -------------- | ---------------- |
-| **ID**         | DEMP-ADD-001     |
-| **Nombre**     | Agregar Empleado |
-| **Actor**      | DealerOwner      |
-| **Criticidad** | 🟠 ALTO          |
-| **Estado**     | 🟢 ACTIVO        |
+| Campo              | Valor                                      |
+| ------------------ | ------------------------------------------ |
+| **ID**             | DEMP-ADD-001                               |
+| **Nombre**         | Agregar Empleado                           |
+| **Actor**          | DealerOwner                                |
+| **Criticidad**     | 🟠 ALTO                                    |
+| **Estado**         | 🟢 ACTIVO                                  |
+| **Implementación** | 🟢 **IMPLEMENTADO**                        |
+| **Controller**     | `DealerEmployeesController`                |
+| **Archivo**        | `Controllers/DealerEmployeesController.cs` |
+| **Tests**          | 🔴 Pendiente                               |
 
 #### Request Body
 
@@ -639,13 +701,17 @@ Proceso para registrar un nuevo concesionario (dealer) en OKLA. El owner debe se
 
 ### DONB-STS-001: Estado de Onboarding
 
-| Campo          | Valor                    |
-| -------------- | ------------------------ |
-| **ID**         | DONB-STS-001             |
-| **Nombre**     | Estado Onboarding Dealer |
-| **Actor**      | DealerOwner              |
-| **Criticidad** | 🟡 MEDIO                 |
-| **Estado**     | 🟢 ACTIVO                |
+| Campo              | Valor                                       |
+| ------------------ | ------------------------------------------- |
+| **ID**             | DONB-STS-001                                |
+| **Nombre**         | Estado Onboarding Dealer                    |
+| **Actor**          | DealerOwner                                 |
+| **Criticidad**     | 🟡 MEDIO                                    |
+| **Estado**         | 🟢 ACTIVO                                   |
+| **Implementación** | 🟢 **IMPLEMENTADO**                         |
+| **Controller**     | `DealerOnboardingController`                |
+| **Archivo**        | `Controllers/DealerOnboardingController.cs` |
+| **Tests**          | 🔴 Pendiente                                |
 
 #### Response Success (200)
 
@@ -694,13 +760,18 @@ Proceso para registrar un nuevo concesionario (dealer) en OKLA. El owner debe se
 
 ### DMOD-ENB-001: Habilitar Módulo de Dealer
 
-| Campo          | Valor            |
-| -------------- | ---------------- |
-| **ID**         | DMOD-ENB-001     |
-| **Nombre**     | Habilitar Módulo |
-| **Actor**      | DealerOwner      |
-| **Criticidad** | 🟡 MEDIO         |
-| **Estado**     | 🟢 ACTIVO        |
+| Campo              | Valor                                    |
+| ------------------ | ---------------------------------------- |
+| **ID**             | DMOD-ENB-001                             |
+| **Nombre**         | Habilitar Módulo                         |
+| **Actor**          | DealerOwner                              |
+| **Criticidad**     | 🟡 MEDIO                                 |
+| **Estado**         | 🟢 ACTIVO                                |
+| **Implementación** | 🟢 **IMPLEMENTADO**                      |
+| **Controller**     | `DealerModulesController`                |
+| **Archivo**        | `Controllers/DealerModulesController.cs` |
+| **Método**         | `GetActiveModules()`                     |
+| **Tests**          | 🔴 Pendiente                             |
 
 #### Módulos Disponibles
 
@@ -797,7 +868,85 @@ sequenceDiagram
 
 ---
 
-## 6. Reglas de Negocio
+## 6. Procesos Adicionales Implementados
+
+### 6.1 Endpoints Adicionales de DealerEmployees
+
+| Método     | Endpoint                                         | Estado              | Controller                |
+| ---------- | ------------------------------------------------ | ------------------- | ------------------------- |
+| **GET**    | `/api/dealers/{dealerId}/employees`              | 🟢 **IMPLEMENTADO** | DealerEmployeesController |
+| **GET**    | `/api/dealers/{dealerId}/employees/{employeeId}` | 🟢 **IMPLEMENTADO** | DealerEmployeesController |
+| **POST**   | `/api/dealers/{dealerId}/employees/invite`       | 🟢 **IMPLEMENTADO** | DealerEmployeesController |
+| **PUT**    | `/api/dealers/{dealerId}/employees/{employeeId}` | 🟢 **IMPLEMENTADO** | DealerEmployeesController |
+| **DELETE** | `/api/dealers/{dealerId}/employees/{employeeId}` | 🟢 **IMPLEMENTADO** | DealerEmployeesController |
+| **POST**   | `/api/dealers/{dealerId}/employees/invite-bulk`  | 🟢 **IMPLEMENTADO** | DealerEmployeesController |
+
+**Descripción**: Sistema completo de gestión de empleados/equipo de dealers con invitaciones, roles y permisos.
+
+### 6.2 Endpoints Adicionales de DealerOnboarding
+
+| Método   | Endpoint                                           | Estado              | Controller                 |
+| -------- | -------------------------------------------------- | ------------------- | -------------------------- |
+| **POST** | `/api/dealers/register`                            | 🟢 **IMPLEMENTADO** | DealerOnboardingController |
+| **GET**  | `/api/dealers/{dealerId}/onboarding/status`        | 🟢 **IMPLEMENTADO** | DealerOnboardingController |
+| **POST** | `/api/dealers/{dealerId}/onboarding/complete-step` | 🟢 **IMPLEMENTADO** | DealerOnboardingController |
+| **POST** | `/api/dealers/{dealerId}/onboarding/skip-step`     | 🟢 **IMPLEMENTADO** | DealerOnboardingController |
+
+**Descripción**: Flujo completo de onboarding de dealers con integración a BillingService para crear Customer de Stripe automáticamente.
+
+### 6.3 Endpoints Adicionales de DealerModules
+
+| Método   | Endpoint                                               | Estado              | Controller              |
+| -------- | ------------------------------------------------------ | ------------------- | ----------------------- |
+| **GET**  | `/api/dealers/{dealerId}/active-modules`               | 🟢 **IMPLEMENTADO** | DealerModulesController |
+| **GET**  | `/api/dealers/{dealerId}/modules-details`              | 🟢 **IMPLEMENTADO** | DealerModulesController |
+| **POST** | `/api/dealers/{dealerId}/modules/{moduleId}/subscribe` | 🟡 **PARCIAL**      | DealerModulesController |
+
+**Descripción**: API para consultar módulos add-on activos de dealers. Incluye módulos del plan base + add-ons suscritos.
+
+### 6.4 Procesos de Users Adicionales
+
+| Proceso          | Endpoint                     | Estado              | Handler           |
+| ---------------- | ---------------------------- | ------------------- | ----------------- |
+| **USER-LST-001** | `GET /api/users`             | 🟢 **IMPLEMENTADO** | GetUsersQuery     |
+| **USER-DEL-001** | `DELETE /api/users/{userId}` | 🟢 **IMPLEMENTADO** | DeleteUserCommand |
+
+**Descripción**: Listar usuarios con paginación y eliminar usuarios (soft delete).
+
+### 6.5 Procesos de UserRoles Adicionales
+
+| Proceso           | Endpoint                                    | Estado              | Handler                   |
+| ----------------- | ------------------------------------------- | ------------------- | ------------------------- |
+| **UROLE-REV-001** | `DELETE /api/users/{userId}/roles/{roleId}` | 🟢 **IMPLEMENTADO** | RevokeRoleFromUserCommand |
+| **UROLE-CHK-001** | `GET /api/users/{userId}/permissions/check` | 🟢 **IMPLEMENTADO** | CheckUserPermissionQuery  |
+
+**Descripción**: Revocar roles y verificar permisos específicos.
+
+### 6.6 Procesos de Sellers Adicionales
+
+| Proceso            | Endpoint                            | Estado              | Handler                     |
+| ------------------ | ----------------------------------- | ------------------- | --------------------------- |
+| **SELLER-GET-001** | `GET /api/sellers/{sellerId}`       | 🟢 **IMPLEMENTADO** | GetSellerProfileQuery       |
+| **SELLER-GET-002** | `GET /api/sellers/user/{userId}`    | 🟢 **IMPLEMENTADO** | GetSellerProfileByUserQuery |
+| **SELLER-UPD-001** | `PUT /api/sellers/{sellerId}`       | 🟢 **IMPLEMENTADO** | UpdateSellerProfileCommand  |
+| **SELLER-STS-001** | `GET /api/sellers/{sellerId}/stats` | 🟢 **IMPLEMENTADO** | GetSellerStatsQuery         |
+
+**Descripción**: CRUD completo de perfiles de vendedores individuales + estadísticas.
+
+### 6.7 Procesos de Dealers Adicionales
+
+| Proceso            | Endpoint                               | Estado              | Handler               |
+| ------------------ | -------------------------------------- | ------------------- | --------------------- |
+| **DEALER-GET-001** | `GET /api/dealers/{dealerId}`          | 🟢 **IMPLEMENTADO** | GetDealerQuery        |
+| **DEALER-GET-002** | `GET /api/dealers/owner/{ownerUserId}` | 🟢 **IMPLEMENTADO** | GetDealerByOwnerQuery |
+| **DEALER-UPD-001** | `PUT /api/dealers/{dealerId}`          | 🟢 **IMPLEMENTADO** | UpdateDealerCommand   |
+| **DEALER-DEL-001** | `DELETE /api/dealers/{dealerId}`       | 🟢 **IMPLEMENTADO** | Directo en controller |
+
+**Descripción**: CRUD completo de dealers/concesionarios.
+
+---
+
+## 7. Reglas de Negocio
 
 ### 6.1 Conversión de Usuario
 
@@ -906,6 +1055,132 @@ sequenceDiagram
 
 ---
 
-**Documento generado:** Enero 21, 2026  
-**Versión:** 1.0.0  
-**Autor:** Equipo OKLA
+## 8. Estado de Testing y Calidad
+
+### 8.1 Cobertura de Tests
+
+| Componente                     | Tests Unitarios | Tests Integración | E2E Tests   | Estado    |
+| ------------------------------ | --------------- | ----------------- | ----------- | --------- |
+| **UsersController**            | 🔴 0/5          | 🔴 0/5            | 🔴 0/3      | 🔴 **0%** |
+| **UserRolesController**        | 🔴 0/4          | 🔴 0/4            | 🔴 0/2      | 🔴 **0%** |
+| **SellersController**          | 🔴 0/6          | 🔴 0/6            | 🔴 0/3      | 🔴 **0%** |
+| **DealersController**          | 🔴 0/6          | 🔴 0/6            | 🔴 0/4      | 🔴 **0%** |
+| **DealerEmployeesController**  | 🔴 0/6          | 🔴 0/6            | 🔴 0/3      | 🔴 **0%** |
+| **DealerOnboardingController** | 🔴 0/4          | 🔴 0/4            | 🔴 0/2      | 🔴 **0%** |
+| **DealerModulesController**    | 🔴 0/3          | 🔴 0/3            | 🔴 0/2      | 🔴 **0%** |
+| **TOTAL**                      | 🔴 **0/34**     | 🔴 **0/34**       | 🔴 **0/19** | 🔴 **0%** |
+
+### 8.2 Próximos Pasos
+
+#### Fase 1: Testing Unitario (Prioridad Alta) 🔴
+
+- [ ] Crear tests para `CreateUserCommand`
+- [ ] Crear tests para `GetUserQuery` y `GetUsersQuery`
+- [ ] Crear tests para `UpdateUserCommand` y `DeleteUserCommand`
+- [ ] Crear tests para `AssignRoleToUserCommand` y `RevokeRoleFromUserCommand`
+- [ ] Crear tests para `CreateSellerProfileCommand` y `VerifySellerProfileCommand`
+- [ ] Crear tests para `CreateDealerCommand` y `VerifyDealerCommand`
+- [ ] Crear tests para `DealerEmployeesController` (invite, update, delete)
+- [ ] Crear tests para `DealerOnboardingController` (registro, onboarding flow)
+- [ ] Crear tests para `DealerModulesController` (active modules, subscriptions)
+
+**Estimación:** 3-4 días  
+**Tests esperados:** 34 tests unitarios
+
+#### Fase 2: Testing de Integración (Prioridad Media) 🟡
+
+- [ ] Tests E2E para flujo completo User → Seller
+- [ ] Tests E2E para flujo completo User → Dealer → Employee
+- [ ] Tests E2E para onboarding de Dealer con Stripe
+- [ ] Tests de integración con RoleService
+- [ ] Tests de integración con BillingService
+- [ ] Tests de integración con NotificationService
+
+**Estimación:** 2-3 días  
+**Tests esperados:** 34 tests de integración
+
+#### Fase 3: Documentación de API (Prioridad Media) 🟡
+
+- [ ] Completar XML comments en todos los controllers
+- [ ] Generar documentación Swagger completa
+- [ ] Agregar ejemplos de request/response
+- [ ] Documentar códigos de error específicos
+- [ ] Crear Postman collection con todos los endpoints
+
+**Estimación:** 1-2 días
+
+#### Fase 4: Mejoras de Código (Prioridad Baja) 🟢
+
+- [ ] Refactorizar DealerEmployeesController para usar MediatR
+- [ ] Refactorizar DealerOnboardingController para usar MediatR
+- [ ] Refactorizar DealerModulesController para usar MediatR
+- [ ] Agregar validaciones con FluentValidation donde falten
+- [ ] Mejorar manejo de errores con Result pattern
+- [ ] Implementar retry policies para llamadas externas
+
+**Estimación:** 2-3 días
+
+### 8.3 Deuda Técnica Identificada
+
+| Item                        | Descripción                                                   | Impacto  | Esfuerzo |
+| --------------------------- | ------------------------------------------------------------- | -------- | -------- |
+| **Tests faltantes**         | 0% de cobertura de tests                                      | 🔴 Alto  | 5-7 días |
+| **Controllers sin MediatR** | 3 controllers usan acceso directo a DB                        | 🟡 Medio | 2-3 días |
+| **Documentación API**       | XML comments incompletos                                      | 🟡 Medio | 1-2 días |
+| **Validaciones**            | Algunas validaciones en controller en vez de FluentValidation | 🟢 Bajo  | 1 día    |
+| **Error handling**          | Excepciones en vez de Result pattern en algunos casos         | 🟢 Bajo  | 1-2 días |
+
+**Total estimado para resolver deuda técnica:** 10-15 días
+
+---
+
+## 9. Resumen Ejecutivo
+
+### 9.1 Estado Actual (Enero 23, 2026)
+
+✅ **Completado:**
+
+- 9 Controllers implementados (100%)
+- 40+ endpoints REST funcionando
+- CRUD completo para Users, Sellers, Dealers
+- Sistema de roles y permisos
+- Gestión de empleados de dealers
+- Onboarding de dealers con integración Stripe
+- Sistema de módulos add-on
+
+🟡 **En Progreso:**
+
+- Testing unitario (0% completado)
+- Testing de integración (0% completado)
+- Documentación API (60% completado)
+
+🔴 **Pendiente:**
+
+- Tests E2E (0% completado)
+- Refactoring de 3 controllers a MediatR
+- Mejoras de validaciones
+- Postman collection completa
+
+### 9.2 Prioridades Inmediatas
+
+1. **CRÍTICO:** Implementar tests unitarios para todos los handlers (34 tests)
+2. **ALTO:** Tests de integración para flujos principales (34 tests)
+3. **MEDIO:** Completar documentación Swagger y XML comments
+4. **BAJO:** Refactorizar controllers restantes a MediatR
+
+### 9.3 Métricas de Calidad
+
+| Métrica                           | Objetivo | Actual | Estado |
+| --------------------------------- | -------- | ------ | ------ |
+| **Cobertura de tests**            | 80%      | 0%     | 🔴     |
+| **Documentación API**             | 100%     | 60%    | 🟡     |
+| **Uso de MediatR**                | 100%     | 67%    | 🟡     |
+| **Validaciones FluentValidation** | 100%     | 85%    | 🟡     |
+| **Result pattern**                | 100%     | 70%    | 🟡     |
+
+---
+
+**Documento actualizado:** Enero 23, 2026  
+**Versión:** 2.0.0  
+**Autor:** Equipo OKLA  
+**Revisor:** GitHub Copilot

@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                  | Total | Implementado | Pendiente | Estado         |
+| --------------------------- | ----- | ------------ | --------- | -------------- |
+| **Controllers**             | 2     | 0            | 2         | 🔴 Pendiente   |
+| **FS-ENG-\*** (Engineering) | 5     | 0            | 5         | 🔴 Pendiente   |
+| **FS-SERV-\*** (Serving)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **FS-DISC-\*** (Discovery)  | 3     | 0            | 3         | 🔴 Pendiente   |
+| **FS-MON-\*** (Monitoring)  | 4     | 0            | 4         | 🔴 Pendiente   |
+| **FS-VER-\*** (Versioning)  | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                   | 0     | 0            | 20        | 🔴 Pendiente   |
+| **TOTAL**                   | 21    | 0            | 21        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

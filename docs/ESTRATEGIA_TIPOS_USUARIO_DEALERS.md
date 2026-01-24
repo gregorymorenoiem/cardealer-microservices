@@ -9,21 +9,25 @@
 ## 👥 TIPOS DE CUENTAS
 
 ### 1. 🛒 Comprador (Buyer)
+
 **AccountType:** `Individual` (Guest para no registrados)  
 **Paga:** No (Gratis)  
 **Objetivo:** Encontrar y comprar vehículo
 
 ### 2. 🏠 Vendedor Individual (Individual Seller)
+
 **AccountType:** `Individual`  
-**Paga:** Comisión por venta o listing fee básico  
+**Paga:** Publicación única RD$1,500 por vehículo  
 **Objetivo:** Vender su vehículo personal (1-3 vehículos)
 
-### 3. 🏢 Dealer (Concesionario)
+### 🏢 Dealer (Concesionario)
+
 **AccountType:** `Dealer` ⭐ **CUENTA PRINCIPAL** ⭐  
-**Paga:** Suscripción mensual ($49-$299/mes)  
+**Paga:** Suscripción mensual (RD$2,900-14,900/mes)  
 **Objetivo:** Vender inventario completo (20-200+ vehículos)
 
 ### 4. 👨‍💼 Administrador (Admin)
+
 **AccountType:** `Admin`  
 **Paga:** No (Staff interno)  
 **Objetivo:** Moderar plataforma, aprobar dealers, soporte
@@ -37,7 +41,9 @@
 ## 1. 👤 COMPRADOR (BUYER)
 
 ### Features Básicos (Gratis)
+
 ✅ **Búsqueda y Exploración**
+
 - Búsqueda avanzada con filtros (marca, modelo, año, precio, etc.)
 - Ver todos los listings públicos
 - Comparar hasta 4 vehículos lado a lado
@@ -45,32 +51,39 @@
 - Alertas de nuevos listings que coincidan con búsqueda guardada
 
 ✅ **Comunicación**
+
 - Contactar vendedores via formulario
 - Chat/mensajería con vendedores
 - Solicitar más fotos o información
 
 ✅ **Agendamiento**
+
 - Agendar test drives
 - Recibir recordatorios automáticos
 
 ✅ **Financiamiento**
+
 - Calculadora de préstamos
 - Solicitar pre-aprobación de financiamiento
 - Comparar ofertas de bancos
 
 ✅ **Información del Vehículo**
+
 - Ver historial del vehículo (si dealer lo proporciona)
 - Ver todas las fotos y especificaciones
 - Ver reseñas del dealer/vendedor
 
 ✅ **Perfil**
+
 - Historial de búsquedas
 - Vehículos guardados
 - Conversaciones con vendedores
 - Solicitudes de financiamiento
 
 ### Features Premium (Futuro)
+
 💎 **Comprador VIP** ($9.99/mes)
+
 - Acceso anticipado a nuevos listings (24h antes)
 - Reportes de historial gratis (Carfax/AutoCheck) - 3 por mes
 - Priority support
@@ -81,7 +94,9 @@
 ## 2. 🏠 VENDEDOR INDIVIDUAL (INDIVIDUAL SELLER)
 
 ### Features Básicos (Free Tier con Limitaciones)
+
 ✅ **Publicación Básica**
+
 - Publicar **1 vehículo gratis**
 - Hasta 10 fotos por vehículo
 - Descripción básica (500 caracteres)
@@ -89,17 +104,21 @@
 - Sin destacado en homepage
 
 ✅ **Gestión**
+
 - Editar listing
 - Ver estadísticas básicas (vistas, contactos)
 - Responder mensajes de compradores
 - Marcar como vendido
 
 ✅ **Comunicación**
+
 - Recibir inquiries
 - Chat con compradores potenciales
 
 ### Features Premium (Vendedor Plus - $19.99/mes o $29 por listing)
+
 💰 **Paquete Individual Premium**
+
 - Publicar hasta **3 vehículos simultáneamente**
 - Hasta 30 fotos por vehículo con galería premium
 - Video de 30 segundos por vehículo
@@ -109,7 +128,9 @@
 - Estadísticas avanzadas (de dónde vienen visitantes)
 - Promoción en redes sociales (1 post en Facebook/Instagram)
 - Listing válido por 60 días
-- Sin comisión en la venta
+
+> **NOTA:** OKLA NO cobra comisión por la venta. El vendedor paga solo el listing fee.
+> La transacción del vehículo ocurre directamente entre comprador y vendedor, fuera de OKLA.
 
 ---
 
@@ -118,7 +139,9 @@
 > **ESTE ES EL CLIENTE PRINCIPAL - NECESITA HERRAMIENTAS QUE JUSTIFIQUEN SUSCRIPCIÓN**
 
 ### 🎯 PROBLEMA DEL DEALER
+
 Los dealers necesitan:
+
 1. **Vender más rápido** - Reducir días en inventario
 2. **Gestionar inventario** - 50-200 vehículos al mismo tiempo
 3. **Capturar leads** - No perder ningún cliente potencial
@@ -129,9 +152,11 @@ Los dealers necesitan:
 ---
 
 ### 📦 PLAN STARTER ($49/mes)
+
 **Para dealers pequeños (1-20 vehículos)**
 
 ✅ **Gestión de Inventario**
+
 - Publicar hasta **20 vehículos activos**
 - Hasta 20 fotos por vehículo
 - Importación masiva vía Excel/CSV
@@ -139,44 +164,52 @@ Los dealers necesitan:
 - Templates de descripción
 
 ✅ **Presencia de Marca**
+
 - Página de perfil del dealer personalizada (`okla.com.do/dealer/tu-dealer`)
 - Logo y banner personalizados
 - Información de contacto (teléfono, dirección, horarios)
 - Mapa con ubicación
 
 ✅ **Comunicación**
+
 - Inbox unificado (todos los mensajes en un lugar)
 - Respuestas rápidas (templates)
 - Auto-responder básico
 
 ✅ **Estadísticas Básicas**
+
 - Total de vistas por vehículo
 - Total de contactos recibidos
 - Vehículos más vistos
 
 ✅ **Soporte**
+
 - Email support (respuesta en 24h)
 
 ---
 
 ### 📦 PLAN PROFESSIONAL ($129/mes) ⭐ RECOMENDADO
+
 **Para dealers medianos (20-75 vehículos)**
 
 ✅ **Todo lo del Plan Starter, más:**
 
 🚀 **Inventario Expandido**
+
 - Publicar hasta **75 vehículos activos**
 - Hasta 40 fotos por vehículo
 - **Video de hasta 2 minutos** por vehículo
 - **Tour virtual 360°** (integración con proveedores)
 
 🎨 **Destacado y Promoción**
+
 - **3 vehículos destacados en homepage** (rotación diaria)
 - Badge "Dealer Verificado"
 - Aparece en sección "Dealers Destacados"
 - **2 posts mensuales en redes sociales de OKLA** (Facebook/Instagram)
 
 📊 **CRM y Gestión de Leads**
+
 - **CRM integrado** - Gestión completa de leads
   - Pipeline visual (New → Contacted → Test Drive → Negotiation → Sold)
   - Lead scoring automático
@@ -186,6 +219,7 @@ Los dealers necesitan:
 - Historial completo de interacciones por cliente
 
 📈 **Analytics Avanzados**
+
 - Dashboard completo con métricas clave:
   - Tasa de conversión (vistas → contactos → ventas)
   - Tiempo promedio de venta
@@ -196,22 +230,26 @@ Los dealers necesitan:
 - Comparación con competencia (anónimo)
 
 📅 **Gestión de Appointments**
+
 - Calendario de test drives integrado
 - Los compradores pueden agendar directamente
 - Recordatorios automáticos
 - Sincronización con Google Calendar
 
 💰 **Herramientas de Venta**
+
 - **Calculadora de financiamiento integrada** en cada listing
 - Captura de solicitudes de financiamiento
 - Gestión de trade-ins (vehículo usado como parte de pago)
 
 📞 **Comunicación Avanzada**
+
 - Chatbot básico con respuestas automáticas 24/7
 - WhatsApp Business integration (próximamente)
 - SMS notifications a compradores
 
 🎯 **Soporte Prioritario**
+
 - Chat support (respuesta en 2h)
 - Account manager asignado
 - Onboarding personalizado
@@ -219,16 +257,19 @@ Los dealers necesitan:
 ---
 
 ### 📦 PLAN ENTERPRISE ($299/mes) 👑
+
 **Para dealers grandes (75-200+ vehículos)**
 
 ✅ **Todo lo del Plan Professional, más:**
 
 🚀 **Inventario Ilimitado**
+
 - **Vehículos ilimitados**
 - Fotos ilimitadas
 - Videos ilimitados
 
 ⭐ **Máxima Visibilidad**
+
 - **10 vehículos destacados permanentemente** en homepage
 - Posición #1 en resultados de búsqueda (dentro de filtros)
 - Badge "Dealer Premium"
@@ -236,6 +277,7 @@ Los dealers necesitan:
 - **Blog post mensual** sobre tu dealer en OKLA.com.do
 
 🤖 **Automatización y Multi-Tienda**
+
 - **Múltiples sucursales** (gestionar varias ubicaciones)
 - **Múltiples usuarios** (hasta 10 vendedores con cuentas separadas)
 - Roles y permisos (Manager, Vendedor, Recepcionista)
@@ -243,6 +285,7 @@ Los dealers necesitan:
 - Sincronización automática de inventario
 
 📊 **Business Intelligence**
+
 - **Reportes personalizados** (cualquier métrica)
 - **Predicción de ventas** con IA
 - **Análisis de pricing** (¿está tu precio competitivo?)
@@ -251,18 +294,21 @@ Los dealers necesitan:
 - Integración con Power BI / Google Data Studio
 
 💼 **Herramientas de Dealer**
+
 - **Gestión de financiamiento** integrada con bancos
 - **Sistema de warranties** (garantías extendidas)
 - **Facturación automática** con NCF (DGII)
 - **Gestión de comisiones** de vendedores
 
 🎯 **Marketing Tools**
+
 - **Email marketing** a tu base de clientes
 - **Remarketing** (contactar clientes que vieron pero no compraron)
 - **Cupones y promociones** personalizados
 - **Landing pages** personalizadas para campañas
 
 🔗 **Integraciones**
+
 - API access completo
 - Webhook notifications
 - Integración con tu website (widget de inventario)
@@ -270,6 +316,7 @@ Los dealers necesitan:
 - Integración con AutoTrader (futuro)
 
 👨‍💼 **Soporte VIP**
+
 - **Soporte telefónico 24/7**
 - **Account manager dedicado**
 - **Onboarding presencial** (si está en Santo Domingo)
@@ -281,27 +328,33 @@ Los dealers necesitan:
 ## 4. 👨‍💼 ADMINISTRADOR (ADMIN)
 
 ### Features de Administración
+
 ✅ **Gestión de Usuarios**
+
 - Ver/editar/suspender cualquier cuenta
 - Verificar dealers (proceso de aprobación)
 - Gestionar suscripciones y pagos
 
 ✅ **Moderación de Contenido**
+
 - Aprobar/rechazar listings de dealers nuevos
 - Remover contenido inapropiado
 - Gestionar reportes de usuarios
 
 ✅ **Configuración de Plataforma**
+
 - Gestionar homepage sections
 - Configurar featured listings
 - Editar contenido estático (FAQ, términos, etc.)
 
 ✅ **Analytics y Reportes**
+
 - Dashboard global de la plataforma
 - Métricas de negocio (revenue, usuarios activos, conversión)
 - Reportes financieros
 
 ✅ **Soporte**
+
 - Sistema de tickets
 - Responder preguntas de usuarios/dealers
 - Gestionar disputas
@@ -311,14 +364,17 @@ Los dealers necesitan:
 ## 🆕 NUEVOS MICROSERVICIOS NECESARIOS
 
 ### 1. **DealerManagementService** ⭐ NUEVO
+
 **Puerto:** 5039  
-**Prioridad:** CRÍTICA  
+**Prioridad:** CRÍTICA
 
 **¿Por qué?**
+
 - Dealers necesitan gestión especializada que Individual Sellers no necesitan
 - Funcionalidades específicas de dealers (multi-usuario, sucursales, comisiones)
 
 **Funcionalidades:**
+
 - Gestión de perfil de dealer (logo, banner, horarios, ubicaciones)
 - Múltiples sucursales por dealer
 - Múltiples usuarios por dealer (vendedores, managers)
@@ -329,6 +385,7 @@ Los dealers necesitan:
 - Import/Export de inventario
 
 **Entidades:**
+
 ```csharp
 - DealerProfile (información del dealer)
 - DealerLocation (sucursales)
@@ -341,14 +398,17 @@ Los dealers necesitan:
 ---
 
 ### 2. **LeadManagementService** (Ampliar CRMService) ⭐ CRÍTICO
+
 **Puerto:** 5030 (CRMService existente)  
-**Prioridad:** CRÍTICA  
+**Prioridad:** CRÍTICA
 
 **¿Por qué?**
+
 - Es el CORE VALUE para dealers
 - Justifica suscripción al demostrar ROI (leads → ventas)
 
 **Features Adicionales Necesarios:**
+
 - Lead assignment automático a vendedores del dealer
 - Lead routing basado en disponibilidad/performance
 - Lead scoring con IA (hot/warm/cold)
@@ -360,6 +420,7 @@ Los dealers necesitan:
 - Leaderboard de vendedores
 
 **Entidades Nuevas:**
+
 ```csharp
 - LeadAssignment (asignación de lead a vendedor)
 - LeadScore (scoring automático)
@@ -371,14 +432,17 @@ Los dealers necesitan:
 ---
 
 ### 3. **InventoryManagementService** ⭐ NUEVO CRÍTICO
+
 **Puerto:** 5040  
-**Prioridad:** CRÍTICA  
+**Prioridad:** CRÍTICA
 
 **¿Por qué?**
+
 - Dealers manejan 50-200 vehículos - necesitan herramientas enterprise
 - Diferente a VehiclesSaleService (que es para listings públicos)
 
 **Funcionalidades:**
+
 ```
 ✅ Importación masiva (CSV, Excel, API)
 ✅ Edición en masa (cambiar precio de 20 vehículos a la vez)
@@ -394,6 +458,7 @@ Los dealers necesitan:
 ```
 
 **Entidades:**
+
 ```csharp
 - InventoryBatch (importaciones masivas)
 - BulkOperation (operaciones en masa)
@@ -406,14 +471,17 @@ Los dealers necesitan:
 ---
 
 ### 4. **DealerAnalyticsService** ⭐ NUEVO IMPORTANTE
+
 **Puerto:** 5041  
-**Prioridad:** ALTA  
+**Prioridad:** ALTA
 
 **¿Por qué?**
+
 - Dealers toman decisiones basadas en datos
 - Necesitan saber qué vende, cuánto tiempo, a qué precio
 
 **Funcionalidades:**
+
 ```
 ✅ Dashboard personalizado por dealer
 ✅ Métricas clave:
@@ -432,6 +500,7 @@ Los dealers necesitan:
 ```
 
 **Entidades:**
+
 ```csharp
 - DealerMetrics (métricas agregadas)
 - VehiclePerformance (performance por vehículo)
@@ -443,14 +512,17 @@ Los dealers necesitan:
 ---
 
 ### 5. **MultiUserService** (Ampliar UserService) 🆕
+
 **Puerto:** 5003 (UserService existente)  
-**Prioridad:** ALTA  
+**Prioridad:** ALTA
 
 **¿Por qué?**
+
 - Dealers necesitan múltiples usuarios (manager, vendedores, recepcionista)
 - Cada vendedor debe tener su login y ver solo sus leads
 
 **Features Adicionales:**
+
 ```csharp
 public enum DealerRole
 {
@@ -470,15 +542,18 @@ public enum DealerRole
 ---
 
 ### 6. **PricingIntelligenceService** 🆕 DIFERENCIADOR
+
 **Puerto:** 5042  
-**Prioridad:** MEDIA-ALTA  
+**Prioridad:** MEDIA-ALTA
 
 **¿Por qué?**
+
 - DIFERENCIADOR clave vs competencia
 - Dealers quieren saber si su precio es competitivo
 - Ayuda a vender más rápido
 
 **Funcionalidades:**
+
 ```
 ✅ Análisis de precios del mercado
 ✅ Scraping de competencia (AutoTrader, Facebook Marketplace)
@@ -490,6 +565,7 @@ public enum DealerRole
 ```
 
 **Entidades:**
+
 ```csharp
 - MarketPrice (precios del mercado)
 - PriceRecommendation (recomendaciones)
@@ -501,14 +577,17 @@ public enum DealerRole
 ---
 
 ### 7. **TradeInService** 🆕 IMPORTANTE
+
 **Puerto:** 5043  
-**Prioridad:** MEDIA  
+**Prioridad:** MEDIA
 
 **¿Por qué?**
+
 - 60% de compradores tienen vehículo para trade-in
 - Simplifica negociación
 
 **Funcionalidades:**
+
 ```
 ✅ Comprador envía info de su vehículo actual
 ✅ Dealer recibe solicitud de trade-in
@@ -520,14 +599,17 @@ public enum DealerRole
 ---
 
 ### 8. **WarrantyService** 🆕 ADICIONAL REVENUE
+
 **Puerto:** 5044  
-**Prioridad:** MEDIA  
+**Prioridad:** MEDIA
 
 **¿Por qué?**
+
 - Dealers pueden ofrecer garantías extendidas (revenue adicional)
 - Compradores tienen más confianza
 
 **Funcionalidades:**
+
 ```
 ✅ Dealers pueden ofrecer warranties (1 año, 2 años, powertrain)
 ✅ Integración con proveedores de warranty (si aplica)
@@ -540,7 +622,9 @@ public enum DealerRole
 ## 🎯 MICROSERVICIOS A AMPLIAR
 
 ### VehiclesSaleService (Ya existe en producción)
+
 **Agregar:**
+
 - [ ] Indicador de "Dealer Verificado" vs "Vendedor Individual"
 - [ ] Destacado (featured) con múltiples niveles
 - [ ] Programación de publicación
@@ -549,7 +633,9 @@ public enum DealerRole
 - [ ] Tour virtual 360° support
 
 ### ContactService (Prioridad 2 en roadmap)
+
 **Agregar:**
+
 - [ ] Auto-responder para dealers
 - [ ] Templates de respuestas rápidas
 - [ ] Routing de mensajes a vendedor específico
@@ -557,20 +643,26 @@ public enum DealerRole
 - [ ] Chatbot básico
 
 ### AppointmentService (Prioridad 3 en roadmap)
+
 **Agregar:**
+
 - [ ] Calendario por dealer (no solo por vehículo)
 - [ ] Asignación de appointments a vendedores específicos
 - [ ] Recordatorios SMS (además de email)
 - [ ] Check-in digital con QR code
 
 ### FinanceService (Prioridad 4 en roadmap)
+
 **Agregar:**
+
 - [ ] Dealers pueden ver solicitudes de financiamiento de sus leads
 - [ ] Integración con financieras partners
 - [ ] Comisión por financiamiento aprobado
 
 ### BillingService (Ya existe en producción)
+
 **Agregar:**
+
 - [ ] Gestión de suscripciones de dealers (Starter, Pro, Enterprise)
 - [ ] Billing automático mensual
 - [ ] Invoicing con NCF
@@ -578,7 +670,9 @@ public enum DealerRole
 - [ ] Trial period (14 días gratis)
 
 ### MarketingService (Prioridad 9 en roadmap)
+
 **Agregar:**
+
 - [ ] Dealers pueden crear promociones ("20% off este fin de semana")
 - [ ] Cupones personalizados
 - [ ] Email marketing a su base de clientes
@@ -589,6 +683,7 @@ public enum DealerRole
 ## 🚀 ROADMAP ACTUALIZADO CON FOCO EN DEALERS
 
 ### 🏃 FASE 1 (Semanas 1-6) - FUNCIONALIDAD BÁSICA
+
 **Objetivo:** Marketplace funcional para compradores y vendedores individuales
 
 1. SearchService
@@ -600,6 +695,7 @@ public enum DealerRole
 ---
 
 ### 🏃 FASE 2 (Semanas 7-14) - DEALERS STARTER 🏢
+
 **Objetivo:** Atraer primeros dealers al plan Starter
 
 4. **DealerManagementService** ⭐ NUEVO
@@ -609,6 +705,7 @@ public enum DealerRole
 8. Mejorar BillingService (subscriptions)
 
 **Features para Dealers:**
+
 - Publicar hasta 20 vehículos
 - Página de perfil personalizada
 - Importación de inventario CSV
@@ -620,6 +717,7 @@ public enum DealerRole
 ---
 
 ### 🏃 FASE 3 (Semanas 15-22) - DEALERS PROFESSIONAL 🚀
+
 **Objetivo:** Plan Professional con herramientas avanzadas
 
 9. **LeadManagementService** (ampliar CRMService) ⭐
@@ -629,6 +727,7 @@ public enum DealerRole
 13. MarketingService
 
 **Features Adicionales:**
+
 - Hasta 75 vehículos
 - CRM avanzado con pipeline visual
 - Dashboard analytics completo
@@ -642,6 +741,7 @@ public enum DealerRole
 ---
 
 ### 🏃 FASE 4 (Semanas 23-30) - DEALERS ENTERPRISE 👑
+
 **Objetivo:** Plan Enterprise para dealers grandes
 
 14. **PricingIntelligenceService** 🆕
@@ -651,6 +751,7 @@ public enum DealerRole
 18. ReportsService (reportes personalizados)
 
 **Features Adicionales:**
+
 - Vehículos ilimitados
 - Múltiples sucursales
 - API access
@@ -670,16 +771,17 @@ public enum DealerRole
 
 **Objetivo:** 50 dealers pagando al final del año 1
 
-| Plan | Dealers | Precio/mes | Revenue Mensual |
-|------|---------|------------|-----------------|
-| Starter (20 veh) | 20 | $49 | $980 |
-| Professional (75 veh) | 25 | $129 | $3,225 |
-| Enterprise (ilimitado) | 5 | $299 | $1,495 |
-| **TOTAL** | **50** | - | **$5,700/mes** |
+| Plan                   | Dealers | Precio/mes | Revenue Mensual |
+| ---------------------- | ------- | ---------- | --------------- |
+| Starter (20 veh)       | 20      | $49        | $980            |
+| Professional (75 veh)  | 25      | $129       | $3,225          |
+| Enterprise (ilimitado) | 5       | $299       | $1,495          |
+| **TOTAL**              | **50**  | -          | **$5,700/mes**  |
 
 **Revenue Anual:** $68,400
 
 **Más:**
+
 - Vendedores Individuales: ~100 × $29 listing = $2,900/mes
 - Compradores VIP (futuro): ~50 × $9.99 = $500/mes
 - Comisiones de financiamiento: ~$500/mes
@@ -692,12 +794,12 @@ public enum DealerRole
 
 **Objetivo:** 150 dealers
 
-| Plan | Dealers | Precio/mes | Revenue Mensual |
-|------|---------|------------|-----------------|
-| Starter | 50 | $49 | $2,450 |
-| Professional | 80 | $129 | $10,320 |
-| Enterprise | 20 | $299 | $5,980 |
-| **TOTAL** | **150** | - | **$18,750/mes** |
+| Plan         | Dealers | Precio/mes | Revenue Mensual |
+| ------------ | ------- | ---------- | --------------- |
+| Starter      | 50      | $49        | $2,450          |
+| Professional | 80      | $129       | $10,320         |
+| Enterprise   | 20      | $299       | $5,980          |
+| **TOTAL**    | **150** | -          | **$18,750/mes** |
 
 **Revenue Anual Año 3:** **$225,000**
 
@@ -706,20 +808,25 @@ public enum DealerRole
 ## 🎯 FEATURES QUE JUSTIFICAN LA SUSCRIPCIÓN
 
 ### Plan Starter ($49/mes) - ROI Claro
+
 **Valor recibido:**
+
 - Publicar 20 vehículos sin límite de tiempo
 - Página web del dealer (valor $200)
 - CRM básico para leads (valor $100/mes)
 - Estadísticas de performance
 
 **Alternativa sin suscripción:**
+
 - $29 por listing individual × 20 = $580/mes
 - **Ahorro: $531/mes = 1,086% ROI** ✅
 
 ---
 
 ### Plan Professional ($129/mes) - Game Changer
+
 **Valor recibido:**
+
 - Todo lo de Starter
 - CRM avanzado (competencia cobra $200-$400/mes por CRM standalone)
 - Analytics dashboard (valor $150/mes)
@@ -729,13 +836,15 @@ public enum DealerRole
 
 **Total valor:** ~$800/mes por solo $129/mes = **520% ROI** ✅
 
-**Justificación:** 
+**Justificación:**
 Si vendes UN vehículo adicional por mes gracias a estas herramientas, recuperaste la inversión 10x.
 
 ---
 
 ### Plan Enterprise ($299/mes) - Para Dealers Serios
+
 **Valor recibido:**
+
 - Todo lo de Professional
 - Pricing Intelligence (competencia: $500/mes)
 - API access (para dealers técnicos)
@@ -755,7 +864,7 @@ Dealers grandes tienen 100+ vehículos. Si el pricing intelligence te ayuda a ve
 
 ### KPIs que deben mejorar con la suscripción:
 
-1. **Días en Inventario** 
+1. **Días en Inventario**
    - Objetivo: Reducir de 45 días → 30 días
    - Con pricing intelligence + promoción
 
@@ -841,6 +950,7 @@ Dealers grandes tienen 100+ vehículos. Si el pricing intelligence te ayuda a ve
 ## ✅ RESUMEN EJECUTIVO
 
 ### Microservicios NUEVOS Necesarios (Dealers):
+
 1. ✅ **DealerManagementService** (5039) - CRÍTICO
 2. ✅ **InventoryManagementService** (5040) - CRÍTICO
 3. ✅ **DealerAnalyticsService** (5041) - IMPORTANTE
@@ -849,23 +959,25 @@ Dealers grandes tienen 100+ vehículos. Si el pricing intelligence te ayuda a ve
 6. ✅ **WarrantyService** (5044) - NICE TO HAVE
 
 ### Microservicios NUEVOS de Data & ML: ⭐ NUEVO
+
 > Ver documento completo: [DATA_ML_MICROSERVICES_STRATEGY.md](DATA_ML_MICROSERVICES_STRATEGY.md)
 
-| # | Servicio | Puerto | Prioridad | Beneficio Principal |
-|---|----------|--------|-----------|--------------------|
-| 1 | **EventTrackingService** | 5050 | ⭐⭐⭐⭐⭐ CRÍTICO | Captura TODOS los eventos |
-| 2 | **DataPipelineService** | 5051 | ⭐⭐⭐⭐⭐ CRÍTICO | ETL y transformaciones |
-| 3 | **UserBehaviorService** | 5052 | ⭐⭐⭐⭐⭐ CRÍTICO | Perfiles de comportamiento |
-| 4 | **FeatureStoreService** | 5053 | ⭐⭐⭐⭐⭐ CRÍTICO | Features para ML |
-| 5 | **RecommendationService** | 5054 | ⭐⭐⭐⭐⭐ CRÍTICO | "Vehículos para ti" |
-| 6 | **LeadScoringService** | 5055 | ⭐⭐⭐⭐⭐ MEGA VALIOSO | Hot/Warm/Cold leads |
-| 7 | **VehicleIntelligenceService** | 5056 | ⭐⭐⭐⭐ DIFERENCIADOR | Pricing óptimo, predicciones |
-| 8 | **MLTrainingService** | 5057 | ⭐⭐⭐ IMPORTANTE | Pipeline de modelos |
-| 9 | **ListingAnalyticsService** | 5058 | ⭐⭐⭐⭐⭐ ESENCIAL | Estadísticas de publicaciones |
-| 10 | **ReviewService** | 5059 | ⭐⭐⭐⭐⭐ ESENCIAL | Reviews estilo Amazon |
-| 11 | **ChatbotService** | 5060 | ⭐⭐⭐⭐⭐ **GAME CHANGER** | **Chatbot IA + Leads + WhatsApp** |
+| #   | Servicio                       | Puerto | Prioridad                   | Beneficio Principal               |
+| --- | ------------------------------ | ------ | --------------------------- | --------------------------------- |
+| 1   | **EventTrackingService**       | 5050   | ⭐⭐⭐⭐⭐ CRÍTICO          | Captura TODOS los eventos         |
+| 2   | **DataPipelineService**        | 5051   | ⭐⭐⭐⭐⭐ CRÍTICO          | ETL y transformaciones            |
+| 3   | **UserBehaviorService**        | 5052   | ⭐⭐⭐⭐⭐ CRÍTICO          | Perfiles de comportamiento        |
+| 4   | **FeatureStoreService**        | 5053   | ⭐⭐⭐⭐⭐ CRÍTICO          | Features para ML                  |
+| 5   | **RecommendationService**      | 5054   | ⭐⭐⭐⭐⭐ CRÍTICO          | "Vehículos para ti"               |
+| 6   | **LeadScoringService**         | 5055   | ⭐⭐⭐⭐⭐ MEGA VALIOSO     | Hot/Warm/Cold leads               |
+| 7   | **VehicleIntelligenceService** | 5056   | ⭐⭐⭐⭐ DIFERENCIADOR      | Pricing óptimo, predicciones      |
+| 8   | **MLTrainingService**          | 5057   | ⭐⭐⭐ IMPORTANTE           | Pipeline de modelos               |
+| 9   | **ListingAnalyticsService**    | 5058   | ⭐⭐⭐⭐⭐ ESENCIAL         | Estadísticas de publicaciones     |
+| 10  | **ReviewService**              | 5059   | ⭐⭐⭐⭐⭐ ESENCIAL         | Reviews estilo Amazon             |
+| 11  | **ChatbotService**             | 5060   | ⭐⭐⭐⭐⭐ **GAME CHANGER** | **Chatbot IA + Leads + WhatsApp** |
 
 ### Microservicios a AMPLIAR:
+
 1. ✅ **CRMService** → LeadManagementService (CRÍTICO)
 2. ✅ **UserService** → MultiUserService (IMPORTANTE)
 3. ✅ **VehiclesSaleService** → Agregar features de dealer
@@ -874,8 +986,11 @@ Dealers grandes tienen 100+ vehículos. Si el pricing intelligence te ayuda a ve
 6. ✅ **MarketingService** → Promociones de dealers
 
 ### Total Nuevos Servicios Dealers: **6**
+
 ### Total Nuevos Servicios Data & ML: **11**
+
 ### Total Servicios a Ampliar: **6**
+
 ### **TOTAL NUEVOS: 17 microservicios**
 
 > 📄 Ver estrategia completa del Chatbot: [docs/CHATBOT_SERVICE_STRATEGY.md](CHATBOT_SERVICE_STRATEGY.md)
@@ -883,6 +998,7 @@ Dealers grandes tienen 100+ vehículos. Si el pricing intelligence te ayuda a ve
 ---
 
 **Próximos Pasos:**
+
 1. ✅ Validar roadmap con stakeholders
 2. ✅ Diseñar UX/UI para dashboard de dealers
 3. ✅ Comenzar con DealerManagementService
@@ -894,6 +1010,7 @@ Dealers grandes tienen 100+ vehículos. Si el pricing intelligence te ayuda a ve
 9. 🤖 **NUEVO:** Implementar ChatbotService (calificación leads)
 
 **Documentos Relacionados:**
+
 - [DATA_ML_MICROSERVICES_STRATEGY.md](DATA_ML_MICROSERVICES_STRATEGY.md) - Estrategia de Data & ML
 - [SERVICIOS_PRIORIZACION.md](SERVICIOS_PRIORIZACION.md) - Priorización de servicios
 

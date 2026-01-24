@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado |
+| ------------- | ----- | ------------ | --------- | ------ |
+| Controllers   | 2     | 0            | 2         | 🔴     |
+| INS-QUOTE-\*  | 4     | 0            | 4         | 🔴     |
+| INS-BUY-\*    | 4     | 0            | 4         | 🔴     |
+| INS-MANAGE-\* | 4     | 0            | 4         | 🔴     |
+| INS-RENEW-\*  | 3     | 0            | 3         | 🔴     |
+| Tests         | 0     | 0            | 12        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                                           |
 | ----------------- | --------------------------------------------------------------- |

@@ -7,6 +7,20 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                     | Total | Implementado | Pendiente | Estado         |
+| ------------------------------ | ----- | ------------ | --------- | -------------- |
+| **TEAMS-HOOK-\*** (Webhooks)   | 3     | 0            | 3         | 🔴 Pendiente   |
+| **TEAMS-MSG-\*** (Mensajes)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **TEAMS-CARD-\*** (Cards)      | 4     | 0            | 4         | 🔴 Pendiente   |
+| **TEAMS-ALERT-\*** (Alertas)   | 4     | 0            | 4         | 🔴 Pendiente   |
+| **TEAMS-REPORT-\*** (Reportes) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **Tests**                      | 0     | 0            | 15        | 🔴 Pendiente   |
+| **TOTAL**                      | 18    | 0            | 18        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

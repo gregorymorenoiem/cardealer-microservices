@@ -160,9 +160,17 @@ export const dealerApi = {
    * Unsubscribe from module
    */
   unsubscribeFromModule: async (dealerId: string, moduleCode: string) => {
-    const response = await apiClient.post(
+    const response = await apiClient.delete(
       `/api/dealers/${dealerId}/modules/${moduleCode}/unsubscribe`
     );
+    return response.data;
+  },
+
+  /**
+   * Get detailed module information
+   */
+  getModulesDetails: async (dealerId: string) => {
+    const response = await apiClient.get(`/api/dealers/${dealerId}/modules-details`);
     return response.data;
   },
 

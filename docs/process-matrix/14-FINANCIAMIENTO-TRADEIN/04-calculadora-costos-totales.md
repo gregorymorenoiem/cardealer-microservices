@@ -7,7 +7,22 @@
 
 ---
 
-## 📋 Información General
+## � Resumen de Implementación
+
+| Componente   | Total | Implementado | Pendiente | Estado |
+| ------------ | ----- | ------------ | --------- | ------ |
+| Controllers  | 1     | 0            | 1         | 🔴     |
+| COST-CALC-\* | 5     | 0            | 5         | 🔴     |
+| COST-TAX-\*  | 4     | 0            | 4         | 🔴     |
+| COST-FEE-\*  | 3     | 0            | 3         | 🔴     |
+| COST-INS-\*  | 3     | 0            | 3         | 🔴     |
+| Tests        | 0     | 0            | 10        | 🔴     |
+
+**Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
+
+---
+
+## �📋 Información General
 
 | Campo             | Valor                                      |
 | ----------------- | ------------------------------------------ |

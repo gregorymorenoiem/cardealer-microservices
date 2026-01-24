@@ -6,6 +6,20 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                       | Total | Implementado | Pendiente | Estado         |
+| -------------------------------- | ----- | ------------ | --------- | -------------- |
+| **DGII-RNC-\*** (Validación RNC) | 3     | 0            | 3         | 🔴 Pendiente   |
+| **DGII-NCF-\*** (Comprobantes)   | 4     | 0            | 4         | 🔴 Pendiente   |
+| **DGII-606-\*** (Compras)        | 3     | 0            | 3         | 🔴 Pendiente   |
+| **DGII-607-\*** (Ventas)         | 3     | 0            | 3         | 🔴 Pendiente   |
+| **DGII-EFACT-\*** (E-Factura)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **Tests**                        | 0     | 0            | 15        | 🔴 Pendiente   |
+| **TOTAL**                        | 17    | 0            | 17        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

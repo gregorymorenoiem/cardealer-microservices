@@ -7,6 +7,21 @@
 
 ---
 
+## 📊 Resumen de Implementación
+
+| Componente                     | Total | Implementado | Pendiente | Estado         |
+| ------------------------------ | ----- | ------------ | --------- | -------------- |
+| **Controllers**                | 1     | 0            | 1         | 🔴 Pendiente   |
+| **INV-NCF-\*** (Comprobantes)  | 4     | 0            | 4         | 🔴 Pendiente   |
+| **INV-GEN-\*** (Generación)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **INV-SEND-\*** (Envío)        | 3     | 0            | 3         | 🔴 Pendiente   |
+| **INV-VOID-\*** (Anulación)    | 3     | 0            | 3         | 🔴 Pendiente   |
+| **INV-REP-\*** (Reportes DGII) | 4     | 0            | 4         | 🔴 Pendiente   |
+| **Tests**                      | 0     | 0            | 18        | 🔴 Pendiente   |
+| **TOTAL**                      | 19    | 0            | 19        | 🔴 0% Completo |
+
+---
+
 ## 1. Información General
 
 ### 1.1 Descripción

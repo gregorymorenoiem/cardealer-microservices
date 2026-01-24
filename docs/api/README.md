@@ -370,15 +370,18 @@ Servicio de email transaccional (backup).
 
 ## 🗓️ Roadmap 2026
 
-### Q1 2026 (Enero-Marzo) - CONSOLIDACIÓN ✅ 60%
+### Q1 2026 (Enero-Marzo) - CONSOLIDACIÓN ✅ 75%
 
 **Objetivo:** Estabilizar APIs en producción
 
-- ✅ AZUL pagos básicos
-- ✅ Stripe subscriptions activas
+- ✅ AZUL pagos básicos (DEFAULT para tarjetas dominicanas)
+- ✅ Stripe subscriptions activas (backup internacional)
 - ✅ S3 con CDN
-- 🚧 Stripe Connect para marketplace
+- ✅ ~~Stripe Connect~~ DESCARTADO (no aplica al modelo)
 - 🚧 AZUL 3D Secure
+
+> **NOTA:** Stripe Connect fue descartado. OKLA es plataforma de publicidad,
+> no marketplace transaccional. Los dealers PAGAN a OKLA por suscripciones.
 
 **Hitos:**
 
@@ -392,11 +395,11 @@ Servicio de email transaccional (backup).
 
 **Objetivo:** Features avanzadas para escalar
 
-- Stripe Connect producción
-- AZUL webhooks + recurring payments
-- S3 video upload + transcoding
-- RabbitMQ quorum queues
-- PostgreSQL read replicas
+- ✅ ~~Stripe Connect producción~~ DESCARTADO
+- 🚧 AZUL webhooks + recurring payments
+- 🚧 S3 video upload + transcoding
+- 📝 RabbitMQ quorum queues
+- 📝 PostgreSQL read replicas
 
 **Hitos:**
 
@@ -447,14 +450,12 @@ Servicio de email transaccional (backup).
 ### Para Desarrolladores
 
 1. **Empezar con una API:**
-
    - Leer documentación técnica en `{api}/API_DOCUMENTATION.md`
    - Revisar ejemplos de código C#/.NET
    - Consultar casos de uso en OKLA
    - Implementar siguiendo best practices
 
 2. **Entender el roadmap:**
-
    - Leer roadmap específico en `{api}/ROADMAP.md`
    - Ver qué features están disponibles ahora
    - Planificar features futuras
@@ -467,7 +468,6 @@ Servicio de email transaccional (backup).
 ### Para Product Managers
 
 1. **Planificación de features:**
-
    - Consultar [ROADMAP_CONSOLIDADO_APIS_EXTERNAS.md](ROADMAP_CONSOLIDADO_APIS_EXTERNAS.md)
    - Ver dependencias entre APIs
    - Estimar costos y tiempos
@@ -480,7 +480,6 @@ Servicio de email transaccional (backup).
 ### Para DevOps
 
 1. **Deployment:**
-
    - Verificar configuración en `appsettings.json`
    - Configurar secrets en Kubernetes
    - Monitorear health checks
@@ -588,11 +587,15 @@ Servicio de email transaccional (backup).
 
 ### ¿Por qué usar AZUL y Stripe?
 
-**AZUL** tiene mejor conversión con tarjetas dominicanas (comisión más baja, depósito más rápido). **Stripe** es necesario para tarjetas internacionales y subscripciones nativas.
+**AZUL** tiene mejor conversión con tarjetas dominicanas (comisión más baja, depósito más rápido). **Stripe** es backup para tarjetas internacionales.
 
-### ¿Cuándo migrar a Stripe Connect?
+### ¿OKLA cobra comisión por venta de vehículos?
 
-Sprint 18 (Febrero 2026). Necesario para que dealers reciban pagos directamente y OKLA cobre comisión automáticamente.
+**NO.** OKLA es una plataforma de **publicidad**, no un marketplace transaccional. Los dealers pagan una suscripción mensual (RD$2,900-14,900) por publicar vehículos. La venta del vehículo ocurre **fuera de OKLA** (directamente entre dealer y comprador). OKLA no participa ni cobra comisión en esas transacciones.
+
+### ¿Se usará Stripe Connect?
+
+**NO.** Stripe Connect es para marketplaces donde la plataforma cobra comisión por transacciones. Como OKLA no procesa pagos de vehículos, Stripe Connect no aplica. Los dealers son **clientes** de OKLA (pagan suscripción), no comerciantes que reciben pagos a través de la plataforma.
 
 ### ¿Por qué DigitalOcean Spaces y no AWS S3?
 
