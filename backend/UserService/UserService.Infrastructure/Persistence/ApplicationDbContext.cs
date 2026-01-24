@@ -16,6 +16,8 @@ namespace UserService.Infrastructure.Persistence
         public DbSet<Dealer> Dealers => Set<Dealer>();
         public DbSet<SellerProfile> SellerProfiles => Set<SellerProfile>();
         public DbSet<IdentityDocument> IdentityDocuments => Set<IdentityDocument>();
+        public DbSet<ContactPreferences> ContactPreferences => Set<ContactPreferences>();
+        public DbSet<SellerBadgeAssignment> SellerBadgeAssignments => Set<SellerBadgeAssignment>();
 
         // Entidades de empleados
         public DbSet<DealerEmployee> DealerEmployees => Set<DealerEmployee>();
@@ -30,9 +32,13 @@ namespace UserService.Infrastructure.Persistence
         // Módulos y suscripciones de módulos (multi-tenant)
         public DbSet<ModuleAddon> ModuleAddons => Set<ModuleAddon>();
         public DbSet<DealerModuleSubscription> DealerModuleSubscriptions => Set<DealerModuleSubscription>();
+        public DbSet<Module> Modules => Set<Module>();
+        public DbSet<DealerModule> DealerModules => Set<DealerModule>();
 
         // Onboarding
         public DbSet<UserOnboarding> UserOnboardings => Set<UserOnboarding>();
+        public DbSet<DealerOnboardingProcess> DealerOnboardingProcesses => Set<DealerOnboardingProcess>();
+        public DbSet<DealerOnboarding> DealerOnboardings => Set<DealerOnboarding>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

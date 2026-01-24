@@ -38,6 +38,12 @@ import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
 import DealerAnalyticsDashboard from './pages/DealerAnalyticsDashboard';
 // Advanced Analytics Dashboard (Sprint 12)
 import AdvancedDealerDashboard from './pages/AdvancedDealerDashboard';
+// Advanced Analytics Pages (Sprint 12 - Dealer Analytics Service)
+import AdvancedAnalyticsDashboard from './pages/dealer/AdvancedAnalyticsDashboard';
+import InventoryAnalyticsPage from './pages/dealer/InventoryAnalyticsPage';
+import LeadFunnelPage from './pages/dealer/LeadFunnelPage';
+import AlertsManagementPage from './pages/dealer/AlertsManagementPage';
+import ReportsPage from './pages/dealer/ReportsPage';
 // User Behavior & Features (Sprint 10)
 import UserBehaviorDashboard from './pages/UserBehaviorDashboard';
 import FeatureStoreDashboard from './pages/FeatureStoreDashboard';
@@ -95,9 +101,18 @@ import DealerAlertsPage from './pages/dealer/DealerAlertsPage';
 import CRMPage from './pages/dealer/CRMPage';
 import AnalyticsPage from './pages/dealer/AnalyticsPage';
 import DealerOnboardingPage from './pages/dealer/DealerOnboardingPage';
+// New Dealer Onboarding V2 Pages (Azul Integration)
+import DealerOnboardingPageV2 from './pages/dealer/DealerOnboardingPageV2';
+import DealerEmailVerificationPage from './pages/dealer/DealerEmailVerificationPage';
+import DealerDocumentsPage from './pages/dealer/DealerDocumentsPage';
+import DealerPaymentSetupPage from './pages/dealer/DealerPaymentSetupPage';
+import DealerOnboardingStatusPage from './pages/dealer/DealerOnboardingStatusPage';
 import DealerInquiriesPage from './pages/dealer/DealerInquiriesPage';
 import CreateSellerPage from './pages/dealer/CreateSellerPage';
+import SellerProfilePage from './pages/dealer/SellerProfilePage';
 import SellerDashboardPage from './pages/seller/SellerDashboardPage';
+import SellerPublicProfilePage from './pages/seller/SellerPublicProfilePage';
+import SellerProfileSettingsPage from './pages/seller/SellerProfileSettingsPage';
 import DealerPortalLayout from './layouts/DealerPortalLayout';
 // Common pages (legal, info, help)
 import {
@@ -342,6 +357,56 @@ function App() {
             }
           />
 
+          {/* Advanced Analytics - Full Dashboard (DealerAnalyticsService) */}
+          <Route
+            path="/dealer/analytics/dashboard"
+            element={
+              <ProtectedRoute requireDealer>
+                <AdvancedAnalyticsDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Advanced Analytics - Inventory Analysis */}
+          <Route
+            path="/dealer/analytics/inventory"
+            element={
+              <ProtectedRoute requireDealer>
+                <InventoryAnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Advanced Analytics - Lead Funnel */}
+          <Route
+            path="/dealer/analytics/funnel"
+            element={
+              <ProtectedRoute requireDealer>
+                <LeadFunnelPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Advanced Analytics - Alerts Management */}
+          <Route
+            path="/dealer/analytics/alerts"
+            element={
+              <ProtectedRoute requireDealer>
+                <AlertsManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Advanced Analytics - Reports */}
+          <Route
+            path="/dealer/analytics/reports"
+            element={
+              <ProtectedRoute requireDealer>
+                <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Sales History Route */}
           <Route
             path="/dealer/sales"
@@ -458,7 +523,24 @@ function App() {
 
           {/* Dealer Routes - Using DealerPortalLayout (built-in) */}
           <Route path="/dealer/onboarding" element={<DealerOnboardingPage />} />
+
+          {/* New Dealer Onboarding V2 Flow (Azul Integration) */}
+          {/* Dealers PAY OKLA for advertising - vehicle sales are external */}
+          <Route path="/dealer/onboarding/v2" element={<DealerOnboardingPageV2 />} />
+          <Route path="/dealer/onboarding/verify-email" element={<DealerEmailVerificationPage />} />
+          <Route path="/dealer/onboarding/documents" element={<DealerDocumentsPage />} />
+          <Route path="/dealer/onboarding/payment-setup" element={<DealerPaymentSetupPage />} />
+          <Route path="/dealer/onboarding/status" element={<DealerOnboardingStatusPage />} />
+
           <Route path="/seller/create" element={<CreateSellerPage />} />
+          <Route
+            path="/seller/profile"
+            element={
+              <ProtectedRoute>
+                <SellerProfilePage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/seller/dashboard"
             element={
@@ -467,6 +549,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/seller/profile/settings"
+            element={
+              <ProtectedRoute>
+                <SellerProfileSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/sellers/:sellerId" element={<SellerPublicProfilePage />} />
           <Route
             path="/dealer"
             element={
