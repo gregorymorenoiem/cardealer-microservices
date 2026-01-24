@@ -1,4 +1,5 @@
 using AuthService.Application.DTOs.ExternalAuth;
+using AuthService.Domain.Entities;
 using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Domain.Interfaces.Repositories;
@@ -16,6 +17,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
     private readonly IExternalAuthService _externalAuthService;
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUserSessionRepository _sessionRepository;
     private readonly ILogger<ExternalAuthCallbackCommandHandler> _logger;
     private readonly IRequestContext _requestContext;
     private readonly IConfiguration _configuration;
@@ -25,6 +27,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
         IExternalAuthService externalAuthService,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
+        IUserSessionRepository sessionRepository,
         ILogger<ExternalAuthCallbackCommandHandler> logger,
         IRequestContext requestContext,
         IConfiguration configuration,
@@ -33,6 +36,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
         _externalAuthService = externalAuthService;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
+        _sessionRepository = sessionRepository;
         _logger = logger;
         _requestContext = requestContext;
         _configuration = configuration;
@@ -79,6 +83,20 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
             );
 
             await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
+
+            // Create user session for session management
+            var userSession = new UserSession(
+                userId: user.Id,
+                refreshTokenId: refreshTokenEntity.Id.ToString(),
+                deviceInfo: ParseDeviceInfo(_requestContext.UserAgent),
+                browser: ParseBrowser(_requestContext.UserAgent),
+                operatingSystem: ParseOperatingSystem(_requestContext.UserAgent),
+                ipAddress: _requestContext.IpAddress,
+                expiresAt: DateTime.UtcNow.AddDays(7)
+            );
+            await _sessionRepository.AddAsync(userSession, cancellationToken);
+            _logger.LogInformation("Created session {SessionId} for user {UserId} via {Provider}", 
+                userSession.Id, user.Id, request.Provider);
 
             _logger.LogInformation("External auth callback processed successfully for user {UserId} from IP {IpAddress}",
                 user.Id, _requestContext.IpAddress);
@@ -269,5 +287,39 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
 
         _logger.LogInformation("Successfully exchanged Apple code for ID token");
         return idToken;
+    }
+
+    private static string ParseDeviceInfo(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
+        
+        if (userAgent.Contains("Mobile")) return "Mobile Device";
+        if (userAgent.Contains("Tablet")) return "Tablet";
+        return "Desktop";
+    }
+
+    private static string ParseBrowser(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        
+        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg")) return "Chrome";
+        if (userAgent.Contains("Firefox")) return "Firefox";
+        if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
+        if (userAgent.Contains("Edg")) return "Edge";
+        if (userAgent.Contains("Opera") || userAgent.Contains("OPR")) return "Opera";
+        return "Unknown";
+    }
+
+    private static string ParseOperatingSystem(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        
+        if (userAgent.Contains("Windows NT 10")) return "Windows 10/11";
+        if (userAgent.Contains("Windows")) return "Windows";
+        if (userAgent.Contains("Mac OS X")) return "macOS";
+        if (userAgent.Contains("Linux")) return "Linux";
+        if (userAgent.Contains("Android")) return "Android";
+        if (userAgent.Contains("iPhone") || userAgent.Contains("iPad")) return "iOS";
+        return "Unknown";
     }
 }

@@ -80,7 +80,69 @@ POST /api/TwoFactor/recover-with-all-codes
 - Para **recuperación total** (`recover-with-all-codes`) se requieren los 10 códigos.
 - Después de una recuperación exitosa, se generan **10 códigos nuevos**.
 
-## 🛠️ Tech Stack
+## � Session Management & Security (AUTH-SEC)
+
+### Overview
+
+El sistema de gestión de sesiones implementa seguridad avanzada para proteger las cuentas de usuarios:
+
+| Proceso | Descripción |
+|---------|-------------|
+| **AUTH-SEC-001** | Cambio de contraseña con revocación de sesiones |
+| **AUTH-SEC-002** | Listar sesiones activas (IP enmascarada) |
+| **AUTH-SEC-003** | Revocar sesión específica con verificación por email |
+| **AUTH-SEC-003-A** | Solicitar código de verificación para revocación |
+| **AUTH-SEC-004** | Revocar todas las sesiones (logout masivo) |
+| **AUTH-SEC-005** | Verificación de login desde dispositivo revocado |
+
+### Session Security Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/auth/security/sessions` | GET | ✅ | Listar sesiones activas |
+| `/api/auth/security/sessions/{id}/request-revoke` | POST | ✅ | Solicitar código de revocación |
+| `/api/auth/security/sessions/{id}` | DELETE | ✅ | Revocar sesión con código |
+| `/api/auth/security/sessions/revoke-all` | POST | ✅ | Revocar todas las sesiones |
+| `/api/auth/security/change-password` | POST | ✅ | Cambiar contraseña |
+| `/api/auth/revoked-device/request-code` | POST | ❌ | Solicitar código para dispositivo revocado |
+| `/api/auth/revoked-device/verify-login` | POST | ❌ | Verificar código y completar login |
+
+### Session Revocation Flow
+
+```
+1. Usuario ve lista de sesiones activas
+2. Click "Terminar sesión" en sesión remota
+3. Backend envía código 6 dígitos por email (5 min TTL)
+4. Usuario ingresa código
+5. Sesión revocada + refresh token invalidado
+6. Dispositivo marcado como "revocado" (30 días)
+```
+
+### Revoked Device Flow
+
+Cuando un dispositivo previamente revocado intenta hacer login:
+
+```
+1. Login con credenciales válidas
+2. Sistema detecta dispositivo revocado
+3. Envía código de verificación por email
+4. Usuario verifica código
+5. Dispositivo limpiado, login permitido
+```
+
+### Security Features
+
+- ✅ **Bloqueo de sesión actual**: No puede revocar su propia sesión activa
+- ✅ **IP enmascarada**: Muestra `192.168.1.***` en listado
+- ✅ **Rate limiting**: 3 solicitudes de código por hora
+- ✅ **Lockout**: 15-30 minutos después de 3 intentos fallidos
+- ✅ **IDOR prevention**: Retorna 404 para sesiones de otros usuarios
+- ✅ **Device fingerprinting**: SHA256(userId + IP + UserAgent)
+- ✅ **Audit logging**: TraceId/SpanId para correlación
+
+📚 **Documentación completa**: [05-session-security.md](../../docs/process-matrix/01-AUTENTICACION-SEGURIDAD/05-session-security.md)
+
+## �🛠️ Tech Stack
 - **Framework**: .NET 8 (ASP.NET Core Web API)
 - **Database**: PostgreSQL (Entity Framework Core)
 - **Caching**: Redis (Distributed Cache)
@@ -115,6 +177,8 @@ dotnet test backend/AuthService/AuthService.Tests
 
 ## 📚 Documentation
 - [Architecture](ARCHITECTURE.md)
+- [Advanced Features Implementation](ADVANCED_FEATURES_IMPLEMENTATION.md)
+- [Session Security & Device Management](../../docs/process-matrix/01-AUTENTICACION-SEGURIDAD/05-session-security.md)
 - [Changelog](CHANGELOG.md)
 - [Troubleshooting](TROUBLESHOOTING.md)
 - [API Documentation](http://localhost:5000/swagger)

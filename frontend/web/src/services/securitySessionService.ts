@@ -52,6 +52,18 @@ export interface RevokeSessionResponse {
   revokedAt: string;
   wasCurrentSession: boolean;
   refreshTokenRevoked: boolean;
+  remainingAttempts?: number;
+}
+
+/**
+ * Response from POST /api/auth/security/sessions/{id}/request-revoke
+ */
+export interface RequestSessionRevocationResponse {
+  success: boolean;
+  message: string;
+  sessionId?: string;
+  codeExpiresAt?: string;
+  remainingAttempts?: number;
 }
 
 /**
@@ -130,20 +142,66 @@ class SecuritySessionService {
   }
 
   /**
-   * AUTH-SEC-003: Revoke a specific session (remote logout)
+   * AUTH-SEC-003-A: Request a verification code to revoke a session
    *
    * Security features:
+   * - Sends 6-digit code to user's email
+   * - Code expires in 5 minutes
+   * - Rate limited: max 3 requests per hour
+   * - Cannot request for current session
+   *
+   * @param sessionId - GUID of the session to request revocation for
+   */
+  async requestSessionRevocation(sessionId: string): Promise<RequestSessionRevocationResponse> {
+    try {
+      const response = await axios.post<ApiResponse<RequestSessionRevocationResponse>>(
+        `${SECURITY_API_URL}/sessions/${sessionId}/request-revoke`,
+        null,
+        { headers: this.getAuthHeaders() }
+      );
+
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+
+      return response.data as unknown as RequestSessionRevocationResponse;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          throw new Error('Session not found');
+        }
+        if (error.response?.status === 400) {
+          throw new Error(
+            error.response.data?.error || error.response.data?.message || 'Request failed'
+          );
+        }
+        throw new Error(error.response?.data?.error || 'Failed to request verification code');
+      }
+      throw new Error('Failed to request verification code');
+    }
+  }
+
+  /**
+   * AUTH-SEC-003: Revoke a specific session with verification code
+   *
+   * Security features:
+   * - Requires verification code from email
    * - Validates session ownership (prevents IDOR)
    * - Revokes associated refresh token
+   * - Sends notification to revoked device
    * - Logs audit trail
    *
    * @param sessionId - GUID of the session to revoke
+   * @param code - 6-digit verification code from email
    */
-  async revokeSession(sessionId: string): Promise<RevokeSessionResponse> {
+  async revokeSession(sessionId: string, code: string): Promise<RevokeSessionResponse> {
     try {
       const response = await axios.delete<ApiResponse<RevokeSessionResponse>>(
         `${SECURITY_API_URL}/sessions/${sessionId}`,
-        { headers: this.getAuthHeaders() }
+        {
+          headers: this.getAuthHeaders(),
+          params: { code },
+        }
       );
 
       if (response.data.success && response.data.data) {
@@ -153,13 +211,14 @@ class SecuritySessionService {
       // Fallback for direct response
       return response.data as unknown as RevokeSessionResponse;
     } catch (error) {
-      console.error('Failed to revoke session:', error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 404) {
           throw new Error('Session not found or already revoked');
         }
         if (error.response?.status === 400) {
-          throw new Error(error.response.data?.error || 'Invalid session ID');
+          const errorData = error.response.data;
+          const message = errorData?.error || errorData?.message || 'Invalid request';
+          throw new Error(message);
         }
         throw new Error(error.response?.data?.error || 'Failed to revoke session');
       }

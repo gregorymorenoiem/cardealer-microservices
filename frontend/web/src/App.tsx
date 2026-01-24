@@ -66,6 +66,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import EmailVerificationPendingPage from './pages/auth/EmailVerificationPendingPage';
 import TwoFactorVerifyPage from './pages/auth/TwoFactorVerifyPage';
+import SetPasswordPage from './pages/auth/SetPasswordPage';
 // User Security Settings
 import SecuritySettingsPage from './pages/user/SecuritySettingsPage';
 // Admin pages
@@ -306,6 +307,14 @@ function App() {
             element={
               <AuthLayout>
                 <TwoFactorVerifyPage />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/auth/set-password"
+            element={
+              <AuthLayout>
+                <SetPasswordPage />
               </AuthLayout>
             }
           />

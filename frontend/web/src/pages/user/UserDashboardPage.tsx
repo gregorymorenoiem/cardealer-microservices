@@ -8,6 +8,7 @@ import MyListingsTab from '@/components/organisms/MyListingsTab';
 import SavedSearchesTab from '@/components/organisms/SavedSearchesTab';
 import SettingsTab from '@/components/organisms/SettingsTab';
 import { kycService, type KYCProfile, KYCStatus } from '@/services/kycService';
+import { useAuthStore } from '@/store/authStore';
 
 type TabId = 'favorites' | 'listings' | 'searches' | 'settings';
 
@@ -29,35 +30,49 @@ export default function UserDashboardPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>('favorites');
 
+  // Get user from auth store
+  const user = useAuthStore((state) => state.user);
+
   // KYC verification state
   const [kycProfile, setKycProfile] = useState<KYCProfile | null>(null);
   const [showKycBanner, setShowKycBanner] = useState(true);
   const [kycLoading, setKycLoading] = useState(true);
 
-  // Fetch KYC status on mount
+  // Fetch KYC status on mount or when user changes
   useEffect(() => {
     const fetchKycStatus = async () => {
       try {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
+        if (user?.id) {
           const profile = await kycService.getProfileByUserId(user.id);
           setKycProfile(profile);
+        } else {
+          setKycProfile(null);
         }
-      } catch (err) {
+      } catch {
         // No KYC profile yet - show the banner
-        console.log('No KYC profile found');
         setKycProfile(null);
       } finally {
         setKycLoading(false);
       }
     };
     fetchKycStatus();
-  }, []);
+  }, [user]);
+
+  // Helper to check if KYC is approved (handles both string and number status)
+  const isKycApproved = (profile: KYCProfile | null): boolean => {
+    if (!profile) return false;
+    const status = profile.status;
+    // Handle both numeric enum and string values from backend
+    return (
+      status === KYCStatus.Approved ||
+      status === 5 ||
+      status === 'Approved' ||
+      status === 'approved'
+    );
+  };
 
   // Check if user needs to complete KYC verification
-  const needsKycVerification =
-    !kycLoading && (!kycProfile || kycProfile.status !== KYCStatus.Approved);
+  const needsKycVerification = !kycLoading && !isKycApproved(kycProfile);
 
   const renderTabContent = () => {
     switch (activeTab) {

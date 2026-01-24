@@ -130,6 +130,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>(); // US-18.4
         services.AddScoped<IUserSessionRepository, UserSessionRepository>(); // Sessions management
+        services.AddScoped<ILoginHistoryRepository, LoginHistoryRepository>(); // Login history for security page
 
         // Services
         services.AddSingleton<Microsoft.AspNetCore.Identity.IPasswordHasher<object>, Microsoft.AspNetCore.Identity.PasswordHasher<object>>();

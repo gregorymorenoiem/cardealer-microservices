@@ -5,6 +5,7 @@ import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import { ConfirmDialog } from '@/components/common';
+import UnlinkActiveProviderModal from '@/components/modals/UnlinkActiveProviderModal';
 import { kycService, type KYCProfile, KYCStatus } from '@/services/kycService';
 import {
   FiShield,
@@ -47,6 +48,7 @@ import {
   type RevokeAllSessionsResponse,
 } from '@/services/securitySessionService';
 import type { LinkedAccount } from '@/services/authService';
+import { useAuthStore } from '@/store/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 const AUTH_API_URL = `${API_BASE_URL}/api/auth`;
@@ -95,6 +97,16 @@ export default function SecuritySettingsPage() {
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
   const [isRevokingAll, setIsRevokingAll] = useState(false);
 
+  // Session revocation with code verification
+  const [showRevokeModal, setShowRevokeModal] = useState(false);
+  const [revokeTargetSession, setRevokeTargetSession] = useState<ActiveSessionDto | null>(null);
+  const [revokeStep, setRevokeStep] = useState<'confirm' | 'code' | 'success'>('confirm');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [codeExpiresAt, setCodeExpiresAt] = useState<Date | null>(null);
+  const [remainingAttempts, setRemainingAttempts] = useState<number>(3);
+  const [isRequestingCode, setIsRequestingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+
   // Change password state
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -110,7 +122,7 @@ export default function SecuritySettingsPage() {
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [manualKey, setManualKey] = useState<string | null>(null);
-  const [verificationCode, setVerificationCode] = useState('');
+  const [twoFACode, setTwoFACode] = useState('');
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [is2FALoading, setIs2FALoading] = useState(false);
   const [twoFAError, setTwoFAError] = useState<string | null>(null);
@@ -134,13 +146,20 @@ export default function SecuritySettingsPage() {
   const [isKycLoading, setIsKycLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Get user from auth store
+  const user = useAuthStore((state) => state.user);
+
   // Fetch security settings and sessions
   useEffect(() => {
     fetchSecuritySettings();
     fetchActiveSessions();
     fetchLinkedAccounts();
-    fetchKycStatus();
   }, []);
+
+  // Fetch KYC status when user changes
+  useEffect(() => {
+    fetchKycStatus();
+  }, [user]);
 
   // Fetch active sessions using new service
   const fetchActiveSessions = async () => {
@@ -150,7 +169,7 @@ export default function SecuritySettingsPage() {
       const response = await securitySessionService.getActiveSessions();
       setActiveSessions(response.sessions || []);
     } catch (err) {
-      console.error('Failed to fetch active sessions:', err);
+      // Error handled silently - UI shows error state
       setSessionsError(err instanceof Error ? err.message : 'Failed to load sessions');
       setActiveSessions([]);
     } finally {
@@ -166,7 +185,7 @@ export default function SecuritySettingsPage() {
       setLinkedAccounts(accounts);
       setLinkedAccountsError(null);
     } catch (err) {
-      console.error('Failed to fetch linked accounts:', err);
+      // Error handled silently - UI shows error state
       setLinkedAccountsError('Failed to load linked accounts');
     } finally {
       setIsLinkedAccountsLoading(false);
@@ -177,16 +196,14 @@ export default function SecuritySettingsPage() {
   const fetchKycStatus = async () => {
     try {
       setIsKycLoading(true);
-      // Get user ID from localStorage or auth context
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
+      if (user?.id) {
         const profile = await kycService.getProfileByUserId(user.id);
         setKycProfile(profile);
+      } else {
+        setKycProfile(null);
       }
-    } catch (err) {
+    } catch {
       // 404 means no KYC profile yet - that's OK
-      console.log('No KYC profile found or error:', err);
       setKycProfile(null);
     } finally {
       setIsKycLoading(false);
@@ -280,9 +297,13 @@ export default function SecuritySettingsPage() {
   const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(null);
   const [linkingProvider, setLinkingProvider] = useState<string | null>(null);
 
-  // Unlink confirmation modal state
+  // Unlink confirmation modal state (simple unlink - AUTH-EXT-006)
   const [showUnlinkModal, setShowUnlinkModal] = useState(false);
   const [providerToUnlink, setProviderToUnlink] = useState<string | null>(null);
+
+  // Active provider unlink modal state (AUTH-EXT-008)
+  const [showActiveProviderUnlinkModal, setShowActiveProviderUnlinkModal] = useState(false);
+  const [activeProviderToUnlink, setActiveProviderToUnlink] = useState<string | null>(null);
 
   // Handle URL params from OAuth callback (success/error messages)
   useEffect(() => {
@@ -314,16 +335,58 @@ export default function SecuritySettingsPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  // Open unlink confirmation modal
-  const openUnlinkModal = (provider: string) => {
-    setProviderToUnlink(provider);
-    setShowUnlinkModal(true);
+  // Open unlink confirmation modal - validates first to determine which flow to use
+  const openUnlinkModal = async (provider: string) => {
+    try {
+      setLinkedAccountsError(null);
+      setUnlinkingProvider(provider); // Show loading state on button
+
+      // Validate unlink request (AUTH-EXT-008)
+      const validation = await authService.validateUnlinkAccount(provider);
+
+      if (!validation.canUnlink && !validation.requiresEmailVerification) {
+        // Cannot unlink at all (e.g., only one provider and no password)
+        setLinkedAccountsError(validation.message);
+        return;
+      }
+
+      if (!validation.hasPassword || validation.requiresEmailVerification) {
+        // Use active provider flow with verification
+        setActiveProviderToUnlink(provider);
+        setShowActiveProviderUnlinkModal(true);
+      } else {
+        // Simple unlink flow (has password, not active provider)
+        setProviderToUnlink(provider);
+        setShowUnlinkModal(true);
+      }
+    } catch (err) {
+      setLinkedAccountsError(
+        err instanceof Error ? err.message : 'Failed to validate unlink request'
+      );
+    } finally {
+      setUnlinkingProvider(null);
+    }
   };
 
-  // Close unlink confirmation modal
+  // Close unlink confirmation modal (simple flow)
   const closeUnlinkModal = () => {
     setShowUnlinkModal(false);
     setProviderToUnlink(null);
+  };
+
+  // Close active provider unlink modal
+  const closeActiveProviderUnlinkModal = () => {
+    setShowActiveProviderUnlinkModal(false);
+    setActiveProviderToUnlink(null);
+  };
+
+  // Handle successful unlink from active provider modal
+  const handleActiveProviderUnlinkSuccess = () => {
+    closeActiveProviderUnlinkModal();
+    fetchLinkedAccounts();
+    setLinkedAccountsSuccess(
+      'Account unlinked successfully. You have been logged out of all sessions.'
+    );
   };
 
   // Handle unlinking an external account (AUTH-EXT-006)
@@ -407,34 +470,24 @@ export default function SecuritySettingsPage() {
       setIsLoading(true);
       const token = localStorage.getItem('accessToken');
 
-      // Fetch security settings and phone status in parallel
-      const [securityResponse, phoneResponse] = await Promise.all([
-        axios
-          .get(`${AUTH_API_URL}/security`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .catch(() => ({ data: null })),
-        axios
-          .get(`${PHONE_API_URL}/status`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .catch(() => ({ data: { data: { isVerified: false, phoneNumber: null } } })),
-      ]);
-
-      const phoneData = phoneResponse.data?.data || { isVerified: false, phoneNumber: null };
+      // Fetch security settings only (phone verification service not implemented yet)
+      const securityResponse = await axios
+        .get(`${AUTH_API_URL}/security`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .catch(() => ({ data: null }));
 
       setSettings({
         twoFactorEnabled: securityResponse.data?.twoFactorEnabled || false,
         twoFactorType: securityResponse.data?.twoFactorType || null,
-        phoneNumber: phoneData.phoneNumber,
-        phoneNumberConfirmed: phoneData.isVerified || false,
+        phoneNumber: null, // Phone verification not implemented yet
+        phoneNumberConfirmed: false,
         lastPasswordChange: securityResponse.data?.lastPasswordChange || '',
         recentLogins: securityResponse.data?.recentLogins || [],
       });
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch security settings:', err);
-      // Set default values if API fails
+      // Error handled silently - set default values if API fails
       setSettings({
         twoFactorEnabled: false,
         twoFactorType: null,
@@ -640,7 +693,7 @@ export default function SecuritySettingsPage() {
       const response = await axios.post(
         `${TWOFACTOR_API_URL}/verify`,
         {
-          code: verificationCode,
+          code: twoFACode,
           type: TwoFactorType.Authenticator,
         },
         {
@@ -655,7 +708,7 @@ export default function SecuritySettingsPage() {
       }
       setTwoFASuccess('Google Authenticator 2FA enabled successfully!');
       setShow2FASetup(false);
-      setVerificationCode('');
+      setTwoFACode('');
       fetchSecuritySettings();
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data) {
@@ -734,44 +787,115 @@ export default function SecuritySettingsPage() {
     }
   };
 
-  // Revoke session - AUTH-SEC-003
-  const handleRevokeSession = async (sessionId: string) => {
-    if (
-      !confirm('Are you sure you want to terminate this session? The device will be logged out.')
-    ) {
+  // Open revoke session modal - AUTH-SEC-003
+  const handleOpenRevokeModal = (session: ActiveSessionDto) => {
+    if (session.isCurrent) {
+      setSessionsError('No puedes terminar tu sesión actual. Usa el botón de cerrar sesión.');
+      return;
+    }
+    setRevokeTargetSession(session);
+    setRevokeStep('confirm');
+    setVerificationCode('');
+    setCodeExpiresAt(null);
+    setRemainingAttempts(3);
+    setSessionsError(null);
+    setShowRevokeModal(true);
+  };
+
+  // Request verification code for session revocation
+  const handleRequestRevocationCode = async () => {
+    if (!revokeTargetSession) return;
+
+    try {
+      setIsRequestingCode(true);
+      setSessionsError(null);
+
+      const response = await securitySessionService.requestSessionRevocation(
+        revokeTargetSession.id
+      );
+
+      if (response.success) {
+        setRevokeStep('code');
+        if (response.codeExpiresAt) {
+          setCodeExpiresAt(new Date(response.codeExpiresAt));
+        }
+        if (response.remainingAttempts) {
+          setRemainingAttempts(response.remainingAttempts);
+        }
+        setSessionSuccess('Se ha enviado un código de verificación a tu correo electrónico.');
+      } else {
+        setSessionsError(response.message);
+      }
+    } catch (err) {
+      setSessionsError(
+        err instanceof Error ? err.message : 'Error al solicitar código de verificación'
+      );
+    } finally {
+      setIsRequestingCode(false);
+    }
+  };
+
+  // Verify code and revoke session
+  const handleVerifyAndRevoke = async () => {
+    if (!revokeTargetSession || !verificationCode) return;
+
+    if (verificationCode.length !== 6 || !/^\d+$/.test(verificationCode)) {
+      setSessionsError('El código debe ser de 6 dígitos numéricos.');
       return;
     }
 
     try {
-      setRevokingSessionId(sessionId);
+      setIsVerifyingCode(true);
       setSessionsError(null);
-      setSessionSuccess(null);
 
-      const response = await securitySessionService.revokeSession(sessionId);
+      const response = await securitySessionService.revokeSession(
+        revokeTargetSession.id,
+        verificationCode
+      );
 
       if (response.success) {
-        setSessionSuccess(
-          response.wasCurrentSession
-            ? 'Current session terminated. You will be logged out shortly.'
-            : `Session terminated successfully. ${response.refreshTokenRevoked ? 'Refresh token also revoked.' : ''}`
-        );
+        setRevokeStep('success');
+        setSessionSuccess('Sesión terminada exitosamente. El dispositivo ha sido desconectado.');
 
-        // Refresh the sessions list
-        await fetchActiveSessions();
-
-        // If current session was revoked, log out
-        if (response.wasCurrentSession) {
-          setTimeout(() => {
-            authService.logout();
-            window.location.href = '/auth/login';
-          }, 2000);
+        // Refresh the sessions list after a short delay
+        setTimeout(async () => {
+          await fetchActiveSessions();
+          setShowRevokeModal(false);
+          setRevokeTargetSession(null);
+        }, 2000);
+      } else {
+        if (response.remainingAttempts !== undefined) {
+          setRemainingAttempts(response.remainingAttempts);
         }
+        setSessionsError(response.message);
       }
     } catch (err) {
-      console.error('Failed to revoke session:', err);
-      setSessionsError(err instanceof Error ? err.message : 'Failed to revoke session');
+      const errorMessage = err instanceof Error ? err.message : 'Error al verificar código';
+      setSessionsError(errorMessage);
+
+      // Check if it mentions remaining attempts
+      if (errorMessage.includes('Invalid verification code')) {
+        setRemainingAttempts((prev) => Math.max(0, prev - 1));
+      }
     } finally {
-      setRevokingSessionId(null);
+      setIsVerifyingCode(false);
+    }
+  };
+
+  // Close revoke modal
+  const handleCloseRevokeModal = () => {
+    setShowRevokeModal(false);
+    setRevokeTargetSession(null);
+    setVerificationCode('');
+    setCodeExpiresAt(null);
+    setRevokeStep('confirm');
+  };
+
+  // Legacy handler (keeping for backwards compatibility with UI that might call it directly)
+  const handleRevokeSession = async (sessionId: string) => {
+    const session = activeSessions.find((s) => s.id === sessionId);
+    if (session) {
+      handleOpenRevokeModal(session);
     }
   };
 
@@ -816,7 +940,7 @@ export default function SecuritySettingsPage() {
         }
       }
     } catch (err) {
-      console.error('Failed to revoke all sessions:', err);
+      // Error handled via toast notification
       setSessionsError(err instanceof Error ? err.message : 'Failed to revoke all sessions');
     } finally {
       setIsRevokingAll(false);
@@ -1253,10 +1377,8 @@ export default function SecuritySettingsPage() {
                     type="text"
                     label="Enter 6-digit code from your app"
                     placeholder="000000"
-                    value={verificationCode}
-                    onChange={(e) =>
-                      setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
-                    }
+                    value={twoFACode}
+                    onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     maxLength={6}
                     fullWidth
                   />
@@ -1266,7 +1388,7 @@ export default function SecuritySettingsPage() {
                     className="mt-3"
                     onClick={handleVerify2FA}
                     isLoading={is2FALoading}
-                    disabled={verificationCode.length !== 6}
+                    disabled={twoFACode.length !== 6}
                   >
                     Verify & Enable
                   </Button>
@@ -1646,6 +1768,154 @@ export default function SecuritySettingsPage() {
             )}
           </div>
 
+          {/* Session Revocation Modal */}
+          {showRevokeModal && revokeTargetSession && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+                {revokeStep === 'confirm' && (
+                  <>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-red-100 rounded-full">
+                        <FiAlertTriangle className="text-red-600" size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Terminar Sesión</h3>
+                        <p className="text-sm text-gray-500">Se requiere verificación</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>Dispositivo a desconectar:</strong>
+                      </p>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p>📱 {revokeTargetSession.device}</p>
+                        <p>
+                          🌐 {revokeTargetSession.browser} • {revokeTargetSession.operatingSystem}
+                        </p>
+                        <p>📍 {revokeTargetSession.location}</p>
+                        <p>
+                          🕐 Última actividad:{' '}
+                          {securitySessionService.formatRelativeTime(
+                            revokeTargetSession.lastActive
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-4">
+                      Para mayor seguridad, enviaremos un código de verificación a tu correo
+                      electrónico. Ingresa el código para confirmar la terminación de esta sesión.
+                    </p>
+
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={handleCloseRevokeModal} className="flex-1">
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={handleRequestRevocationCode}
+                        isLoading={isRequestingCode}
+                        className="flex-1 bg-red-600 hover:bg-red-700"
+                      >
+                        Enviar Código
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {revokeStep === 'code' && (
+                  <>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-blue-100 rounded-full">
+                        <FiKey className="text-blue-600" size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Verificar Código</h3>
+                        <p className="text-sm text-gray-500">Revisa tu correo electrónico</p>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-4">
+                      Hemos enviado un código de 6 dígitos a tu correo. Ingrésalo a continuación
+                      para confirmar.
+                    </p>
+
+                    {codeExpiresAt && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
+                        <p className="text-amber-800">⏱️ El código expira en 5 minutos</p>
+                      </div>
+                    )}
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Código de verificación
+                      </label>
+                      <Input
+                        type="text"
+                        value={verificationCode}
+                        onChange={(e) =>
+                          setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                        }
+                        placeholder="123456"
+                        className="text-center text-2xl tracking-widest font-mono"
+                        maxLength={6}
+                        autoFocus
+                      />
+                      {remainingAttempts < 3 && (
+                        <p className="text-sm text-red-600 mt-2">
+                          ⚠️ Intentos restantes: {remainingAttempts}
+                        </p>
+                      )}
+                    </div>
+
+                    {sessionsError && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">
+                        {sessionsError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={handleCloseRevokeModal} className="flex-1">
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={handleVerifyAndRevoke}
+                        isLoading={isVerifyingCode}
+                        disabled={verificationCode.length !== 6}
+                        className="flex-1 bg-red-600 hover:bg-red-700"
+                      >
+                        Terminar Sesión
+                      </Button>
+                    </div>
+
+                    <button
+                      onClick={handleRequestRevocationCode}
+                      disabled={isRequestingCode}
+                      className="w-full mt-3 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    >
+                      ¿No recibiste el código? Enviar de nuevo
+                    </button>
+                  </>
+                )}
+
+                {revokeStep === 'success' && (
+                  <div className="text-center py-4">
+                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                      <FiCheckCircle className="text-green-600" size={32} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">¡Sesión Terminada!</h3>
+                    <p className="text-sm text-gray-600">
+                      El dispositivo ha sido desconectado exitosamente. Se ha enviado una
+                      notificación a tu correo.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Linked Accounts Section */}
           <div className="bg-white rounded-xl shadow-sm border p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -1757,183 +2027,13 @@ export default function SecuritySettingsPage() {
                     ))}
                   </div>
                 )}
-
-                {/* Available providers to link */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-700">
-                    {linkedAccounts.length > 0 ? 'Add Another Account' : 'Connect an Account'}
-                  </h3>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Link an external provider for easier sign-in. You can have one provider linked
-                    at a time.
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {/* Google */}
-                    {import.meta.env.VITE_GOOGLE_CLIENT_ID && !isProviderLinked('google') && (
-                      <button
-                        onClick={() => handleLinkAccount('google')}
-                        className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
-                          linkingProvider === 'google'
-                            ? 'bg-red-50 border-red-300 ring-2 ring-red-100'
-                            : 'hover:bg-gray-50 hover:border-gray-300'
-                        }`}
-                        disabled={linkingProvider !== null || unlinkingProvider !== null}
-                      >
-                        {linkingProvider === 'google' ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-500"></div>
-                        ) : (
-                          <FaGoogle className="text-red-500" size={18} />
-                        )}
-                        <span className="text-sm font-medium">
-                          {linkingProvider === 'google' ? 'Linking...' : 'Google'}
-                        </span>
-                      </button>
-                    )}
-
-                    {/* Facebook */}
-                    {import.meta.env.VITE_FACEBOOK_APP_ID && !isProviderLinked('facebook') && (
-                      <button
-                        onClick={() => handleLinkAccount('facebook')}
-                        className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
-                          linkingProvider === 'facebook'
-                            ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100'
-                            : 'hover:bg-gray-50 hover:border-gray-300'
-                        }`}
-                        disabled={linkingProvider !== null || unlinkingProvider !== null}
-                      >
-                        {linkingProvider === 'facebook' ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                        ) : (
-                          <FaFacebook className="text-blue-600" size={18} />
-                        )}
-                        <span className="text-sm font-medium">
-                          {linkingProvider === 'facebook' ? 'Linking...' : 'Facebook'}
-                        </span>
-                      </button>
-                    )}
-
-                    {/* Apple */}
-                    {import.meta.env.VITE_APPLE_CLIENT_ID && !isProviderLinked('apple') && (
-                      <button
-                        onClick={() => handleLinkAccount('apple')}
-                        className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
-                          linkingProvider === 'apple'
-                            ? 'bg-gray-100 border-gray-400 ring-2 ring-gray-200'
-                            : 'hover:bg-gray-50 hover:border-gray-300'
-                        }`}
-                        disabled={linkingProvider !== null || unlinkingProvider !== null}
-                      >
-                        {linkingProvider === 'apple' ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
-                        ) : (
-                          <FaApple className="text-gray-900" size={18} />
-                        )}
-                        <span className="text-sm font-medium">
-                          {linkingProvider === 'apple' ? 'Linking...' : 'Apple'}
-                        </span>
-                      </button>
-                    )}
-
-                    {/* Microsoft */}
-                    {import.meta.env.VITE_MICROSOFT_CLIENT_ID && !isProviderLinked('microsoft') && (
-                      <button
-                        onClick={() => handleLinkAccount('microsoft')}
-                        className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-all ${
-                          linkingProvider === 'microsoft'
-                            ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100'
-                            : 'hover:bg-gray-50 hover:border-gray-300'
-                        }`}
-                        disabled={linkingProvider !== null || unlinkingProvider !== null}
-                      >
-                        {linkingProvider === 'microsoft' ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                        ) : (
-                          <FaMicrosoft className="text-blue-500" size={18} />
-                        )}
-                        <span className="text-sm font-medium">
-                          {linkingProvider === 'microsoft' ? 'Linking...' : 'Microsoft'}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Message if no providers are configured */}
-                  {!import.meta.env.VITE_GOOGLE_CLIENT_ID &&
-                    !import.meta.env.VITE_FACEBOOK_APP_ID &&
-                    !import.meta.env.VITE_APPLE_CLIENT_ID &&
-                    !import.meta.env.VITE_MICROSOFT_CLIENT_ID && (
-                      <p className="text-sm text-gray-500 text-center py-4">
-                        No external login providers are currently configured.
-                      </p>
-                    )}
-
-                  {/* All providers linked */}
-                  {linkedAccounts.length >= 4 && (
-                    <p className="text-sm text-gray-500 text-center py-2">
-                      All available providers are already connected.
-                    </p>
-                  )}
-                </div>
               </div>
             )}
-          </div>
-
-          {/* Login History Section */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <FiClock className="text-orange-600" size={24} />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {t('security.loginHistory', 'Recent Login Activity')}
-                </h2>
-                <p className="text-sm text-gray-500">Your last 10 login attempts</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {settings?.recentLogins?.length ? (
-                settings.recentLogins.map((login) => (
-                  <div
-                    key={login.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      login.success ? 'bg-gray-50' : 'bg-red-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-lg ${login.success ? 'bg-white' : 'bg-red-100'}`}
-                      >
-                        {login.success ? (
-                          <FiCheckCircle className="text-green-600" size={18} />
-                        ) : (
-                          <FiAlertCircle className="text-red-600" size={18} />
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {login.device} - {login.browser}
-                        </div>
-                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                          <span>{login.location}</span>
-                          <span>•</span>
-                          <span>{login.ipAddress}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">{formatDate(login.loginTime)}</div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No login history available</p>
-              )}
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Unlink Account Confirmation Modal */}
+      {/* Unlink Account Confirmation Modal (Simple flow - AUTH-EXT-006) */}
       <ConfirmDialog
         isOpen={showUnlinkModal}
         onClose={closeUnlinkModal}
@@ -1963,6 +2063,14 @@ export default function SecuritySettingsPage() {
         variant="danger"
         isLoading={unlinkingProvider !== null}
         infoText="You can always link this account again from this settings page."
+      />
+
+      {/* Active Provider Unlink Modal (AUTH-EXT-008) */}
+      <UnlinkActiveProviderModal
+        isOpen={showActiveProviderUnlinkModal}
+        onClose={closeActiveProviderUnlinkModal}
+        provider={activeProviderToUnlink || ''}
+        onSuccess={handleActiveProviderUnlinkSuccess}
       />
     </MainLayout>
   );

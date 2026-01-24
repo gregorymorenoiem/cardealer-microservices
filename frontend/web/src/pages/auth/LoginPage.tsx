@@ -9,7 +9,7 @@ import { authService } from '@/services/authService';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import OAuthButtons from '@/components/auth/OAuthButtons';
-import { FiMail, FiLock, FiAlertCircle, FiInfo, FiCheckCircle } from 'react-icons/fi';
+import { FiMail, FiLock, FiAlertCircle, FiInfo, FiCheckCircle, FiShield } from 'react-icons/fi';
 
 // Validation schema
 const loginSchema = z.object({
@@ -20,11 +20,15 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-// Extended response type for 2FA
+// Extended response type for 2FA and revoked device verification
 interface LoginResponse {
   requiresTwoFactor?: boolean;
   sessionToken?: string;
   twoFactorType?: string;
+  // AUTH-SEC-005: Revoked device verification
+  requiresRevokedDeviceVerification?: boolean;
+  deviceFingerprint?: string;
+  // Standard login response
   accessToken?: string;
   refreshToken?: string;
   user?: {
@@ -44,6 +48,17 @@ export default function LoginPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
 
+  // AUTH-SEC-005: Revoked device verification state
+  const [showRevokedDeviceVerification, setShowRevokedDeviceVerification] = useState(false);
+  const [revokedDeviceEmail, setRevokedDeviceEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isRequestingCode, setIsRequestingCode] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | undefined>();
+  const [isLockedOut, setIsLockedOut] = useState(false);
+  const [lockoutMinutes, setLockoutMinutes] = useState<number | undefined>();
+
   // Get success message from navigation state (e.g., after email verification)
   const successMessage = location.state?.message as string | undefined;
 
@@ -62,6 +77,7 @@ export default function LoginPage() {
     try {
       setApiError(null);
       setShowEmailVerification(false);
+      setShowRevokedDeviceVerification(false);
 
       // Call backend auth service
       const response: LoginResponse = await authService.login({
@@ -69,6 +85,17 @@ export default function LoginPage() {
         password: data.password,
         rememberMe: data.rememberMe,
       });
+
+      // AUTH-SEC-005: Check if revoked device verification is required
+      if (response.requiresRevokedDeviceVerification) {
+        setRevokedDeviceEmail(data.email);
+        setShowRevokedDeviceVerification(true);
+        setCodeSent(false);
+        setVerificationCode('');
+        setRemainingAttempts(undefined);
+        setIsLockedOut(false);
+        return;
+      }
 
       // Check if 2FA is required
       if (response.requiresTwoFactor && response.sessionToken) {
@@ -171,6 +198,131 @@ export default function LoginPage() {
     }
   };
 
+  // AUTH-SEC-005: Request verification code for revoked device
+  const handleRequestRevokedDeviceCode = async () => {
+    try {
+      setIsRequestingCode(true);
+      setApiError(null);
+
+      const pendingLogin = authService.getPendingRevokedDeviceLogin();
+      if (!pendingLogin) {
+        setApiError('Session expired. Please login again.');
+        setShowRevokedDeviceVerification(false);
+        return;
+      }
+
+      const response = await authService.requestRevokedDeviceCode({
+        email: pendingLogin.email,
+        deviceFingerprint: pendingLogin.deviceFingerprint,
+      });
+
+      if (response.isLockedOut) {
+        setIsLockedOut(true);
+        setLockoutMinutes(response.lockoutMinutesRemaining);
+        setApiError(
+          `Too many attempts. Please try again in ${response.lockoutMinutesRemaining} minutes.`
+        );
+        return;
+      }
+
+      if (response.success) {
+        setCodeSent(true);
+        setApiError(null);
+      } else {
+        setApiError(response.message || 'Failed to send verification code');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    } finally {
+      setIsRequestingCode(false);
+    }
+  };
+
+  // AUTH-SEC-005: Verify the code and complete login
+  const handleVerifyRevokedDevice = async () => {
+    try {
+      setIsVerifying(true);
+      setApiError(null);
+
+      const pendingLogin = authService.getPendingRevokedDeviceLogin();
+      if (!pendingLogin) {
+        setApiError('Session expired. Please login again.');
+        setShowRevokedDeviceVerification(false);
+        return;
+      }
+
+      const response = await authService.verifyRevokedDevice({
+        email: pendingLogin.email,
+        deviceFingerprint: pendingLogin.deviceFingerprint,
+        verificationCode: verificationCode.trim(),
+        password: pendingLogin.password,
+      });
+
+      if (response.isLockedOut) {
+        setIsLockedOut(true);
+        setLockoutMinutes(response.lockoutMinutesRemaining);
+        setApiError(
+          `Account temporarily locked. Please try again in ${response.lockoutMinutesRemaining} minutes.`
+        );
+        return;
+      }
+
+      if (response.remainingAttempts !== undefined) {
+        setRemainingAttempts(response.remainingAttempts);
+        setApiError(`Invalid code. ${response.remainingAttempts} attempts remaining.`);
+        return;
+      }
+
+      if (response.success && response.accessToken) {
+        // Clear pending login data
+        authService.clearPendingRevokedDeviceLogin();
+
+        // Build user object from response
+        const user = {
+          id: response.userId || '',
+          email: response.email || pendingLogin.email,
+          name: response.email?.split('@')[0] || '',
+          accountType: 'individual' as const,
+          emailVerified: true,
+          createdAt: new Date().toISOString(),
+        };
+
+        // Update auth store
+        storeLogin({
+          user,
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken || '',
+        });
+
+        // Navigate to dashboard
+        const from =
+          (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
+      } else {
+        setApiError(response.message || 'Verification failed. Please try again.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // AUTH-SEC-005: Cancel revoked device verification
+  const handleCancelRevokedDeviceVerification = () => {
+    setShowRevokedDeviceVerification(false);
+    setCodeSent(false);
+    setVerificationCode('');
+    setRemainingAttempts(undefined);
+    setIsLockedOut(false);
+    setApiError(null);
+    authService.clearPendingRevokedDeviceLogin();
+  };
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -187,8 +339,126 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* API Error Alert */}
-      {apiError && (
+      {/* AUTH-SEC-005: Revoked Device Verification UI */}
+      {showRevokedDeviceVerification && (
+        <div className="mb-6 p-6 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-3 mb-4">
+            <FiShield className="text-amber-600 flex-shrink-0 mt-0.5" size={24} />
+            <div>
+              <h3 className="font-semibold text-amber-800">Security Verification Required</h3>
+              <p className="text-sm text-amber-700 mt-1">
+                This device was previously logged out for security reasons. To continue, we need to
+                verify it's really you.
+              </p>
+            </div>
+          </div>
+
+          {isLockedOut ? (
+            <div className="text-center py-4">
+              <p className="text-amber-800 font-medium">Account Temporarily Locked</p>
+              <p className="text-sm text-amber-600 mt-1">
+                Too many failed attempts. Please try again in {lockoutMinutes} minutes.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                className="mt-4"
+                onClick={handleCancelRevokedDeviceVerification}
+              >
+                Back to Login
+              </Button>
+            </div>
+          ) : !codeSent ? (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-700">
+                We'll send a verification code to <strong>{revokedDeviceEmail}</strong>
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={handleRequestRevokedDeviceCode}
+                  isLoading={isRequestingCode}
+                >
+                  Send Verification Code
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={handleCancelRevokedDeviceVerification}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-green-700 text-sm">
+                <FiCheckCircle size={16} />
+                <span>Verification code sent to {revokedDeviceEmail}</span>
+              </div>
+
+              <Input
+                type="text"
+                label="Verification Code"
+                placeholder="Enter 6-digit code"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                maxLength={6}
+                leftIcon={<FiLock size={18} />}
+                fullWidth
+              />
+
+              {remainingAttempts !== undefined && (
+                <p className="text-sm text-amber-600">{remainingAttempts} attempts remaining</p>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={handleVerifyRevokedDevice}
+                  isLoading={isVerifying}
+                  disabled={verificationCode.length < 6}
+                >
+                  Verify & Login
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={handleRequestRevokedDeviceCode}
+                  isLoading={isRequestingCode}
+                >
+                  Resend Code
+                </Button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCancelRevokedDeviceVerification}
+                className="text-sm text-gray-500 hover:text-gray-700 underline"
+              >
+                Cancel and go back
+              </button>
+            </div>
+          )}
+
+          {apiError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded flex items-start gap-2">
+              <FiAlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={16} />
+              <p className="text-sm text-red-800">{apiError}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* API Error Alert - Only show when not in revoked device verification mode */}
+      {apiError && !showRevokedDeviceVerification && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
           <FiAlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
@@ -206,76 +476,80 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Login Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Email Field */}
-        <Input
-          {...register('email')}
-          type="email"
-          label={t('login.email')}
-          placeholder={t('login.emailPlaceholder')}
-          error={errors.email?.message}
-          leftIcon={<FiMail size={18} />}
-          required
-          fullWidth
-        />
-
-        {/* Password Field */}
-        <Input
-          {...register('password')}
-          type="password"
-          label={t('login.password')}
-          placeholder={t('login.passwordPlaceholder')}
-          error={errors.password?.message}
-          leftIcon={<FiLock size={18} />}
-          required
-          fullWidth
-        />
-
-        {/* Remember Me & Forgot Password */}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              {...register('rememberMe')}
-              type="checkbox"
-              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary-500"
+      {/* Login Form - Hide when revoked device verification is active */}
+      {!showRevokedDeviceVerification && (
+        <>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Email Field */}
+            <Input
+              {...register('email')}
+              type="email"
+              label={t('login.email')}
+              placeholder={t('login.emailPlaceholder')}
+              error={errors.email?.message}
+              leftIcon={<FiMail size={18} />}
+              required
+              fullWidth
             />
-            <span className="text-sm text-gray-700">{t('login.rememberMe')}</span>
-          </label>
 
-          <Link
-            to="/forgot-password"
-            className="text-sm text-primary hover:text-primary-600 font-medium transition-colors"
-          >
-            {t('login.forgotPassword')}
-          </Link>
-        </div>
+            {/* Password Field */}
+            <Input
+              {...register('password')}
+              type="password"
+              label={t('login.password')}
+              placeholder={t('login.passwordPlaceholder')}
+              error={errors.password?.message}
+              leftIcon={<FiLock size={18} />}
+              required
+              fullWidth
+            />
 
-        {/* Submit Button */}
-        <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting}>
-          {t('login.signIn')}
-        </Button>
-      </form>
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  {...register('rememberMe')}
+                  type="checkbox"
+                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-700">{t('login.rememberMe')}</span>
+              </label>
 
-      {/* OAuth Buttons */}
-      <OAuthButtons
-        onGoogleClick={handleGoogleLogin}
-        onMicrosoftClick={handleMicrosoftLogin}
-        onFacebookClick={handleFacebookLogin}
-        onAppleClick={handleAppleLogin}
-        disabled={isSubmitting}
-      />
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary hover:text-primary-600 font-medium transition-colors"
+              >
+                {t('login.forgotPassword')}
+              </Link>
+            </div>
 
-      {/* Register Link */}
-      <p className="mt-8 text-center text-sm text-gray-600">
-        {t('login.noAccount')}{' '}
-        <Link
-          to="/register"
-          className="font-medium text-primary hover:text-primary-600 transition-colors"
-        >
-          {t('login.signUpFree')}
-        </Link>
-      </p>
+            {/* Submit Button */}
+            <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting}>
+              {t('login.signIn')}
+            </Button>
+          </form>
+
+          {/* OAuth Buttons */}
+          <OAuthButtons
+            onGoogleClick={handleGoogleLogin}
+            onMicrosoftClick={handleMicrosoftLogin}
+            onFacebookClick={handleFacebookLogin}
+            onAppleClick={handleAppleLogin}
+            disabled={isSubmitting}
+          />
+
+          {/* Register Link */}
+          <p className="mt-8 text-center text-sm text-gray-600">
+            {t('login.noAccount')}{' '}
+            <Link
+              to="/register"
+              className="font-medium text-primary hover:text-primary-600 transition-colors"
+            >
+              {t('login.signUpFree')}
+            </Link>
+          </p>
+        </>
+      )}
     </div>
   );
 }

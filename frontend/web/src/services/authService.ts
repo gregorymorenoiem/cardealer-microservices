@@ -122,6 +122,9 @@ interface LoginResponse {
   requiresTwoFactor?: boolean;
   sessionToken?: string;
   twoFactorType?: string;
+  // AUTH-SEC-005: Revoked device verification fields
+  requiresRevokedDeviceVerification?: boolean;
+  deviceFingerprint?: string;
 }
 
 interface RefreshTokenResponse {
@@ -148,8 +151,43 @@ interface BackendAuthResponse {
     lastName?: string;
     profilePictureUrl?: string;
     isNewUser?: boolean;
+    // AUTH-SEC-005: Revoked device verification
+    requiresRevokedDeviceVerification?: boolean;
+    deviceFingerprint?: string | null;
   };
   error: string | null;
+}
+
+// AUTH-SEC-005: Revoked device verification types
+interface RevokedDeviceCodeRequest {
+  userId: string;
+  email: string;
+  deviceFingerprint: string;
+}
+
+interface RevokedDeviceCodeResponse {
+  success: boolean;
+  data: {
+    requiresVerification: boolean;
+    message: string;
+    verificationToken?: string;
+    codeExpiresAt?: string;
+  };
+}
+
+interface RevokedDeviceVerifyRequest {
+  verificationToken: string;
+  code: string;
+}
+
+interface RevokedDeviceVerifyResponse {
+  success: boolean;
+  data: {
+    success: boolean;
+    message: string;
+    deviceCleared?: boolean;
+    remainingAttempts?: number;
+  };
 }
 
 /**
@@ -167,6 +205,25 @@ export const authService = {
 
       if (!data) {
         throw new Error('Invalid response from server');
+      }
+
+      // AUTH-SEC-005: Check if revoked device verification is required
+      if (data.requiresRevokedDeviceVerification) {
+        // Store pending login credentials for verification flow
+        this.storePendingRevokedDeviceLogin(
+          credentials.email,
+          credentials.password,
+          data.deviceFingerprint || ''
+        );
+
+        // Return revoked device response - login blocked until verification
+        return {
+          user: {} as User,
+          accessToken: '',
+          refreshToken: '',
+          requiresRevokedDeviceVerification: true,
+          deviceFingerprint: data.deviceFingerprint || '',
+        };
       }
 
       // Check if 2FA is required
@@ -693,6 +750,167 @@ export const authService = {
     }
   },
 
+  // ========================================
+  // AUTH-PWD-001: Set Password for OAuth User
+  // ========================================
+
+  /**
+   * Request password setup email for OAuth-only users
+   * Called when user wants to set a password before unlinking their OAuth provider
+   */
+  async requestPasswordSetup(): Promise<RequestPasswordSetupResponse> {
+    try {
+      const response = await axios.post<{ data: RequestPasswordSetupResponse }>(
+        `${AUTH_API_URL}/password/setup-request`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to request password setup';
+        throw new Error(message);
+      }
+      throw new Error('Failed to request password setup. Please try again.');
+    }
+  },
+
+  /**
+   * Validate password setup token from email link
+   * Called when user clicks the link in their email
+   */
+  async validatePasswordSetupToken(token: string): Promise<ValidatePasswordSetupTokenResponse> {
+    try {
+      const response = await axios.get<{ data: ValidatePasswordSetupTokenResponse }>(
+        `${AUTH_API_URL}/password/setup-validate`,
+        {
+          params: { token },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Invalid or expired token';
+        throw new Error(message);
+      }
+      throw new Error('Failed to validate token. Please try again.');
+    }
+  },
+
+  /**
+   * Complete password setup for OAuth user
+   * Sets the password using the token from email
+   */
+  async completePasswordSetup(
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<SetPasswordForOAuthUserResponse> {
+    try {
+      const response = await axios.post<{ data: SetPasswordForOAuthUserResponse }>(
+        `${AUTH_API_URL}/password/setup-complete`,
+        {
+          token,
+          newPassword,
+          confirmPassword,
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to set password';
+        throw new Error(message);
+      }
+      throw new Error('Failed to set password. Please try again.');
+    }
+  },
+
+  // ========================================
+  // AUTH-EXT-008: Unlink Active Provider
+  // ========================================
+
+  /**
+   * Validate if user can unlink their OAuth account
+   * Returns info about whether they have password, if it's active provider, etc.
+   */
+  async validateUnlinkAccount(provider: string): Promise<ValidateUnlinkAccountResponse> {
+    try {
+      const response = await axios.post<{ data: ValidateUnlinkAccountResponse }>(
+        `${EXTERNAL_AUTH_API_URL}/unlink-account/validate`,
+        { provider },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to validate unlink request';
+        throw new Error(message);
+      }
+      throw new Error('Failed to validate. Please try again.');
+    }
+  },
+
+  /**
+   * Request verification code for unlinking active provider
+   * Sends a 6-digit code to user's email
+   */
+  async requestUnlinkCode(provider: string): Promise<RequestUnlinkCodeResponse> {
+    try {
+      const response = await axios.post<{ data: RequestUnlinkCodeResponse }>(
+        `${EXTERNAL_AUTH_API_URL}/unlink-account/request-code`,
+        { provider },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to send verification code';
+        throw new Error(message);
+      }
+      throw new Error('Failed to send code. Please try again.');
+    }
+  },
+
+  /**
+   * Unlink active OAuth provider with verification code
+   * This will revoke all sessions and force re-login
+   */
+  async unlinkActiveProvider(
+    provider: string,
+    verificationCode: string
+  ): Promise<UnlinkActiveProviderResponse> {
+    try {
+      const response = await axios.post<{ data: UnlinkActiveProviderResponse }>(
+        `${EXTERNAL_AUTH_API_URL}/unlink-account/confirm`,
+        { provider, verificationCode },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = error.response.data?.error || 'Failed to unlink account';
+        throw new Error(message);
+      }
+      throw new Error('Failed to unlink account. Please try again.');
+    }
+  },
+
   // Start OAuth flow for linking (different from login - requires auth)
   async startLinkAccount(provider: 'google' | 'microsoft' | 'facebook' | 'apple'): Promise<void> {
     // Store that we're linking, not logging in
@@ -712,6 +930,172 @@ export const authService = {
         await this.loginWithApple();
         break;
     }
+  },
+
+  // ========================================
+  // AUTH-SEC-005: Revoked Device Verification
+  // When a user tries to login from a device that was previously revoked,
+  // they must verify via email code before proceeding
+  // ========================================
+
+  /**
+   * Request a verification code for a revoked device login attempt
+   * This is called when login returns requiresRevokedDeviceVerification: true
+   * @param email - The user's email address
+   * @param deviceFingerprint - The device fingerprint from login response
+   * @returns Promise with success status and message
+   */
+  async requestRevokedDeviceCode(
+    request: RevokedDeviceCodeRequest
+  ): Promise<RevokedDeviceCodeResponse> {
+    try {
+      const response = await axios.post<{ data: RevokedDeviceCodeResponse }>(
+        `${AUTH_API_URL}/revoked-device/request-code`,
+        {
+          email: request.email,
+          deviceFingerprint: request.deviceFingerprint,
+        }
+      );
+
+      return (
+        response.data.data || {
+          success: true,
+          message: 'Verification code sent to your email',
+          expiresInMinutes: 10,
+        }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const errorData = error.response.data;
+        // Check if it's a lockout response
+        if (errorData?.data?.isLockedOut) {
+          return {
+            success: false,
+            message: errorData.data.message || 'Too many attempts. Please try again later.',
+            isLockedOut: true,
+            lockoutMinutesRemaining: errorData.data.lockoutMinutesRemaining,
+          };
+        }
+        throw new Error(errorData?.error || 'Failed to request verification code');
+      }
+      throw new Error('Failed to request verification code. Please try again.');
+    }
+  },
+
+  /**
+   * Verify the code sent to email for revoked device login
+   * On success, clears the device from revoked list and returns login tokens
+   * @param request - Contains email, deviceFingerprint, verificationCode, and original password
+   * @returns Promise with login response on success
+   */
+  async verifyRevokedDevice(
+    request: RevokedDeviceVerifyRequest
+  ): Promise<RevokedDeviceVerifyResponse> {
+    try {
+      const response = await axios.post<{ data: RevokedDeviceVerifyResponse }>(
+        `${AUTH_API_URL}/revoked-device/verify`,
+        {
+          email: request.email,
+          deviceFingerprint: request.deviceFingerprint,
+          verificationCode: request.verificationCode,
+          password: request.password,
+        }
+      );
+
+      const data = response.data.data;
+
+      if (data.success && data.accessToken && data.refreshToken) {
+        // Store tokens on successful verification
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        if (data.userId) {
+          localStorage.setItem('userId', data.userId);
+        }
+      }
+
+      return data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const errorData = error.response.data;
+
+        // Handle lockout
+        if (errorData?.data?.isLockedOut) {
+          return {
+            success: false,
+            message:
+              errorData.data.message || 'Account temporarily locked. Please try again later.',
+            isLockedOut: true,
+            lockoutMinutesRemaining: errorData.data.lockoutMinutesRemaining,
+          };
+        }
+
+        // Handle invalid code with remaining attempts
+        if (errorData?.data?.remainingAttempts !== undefined) {
+          return {
+            success: false,
+            message: errorData.data.message || 'Invalid verification code',
+            remainingAttempts: errorData.data.remainingAttempts,
+          };
+        }
+
+        throw new Error(errorData?.error || 'Verification failed');
+      }
+      throw new Error('Verification failed. Please try again.');
+    }
+  },
+
+  /**
+   * Store pending login credentials temporarily during revoked device verification
+   * Uses sessionStorage (cleared on tab close) for security
+   */
+  storePendingRevokedDeviceLogin(email: string, password: string, deviceFingerprint: string): void {
+    sessionStorage.setItem(
+      'revoked_device_pending',
+      JSON.stringify({
+        email,
+        password,
+        deviceFingerprint,
+        timestamp: Date.now(),
+      })
+    );
+  },
+
+  /**
+   * Get pending revoked device login credentials
+   * Returns null if expired (10 minutes) or not found
+   */
+  getPendingRevokedDeviceLogin(): {
+    email: string;
+    password: string;
+    deviceFingerprint: string;
+  } | null {
+    const stored = sessionStorage.getItem('revoked_device_pending');
+    if (!stored) return null;
+
+    try {
+      const data = JSON.parse(stored);
+      // Check if expired (10 minutes = 600000 ms)
+      if (Date.now() - data.timestamp > 600000) {
+        sessionStorage.removeItem('revoked_device_pending');
+        return null;
+      }
+      return {
+        email: data.email,
+        password: data.password,
+        deviceFingerprint: data.deviceFingerprint,
+      };
+    } catch {
+      sessionStorage.removeItem('revoked_device_pending');
+      return null;
+    }
+  },
+
+  /**
+   * Clear pending revoked device login credentials
+   * Called after successful verification or on cancel
+   */
+  clearPendingRevokedDeviceLogin(): void {
+    sessionStorage.removeItem('revoked_device_pending');
   },
 };
 
@@ -741,4 +1125,57 @@ export interface UnlinkAccountResponse {
   message: string;
   provider: string;
   unlinkedAt: string;
+}
+
+// ========================================
+// AUTH-PWD-001: Set Password for OAuth User
+// ========================================
+
+export interface RequestPasswordSetupResponse {
+  success: boolean;
+  message: string;
+  expiresAt: string;
+}
+
+export interface ValidatePasswordSetupTokenResponse {
+  isValid: boolean;
+  message: string;
+  email?: string;
+  provider?: string;
+  expiresAt?: string;
+}
+
+export interface SetPasswordForOAuthUserResponse {
+  success: boolean;
+  message: string;
+  email?: string;
+  canNowUnlinkProvider: boolean;
+}
+
+// ========================================
+// AUTH-EXT-008: Unlink Active Provider
+// ========================================
+
+export interface ValidateUnlinkAccountResponse {
+  canUnlink: boolean;
+  hasPassword: boolean;
+  isActiveProvider: boolean;
+  requiresPasswordSetup: boolean;
+  requiresEmailVerification: boolean;
+  message: string;
+}
+
+export interface RequestUnlinkCodeResponse {
+  success: boolean;
+  message: string;
+  maskedEmail: string;
+  expiresInMinutes: number;
+}
+
+export interface UnlinkActiveProviderResponse {
+  success: boolean;
+  message: string;
+  provider: string;
+  sessionsRevoked: number;
+  requiresReLogin: boolean;
 }

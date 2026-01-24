@@ -17,6 +17,7 @@ using AuthService.Infrastructure.Middleware;
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Infrastructure.External;
 using AuthService.Infrastructure.Services.Notification;
+using AuthService.Application.Services;
 using Microsoft.Extensions.Options;
 using CarDealer.Shared.Database;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -208,6 +209,9 @@ builder.Services.AddScoped<IAuthNotificationService>(provider =>
         logger
     );
 });
+
+// AUTH-SEC-005: Revoked device service for tracking revoked devices
+builder.Services.AddScoped<IRevokedDeviceService, RevokedDeviceService>();
 
 // 🚨 CONSTRUIR LA APLICACIÓN
 var app = builder.Build();

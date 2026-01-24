@@ -3,6 +3,7 @@ using AuthService.Domain.Entities;
 using RefreshTokenEntity = AuthService.Domain.Entities.RefreshToken;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
+using AuthService.Application.Services;
 using MediatR;
 using AuthService.Application.DTOs.Auth;
 using AuthService.Domain.Interfaces;
@@ -16,6 +17,7 @@ namespace AuthService.Application.Features.Auth.Commands.Login;
 
 /// <summary>
 /// US-18.3: Login handler with CAPTCHA verification after 2 failed attempts.
+/// AUTH-SEC-005: Revoked device detection and verification.
 /// </summary>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 {
@@ -23,12 +25,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUserSessionRepository _sessionRepository;
     private readonly IEventPublisher _eventPublisher;
     private readonly IRequestContext _requestContext;
     private readonly ITwoFactorService _twoFactorService;
     private readonly ICaptchaService _captchaService;
     private readonly IDistributedCache _cache;
     private readonly IAuthNotificationService _notificationService;
+    private readonly IRevokedDeviceService _revokedDeviceService;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     private const int CAPTCHA_REQUIRED_AFTER_ATTEMPTS = 2;
@@ -41,24 +45,28 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         IPasswordHasher passwordHasher,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
+        IUserSessionRepository sessionRepository,
         IEventPublisher eventPublisher,
         IRequestContext requestContext,
         ITwoFactorService twoFactorService,
         ICaptchaService captchaService,
         IDistributedCache cache,
         IAuthNotificationService notificationService,
+        IRevokedDeviceService revokedDeviceService,
         ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
+        _sessionRepository = sessionRepository;
         _eventPublisher = eventPublisher;
         _requestContext = requestContext;
         _twoFactorService = twoFactorService;
         _captchaService = captchaService;
         _cache = cache;
         _notificationService = notificationService;
+        _revokedDeviceService = revokedDeviceService;
         _logger = logger;
     }
 
@@ -123,6 +131,35 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         // Clear failed attempts on successful password verification
         await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
 
+        // AUTH-SEC-005: Check if this device was previously revoked
+        var revokedDeviceCheck = await _revokedDeviceService.CheckIfDeviceIsRevokedAsync(
+            user.Id,
+            _requestContext.IpAddress,
+            _requestContext.UserAgent,
+            cancellationToken);
+
+        if (revokedDeviceCheck.IsRevoked)
+        {
+            _logger.LogWarning(
+                "AUTH-SEC-005: Login attempt from revoked device. User: {UserId}, Fingerprint: {Fingerprint}",
+                user.Id, revokedDeviceCheck.DeviceFingerprint);
+
+            // Return a response indicating revoked device verification is required
+            // The frontend will need to handle this and call the revoked device verification flow
+            return new LoginResponse(
+                user.Id,
+                user.Email!,
+                string.Empty, // No access token
+                string.Empty, // No refresh token
+                DateTime.UtcNow.AddMinutes(10), // Short expiration
+                false, // requiresTwoFactor
+                null, // No temp token (reserved for 2FA)
+                null, // No 2FA type
+                true, // requiresRevokedDeviceVerification
+                revokedDeviceCheck.DeviceFingerprint // Device fingerprint for verification
+            );
+        }
+
         // Verificar si requiere 2FA
         if (user.IsTwoFactorEnabled)
         {
@@ -176,6 +213,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
+
+        // Create user session for session management
+        var userSession = new UserSession(
+            userId: user.Id,
+            refreshTokenId: refreshTokenEntity.Id.ToString(),
+            deviceInfo: ParseDeviceInfo(_requestContext.UserAgent),
+            browser: ParseBrowser(_requestContext.UserAgent),
+            operatingSystem: ParseOperatingSystem(_requestContext.UserAgent),
+            ipAddress: _requestContext.IpAddress,
+            expiresAt: DateTime.UtcNow.AddDays(7)
+        );
+        await _sessionRepository.AddAsync(userSession, cancellationToken);
+        _logger.LogInformation("Created session {SessionId} for user {UserId}", userSession.Id, user.Id);
+
         user.ResetAccessFailedCount();
         await _userRepository.UpdateAsync(user, cancellationToken);
 
@@ -251,5 +302,50 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         {
             _logger.LogInformation("CAPTCHA will be required for next login attempt from {Email}", email);
         }
+    }
+
+    /// <summary>
+    /// Parse device info from User-Agent string
+    /// </summary>
+    private static string ParseDeviceInfo(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
+        
+        if (userAgent.Contains("Mobile") || userAgent.Contains("Android") || userAgent.Contains("iPhone"))
+            return "Mobile";
+        if (userAgent.Contains("Tablet") || userAgent.Contains("iPad"))
+            return "Tablet";
+        return "Desktop";
+    }
+
+    /// <summary>
+    /// Parse browser name from User-Agent string
+    /// </summary>
+    private static string ParseBrowser(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        
+        if (userAgent.Contains("Edg/")) return "Microsoft Edge";
+        if (userAgent.Contains("Chrome/") && !userAgent.Contains("Chromium")) return "Chrome";
+        if (userAgent.Contains("Firefox/")) return "Firefox";
+        if (userAgent.Contains("Safari/") && !userAgent.Contains("Chrome")) return "Safari";
+        if (userAgent.Contains("Opera") || userAgent.Contains("OPR")) return "Opera";
+        return "Unknown Browser";
+    }
+
+    /// <summary>
+    /// Parse operating system from User-Agent string
+    /// </summary>
+    private static string ParseOperatingSystem(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        
+        if (userAgent.Contains("Windows NT 10")) return "Windows 10/11";
+        if (userAgent.Contains("Windows NT")) return "Windows";
+        if (userAgent.Contains("Mac OS X")) return "macOS";
+        if (userAgent.Contains("Linux") && !userAgent.Contains("Android")) return "Linux";
+        if (userAgent.Contains("Android")) return "Android";
+        if (userAgent.Contains("iPhone") || userAgent.Contains("iPad")) return "iOS";
+        return "Unknown OS";
     }
 }

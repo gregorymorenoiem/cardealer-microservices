@@ -2,6 +2,7 @@ using AuthService.Application.DTOs.Security;
 using AuthService.Application.Features.Auth.Commands.ChangePassword;
 using AuthService.Application.Features.Auth.Commands.RevokeSession;
 using AuthService.Application.Features.Auth.Commands.RevokeAllSessions;
+using AuthService.Application.Features.Auth.Commands.RequestSessionRevocation;
 using AuthService.Application.Features.Auth.Queries.GetActiveSessions;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Shared;
@@ -286,17 +287,92 @@ public class SecurityController : ControllerBase
     }
 
     /// <summary>
-    /// Revoke a specific session (remote logout)
+    /// Request a verification code to revoke a session
+    /// Proceso: AUTH-SEC-003-A
+    /// 
+    /// Sends a 6-digit code to the user's email that must be provided to revoke the session.
+    /// Code expires in 5 minutes. Maximum 3 requests per hour.
+    /// </summary>
+    /// <remarks>
+    /// Security features:
+    /// - Cannot request code for current session (must use logout)
+    /// - Rate limited: 3 requests per hour
+    /// - Code expires in 5 minutes
+    /// - Maximum 3 verification attempts before lockout
+    /// </remarks>
+    /// <param name="sessionId">The GUID of the session to request revocation for</param>
+    [HttpPost("sessions/{sessionId}/request-revoke")]
+    [ProducesResponseType(typeof(ApiResponse<RequestSessionRevocationResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<RequestSessionRevocationResponse>>> RequestSessionRevocation(
+        string sessionId,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning(
+                "AUTH-SEC-003-A: Attempt to request session revocation without authentication");
+            return Unauthorized(ApiResponse<RequestSessionRevocationResponse>.Fail("User not authenticated"));
+        }
+
+        _logger.LogInformation(
+            "AUTH-SEC-003-A: Session revocation code request from user {UserId} for session {SessionId}",
+            userId, sessionId);
+
+        try
+        {
+            var command = new RequestSessionRevocationCommand(
+                UserId: userId,
+                SessionId: sessionId,
+                CurrentSessionId: GetCurrentSessionId(),
+                IpAddress: GetClientIpAddress(),
+                UserAgent: GetUserAgentString()
+            );
+
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+            {
+                return BadRequest(ApiResponse<RequestSessionRevocationResponse>.Fail(result.Message));
+            }
+
+            return Ok(ApiResponse<RequestSessionRevocationResponse>.Ok(result));
+        }
+        catch (Exception ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        {
+            return NotFound(ApiResponse<RequestSessionRevocationResponse>.Fail("Session not found."));
+        }
+        catch (Exception ex) when (ex.Message.Contains("Too many", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(ApiResponse<RequestSessionRevocationResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "AUTH-SEC-003-A: Error requesting session revocation for user {UserId}",
+                userId);
+            return StatusCode(500, ApiResponse<RequestSessionRevocationResponse>.Fail(
+                "An error occurred while requesting session revocation."));
+        }
+    }
+
+    /// <summary>
+    /// Revoke a specific session with verification code (remote logout)
     /// Proceso: AUTH-SEC-003
     /// 
-    /// Terminates a specific session and invalidates its refresh token.
+    /// Terminates a specific session after verifying the email code.
     /// The device will be logged out on next request.
     /// </summary>
     /// <remarks>
     /// Security features:
+    /// - Requires verification code sent via email
+    /// - Cannot revoke current session (must use logout)
     /// - Verifies session belongs to the authenticated user (prevents IDOR)
     /// - Returns 404 even for sessions of other users (prevents enumeration)
     /// - Revokes associated refresh token
+    /// - Sends notification email to user
     /// - Logs security audit trail
     /// </remarks>
     /// <param name="sessionId">The GUID of the session to revoke</param>
@@ -307,6 +383,7 @@ public class SecurityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<RevokeSessionResponse>>> RevokeSession(
         string sessionId,
+        [FromQuery] string code,
         CancellationToken cancellationToken)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -318,6 +395,12 @@ public class SecurityController : ControllerBase
             return Unauthorized(ApiResponse<RevokeSessionResponse>.Fail("User not authenticated"));
         }
 
+        if (string.IsNullOrEmpty(code))
+        {
+            return BadRequest(ApiResponse<RevokeSessionResponse>.Fail(
+                "Verification code is required. Please request a code first."));
+        }
+
         _logger.LogInformation(
             "AUTH-SEC-003: Session revocation request from user {UserId} for session {SessionId}",
             userId, sessionId);
@@ -327,6 +410,7 @@ public class SecurityController : ControllerBase
             var command = new RevokeSessionCommand(
                 UserId: userId,
                 SessionId: sessionId,
+                VerificationCode: code,
                 CurrentSessionId: GetCurrentSessionId(),
                 IpAddress: GetClientIpAddress(),
                 UserAgent: GetUserAgentString()

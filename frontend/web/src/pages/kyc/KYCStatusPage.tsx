@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
 import {
@@ -20,11 +21,26 @@ import {
 import { kycService, KYCStatus, RiskLevel } from '@/services/kycService';
 import type { KYCProfile, KYCDocument } from '@/services/kycService';
 
+// Helper function to format names that are concatenated without spaces
+// e.g., "GregoryAlexanderMorenoLebron" -> "Gregory Alexander Moreno Lebron"
+const formatName = (name: string | undefined | null): string => {
+  if (!name) return '';
+  // Check if name has spaces already
+  if (name.includes(' ')) return name;
+  // Add space before each uppercase letter (except the first one)
+  return name.replace(/([A-Z])/g, ' $1').trim();
+};
+
 export default function KYCStatusPage() {
   // Translation hook available for future use
   useTranslation('kyc');
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Check if user has admin/compliance permissions to see risk info
+  const isAdmin = useAuthStore((state) => state.isAdmin());
+  const canAccessAdminPanel = useAuthStore((state) => state.canAccessAdminPanel());
+  const canViewRiskInfo = isAdmin || canAccessAdminPanel;
 
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<KYCProfile | null>(null);
@@ -201,93 +217,140 @@ export default function KYCStatusPage() {
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Nombre:</span>
+                    <span className="text-gray-500">Nombre completo:</span>
                     <span className="font-medium">
-                      {profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'No especificado'}
+                      {formatName(profile.fullName) ||
+                        `${profile.firstName || ''} ${profile.lastName || ''}`.trim() ||
+                        formatName(user?.name) ||
+                        `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
+                        'No especificado'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Documento:</span>
-                    <span className="font-medium">{profile.primaryDocumentNumber || profile.documentNumber || 'No especificado'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Nacionalidad:</span>
-                    <span className="font-medium">{profile.nationality || 'No especificado'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Ocupación:</span>
-                    <span className="font-medium">{profile.occupation || 'No especificado'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <FiShield className="text-primary" />
-                  Nivel de Riesgo
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Categoría:</span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskLevelColor(profile.riskLevel)}`}
-                    >
-                      {getRiskLevelLabel(profile.riskLevel)}
+                    <span className="text-gray-500">Correo:</span>
+                    <span className="font-medium">
+                      {profile.email || user?.email || 'No especificado'}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Score:</span>
-                    <span className="font-medium">{profile.riskScore.toFixed(1)} / 100</span>
-                  </div>
-                  {profile.isPEP && (
-                    <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm text-orange-800">
-                      ⚠️ Persona Políticamente Expuesta (PEP)
+                  {(profile.phone || user?.phone) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Teléfono:</span>
+                      <span className="font-medium">{profile.phone || user?.phone}</span>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* Documents */}
+              {/* Risk Level - Only visible for Admin/Compliance/Auditors */}
+              {canViewRiskInfo && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <FiShield className="text-primary" />
+                    Nivel de Riesgo
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                      Solo Admin/Compliance
+                    </span>
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Categoría:</span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskLevelColor(profile.riskLevel)}`}
+                      >
+                        {getRiskLevelLabel(profile.riskLevel)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Score:</span>
+                      <span className="font-medium">{profile.riskScore.toFixed(1)} / 100</span>
+                    </div>
+                    {profile.isPEP && (
+                      <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm text-orange-800">
+                        ⚠️ Persona Políticamente Expuesta (PEP)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Verification History Section */}
+        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <FiClock className="text-blue-600" size={24} />
+            </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FiFileText className="text-primary" />
-                Documentos ({profile.documents?.length || 0})
-              </h3>
-              <div className="space-y-2">
-                {profile.documents?.map((doc) => (
-                  <DocumentRow key={doc.id} document={doc} />
-                ))}
-                {(!profile.documents || profile.documents.length === 0) && (
-                  <p className="text-gray-500 text-sm">No hay documentos subidos</p>
-                )}
+              <h2 className="text-lg font-semibold text-gray-900">Historial</h2>
+              <p className="text-sm text-gray-500">Historial de verificación de identidad</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {/* Profile Created */}
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <FiCheck className="text-green-600" size={18} />
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-900">Perfil creado</div>
+              </div>
+              <div className="text-xs text-gray-500">
+                {new Date(profile.createdAt).toLocaleString()}
               </div>
             </div>
 
-            {/* Timeline */}
-            <div className="mt-6 pt-6 border-t">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FiCalendar className="text-primary" />
-                Historial
-              </h3>
-              <div className="space-y-3">
-                <TimelineItem date={profile.createdAt} title="Perfil creado" status="completed" />
-                {profile.approvedAt && (
-                  <TimelineItem
-                    date={profile.approvedAt}
-                    title={`Aprobado por ${profile.approvedByName || 'Administrador'}`}
-                    status="completed"
-                  />
-                )}
-                {profile.rejectedAt && (
-                  <TimelineItem 
-                    date={profile.rejectedAt} 
-                    title={`Rechazado${profile.rejectedByName ? ` por ${profile.rejectedByName}` : ''}`} 
-                    status="rejected" 
-                  />
-                )}
+            {/* Submitted for Review */}
+            {profile.submittedAt && (
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FiFileText className="text-blue-600" size={18} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">Enviado para revisión</div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {new Date(profile.submittedAt).toLocaleString()}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Approved */}
+            {profile.approvedAt && (
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <FiCheck className="text-green-600" size={18} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">
+                    Aprobado por {profile.approvedByName || 'Administrador'}
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {new Date(profile.approvedAt).toLocaleString()}
+                </div>
+              </div>
+            )}
+
+            {/* Rejected */}
+            {profile.rejectedAt && (
+              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <FiX className="text-red-600" size={18} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">
+                    Rechazado
+                    {profile.rejectedByName ? ` por ${profile.rejectedByName}` : ''}
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {new Date(profile.rejectedAt).toLocaleString()}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

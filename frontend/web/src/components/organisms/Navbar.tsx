@@ -71,7 +71,6 @@ export default function NavbarSimple() {
   const userLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: FiGrid },
     { href: '/favorites', label: 'Favoritos', icon: FiHeart },
-    { href: '/kyc/status', label: 'Verificar Identidad', icon: FiShield },
     { href: '/messages', label: 'Mensajes', icon: FiMessageSquare },
     { href: '/settings/security', label: 'Seguridad', icon: FiSettings },
     { href: '/profile', label: 'Perfil', icon: FiUser },
