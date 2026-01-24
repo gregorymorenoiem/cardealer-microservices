@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/atoms/Button';
+import { useAuthStore } from '@/store/authStore';
 import {
   FiShield,
   FiCheck,
@@ -28,6 +29,7 @@ export default function KYCAdminReviewPage() {
   useTranslation('kyc');
   const navigate = useNavigate();
   const { profileId } = useParams<{ profileId?: string }>();
+  const { user } = useAuthStore(); // Get current admin user
 
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [isLoading, setIsLoading] = useState(true);
@@ -128,7 +130,7 @@ export default function KYCAdminReviewPage() {
 
   // Handle approval
   const handleApprove = async () => {
-    if (!selectedProfile) return;
+    if (!selectedProfile || !user?.id) return;
 
     try {
       setIsSubmitting(true);
@@ -137,7 +139,7 @@ export default function KYCAdminReviewPage() {
 
       await kycService.approveProfile(
         selectedProfile.id,
-        'admin@okla.com.do', // TODO: Get from auth context
+        user.id, // Use authenticated admin user ID
         comments,
         expiresAt.toISOString()
       );
@@ -184,10 +186,10 @@ export default function KYCAdminReviewPage() {
 
   // Verify document
   const handleVerifyDocument = async (docId: string) => {
-    if (!selectedProfile) return;
+    if (!selectedProfile || !user?.id) return;
 
     try {
-      await kycService.verifyDocument(docId, 'admin@okla.com.do');
+      await kycService.verifyDocument(docId, user.id);
       // Refresh profile
       const updated = await kycService.getProfileById(selectedProfile.id);
       setSelectedProfile(updated);
@@ -251,9 +253,15 @@ export default function KYCAdminReviewPage() {
                     </div>
                     <div>
                       <h1 className="text-2xl font-bold">
-                        {selectedProfile.firstName} {selectedProfile.lastName}
+                        {selectedProfile.fullName ||
+                          `${selectedProfile.firstName || ''} ${selectedProfile.lastName || ''}`.trim() ||
+                          'Sin nombre'}
                       </h1>
-                      <p className="text-gray-500">{selectedProfile.documentNumber}</p>
+                      <p className="text-gray-500">
+                        {selectedProfile.primaryDocumentNumber ||
+                          selectedProfile.documentNumber ||
+                          'Documento no registrado'}
+                      </p>
                       <div className="flex items-center gap-2 mt-2">
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -282,32 +290,38 @@ export default function KYCAdminReviewPage() {
                   <div>
                     <span className="text-gray-500">Fecha de Nacimiento:</span>
                     <p className="font-medium">
-                      {new Date(selectedProfile.dateOfBirth).toLocaleDateString('es-DO')}
+                      {selectedProfile.dateOfBirth
+                        ? new Date(selectedProfile.dateOfBirth).toLocaleDateString('es-DO')
+                        : 'No especificado'}
                     </p>
                   </div>
                   <div>
                     <span className="text-gray-500">Nacionalidad:</span>
-                    <p className="font-medium">{selectedProfile.nationality}</p>
+                    <p className="font-medium">
+                      {selectedProfile.nationality || 'No especificado'}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-500">Teléfono:</span>
-                    <p className="font-medium">{selectedProfile.phoneNumber}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Ocupación:</span>
-                    <p className="font-medium">{selectedProfile.occupation}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Fuente de Ingresos:</span>
-                    <p className="font-medium">{selectedProfile.sourceOfFunds}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Transacciones Esperadas:</span>
                     <p className="font-medium">
-                      {selectedProfile.expectedMonthlyTransaction
-                        ? `$${selectedProfile.expectedMonthlyTransaction.toLocaleString()}/mes`
-                        : 'No especificado'}
+                      {selectedProfile.phone || selectedProfile.phoneNumber || 'No especificado'}
                     </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Email:</span>
+                    <p className="font-medium">{selectedProfile.email || 'No especificado'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Documento:</span>
+                    <p className="font-medium">
+                      {selectedProfile.primaryDocumentNumber ||
+                        selectedProfile.documentNumber ||
+                        'No especificado'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">País:</span>
+                    <p className="font-medium">{selectedProfile.country || 'RD'}</p>
                   </div>
                 </div>
 
@@ -324,54 +338,115 @@ export default function KYCAdminReviewPage() {
               <div className="bg-white rounded-xl shadow-sm border p-6">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <FiFileText className="text-primary" />
-                  Documentos ({selectedProfile.documents?.length || 0})
+                  Documentos (
+                  {selectedProfile.documents?.filter((d) => !d.fileUrl?.includes('pending-upload'))
+                    ?.length || 0}
+                  )
                 </h2>
-                <div className="space-y-3">
-                  {selectedProfile.documents?.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FiFileText className="text-gray-400" size={24} />
-                        <div>
-                          <p className="font-medium">
-                            {kycService.getDocumentTypeLabel(doc.documentType)}
-                          </p>
-                          <p className="text-sm text-gray-500">{doc.fileName}</p>
+                <div className="space-y-4">
+                  {selectedProfile.documents
+                    ?.filter((doc) => !doc.fileUrl?.includes('pending-upload')) // Filter out invalid pending uploads
+                    ?.map((doc) => {
+                      const isImage =
+                        doc.fileType?.startsWith('image/') ||
+                        doc.fileUrl?.match(/\.(jpg|jpeg|png|gif|webp)/i);
+                      const isValidUrl =
+                        doc.fileUrl?.startsWith('https://') || doc.fileUrl?.startsWith('http://');
+                      const statusLabel =
+                        doc.statusName === 'Verified' || doc.statusName === 'Approved'
+                          ? 'Verificado'
+                          : doc.statusName === 'Rejected'
+                            ? 'Rechazado'
+                            : 'Pendiente';
+                      const statusClass =
+                        doc.statusName === 'Verified' || doc.statusName === 'Approved'
+                          ? 'bg-green-100 text-green-700'
+                          : doc.statusName === 'Rejected'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700';
+
+                      return (
+                        <div key={doc.id} className="p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <FiFileText className="text-gray-400" size={24} />
+                              <div>
+                                <p className="font-medium">
+                                  {kycService.getDocumentTypeLabel(doc.type as any) ||
+                                    doc.documentName}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {doc.documentName} • {(doc.fileSize / 1024).toFixed(1)} KB
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${statusClass}`}
+                              >
+                                {statusLabel}
+                              </span>
+                              {doc.statusName === 'Pending' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleVerifyDocument(doc.id)}
+                                >
+                                  <FiCheck className="mr-1" /> Verificar
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Image Preview - inline with fallback */}
+                          {isImage && isValidUrl && doc.fileUrl && (
+                            <div className="mt-3 bg-white p-2 rounded-lg border">
+                              <img
+                                src={doc.fileUrl}
+                                alt={doc.documentName}
+                                className="w-full max-h-[500px] object-contain rounded-lg"
+                                crossOrigin="anonymous"
+                                loading="lazy"
+                                onError={(e) => {
+                                  // Hide img and show fallback link
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                              <a
+                                href={doc.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-2"
+                                style={{ display: 'none' }}
+                              >
+                                <FiEye /> Ver Imagen (abrir en nueva pestaña)
+                              </a>
+                            </div>
+                          )}
+
+                          {/* Non-image file link */}
+                          {!isImage && isValidUrl && doc.fileUrl && (
+                            <div className="mt-3">
+                              <a
+                                href={doc.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                              >
+                                <FiEye /> Ver Documento
+                              </a>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            doc.verificationStatus === 'Verified'
-                              ? 'bg-green-100 text-green-700'
-                              : doc.verificationStatus === 'Rejected'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                          }`}
-                        >
-                          {doc.verificationStatus === 'Verified'
-                            ? 'Verificado'
-                            : doc.verificationStatus === 'Rejected'
-                              ? 'Rechazado'
-                              : 'Pendiente'}
-                        </span>
-                        <Button variant="ghost" size="sm">
-                          <FiEye />
-                        </Button>
-                        {doc.verificationStatus === 'Pending' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleVerifyDocument(doc.id)}
-                          >
-                            <FiCheck className="mr-1" /> Verificar
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
+
+                  {(!selectedProfile.documents || selectedProfile.documents.length === 0) && (
+                    <p className="text-gray-500 text-center py-4">No hay documentos subidos</p>
+                  )}
                 </div>
               </div>
             </div>

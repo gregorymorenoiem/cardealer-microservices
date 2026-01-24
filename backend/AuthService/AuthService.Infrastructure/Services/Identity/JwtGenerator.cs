@@ -20,7 +20,7 @@ public class JwtGenerator : IJwtGenerator
 
     public string GenerateToken(ApplicationUser user)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
@@ -33,6 +33,29 @@ public class JwtGenerator : IJwtGenerator
             // Account type for role-based UI
             new Claim("account_type", ((int)user.AccountType).ToString())
         };
+        
+        // Add role claims based on AccountType for [Authorize(Roles = "...")] compatibility
+        // AccountType: Guest=0, Individual=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5
+        switch (user.AccountType)
+        {
+            case Domain.Enums.AccountType.Admin:
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                claims.Add(new Claim(ClaimTypes.Role, "Compliance"));
+                break;
+            case Domain.Enums.AccountType.PlatformEmployee:
+                claims.Add(new Claim(ClaimTypes.Role, "Compliance"));
+                claims.Add(new Claim(ClaimTypes.Role, "PlatformEmployee"));
+                break;
+            case Domain.Enums.AccountType.Dealer:
+                claims.Add(new Claim(ClaimTypes.Role, "Dealer"));
+                break;
+            case Domain.Enums.AccountType.DealerEmployee:
+                claims.Add(new Claim(ClaimTypes.Role, "DealerEmployee"));
+                break;
+            case Domain.Enums.AccountType.Individual:
+                claims.Add(new Claim(ClaimTypes.Role, "User"));
+                break;
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

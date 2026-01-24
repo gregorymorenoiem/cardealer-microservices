@@ -1,7 +1,9 @@
 import axios from 'axios';
 import imageCompression from 'browser-image-compression';
 
-const UPLOAD_API_URL = import.meta.env.VITE_UPLOAD_SERVICE_URL || 'http://localhost:5006/api';
+// Use Gateway URL for all API calls - MediaService upload endpoint
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+const MEDIA_UPLOAD_URL = `${API_BASE_URL}/api/media/upload`;
 
 export interface UploadResponse {
   url: string;
@@ -52,7 +54,7 @@ export const uploadImage = async (
     formData.append('file', compressedFile);
     formData.append('folder', folder);
 
-    const response = await axios.post(`${UPLOAD_API_URL}/upload/image`, formData, {
+    const response = await axios.post(`${MEDIA_UPLOAD_URL}/image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -99,7 +101,7 @@ export const uploadMultipleImages = async (
 // Delete image
 export const deleteImage = async (publicId: string): Promise<void> => {
   try {
-    await axios.delete(`${UPLOAD_API_URL}/upload/image/${publicId}`);
+    await axios.delete(`${MEDIA_UPLOAD_URL}/image/${publicId}`);
   } catch (error) {
     console.error('Error deleting image:', error);
     throw new Error('Failed to delete image');
@@ -126,7 +128,7 @@ export const uploadProfilePicture = async (
     formData.append('file', compressedFile);
     formData.append('folder', 'profiles');
 
-    const response = await axios.post(`${UPLOAD_API_URL}/upload/profile`, formData, {
+    const response = await axios.post(`${MEDIA_UPLOAD_URL}/profile`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -235,7 +237,7 @@ export const uploadDocument = async (
     formData.append('documentType', documentType);
     formData.append('folder', 'documents');
 
-    const response = await axios.post(`${UPLOAD_API_URL}/upload/document`, formData, {
+    const response = await axios.post(`${MEDIA_UPLOAD_URL}/document`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -264,7 +266,7 @@ export const getUploadStats = async (): Promise<{
   uploadsByType: Record<string, number>;
 }> => {
   try {
-    const response = await axios.get(`${UPLOAD_API_URL}/admin/upload/stats`);
+    const response = await axios.get(`${API_BASE_URL}/api/media/admin/upload/stats`);
     return response.data;
   } catch (error) {
     console.error('Error fetching upload stats:', error);

@@ -47,6 +47,14 @@ public class SellerProfileRepository : ISellerProfileRepository
         return profile;
     }
 
+    /// <summary>
+    /// Alias for CreateAsync - adds a new seller profile
+    /// </summary>
+    public async Task<SellerProfile> AddAsync(SellerProfile profile)
+    {
+        return await CreateAsync(profile);
+    }
+
     public async Task<SellerProfile> UpdateAsync(SellerProfile profile)
     {
         profile.UpdatedAt = DateTime.UtcNow;
@@ -64,6 +72,14 @@ public class SellerProfileRepository : ISellerProfileRepository
         profile.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>
+    /// Check if a seller profile exists by ID
+    /// </summary>
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        return await _context.SellerProfiles.AnyAsync(sp => sp.Id == id && !sp.IsDeleted);
     }
 
     #endregion

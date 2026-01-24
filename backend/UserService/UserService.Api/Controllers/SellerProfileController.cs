@@ -334,12 +334,8 @@ public class SellerProfileController : ControllerBase
 
         await _sellerProfileRepository.UpdateAsync(profile);
 
-        await _eventPublisher.PublishAsync("seller.profile.updated", new
-        {
-            SellerId = profile.Id,
-            UserId = userId,
-            UpdatedAt = DateTime.UtcNow
-        });
+        // TODO: Create typed SellerProfileUpdatedEvent
+        // await _eventPublisher.PublishAsync(new SellerProfileUpdatedEvent { ... });
 
         return Ok(MapToSellerProfileDto(profile));
     }
@@ -440,12 +436,8 @@ public class SellerProfileController : ControllerBase
             await _sellerProfileRepository.UpdateContactPreferencesAsync(preferences);
         }
 
-        await _eventPublisher.PublishAsync("seller.preferences.updated", new
-        {
-            SellerId = profile.Id,
-            UserId = userId,
-            UpdatedAt = DateTime.UtcNow
-        });
+        // TODO: Create typed SellerPreferencesUpdatedEvent
+        // await _eventPublisher.PublishAsync(new SellerPreferencesUpdatedEvent { ... });
 
         return Ok(MapToContactPreferencesDto(preferences));
     }
@@ -565,12 +557,8 @@ public class SellerProfileController : ControllerBase
             Reason = "Nuevo vendedor en OKLA"
         });
 
-        await _eventPublisher.PublishAsync("seller.profile.created", new
-        {
-            SellerId = profile.Id,
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow
-        });
+        // TODO: Create typed SellerProfileCreatedEvent
+        // await _eventPublisher.PublishAsync(new SellerProfileCreatedEvent { ... });
 
         return CreatedAtAction(nameof(GetMyProfile), MapToSellerProfileDto(profile));
     }
@@ -606,12 +594,8 @@ public class SellerProfileController : ControllerBase
             Reason = request.Reason
         });
 
-        await _eventPublisher.PublishAsync("seller.badge.earned", new
-        {
-            SellerId = sellerId,
-            Badge = request.Badge.ToString(),
-            EarnedAt = DateTime.UtcNow
-        });
+        // TODO: Create typed SellerBadgeEarnedEvent
+        // await _eventPublisher.PublishAsync(new SellerBadgeEarnedEvent { ... });
 
         return Ok(new { 
             message = $"Badge {request.Badge} asignado exitosamente",
@@ -642,12 +626,8 @@ public class SellerProfileController : ControllerBase
             return NotFound(new { message = "Badge no encontrado" });
         }
 
-        await _eventPublisher.PublishAsync("seller.badge.lost", new
-        {
-            SellerId = sellerId,
-            Badge = badge.ToString(),
-            RemovedAt = DateTime.UtcNow
-        });
+        // TODO: Create typed SellerBadgeLostEvent
+        // await _eventPublisher.PublishAsync(new SellerBadgeLostEvent { ... });
 
         return Ok(new { message = $"Badge {badge} removido exitosamente" });
     }
@@ -668,11 +648,8 @@ public class SellerProfileController : ControllerBase
             return NotFound(new { message = "Vendedor no encontrado" });
         }
 
-        await _eventPublisher.PublishAsync("seller.verified", new
-        {
-            SellerId = sellerId,
-            VerifiedAt = DateTime.UtcNow
-        });
+        // TODO: Create typed SellerVerifiedEvent
+        // await _eventPublisher.PublishAsync(new SellerVerifiedEvent { ... });
 
         return Ok(new { message = "Vendedor verificado exitosamente" });
     }

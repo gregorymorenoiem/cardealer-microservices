@@ -19,18 +19,7 @@ namespace UserService.Domain.Interfaces
         Task<int> CountByTypeAsync(DealerType dealerType);
     }
 
-    public interface ISellerProfileRepository
-    {
-        Task<SellerProfile?> GetByIdAsync(Guid id);
-        Task<SellerProfile?> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<SellerProfile>> GetAllAsync(int page = 1, int pageSize = 10);
-        Task<IEnumerable<SellerProfile>> SearchAsync(string? searchTerm, string? city, string? state, bool? isVerified, int page = 1, int pageSize = 10);
-        Task<SellerProfile> AddAsync(SellerProfile profile);
-        Task UpdateAsync(SellerProfile profile);
-        Task DeleteAsync(Guid id);
-        Task<bool> ExistsAsync(Guid id);
-        Task<int> CountAsync();
-    }
+    // NOTE: ISellerProfileRepository is defined in ISellerProfileRepository.cs (more complete version)
 
     public interface IIdentityDocumentRepository
     {

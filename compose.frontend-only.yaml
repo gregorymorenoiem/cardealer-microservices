@@ -380,10 +380,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 384M
+          cpus: "1.0"
+          memory: 1024M
         reservations:
-          memory: 256M
+          memory: 512M
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
@@ -394,13 +394,23 @@ services:
       Jwt__Issuer: "AuthService-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
       Redis__Host: "redis:6379"
       Consul__Host: "http://consul:8500"
-      # S3 Configuration (Local MinIO o AWS)
-      S3__Endpoint: "${S3_ENDPOINT:-http://localhost:9000}"
-      S3__AccessKey: "${S3_ACCESS_KEY:-minioadmin}"
-      S3__SecretKey: "${S3_SECRET_KEY:-minioadmin}"
-      S3__BucketName: "${S3_BUCKET:-okla}"
+      Consul__Enabled: "false"
+      # Storage configuration - AWS S3 Enabled
+      Storage__Provider: "s3"
+      Storage__S3__AccessKey: "${AWS_ACCESS_KEY_ID:-AKIAQII4Y254AUECTCON}"
+      Storage__S3__SecretKey: "${AWS_SECRET_ACCESS_KEY:-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}"
+      Storage__S3__BucketName: "${AWS_S3_BUCKET:-okla-images-2026}"
+      Storage__S3__Region: "${AWS_REGION:-us-east-2}"
+      Storage__S3__CdnBaseUrl: ""
+      Storage__S3__PreSignedUrlExpirationMinutes: "60"
+      Storage__Local__BasePath: "/app/media-files"
+      Storage__Local__BaseUrl: "http://localhost:15020/uploads"
+      ServiceUrls__ErrorService: "http://errorservice:80"
     ports:
       - "15020:80"
     depends_on:
@@ -441,10 +451,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 384M
+          cpus: "1.0"
+          memory: 1024M
         reservations:
-          memory: 256M
+          memory: 512M
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
@@ -452,6 +462,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=userservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -519,6 +531,8 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -566,6 +580,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=notificationservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -615,6 +631,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=adminservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -670,6 +688,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=errorservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -726,6 +746,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=eventtrackingservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -790,6 +812,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=roleservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -842,6 +866,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -918,6 +944,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -964,6 +992,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealeranalyticsservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1010,6 +1040,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=crmservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1056,6 +1088,8 @@ services:
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=searchservice;Username=postgres;Password=password"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1108,6 +1142,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1160,6 +1196,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1212,6 +1250,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1265,6 +1305,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1317,6 +1359,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=financeservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1369,6 +1413,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featuretoggleservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1421,6 +1467,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1473,6 +1521,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1525,6 +1575,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1572,6 +1624,8 @@ services:
       ASPNETCORE_URLS: http://+:80
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15120:80"
     depends_on:
@@ -1615,6 +1669,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=appointmentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1662,6 +1718,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=inventorymanagementservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1709,6 +1767,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=invoicingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1756,6 +1816,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=marketingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1803,6 +1865,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recommendationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
     ports:
       - "15126:80"
@@ -1843,6 +1907,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15127:80"
     networks:
@@ -1884,6 +1950,8 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=ratelimitingservice;Username=postgres;Password=password"
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15128:80"
     depends_on:
@@ -1928,6 +1996,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehicleintelligenceservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1975,6 +2045,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=userbehaviorservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2019,6 +2091,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15131:80"
     networks:
@@ -2059,6 +2133,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=loggingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15132:80"
     depends_on:
@@ -2102,6 +2178,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=backupdrservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15133:80"
     depends_on:
@@ -2145,6 +2223,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=configurationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15134:80"
     depends_on:
@@ -2188,6 +2268,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=integrationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -2226,6 +2308,8 @@ services:
       ASPNETCORE_URLS: http://+:80
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15136:80"
     depends_on:
@@ -2271,6 +2355,8 @@ services:
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15137:80"
     depends_on:
@@ -2316,6 +2402,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=filestorageservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15138:5012"
     depends_on:
@@ -2491,6 +2579,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=realestateservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -2537,6 +2627,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=chatbotservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-sk-placeholder}"
@@ -2584,6 +2676,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=stripepaymentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Stripe__SecretKey: "${STRIPE_SECRET_KEY:-sk_test_placeholder}"
       Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}"
       Redis__ConnectionString: "redis:6379"
@@ -2634,6 +2728,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=azulpaymentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Azul__MerchantId: "${AZUL_MERCHANT_ID:-placeholder}"
       Azul__AuthKey: "${AZUL_AUTH_KEY:-placeholder}"
       Redis__ConnectionString: "redis:6379"
@@ -2678,6 +2774,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
     ports:
       - "15146:80"
     networks:
@@ -2778,7 +2876,7 @@ services:
   # 🔒 COMPLIANCE & LEGAL SERVICES
   # ──────────────────────────────────────────────────────────────────────
 
-  # KYCService - Puerto 15150 (Know Your Customer - Verificación de Identidad)
+  # KYCService - Puerto 15180 (Know Your Customer - Verificación de Identidad)
   kycservice:
     build:
       context: ./backend
@@ -2796,16 +2894,18 @@ services:
       ASPNETCORE_URLS: http://+:80
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
-      DATABASE_NAME: "kycservice"
+      DATABASE_NAME: "kycdb"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycdb;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
-      - "15150:80"
+      - "15180:80"
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -2848,6 +2948,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2895,6 +2997,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=escrowservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2942,6 +3046,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contractservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2989,6 +3095,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=legaldocumentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3036,6 +3144,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=disputeservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3087,6 +3197,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featurestoreservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3134,6 +3246,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=leadscoringservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3185,6 +3299,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=spyneintegrationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3232,6 +3348,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=regulatoryalertservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3279,6 +3397,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceintegrationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3326,6 +3446,8 @@ services:
       DATABASE_PASSWORD: "password"
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"

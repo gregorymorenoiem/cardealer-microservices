@@ -130,11 +130,15 @@ namespace UserService.Infrastructure.Persistence
         }
     }
 
-    public class SellerProfileRepository : ISellerProfileRepository
+    // NOTE: SellerProfileRepository has been moved to Repositories/SellerProfileRepository.cs (more complete version)
+    // The old implementation below is commented out to avoid duplicate class definition
+
+    /*
+    public class SellerProfileRepository_DEPRECATED : ISellerProfileRepository
     {
         private readonly ApplicationDbContext _context;
 
-        public SellerProfileRepository(ApplicationDbContext context)
+        public SellerProfileRepository_DEPRECATED(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -238,6 +242,7 @@ namespace UserService.Infrastructure.Persistence
             return await _context.SellerProfiles.CountAsync();
         }
     }
+    */
 
     public class IdentityDocumentRepository : IIdentityDocumentRepository
     {

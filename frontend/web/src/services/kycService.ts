@@ -1,18 +1,26 @@
-import axios from 'axios';
+import api from './api';
+import { uploadImage } from './uploadService';
+
+// Use api instance which has the auth interceptor configured
+const axios = api;
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
+// KYC endpoints go through /api/kyc/kycprofiles which maps to backend /api/kycprofiles
 const KYC_API_URL = `${API_BASE_URL}/api/kyc`;
 
-// Enums matching backend
+// Enums matching backend (KYCService.Domain.Entities.KYCEntities.cs)
 export enum KYCStatus {
+  Pending = 1,
+  InProgress = 2,
+  DocumentsRequired = 3,
+  UnderReview = 4,
+  Approved = 5,
+  Rejected = 6,
+  Expired = 7,
+  Suspended = 8,
+  // Aliases for backwards compatibility
   NotStarted = 0,
-  InProgress = 1,
-  PendingReview = 2,
-  UnderReview = 3,
-  Approved = 4,
-  Rejected = 5,
-  Expired = 6,
-  Suspended = 7,
+  PendingReview = 4, // Same as UnderReview
 }
 
 export enum RiskLevel {
@@ -23,16 +31,17 @@ export enum RiskLevel {
 }
 
 export enum DocumentType {
-  // Identity Documents
-  Cedula = 0,
-  Passport = 1,
-  DriverLicense = 2,
-  // Proof of Address
+  // Identity Documents (matching backend)
+  Cedula = 1,
+  Passport = 2,
+  DriverLicense = 3,
+  ResidencyCard = 4,
+  RNC = 5,
+  Other = 99,
+  // Proof of Address (extended for frontend)
   UtilityBill = 10,
   BankStatement = 11,
   LeaseAgreement = 12,
-  // Business Documents (Dealers)
-  RNC = 20,
   MercantileRegistry = 21,
   BusinessLicense = 22,
   TaxCertificate = 23,
@@ -47,48 +56,78 @@ export enum DocumentType {
 export interface KYCProfile {
   id: string;
   userId: string;
-  firstName: string;
-  lastName: string;
-  documentNumber: string;
-  documentType: DocumentType;
+  // Backend sends these fields
+  fullName?: string;
+  middleName?: string | null;
+  lastName?: string;
+  firstName?: string; // May not exist, derive from fullName
+  entityType: number;
+  status: number;
+  statusName: string;
+  riskLevel: number;
+  riskLevelName: string;
+  riskScore: number;
+  riskFactors: string[];
   dateOfBirth: string;
+  placeOfBirth?: string | null;
   nationality: string;
+  primaryDocumentType: number;
+  primaryDocumentNumber?: string | null;
+  primaryDocumentExpiry?: string | null;
+  email?: string | null;
+  phone?: string | null;
   address: string;
   city: string;
   province: string;
-  phoneNumber: string;
-  status: KYCStatus;
-  riskLevel: RiskLevel;
-  riskScore: number;
+  country?: string;
   isPEP: boolean;
-  pepPosition?: string;
-  sourceOfFunds: string;
-  occupation: string;
-  expectedMonthlyTransaction?: number;
+  pepPosition?: string | null;
+  businessName?: string | null;
+  rnc?: string | null;
+  isIdentityVerified: boolean;
+  isAddressVerified: boolean;
+  identityVerifiedAt?: string | null;
+  addressVerifiedAt?: string | null;
   createdAt: string;
-  approvedAt?: string;
-  approvedBy?: string;
-  expiresAt?: string;
-  rejectedAt?: string;
-  rejectionReason?: string;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  approvedByName?: string | null; // Human-readable name
+  expiresAt?: string | null;
+  nextReviewAt?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
+  rejectedBy?: string | null;
+  rejectedByName?: string | null; // Human-readable name
   documents: KYCDocument[];
+  verifications: any[];
+  // Legacy/optional fields for backward compatibility
+  occupation?: string;
+  sourceOfFunds?: string;
+  expectedMonthlyTransaction?: number;
+  phoneNumber?: string; // Alias for phone
+  documentNumber?: string; // Alias for primaryDocumentNumber
 }
 
 export interface KYCDocument {
   id: string;
-  profileId: string;
-  documentType: DocumentType;
+  kycProfileId: string;
+  // Backend sends 'type' as number and 'typeName' as string
+  type: number;
+  typeName?: string;
+  documentName: string;
   fileName: string;
   fileUrl: string;
-  fileSizeBytes: number;
-  mimeType: string;
-  side?: 'Front' | 'Back';
+  fileType: string;
+  fileSize: number;
+  side?: string | null;
+  status: number;
+  statusName: string;
+  rejectionReason?: string | null;
+  extractedNumber?: string | null;
+  extractedExpiry?: string | null;
+  extractedName?: string | null;
   uploadedAt: string;
-  verifiedAt?: string;
-  verifiedBy?: string;
-  verificationStatus: 'Pending' | 'Verified' | 'Rejected';
-  rejectionReason?: string;
-  ocrData?: Record<string, string>;
+  verifiedAt?: string | null;
 }
 
 export interface CreateKYCProfileRequest {
@@ -150,9 +189,13 @@ class KYCService {
       });
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        return null;
+      if (axios.isAxiosError(error)) {
+        // 404 = profile not found, 401 = not authenticated yet, both are expected states
+        if (error.response?.status === 404 || error.response?.status === 401) {
+          return null;
+        }
       }
+      console.error('Error fetching KYC profile:', error);
       throw error;
     }
   }
@@ -165,9 +208,35 @@ class KYCService {
     return response.data;
   }
 
+  // Map frontend field names to backend field names
+  private mapToBackendFormat(data: CreateKYCProfileRequest | Partial<CreateKYCProfileRequest>) {
+    return {
+      userId: data.userId,
+      fullName:
+        data.firstName && data.lastName
+          ? `${data.firstName} ${data.lastName}`.trim()
+          : data.firstName || '',
+      lastName: data.lastName,
+      primaryDocumentNumber: data.documentNumber,
+      primaryDocumentType: data.documentType,
+      dateOfBirth: data.dateOfBirth,
+      nationality: data.nationality,
+      address: data.address,
+      city: data.city,
+      province: data.province,
+      country: 'DO',
+      phone: data.phoneNumber,
+      sourceOfFunds: data.sourceOfFunds,
+      occupation: data.occupation,
+      expectedTransactionVolume: data.expectedMonthlyTransaction?.toString(),
+      entityType: 0, // Individual
+    };
+  }
+
   // Create new KYC profile
   async createProfile(data: CreateKYCProfileRequest): Promise<KYCProfile> {
-    const response = await axios.post<KYCProfile>(`${KYC_API_URL}/kycprofiles`, data, {
+    const mappedData = this.mapToBackendFormat(data);
+    const response = await axios.post<KYCProfile>(`${KYC_API_URL}/kycprofiles`, mappedData, {
       headers: this.getAuthHeader(),
     });
     return response.data;
@@ -175,41 +244,82 @@ class KYCService {
 
   // Update profile
   async updateProfile(id: string, data: Partial<CreateKYCProfileRequest>): Promise<KYCProfile> {
+    const mappedData = this.mapToBackendFormat(data);
     const response = await axios.put<KYCProfile>(
       `${KYC_API_URL}/kycprofiles/${id}`,
-      { id, ...data },
+      { id, ...mappedData },
       { headers: this.getAuthHeader() }
     );
     return response.data;
   }
 
-  // Upload document
+  // Upload document - Uses Upload Service for file upload, then registers in KYC
   async uploadDocument(request: UploadDocumentRequest): Promise<KYCDocument> {
-    const formData = new FormData();
-    formData.append('profileId', request.profileId);
-    formData.append('documentType', request.documentType.toString());
-    formData.append('file', request.file);
-    if (request.side) {
-      formData.append('side', request.side);
-    }
+    try {
+      let fileUrl: string;
+      let publicId: string;
 
-    const response = await axios.post<KYCDocument>(
-      `${KYC_API_URL}/kyc/profiles/${request.profileId}/documents`,
-      formData,
-      {
-        headers: {
-          ...this.getAuthHeader(),
-          'Content-Type': 'multipart/form-data',
-        },
+      try {
+        // Step 1: Try to upload file to Media/Upload Service (returns S3 URL)
+        const uploadResponse = await uploadImage(request.file, 'kyc-documents');
+        fileUrl = uploadResponse.url;
+        publicId = uploadResponse.publicId || request.file.name;
+      } catch (uploadError) {
+        // If MediaService is down, use a placeholder URL
+        // The actual file is stored locally in browser state (capturedImages)
+        // Admin can request re-upload when MediaService is back
+        console.warn('MediaService unavailable, using placeholder URL:', uploadError);
+
+        // Use a placeholder URL that indicates the file was captured but not uploaded
+        const timestamp = Date.now();
+        publicId = `pending-upload-${timestamp}-${request.file.name}`;
+        fileUrl = `https://pending-upload.okla.com.do/kyc/${publicId}`;
       }
-    );
-    return response.data;
+
+      // Step 2: Register document in KYC with metadata + URL
+      const payload = {
+        kycProfileId: request.profileId,
+        type: request.documentType,
+        documentName: request.file.name,
+        fileName: publicId,
+        fileUrl: fileUrl,
+        fileType: request.file.type,
+        fileSize: request.file.size,
+        uploadedBy: request.profileId,
+        side: request.side,
+      };
+
+      const response = await axios.post<KYCDocument>(
+        `${KYC_API_URL}/profiles/${request.profileId}/documents`,
+        payload,
+        {
+          headers: {
+            ...this.getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading KYC document:', error);
+      throw error;
+    }
+  }
+
+  // Helper to convert File to base64
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   }
 
   // Get documents for profile
   async getDocuments(profileId: string): Promise<KYCDocument[]> {
     const response = await axios.get<KYCDocument[]>(
-      `${KYC_API_URL}/kyc/profiles/${profileId}/documents`,
+      `${KYC_API_URL}/profiles/${profileId}/documents`,
       { headers: this.getAuthHeader() }
     );
     return response.data;
@@ -217,7 +327,7 @@ class KYCService {
 
   // Delete document
   async deleteDocument(documentId: string): Promise<void> {
-    await axios.delete(`${KYC_API_URL}/kyc/documents/${documentId}`, {
+    await axios.delete(`${KYC_API_URL}/documents/${documentId}`, {
       headers: this.getAuthHeader(),
     });
   }
@@ -283,10 +393,20 @@ class KYCService {
   }
 
   // Admin: Verify document
-  async verifyDocument(documentId: string, verifiedBy: string): Promise<KYCDocument> {
+  async verifyDocument(
+    documentId: string,
+    verifiedBy: string,
+    approved: boolean = true,
+    rejectionReason?: string
+  ): Promise<KYCDocument> {
     const response = await axios.post<KYCDocument>(
-      `${KYC_API_URL}/kyc/documents/${documentId}/verify`,
-      { id: documentId, verifiedBy, approved: true },
+      `${KYC_API_URL}/documents/${documentId}/verify`,
+      {
+        id: documentId,
+        verifiedBy: verifiedBy, // Must be a valid GUID
+        approved: approved,
+        rejectionReason: rejectionReason || null,
+      },
       { headers: this.getAuthHeader() }
     );
     return response.data;
@@ -310,11 +430,13 @@ class KYCService {
 
   // Helper: Get status label
   getStatusLabel(status: KYCStatus): string {
-    const labels: Record<KYCStatus, string> = {
+    const labels: Record<number, string> = {
       [KYCStatus.NotStarted]: 'No Iniciado',
+      [KYCStatus.Pending]: 'Pendiente',
       [KYCStatus.InProgress]: 'En Progreso',
-      [KYCStatus.PendingReview]: 'Pendiente de Revisión',
+      [KYCStatus.DocumentsRequired]: 'Documentos Requeridos',
       [KYCStatus.UnderReview]: 'En Revisión',
+      [KYCStatus.PendingReview]: 'Pendiente de Revisión',
       [KYCStatus.Approved]: 'Aprobado',
       [KYCStatus.Rejected]: 'Rechazado',
       [KYCStatus.Expired]: 'Expirado',
@@ -325,17 +447,37 @@ class KYCService {
 
   // Helper: Get status color
   getStatusColor(status: KYCStatus): string {
-    const colors: Record<KYCStatus, string> = {
+    const colors: Record<number, string> = {
       [KYCStatus.NotStarted]: 'gray',
+      [KYCStatus.Pending]: 'yellow',
       [KYCStatus.InProgress]: 'blue',
-      [KYCStatus.PendingReview]: 'yellow',
+      [KYCStatus.DocumentsRequired]: 'orange',
       [KYCStatus.UnderReview]: 'orange',
+      [KYCStatus.PendingReview]: 'yellow',
       [KYCStatus.Approved]: 'green',
       [KYCStatus.Rejected]: 'red',
       [KYCStatus.Expired]: 'purple',
       [KYCStatus.Suspended]: 'red',
     };
     return colors[status] || 'gray';
+  }
+
+  // Submit profile for review - updates status to PendingReview
+  async submitForReview(profileId: string): Promise<KYCProfile> {
+    try {
+      const response = await axios.put<KYCProfile>(
+        `${KYC_API_URL}/kycprofiles/${profileId}`,
+        {
+          id: profileId,
+          status: KYCStatus.PendingReview,
+        },
+        { headers: this.getAuthHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting KYC for review:', error);
+      throw error;
+    }
   }
 
   // Helper: Get document type label

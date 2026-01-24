@@ -203,20 +203,20 @@ export default function KYCStatusPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-500">Nombre:</span>
                     <span className="font-medium">
-                      {profile.firstName} {profile.lastName}
+                      {profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'No especificado'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Documento:</span>
-                    <span className="font-medium">{profile.documentNumber}</span>
+                    <span className="font-medium">{profile.primaryDocumentNumber || profile.documentNumber || 'No especificado'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Nacionalidad:</span>
-                    <span className="font-medium">{profile.nationality}</span>
+                    <span className="font-medium">{profile.nationality || 'No especificado'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Ocupación:</span>
-                    <span className="font-medium">{profile.occupation}</span>
+                    <span className="font-medium">{profile.occupation || 'No especificado'}</span>
                   </div>
                 </div>
               </div>
@@ -275,12 +275,16 @@ export default function KYCStatusPage() {
                 {profile.approvedAt && (
                   <TimelineItem
                     date={profile.approvedAt}
-                    title={`Aprobado por ${profile.approvedBy}`}
+                    title={`Aprobado por ${profile.approvedByName || 'Administrador'}`}
                     status="completed"
                   />
                 )}
                 {profile.rejectedAt && (
-                  <TimelineItem date={profile.rejectedAt} title="Rechazado" status="rejected" />
+                  <TimelineItem 
+                    date={profile.rejectedAt} 
+                    title={`Rechazado${profile.rejectedByName ? ` por ${profile.rejectedByName}` : ''}`} 
+                    status="rejected" 
+                  />
                 )}
               </div>
             </div>

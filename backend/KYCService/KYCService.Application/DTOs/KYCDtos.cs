@@ -99,6 +99,7 @@ public record KYCDocumentDto
     public string FileUrl { get; init; } = string.Empty;
     public string FileType { get; init; } = string.Empty;
     public long FileSize { get; init; }
+    public string? Side { get; init; }
     public KYCDocumentStatus Status { get; init; }
     public string StatusName => Status.ToString();
     public string? RejectionReason { get; init; }

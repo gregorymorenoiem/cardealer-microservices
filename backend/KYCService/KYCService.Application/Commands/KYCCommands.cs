@@ -116,6 +116,7 @@ public record UploadKYCDocumentCommand : IRequest<KYCDocumentDto>
     public long FileSize { get; init; }
     public string? FileHash { get; init; }
     public Guid UploadedBy { get; init; }
+    public string? Side { get; init; } // "Front" or "Back" for cedula
 }
 
 /// <summary>

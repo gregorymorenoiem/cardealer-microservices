@@ -29,7 +29,7 @@ public class KYCProfilesController : ControllerBase
     /// Obtener todos los perfiles KYC con paginación y filtros
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<PaginatedResult<KYCProfileSummaryDto>>> GetProfiles(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -78,7 +78,7 @@ public class KYCProfilesController : ControllerBase
     /// Obtener perfil KYC por número de documento
     /// </summary>
     [HttpGet("document/{documentNumber}")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCProfileDto>> GetByDocument(string documentNumber)
     {
         var result = await _mediator.Send(new GetKYCProfileByDocumentQuery(documentNumber));
@@ -116,7 +116,7 @@ public class KYCProfilesController : ControllerBase
     /// Aprobar perfil KYC
     /// </summary>
     [HttpPost("{id:guid}/approve")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCProfileDto>> Approve(Guid id, [FromBody] ApproveKYCProfileCommand command)
     {
         if (id != command.Id)
@@ -131,7 +131,7 @@ public class KYCProfilesController : ControllerBase
     /// Rechazar perfil KYC
     /// </summary>
     [HttpPost("{id:guid}/reject")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCProfileDto>> Reject(Guid id, [FromBody] RejectKYCProfileCommand command)
     {
         if (id != command.Id)
@@ -146,7 +146,7 @@ public class KYCProfilesController : ControllerBase
     /// Obtener perfiles pendientes de revisión
     /// </summary>
     [HttpGet("pending")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<PaginatedResult<KYCProfileSummaryDto>>> GetPending(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -158,7 +158,7 @@ public class KYCProfilesController : ControllerBase
     /// Obtener perfiles próximos a expirar
     /// </summary>
     [HttpGet("expiring")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<PaginatedResult<KYCProfileSummaryDto>>> GetExpiring(
         [FromQuery] int daysUntilExpiry = 30,
         [FromQuery] int page = 1, 
@@ -177,7 +177,7 @@ public class KYCProfilesController : ControllerBase
     /// Obtener estadísticas KYC
     /// </summary>
     [HttpGet("statistics")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCStatisticsDto>> GetStatistics()
     {
         var result = await _mediator.Send(new GetKYCStatisticsQuery());

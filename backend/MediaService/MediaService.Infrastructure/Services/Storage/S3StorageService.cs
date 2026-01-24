@@ -2,6 +2,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using MediaService.Domain.Interfaces.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -13,11 +14,37 @@ public class S3StorageService : IMediaStorageService
     private readonly S3StorageOptions _options;
     private readonly ILogger<S3StorageService> _logger;
 
-    public S3StorageService(IOptions<S3StorageOptions> options, ILogger<S3StorageService> logger)
+    public S3StorageService(IConfiguration configuration, ILogger<S3StorageService> logger)
     {
-        _options = options.Value;
         _logger = logger;
-        _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, _options.Region);
+        
+        // Bind options directly from configuration
+        _options = new S3StorageOptions();
+        var section = configuration.GetSection("Storage:S3");
+        section.Bind(_options);
+        
+        _logger.LogInformation("S3StorageService: AccessKey={HasKey}, SecretKey={HasSecret}, Region={Region}, Bucket={Bucket}",
+            !string.IsNullOrEmpty(_options.AccessKey) ? "PRESENT" : "MISSING",
+            !string.IsNullOrEmpty(_options.SecretKey) ? "PRESENT" : "MISSING",
+            _options.Region,
+            _options.BucketName);
+        
+        if (string.IsNullOrEmpty(_options.AccessKey))
+        {
+            throw new InvalidOperationException($"S3 AccessKey is not configured. Check Storage:S3:AccessKey configuration.");
+        }
+        
+        if (string.IsNullOrEmpty(_options.SecretKey))
+        {
+            throw new InvalidOperationException($"S3 SecretKey is not configured. Check Storage:S3:SecretKey configuration.");
+        }
+        
+        // Parse region string to RegionEndpoint
+        var region = Amazon.RegionEndpoint.GetBySystemName(_options.Region);
+        _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, region);
+        
+        _logger.LogInformation("S3StorageService initialized successfully with bucket: {Bucket}, region: {Region}", 
+            _options.BucketName, _options.Region);
     }
 
     public async Task<UploadUrlResponse> GenerateUploadUrlAsync(string storageKey, string contentType, TimeSpan? expiry = null)

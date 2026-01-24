@@ -31,13 +31,13 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
             FullName = request.FullName,
             MiddleName = request.MiddleName,
             LastName = request.LastName,
-            DateOfBirth = request.DateOfBirth,
+            DateOfBirth = ToUtc(request.DateOfBirth),
             PlaceOfBirth = request.PlaceOfBirth,
             Nationality = request.Nationality,
             Gender = request.Gender,
             PrimaryDocumentType = request.PrimaryDocumentType,
             PrimaryDocumentNumber = request.PrimaryDocumentNumber,
-            PrimaryDocumentExpiry = request.PrimaryDocumentExpiry,
+            PrimaryDocumentExpiry = ToUtc(request.PrimaryDocumentExpiry),
             PrimaryDocumentCountry = request.PrimaryDocumentCountry,
             Email = request.Email,
             Phone = request.Phone,
@@ -58,7 +58,7 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
             BusinessName = request.BusinessName,
             RNC = request.RNC,
             BusinessType = request.BusinessType,
-            IncorporationDate = request.IncorporationDate,
+            IncorporationDate = ToUtc(request.IncorporationDate),
             LegalRepresentative = request.LegalRepresentative,
             CreatedAt = DateTime.UtcNow
         };
@@ -73,6 +73,24 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
 
         var created = await _repository.CreateAsync(profile, cancellationToken);
         return MapToDto(created);
+    }
+
+    /// <summary>
+    /// Converts a DateTime to UTC. If the DateTime is null or already UTC, returns as-is.
+    /// For Unspecified kind, assumes the value is already in UTC and specifies it as such.
+    /// </summary>
+    private static DateTime? ToUtc(DateTime? dateTime)
+    {
+        if (dateTime == null) return null;
+        
+        var dt = dateTime.Value;
+        return dt.Kind switch
+        {
+            DateTimeKind.Utc => dt,
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+            DateTimeKind.Local => dt.ToUniversalTime(),
+            _ => dt
+        };
     }
 
     private static KYCProfileDto MapToDto(KYCProfile p) => new()
@@ -289,6 +307,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             FileType = request.FileType,
             FileSize = request.FileSize,
             FileHash = request.FileHash,
+            Side = request.Side,
             Status = KYCDocumentStatus.Pending,
             UploadedBy = request.UploadedBy,
             UploadedAt = DateTime.UtcNow
@@ -314,6 +333,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             FileUrl = created.FileUrl,
             FileType = created.FileType,
             FileSize = created.FileSize,
+            Side = created.Side,
             Status = created.Status,
             UploadedAt = created.UploadedAt
         };

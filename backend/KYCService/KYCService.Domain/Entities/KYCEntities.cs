@@ -176,6 +176,11 @@ public class KYCDocument
     public string? FileHash { get; set; }
     
     /// <summary>
+    /// Lado del documento (Front/Back) - Para cédula se requieren ambos lados
+    /// </summary>
+    public string? Side { get; set; }
+    
+    /// <summary>
     /// Estado de verificación del documento
     /// </summary>
     public KYCDocumentStatus Status { get; set; } = KYCDocumentStatus.Pending;

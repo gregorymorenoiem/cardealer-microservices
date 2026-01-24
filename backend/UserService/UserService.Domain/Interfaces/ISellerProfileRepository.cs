@@ -16,8 +16,10 @@ public interface ISellerProfileRepository
     Task<SellerProfile?> GetByIdAsync(Guid id);
     Task<SellerProfile?> GetByUserIdAsync(Guid userId);
     Task<SellerProfile> CreateAsync(SellerProfile profile);
+    Task<SellerProfile> AddAsync(SellerProfile profile); // Alias for CreateAsync
     Task<SellerProfile> UpdateAsync(SellerProfile profile);
     Task<bool> DeleteAsync(Guid id);
+    Task<bool> ExistsAsync(Guid id);
 
     // ========================================
     // CONSULTAS

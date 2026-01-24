@@ -98,7 +98,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+// Authorization policies based on account_type claim
+// AccountType enum: Guest=0, Individual=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5
+builder.Services.AddAuthorization(options =>
+{
+    // Admin policy: account_type = 4 (Admin)
+    options.AddPolicy("Admin", policy => 
+        policy.RequireClaim("account_type", "4"));
+    
+    // Compliance policy: account_type = 4 (Admin) or 5 (PlatformEmployee)
+    options.AddPolicy("Compliance", policy => 
+        policy.RequireClaim("account_type", "4", "5"));
+    
+    // AdminOrCompliance: Either Admin or Compliance (used in controllers)
+    options.AddPolicy("AdminOrCompliance", policy => 
+        policy.RequireClaim("account_type", "4", "5"));
+});
 
 // Health Checks
 builder.Services.AddHealthChecks()

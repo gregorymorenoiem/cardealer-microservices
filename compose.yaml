@@ -780,10 +780,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
-          memory: 320M
+          cpus: "1.0"
+          memory: 1024M
         reservations:
-          memory: 192M
+          memory: 512M
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -817,16 +817,15 @@ services:
       Consul__Enabled: "false"
       Consul__Address: "http://consul:8500"
       # Storage configuration - AWS S3 Enabled
-      S3Storage__Enabled: "true"
-      S3Storage__AccessKey: "${AWS_ACCESS_KEY_ID:-AKIAQII4Y254AUECTCON}"
-      S3Storage__SecretKey: "${AWS_SECRET_ACCESS_KEY:-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}"
-      S3Storage__BucketName: "${AWS_S3_BUCKET:-okla-images-2026}"
-      S3Storage__Region: "${AWS_REGION:-us-east-2}"
-      S3Storage__CdnBaseUrl: ""
-      S3Storage__PreSignedUrlExpirationMinutes: "60"
-      AzureBlobStorage__Enabled: "false"
-      LocalStorage__Enabled: "false"
-      LocalStorage__BasePath: "/app/media-files"
+      Storage__Provider: "s3"
+      Storage__S3__AccessKey: "${AWS_ACCESS_KEY_ID:-AKIAQII4Y254AUECTCON}"
+      Storage__S3__SecretKey: "${AWS_SECRET_ACCESS_KEY:-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}"
+      Storage__S3__BucketName: "${AWS_S3_BUCKET:-okla-images-2026}"
+      Storage__S3__Region: "${AWS_REGION:-us-east-2}"
+      Storage__S3__CdnBaseUrl: ""
+      Storage__S3__PreSignedUrlExpirationMinutes: "60"
+      Storage__Local__BasePath: "/app/media-files"
+      Storage__Local__BaseUrl: "http://localhost:15090/uploads"
       ServiceUrls__ErrorService: "http://errorservice:80"
     volumes:
       - ./backend:/app
@@ -2865,6 +2864,55 @@ services:
       - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # KYCService - Know Your Customer / Verificación de Identidad
+  kycservice:
+    build:
+      context: ./backend
+      dockerfile: KYCService/KYCService.Api/Dockerfile.dev
+    container_name: kycservice
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DATABASE_HOST: "postgres_db"
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: "kycdb"
+      DATABASE_USER: "postgres"
+      DATABASE_PASSWORD: "password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycdb;Username=postgres;Password=password"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "CarGurus-Dev"
+      Redis__Host: "redis:6379"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+    ports:
+      - "15180:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cargurus-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -840,6 +840,36 @@
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }]
     },
     {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/kycprofiles/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/kycprofiles",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/kyc/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/kyc/{everything}",

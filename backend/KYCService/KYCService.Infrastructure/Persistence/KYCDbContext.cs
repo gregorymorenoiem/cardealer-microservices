@@ -134,6 +134,7 @@ public class KYCDbContext : DbContext
             entity.Property(e => e.FileType).HasColumnName("file_type").HasMaxLength(50);
             entity.Property(e => e.FileSize).HasColumnName("file_size");
             entity.Property(e => e.FileHash).HasColumnName("file_hash").HasMaxLength(128);
+            entity.Property(e => e.Side).HasColumnName("side").HasMaxLength(50);
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.RejectionReason).HasColumnName("rejection_reason").HasMaxLength(500);
             entity.Property(e => e.ExtractedNumber).HasColumnName("extracted_number").HasMaxLength(50);

@@ -9,14 +9,15 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/images/logo.svg',
   '/images/icon-192.svg',
-  '/images/icon-512.svg'
+  '/images/icon-512.svg',
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Install');
   event.waitUntil(
-    caches.open(STATIC_CACHE)
+    caches
+      .open(STATIC_CACHE)
       .then((cache) => {
         console.log('[ServiceWorker] Caching static assets');
         return cache.addAll(STATIC_ASSETS);
@@ -32,16 +33,19 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   console.log('[ServiceWorker] Activate');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
-            console.log('[ServiceWorker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
+              console.log('[ServiceWorker] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(() => self.clients.claim())
   );
 });
 
@@ -53,11 +57,25 @@ self.addEventListener('fetch', (event) => {
   // Skip API requests - always go to network
   if (event.request.url.includes('/api/')) return;
 
+  // Skip chrome-extension, moz-extension, etc. - cannot be cached
+  if (
+    event.request.url.startsWith('chrome-extension://') ||
+    event.request.url.startsWith('moz-extension://') ||
+    event.request.url.startsWith('safari-extension://')
+  ) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         // Clone response for caching
-        if (response.ok && response.type === 'basic') {
+        // Only cache http/https requests with 'basic' type
+        if (
+          response.ok &&
+          response.type === 'basic' &&
+          (event.request.url.startsWith('http://') || event.request.url.startsWith('https://'))
+        ) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
@@ -90,19 +108,15 @@ self.addEventListener('push', (event) => {
       badge: '/images/icon-96.svg',
       vibrate: [100, 50, 100],
       data: {
-        url: data.url || '/'
-      }
+        url: data.url || '/',
+      },
     };
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'CarDealer', options)
-    );
+    event.waitUntil(self.registration.showNotification(data.title || 'CarDealer', options));
   }
 });
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url)
-  );
+  event.waitUntil(clients.openWindow(event.notification.data.url));
 });
