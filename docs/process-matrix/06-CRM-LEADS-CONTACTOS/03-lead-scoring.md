@@ -74,6 +74,47 @@ Sistema de calificación de leads basado en Machine Learning que asigna puntuaci
 | MLTrainingService    | Entrenamiento de modelos   |
 | NotificationService  | Alertas de leads calientes |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      LeadScoringService Architecture                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Data Sources                       Processing                Outputs      │
+│   ┌────────────────┐              ┌─────────────────────┐    ┌──────────┐  │
+│   │ EventTracking  │──┐           │                     │    │ Dealer   │  │
+│   │ Service        │  │           │  ┌───────────────┐  │    │ Dashboard│  │
+│   └────────────────┘  │           │  │ ML Scoring    │  │    │          │  │
+│   ┌────────────────┐  │           │  │ Engine        │  │    │ Hot Leads│  │
+│   │ UserService    │──┼──────────▶│  │               │  │───▶│ Priority │  │
+│   │ (Profile Data) │  │           │  │ - Behavior    │  │    │ Queue    │  │
+│   └────────────────┘  │           │  │ - Engagement  │  │    └──────────┘  │
+│   ┌────────────────┐  │           │  │ - Profile     │  │    ┌──────────┐  │
+│   │ VehiclesSale   │──┤           │  │ - Intent      │  │    │ Notif.   │  │
+│   │ (Views/Favs)   │  │           │  └───────────────┘  │───▶│ Service  │  │
+│   └────────────────┘  │           │         │           │    │          │  │
+│   ┌────────────────┐  │           │  ┌──────▼────────┐  │    │ Alerts   │  │
+│   │ ContactService │──┘           │  │ Score Output  │  │    └──────────┘  │
+│   │ (Inquiries)    │              │  │ COLD  0-30    │  │                  │
+│   └────────────────┘              │  │ WARM  31-60   │  │                  │
+│                                   │  │ HOT   61-80   │  │                  │
+│   ML Training                     │  │ READY 81-100  │  │                  │
+│   ┌────────────────┐              │  └───────────────┘  │                  │
+│   │ MLTraining     │─────────────▶│                     │                  │
+│   │ Service        │              └─────────────────────┘                  │
+│   └────────────────┘                        │                              │
+│                                ┌────────────┼────────────┐                 │
+│                                ▼            ▼            ▼                 │
+│                        ┌────────────┐ ┌────────────┐ ┌────────────┐       │
+│                        │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │       │
+│                        │ (Scores,   │ │  (Real-time│ │ (Score     │       │
+│                        │  History)  │ │  Scores)   │ │  Updates)  │       │
+│                        └────────────┘ └────────────┘ └────────────┘       │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

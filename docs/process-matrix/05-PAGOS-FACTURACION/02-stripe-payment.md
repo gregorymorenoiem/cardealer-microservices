@@ -49,6 +49,42 @@ Integración con Stripe para procesar pagos internacionales (tarjetas no dominic
 | NotificationService | Confirmaciones de pago   |
 | InvoiceService      | Generación de facturas   |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Stripe Payment Architecture                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Frontend                           BillingService                          │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Checkout Page  │──┐             │      StripePaymentsController    │      │
+│   │ (Card Form)    │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Endpoints                │   │      │
+│   ┌────────────────┐  │             │  │ • POST /payment-intent   │   │      │
+│   │ Apple Pay      │──┼────────────▶│  │ • POST /confirm          │   │      │
+│   │ Google Pay     │  │             │  │ • GET /payment/{id}      │   │      │
+│   └────────────────┘  │             │  │ • POST /refund           │   │      │
+│   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
+│   │ Dealer Sub     │──┘             │  ┌──────────────────────────┐   │      │
+│   │ (Monthly)      │               │  │ StripeWebhooksController │   │      │
+│   └────────────────┘               │  │ • payment_intent.success │   │      │
+│                                    │  │ • invoice.paid           │   │      │
+│   Stripe API                       │  │ • charge.dispute.created │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ Payment Intent │◀─────────────└────────────────────────────────┘      │
+│   │ Subscriptions  │                           │                        │
+│   │ Webhooks       │               ┌───────────┼───────────┐                │
+│   └────────────────┘               ▼           ▼           ▼                │
+│                            ┌────────────┐ ┌────────────┐ ┌────────────┐   │
+│                            │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │   │
+│                            │ (Payments, │ │ (Idempot., │ │ (Payment   │   │
+│                            │  Customers)│ │  Sessions) │ │  Events)   │   │
+│                            └────────────┘ └────────────┘ └────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

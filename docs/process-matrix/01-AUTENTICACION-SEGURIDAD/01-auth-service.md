@@ -116,7 +116,56 @@ El AuthService es el servicio central de autenticación y autorización de OKLA.
 | KYCService          | Iniciar proceso KYC                   | RabbitMQ         |
 | AuditService        | Registrar eventos de seguridad        | RabbitMQ         |
 
-### 1.3 Controllers
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        AuthService Architecture                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Clients                      AuthService                   External        │
+│   ┌────────────┐              ┌──────────────────────────┐  ┌────────────┐  │
+│   │ Web App    │──┐           │ ┌──────────────────────┐ │  │ Google     │  │
+│   │ (React)    │  │           │ │    Controllers       │ │  │ OAuth      │  │
+│   └────────────┘  │           │ │ - AuthController     │ │  └────────────┘  │
+│   ┌────────────┐  │ HTTPS/JWT │ │ - ExternalAuth       │ │  ┌────────────┐  │
+│   │ Mobile App │──┼──────────▶│ │ - TwoFactor          │ │  │ Facebook   │  │
+│   │ (Flutter)  │  │           │ │ - Security           │ │  │ OAuth      │  │
+│   └────────────┘  │           │ │ - PhoneVerification  │ │  └────────────┘  │
+│   ┌────────────┐  │           │ └──────────┬───────────┘ │  ┌────────────┐  │
+│   │ API        │──┘           │            │             │  │ Apple      │  │
+│   │ Gateway    │              │ ┌──────────▼───────────┐ │  │ Sign In    │  │
+│   └────────────┘              │ │   Application Layer  │ │  └────────────┘  │
+│                               │ │ - CQRS + MediatR     │ │  ┌────────────┐  │
+│                               │ │ - JWT Generation     │ │  │ Twilio     │  │
+│                               │ │ - TOTP Validation    │ │  │ SMS        │  │
+│                               │ │ - OAuth Handlers     │ │  └────────────┘  │
+│                               │ └──────────┬───────────┘ │                  │
+│                               │            │             │                  │
+│                               │ ┌──────────▼───────────┐ │                  │
+│                               │ │   Infrastructure     │ │                  │
+│                               │ │ - EF Core + Identity │ │                  │
+│                               │ │ - Redis Cache        │ │                  │
+│                               │ │ - RabbitMQ Events    │ │                  │
+│                               │ └──────────────────────┘ │                  │
+│                               └──────────┬───────────────┘                  │
+│                                          │                                  │
+│   ┌──────────────────────────────────────┼──────────────────────────────┐   │
+│   │                                      ▼                              │   │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │   │
+│   │  │  PostgreSQL  │  │    Redis     │  │  RabbitMQ    │               │   │
+│   │  │  (authdb)    │  │   (tokens)   │  │  (events)    │               │   │
+│   │  │ - Users      │  │ - Sessions   │  │ - UserReg    │               │   │
+│   │  │ - Tokens     │  │ - Rate Limit │  │ - PasswordRst│               │   │
+│   │  │ - 2FA        │  │ - OTP Codes  │  │ - LoginEvent │               │   │
+│   │  └──────────────┘  └──────────────┘  └──────────────┘               │   │
+│   │                         Data Layer                                  │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.5 Controllers
 
 | Controller                  | Archivo                        | Endpoints |
 | --------------------------- | ------------------------------ | --------- |

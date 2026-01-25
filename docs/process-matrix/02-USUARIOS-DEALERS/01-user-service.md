@@ -59,6 +59,63 @@ El UserService gestiona todos los perfiles de usuario de OKLA: usuarios base, ve
 | OnboardingController       | OnboardingController.cs       | 3         |
 | SellerProfileController    | SellerProfileController.cs    | 4         |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         UserService Architecture                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Sources                       UserService                    Consumers    │
+│   ┌────────────┐               ┌─────────────────────────┐    ┌──────────┐  │
+│   │ AuthService│───┐           │  ┌─────────────────────┐│    │ Frontend │  │
+│   │ (Register) │   │           │  │    Controllers      ││    │ Web/App  │  │
+│   └────────────┘   │           │  │ - Users             ││    └──────────┘  │
+│   ┌────────────┐   │  Events   │  │ - Sellers           ││    ┌──────────┐  │
+│   │ KYCService │───┼──────────▶│  │ - Dealers           ││───▶│ Dealer   │  │
+│   │ (Verified) │   │           │  │ - DealerEmployees   ││    │ Dashboard│  │
+│   └────────────┘   │           │  │ - DealerOnboarding  ││    └──────────┘  │
+│   ┌────────────┐   │           │  │ - DealerModules     ││    ┌──────────┐  │
+│   │ Billing    │───┘           │  └──────────┬──────────┘│    │ Admin    │  │
+│   │ Service    │               │             │           │    │ Panel    │  │
+│   └────────────┘               │  ┌──────────▼──────────┐│    └──────────┘  │
+│                                │  │  Application Layer  ││                  │
+│                                │  │ - CQRS + MediatR    ││                  │
+│                                │  │ - Profile Mgmt      ││                  │
+│                                │  │ - Dealer Onboarding ││                  │
+│                                │  │ - Employee Mgmt     ││                  │
+│                                │  └──────────┬──────────┘│                  │
+│                                │             │           │                  │
+│                                │  ┌──────────▼──────────┐│                  │
+│                                │  │    Domain Layer     ││                  │
+│                                │  │ - User Aggregate    ││                  │
+│                                │  │ - Seller Aggregate  ││                  │
+│                                │  │ - Dealer Aggregate  ││                  │
+│                                │  └──────────┬──────────┘│                  │
+│                                │             │           │                  │
+│                                │  ┌──────────▼──────────┐│                  │
+│                                │  │   Infrastructure    ││                  │
+│                                │  │ - EF Core Repos     ││                  │
+│                                │  │ - RabbitMQ Events   ││                  │
+│                                │  └─────────────────────┘│                  │
+│                                └──────────┬──────────────┘                  │
+│                                           │                                 │
+│   ┌───────────────────────────────────────┼─────────────────────────────┐   │
+│   │                                       ▼                             │   │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │   │
+│   │  │  PostgreSQL  │  │    Redis     │  │  RabbitMQ    │               │   │
+│   │  │  (user_db)   │  │   (cache)    │  │  (events)    │               │   │
+│   │  │ - Users      │  │ - Sessions   │  │ - UserCreated│               │   │
+│   │  │ - Sellers    │  │ - Profiles   │  │ - SellerVer  │               │   │
+│   │  │ - Dealers    │  │ - Onboard    │  │ - DealerVer  │               │   │
+│   │  │ - Employees  │  └──────────────┘  └──────────────┘               │   │
+│   │  └──────────────┘                                                   │   │
+│   │                          Data Layer                                 │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

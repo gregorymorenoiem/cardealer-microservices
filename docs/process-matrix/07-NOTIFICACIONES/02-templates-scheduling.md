@@ -40,6 +40,47 @@ Sistema de gestión de templates de notificaciones y programación de envíos. P
 | NotificationService | Envío de notificaciones       |
 | MediaService        | Imágenes en templates         |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                Templates & Scheduling Architecture                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Clients                            NotificationService                     │
+│   ┌────────────────┐              ┌─────────────────────────────────────┐    │
+│   │ Admin Panel    │──┐           │     Templates & Scheduling Module   │    │
+│   │ (Create Templ) │  │           │  ┌───────────────────────────────┐  │    │
+│   └────────────────┘  │           │  │ TemplatesController           │  │    │
+│   ┌────────────────┐  │           │  │ • CRUD templates              │  │    │
+│   │ Marketing Team │──┼──────────▶│  │ • Preview with data           │  │    │
+│   │ (Schedule)     │  │           │  │ • Validate Handlebars         │  │    │
+│   └────────────────┘  │           │  └───────────────────────────────┘  │    │
+│   ┌────────────────┐  │           │  ┌───────────────────────────────┐  │    │
+│   │ Other Services │──┘           │  │ ScheduledNotificationsCtrl    │  │    │
+│   │ (API calls)    │              │  │ • Create scheduled send       │  │    │
+│   └────────────────┘              │  │ • Recurring (cron patterns)   │  │    │
+│                                   │  │ • Cancel/reschedule           │  │    │
+│   Scheduler                       │  └───────────────────────────────┘  │    │
+│   ┌────────────────┐              │  ┌───────────────────────────────┐  │    │
+│   │ Hangfire       │─────────────▶│  │ Template Engine (Handlebars)  │  │    │
+│   │ (Cron Jobs)    │              │  │ • Variables: {{user.name}}   │  │    │
+│   └────────────────┘              │  │ • Conditionals: {{#if}}      │  │    │
+│                                   │  │ • Loops: {{#each items}}     │  │    │
+│                                   │  └───────────────────────────────┘  │    │
+│                                   └─────────────────────────────────────┘    │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Templates,│  │ (Rendered  │  │ (Schedule  │  │
+│                            │  Schedules)│  │  Cache)    │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

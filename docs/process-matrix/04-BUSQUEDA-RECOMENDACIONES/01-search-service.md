@@ -52,7 +52,44 @@ SearchService proporciona capacidades de búsqueda full-text sobre vehículos, p
 | RabbitMQ            | Sincronización de índices |
 | Elasticsearch       | Motor de búsqueda         |
 
-### 1.3 Tecnologías
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       SearchService Architecture                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Data Sources                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ VehiclesSale   │──┐             │          SearchService           │      │
+│   │ Service        │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • SearchController       │   │      │
+│   │ Properties     │──┼──── RabbitMQ ──│  │ • IndexController        │   │      │
+│   │ Service        │  │   (Events)   │  │ • SuggestController      │   │      │
+│   └────────────────┘  │             │  └──────────────────────────┘   │      │
+│   ┌────────────────┐  │             │  ┌──────────────────────────┐   │      │
+│   │ DealerService  │──┘             │  │ Application (CQRS)       │   │      │
+│   │ (Multi-tenant) │               │  │ • SearchQuery            │   │      │
+│   └────────────────┘               │  │ • IndexDocumentCommand   │   │      │
+│                                    │  │ • SuggestQuery           │   │      │
+│   Consumers                        │  │ • ReindexCommand         │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ Web Frontend   │◀─────────────│                                  │      │
+│   │ (Search Bar)   │               └────────────────────────────────┘      │
+│   └────────────────┘                           │                        │
+│   ┌────────────────┐               ┌───────────┴───────────┐                │
+│   │ Mobile App     │◀────────────▼           ▼           ▼                │
+│   └────────────────┘       ┌─────────────┐  ┌────────────┐  ┌─────────┐   │
+│                           │ Elasticsearch │  │   Redis    │  │ RabbitMQ│   │
+│                           │  (Full-text   │  │  (Cache,   │  │ (Index  │   │
+│                           │   Search)     │  │  Suggest)  │  │ Events) │   │
+│                           └─────────────┘  └────────────┘  └─────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Tecnologías
 
 - **.NET 8.0** con MediatR (CQRS)
 - **Elasticsearch 8.x** (NEST client)

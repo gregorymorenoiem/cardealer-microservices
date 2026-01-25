@@ -44,7 +44,47 @@ ContactService gestiona toda la comunicación entre compradores y vendedores en 
 | NotificationService | Alertas de nuevos mensajes            |
 | CRMService          | Creación automática de leads          |
 
-### 1.3 Tecnologías
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ContactService Architecture                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Participants                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Buyers         │──┐             │          ContactService          │      │
+│   │ (Inquiries)    │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • ContactRequestsCtrl    │   │      │
+│   │ Sellers        │──┼────────────▶│  │ • ContactMessagesCtrl    │   │      │
+│   │ (Responses)    │  │             │  └──────────────────────────┘   │      │
+│   └────────────────┘  │             │  ┌──────────────────────────┐   │      │
+│   ┌────────────────┐  │             │  │ Application (CQRS)       │   │      │
+│   │ Dealers        │──┘             │  │ • CreateInquiryCommand   │   │      │
+│   │ (CRM View)     │               │  │ • ReplyToInquiryCmd      │   │      │
+│   └────────────────┘               │  │ • GetConversationQuery   │   │      │
+│                                    │  │ • MarkAsReadCommand      │   │      │
+│   Integrations                     │  └──────────────────────────┘   │      │
+│   ┌────────────────┐               │  ┌──────────────────────────┐   │      │
+│   │ CRMService     │◀─────────────│  │ Domain                   │   │      │
+│   │ (Lead Create)  │               │  │ • ContactRequest, Msg   │   │      │
+│   └────────────────┘               │  │ • Conversation, Status   │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ Notification   │◀─────────────└────────────────────────────────┘      │
+│   │ Service        │                           │                        │
+│   └────────────────┘               ┌───────────┼───────────┐                │
+│                                    ▼           ▼           ▼                │
+│                            ┌────────────┐ ┌────────────┐ ┌────────────┐   │
+│                            │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │   │
+│                            │ (Messages, │ │ (Unread    │ │ (Message   │   │
+│                            │  Requests) │ │  Counts)   │ │  Events)   │   │
+│                            └────────────┘ └────────────┘ └────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Tecnologías
 
 - **.NET 8.0** con Repository Pattern
 - **PostgreSQL** para persistencia

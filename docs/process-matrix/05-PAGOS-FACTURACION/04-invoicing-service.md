@@ -48,6 +48,47 @@ Sistema de facturación electrónica conforme a las regulaciones de la DGII (Dir
 | DGII API            | Validación de RNC/NCF |
 | MediaService        | Almacenamiento PDFs   |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      InvoicingService Architecture                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Payment Events                     Core Service                            │
+│   ┌────────────────┐              ┌─────────────────────────────────────┐   │
+│   │ BillingService │──┐           │         InvoicingService            │   │
+│   │ (Payment Done) │  │           │  ┌───────────────────────────────┐  │   │
+│   └────────────────┘  │           │  │ Controllers                   │  │   │
+│                      │           │  │ • InvoicesController          │  │   │
+│   Regulatory API     │           │  │ • CreditNotesController       │  │   │
+│   ┌────────────────┐  │           │  │ • DGIIController               │  │   │
+│   │ DGII API       │──┼──────────▶│  └───────────────────────────────┘  │   │
+│   │ (RNC/NCF Val.) │  │           │  ┌───────────────────────────────┐  │   │
+│   └────────────────┘  │           │  │ NCF Generator                 │  │   │
+│                      │           │  │ • B01 (Consumidor final)      │  │   │
+│   User Actions       │           │  │ • B14 (Régimen especial)      │  │   │
+│   ┌────────────────┐  │           │  │ • B15 (Gubernamental)         │  │   │
+│   │ View Invoices  │──┘           │  └───────────────────────────────┘  │   │
+│   │ Download PDF   │              │  ┌───────────────────────────────┐  │   │
+│   └────────────────┘              │  │ Domain                        │  │   │
+│                                   │  │ • Invoice, CreditNote         │  │   │
+│   Output                          │  │ • NCFSequence                 │  │   │
+│   ┌────────────────┐              │  │ • InvoiceItem                 │  │   │
+│   │ Invoice PDF    │◀─────────────│  └───────────────────────────────┘  │   │
+│   │ with NCF      │              └─────────────────────────────────────┘   │
+│   └────────────────┘                           │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   S3/DO    │  │  RabbitMQ  │  │
+│                            │ (Invoices, │  │  Spaces    │  │ (Invoice   │  │
+│                            │  NCF Seqs) │  │  (PDFs)    │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

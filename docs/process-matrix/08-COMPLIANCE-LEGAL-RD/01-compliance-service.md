@@ -52,7 +52,49 @@ ComplianceService gestiona todo el cumplimiento regulatorio de OKLA según las l
 | NotificationService | Alertas de vencimiento          |
 | MediaService        | Documentos de evidencia         |
 
-### 1.3 Tecnologías
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      ComplianceService Architecture                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Regulatory Sources                 Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Ley 155-17     │──┐             │        ComplianceService          │      │
+│   │ (AML/PLD)      │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • FrameworksController   │   │      │
+│   │ Ley 172-13     │──┼────────────▶│  │ • ConsentController      │   │      │
+│   │ (Data Privacy) │  │             │  │ • STRController          │   │      │
+│   └────────────────┘  │             │  │ • WatchlistController    │   │      │
+│   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
+│   │ Ley 358-05     │──┤             │  ┌──────────────────────────┐   │      │
+│   │ (Consumer)     │  │             │  │ Application (CQRS)       │   │      │
+│   └────────────────┘  │             │  │ • RecordConsentCommand   │   │      │
+│   ┌────────────────┐  │             │  │ • GenerateSTRCommand     │   │      │
+│   │ DGII (Taxes)   │──┘             │  │ • CheckWatchlistQuery    │   │      │
+│   │ INTRANT (Veh.) │               │  │ • RiskAssessmentJob      │   │      │
+│   └────────────────┘               │  └──────────────────────────┘   │      │
+│                                    │  ┌──────────────────────────┐   │      │
+│   External                         │  │ Domain                   │   │      │
+│   ┌────────────────┐               │  │ • Consent, STR, Risk     │   │      │
+│   │ UAF Reports    │◀─────────────│  │ • Watchlist, Framework   │   │      │
+│   │ (AML Alerts)   │               │  └──────────────────────────┘   │      │
+│   └────────────────┘               └────────────────────────────────┘      │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Consents, │  │ (Watchlist │  │ (Compliance│  │
+│                            │  STRs)     │  │  Cache)    │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Tecnologías
 
 - **.NET 8.0** con MediatR (CQRS)
 - **PostgreSQL** para persistencia

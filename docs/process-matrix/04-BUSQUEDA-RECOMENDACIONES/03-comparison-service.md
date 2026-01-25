@@ -52,6 +52,47 @@ Sistema de comparación de vehículos que permite a los usuarios comparar hasta 
 | UserService         | Preferencias de usuario   |
 | CatalogService      | Especificaciones técnicas |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     ComparisonService Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   User Actions                       Core Service                            │
+│   ┌────────────────┐              ┌─────────────────────────────────────┐   │
+│   │ Add to Compare │──┐           │          ComparisonService          │   │
+│   │ (Button)       │  │           │  ┌───────────────────────────────┐  │   │
+│   └────────────────┘  │           │  │ Controllers                   │  │   │
+│   ┌────────────────┐  │           │  │ • ComparisonsController       │  │   │
+│   │ Compare View   │──┼──────────▶│  │ • ComparisonSessionController │  │   │
+│   │ (Side-by-Side) │  │           │  └───────────────────────────────┘  │   │
+│   └────────────────┘  │           │  ┌───────────────────────────────┐  │   │
+│   ┌────────────────┐  │           │  │ Application (CQRS)            │  │   │
+│   │ Share Link     │──┘           │  │ • CreateComparisonCmd         │  │   │
+│   │ (Public URL)   │              │  │ • AddVehicleCommand           │  │   │
+│   └────────────────┘              │  │ • GenerateShareLinkCmd        │  │   │
+│                                   │  │ • ExportPDFCommand            │  │   │
+│   Data Sources                    │  └───────────────────────────────┘  │   │
+│   ┌────────────────┐              │  ┌───────────────────────────────┐  │   │
+│   │ VehiclesSale   │─────────────▶│  │ Domain                        │  │   │
+│   │ (Specs, Price) │              │  │ • Comparison (max 3 vehicles) │  │   │
+│   └────────────────┘              │  │ • ComparisonVehicle           │  │   │
+│   ┌────────────────┐              │  │ • ShareToken (expiry)         │  │   │
+│   │ MediaService   │─────────────▶│  └───────────────────────────────┘  │   │
+│   │ (Images)       │              └─────────────────────────────────────┘   │
+│   └────────────────┘                           │                            │
+│   ┌────────────────┐               ┌───────────┼───────────┐                │
+│   │ CatalogService │               ▼           ▼           ▼                │
+│   │ (Tech Specs)   │       ┌────────────┐ ┌────────────┐ ┌────────────┐    │
+│   └────────────────┘       │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │    │
+│                            │ (Sessions, │ │  (Session  │ │ (Compare   │    │
+│                            │  History)  │ │  Cache)    │ │  Events)   │    │
+│                            └────────────┘ └────────────┘ └────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

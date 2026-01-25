@@ -54,6 +54,48 @@ Sistema de gestión de suscripciones para dealers. Maneja planes mensuales/anual
 | InvoicingService    | Facturación       |
 | StripeService       | Pagos recurrentes |
 
+### 1.5 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     SubscriptionService Architecture                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Dealers                            Core Service (BillingService)           │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Pricing Page   │──┐             │      SubscriptionsController     │      │
+│   │ (Select Plan)  │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Endpoints                │   │      │
+│   ┌────────────────┐  │             │  │ • POST /subscribe        │   │      │
+│   │ Checkout       │──┼────────────▶│  │ • POST /upgrade          │   │      │
+│   │ (Payment)      │  │             │  │ • POST /cancel           │   │      │
+│   └────────────────┘  │             │  │ • GET /my-subscription   │   │      │
+│   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
+│   │ Dashboard      │──┘             │  ┌──────────────────────────┐   │      │
+│   │ (Manage Sub)   │               │  │ Plans                    │   │      │
+│   └────────────────┘               │  │ • Starter $49/mo (15)    │   │      │
+│                                    │  │ • Pro $129/mo (50) ⭐    │   │      │
+│   Payment Providers                │  │ • Enterprise $299/mo    │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ Stripe         │◀─────────────│  ┌──────────────────────────┐   │      │
+│   │ (Recurring)    │               │  │ Early Bird (31/01/2026)  │   │      │
+│   └────────────────┘               │  │ • 90 days free trial     │   │      │
+│   ┌────────────────┐               │  │ • 20% lifetime discount  │   │      │
+│   │ AZUL           │◀─────────────│  │ • Founder Badge          │   │      │
+│   │ (Dominican)    │               │  └──────────────────────────┘   │      │
+│   └────────────────┘               └────────────────────────────────┘      │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Subs,     │  │  (Status,  │  │ (Sub       │  │
+│                            │  Invoices) │  │  Limits)   │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

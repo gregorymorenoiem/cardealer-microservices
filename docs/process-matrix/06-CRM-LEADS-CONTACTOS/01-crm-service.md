@@ -53,7 +53,50 @@ CRMService gestiona todo el ciclo de vida de leads y oportunidades de venta para
 | BillingService      | Conversión a ventas        |
 | ContactService      | Gestión de contactos       |
 
-### 1.3 Tecnologías
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         CRMService Architecture                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Lead Sources                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Website Forms  │──┐             │           CRMService             │      │
+│   │ (Contact)      │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • LeadsController        │   │      │
+│   │ VehiclesSale   │──┼────────────▶│  │ • DealsController        │   │      │
+│   │ (Inquiries)    │  │             │  │ • PipelineController     │   │      │
+│   └────────────────┘  │             │  │ • ActivitiesController   │   │      │
+│   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
+│   │ Phone/WhatsApp │──┤             │  ┌──────────────────────────┐   │      │
+│   │ (Calls)        │  │             │  │ Application (CQRS)       │   │      │
+│   └────────────────┘  │             │  │ • CreateLeadCommand      │   │      │
+│   ┌────────────────┐  │             │  │ • UpdateDealCommand      │   │      │
+│   │ Walk-ins       │──┘             │  │ • MovePipelineStageCmd   │   │      │
+│   │ (Manual Entry) │               │  │ • GetLeadsByDealerQuery  │   │      │
+│   └────────────────┘               │  └──────────────────────────┘   │      │
+│                                    │  ┌──────────────────────────┐   │      │
+│   Integrations                     │  │ Domain                   │   │      │
+│   ┌────────────────┐               │  │ • Lead, Deal, Activity   │   │      │
+│   │ LeadScoring    │──────────────▶│  │ • Pipeline, Stage        │   │      │
+│   │ Service        │               │  │ • Task, Note, Contact    │   │      │
+│   └────────────────┘               │  └──────────────────────────┘   │      │
+│                                    └────────────────────────────────┘      │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Leads,    │  │ (Dashboard,│  │ (Lead      │  │
+│                            │  Deals)    │  │  Cache)    │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Tecnologías
 
 - **.NET 8.0** con Repository Pattern
 - **PostgreSQL** para persistencia

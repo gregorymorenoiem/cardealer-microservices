@@ -51,6 +51,48 @@ Sistema de gestión de perfiles públicos de vendedores (individuales y dealers)
 | MediaService        | Fotos del perfil          |
 | LeadService         | Estadísticas de contactos |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       Seller Profiles Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Public Views                       UserService                             │
+│   ┌────────────────┐              ┌─────────────────────────────────────┐   │
+│   │ Seller Profile │──┐           │      SellerProfileController        │   │
+│   │ Page (Web)     │  │           │  ┌───────────────────────────────┐  │   │
+│   └────────────────┘  │           │  │ Endpoints                     │  │   │
+│   ┌────────────────┐  │           │  │ • GET /profile (public)       │  │   │
+│   │ Vehicle Detail │──┼──────────▶│  │ • GET /listings               │  │   │
+│   │ (Seller Card)  │  │           │  │ • GET /reviews                │  │   │
+│   └────────────────┘  │           │  │ • PUT /profile (owner)        │  │   │
+│   ┌────────────────┐  │           │  └───────────────────────────────┘  │   │
+│   │ Search Results │──┘           │  ┌───────────────────────────────┐  │   │
+│   │ (Seller Info)  │              │  │ Application (CQRS)            │  │   │
+│   └────────────────┘              │  │ • GetSellerProfileQuery       │  │   │
+│                                   │  │ • UpdateProfileCommand        │  │   │
+│   Data Sources                    │  │ • GetSellerStatsQuery         │  │   │
+│   ┌────────────────┐              │  └───────────────────────────────┘  │   │
+│   │ ReviewService  │─────────────▶│  ┌───────────────────────────────┐  │   │
+│   │ (Ratings)      │              │  │ Domain                        │  │   │
+│   └────────────────┘              │  │ • SellerProfile               │  │   │
+│   ┌────────────────┐              │  │ • SellerBadge                 │  │   │
+│   │ VehiclesSale   │─────────────▶│  │ • ContactPreferences          │  │   │
+│   │ (Listings)     │              │  └───────────────────────────────┘  │   │
+│   └────────────────┘              └─────────────────────────────────────┘   │
+│   ┌────────────────┐                           │                            │
+│   │ MediaService   │               ┌───────────┼───────────┐                │
+│   │ (Photos)       │               ▼           ▼           ▼                │
+│   └────────────────┘       ┌────────────┐ ┌────────────┐ ┌────────────┐    │
+│                            │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │    │
+│                            │ (Profiles, │ │  (Cache,   │ │ (Profile   │    │
+│                            │  Stats)    │ │  Ratings)  │ │  Events)   │    │
+│                            └────────────┘ └────────────┘ └────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

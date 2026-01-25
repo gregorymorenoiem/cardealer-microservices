@@ -48,6 +48,47 @@ Sistema de almacenamiento seguro para documentos sensibles de la plataforma OKLA
 | Redis               | Cache de URLs      |
 | AuditService        | Logging de accesos |
 
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Document Storage Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Sources                          Processing               Storage         │
+│   ┌────────────────┐              ┌─────────────────┐     ┌────────────┐   │
+│   │ Dealer         │──┐           │                 │     │ Digital    │   │
+│   │ Documents      │  │           │  Document       │     │ Ocean      │   │
+│   │ (RNC, License) │  │           │  Service        │     │ Spaces     │   │
+│   └────────────────┘  │           │                 │     │ (S3)       │   │
+│   ┌────────────────┐  │           │ ┌─────────────┐ │     │            │   │
+│   │ KYC Documents  │──┼──────────▶│ │ Validation  │ │────▶│ /encrypted │   │
+│   │ (ID, Passport) │  │           │ │ - Type check│ │     │ /verified  │   │
+│   └────────────────┘  │           │ │ - Virus scan│ │     │ /pending   │   │
+│   ┌────────────────┐  │           │ └─────────────┘ │     └────────────┘   │
+│   │ Vehicle Docs   │──┤           │ ┌─────────────┐ │            │         │
+│   │ (Title, Matr.) │  │           │ │ Encryption  │ │            │         │
+│   └────────────────┘  │           │ │ AES-256     │ │            ▼         │
+│   ┌────────────────┐  │           │ │ + AWS KMS   │ │     ┌────────────┐   │
+│   │ Contracts      │──┘           │ └─────────────┘ │     │ PostgreSQL │   │
+│   │ (Legal)        │              │ ┌─────────────┐ │     │ (Metadata, │   │
+│   └────────────────┘              │ │ Audit Log   │ │────▶│  Audit)    │   │
+│                                   │ │ All actions │ │     └────────────┘   │
+│   Access Control                  │ └─────────────┘ │                      │
+│   ┌────────────────┐              └─────────────────┘                      │
+│   │ Admin Panel    │                      │                                │
+│   │ (Verify Docs)  │◀─────────────────────┘                                │
+│   └────────────────┘                                                       │
+│   ┌────────────────┐              ┌─────────────────┐                      │
+│   │ User Portal    │◀────────────│ Presigned URLs  │                      │
+│   │ (Download)     │              │ (Time-limited)  │                      │
+│   └────────────────┘              └─────────────────┘                      │
+│                                                                              │
+│   Retention: 10 años (documentos legales/fiscales) | 24h (temporales)       │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

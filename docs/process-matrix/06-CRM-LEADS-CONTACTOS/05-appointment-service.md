@@ -39,6 +39,48 @@ Sistema de agendamiento de citas para test drives de vehículos. Gestiona la dis
 | LeadService         | Creación de leads       |
 | CalendarService     | Sync con Google/Outlook |
 
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     AppointmentService Architecture                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   User Actions                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Buyers         │──┐             │       AppointmentService         │      │
+│   │ (Book Test Dr.)│  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • AppointmentsController │   │      │
+│   │ Dealers        │──┼────────────▶│  │ • AvailabilityController │   │      │
+│   │ (Manage Slots) │  │             │  │ • DealerApptController   │   │      │
+│   └────────────────┘  │             │  └──────────────────────────┘   │      │
+│   ┌────────────────┐  │             │  ┌──────────────────────────┐   │      │
+│   │ Vehicle Detail │──┘             │  │ Application (CQRS)       │   │      │
+│   │ (Schedule Btn) │               │  │ • CreateAppointmentCmd   │   │      │
+│   └────────────────┘               │  │ • CheckAvailabilityQuery │   │      │
+│                                    │  │ • SendReminderCommand    │   │      │
+│   External                         │  │ • SyncCalendarCommand    │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ Google Cal.    │◀─────────────│  ┌──────────────────────────┐   │      │
+│   │ Outlook        │               │  │ Domain                   │   │      │
+│   └────────────────┘               │  │ • Appointment            │   │      │
+│   ┌────────────────┐               │  │ • AvailabilitySlot       │   │      │
+│   │ Notification   │◀─────────────│  │ • Reminder, BlockedTime  │   │      │
+│   │ Service        │               │  └──────────────────────────┘   │      │
+│   └────────────────┘               └────────────────────────────────┘      │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Appts,    │  │  (Slots,   │  │ (Reminder  │  │
+│                            │  Slots)    │  │  Avail.)   │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Endpoints API

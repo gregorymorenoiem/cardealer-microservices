@@ -41,7 +41,49 @@ El RoleService implementa el sistema RBAC (Role-Based Access Control) de OKLA. G
 | Gateway      | Verificar permisos en cada request  |
 | AuditService | Registrar cambios en roles/permisos |
 
-### 1.3 Controllers
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         RoleService Architecture                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Consumers                          Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Gateway        │──┐             │           RoleService            │      │
+│   │ (Auth Check)   │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • RolesController        │   │      │
+│   │ UserService    │──┼────────────▶│  │ • PermissionsController  │   │      │
+│   │ (Roles Query)  │  │             │  │ • RolePermissionsCtrl    │   │      │
+│   └────────────────┘  │             │  └──────────────────────────┘   │      │
+│   ┌────────────────┐  │             │  ┌──────────────────────────┐   │      │
+│   │ Admin Panel    │──┘             │  │ Application (CQRS)       │   │      │
+│   │ (Manage RBAC)  │               │  │ • CreateRoleCommand      │   │      │
+│   └────────────────┘               │  │ • AssignPermissionCmd    │   │      │
+│                                    │  │ • CheckPermissionQuery   │   │      │
+│                                    │  │ • GetRolesWithPermsQuery │   │      │
+│                                    │  └──────────────────────────┘   │      │
+│                                    │  ┌──────────────────────────┐   │      │
+│                                    │  │ Domain                   │   │      │
+│                                    │  │ • Role, Permission       │   │      │
+│                                    │  │ • RolePermission         │   │      │
+│                                    │  │ • UserRole               │   │      │
+│                                    │  └──────────────────────────┘   │      │
+│                                    └────────────────────────────────┘      │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Roles,    │  │  (Perms    │  │  (Role     │  │
+│                            │  Perms)    │  │  Cache)    │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.5 Controllers
 
 | Controller                | Archivo                      | Endpoints |
 | ------------------------- | ---------------------------- | --------- |

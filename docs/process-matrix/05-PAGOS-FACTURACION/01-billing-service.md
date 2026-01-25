@@ -53,7 +53,51 @@ El BillingService gestiona todos los aspectos de pagos y facturación de OKLA. I
 | NotificationService | Confirmaciones de pago    |
 | AuditService        | Registro de transacciones |
 
-### 1.4 Controllers
+### 1.4 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       BillingService Architecture                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Payment Gateways                   Core Service                            │
+│   ┌────────────────┐                ┌──────────────────────────────────┐    │
+│   │    Stripe      │◀──┐            │         BillingService           │    │
+│   │ (International)│   │            │  ┌────────────────────────────┐  │    │
+│   └────────────────┘   │            │  │ Controllers                │  │    │
+│   ┌────────────────┐   │            │  │ • PaymentsController       │  │    │
+│   │ AZUL Banco Pop │◀──┼────────────│  │ • SubscriptionsController  │  │    │
+│   │ (Dominican)    │   │            │  │ • InvoicesController       │  │    │
+│   └────────────────┘   │            │  │ • EarlyBirdController      │  │    │
+│                        │            │  │ • StripeWebhooksController │  │    │
+│   Webhooks             │            │  │ • AzulCallbackController   │  │    │
+│   ┌────────────────┐   │            │  └────────────────────────────┘  │    │
+│   │ Stripe Events  │───┘            │  ┌────────────────────────────┐  │    │
+│   └────────────────┘                │  │ Application (CQRS)         │  │    │
+│   ┌────────────────┐                │  │ • ProcessPaymentCommand    │  │    │
+│   │ AZUL Callbacks │────────────────│  │ • CreateSubscriptionCmd    │  │    │
+│   └────────────────┘                │  │ • GenerateInvoiceCommand   │  │    │
+│                                     │  └────────────────────────────┘  │    │
+│   Internal Services                 │  ┌────────────────────────────┐  │    │
+│   ┌────────────────┐                │  │ Domain                     │  │    │
+│   │ UserService    │───────────────▶│  │ • Payment, Subscription    │  │    │
+│   └────────────────┘                │  │ • Invoice, EarlyBird       │  │    │
+│   ┌────────────────┐                │  │ • DealerPlan, Transaction  │  │    │
+│   │ VehicleService │────────────────│  └────────────────────────────┘  │    │
+│   └────────────────┘                └──────────────────────────────────┘    │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Payments, │  │ (Sessions, │  │ (Payment   │  │
+│                            │  Invoices) │  │  Idempot.) │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.5 Controllers
 
 | Controller                | Archivo                      | Endpoints |
 | ------------------------- | ---------------------------- | --------- |

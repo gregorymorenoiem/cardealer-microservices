@@ -41,7 +41,47 @@ Sistema de alertas personalizadas para OKLA. Permite a los usuarios crear alerta
 | SearchService       | Ejecución de búsquedas guardadas   |
 | UserService         | Información del usuario            |
 
-### 1.3 Componentes
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        AlertService Architecture                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   User Actions                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Create Price   │──┐             │           AlertService           │      │
+│   │ Alert          │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • PriceAlertsController  │   │      │
+│   │ Save Search    │──┼────────────▶│  │ • SavedSearchesController│   │      │
+│   │ Criteria       │  │             │  └──────────────────────────┘   │      │
+│   └────────────────┘  │             │  ┌──────────────────────────┐   │      │
+│   ┌────────────────┐  │             │  │ Application (CQRS)       │   │      │
+│   │ Manage Alerts  │──┘             │  │ • CreatePriceAlertCmd    │   │      │
+│   │ (UI)           │               │  │ • SaveSearchCommand      │   │      │
+│   └────────────────┘               │  │ • CheckAlertsJob         │   │      │
+│                                    │  └──────────────────────────┘   │      │
+│   Data Sources                     │  ┌──────────────────────────┐   │      │
+│   ┌────────────────┐               │  │ Domain                   │   │      │
+│   │ VehiclesSale   │──────────────▶│  │ • PriceAlert             │   │      │
+│   │ (Price Changes)│               │  │ • SavedSearch            │   │      │
+│   └────────────────┘               │  │ • AlertNotification      │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ SearchService  │──────────────└────────────────────────────────┘      │
+│   │ (New Matches)  │                           │                        │
+│   └────────────────┘               ┌───────────┼───────────┐                │
+│                                    ▼           ▼           ▼                │
+│   Output                   ┌────────────┐ ┌────────────┐ ┌────────────┐   │
+│   ┌────────────────┐       │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │   │
+│   │ Notification   │◀───── │ (Alerts,   │ │  (Alert    │ │ (Price     │   │
+│   │ Service        │       │  Searches) │ │  Queue)    │ │  Events)   │   │
+│   └────────────────┘       └────────────┘ └────────────┘ └────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Componentes
 
 - **PriceAlertsController**: Alertas de cambio de precio
 - **SavedSearchesController**: Búsquedas guardadas con notificaciones

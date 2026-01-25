@@ -45,7 +45,46 @@ ReportsService gestiona la generación, programación y distribución de reporte
 | MediaService        | Almacenamiento de archivos   |
 | NotificationService | Envío de reportes por email  |
 
-### 1.3 Tecnologías
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ReportsService Architecture                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Data Sources                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ VehiclesSale   │──┐             │          ReportsService          │      │
+│   │ Service        │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • ReportsController      │   │      │
+│   │ BillingService │──┼────────────▶│  │ • DashboardsController   │   │      │
+│   │ (Financial)    │  │             │  └──────────────────────────┘   │      │
+│   └────────────────┘  │             │  ┌──────────────────────────┐   │      │
+│   ┌────────────────┐  │             │  │ Report Generation        │   │      │
+│   │ CRMService     │──┤             │  │ • QuestPDF (PDF)         │   │      │
+│   │ (Leads/Deals)  │  │             │  │ • ClosedXML (Excel)      │   │      │
+│   └────────────────┘  │             │  │ • CSV, JSON, HTML        │   │      │
+│   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
+│   │ DealerAnalytics│──┘             │  ┌──────────────────────────┐   │      │
+│   │ Service        │               │  │ Scheduling (Hangfire)    │   │      │
+│   └────────────────┘               │  │ • Daily/Weekly/Monthly   │   │      │
+│                                    │  │ • Custom Schedules       │   │      │
+│   Output Destinations              │  └──────────────────────────┘   │      │
+│   ┌────────────────┐               └────────────────────────────────┘      │
+│   │ MediaService   │◀────────────────────         │                        │
+│   │ (File Storage) │               ┌───────────┼───────────┐                │
+│   └────────────────┘               ▼           ▼           ▼                │
+│   ┌────────────────┐       ┌────────────┐ ┌────────────┐ ┌────────────┐   │
+│   │ Notification   │◀───── │ PostgreSQL │ │   Redis    │ │  RabbitMQ  │   │
+│   │ Service        │       │ (Report    │ │ (Dashboard │ │ (Report    │   │
+│   │ (Email Delivery)       │  Metadata) │ │  Cache)    │ │  Events)   │   │
+│   └────────────────┘       └────────────┘ └────────────┘ └────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Tecnologías
 
 - **.NET 8.0** con Repository Pattern
 - **PostgreSQL** para metadatos

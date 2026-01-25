@@ -37,7 +37,49 @@ Sistema de gestión de campañas de marketing para OKLA. Permite a dealers y adm
 | EventTrackingService | Tracking de opens/clicks |
 | BillingService       | Cobro por campañas       |
 
-### 1.3 Componentes
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      MarketingService Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Campaign Managers                  Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ Dealers        │──┐             │        MarketingService          │      │
+│   │ (Campaigns)    │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ Controllers              │   │      │
+│   ┌────────────────┐  │             │  │ • CampaignsController    │   │      │
+│   │ Admin          │──┼────────────▶│  │ • AudiencesController    │   │      │
+│   │ (Platform-wide)│  │             │  │ • TemplatesController    │   │      │
+│   └────────────────┘  │             │  └──────────────────────────┘   │      │
+│   ┌────────────────┐  │             │  ┌──────────────────────────┐   │      │
+│   │ Analytics View │──┘             │  │ Application (CQRS)       │   │      │
+│   │ (Reports)      │               │  │ • CreateCampaignCmd      │   │      │
+│   └────────────────┘               │  │ • ScheduleCampaignCmd    │   │      │
+│                                    │  │ • BuildAudienceQuery     │   │      │
+│   Integrations                     │  │ • GetCampaignStatsQuery  │   │      │
+│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ Notification   │◀─────────────│  ┌──────────────────────────┐   │      │
+│   │ Service        │               │  │ Domain                   │   │      │
+│   └────────────────┘               │  │ • Campaign, Audience     │   │      │
+│   ┌────────────────┐               │  │ • EmailTemplate          │   │      │
+│   │ EventTracking  │◀─────────────│  │ • CampaignStats          │   │      │
+│   │ (Opens/Clicks) │               │  └──────────────────────────┘   │      │
+│   └────────────────┘               └────────────────────────────────┘      │
+│                                                    │                        │
+│                                    ┌───────────────┼───────────────┐        │
+│                                    ▼               ▼               ▼        │
+│                            ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│                            │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│                            │ (Campaigns,│  │  (Queue,   │  │ (Campaign  │  │
+│                            │  Audiences)│  │  Stats)    │  │  Events)   │  │
+│                            └────────────┘  └────────────┘  └────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Componentes
 
 - **CampaignsController**: Gestión de campañas
 - **AudiencesController**: Segmentos de usuarios

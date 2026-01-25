@@ -41,7 +41,46 @@ Sistema de recomendaciones personalizadas basado en Machine Learning para OKLA. 
 | FeatureStoreService  | Features para ML         |
 | EventTrackingService | Eventos de usuario       |
 
-### 1.3 Algoritmos
+### 1.3 Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   RecommendationService Architecture                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Data Sources                       Core Service                            │
+│   ┌────────────────┐                ┌────────────────────────────────┐      │
+│   │ UserBehavior   │──┐             │      RecommendationService       │      │
+│   │ Service        │  │             │  ┌──────────────────────────┐   │      │
+│   └────────────────┘  │             │  │ ML Algorithms            │   │      │
+│   ┌────────────────┐  │             │  │ • Collaborative Filter   │   │      │
+│   │ VehiclesSale   │──┼────────────▶│  │ • Content-Based          │   │      │
+│   │ Service        │  │             │  │ • Hybrid Approach        │   │      │
+│   └────────────────┘  │             │  │ • Similar Items          │   │      │
+│   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
+│   │ FeatureStore   │──┤             │  ┌──────────────────────────┐   │      │
+│   │ Service        │  │             │  │ Application (CQRS)       │   │      │
+│   └────────────────┘  │             │  │ • GetForYouQuery         │   │      │
+│   ┌────────────────┐  │             │  │ • GetSimilarQuery        │   │      │
+│   │ EventTracking  │──┘             │  │ • RecordInteractionCmd   │   │      │
+│   │ Service        │               │  │ • RegenerateRecsCommand  │   │      │
+│   └────────────────┘               │  └──────────────────────────┘   │      │
+│                                    └────────────────────────────────┘      │
+│                                                    │                        │
+│   Consumers                        ┌───────────────┼───────────────┐        │
+│   ┌────────────────┐               ▼               ▼               ▼        │
+│   │ Web/Mobile     │◀───── ┌────────────┐  ┌────────────┐  ┌────────────┐  │
+│   │ (For You)      │       │ PostgreSQL │  │   Redis    │  │  RabbitMQ  │  │
+│   └────────────────┘       │ (User Prefs│  │ (Cached    │  │ (Tracking  │  │
+│   ┌────────────────┐       │  Recs)     │  │  Recs)     │  │  Events)   │  │
+│   │ Vehicle Detail │◀───── └────────────┘  └────────────┘  └────────────┘  │
+│   │ (Similar)      │                                                        │
+│   └────────────────┘                                                        │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Algoritmos
 
 - **Collaborative Filtering**: Usuarios similares
 - **Content-Based**: Características de vehículos
