@@ -87,6 +87,10 @@ import AdminReportsPage from './pages/admin/AdminReportsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import CategoriesManagementPage from './pages/admin/CategoriesManagementPage';
 import KYCAdminReviewPage from './pages/admin/KYCAdminReviewPage';
+// KYC Admin Queue, Watchlist, STR pages (Sprint - KYC Service Compliance)
+import KYCAdminQueuePage from './pages/admin/KYCAdminQueuePage';
+import WatchlistAdminPage from './pages/admin/WatchlistAdminPage';
+import STRReportsPage from './pages/admin/STRReportsPage';
 // RBAC - Roles & Permissions Management
 import RolesManagementPage from './pages/admin/RolesManagementPage';
 import PermissionsManagementPage from './pages/admin/PermissionsManagementPage';
@@ -864,6 +868,33 @@ function App() {
                 <AdminLayout>
                   <KYCAdminReviewPage />
                 </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* KYC Admin Queue - Cola de verificación */}
+          <Route
+            path="/admin/kyc/queue"
+            element={
+              <ProtectedRoute requireAdmin>
+                <KYCAdminQueuePage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Watchlist Admin - PEPs, Sanciones (Ley 155-17) */}
+          <Route
+            path="/admin/compliance/watchlist"
+            element={
+              <ProtectedRoute requireAdmin>
+                <WatchlistAdminPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* STR Reports - Reportes Transacciones Sospechosas (UAF) */}
+          <Route
+            path="/admin/compliance/str"
+            element={
+              <ProtectedRoute requireAdmin>
+                <STRReportsPage />
               </ProtectedRoute>
             }
           />

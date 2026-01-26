@@ -53,6 +53,61 @@ export enum DocumentType {
   SelfieWithDocument = 41,
 }
 
+// Watchlist Types
+export enum WatchlistType {
+  PEP = 1,
+  Sanctions = 2,
+  Internal = 3,
+  OFAC = 4,
+  UN = 5,
+  EU = 6,
+}
+
+// STR Status
+export enum STRStatus {
+  Draft = 1,
+  PendingReview = 2,
+  Approved = 3,
+  SentToUAF = 4,
+  Rejected = 5,
+  Archived = 6,
+}
+
+// Watchlist Entry
+export interface WatchlistEntry {
+  id: string;
+  fullName: string;
+  listType: WatchlistType;
+  position?: string;
+  jurisdiction?: string;
+  dateOfBirth?: string;
+  documentNumber?: string;
+  remarks?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Suspicious Transaction Report
+export interface SuspiciousTransactionReport {
+  id: string;
+  reportNumber: string;
+  userId: string;
+  suspiciousActivityType: string;
+  description: string;
+  amount: number;
+  currency: string;
+  redFlags: string[];
+  status: STRStatus;
+  detectedAt?: string;
+  reportingDeadline?: string;
+  uafReportNumber?: string;
+  sentToUafAt?: string;
+  createdAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+}
+
 export interface KYCProfile {
   id: string;
   userId: string;
@@ -365,13 +420,11 @@ class KYCService {
   // Admin: Approve profile
   async approveProfile(
     id: string,
-    approvedBy: string,
-    comments: string,
-    expiresAt: string
+    data: { approvedByName: string; notes?: string; validityDays?: number }
   ): Promise<KYCProfile> {
     const response = await axios.post<KYCProfile>(
       `${KYC_API_URL}/kycprofiles/${id}/approve`,
-      { id, approvedBy, comments, expiresAt },
+      { id, ...data },
       { headers: this.getAuthHeader() }
     );
     return response.data;
@@ -380,13 +433,11 @@ class KYCService {
   // Admin: Reject profile
   async rejectProfile(
     id: string,
-    rejectionReason: string,
-    comments: string,
-    canRetry: boolean
+    data: { rejectedByName: string; rejectionReason: string; canRetry?: boolean }
   ): Promise<KYCProfile> {
     const response = await axios.post<KYCProfile>(
       `${KYC_API_URL}/kycprofiles/${id}/reject`,
-      { id, rejectionReason, comments, canRetry },
+      { id, ...data },
       { headers: this.getAuthHeader() }
     );
     return response.data;
@@ -519,6 +570,134 @@ class KYCService {
       default:
         return [DocumentType.Cedula];
     }
+  }
+
+  // =============== WATCHLIST METHODS ===============
+
+  // Search watchlist entries
+  async searchWatchlist(searchTerm: string, listType?: WatchlistType): Promise<WatchlistEntry[]> {
+    try {
+      const response = await axios.get<WatchlistEntry[]>(`${KYC_API_URL}/watchlist/search`, {
+        params: { searchTerm, listType },
+        headers: this.getAuthHeader(),
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching watchlist:', error);
+      return [];
+    }
+  }
+
+  // Add watchlist entry
+  async addWatchlistEntry(
+    entry: Omit<WatchlistEntry, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>
+  ): Promise<WatchlistEntry> {
+    const response = await axios.post<WatchlistEntry>(`${KYC_API_URL}/watchlist`, entry, {
+      headers: this.getAuthHeader(),
+    });
+    return response.data;
+  }
+
+  // Screen individual against watchlist
+  async screenIndividual(
+    fullName: string,
+    documentNumber?: string,
+    dateOfBirth?: string
+  ): Promise<{ isMatch: boolean; matches: WatchlistEntry[] }> {
+    const response = await axios.post<{ isMatch: boolean; matches: WatchlistEntry[] }>(
+      `${KYC_API_URL}/watchlist/screen`,
+      { fullName, documentNumber, dateOfBirth },
+      { headers: this.getAuthHeader() }
+    );
+    return response.data;
+  }
+
+  // =============== STR METHODS ===============
+
+  // Get STRs (Suspicious Transaction Reports)
+  async getSTRs(params: {
+    page?: number;
+    pageSize?: number;
+    status?: STRStatus;
+  }): Promise<PaginatedResult<SuspiciousTransactionReport>> {
+    try {
+      const response = await axios.get<PaginatedResult<SuspiciousTransactionReport>>(
+        `${KYC_API_URL}/str`,
+        {
+          params,
+          headers: this.getAuthHeader(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching STRs:', error);
+      return { items: [], page: 1, pageSize: 50, totalCount: 0, totalPages: 0 };
+    }
+  }
+
+  // Get STR statistics
+  async getSTRStatistics(): Promise<{
+    draftCount: number;
+    pendingCount: number;
+    approvedCount: number;
+    sentCount: number;
+    overdueCount: number;
+    totalCount: number;
+  }> {
+    try {
+      const response = await axios.get(`${KYC_API_URL}/str/statistics`, {
+        headers: this.getAuthHeader(),
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching STR statistics:', error);
+      return {
+        draftCount: 0,
+        pendingCount: 0,
+        approvedCount: 0,
+        sentCount: 0,
+        overdueCount: 0,
+        totalCount: 0,
+      };
+    }
+  }
+
+  // Create STR
+  async createSTR(data: {
+    userId: string;
+    suspiciousActivityType: string;
+    description: string;
+    amount: number;
+    currency: string;
+    redFlags: string[];
+    detectedAt: string;
+  }): Promise<SuspiciousTransactionReport> {
+    const response = await axios.post<SuspiciousTransactionReport>(`${KYC_API_URL}/str`, data, {
+      headers: this.getAuthHeader(),
+    });
+    return response.data;
+  }
+
+  // Approve STR
+  async approveSTR(strId: string): Promise<void> {
+    await axios.post(
+      `${KYC_API_URL}/str/${strId}/approve`,
+      {},
+      {
+        headers: this.getAuthHeader(),
+      }
+    );
+  }
+
+  // Send STR to UAF
+  async sendSTRToUAF(strId: string, uafReportNumber: string): Promise<void> {
+    await axios.post(
+      `${KYC_API_URL}/str/${strId}/send-to-uaf`,
+      { uafReportNumber },
+      {
+        headers: this.getAuthHeader(),
+      }
+    );
   }
 }
 
