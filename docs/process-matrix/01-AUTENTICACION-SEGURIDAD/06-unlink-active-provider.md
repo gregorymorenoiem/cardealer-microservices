@@ -2,42 +2,38 @@
 
 > **Servicio:** AuthService (ExternalAuthController)  
 > **Puerto:** 5001  
-> **Última actualización:** Enero 25, 2026  
-> **Estado:** 🟡 PENDIENTE IMPLEMENTACIÓN  
+> **Última actualización:** Enero 26, 2026  
+> **Estado:** 🟢 ACTIVO  
 > **Procesos ID:** AUTH-EXT-008, AUTH-PWD-001  
-> **Estado de Implementación:** 🟡 50% Backend | 🔴 0% UI
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% Tests | ✅ 100% UI
 
 ---
 
-## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 26, 2026)
 
-| Proceso                         | Backend    | UI Access | Observación           |
-| ------------------------------- | ---------- | --------- | --------------------- |
-| AUTH-EXT-008 Unlink OAuth       | 🟡 Parcial | 🔴 Falta  | Flujo no implementado |
-| AUTH-PWD-001 Set Password OAuth | 🟡 Parcial | 🔴 Falta  | Falta UI de setup     |
+| Proceso                         | Backend     | UI Access   | Observación            |
+| ------------------------------- | ----------- | ----------- | ---------------------- |
+| AUTH-EXT-008 Unlink OAuth       | ✅ Completo | ✅ Completo | Modal con código email |
+| AUTH-PWD-001 Set Password OAuth | ✅ Completo | ✅ Completo | SetPasswordPage.tsx    |
 
 ### Rutas UI Existentes ✅
 
-- `/settings/linked-accounts` → LinkedAccountsPage (solo lista proveedores)
+- `/user/settings/security` → SecuritySettingsPage (incluye Linked Accounts)
+- `/auth/set-password?token=xxx` → SetPasswordPage (configurar password)
+- Modal: UnlinkActiveProviderModal (verificación por email)
 
-### Rutas UI Faltantes 🔴
-
-- `/settings/linked-accounts/unlink/:provider` → Flujo seguro de desvinculación
-- `/settings/set-password` → Configurar password para OAuth-only users
-- Modal de verificación por email antes de unlink
-
-**Verificación Backend:** AuthService/ExternalAuthController existe pero flujo incompleto 🟡
+**Verificación Backend:** AuthService/ExternalAuthController ✅ COMPLETO
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                    | Total | Implementado | Pendiente | Estado |
-| ----------------------------- | ----- | ------------ | --------- | ------ |
-| **Backend Handlers**          | 4     | 0            | 4         | 🔴 0%  |
-| **Frontend Components**       | 3     | 0            | 3         | 🔴 0%  |
-| **Validaciones de Seguridad** | 10    | 2            | 8         | 🟡 20% |
-| **Tests Unitarios**           | 12    | 0            | 12        | 🔴 0%  |
+| Componente                    | Total | Implementado | Pendiente | Estado  |
+| ----------------------------- | ----- | ------------ | --------- | ------- |
+| **Backend Handlers**          | 6     | 6            | 0         | ✅ 100% |
+| **Frontend Components**       | 3     | 3            | 0         | ✅ 100% |
+| **Validaciones de Seguridad** | 10    | 10           | 0         | ✅ 100% |
+| **Tests Unitarios**           | 57    | 57           | 0         | ✅ 100% |
 
 ### Leyenda de Estados
 
