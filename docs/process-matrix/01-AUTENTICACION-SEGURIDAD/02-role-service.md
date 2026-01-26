@@ -34,10 +34,33 @@
 | Componente              | Total | Implementado | Pendiente | Estado  |
 | ----------------------- | ----- | ------------ | --------- | ------- |
 | **Controllers**         | 3     | 3            | 0         | ✅ 100% |
-| **Procesos (ROLE-\*)**  | 5     | 0            | 5         | 🔴 0%   |
-| **Procesos (PERM-\*)**  | 2     | 0            | 2         | 🔴 0%   |
-| **Procesos (RPERM-\*)** | 3     | 0            | 3         | 🔴 0%   |
-| **Tests Unitarios**     | 0     | 0            | 10        | 🔴 0%   |
+| **Procesos (ROLE-\*)**  | 5     | 5            | 0         | ✅ 100% |
+| **Procesos (PERM-\*)**  | 2     | 2            | 0         | ✅ 100% |
+| **Procesos (RPERM-\*)** | 3     | 3            | 0         | ✅ 100% |
+| **Tests Unitarios**     | 10    | 10           | 0         | ✅ 100% |
+
+### Tests Unitarios Implementados (Enero 2026)
+
+**Roles Handlers:**
+
+- ✅ `CreateRoleCommandHandlerTests.cs` - 4 tests
+- ✅ `GetRolesQueryHandlerTests.cs` - 3 tests
+- ✅ `GetRoleByIdQueryHandlerTests.cs` - 3 tests
+- ✅ `UpdateRoleCommandHandlerTests.cs` - 4 tests
+- ✅ `DeleteRoleCommandHandlerTests.cs` - 4 tests
+
+**Permissions Handlers:**
+
+- ✅ `CreatePermissionCommandHandlerTests.cs` - 4 tests
+- ✅ `GetPermissionsQueryHandlerTests.cs` - 5 tests
+
+**RolePermissions Handlers:**
+
+- ✅ `AssignPermissionCommandHandlerTests.cs` - 4 tests
+- ✅ `RemovePermissionCommandHandlerTests.cs` - 4 tests
+- ✅ `CheckPermissionQueryHandlerTests.cs` - 6 tests
+
+**Total: 41 tests unitarios**
 
 ### Leyenda de Estados
 
