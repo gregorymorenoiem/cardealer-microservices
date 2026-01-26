@@ -2,8 +2,32 @@
 
 > **Servicio:** LeadScoringService  
 > **Puerto:** 5055  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟢 ACTIVO  
+> **Estado de Implementación:** ✅ 100% Backend | 🟡 50% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                       | Backend               | UI Access          | Observación         |
+| ----------------------------- | --------------------- | ------------------ | ------------------- |
+| SCORE-CALC-001 Calcular Score | ✅ LeadScoringService | ✅ DealerLeadsPage | Badge Hot/Warm/Cold |
+| SCORE-ML-001 Modelo ML        | ✅ MLService          | N/A                | Backend only        |
+| SCORE-RULE-001 Reglas Custom  | ✅ LeadScoringService | 🔴 Falta           | Sin configurador    |
+| SCORE-SEG-001 Segmentación    | ✅ LeadScoringService | 🟡 Parcial         | Filtros básicos     |
+
+### Rutas UI Existentes ✅
+
+- `/dealer/leads` → DealerLeadsPage (muestra scores como badges)
+- `/dealer/leads/:id` → Detalle de lead (score visible)
+
+### Rutas UI Faltantes 🔴
+
+- `/dealer/settings/scoring` → Configurar reglas de scoring personalizadas
+- `/dealer/leads/segments` → Vista por segmentos (Hot/Warm/Cold)
+
+**Verificación Backend:** LeadScoringService existe en `/backend/LeadScoringService/` ✅
 
 ---
 

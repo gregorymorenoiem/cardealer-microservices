@@ -2,23 +2,48 @@
 
 > **Servicio:** ChatbotService  
 > **Puerto:** 5060  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟡 EN DESARROLLO  
+> **Estado de Implementación:** 🟡 40% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                     | Backend      | UI Access | Observación               |
+| --------------------------- | ------------ | --------- | ------------------------- |
+| CHAT-NLU-001 Procesamiento  | 🟡 Parcial   | 🔴 Falta  | Integración GPT pendiente |
+| CHAT-INTENT-001 Intenciones | 🟡 Parcial   | 🔴 Falta  | Clasificador básico       |
+| CHAT-WA-001 WhatsApp        | 🔴 Pendiente | 🔴 Falta  | Sin integración Meta      |
+| CHAT-ESCAL-001 Escalamiento | 🔴 Pendiente | 🔴 Falta  | Sin flujo humano          |
+
+### Rutas UI Existentes ✅
+
+- `/messages` → ChatPage (chat humano, no bot)
+
+### Rutas UI Faltantes 🔴
+
+- Widget de chat flotante en todas las páginas
+- `/admin/chatbot/config` → Configurar respuestas del bot
+- `/admin/chatbot/training` → Entrenar intenciones
+- `/dealer/chatbot/conversations` → Ver conversaciones del bot
+
+**Verificación Backend:** ChatbotService existe parcialmente en `/backend/ChatbotService/` 🟡
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                       | Total | Implementado | Pendiente | Estado         |
-| -------------------------------- | ----- | ------------ | --------- | -------------- |
-| **Controllers**                  | 2     | 0            | 2         | 🔴 Pendiente   |
-| **CHAT-NLU-\*** (Procesamiento)  | 5     | 0            | 5         | 🔴 Pendiente   |
-| **CHAT-INTENT-\*** (Intenciones) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **CHAT-RESP-\*** (Respuestas)    | 4     | 0            | 4         | 🔴 Pendiente   |
-| **CHAT-WA-\*** (WhatsApp)        | 4     | 0            | 4         | 🔴 Pendiente   |
-| **CHAT-ESCAL-\*** (Escalamiento) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                        | 0     | 0            | 20        | 🔴 Pendiente   |
-| **TOTAL**                        | 22    | 0            | 22        | 🔴 0% Completo |
+| Componente                       | Total | Implementado | Pendiente | Estado            |
+| -------------------------------- | ----- | ------------ | --------- | ----------------- |
+| **Controllers**                  | 2     | 1            | 1         | 🟡 Parcial        |
+| **CHAT-NLU-\*** (Procesamiento)  | 5     | 3            | 2         | 🟡 Parcial        |
+| **CHAT-INTENT-\*** (Intenciones) | 4     | 2            | 2         | 🟡 Parcial        |
+| **CHAT-RESP-\*** (Respuestas)    | 4     | 2            | 2         | 🟡 Parcial        |
+| **CHAT-WA-\*** (WhatsApp)        | 4     | 0            | 4         | 🔴 Pendiente      |
+| **CHAT-ESCAL-\*** (Escalamiento) | 3     | 0            | 3         | 🔴 Pendiente      |
+| **Tests**                        | 20    | 6            | 14        | 🟡 Parcial        |
+| **TOTAL**                        | 42    | 14           | 28        | 🟡 40% BE + 0% UI |
 
 ---
 

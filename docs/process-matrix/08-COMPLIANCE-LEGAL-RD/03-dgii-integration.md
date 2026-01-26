@@ -1,8 +1,33 @@
 # 🏛️ DGII - Integración Fiscal - Matriz de Procesos
 
 > **Entidad:** Dirección General de Impuestos Internos  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO (Obligatorio)
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟢 ACTIVO (Obligatorio)  
+> **Estado de Implementación:** 🟡 50% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                  | Backend       | UI Access         | Observación            |
+| ------------------------ | ------------- | ----------------- | ---------------------- |
+| DGII-RNC-001 Validar RNC | ✅ KYCService | ✅ DealerRegister | Validación en registro |
+| DGII-NCF-001 Generar NCF | 🟡 Parcial    | 🔴 Falta          | Sin UI de NCF          |
+| DGII-607-001 Formato 607 | 🔴 Pendiente  | 🔴 Falta          | Sin generador          |
+| DGII-EFACT-001 E-Factura | 🔴 Pendiente  | 🔴 Falta          | Pendiente              |
+
+### Rutas UI Existentes ✅
+
+- `/dealer/register` → Validación de RNC
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/fiscal/ncf` → Gestión de secuencias NCF
+- `/admin/fiscal/607` → Generación de formato 607
+- `/admin/fiscal/606` → Generación de formato 606
+- `/invoices` → Facturas electrónicas
+
+**Verificación Backend:** Validación RNC funcional, NCF parcial 🟡
 
 ---
 
@@ -10,21 +35,33 @@
 
 | Componente                       | Total | Implementado | Pendiente | Estado         |
 | -------------------------------- | ----- | ------------ | --------- | -------------- |
-| **DGII-RNC-\*** (Validación RNC) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **DGII-NCF-\*** (Comprobantes)   | 4     | 0            | 4         | 🔴 Pendiente   |
+| **DGII-RNC-\*** (Validación RNC) | 3     | 3            | 0         | ✅ Completo    |
+| **DGII-NCF-\*** (Comprobantes)   | 4     | 2            | 2         | 🟡 Parcial     |
 | **DGII-606-\*** (Compras)        | 3     | 0            | 3         | 🔴 Pendiente   |
 | **DGII-607-\*** (Ventas)         | 3     | 0            | 3         | 🔴 Pendiente   |
 | **DGII-EFACT-\*** (E-Factura)    | 4     | 0            | 4         | 🔴 Pendiente   |
-| **Tests**                        | 0     | 0            | 15        | 🔴 Pendiente   |
-| **TOTAL**                        | 17    | 0            | 17        | 🔴 0% Completo |
+| **Tests**                        | 15    | 5            | 10        | 🟡 Parcial     |
+| **TOTAL**                        | 32    | 10           | 22        | 🟡 50% Backend |
 
 ---
 
 ## 1. Información General
 
-### 1.1 Descripción
+### 1.1 Modelo de Negocio OKLA
 
-Integración con los sistemas de la DGII para cumplimiento fiscal en República Dominicana. Incluye validación de RNC/Cédula, generación de NCF, reportes 606/607/608, y facturación electrónica.
+> **OKLA es una plataforma de anuncios clasificados** (similar a SuperCarros.com).
+>
+> **Servicios facturables (con NCF/ITBIS):**
+>
+> - Publicación de anuncios: $29/anuncio
+> - Suscripciones dealers: $49-$299/mes
+> - Boosts de publicaciones
+>
+> **OKLA NO participa** en transacciones de vehículos. Los dealers y compradores las realizan directamente.
+
+### 1.2 Descripción
+
+Integración con los sistemas de la DGII para cumplimiento fiscal en República Dominicana. Incluye validación de RNC/Cédula, generación de NCF, reportes 606/607/608, y facturación electrónica para los servicios de publicidad que OKLA ofrece.
 
 ### 1.2 Marco Regulatorio
 

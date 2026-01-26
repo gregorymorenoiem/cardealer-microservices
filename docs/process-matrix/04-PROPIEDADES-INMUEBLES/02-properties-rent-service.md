@@ -1,5 +1,34 @@
 # 🏢 Propiedades en Renta - Matriz de Procesos
 
+> **Servicio:** PropertiesRentService  
+> **Puerto:** 5025  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                  | Backend      | UI Access | Observación              |
+| ------------------------ | ------------ | --------- | ------------------------ |
+| PROP-RENT-001 CRUD       | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+| PROP-SEARCH-001 Búsqueda | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+
+### Rutas UI Existentes ✅
+
+- Ninguna - Vertical de alquiler de propiedades no implementada
+
+### Rutas UI Faltantes 🔴
+
+- `/rentals/properties` → Búsqueda de alquileres
+- `/rentals/properties/:id` → Detalle de propiedad en renta
+
+**Verificación Backend:** PropertiesRentService **NO** existe en `/backend/` ⚠️
+
+> ⚠️ **NOTA:** OKLA actualmente se enfoca exclusivamente en venta de vehículos. La vertical de alquiler de propiedades está planificada para 2027.
+
+---
+
 ## � Resumen de Implementación
 
 | Componente     | Total | Implementado | Pendiente | Estado |

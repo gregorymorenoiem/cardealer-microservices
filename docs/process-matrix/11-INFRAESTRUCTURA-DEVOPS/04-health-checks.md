@@ -2,8 +2,32 @@
 
 > **Componente:** Health Check System  
 > **Framework:** ASP.NET Core Health Checks  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | 🟡 70% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso          | Backend | UI Access | Observación              |
+| ---------------- | ------- | --------- | ------------------------ |
+| Liveness Checks  | ✅ 100% | N/A       | K8s consume directamente |
+| Readiness Checks | ✅ 100% | N/A       | K8s consume directamente |
+| Health Dashboard | ✅ 100% | 🟡 70%    | `/health` UI básica      |
+| Service Status   | ✅ 100% | ✅ 80%    | Integrado en admin       |
+
+### Rutas UI Existentes ✅
+
+- `/health` - Vista consolidada de health checks
+- `/admin/services` - Estado de servicios
+- Todos los endpoints `/health` expuestos
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/health/history` - Historial de health checks
+- Alertas visuales en dashboard principal
+
+**Verificación Backend:** Health checks en todos los servicios ✅
 
 ---
 

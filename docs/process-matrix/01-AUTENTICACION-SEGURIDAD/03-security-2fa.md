@@ -2,9 +2,32 @@
 
 > **Servicio:** AuthService (TwoFactorController)  
 > **Puerto:** 5001  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Estado de Implementación:** ✅ 100% Completo
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 90% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                    | Backend                | UI Access               | Observación           |
+| -------------------------- | ---------------------- | ----------------------- | --------------------- |
+| SEC-2FA-001 Enable 2FA     | ✅ TwoFactorController | ✅ SecuritySettingsPage | Flujo completo        |
+| SEC-2FA-002 Verify TOTP    | ✅ TwoFactorController | ✅ LoginTwoFactorPage   | Paso 2 del login      |
+| SEC-2FA-003 Recovery Codes | ✅ TwoFactorController | ✅ Modal recovery       | Generación y descarga |
+| SEC-2FA-004 Disable 2FA    | ✅ TwoFactorController | ✅ SecuritySettingsPage | Con confirmación      |
+
+### Rutas UI Existentes ✅
+
+- `/settings/security` → SecuritySettingsPage (toggle 2FA)
+- `/login/2fa` → LoginTwoFactorPage (verificación TOTP)
+- `/login/recovery` → RecoveryCodePage (usar código backup)
+
+### Rutas UI Faltantes 🔴
+
+- `/settings/2fa/setup` → Wizard guiado de configuración (mejora UX)
+
+**Verificación Backend:** AuthService/TwoFactorController existe en `/backend/AuthService/` ✅
 
 ---
 

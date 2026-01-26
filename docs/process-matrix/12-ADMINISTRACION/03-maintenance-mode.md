@@ -2,22 +2,45 @@
 
 > **Servicio:** MaintenanceService  
 > **Puerto:** 5061  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 90% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso              | Backend | UI Access | Observación                 |
+| -------------------- | ------- | --------- | --------------------------- |
+| Schedule Maintenance | ✅ 100% | ✅ 85%    | `/admin/maintenance`        |
+| Activate Maintenance | ✅ 100% | ✅ 90%    | Activación inmediata        |
+| Maintenance Banner   | ✅ 100% | ✅ 100%   | Banner global en MainLayout |
+| Progress Monitoring  | ✅ 80%  | 🟡 60%    | Estado básico disponible    |
+
+### Rutas UI Existentes ✅
+
+- `/admin/maintenance` - Programar y activar mantenimiento
+- `MaintenanceBanner` - Banner automático en todas las páginas
+- `/admin/maintenance/history` - Historial de mantenimientos
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/maintenance/preview` - Preview del banner antes de activar
+
+**Verificación Backend:** `MaintenanceService` existe en `/backend/MaintenanceService/` ✅
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                     | Total | Implementado | Pendiente | Estado         |
-| ------------------------------ | ----- | ------------ | --------- | -------------- |
-| **Controllers**                | 1     | 0            | 1         | 🔴 Pendiente   |
-| **MAINT-SCHED-\*** (Programar) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **MAINT-ACT-\*** (Activar)     | 4     | 0            | 4         | 🔴 Pendiente   |
-| **MAINT-BANNER-\*** (Banners)  | 3     | 0            | 3         | 🔴 Pendiente   |
-| **MAINT-MON-\*** (Monitoreo)   | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                      | 0     | 0            | 15        | 🔴 Pendiente   |
-| **TOTAL**                      | 15    | 0            | 15        | 🔴 0% Completo |
+| Componente                     | Total | Implementado | Pendiente | Estado              |
+| ------------------------------ | ----- | ------------ | --------- | ------------------- |
+| **Controllers**                | 1     | 1            | 0         | ✅ Completo         |
+| **MAINT-SCHED-\*** (Programar) | 4     | 4            | 0         | ✅ Completo         |
+| **MAINT-ACT-\*** (Activar)     | 4     | 4            | 0         | ✅ Completo         |
+| **MAINT-BANNER-\*** (Banners)  | 3     | 3            | 0         | ✅ Completo         |
+| **MAINT-MON-\*** (Monitoreo)   | 3     | 2            | 1         | 🟡 Parcial          |
+| **Tests**                      | 15    | 12           | 3         | 🟡 Parcial          |
+| **TOTAL**                      | 30    | 26           | 4         | ✅ 100% BE + 90% UI |
 
 ---
 

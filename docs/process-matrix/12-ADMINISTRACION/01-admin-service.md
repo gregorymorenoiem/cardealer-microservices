@@ -2,28 +2,48 @@
 
 > **Servicio:** AdminService  
 > **Puerto:** 5011  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
 > **Estado de Implementación:** 🟡 En Progreso
 
 ---
 
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+> **Brecha Identificada:** Los roles de moderación (ADM-MOD) y soporte (ADM-SUPPORT) no tienen acceso completo desde el frontend.
+
+| Rol             | Backend | Acceso UI | Brecha                                        |
+| --------------- | ------- | --------- | --------------------------------------------- |
+| **ADM-ADMIN**   | ✅ 100% | 🟡 67%    | Falta Dashboard Reports                       |
+| **ADM-MOD**     | 🟡 60%  | 🔴 25%    | **CRÍTICO** - Sin cola de moderación dedicada |
+| **ADM-SUPPORT** | 🟡 70%  | 🔴 30%    | **CRÍTICO** - Sin sistema de tickets          |
+| **ADM-SUPER**   | ✅ 100% | 🟡 48%    | Faltan config avanzadas                       |
+
+**Rutas UI Faltantes:**
+
+- ❌ `/admin/moderation/queue` - Cola de moderación
+- ❌ `/admin/moderation/reports` - Reportes de contenido
+- ❌ `/admin/support/tickets` - Sistema de tickets
+- ❌ `/admin/config/advanced` - Configuraciones avanzadas
+
+---
+
 ## 📊 Resumen de Implementación
 
-| Componente            | Total | Implementado | Pendiente | Estado  |
-| --------------------- | ----- | ------------ | --------- | ------- |
-| **Controllers**       | 8     | 6            | 2         | 🟡 75%  |
-| **Procesos (ADM-\*)** | 10    | 7            | 3         | 🟡 70%  |
-| **Procesos (MOD-\*)** | 5     | 3            | 2         | 🟡 60%  |
-| **Procesos (CFG-\*)** | 4     | 4            | 0         | ✅ 100% |
-| **Tests Unitarios**   | 30    | 20           | 10        | 🟡 67%  |
+| Componente            | Backend | UI Access | Estado Real |
+| --------------------- | ------- | --------- | ----------- |
+| **Controllers**       | 🟡 75%  | 🟡 60%    | 🟡 68%      |
+| **Procesos (ADM-\*)** | 🟡 70%  | 🟡 67%    | 🟡 68%      |
+| **Procesos (MOD-\*)** | 🟡 60%  | 🔴 25%    | 🔴 43%      |
+| **Procesos (CFG-\*)** | ✅ 100% | 🟡 50%    | 🟡 75%      |
+| **Tests Unitarios**   | 🟡 67%  | N/A       | 🟡 67%      |
 
 ### Leyenda de Estados
 
-- ✅ **IMPLEMENTADO Y PROBADO**: Código completo con tests
-- 🟢 **IMPLEMENTADO**: Código completo, falta testing
-- 🟡 **EN PROGRESO**: Implementación parcial
-- 🔴 **PENDIENTE**: No implementado
+- ✅ **IMPLEMENTADO Y PROBADO**: Backend + UI + Tests completos
+- 🟢 **IMPLEMENTADO**: Backend completo, UI completo
+- 🟡 **EN PROGRESO**: Backend OK, UI parcial o falta testing
+- 🔴 **PENDIENTE**: Falta backend o UI crítica
 
 ---
 

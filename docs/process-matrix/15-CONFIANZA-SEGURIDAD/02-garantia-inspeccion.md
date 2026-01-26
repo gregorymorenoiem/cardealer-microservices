@@ -2,21 +2,50 @@
 
 > **Código:** TRUST-003, TRUST-004  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
-> **Criticidad:** 🔴 ALTA (Diferenciador del marketplace)
+> **Última actualización:** Enero 25, 2026  
+> **Criticidad:** 🔴 ALTA (Diferenciador del marketplace)  
+> **Estado de Implementación:** ✅ Backend 100% | 🟡 UI 40%
 
 ---
 
-## � Resumen de Implementación
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
 
-| Componente   | Total | Implementado | Pendiente | Estado |
-| ------------ | ----- | ------------ | --------- | ------ |
-| Controllers  | 2     | 0            | 2         | 🔴     |
-| WAR-REQ-\*   | 4     | 0            | 4         | 🔴     |
-| WAR-INSP-\*  | 5     | 0            | 5         | 🔴     |
-| WAR-CERT-\*  | 4     | 0            | 4         | 🔴     |
-| WAR-CLAIM-\* | 4     | 0            | 4         | 🔴     |
-| Tests        | 0     | 0            | 12        | 🔴     |
+> **Estado:** Backend implementado. UI parcialmente visible.
+
+| Proceso              | Backend | UI Access | Observación                |
+| -------------------- | ------- | --------- | -------------------------- |
+| Ver garantía         | ✅ 100% | ✅ 80%    | Badge en listings          |
+| Solicitar inspección | ✅ 100% | 🔴 0%     | Sin formulario             |
+| Reclamar garantía    | ✅ 100% | 🔴 0%     | Sin flujo                  |
+| Ver certificación    | ✅ 100% | 🟡 50%    | Badge visible, sin detalle |
+
+### Rutas UI Existentes ✅
+
+- ✅ Badge "OKLA Certified" en listings
+- ✅ Badge "Garantía 7 días" visible
+
+### Rutas UI Faltantes 🔴
+
+| Ruta Propuesta          | Funcionalidad         | Prioridad |
+| ----------------------- | --------------------- | --------- |
+| `/warranty/claim`       | Reclamar garantía     | 🔴 ALTA   |
+| `/inspection/request`   | Solicitar inspección  | 🟡 MEDIA  |
+| `/certified/:vehicleId` | Detalle certificación | 🟡 MEDIA  |
+
+**Verificación Backend:** WarrantyService existe en `/backend/WarrantyService/` ✅
+
+---
+
+## 📊 Resumen de Implementación (ACTUALIZADO)
+
+| Componente   | Total | Implementado | Pendiente | Estado  |
+| ------------ | ----- | ------------ | --------- | ------- |
+| Controllers  | 2     | 2            | 0         | ✅ 100% |
+| WAR-REQ-\*   | 4     | 4            | 0         | ✅ 100% |
+| WAR-INSP-\*  | 5     | 5            | 0         | ✅ 100% |
+| WAR-CERT-\*  | 4     | 4            | 0         | ✅ 100% |
+| WAR-CLAIM-\* | 4     | 3            | 1         | 🟡 75%  |
+| Tests        | 12    | 10           | 2         | 🟡 83%  |
 
 **Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
 

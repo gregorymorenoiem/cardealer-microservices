@@ -2,21 +2,47 @@
 
 > **Código:** ONBOARD-001, ONBOARD-002  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🟡 30% Backend | 🟡 40% UI
 > **Criticidad:** 🟢 MEDIA (Activación de usuarios)
 
 ---
 
-## � Resumen de Implementación
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
 
-| Componente    | Total | Implementado | Pendiente | Estado |
-| ------------- | ----- | ------------ | --------- | ------ |
-| Controllers   | 1     | 0            | 1         | 🔴     |
-| ONB-STATUS-\* | 3     | 0            | 3         | 🔴     |
-| ONB-PREF-\*   | 3     | 0            | 3         | 🔴     |
-| ONB-STEP-\*   | 4     | 0            | 4         | 🔴     |
-| ONB-GUIDE-\*  | 3     | 0            | 3         | 🔴     |
-| Tests         | 0     | 0            | 10        | 🔴     |
+| Proceso            | Backend | UI Access | Observación              |
+| ------------------ | ------- | --------- | ------------------------ |
+| Onboarding Status  | 🟡 40%  | 🟡 50%    | Flujo de registro básico |
+| Preferencias       | 🟡 30%  | 🟡 40%    | Perfil básico            |
+| Steps Progresivos  | 🔴 0%   | 🔴 0%     | Sin wizard de pasos      |
+| Guías Interactivas | 🔴 0%   | 🔴 0%     | Sin tooltips/tours       |
+
+### Rutas UI Existentes ✅
+
+- `/register` - Registro básico
+- `/settings/profile` - Completar perfil
+
+### Rutas UI Faltantes 🔴
+
+- `/welcome` - Wizard de bienvenida
+- `/onboarding/preferences` - Selección de preferencias
+- Tooltips y product tours (Intercom/Pendo style)
+
+**Nota:** Onboarding básico funciona. Tours guiados y gamificación son Fase 2.
+
+---
+
+## 📊 Resumen de Implementación
+
+| Componente    | Total | Implementado | Pendiente | Estado             |
+| ------------- | ----- | ------------ | --------- | ------------------ |
+| Controllers   | 1     | 0            | 1         | 🔴 Pendiente       |
+| ONB-STATUS-\* | 3     | 1            | 2         | 🟡 Parcial         |
+| ONB-PREF-\*   | 3     | 1            | 2         | 🟡 Parcial         |
+| ONB-STEP-\*   | 4     | 0            | 4         | 🔴 Pendiente       |
+| ONB-GUIDE-\*  | 3     | 0            | 3         | 🔴 Pendiente       |
+| Tests         | 10    | 3            | 7         | 🟡 Parcial         |
+| **TOTAL**     | 24    | 5            | 19        | 🟡 30% BE + 40% UI |
 
 **Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
 

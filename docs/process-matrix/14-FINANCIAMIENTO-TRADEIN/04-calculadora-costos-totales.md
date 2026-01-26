@@ -2,8 +2,31 @@
 
 > **Código:** FIN-004, FIN-005  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
 > **Criticidad:** 🟢 ALTA (Diferenciador competitivo)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                | Backend | UI Access | Observación                |
+| ---------------------- | ------- | --------- | -------------------------- |
+| Cálculo Impuestos      | 🔴 0%   | 🔴 0%     | No implementado            |
+| Cálculo DGII           | 🔴 0%   | 🔴 0%     | Requiere tablas DGII       |
+| Cálculo Seguros        | 🔴 0%   | 🔴 0%     | Requiere APIs aseguradoras |
+| Cálculo Financiamiento | 🔴 0%   | 🔴 0%     | Requiere APIs bancos       |
+
+### Rutas UI Existentes ✅
+
+- Ninguna
+
+### Rutas UI Faltantes 🔴
+
+- `/vehicles/:id/calculator` - Calculadora en detalle de vehículo
+- `/tools/total-cost-calculator` - Herramienta standalone
+
+**Nota:** Feature de Fase 2. Requiere integraciones con DGII, bancos, aseguradoras.
 
 ---
 

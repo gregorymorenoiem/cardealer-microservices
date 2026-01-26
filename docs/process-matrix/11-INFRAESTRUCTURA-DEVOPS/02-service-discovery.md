@@ -1,23 +1,45 @@
 # 🔍 Service Discovery - Descubrimiento de Servicios - Matriz de Procesos
 
-> **Servicio:** Infrastructure / Consul  
-> **Puerto:** 8500 (Consul UI)  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Servicio:** Infrastructure / Kubernetes DNS  
+> **Puerto:** N/A (K8s nativo)  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend (K8s nativo) | N/A UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso              | Backend | UI Access | Observación               |
+| -------------------- | ------- | --------- | ------------------------- |
+| Service Registration | ✅ 100% | N/A       | Automático vía K8s        |
+| Service Discovery    | ✅ 100% | N/A       | DNS interno K8s           |
+| Health Checks        | ✅ 100% | N/A       | Liveness/Readiness probes |
+| Load Balancing       | ✅ 100% | N/A       | K8s Service + Ingress     |
+
+### Rutas UI Existentes ✅
+
+- N/A - Servicio de infraestructura puro
+- Monitoreo vía Kubernetes Dashboard (externo)
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna requerida - infraestructura manejada por K8s
+
+**Nota:** Consul fue considerado pero se optó por Kubernetes DNS nativo que ya está 100% implementado.
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                       | Total | Implementado | Pendiente | Estado         |
-| -------------------------------- | ----- | ------------ | --------- | -------------- |
-| **SD-REG-\*** (Registro)         | 4     | 0            | 4         | 🔴 Pendiente   |
-| **SD-DISC-\*** (Descubrimiento)  | 4     | 0            | 4         | 🔴 Pendiente   |
-| **SD-HEALTH-\*** (Health Checks) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **SD-LB-\*** (Load Balancing)    | 3     | 0            | 3         | 🔴 Pendiente   |
-| **SD-DNS-\*** (DNS)              | 2     | 0            | 2         | 🔴 Pendiente   |
-| **Tests**                        | 0     | 0            | 15        | 🔴 Pendiente   |
-| **TOTAL**                        | 16    | 0            | 16        | 🔴 0% Completo |
+| Componente                       | Total | Implementado | Pendiente | Estado          |
+| -------------------------------- | ----- | ------------ | --------- | --------------- |
+| **SD-REG-\*** (Registro)         | 4     | 4            | 0         | ✅ Completo     |
+| **SD-DISC-\*** (Descubrimiento)  | 4     | 4            | 0         | ✅ Completo     |
+| **SD-HEALTH-\*** (Health Checks) | 3     | 3            | 0         | ✅ Completo     |
+| **SD-LB-\*** (Load Balancing)    | 3     | 3            | 0         | ✅ Completo     |
+| **SD-DNS-\*** (DNS)              | 2     | 2            | 0         | ✅ Completo     |
+| **Tests**                        | 15    | 15           | 0         | ✅ Completo     |
+| **TOTAL**                        | 31    | 31           | 0         | ✅ 100% Backend |
 
 > **Nota:** Actualmente usando Kubernetes DNS nativo. Consul es opcional para entornos no-K8s.
 

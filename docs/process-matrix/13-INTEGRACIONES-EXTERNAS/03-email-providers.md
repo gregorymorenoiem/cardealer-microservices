@@ -2,8 +2,32 @@
 
 > **Servicio:** NotificationService  
 > **Proveedor Principal:** Resend API ✅ (antes SendGrid)  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** ✅ PRODUCCIÓN - Funcionando
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 95% Backend | ✅ 100% UI (Transparente)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso         | Backend | UI Access | Observación             |
+| --------------- | ------- | --------- | ----------------------- |
+| Email Sending   | ✅ 100% | N/A       | Backend automático      |
+| Email Templates | ✅ 100% | N/A       | React Email templates   |
+| Transactional   | ✅ 100% | N/A       | Confirmaciones, alertas |
+| Digest Emails   | 🔴 0%   | 🔴 0%     | Pendiente para fase 2   |
+
+### Rutas UI Existentes ✅
+
+- Emails se envían automáticamente (registro, reset password, alertas)
+- Templates profesionales con branding OKLA
+- Tracking de apertura integrado
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/emails/templates` - Editor visual de templates
+- `/settings/email-preferences` - Preferencias de email por usuario
+
+**Verificación Backend:** Resend configurado en `NotificationService` ✅ PRODUCCIÓN
 
 ---
 

@@ -2,21 +2,43 @@
 
 > **Código:** NOTIF-001, NOTIF-002  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
-> **Criticidad:** 🟢 MEDIA (UX y engagement)
+> **Última actualización:** Enero 25, 2026  
+> **Criticidad:** 🟢 MEDIA (UX y engagement)  
+> **Estado de Implementación:** 🟡 50% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                               | Backend                | UI Access | Observación         |
+| ------------------------------------- | ---------------------- | --------- | ------------------- |
+| SOLD-DETECT-001 Detectar venta        | ✅ VehiclesSaleService | N/A       | Evento RabbitMQ     |
+| SOLD-NOTIFY-001 Notificar interesados | 🟡 Parcial             | 🔴 Falta  | Email básico        |
+| SOLD-ALT-001 Sugerir alternativas     | 🔴 Pendiente           | 🔴 Falta  | Sin recomendaciones |
+
+### Rutas UI Existentes ✅
+
+- Email de notificación (sin página de alternativas)
+
+### Rutas UI Faltantes 🔴
+
+- `/vehicles/:id/sold` → Página "Este vehículo ya fue vendido" con alternativas
+- Sección en email con vehículos similares
+
+**Verificación Backend:** NotificationService tiene handler parcial 🟡
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                     | Total | Implementado | Pendiente | Estado         |
-| ------------------------------ | ----- | ------------ | --------- | -------------- |
-| **SOLD-DETECT-\*** (Detección) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **SOLD-NOTIFY-\*** (Notificar) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **SOLD-ALT-\*** (Alternativas) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **SOLD-TRACK-\*** (Tracking)   | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                      | 0     | 0            | 12        | 🔴 Pendiente   |
-| **TOTAL**                      | 14    | 0            | 14        | 🔴 0% Completo |
+| Componente                     | Total | Implementado | Pendiente | Estado            |
+| ------------------------------ | ----- | ------------ | --------- | ----------------- |
+| **SOLD-DETECT-\*** (Detección) | 3     | 3            | 0         | ✅ Completo       |
+| **SOLD-NOTIFY-\*** (Notificar) | 4     | 2            | 2         | 🟡 Parcial        |
+| **SOLD-ALT-\*** (Alternativas) | 4     | 0            | 4         | 🔴 Pendiente      |
+| **SOLD-TRACK-\*** (Tracking)   | 3     | 1            | 2         | 🟡 Parcial        |
+| **Tests**                      | 12    | 4            | 8         | 🟡 Parcial        |
+| **TOTAL**                      | 26    | 10           | 16        | 🟡 50% BE + 0% UI |
 
 ---
 

@@ -3,22 +3,47 @@
 > **Servicio:** CRMService  
 > **Puerto:** 5085  
 > **Base de Datos:** crmservicedb  
-> **Última Actualización:** Enero 21, 2026  
+> **Última Actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Estado de Implementación:** 🟡 En Progreso
+> **Estado de Implementación:** 🟡 Backend 85% | UI 75%
 
 ---
 
-## 📊 Resumen de Implementación
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
 
-| Componente             | Total | Implementado | Pendiente | Estado  |
-| ---------------------- | ----- | ------------ | --------- | ------- |
-| **Controllers**        | 5     | 5            | 0         | ✅ 100% |
-| **Procesos (LEAD-\*)** | 6     | 4            | 2         | 🟡 67%  |
-| **Procesos (DEAL-\*)** | 5     | 3            | 2         | 🟡 60%  |
-| **Procesos (PIPE-\*)** | 4     | 4            | 0         | ✅ 100% |
-| **Procesos (ACT-\*)**  | 4     | 4            | 0         | ✅ 100% |
-| **Tests Unitarios**    | 20    | 15           | 5         | 🟡 75%  |
+> **Estado:** UI accesible desde `/dealer/leads` para dealers
+
+| Rol           | Backend | Acceso UI | Observación      |
+| ------------- | ------- | --------- | ---------------- |
+| **DLR-STAFF** | ✅ 100% | ✅ 80%    | Leads + Pipeline |
+| **DLR-ADMIN** | ✅ 100% | ✅ 75%    | + Analytics      |
+
+### Rutas UI Existentes ✅
+
+- ✅ `/dealer/leads` - Lista de leads
+- ✅ `/dealer/leads/{id}` - Detalle de lead
+- ✅ `/dealer/analytics` - Métricas (incluye CRM)
+
+### Rutas UI Faltantes 🔴
+
+| Ruta Propuesta           | Funcionalidad        | Prioridad |
+| ------------------------ | -------------------- | --------- |
+| `/dealer/crm/pipeline`   | Kanban de pipeline   | 🟡 MEDIA  |
+| `/dealer/crm/deals`      | Deals/Oportunidades  | 🟡 MEDIA  |
+| `/dealer/crm/activities` | Timeline actividades | 🟡 MEDIA  |
+
+---
+
+## 📊 Resumen de Implementación (ACTUALIZADO)
+
+| Componente             | Backend | Acceso UI | Estado Real |
+| ---------------------- | ------- | --------- | ----------- |
+| **Controllers**        | ✅ 100% | 🟡 75%    | 🟡 88%      |
+| **Procesos (LEAD-\*)** | 🟡 67%  | 🟡 80%    | 🟡 74%      |
+| **Procesos (DEAL-\*)** | 🟡 60%  | 🔴 40%    | 🔴 50%      |
+| **Procesos (PIPE-\*)** | ✅ 100% | 🔴 50%    | 🟡 75%      |
+| **Procesos (ACT-\*)**  | ✅ 100% | 🟡 60%    | 🟡 80%      |
+| **Tests Unitarios**    | 🟡 75%  | N/A       | 🟡 75%      |
 
 ### Leyenda de Estados
 

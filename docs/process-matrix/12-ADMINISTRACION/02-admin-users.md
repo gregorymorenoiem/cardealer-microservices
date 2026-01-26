@@ -2,8 +2,32 @@
 
 > **Servicio:** AdminService  
 > **Base de datos:** PostgreSQL (adminservice)  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 80% Backend | 🟡 60% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso           | Backend | UI Access | Observación                       |
+| ----------------- | ------- | --------- | --------------------------------- |
+| Admin User CRUD   | ✅ 90%  | ✅ 80%    | `/admin/users` - Gestión completa |
+| Role Management   | ✅ 100% | ✅ 90%    | `/admin/roles` - Integrado        |
+| Permission Matrix | ✅ 80%  | 🟡 50%    | Vista básica de permisos          |
+| Admin Audit Log   | ✅ 70%  | 🔴 0%     | Logs existen, sin UI              |
+
+### Rutas UI Existentes ✅
+
+- `/admin/users` - Lista y edición de admins
+- `/admin/roles` - Gestión de roles
+- `/admin/dashboard` - Dashboard ejecutivo
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/users/audit` - Log de acciones admin
+- `/admin/permissions/matrix` - Matriz visual de permisos
+
+**Verificación Backend:** `AdminService` existe en `/backend/AdminService/` ✅
 
 ---
 

@@ -2,9 +2,31 @@
 
 > **Servicio:** AuthService (ExternalAuthController)  
 > **Puerto:** 5001  
-> **Última actualización:** Enero 24, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟡 PENDIENTE IMPLEMENTACIÓN  
-> **Procesos ID:** AUTH-EXT-008, AUTH-PWD-001
+> **Procesos ID:** AUTH-EXT-008, AUTH-PWD-001  
+> **Estado de Implementación:** 🟡 50% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                         | Backend    | UI Access | Observación           |
+| ------------------------------- | ---------- | --------- | --------------------- |
+| AUTH-EXT-008 Unlink OAuth       | 🟡 Parcial | 🔴 Falta  | Flujo no implementado |
+| AUTH-PWD-001 Set Password OAuth | 🟡 Parcial | 🔴 Falta  | Falta UI de setup     |
+
+### Rutas UI Existentes ✅
+
+- `/settings/linked-accounts` → LinkedAccountsPage (solo lista proveedores)
+
+### Rutas UI Faltantes 🔴
+
+- `/settings/linked-accounts/unlink/:provider` → Flujo seguro de desvinculación
+- `/settings/set-password` → Configurar password para OAuth-only users
+- Modal de verificación por email antes de unlink
+
+**Verificación Backend:** AuthService/ExternalAuthController existe pero flujo incompleto 🟡
 
 ---
 

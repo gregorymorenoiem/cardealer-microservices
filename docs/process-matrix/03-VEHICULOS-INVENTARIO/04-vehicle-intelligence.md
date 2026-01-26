@@ -1,15 +1,51 @@
 # 🤖 VehicleIntelligenceService - Matriz de Procesos
 
-## � Resumen de Implementación
+> **Servicio:** VehicleIntelligenceService  
+> **Puerto:** 5056  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ Backend 100% | 🟡 UI 40%
 
-| Componente    | Total | Implementado | Pendiente | Estado |
-| ------------- | ----- | ------------ | --------- | ------ |
-| Controllers   | 3     | 0            | 3         | 🔴     |
-| VINT-PRICE-\* | 5     | 0            | 5         | 🔴     |
-| VINT-DEM-\*   | 4     | 0            | 4         | 🔴     |
-| VINT-ML-\*    | 6     | 0            | 6         | 🔴     |
-| VINT-REC-\*   | 4     | 0            | 4         | 🔴     |
-| Tests         | 0     | 0            | 15        | 🔴     |
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+> **Estado:** Backend implementado. Consumido parcialmente en UI.
+
+| Proceso          | Backend | UI Access | Observación           |
+| ---------------- | ------- | --------- | --------------------- |
+| Price suggestion | ✅ 100% | 🟡 60%    | Sugerencia en `/sell` |
+| Market analysis  | ✅ 100% | 🔴 0%     | Sin dashboard         |
+| Demand forecast  | ✅ 100% | 🔴 0%     | Sin gráficos          |
+| Deal rating      | ✅ 100% | ✅ 100%   | Badge en listings     |
+| Recommendations  | ✅ 100% | 🟡 50%    | "Similar vehicles"    |
+
+### Puntos de Consumo UI ✅
+
+- ✅ Badge Deal Rating en cards
+- ✅ "Vehículos similares" en detalle
+- ✅ Sugerencia de precio en `/sell`
+
+### Rutas UI Faltantes 🔴
+
+| Ruta Propuesta            | Funcionalidad       | Prioridad |
+| ------------------------- | ------------------- | --------- |
+| `/dealer/market-analysis` | Análisis de mercado | 🟡 MEDIA  |
+| `/admin/ml/dashboard`     | Dashboard de ML     | 🟢 BAJA   |
+
+**Verificación Backend:** VehicleIntelligenceService existe en `/backend/VehicleIntelligenceService/` ✅
+
+---
+
+## 📊 Resumen de Implementación (ACTUALIZADO)
+
+| Componente    | Total | Implementado | Pendiente | Estado  |
+| ------------- | ----- | ------------ | --------- | ------- |
+| Controllers   | 3     | 3            | 0         | ✅ 100% |
+| VINT-PRICE-\* | 5     | 5            | 0         | ✅ 100% |
+| VINT-DEM-\*   | 4     | 4            | 0         | ✅ 100% |
+| VINT-ML-\*    | 6     | 5            | 1         | 🟡 83%  |
+| VINT-REC-\*   | 4     | 4            | 0         | ✅ 100% |
+| Tests         | 15    | 12           | 3         | 🟡 80%  |
 
 **Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
 

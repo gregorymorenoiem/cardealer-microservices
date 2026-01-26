@@ -4,8 +4,33 @@
 > **Puerto:** 5045  
 > **Base de Datos:** PostgreSQL (audit_db) / Elasticsearch (opcional)  
 > **Tecnología:** .NET 8, MediatR, Entity Framework Core  
-> **Última actualización:** Enero 23, 2026  
-> **Estado de Implementación:** 🟢 Implementado
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso       | Backend | UI Access | Observación                 |
+| ------------- | ------- | --------- | --------------------------- |
+| Audit Logging | ✅ 100% | N/A       | Automático vía middleware   |
+| Audit Queries | ✅ 100% | 🔴 0%     | API lista, sin UI           |
+| Audit Reports | ✅ 90%  | 🔴 0%     | Reportes generables, sin UI |
+| Audit Export  | ✅ 80%  | 🔴 0%     | CSV/JSON disponible vía API |
+
+### Rutas UI Existentes ✅
+
+- N/A - Audit trail se captura automáticamente
+- Logs disponibles vía API para integraciones
+
+### Rutas UI Faltantes 🔴 (CRÍTICO para compliance)
+
+- `/admin/audit` - Visor de audit trail
+- `/admin/audit/search` - Búsqueda de eventos
+- `/admin/audit/reports` - Generador de reportes
+- `/admin/audit/export` - Exportar para auditorías externas
+
+**Verificación Backend:** `AuditService` existe en `/backend/AuditService/` ✅
 
 ---
 

@@ -2,9 +2,34 @@
 
 > **Código:** CERT-001  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
 > **Criticidad:** 🔴 ALTA (Diferenciación premium)  
 > **Origen:** AutoTrader, Cars.com CPO Programs
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso               | Backend | UI Access | Observación        |
+| --------------------- | ------- | --------- | ------------------ |
+| Aplicar Certificación | 🔴 0%   | 🔴 0%     | No implementado    |
+| Inspección            | 🔴 0%   | 🔴 0%     | Requiere checklist |
+| Badge Certified       | 🔴 0%   | 🔴 0%     | No implementado    |
+| Renovación            | 🔴 0%   | 🔴 0%     | No implementado    |
+
+### Rutas UI Existentes ✅
+
+- Ninguna
+
+### Rutas UI Faltantes 🔴 (DIFERENCIADOR PREMIUM)
+
+- `/okla-certified` - Landing del programa
+- `/okla-certified/apply` - Aplicar para certificación
+- `/okla-certified/vehicles` - Vehículos certificados
+- Badge ✅ en listings certificados
+
+**Nota:** Feature de Fase 2. Inspirado en programas CPO de AutoTrader/Cars.com. Diferenciador vs competencia.
 
 ---
 

@@ -2,27 +2,64 @@
 
 > **Servicio:** InvoicingService  
 > **Puerto:** 5046  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟡 EN DESARROLLO  
+> **Estado de Implementación:** 🟡 60% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                       | Backend        | UI Access | Observación        |
+| ----------------------------- | -------------- | --------- | ------------------ |
+| INV-NCF-001 Generar NCF       | 🟡 En progreso | 🔴 Falta  | Sin UI de facturas |
+| INV-GEN-001 Crear Factura     | 🟡 En progreso | 🔴 Falta  | Sin visor PDF      |
+| INV-SEND-001 Enviar por Email | 🟡 Parcial     | 🔴 Falta  | Pendiente          |
+| INV-REP-001 Reportes DGII     | 🔴 Pendiente   | 🔴 Falta  | Formato 606/607    |
+
+### Rutas UI Existentes ✅
+
+- `/dealer/billing` → Lista de pagos (sin facturas aún)
+
+### Rutas UI Faltantes 🔴
+
+- `/invoices` → Lista de facturas del usuario
+- `/invoices/:id` → Detalle y descarga de factura PDF
+- `/admin/invoices` → Gestión de NCF para admin
+- `/admin/dgii/reports` → Generación de formatos 606/607
+
+**Verificación Backend:** InvoicingService existe parcialmente en `/backend/BillingService/` 🟡
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                     | Total | Implementado | Pendiente | Estado         |
-| ------------------------------ | ----- | ------------ | --------- | -------------- |
-| **Controllers**                | 1     | 0            | 1         | 🔴 Pendiente   |
-| **INV-NCF-\*** (Comprobantes)  | 4     | 0            | 4         | 🔴 Pendiente   |
-| **INV-GEN-\*** (Generación)    | 4     | 0            | 4         | 🔴 Pendiente   |
-| **INV-SEND-\*** (Envío)        | 3     | 0            | 3         | 🔴 Pendiente   |
-| **INV-VOID-\*** (Anulación)    | 3     | 0            | 3         | 🔴 Pendiente   |
-| **INV-REP-\*** (Reportes DGII) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **Tests**                      | 0     | 0            | 18        | 🔴 Pendiente   |
-| **TOTAL**                      | 19    | 0            | 19        | 🔴 0% Completo |
+| Componente                     | Total | Implementado | Pendiente | Estado            |
+| ------------------------------ | ----- | ------------ | --------- | ----------------- |
+| **Controllers**                | 1     | 1            | 0         | ✅ Completo       |
+| **INV-NCF-\*** (Comprobantes)  | 4     | 3            | 1         | 🟡 Parcial        |
+| **INV-GEN-\*** (Generación)    | 4     | 3            | 1         | 🟡 Parcial        |
+| **INV-SEND-\*** (Envío)        | 3     | 2            | 1         | 🟡 Parcial        |
+| **INV-VOID-\*** (Anulación)    | 3     | 1            | 2         | 🟡 Parcial        |
+| **INV-REP-\*** (Reportes DGII) | 4     | 0            | 4         | 🔴 Pendiente      |
+| **Tests**                      | 18    | 8            | 10        | 🟡 Parcial        |
+| **TOTAL**                      | 37    | 18           | 19        | 🟡 60% BE + 0% UI |
 
 ---
 
 ## 1. Información General
+
+### 1.0 Modelo de Negocio OKLA (Contexto para Facturación)
+
+> **IMPORTANTE:** OKLA S.R.L. (RNC: 1-33-32590-1) es una **plataforma de anuncios clasificados** de vehículos.
+>
+> **Servicios que OKLA factura (con NCF + ITBIS 18%):**
+>
+> - Publicación de anuncios individuales: $29 + ITBIS ($5.22)
+> - Suscripciones mensuales para dealers: $49-$299/mes + ITBIS
+> - Boosts y promociones de publicaciones
+>
+> **OKLA NO factura transacciones de vehículos.** Esas ocurren directamente entre dealers y compradores.
 
 ### 1.1 Descripción
 

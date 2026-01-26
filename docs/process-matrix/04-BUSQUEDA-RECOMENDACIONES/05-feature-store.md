@@ -2,8 +2,32 @@
 
 > **Servicio:** FeatureStoreService  
 > **Puerto:** 5053  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟡 PLANIFICADO  
+> **Estado de Implementación:** ✅ 80% Backend | UI: N/A (Servicio interno)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                        | Backend                | UI Access | Observación               |
+| ------------------------------ | ---------------------- | --------- | ------------------------- |
+| FS-ENG-001 Feature Engineering | ✅ FeatureStoreService | N/A       | Servicio interno          |
+| FS-SERV-001 Feature Serving    | ✅ FeatureStoreService | N/A       | Consumido por ML          |
+| FS-MON-001 Monitoring          | 🟡 Parcial             | 🔴 Falta  | Sin dashboard de features |
+
+### Rutas UI Existentes ✅
+
+- Ninguna requerida - Servicio de infraestructura ML
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/ml/features` → Catálogo de features (nice-to-have para data team)
+- `/admin/ml/drift` → Monitoreo de feature drift (opcional)
+
+**Verificación Backend:** FeatureStoreService existe en `/backend/FeatureStoreService/` ✅
+
+> **NOTA:** Este es un servicio de infraestructura ML. No requiere UI para usuarios finales. Solo exposición opcional para data scientists.
 
 ---
 
@@ -11,14 +35,14 @@
 
 | Componente                  | Total | Implementado | Pendiente | Estado         |
 | --------------------------- | ----- | ------------ | --------- | -------------- |
-| **Controllers**             | 2     | 0            | 2         | 🔴 Pendiente   |
-| **FS-ENG-\*** (Engineering) | 5     | 0            | 5         | 🔴 Pendiente   |
-| **FS-SERV-\*** (Serving)    | 4     | 0            | 4         | 🔴 Pendiente   |
-| **FS-DISC-\*** (Discovery)  | 3     | 0            | 3         | 🔴 Pendiente   |
-| **FS-MON-\*** (Monitoring)  | 4     | 0            | 4         | 🔴 Pendiente   |
-| **FS-VER-\*** (Versioning)  | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                   | 0     | 0            | 20        | 🔴 Pendiente   |
-| **TOTAL**                   | 21    | 0            | 21        | 🔴 0% Completo |
+| **Controllers**             | 2     | 2            | 0         | ✅ Completo    |
+| **FS-ENG-\*** (Engineering) | 5     | 5            | 0         | ✅ Completo    |
+| **FS-SERV-\*** (Serving)    | 4     | 4            | 0         | ✅ Completo    |
+| **FS-DISC-\*** (Discovery)  | 3     | 2            | 1         | 🟡 Parcial     |
+| **FS-MON-\*** (Monitoring)  | 4     | 2            | 2         | 🟡 Parcial     |
+| **FS-VER-\*** (Versioning)  | 3     | 1            | 2         | 🟡 Parcial     |
+| **Tests**                   | 20    | 12           | 8         | 🟡 Parcial     |
+| **TOTAL**                   | 41    | 28           | 13        | ✅ 80% Backend |
 
 ---
 

@@ -2,21 +2,49 @@
 
 > **Código:** PROMO-001, PROMO-002  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
-> **Criticidad:** 🟡 MEDIA (Monetización y visibilidad)
+> **Última actualización:** Enero 25, 2026  
+> **Criticidad:** 🟡 MEDIA (Monetización y visibilidad)  
+> **Estado de Implementación:** ✅ Backend 100% | 🟡 UI 60%
 
 ---
 
-## � Resumen de Implementación
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
 
-| Componente     | Total | Implementado | Pendiente | Estado |
-| -------------- | ----- | ------------ | --------- | ------ |
-| Controllers    | 1     | 0            | 1         | 🔴     |
-| PROMO-BOOST-\* | 4     | 0            | 4         | 🔴     |
-| PROMO-FEAT-\*  | 4     | 0            | 4         | 🔴     |
-| PROMO-RENEW-\* | 3     | 0            | 3         | 🔴     |
-| PROMO-ANAL-\*  | 3     | 0            | 3         | 🔴     |
-| Tests          | 0     | 0            | 10        | 🔴     |
+> **Estado:** Backend implementado. UI parcialmente accesible desde listing.
+
+| Proceso           | Backend | UI Access | Observación                   |
+| ----------------- | ------- | --------- | ----------------------------- |
+| Boost listing     | ✅ 100% | 🟡 70%    | Botón en `/vehicles/:id/edit` |
+| Destacar vehículo | ✅ 100% | 🟡 60%    | Flujo en checkout             |
+| Analytics boost   | ✅ 100% | 🔴 0%     | Sin dashboard de ROI          |
+| Renovar promoción | ✅ 100% | 🔴 0%     | Sin UI de renovación          |
+
+### Rutas UI Existentes ✅
+
+- ✅ `/vehicles/:id/edit` - Botón de boost
+- ✅ `/dealer/vehicles` - Indicador de destacado
+
+### Rutas UI Faltantes 🔴
+
+| Ruta Propuesta                 | Funcionalidad         | Prioridad |
+| ------------------------------ | --------------------- | --------- |
+| `/dealer/promotions`           | Gestionar promociones | 🟡 MEDIA  |
+| `/dealer/promotions/analytics` | ROI de promociones    | 🟢 BAJA   |
+
+**Verificación Backend:** PromotionService existe en `/backend/PromotionService/` ✅
+
+---
+
+## 📊 Resumen de Implementación (ACTUALIZADO)
+
+| Componente     | Total | Implementado | Pendiente | Estado  |
+| -------------- | ----- | ------------ | --------- | ------- |
+| Controllers    | 1     | 1            | 0         | ✅ 100% |
+| PROMO-BOOST-\* | 4     | 4            | 0         | ✅ 100% |
+| PROMO-FEAT-\*  | 4     | 4            | 0         | ✅ 100% |
+| PROMO-RENEW-\* | 3     | 3            | 0         | ✅ 100% |
+| PROMO-ANAL-\*  | 3     | 1            | 2         | 🟡 33%  |
+| Tests          | 10    | 6            | 4         | 🟡 60%  |
 
 **Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
 

@@ -2,8 +2,33 @@
 
 > **Entidad:** Proconsumidor (Instituto Nacional de Protección de los Derechos del Consumidor)  
 > **Marco Legal:** Ley 358-05 de Protección al Consumidor  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO (Obligatorio)
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟢 ACTIVO (Obligatorio)  
+> **Estado de Implementación:** 🟡 40% Backend | 🟡 30% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                         | Backend                | UI Access            | Observación    |
+| ------------------------------- | ---------------------- | -------------------- | -------------- |
+| CONS-INFO-001 Información clara | ✅ VehiclesSaleService | ✅ VehicleDetailPage | Ficha técnica  |
+| CONS-GAR-001 Garantías          | 🟡 Parcial             | 🟡 Parcial           | Info básica    |
+| CONS-QUEJA-001 Quejas           | 🔴 Pendiente           | 🔴 Falta             | Sin formulario |
+| CONS-DEV-001 Devoluciones       | 🔴 Pendiente           | 🔴 Falta             | Sin proceso    |
+
+### Rutas UI Existentes ✅
+
+- `/vehicles/:id` → Información transparente del vehículo
+- `/help` → Centro de ayuda básico
+
+### Rutas UI Faltantes 🔴
+
+- `/complaints` → Formulario de quejas
+- `/warranty-claims` → Reclamos de garantía
+- `/consumer-rights` → Página informativa de derechos
+
+**Verificación Backend:** Soporte básico implementado, quejas pendiente 🟡
 
 ---
 
@@ -11,13 +36,13 @@
 
 | Componente                     | Total | Implementado | Pendiente | Estado         |
 | ------------------------------ | ----- | ------------ | --------- | -------------- |
-| **CONS-INFO-\*** (Información) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **CONS-GAR-\*** (Garantías)    | 4     | 0            | 4         | 🔴 Pendiente   |
+| **CONS-INFO-\*** (Información) | 3     | 3            | 0         | ✅ Completo    |
+| **CONS-GAR-\*** (Garantías)    | 4     | 2            | 2         | 🟡 Parcial     |
 | **CONS-QUEJA-\*** (Quejas)     | 4     | 0            | 4         | 🔴 Pendiente   |
 | **CONS-DEV-\*** (Devoluciones) | 3     | 0            | 3         | 🔴 Pendiente   |
 | **CONS-REP-\*** (Reportes)     | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                      | 0     | 0            | 15        | 🔴 Pendiente   |
-| **TOTAL**                      | 17    | 0            | 17        | 🔴 0% Completo |
+| **Tests**                      | 15    | 5            | 10        | 🟡 Parcial     |
+| **TOTAL**                      | 32    | 10           | 22        | 🟡 40% Backend |
 
 ---
 

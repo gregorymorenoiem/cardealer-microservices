@@ -1,5 +1,36 @@
 # 📚 Catálogo, Favoritos y Homepage - Matriz de Procesos
 
+> **Servicio:** VehiclesSaleService (Controllers adicionales)  
+> **Puerto:** 5020  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                  | Backend                       | UI Access             | Observación         |
+| ------------------------ | ----------------------------- | --------------------- | ------------------- |
+| CAT-MAKE-001 Marcas      | ✅ CatalogController          | ✅ PublishVehiclePage | Dropdown marcas     |
+| CAT-MODEL-001 Modelos    | ✅ CatalogController          | ✅ PublishVehiclePage | Dropdown modelos    |
+| FAV-CRUD-001 Agregar Fav | ✅ FavoritesController        | ✅ VehicleCard        | Botón corazón       |
+| FAV-CRUD-002 Listar Favs | ✅ FavoritesController        | ✅ FavoritesPage      | Lista completa      |
+| HOME-SECT-001 Secciones  | ✅ HomepageSectionsController | ✅ HomePage           | Secciones dinámicas |
+| HOME-ADMIN-001 Config    | ✅ HomepageSectionsController | ✅ AdminHomepagePage  | Configuración admin |
+
+### Rutas UI Existentes ✅
+
+- `/` → HomePage (secciones dinámicas)
+- `/favorites` → FavoritesPage (lista de favoritos)
+- `/sell` → PublishVehiclePage (catálogo en dropdowns)
+- `/admin/homepage` → AdminHomepagePage (config secciones)
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna - Catálogo, favoritos y homepage 100% funcionales
+
+**Verificación Backend:** VehiclesSaleService controllers existen en `/backend/VehiclesSaleService/` ✅
+
 ---
 
 ## 📊 Resumen de Implementación

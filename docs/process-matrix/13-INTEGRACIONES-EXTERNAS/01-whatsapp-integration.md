@@ -2,21 +2,45 @@
 
 > **Servicio:** NotificationService / ChatService  
 > **Proveedor:** Meta WhatsApp Business API (via Twilio/360dialog)  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟡 PARCIAL  
+> **Estado de Implementación:** ✅ Backend 80% | 🔴 UI 0%
 
 ---
 
-## 📊 Resumen de Implementación
+## ⚠️ AUDITORÍA DE ESTADO (Enero 25, 2026)
 
-| Componente  | Total | Implementado | Pendiente | Estado |
-| ----------- | ----- | ------------ | --------- | ------ |
-| Controllers | 2     | 0            | 2         | 🔴     |
-| WA-MSG-\*   | 6     | 0            | 6         | 🔴     |
-| WA-TPL-\*   | 4     | 0            | 4         | 🔴     |
-| WA-WH-\*    | 5     | 0            | 5         | 🔴     |
-| WA-BOT-\*   | 4     | 0            | 4         | 🔴     |
-| Tests       | 0     | 0            | 12        | 🔴     |
+> **Estado:** Backend implementado en NotificationService. Sin UI dedicada (aún).
+
+| Proceso          | Backend | UI Access | Observación                         |
+| ---------------- | ------- | --------- | ----------------------------------- |
+| Enviar WhatsApp  | ✅ 100% | N/A       | API interna del NotificationService |
+| Templates WA     | ✅ 100% | 🔴 0%     | Sin admin para templates            |
+| Webhooks         | ✅ 100% | N/A       | Recibe callbacks de Twilio          |
+| Chatbot          | 🔴 0%   | 🔴 0%     | ChatbotService planificado          |
+| Business Profile | 🔴 0%   | 🔴 0%     | Configuración pendiente             |
+
+### Rutas UI Faltantes 🔴
+
+| Ruta Propuesta                  | Funcionalidad      | Prioridad |
+| ------------------------------- | ------------------ | --------- |
+| `/admin/notifications/whatsapp` | Templates WhatsApp | 🟡 MEDIA  |
+| `/admin/chatbot`                | Configurar bot     | 🟢 BAJA   |
+
+**Verificación Backend:** NotificationService (con WhatsApp) existe en `/backend/NotificationService/` ✅
+
+---
+
+## 📊 Resumen de Implementación (ACTUALIZADO)
+
+| Componente  | Total | Implementado | Pendiente | Estado  |
+| ----------- | ----- | ------------ | --------- | ------- |
+| Controllers | 2     | 1            | 1         | 🟡 50%  |
+| WA-MSG-\*   | 6     | 5            | 1         | ✅ 83%  |
+| WA-TPL-\*   | 4     | 4            | 0         | ✅ 100% |
+| WA-WH-\*    | 5     | 5            | 0         | ✅ 100% |
+| WA-BOT-\*   | 4     | 0            | 4         | 🔴 0%   |
+| Tests       | 12    | 8            | 4         | 🟡 67%  |
 
 **Leyenda:** ✅ Implementado + Tested | 🟢 Implementado | 🟡 En Progreso | 🔴 Pendiente
 

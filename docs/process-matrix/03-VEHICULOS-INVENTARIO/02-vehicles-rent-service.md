@@ -1,5 +1,37 @@
 # 🚗 VehiclesRentService - Matriz de Procesos
 
+> **Servicio:** VehiclesRentService  
+> **Puerto:** 5024  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                       | Backend      | UI Access | Observación              |
+| ----------------------------- | ------------ | --------- | ------------------------ |
+| RENT-VEH-001 CRUD Vehículos   | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+| RENT-BOOK-001 Reservas        | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+| RENT-AVAIL-001 Disponibilidad | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+
+### Rutas UI Existentes ✅
+
+- Ninguna - Servicio no implementado
+
+### Rutas UI Faltantes 🔴
+
+- `/rentals` → Búsqueda de vehículos en renta
+- `/rentals/:id` → Detalle de vehículo en renta
+- `/rentals/book` → Proceso de reserva
+- `/dealer/rentals` → Gestión de flota de alquiler
+
+**Verificación Backend:** VehiclesRentService **NO** existe en `/backend/` ⚠️
+
+> ⚠️ **NOTA:** Este servicio está planificado para fases futuras. OKLA actualmente se enfoca solo en venta de vehículos.
+
+---
+
 ## � Resumen de Implementación
 
 | Componente    | Total | Implementado | Pendiente | Estado |

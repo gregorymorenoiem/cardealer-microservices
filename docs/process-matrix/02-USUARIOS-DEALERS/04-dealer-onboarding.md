@@ -2,9 +2,36 @@
 
 > **Servicio:** UserService / DealerOnboardingV2Controller  
 > **Puerto:** 5004  
-> **Última actualización:** Enero 23, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Estado de Implementación:** ✅ 98% Completo
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                  | Backend                         | UI Access             | Observación            |
+| ------------------------ | ------------------------------- | --------------------- | ---------------------- |
+| ONBOARD-001 Landing      | ✅ N/A                          | ✅ DealerLandingPage  | Información planes     |
+| ONBOARD-002 Registro     | ✅ DealerOnboardingV2Controller | ✅ DealerRegisterPage | Formulario completo    |
+| ONBOARD-003 Pricing      | ✅ BillingService               | ✅ DealerPricingPage  | Selección de plan      |
+| ONBOARD-004 Pago         | ✅ AzulPaymentService           | ✅ CheckoutPage       | Integración Azul       |
+| ONBOARD-005 Verificación | ✅ KYCService                   | ✅ VerificationPage   | Upload documentos      |
+| ONBOARD-006 Dashboard    | ✅ DealerManagementService      | ✅ DealerDashboard    | Acceso post-onboarding |
+
+### Rutas UI Existentes ✅
+
+- `/dealer/landing` → DealerLandingPage (información)
+- `/dealer/pricing` → DealerPricingPage (planes)
+- `/dealer/register` → DealerRegisterPage (formulario)
+- `/dealer/checkout` → CheckoutPage (pago)
+- `/dealer/dashboard` → DealerDashboard (post-activación)
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna - Flujo completo de onboarding implementado
+
+**Verificación Backend:** UserService/DealerOnboardingV2Controller existe ✅
 
 ---
 

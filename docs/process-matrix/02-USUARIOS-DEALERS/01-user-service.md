@@ -3,8 +3,31 @@
 > **Servicio:** UserService  
 > **Puerto:** 15101  
 > **Base de Datos:** user_db  
-> **Última actualización:** Enero 27, 2026  
-> **Estado de Implementación:** ✅ 100% Completo
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | 🟡 95% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+> **Estado General:** Backend 100% completo. UI tiene acceso al 95% de funcionalidades.
+
+| Proceso              | Backend | UI Access | Observación                |
+| -------------------- | ------- | --------- | -------------------------- |
+| Gestión Usuarios     | ✅ 100% | ✅ 100%   | OK                         |
+| Gestión Sellers      | ✅ 100% | ✅ 100%   | OK                         |
+| Gestión Dealers      | ✅ 100% | ✅ 100%   | OK                         |
+| **Dealer Employees** | ✅ 100% | 🔴 0%     | ⚠️ Sin `/dealer/employees` |
+| Onboarding           | ✅ 100% | ✅ 100%   | OK                         |
+
+### Ruta UI Faltante
+
+| Ruta                                 | Funcionalidad                   | Prioridad |
+| ------------------------------------ | ------------------------------- | --------- |
+| `/dealer/employees`                  | Gestión de empleados del dealer | 🔴 ALTA   |
+| `/dealer/employees/{id}/permissions` | Permisos de empleado            | 🔴 ALTA   |
+
+---
 
 ## 📊 Resumen de Implementación
 
@@ -18,7 +41,23 @@
 | **Procesos (DEMP-\*)**   | 5     | 5            | 0         | ✅ 100% |
 | **Procesos (DONB-\*)**   | 4     | 4            | 0         | ✅ 100% |
 | **Procesos (DMOD-\*)**   | 3     | 3            | 0         | ✅ 100% |
-| **Tests Unitarios**      | 93    | 93           | 0         | ✅ 100% |
+| **Tests Unitarios**      | 125   | 125          | 0         | ✅ 100% |
+
+### ✅ Controllers Verificados
+
+| Controller                 | Archivo                       | Endpoints | Estado  |
+| -------------------------- | ----------------------------- | --------- | ------- |
+| UsersController            | UsersController.cs            | 5         | ✅ 100% |
+| UserRolesController        | UserRolesController.cs        | 4         | ✅ 100% |
+| SellersController          | SellersController.cs          | 6         | ✅ 100% |
+| DealersController          | DealersController.cs          | 6         | ✅ 100% |
+| DealerEmployeesController  | DealerEmployeesController.cs  | 5         | ✅ 100% |
+| DealerOnboardingController | DealerOnboardingController.cs | 4         | ✅ 100% |
+| DealerModulesController    | DealerModulesController.cs    | 3         | ✅ 100% |
+| OnboardingController       | OnboardingController.cs       | 3         | ✅ 100% |
+| SellerProfileController    | SellerProfileController.cs    | 4+        | ✅ 100% |
+
+> **Nota:** Existen 3 controllers auxiliares adicionales: `HealthController`, `ErrorsController`, `DealerOnboardingV2Controller`
 
 ### Leyenda de Estados
 

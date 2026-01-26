@@ -1,31 +1,38 @@
 # ⏰ SchedulerService - Matriz de Procesos
 
----
-
-## 📊 Resumen de Implementación
-
-| Componente                    | Total | Implementado | Pendiente | Estado         |
-| ----------------------------- | ----- | ------------ | --------- | -------------- |
-| **Controllers**               | 2     | 0            | 2         | 🔴 Pendiente   |
-| **SCHED-JOB-\*** (Jobs CRUD)  | 5     | 0            | 5         | 🔴 Pendiente   |
-| **SCHED-EXEC-\*** (Ejecución) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **SCHED-CRON-\*** (Cron)      | 3     | 0            | 3         | 🔴 Pendiente   |
-| **SCHED-HIST-\*** (Historial) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                     | 0     | 0            | 18        | 🔴 Pendiente   |
-| **TOTAL**                     | 17    | 0            | 17        | 🔴 0% Completo |
+> **Servicio:** SchedulerService  
+> **Puerto:** 5046  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🟡 40% Backend | 🔴 0% UI
 
 ---
 
-## 📋 Información General
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
 
-| Aspecto           | Detalle                                                                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Servicio**      | SchedulerService                                                                                                                                      |
-| **Puerto**        | 5046                                                                                                                                                  |
-| **Base de Datos** | PostgreSQL (scheduler_db)                                                                                                                             |
-| **Tecnología**    | .NET 8, MediatR, Quartz.NET, Entity Framework Core                                                                                                    |
-| **Mensajería**    | RabbitMQ (publicador)                                                                                                                                 |
-| **Descripción**   | Sistema centralizado de programación de tareas (jobs) para ejecutar procesos recurrentes, reportes programados, mantenimientos y tareas de background |
+| Proceso        | Backend | UI Access | Observación                  |
+| -------------- | ------- | --------- | ---------------------------- |
+| Job Scheduling | 🟡 50%  | 🔴 0%     | Hangfire configurado         |
+| Cron Jobs      | 🟡 40%  | 🔴 0%     | Expresiones cron soportadas  |
+| Job History    | 🔴 0%   | 🔴 0%     | Pendiente                    |
+| Job Dashboard  | 🟡 30%  | 🔴 0%     | Hangfire Dashboard (interno) |
+
+### Rutas UI Existentes ✅
+
+- Hangfire Dashboard: http://scheduler:5046/hangfire (interno admin)
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/scheduler` - Vista de jobs programados
+- `/admin/scheduler/history` - Historial de ejecución
+- `/admin/scheduler/create` - Crear jobs ad-hoc
+
+**Verificación Backend:** `SchedulerService` existe en `/backend/SchedulerService/` ✅
+
+---
+
+| **Tecnología** | .NET 8, MediatR, Quartz.NET, Entity Framework Core |
+| **Mensajería** | RabbitMQ (publicador) |
+| **Descripción** | Sistema centralizado de programación de tareas (jobs) para ejecutar procesos recurrentes, reportes programados, mantenimientos y tareas de background |
 
 ---
 

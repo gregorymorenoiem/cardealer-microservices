@@ -2,8 +2,30 @@
 
 > **Servicio:** SharedLibrary / Middleware  
 > **Ubicación:** CarDealer.Shared.Idempotency  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | N/A UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso          | Backend | UI Access | Observación              |
+| ---------------- | ------- | --------- | ------------------------ |
+| Idempotency Keys | ✅ 100% | N/A       | Header X-Idempotency-Key |
+| Key Storage      | ✅ 100% | N/A       | Redis TTL 24h            |
+| Response Caching | ✅ 100% | N/A       | Respuestas cacheadas     |
+| Webhook Dedup    | ✅ 100% | N/A       | Stripe/Azul webhooks     |
+
+### Rutas UI Existentes ✅
+
+- N/A - Funcionalidad transparente de backend
+- El frontend envía header X-Idempotency-Key automáticamente
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna requerida - es infraestructura transparente
+
+**Verificación Backend:** `CarDealer.Shared` implementa IdempotencyMiddleware ✅
 
 ---
 

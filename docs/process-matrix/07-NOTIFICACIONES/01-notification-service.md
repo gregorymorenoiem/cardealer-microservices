@@ -3,9 +3,38 @@
 > **Servicio:** NotificationService  
 > **Puerto:** 15040 (Docker), 80 (K8s)  
 > **Base de Datos:** notificationservice (PostgreSQL)  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** ✅ PRODUCCIÓN - Emails funcionando con Resend  
-> **Estado de Implementación:** ✅ 100% Completo
+> **Estado de Implementación:** ✅ 100% Backend | 🟡 70% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+> **Estado:** Backend 100% completo. UI tiene acceso parcial (notificaciones toast/bell, falta centro de notificaciones).
+
+| Proceso                 | Backend | UI Access | Observación                 |
+| ----------------------- | ------- | --------- | --------------------------- |
+| Envío de notificaciones | ✅ 100% | N/A       | Backend only                |
+| Ver notificaciones      | ✅ 100% | 🟡 60%    | Solo toast/bell, sin centro |
+| Preferencias de usuario | ✅ 100% | 🔴 30%    | UI básico en /settings      |
+| Templates admin         | ✅ 100% | 🔴 0%     | Sin UI admin                |
+| Historial               | ✅ 100% | 🔴 0%     | Sin página de historial     |
+
+### Rutas UI Existentes ✅
+
+- ✅ Bell icon en header (notificaciones in-app)
+- ✅ Toast notifications (push en tiempo real)
+- ✅ `/settings` (preferencias básicas)
+
+### Rutas UI Faltantes 🔴
+
+| Ruta Propuesta                   | Funcionalidad            | Prioridad |
+| -------------------------------- | ------------------------ | --------- |
+| `/notifications`                 | Centro de notificaciones | 🟡 MEDIA  |
+| `/notifications/history`         | Historial completo       | 🟢 BAJA   |
+| `/admin/notifications/templates` | Gestión de templates     | 🟡 MEDIA  |
+| `/admin/notifications/campaigns` | Campañas marketing       | 🟡 MEDIA  |
 
 ---
 

@@ -69,6 +69,15 @@ import TwoFactorVerifyPage from './pages/auth/TwoFactorVerifyPage';
 import SetPasswordPage from './pages/auth/SetPasswordPage';
 // User Security Settings
 import SecuritySettingsPage from './pages/user/SecuritySettingsPage';
+// Privacy & Data Management (Sprint - ARCO Compliance Ley 172-13)
+import PrivacyCenterPage from './pages/user/PrivacyCenterPage';
+import DataDownloadPage from './pages/user/DataDownloadPage';
+import DeleteAccountPage from './pages/user/DeleteAccountPage';
+// Recently Viewed (Recommendations)
+import RecentlyViewedPage from './pages/vehicles/RecentlyViewedPage';
+// Media Viewers (360 & Video Tours)
+import Media360ViewerPage from './pages/vehicles/Media360ViewerPage';
+import VideoTourPage from './pages/vehicles/VideoTourPage';
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import PendingApprovalsPage from './pages/admin/PendingApprovalsPage';
@@ -82,6 +91,8 @@ import KYCAdminReviewPage from './pages/admin/KYCAdminReviewPage';
 import RolesManagementPage from './pages/admin/RolesManagementPage';
 import PermissionsManagementPage from './pages/admin/PermissionsManagementPage';
 import RoleDetailPage from './pages/admin/RoleDetailPage';
+// ML Admin Dashboard (Sprint - ML Models Management)
+import MLAdminDashboard from './pages/admin/MLAdminDashboard';
 // KYC pages
 import KYCVerificationPage from './pages/kyc/KYCVerificationPage';
 import KYCStatusPage from './pages/kyc/KYCStatusPage';
@@ -326,6 +337,46 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Privacy & Data Management Routes (ARCO - Ley 172-13) */}
+          <Route
+            path="/privacy-center"
+            element={
+              <ProtectedRoute>
+                <PrivacyCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/privacy/download-my-data"
+            element={
+              <ProtectedRoute>
+                <DataDownloadPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/privacy/delete-account"
+            element={
+              <ProtectedRoute>
+                <DeleteAccountPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Recently Viewed & Recommendations */}
+          <Route
+            path="/recently-viewed"
+            element={
+              <ProtectedRoute>
+                <RecentlyViewedPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Vehicle Media Viewers (360 & Video Tours) */}
+          <Route path="/vehicles/:slug/360" element={<Media360ViewerPage />} />
+          <Route path="/vehicles/:slug/video" element={<VideoTourPage />} />
 
           {/* Payment Routes (Sprint 4 - AZUL) */}
           <Route path="/payment/azul" element={<AzulPaymentPage />} />
@@ -854,6 +905,18 @@ function App() {
               <ProtectedRoute requireAdmin>
                 <AdminLayout>
                   <FeatureStoreDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ML Models Administration */}
+          <Route
+            path="/admin/ml/models"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <MLAdminDashboard />
                 </AdminLayout>
               </ProtectedRoute>
             }

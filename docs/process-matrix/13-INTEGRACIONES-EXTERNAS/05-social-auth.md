@@ -2,8 +2,31 @@
 
 > **Servicio:** AuthService  
 > **Proveedores:** Google, Facebook, Apple  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso         | Backend | UI Access | Observación                    |
+| --------------- | ------- | --------- | ------------------------------ |
+| Google Login    | ✅ 100% | ✅ 100%   | Botón "Continuar con Google"   |
+| Facebook Login  | ✅ 100% | ✅ 100%   | Botón "Continuar con Facebook" |
+| Apple Login     | ✅ 100% | ✅ 100%   | Botón "Continuar con Apple"    |
+| Account Linking | ✅ 100% | ✅ 90%    | En settings                    |
+
+### Rutas UI Existentes ✅
+
+- `/login` - Botones de social login
+- `/register` - Registro con social
+- `/settings/connected-accounts` - Gestionar cuentas vinculadas
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna - Social auth 100% completo
+
+**Verificación Backend:** OAuth2 configurado en `AuthService` ✅ PRODUCCIÓN
 
 ---
 

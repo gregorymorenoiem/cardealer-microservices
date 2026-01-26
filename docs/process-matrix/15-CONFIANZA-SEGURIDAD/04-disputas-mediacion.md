@@ -2,8 +2,33 @@
 
 > **Código:** DISP-001, DISP-002, DISP-003  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 80% Backend | 🔴 0% UI
 > **Criticidad:** 🔴 CRÍTICA (Protección legal)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso       | Backend | UI Access | Observación            |
+| ------------- | ------- | --------- | ---------------------- |
+| Crear Disputa | ✅ 100% | 🔴 0%     | API lista, sin UI      |
+| Mediación     | ✅ 80%  | 🔴 0%     | Lógica backend, sin UI |
+| Resolución    | ✅ 70%  | 🔴 0%     | Workflow backend       |
+| Escalación    | 🟡 50%  | 🔴 0%     | Parcial, sin UI        |
+
+### Rutas UI Existentes ✅
+
+- Ninguna
+
+### Rutas UI Faltantes 🔴 (CRÍTICO para compliance Pro Consumidor)
+
+- `/my-disputes` - Lista de disputas del usuario
+- `/disputes/:id` - Detalle de disputa
+- `/disputes/new` - Crear nueva disputa
+- `/admin/disputes` - Panel de mediación admin
+
+**Verificación Backend:** `DisputeService` existe en `/backend/DisputeService/` ✅
 
 ---
 

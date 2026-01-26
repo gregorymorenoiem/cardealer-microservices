@@ -2,8 +2,34 @@
 
 > **Servicio:** MarketingService  
 > **Puerto:** 5045  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟡 PLANIFICADO  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                | Backend      | UI Access | Observación              |
+| ---------------------- | ------------ | --------- | ------------------------ |
+| MKT-CAMP-001 Campañas  | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+| MKT-AUD-001 Audiencias | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+| MKT-ANAL-001 Analytics | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+
+### Rutas UI Existentes ✅
+
+- Ninguna - Servicio no implementado
+
+### Rutas UI Faltantes 🔴
+
+- `/dealer/marketing` → Dashboard de campañas
+- `/dealer/marketing/campaigns/new` → Crear campaña
+- `/dealer/marketing/audiences` → Gestión de audiencias
+- `/admin/marketing` → Campañas a nivel plataforma
+
+**Verificación Backend:** MarketingService **NO** existe en `/backend/` ⚠️
+
+> ⚠️ **NOTA:** Este servicio está planificado para Q2 2026.
 
 ---
 

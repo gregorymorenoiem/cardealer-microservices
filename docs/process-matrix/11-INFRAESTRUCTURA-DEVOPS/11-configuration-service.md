@@ -1,9 +1,30 @@
 # ⚙️ Configuration Service - Servicio de Configuración - Matriz de Procesos
 
-> **Servicio:** ConfigurationService  
+> **Servicio:** ConfigurationService (no implementado)  
 > **Puerto:** 5070  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI (Usando appsettings.json)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso        | Backend | UI Access | Observación                   |
+| -------------- | ------- | --------- | ----------------------------- |
+| Config Reading | ✅ 100% | N/A       | Via IConfiguration nativo     |
+| Config Writing | 🔴 0%   | 🔴 0%     | No implementado dinámicamente |
+| Config Caching | ✅ 100% | N/A       | In-memory config              |
+| Config Refresh | 🔴 0%   | 🔴 0%     | Requiere restart              |
+
+### Rutas UI Existentes ✅
+
+- N/A - Configuración vía archivos appsettings.json y variables de entorno K8s
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/config` - Editor de configuración dinámica (nice-to-have)
+
+**Nota:** Actualmente usando `appsettings.json` + K8s ConfigMaps. Un servicio de configuración dinámica es opcional para fase 2.
 
 ---
 

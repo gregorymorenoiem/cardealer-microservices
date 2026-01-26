@@ -1,9 +1,32 @@
 # 🚩 Feature Flags - Gestión de Características - Matriz de Procesos
 
-> **Servicio:** AdminService / FeatureFlagService  
+> **Servicio:** Feature Flags (no implementado)  
 > **Base de datos:** PostgreSQL + Redis  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso           | Backend | UI Access | Observación     |
+| ----------------- | ------- | --------- | --------------- |
+| Feature Flag CRUD | 🔴 0%   | 🔴 0%     | No implementado |
+| Flag Evaluation   | 🔴 0%   | 🔴 0%     | No implementado |
+| User Targeting    | 🔴 0%   | 🔴 0%     | No implementado |
+| Gradual Rollout   | 🔴 0%   | 🔴 0%     | No implementado |
+
+### Rutas UI Existentes ✅
+
+- Ninguna
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/features` - Gestión de feature flags
+- `/admin/features/targeting` - Reglas de targeting
+- `/admin/features/audit` - Historial de cambios
+
+**Nota:** Feature flags planificado para Fase 2. Considerar LaunchDarkly o Unleash.
 
 ---
 

@@ -2,8 +2,32 @@
 
 > **Stack:** Prometheus + Grafana + Alertmanager  
 > **Tracing:** OpenTelemetry + Jaeger  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 78% Backend | N/A UI (Grafana externo)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso             | Backend | UI Access | Observación        |
+| ------------------- | ------- | --------- | ------------------ |
+| Métricas Prometheus | ✅ 100% | N/A       | Grafana dashboards |
+| Alertas             | ✅ 100% | N/A       | Alertmanager       |
+| Dashboards          | ✅ 100% | N/A       | Grafana            |
+| Distributed Tracing | 🟡 50%  | N/A       | Jaeger parcial     |
+| APM                 | 🔴 0%   | N/A       | Pendiente          |
+
+### Rutas UI Existentes ✅
+
+- Grafana: http://grafana:3000 (admin)
+- Prometheus: http://prometheus:9090
+- Jaeger: http://jaeger:16686
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna interna requerida - stack de observabilidad externo
+
+**Verificación:** Prometheus endpoints `/metrics` en todos los servicios ✅
 
 ---
 

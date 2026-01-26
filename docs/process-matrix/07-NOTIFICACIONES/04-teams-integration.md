@@ -2,8 +2,31 @@
 
 > **Servicio:** NotificationService  
 > **Provider:** Microsoft Graph API  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟡 PLANIFICADO  
+> **Estado de Implementación:** 🔴 0% Backend | UI: N/A (Integración interna)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                 | Backend      | UI Access | Observación     |
+| ----------------------- | ------------ | --------- | --------------- |
+| TEAMS-HOOK-001 Webhooks | 🔴 Pendiente | N/A       | Sin integración |
+| TEAMS-MSG-001 Mensajes  | 🔴 Pendiente | N/A       | Sin integración |
+| TEAMS-ALERT-001 Alertas | 🔴 Pendiente | N/A       | Sin integración |
+
+### Rutas UI Existentes ✅
+
+- N/A - Integración interna sin UI pública
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/integrations/teams` → Configuración de webhooks Teams (opcional)
+
+**Verificación Backend:** Integración Teams **NO** implementada ⚠️
+
+> ⚠️ **NOTA:** Integración interna para equipo OKLA. Prioridad baja.
 
 ---
 

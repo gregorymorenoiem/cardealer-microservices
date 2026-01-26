@@ -2,8 +2,32 @@
 
 > **Código:** TRUST-005, TRUST-006  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
 > **Criticidad:** 🟡 ALTA (Confianza del consumidor)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso              | Backend | UI Access | Observación                 |
+| -------------------- | ------- | --------- | --------------------------- |
+| Solicitud Devolución | 🔴 0%   | 🔴 0%     | No implementado             |
+| Proceso Devolución   | 🔴 0%   | 🔴 0%     | No implementado             |
+| Reembolso            | 🔴 0%   | 🔴 0%     | Requiere lógica Stripe/Azul |
+| Cancelación          | 🔴 0%   | 🔴 0%     | No implementado             |
+
+### Rutas UI Existentes ✅
+
+- Ninguna
+
+### Rutas UI Faltantes 🔴
+
+- `/my-purchases/:id/return` - Solicitar devolución
+- `/returns/status` - Estado de devoluciones
+- `/admin/returns` - Gestión admin de devoluciones
+
+**Nota:** Modelo de negocio actual es marketplace (P2P/C2B), las devoluciones son entre partes. Este servicio aplica más para transacciones con garantía OKLA.
 
 ---
 

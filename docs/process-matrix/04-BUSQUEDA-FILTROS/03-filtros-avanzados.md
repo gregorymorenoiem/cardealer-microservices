@@ -2,24 +2,51 @@
 
 > **Código:** SEARCH-001  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Criticidad:** 🔴 ALTA (UX y Engagement)  
-> **Origen:** CarGurus
+> **Origen:** CarGurus  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 95% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                      | Backend                       | UI Access     | Observación               |
+| ---------------------------- | ----------------------------- | ------------- | ------------------------- |
+| FILTER-PRICE-001 Rango       | ✅ VehiclesSaleService        | ✅ SearchPage | Slider de precio          |
+| FILTER-MAKE-001 Marca/Modelo | ✅ CatalogController          | ✅ SearchPage | Dropdowns anidados        |
+| FILTER-COND-001 Condición    | ✅ VehiclesSaleService        | ✅ SearchPage | Nuevo/Usado               |
+| FILTER-LOC-001 Ubicación     | ✅ VehiclesSaleService        | ✅ SearchPage | Provincia/Ciudad          |
+| FILTER-FEAT-001 Features     | ✅ VehiclesSaleService        | 🟡 Parcial    | Algunos filtros avanzados |
+| FILTER-ADV-001 Deal Rating   | ✅ PricingIntelligenceService | 🔴 Falta      | Filtro por calificación   |
+
+### Rutas UI Existentes ✅
+
+- `/search` → SearchPage con panel de filtros completo
+- `/vehicles` → VehiclesPage con filtros básicos
+
+### Rutas UI Faltantes 🔴
+
+- Filtro por "Deal Rating" (Great/Good/Fair/High Price)
+- Filtro por "Days on Market"
+- Filtro por "Price Drops"
+
+**Verificación Backend:** VehiclesSaleService soporta 20+ filtros ✅
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                           | Total | Implementado | Pendiente | Estado         |
-| ------------------------------------ | ----- | ------------ | --------- | -------------- |
-| **FILTER-PRICE-\*** (Precio)         | 4     | 0            | 4         | 🔴 Pendiente   |
-| **FILTER-MAKE-\*** (Marca/Modelo)    | 4     | 0            | 4         | 🔴 Pendiente   |
-| **FILTER-COND-\*** (Condición)       | 3     | 0            | 3         | 🔴 Pendiente   |
-| **FILTER-LOC-\*** (Ubicación)        | 3     | 0            | 3         | 🔴 Pendiente   |
-| **FILTER-FEAT-\*** (Características) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **FILTER-ADV-\*** (Avanzados)        | 5     | 0            | 5         | 🔴 Pendiente   |
-| **Tests**                            | 0     | 0            | 20        | 🔴 Pendiente   |
-| **TOTAL**                            | 23    | 0            | 23        | 🔴 0% Completo |
+| Componente                           | Total | Implementado | Pendiente | Estado              |
+| ------------------------------------ | ----- | ------------ | --------- | ------------------- |
+| **FILTER-PRICE-\*** (Precio)         | 4     | 4            | 0         | ✅ Completo         |
+| **FILTER-MAKE-\*** (Marca/Modelo)    | 4     | 4            | 0         | ✅ Completo         |
+| **FILTER-COND-\*** (Condición)       | 3     | 3            | 0         | ✅ Completo         |
+| **FILTER-LOC-\*** (Ubicación)        | 3     | 3            | 0         | ✅ Completo         |
+| **FILTER-FEAT-\*** (Características) | 4     | 3            | 1         | 🟡 Parcial          |
+| **FILTER-ADV-\*** (Avanzados)        | 5     | 3            | 2         | 🟡 Parcial          |
+| **Tests**                            | 20    | 18           | 2         | 🟡 Parcial          |
+| **TOTAL**                            | 43    | 38           | 5         | ✅ 100% BE + 95% UI |
 
 ---
 

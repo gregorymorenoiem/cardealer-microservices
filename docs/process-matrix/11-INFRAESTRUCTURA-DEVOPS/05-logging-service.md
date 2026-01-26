@@ -1,9 +1,31 @@
 # 📝 Logging Service - Logging Centralizado - Matriz de Procesos
 
-> **Stack:** Seq + Serilog  
+> **Stack:** Serilog + Seq (opcional ELK)  
 > **Alternativa:** ELK Stack (Elasticsearch, Logstash, Kibana)  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | 🔴 0% UI (Herramientas externas)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso            | Backend | UI Access | Observación                |
+| ------------------ | ------- | --------- | -------------------------- |
+| Structured Logging | ✅ 100% | N/A       | Serilog configurado        |
+| Log Sinks          | ✅ 100% | N/A       | Console, File, Seq         |
+| Log Enrichment     | ✅ 100% | N/A       | CorrelationId, UserId, etc |
+| Log Queries        | ✅ 90%  | 🔴 0%     | Seq UI externa             |
+
+### Rutas UI Existentes ✅
+
+- N/A - Logs se acceden vía Seq UI (http://seq:5341) o Grafana
+- Los logs se almacenan y son consultables externamente
+
+### Rutas UI Faltantes 🔴
+
+- No se requiere UI interna - se usa Seq/Grafana/Kibana
+
+**Nota:** Logging es 100% funcional. La consulta se hace vía herramientas externas (Seq, Grafana Loki, ELK).
 
 ---
 

@@ -2,8 +2,33 @@
 
 > **Servicio:** EventTrackingService  
 > **Puerto:** 5050  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | 🔴 0% UI (Backend-only service)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso          | Backend | UI Access | Observación                           |
+| ---------------- | ------- | --------- | ------------------------------------- |
+| Event Collection | ✅ 100% | N/A       | SDK JavaScript embebido en frontend   |
+| Event Processing | ✅ 100% | N/A       | Pipeline interno con RabbitMQ         |
+| Event Storage    | ✅ 100% | N/A       | Almacenamiento en TimescaleDB/Redis   |
+| Event Query API  | ✅ 100% | 🔴 0%     | API disponible, sin UI de exploración |
+
+### Rutas UI Existentes ✅
+
+- Ninguna - Este es un servicio de backend puro
+- Los eventos se capturan automáticamente desde el frontend
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/events/explorer` - Explorador de eventos (opcional, para debugging)
+- Los eventos alimentan otros servicios (Analytics, Recommendations)
+
+**Verificación Backend:** `EventTrackingService` existe en `/backend/EventTrackingService/` ✅
+
+**Nota:** Este servicio es backend-only por diseño. La captura de eventos se hace vía SDK JavaScript inyectado en el frontend.
 
 ---
 

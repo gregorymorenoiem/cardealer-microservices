@@ -2,8 +2,34 @@
 
 > **Código:** VEH-006, VEH-007  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
-> **Criticidad:** 🟡 ALTA (Diferenciador de UX)
+> **Última actualización:** Enero 25, 2026  
+> **Criticidad:** 🟡 ALTA (Diferenciador de UX)  
+> **Estado de Implementación:** � En desarrollo Backend | ✅ 100% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                     | Backend        | UI Access             | Observación              |
+| --------------------------- | -------------- | --------------------- | ------------------------ |
+| M360-UPLOAD-001 Subida 360° | 🟡 En progreso | ✅ Form disponible    | Feature planificada Q2   |
+| M360-VIEW-001 Visualizador  | 🟡 En progreso | ✅ Media360ViewerPage | Visor interactivo creado |
+| VIDEO-UPLOAD-001 Video Tour | 🟡 En progreso | ✅ Form disponible    | Upload video disponible  |
+| VIDEO-STREAM-001 Streaming  | 🟡 En progreso | ✅ VideoTourPage      | Player de video creado   |
+
+### Rutas UI Existentes ✅
+
+- `/vehicles/:id` → VehicleDetailPage (fotos estáticas + links a 360°/video)
+- `/vehicles/:slug/360` → Visor 360° interactivo (Media360ViewerPage)
+- `/vehicles/:slug/video` → Video tour completo (VideoTourPage)
+
+### Rutas UI para Upload (Dealer) ✅
+
+- `/dealer/inventory/:id/edit` → Incluye sección de media 360° y video
+
+**Verificación Backend:** MediaService existe, extensión 360°/Video en desarrollo para Q2 2026.
+
+> ℹ️ **NOTA:** Frontend UI completado. Backend en desarrollo para streaming/processing.
 
 ---
 

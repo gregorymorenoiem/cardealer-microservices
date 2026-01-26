@@ -1,8 +1,34 @@
 # 📁 Document Storage - Almacenamiento de Documentos - Matriz de Procesos
 
-> **Componente:** DocumentStorageService  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Componente:** DocumentStorageService (MediaService)  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 90% Backend | 🟡 60% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso           | Backend | UI Access | Observación                        |
+| ----------------- | ------- | --------- | ---------------------------------- |
+| Document Upload   | ✅ 100% | ✅ 90%    | KYC, Dealer verification           |
+| Document Download | ✅ 100% | ✅ 80%    | Acceso a documentos propios        |
+| Document Security | ✅ 90%  | N/A       | Backend-only, presigned URLs       |
+| Document Audit    | 🟡 70%  | 🔴 0%     | Logs existen, sin UI de audit      |
+| Retention Policy  | 🟡 60%  | 🔴 0%     | Políticas definidas, sin UI config |
+
+### Rutas UI Existentes ✅
+
+- `/dealer/register` - Upload de documentos de verificación
+- `/kyc/upload` - Documentos de identidad
+- `/admin/dealers/:id/documents` - Revisión admin de documentos
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/documents/audit` - Log de acceso a documentos
+- `/admin/documents/retention` - Configuración de retención
+- `/settings/documents` - Usuario gestiona sus documentos
+
+**Verificación Backend:** `MediaService` maneja documentos en `/backend/MediaService/` ✅
 
 ---
 

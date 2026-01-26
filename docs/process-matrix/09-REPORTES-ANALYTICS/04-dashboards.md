@@ -1,9 +1,36 @@
 # 📊 Dashboards Service - Dashboards Ejecutivos - Matriz de Procesos
 
-> **Servicio:** ReportsService / DashboardsModule  
+> **Servicio:** ReportsService / ReportingService  
 > **Puerto:** 5020  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 90% Backend | 🟡 70% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso              | Backend | UI Access | Observación                           |
+| -------------------- | ------- | --------- | ------------------------------------- |
+| Executive Dashboard  | ✅ 100% | ✅ 90%    | `/admin/dashboard` - KPIs principales |
+| Dealer Dashboard     | ✅ 100% | ✅ 100%   | `/dealer/dashboard` - Completo        |
+| Operations Dashboard | ✅ 85%  | 🟡 60%    | Parcial en admin                      |
+| Financial Dashboard  | ✅ 80%  | 🟡 50%    | Reportes básicos en billing           |
+| Compliance Dashboard | ✅ 70%  | 🔴 0%     | Backend listo, sin UI                 |
+
+### Rutas UI Existentes ✅
+
+- `/admin/dashboard` - Dashboard ejecutivo principal
+- `/dealer/dashboard` - Dashboard de dealer completo
+- `/admin/reports` - Generador de reportes
+- `/admin/billing` - Métricas financieras básicas
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/dashboard/compliance` - Dashboard de compliance
+- `/admin/dashboard/operations` - Dashboard operativo detallado
+- `/admin/dashboard/widgets` - Constructor de dashboards personalizados
+
+**Verificación Backend:** `ReportsService` y `ReportingService` existen en `/backend/` ✅
 
 ---
 

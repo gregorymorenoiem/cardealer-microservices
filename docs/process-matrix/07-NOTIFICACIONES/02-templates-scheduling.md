@@ -2,8 +2,31 @@
 
 > **Servicio:** NotificationService (TemplatesController, ScheduledNotificationsController)  
 > **Puerto:** 5010  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟢 ACTIVO  
+> **Estado de Implementación:** ✅ 100% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                   | Backend                             | UI Access | Observación       |
+| ------------------------- | ----------------------------------- | --------- | ----------------- |
+| TPL-001 CRUD Templates    | ✅ TemplatesController              | 🔴 Falta  | Sin UI admin      |
+| SCHED-001 Programar Envío | ✅ ScheduledNotificationsController | 🔴 Falta  | Sin calendario    |
+| TPL-VAR-001 Variables     | ✅ TemplatesController              | 🔴 Falta  | Sin editor visual |
+
+### Rutas UI Existentes ✅
+
+- Ninguna - Backend-only por ahora
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/notifications/templates` → Editor de templates con preview
+- `/admin/notifications/scheduled` → Calendario de envíos programados
+- `/admin/notifications/templates/:id/edit` → Editor visual drag-and-drop
+
+**Verificación Backend:** NotificationService/TemplatesController existe ✅
 
 ---
 

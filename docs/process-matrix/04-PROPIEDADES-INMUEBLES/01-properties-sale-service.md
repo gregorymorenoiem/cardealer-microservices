@@ -1,5 +1,35 @@
 # 🏠 Propiedades en Venta - Matriz de Procesos
 
+> **Servicio:** PropertiesSaleService  
+> **Puerto:** 5024  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                  | Backend      | UI Access | Observación              |
+| ------------------------ | ------------ | --------- | ------------------------ |
+| PROP-SALE-001 CRUD       | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+| PROP-SEARCH-001 Búsqueda | 🔴 Pendiente | 🔴 Falta  | Servicio no implementado |
+
+### Rutas UI Existentes ✅
+
+- Ninguna - Vertical de propiedades no implementada
+
+### Rutas UI Faltantes 🔴
+
+- `/properties` → Búsqueda de propiedades
+- `/properties/:id` → Detalle de propiedad
+- `/sell-property` → Publicar propiedad
+
+**Verificación Backend:** PropertiesSaleService **NO** existe en `/backend/` ⚠️
+
+> ⚠️ **NOTA:** OKLA actualmente se enfoca exclusivamente en vehículos. La vertical de inmuebles está planificada para 2027.
+
+---
+
 ## � Resumen de Implementación
 
 | Componente     | Total | Implementado | Pendiente | Estado |

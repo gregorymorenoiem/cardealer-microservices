@@ -2,22 +2,46 @@
 
 > **Servicio:** AdminService / ConfigService  
 > **Base de datos:** PostgreSQL (adminservice)  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🟡 40% Backend | 🔴 10% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso            | Backend | UI Access | Observación               |
+| ------------------ | ------- | --------- | ------------------------- |
+| Business Config    | 🟡 50%  | 🔴 0%     | Via appsettings solamente |
+| Integration Config | 🟡 60%  | 🔴 10%    | Hardcoded mayormente      |
+| UI Config          | 🔴 20%  | 🔴 0%     | No dinámico               |
+| Security Config    | ✅ 80%  | 🔴 0%     | En variables de entorno   |
+
+### Rutas UI Existentes ✅
+
+- Configuración via archivos appsettings.json
+- Variables de entorno en K8s ConfigMaps
+
+### Rutas UI Faltantes 🔴 (CRÍTICO)
+
+- `/admin/config` - Panel de configuración dinámica
+- `/admin/config/integrations` - Configurar APIs externas
+- `/admin/config/business` - Reglas de negocio
+
+**Nota:** Configuración dinámica es fase 2. Actualmente via archivos.
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                     | Total | Implementado | Pendiente | Estado         |
-| ------------------------------ | ----- | ------------ | --------- | -------------- |
-| **Controllers**                | 1     | 0            | 1         | 🔴 Pendiente   |
-| **CFG-BIZ-\*** (Negocio)       | 5     | 0            | 5         | 🔴 Pendiente   |
-| **CFG-INT-\*** (Integraciones) | 4     | 0            | 4         | 🔴 Pendiente   |
-| **CFG-UI-\*** (Interfaz)       | 3     | 0            | 3         | 🔴 Pendiente   |
-| **CFG-SEC-\*** (Seguridad)     | 4     | 0            | 4         | 🔴 Pendiente   |
-| **Tests**                      | 0     | 0            | 18        | 🔴 Pendiente   |
-| **TOTAL**                      | 17    | 0            | 17        | 🔴 0% Completo |
+| Componente                     | Total | Implementado | Pendiente | Estado             |
+| ------------------------------ | ----- | ------------ | --------- | ------------------ |
+| **Controllers**                | 1     | 0            | 1         | 🔴 Pendiente       |
+| **CFG-BIZ-\*** (Negocio)       | 5     | 2            | 3         | 🟡 Parcial         |
+| **CFG-INT-\*** (Integraciones) | 4     | 2            | 2         | 🟡 Parcial         |
+| **CFG-UI-\*** (Interfaz)       | 3     | 0            | 3         | 🔴 Pendiente       |
+| **CFG-SEC-\*** (Seguridad)     | 4     | 3            | 1         | ✅ 80% Completo    |
+| **Tests**                      | 18    | 5            | 13        | 🟡 Parcial         |
+| **TOTAL**                      | 35    | 12           | 23        | 🟡 40% BE + 10% UI |
 
 ---
 

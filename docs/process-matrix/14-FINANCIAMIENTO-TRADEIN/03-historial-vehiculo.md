@@ -2,8 +2,33 @@
 
 > **Código:** VEH-004  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
 > **Criticidad:** 🔴 ALTA (Diferenciador clave del marketplace)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                 | Backend | UI Access | Observación               |
+| ----------------------- | ------- | --------- | ------------------------- |
+| Historial de Dueños     | 🔴 0%   | 🔴 0%     | No implementado           |
+| Historial Accidentes    | 🔴 0%   | 🔴 0%     | Requiere integración DGTT |
+| Historial Mantenimiento | 🔴 0%   | 🔴 0%     | No implementado           |
+| Verificación KM         | 🔴 0%   | 🔴 0%     | No implementado           |
+| Historial Legal         | 🔴 0%   | 🔴 0%     | Requiere integración PN   |
+
+### Rutas UI Existentes ✅
+
+- Ninguna
+
+### Rutas UI Faltantes 🔴 (CRÍTICO - DIFERENCIADOR)
+
+- `/vehicles/:id/history` - Reporte estilo CARFAX
+- `/vehicle-history/report/:vin` - Reporte público por VIN
+- `/admin/vehicle-history` - Administración de reportes
+
+**Nota:** Este es un DIFERENCIADOR CLAVE. Requiere integraciones con DGTT, Policía Nacional, aseguradoras. Prioridad ALTA para Fase 2.
 
 ---
 

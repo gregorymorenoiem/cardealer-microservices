@@ -2,9 +2,37 @@
 
 > **Servicio:** KYCService  
 > **Puerto:** 5020  
-> **Última actualización:** Enero 23, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Regulación:** Ley 155-17 (Prevención Lavado de Activos)
+> **Regulación:** Ley 155-17 (Prevención Lavado de Activos)  
+> **Estado de Implementación:** ✅ 100% Backend | 🟡 60% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                         | Backend                           | UI Access             | Observación          |
+| ------------------------------- | --------------------------------- | --------------------- | -------------------- |
+| KYC-001 Crear Perfil            | ✅ KYCProfilesController          | ✅ VerificationPage   | En onboarding        |
+| KYC-002 Upload Documentos       | ✅ KYCDocumentsController         | ✅ DocumentUploadPage | Cédula y licencia    |
+| KYC-003 Verificación Biométrica | ✅ IdentityVerificationController | 🟡 Parcial            | Selfie sin liveness  |
+| KYC-004 Admin Review            | ✅ KYCProfilesController          | 🔴 Falta              | Cola de verificación |
+| KYC-005 Watchlist               | ✅ WatchlistController            | 🔴 Falta              | Panel compliance     |
+| KYC-006 STR Reports             | ✅ STRController                  | 🔴 Falta              | Reportes sospechosos |
+
+### Rutas UI Existentes ✅
+
+- `/verification` → VerificationPage (inicio de KYC)
+- `/verification/documents` → DocumentUploadPage
+- `/verification/selfie` → SelfieVerificationPage
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/kyc/queue` → Cola de perfiles pendientes de revisión
+- `/admin/compliance/watchlist` → Gestión de lista de vigilancia
+- `/admin/compliance/str` → Reportes de transacciones sospechosas
+
+**Verificación Backend:** KYCService existe en `/backend/KYCService/` ✅
 
 ---
 

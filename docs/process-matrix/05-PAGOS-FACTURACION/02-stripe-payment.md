@@ -2,8 +2,33 @@
 
 > **Servicio:** StripePaymentService (BillingService)  
 > **Puerto:** 5008  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado:** 🟢 ACTIVO  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 90% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                             | Backend           | UI Access            | Observación         |
+| ----------------------------------- | ----------------- | -------------------- | ------------------- |
+| STRIPE-PAY-001 Checkout             | ✅ BillingService | ✅ CheckoutPage      | Stripe Elements     |
+| STRIPE-PAY-002 Apple/Google Pay     | ✅ BillingService | ✅ CheckoutPage      | Payment Request     |
+| STRIPE-SUB-001 Suscripciones        | ✅ BillingService | ✅ DealerPricingPage | Planes dealer       |
+| STRIPE-WH-001 Webhooks              | ✅ BillingService | N/A                  | Backend only        |
+| STRIPE-WALLET-001 Métodos guardados | ✅ BillingService | 🟡 Parcial           | Falta UI de gestión |
+
+### Rutas UI Existentes ✅
+
+- `/checkout` → CheckoutPage (Stripe Elements integrados)
+- `/dealer/pricing` → DealerPricingPage (selección de plan)
+- `/dealer/billing` → BillingHistoryPage (historial de pagos)
+
+### Rutas UI Faltantes 🔴
+
+- `/settings/payment-methods` → Gestión de tarjetas guardadas
+
+**Verificación Backend:** BillingService/Stripe existe en `/backend/BillingService/` ✅
 
 ---
 

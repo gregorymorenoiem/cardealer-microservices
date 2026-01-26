@@ -2,8 +2,32 @@
 
 > **Código:** WISH-001, WISH-002  
 > **Versión:** 1.0  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🔴 0% Backend | 🔴 0% UI
 > **Criticidad:** 🟢 BAJA (Feature social)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso            | Backend | UI Access | Observación     |
+| ------------------ | ------- | --------- | --------------- |
+| Crear Wishlist     | 🔴 0%   | 🔴 0%     | No implementado |
+| Compartir Wishlist | 🔴 0%   | 🔴 0%     | No implementado |
+| Votar en Wishlist  | 🔴 0%   | 🔴 0%     | No implementado |
+| Notificaciones     | 🔴 0%   | 🔴 0%     | No implementado |
+
+### Rutas UI Existentes ✅
+
+- `/favorites` - Lista de favoritos individual (NO compartida)
+
+### Rutas UI Faltantes 🔴
+
+- `/wishlist/create` - Crear wishlist compartida
+- `/wishlist/:id` - Ver wishlist compartida
+- `/wishlist/:id/invite` - Invitar colaboradores
+
+**Nota:** Feature social de baja prioridad. Favoritos individuales ya implementados.
 
 ---
 

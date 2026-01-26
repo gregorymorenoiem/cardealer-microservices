@@ -2,8 +2,31 @@
 
 > **Tecnología:** RabbitMQ 3.12+  
 > **Librería:** MassTransit  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 85% Backend | N/A UI (RabbitMQ Management)
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso           | Backend | UI Access | Observación                            |
+| ----------------- | ------- | --------- | -------------------------------------- |
+| Publishers        | ✅ 100% | N/A       | MassTransit integrado                  |
+| Subscribers       | ✅ 100% | N/A       | Consumers en servicios                 |
+| Dead Letter Queue | ✅ 100% | N/A       | ErrorService integrado                 |
+| Retry Policies    | ✅ 100% | N/A       | Exponential backoff                    |
+| Sagas             | 🔴 0%   | N/A       | Pendiente para transacciones complejas |
+
+### Rutas UI Existentes ✅
+
+- RabbitMQ Management UI: http://rabbitmq:15672 (admin)
+- Grafana dashboards para métricas de colas
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna requerida - RabbitMQ Management es suficiente
+
+**Verificación Backend:** RabbitMQ + MassTransit en todos los servicios ✅
 
 ---
 

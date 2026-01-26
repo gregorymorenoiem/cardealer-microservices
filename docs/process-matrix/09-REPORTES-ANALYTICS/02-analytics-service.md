@@ -1,9 +1,35 @@
 # 📊 Analytics Service - Métricas y Reportes - Matriz de Procesos
 
-> **Servicio:** AnalyticsService  
+> **Servicio:** AnalyticsService (ver DealerAnalyticsService)  
 > **Puerto:** 5070  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** ✅ 80% Backend | 🟡 60% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                    | Backend | UI Access | Observación                              |
+| -------------------------- | ------- | --------- | ---------------------------------------- |
+| Dashboard Analytics Dealer | ✅ 100% | ✅ 100%   | `/dealer/dashboard` - Métricas completas |
+| Platform Analytics         | ✅ 80%  | 🟡 50%    | Parcial en AdminDashboard                |
+| Vehicle Analytics          | ✅ 90%  | ✅ 85%    | Integrado en ListingAnalytics            |
+| User Behavior Analytics    | 🟡 60%  | 🔴 0%     | Backend existe, sin UI dedicada          |
+| Revenue Reports            | ✅ 100% | 🟡 40%    | Solo vista admin básica                  |
+
+### Rutas UI Existentes ✅
+
+- `/dealer/dashboard` - Analytics de dealer completo
+- `/admin/dashboard` - Vista ejecutiva (parcial)
+- `/admin/analytics` - Reportes básicos
+
+### Rutas UI Faltantes 🔴
+
+- `/admin/analytics/platform` - Analytics de plataforma detallado
+- `/admin/analytics/users` - Comportamiento de usuarios
+- `/admin/analytics/revenue` - Reportes financieros completos
+
+**Verificación Backend:** `DealerAnalyticsService` existe en `/backend/DealerAnalyticsService/` ✅
 
 ---
 

@@ -2,9 +2,34 @@
 
 > **Servicio:** UserService / SellerProfileController  
 > **Puerto:** 5004  
-> **Última actualización:** Enero 21, 2026  
+> **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Estado de Implementación:** ✅ 100% Completo
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso                       | Backend                    | UI Access              | Observación    |
+| ----------------------------- | -------------------------- | ---------------------- | -------------- |
+| SELLER-001 Ver Perfil Público | ✅ SellerProfileController | ✅ SellerProfilePage   | Perfil público |
+| SELLER-002 Editar Perfil      | ✅ SellerProfileController | ✅ ProfileSettingsPage | Configuración  |
+| SELLER-003 Ver Listings       | ✅ SellerProfileController | ✅ SellerProfilePage   | Tab listados   |
+| SELLER-004 Ver Reviews        | ✅ ReviewService           | ✅ SellerProfilePage   | Tab reseñas    |
+| PROF-001 Avatar/Logo          | ✅ MediaService            | ✅ ProfileSettingsPage | Upload imagen  |
+
+### Rutas UI Existentes ✅
+
+- `/sellers/:id` → SellerProfilePage (perfil público)
+- `/dealers/:id` → DealerProfilePage (perfil dealer público)
+- `/settings/profile` → ProfileSettingsPage (edición)
+- `/settings/seller` → SellerSettingsPage (config vendedor)
+
+### Rutas UI Faltantes 🔴
+
+- Ninguna - Perfiles completamente implementados
+
+**Verificación Backend:** UserService/SellerProfileController existe ✅
 
 ---
 

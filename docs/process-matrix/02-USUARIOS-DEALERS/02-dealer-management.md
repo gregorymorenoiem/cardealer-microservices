@@ -4,20 +4,49 @@
 > **Puerto:** 5039  
 > **Base de Datos:** PostgreSQL (dealermanagement_db)  
 > **Tecnología:** .NET 8, MediatR, Entity Framework Core  
-> **Última actualización:** Enero 23, 2026  
-> **Estado de Implementación:** ✅ 100% Completo
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🟡 95% (UI Pendiente)
 
 ---
 
-## 📊 Resumen de Implementación
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
 
-| Componente               | Total | Implementado | Pendiente | Estado  |
-| ------------------------ | ----- | ------------ | --------- | ------- |
-| **Controllers**          | 3     | 3            | 0         | ✅ 100% |
-| **Procesos (DEAL-\*)**   | 8     | 8            | 0         | ✅ 100% |
-| **Procesos (SUB-\*)**    | 6     | 6            | 0         | ✅ 100% |
-| **Procesos (LIMITS-\*)** | 3     | 3            | 0         | ✅ 100% |
-| **Tests Unitarios**      | 25    | 25           | 0         | ✅ 100% |
+> **Brecha Identificada:** La gestión de empleados de dealer (DLR-ADMIN) no tiene página en frontend.
+
+| Rol           | Backend | Acceso UI | Brecha                   |
+| ------------- | ------- | --------- | ------------------------ |
+| **DLR-STAFF** | ✅ 100% | ✅ 80%    | Inventario OK            |
+| **DLR-ADMIN** | ✅ 100% | 🟡 70%    | Sin gestión de empleados |
+
+### Ruta UI Faltante
+
+| Ruta Propuesta                       | Funcionalidad               | Prioridad |
+| ------------------------------------ | --------------------------- | --------- |
+| `/dealer/employees`                  | Gestión de staff del dealer | 🔴 ALTA   |
+| `/dealer/employees/{id}/permissions` | Permisos de empleado        | 🔴 ALTA   |
+
+### Rutas UI Existentes ✅
+
+- ✅ `/dealer/landing` - Landing de dealers
+- ✅ `/dealer/pricing` - Planes y precios
+- ✅ `/dealer/register` - Registro de dealer
+- ✅ `/dealer/dashboard` - Dashboard principal
+- ✅ `/dealer/inventory` - Gestión de inventario
+- ✅ `/dealer/analytics` - Analytics del dealer
+- ✅ `/dealer/leads` - Gestión de leads
+
+---
+
+## 📊 Resumen de Implementación (ACTUALIZADO)
+
+| Componente               | Backend | Acceso UI | Estado Real |
+| ------------------------ | ------- | --------- | ----------- |
+| **Controllers**          | ✅ 100% | ✅ 90%    | ✅ 95%      |
+| **Procesos (DEAL-\*)**   | ✅ 100% | ✅ 90%    | ✅ 95%      |
+| **Procesos (SUB-\*)**    | ✅ 100% | ✅ 100%   | ✅ 100%     |
+| **Procesos (LIMITS-\*)** | ✅ 100% | ✅ 100%   | ✅ 100%     |
+| **Procesos (EMP-\*)**    | ✅ 100% | 🔴 0%     | 🔴 50%      |
+| **Tests Unitarios**      | ✅ 100% | N/A       | ✅ 100%     |
 
 ### Leyenda de Estados
 

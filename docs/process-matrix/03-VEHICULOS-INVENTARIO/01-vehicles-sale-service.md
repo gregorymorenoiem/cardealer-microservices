@@ -3,8 +3,41 @@
 > **Servicio:** VehiclesSaleService  
 > **Puerto:** 15102  
 > **Base de Datos:** vehicles_db  
-> **Última actualización:** Enero 21, 2026  
-> **Estado de Implementación:** ✅ 100% Completo
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🟡 ~75% Backend | ✅ 100% UI Principal
+
+---
+
+## ✅ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+> **Estado:** ✅ SERVICIO CRÍTICO 100% ACCESIBLE - Páginas principales funcionando.
+
+| Proceso              | Backend | UI Access | Observación              |
+| -------------------- | ------- | --------- | ------------------------ |
+| Listado vehículos    | ✅ 100% | ✅ 100%   | `/vehicles`, `/search`   |
+| Detalle vehículo     | ✅ 100% | ✅ 100%   | `/vehicles/:slug`        |
+| Crear vehículo       | ✅ 100% | ✅ 100%   | `/sell`, `/vehicles/new` |
+| Editar vehículo      | ✅ 100% | ✅ 100%   | `/vehicles/:id/edit`     |
+| Favoritos            | ✅ 100% | ✅ 100%   | `/favorites`             |
+| Comparar             | ✅ 100% | ✅ 100%   | `/comparison`            |
+| Catálogo marcas      | ✅ 100% | ✅ 100%   | Consumido en formularios |
+| Publicar/Despublicar | 🟡 63%  | 🟡 80%    | Falta endpoint publish   |
+
+### Rutas UI Existentes ✅
+
+- ✅ `/` - Homepage con secciones de vehículos
+- ✅ `/vehicles` - Listado público
+- ✅ `/vehicles/:slug` - Detalle vehículo
+- ✅ `/search` - Búsqueda avanzada
+- ✅ `/favorites` - Lista de favoritos
+- ✅ `/comparison` - Comparador
+- ✅ `/sell` - Formulario de publicación
+- ✅ `/vehicles/new` - Crear vehículo
+- ✅ `/vehicles/:id/edit` - Editar vehículo
+- ✅ `/dealer/vehicles` - Inventario dealer
+- ✅ `/dealer/vehicles/new` - Dealer crear vehículo
+
+**Verificación Backend:** VehiclesSaleService existe en `/backend/VehiclesSaleService/` ✅
 
 ---
 
@@ -13,11 +46,26 @@
 | Componente              | Total | Implementado | Pendiente | Estado  |
 | ----------------------- | ----- | ------------ | --------- | ------- |
 | **Controllers**         | 5     | 5            | 0         | ✅ 100% |
-| **Procesos (VEH-\*)**   | 8     | 8            | 0         | ✅ 100% |
-| **Procesos (CAT-\*)**   | 4     | 4            | 0         | ✅ 100% |
+| **Procesos (VEH-\*)**   | 8     | 5            | 3         | 🟡 63%  |
+| **Procesos (CAT-\*)**   | 4     | 3            | 1         | 🟡 75%  |
 | **Procesos (FAV-\*)**   | 4     | 4            | 0         | ✅ 100% |
 | **Procesos (HPAGE-\*)** | 2     | 2            | 0         | ✅ 100% |
-| **Tests Unitarios**     | 45    | 45           | 0         | ✅ 100% |
+| **Tests Unitarios**     | 45    | 43           | 2         | 🟢 96%  |
+
+### ⚠️ Endpoints Backend Pendientes
+
+| Endpoint                            | Proceso     | Criticidad |
+| ----------------------------------- | ----------- | ---------- |
+| `POST /api/vehicles/{id}/publish`   | VEH-PUB-001 | 🔴 CRÍTICO |
+| `POST /api/vehicles/{id}/unpublish` | VEH-UNP-001 | 🔴 CRÍTICO |
+| `POST /api/vehicles/{id}/sold`      | VEH-SLD-001 | 🟡 MEDIO   |
+| `POST /api/vehicles/{id}/feature`   | VEH-FTR-001 | 🟢 BAJO    |
+| `POST /api/vehicles/{id}/views`     | VEH-VWS-001 | 🟡 MEDIO   |
+| `GET /api/catalog/vin/{vin}/decode` | CAT-VIN-001 | 🟡 MEDIO   |
+
+### 🔧 Frontend - Hook useFavorites
+
+⚠️ El hook `useFavorites` actualmente usa **localStorage** en lugar del API `/api/favorites`. La página `FavoritesPage.tsx` sí consume el API correctamente.
 
 ### Leyenda de Estados
 

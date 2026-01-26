@@ -2,8 +2,32 @@
 
 > **Servicio:** VehiclesSaleService / LocationService  
 > **Proveedor:** Google Maps Platform  
-> **Última actualización:** Enero 21, 2026  
-> **Estado:** 🟢 ACTIVO
+> **Última actualización:** Enero 25, 2026  
+> **Estado de Implementación:** 🟡 60% Backend | 🟡 70% UI
+
+---
+
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+
+| Proceso             | Backend | UI Access | Observación                 |
+| ------------------- | ------- | --------- | --------------------------- |
+| Geocoding           | 🟡 70%  | ✅ 80%    | Autocompletado de dirección |
+| Places Autocomplete | ✅ 90%  | ✅ 90%    | En formularios              |
+| Distance Matrix     | 🔴 0%   | 🔴 0%     | No implementado             |
+| Static Maps         | ✅ 100% | ✅ 100%   | Thumbnails de ubicación     |
+
+### Rutas UI Existentes ✅
+
+- `/sell` - Autocompletado de ubicación
+- `/vehicles/:slug` - Mapa de ubicación del vehículo
+- `/dealer/:id` - Mapa de sucursales del dealer
+
+### Rutas UI Faltantes 🔴
+
+- `/search` - Filtro por distancia ("a 10km de mi ubicación")
+- `/dealers/map` - Vista de mapa de todos los dealers
+
+**Verificación:** Google Maps SDK integrado en frontend, backend geocoding parcial.
 
 ---
 
