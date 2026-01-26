@@ -1,0 +1,296 @@
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using VehiclesSaleService.Api.Controllers;
+using VehiclesSaleService.Domain.Interfaces;
+
+namespace VehiclesSaleService.Tests.Integration.Controllers;
+
+/// <summary>
+/// Tests for VIN decode endpoint in CatalogController
+/// </summary>
+public class VinDecodeControllerTests
+{
+    private readonly CatalogController _controller;
+    private readonly Mock<IVehicleCatalogRepository> _catalogRepositoryMock;
+    private readonly Mock<ILogger<CatalogController>> _loggerMock;
+
+    public VinDecodeControllerTests()
+    {
+        _catalogRepositoryMock = new Mock<IVehicleCatalogRepository>();
+        _loggerMock = new Mock<ILogger<CatalogController>>();
+
+        _controller = new CatalogController(
+            _catalogRepositoryMock.Object,
+            _loggerMock.Object
+        );
+    }
+
+    #region VIN Validation Tests
+
+    [Fact]
+    public async Task DecodeVin_EmptyVin_ReturnsBadRequest()
+    {
+        // Act
+        var result = await _controller.DecodeVin("");
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task DecodeVin_NullVin_ReturnsBadRequest()
+    {
+        // Act
+        var result = await _controller.DecodeVin(null!);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task DecodeVin_ShortVin_ReturnsBadRequest()
+    {
+        // Arrange - VIN with only 10 characters
+        var shortVin = "1HGCV1F32L";
+
+        // Act
+        var result = await _controller.DecodeVin(shortVin);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task DecodeVin_LongVin_ReturnsBadRequest()
+    {
+        // Arrange - VIN with 20 characters
+        var longVin = "1HGCV1F32LA00000123";
+
+        // Act
+        var result = await _controller.DecodeVin(longVin);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task DecodeVin_VinWithLetterI_ReturnsBadRequest()
+    {
+        // Arrange - VIN with invalid character I
+        var invalidVin = "1HGCV1F32IA000001";
+
+        // Act
+        var result = await _controller.DecodeVin(invalidVin);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequest = (BadRequestObjectResult)result.Result!;
+        badRequest.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DecodeVin_VinWithLetterO_ReturnsBadRequest()
+    {
+        // Arrange - VIN with invalid character O
+        var invalidVin = "1HGCV1F32OA000001";
+
+        // Act
+        var result = await _controller.DecodeVin(invalidVin);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task DecodeVin_VinWithLetterQ_ReturnsBadRequest()
+    {
+        // Arrange - VIN with invalid character Q
+        var invalidVin = "1HGCV1F32QA000001";
+
+        // Act
+        var result = await _controller.DecodeVin(invalidVin);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    #endregion
+
+    #region Valid VIN Tests (Integration with NHTSA)
+
+    // Note: These tests make real HTTP calls to NHTSA API
+    // They may fail if NHTSA service is unavailable
+    
+    [Fact]
+    public async Task DecodeVin_ValidHondaAccordVin_ReturnsVehicleInfo()
+    {
+        // Arrange - Real Honda Accord VIN
+        var validVin = "1HGCV1F32LA000001";
+
+        // Act
+        var result = await _controller.DecodeVin(validVin);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var response = ((OkObjectResult)result.Result!).Value as VinDecodeResponse;
+        response.Should().NotBeNull();
+        response!.VIN.Should().Be(validVin);
+        response.Make.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task DecodeVin_ValidToyotaCamryVin_ReturnsMakeAndModel()
+    {
+        // Arrange - Toyota Camry VIN pattern
+        var validVin = "4T1B11HK5JU123456";
+
+        // Act
+        var result = await _controller.DecodeVin(validVin);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var response = ((OkObjectResult)result.Result!).Value as VinDecodeResponse;
+        response.Should().NotBeNull();
+        response!.VIN.Should().Be(validVin);
+        // Toyota VINs starting with 4T are from Toyota
+        response.Make.ToUpperInvariant().Should().Contain("TOYOTA");
+    }
+
+    [Fact]
+    public async Task DecodeVin_ValidVin_IncludesSuggestedData()
+    {
+        // Arrange
+        var validVin = "1HGCV1F32LA000001";
+
+        // Act
+        var result = await _controller.DecodeVin(validVin);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var response = ((OkObjectResult)result.Result!).Value as VinDecodeResponse;
+        response.Should().NotBeNull();
+        response!.SuggestedData.Should().NotBeNull();
+        response.SuggestedData!.VehicleType.Should().NotBeNullOrEmpty();
+        response.SuggestedData.BodyStyle.Should().NotBeNullOrEmpty();
+    }
+
+    #endregion
+
+    #region Fuel Type Mapping Tests
+
+    [Theory]
+    [InlineData("Gasoline", "Gasoline")]
+    [InlineData("Diesel", "Diesel")]
+    [InlineData("Electric", "Electric")]
+    [InlineData("Hybrid", "Hybrid")]
+    [InlineData("Plug-in Hybrid Electric (PHEV)", "PlugInHybrid")]
+    [InlineData("Flex Fuel", "FlexFuel")]
+    [InlineData("Hydrogen", "Hydrogen")]
+    [InlineData("Compressed Natural Gas (CNG)", "NaturalGas")]
+    [InlineData(null, "Gasoline")]
+    [InlineData("", "Gasoline")]
+    public void MapFuelType_ReturnsCorrectMapping(string? input, string expected)
+    {
+        // Use reflection to test private method
+        var method = typeof(CatalogController).GetMethod("MapFuelType", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        var result = method?.Invoke(null, new object?[] { input }) as string;
+        
+        result.Should().Be(expected);
+    }
+
+    #endregion
+
+    #region Transmission Mapping Tests
+
+    [Theory]
+    [InlineData("Automatic", "Automatic")]
+    [InlineData("Manual", "Manual")]
+    [InlineData("CVT", "CVT")]
+    [InlineData("Dual Clutch Transmission (DCT)", "DualClutch")]
+    [InlineData("Automated Manual", "Automated")]
+    [InlineData(null, "Automatic")]
+    public void MapTransmission_ReturnsCorrectMapping(string? input, string expected)
+    {
+        var method = typeof(CatalogController).GetMethod("MapTransmission", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        var result = method?.Invoke(null, new object?[] { input }) as string;
+        
+        result.Should().Be(expected);
+    }
+
+    #endregion
+
+    #region Drive Type Mapping Tests
+
+    [Theory]
+    [InlineData("Front-Wheel Drive", "FWD")]
+    [InlineData("Rear-Wheel Drive", "RWD")]
+    [InlineData("All-Wheel Drive", "AWD")]
+    [InlineData("4x4", "FourWD")]
+    [InlineData("4WD/4-Wheel Drive/4x4", "FourWD")]
+    [InlineData(null, "FWD")]
+    public void MapDriveType_ReturnsCorrectMapping(string? input, string expected)
+    {
+        var method = typeof(CatalogController).GetMethod("MapDriveType", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        var result = method?.Invoke(null, new object?[] { input }) as string;
+        
+        result.Should().Be(expected);
+    }
+
+    #endregion
+
+    #region Body Style Mapping Tests
+
+    [Theory]
+    [InlineData("Sedan", "Sedan")]
+    [InlineData("Sport Utility Vehicle (SUV)", "SUV")]
+    [InlineData("Pickup", "Pickup")]
+    [InlineData("Minivan", "Minivan")]
+    [InlineData("Van", "Van")]
+    [InlineData("Coupe", "Coupe")]
+    [InlineData("Convertible", "Convertible")]
+    [InlineData("Hatchback", "Hatchback")]
+    [InlineData("Station Wagon", "Wagon")]
+    [InlineData("Crossover", "Crossover")]
+    [InlineData(null, "Sedan")]
+    public void MapBodyStyle_ReturnsCorrectMapping(string? input, string expected)
+    {
+        var method = typeof(CatalogController).GetMethod("MapBodyStyle", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        var result = method?.Invoke(null, new object?[] { input }) as string;
+        
+        result.Should().Be(expected);
+    }
+
+    #endregion
+
+    #region Vehicle Type Mapping Tests
+
+    [Theory]
+    [InlineData("Passenger Car", "Car")]
+    [InlineData("Truck", "Truck")]
+    [InlineData("Multipurpose Passenger Vehicle (MPV)", "SUV")]
+    [InlineData("Van", "Van")]
+    [InlineData("Motorcycle", "Motorcycle")]
+    [InlineData("Bus", "Commercial")]
+    [InlineData(null, "Car")]
+    public void MapVehicleType_ReturnsCorrectMapping(string? input, string expected)
+    {
+        var method = typeof(CatalogController).GetMethod("MapVehicleType", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        var result = method?.Invoke(null, new object?[] { input }) as string;
+        
+        result.Should().Be(expected);
+    }
+
+    #endregion
+}

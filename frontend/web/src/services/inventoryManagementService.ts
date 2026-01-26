@@ -109,6 +109,35 @@ export enum InventoryVisibility {
   Private = 'Private',
 }
 
+export interface BulkImportJobDto {
+  id: string;
+  dealerId: string;
+  userId: string;
+  fileName: string;
+  fileUrl: string;
+  fileSizeBytes: number;
+  fileType: string;
+  status: string;
+  totalRows: number;
+  processedRows: number;
+  successfulRows: number;
+  failedRows: number;
+  skippedRows: number;
+  progressPercentage: number;
+  errors: ImportErrorDto[];
+  failureReason?: string;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  duration?: string;
+}
+
+export interface ImportErrorDto {
+  rowNumber: number;
+  field: string;
+  errorMessage: string;
+}
+
 export interface InventoryFilters {
   dealerId: string;
   page?: number;
@@ -232,6 +261,50 @@ class InventoryManagementService {
   async getOverdueItems(dealerId: string): Promise<InventoryItemDto[]> {
     const response = await this.api.get<InventoryItemDto[]>(`/overdue?dealerId=${dealerId}`);
     return response.data;
+  }
+
+  /**
+   * Upload a CSV file for bulk import
+   */
+  async uploadCSVImport(dealerId: string, userId: string, file: File): Promise<BulkImportJobDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await this.api.post<BulkImportJobDto>(
+      `/bulkimport/upload?dealerId=${dealerId}&userId=${userId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Get bulk import job status
+   */
+  async getBulkImportJob(jobId: string): Promise<BulkImportJobDto> {
+    const response = await this.api.get<BulkImportJobDto>(`/bulkimport/${jobId}`);
+    return response.data;
+  }
+
+  /**
+   * Get all bulk import jobs for a dealer
+   */
+  async getBulkImportJobs(dealerId: string, limit: number = 20): Promise<BulkImportJobDto[]> {
+    const response = await this.api.get<BulkImportJobDto[]>(
+      `/bulkimport?dealerId=${dealerId}&limit=${limit}`
+    );
+    return response.data;
+  }
+
+  /**
+   * Cancel a bulk import job
+   */
+  async cancelBulkImportJob(jobId: string): Promise<void> {
+    await this.api.post(`/bulkimport/${jobId}/cancel`);
   }
 
   /**

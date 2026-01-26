@@ -5,12 +5,12 @@
  * según el derecho de Cancelación de la Ley 172-13.
  *
  * @module pages/user/DeleteAccountPage
- * @version 1.0.0
- * @since Enero 25, 2026
+ * @version 2.0.0
+ * @since Enero 26, 2026
  */
 
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FiTrash2,
   FiArrowLeft,
@@ -23,32 +23,26 @@ import {
   FiClock,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
-
-type DeletionReason =
-  | 'privacy_concerns'
-  | 'no_longer_needed'
-  | 'found_alternative'
-  | 'bad_experience'
-  | 'too_many_emails'
-  | 'other';
+import { privacyService, deletionReasonLabels } from '../../services/privacyService';
+import type { DeletionReason, AccountDeletionStatus } from '../../services/privacyService';
 
 const DeleteAccountPage = () => {
-  const navigate = useNavigate();
-  const [step, setStep] = useState<'reason' | 'confirm' | 'submitted'>('reason');
+  const [step, setStep] = useState<'reason' | 'confirm' | 'submitted' | 'pending'>('reason');
   const [selectedReason, setSelectedReason] = useState<DeletionReason | null>(null);
   const [otherReason, setOtherReason] = useState('');
   const [password, setPassword] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [deletionStatus, setDeletionStatus] = useState<AccountDeletionStatus | null>(null);
 
   const reasons: { id: DeletionReason; label: string }[] = [
-    { id: 'privacy_concerns', label: 'Preocupaciones de privacidad' },
-    { id: 'no_longer_needed', label: 'Ya no necesito el servicio' },
-    { id: 'found_alternative', label: 'Encontré una alternativa' },
-    { id: 'bad_experience', label: 'Tuve una mala experiencia' },
-    { id: 'too_many_emails', label: 'Recibo demasiados emails' },
-    { id: 'other', label: 'Otra razón' },
+    { id: 'PrivacyConcerns', label: deletionReasonLabels.PrivacyConcerns },
+    { id: 'NoLongerNeeded', label: deletionReasonLabels.NoLongerNeeded },
+    { id: 'FoundAlternative', label: deletionReasonLabels.FoundAlternative },
+    { id: 'BadExperience', label: deletionReasonLabels.BadExperience },
+    { id: 'TooManyEmails', label: deletionReasonLabels.TooManyEmails },
+    { id: 'Other', label: deletionReasonLabels.Other },
   ];
 
   const consequences = [
@@ -60,12 +54,28 @@ const DeleteAccountPage = () => {
     'Si eres dealer, tu suscripción será cancelada sin reembolso',
   ];
 
+  // Verificar si ya hay una solicitud pendiente
+  useEffect(() => {
+    const checkPendingDeletion = async () => {
+      try {
+        const status = await privacyService.getAccountDeletionStatus();
+        if (status) {
+          setDeletionStatus(status);
+          setStep('pending');
+        }
+      } catch (err) {
+        // No hay solicitud pendiente, continuar normalmente
+      }
+    };
+    checkPendingDeletion();
+  }, []);
+
   const handleNextStep = () => {
     if (!selectedReason) {
       setError('Por favor selecciona una razón');
       return;
     }
-    if (selectedReason === 'other' && !otherReason.trim()) {
+    if (selectedReason === 'Other' && !otherReason.trim()) {
       setError('Por favor especifica tu razón');
       return;
     }
@@ -88,12 +98,96 @@ const DeleteAccountPage = () => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Solicitar eliminación
+      await privacyService.requestAccountDeletion({
+        reason: selectedReason!,
+        otherReason: selectedReason === 'Other' ? otherReason : undefined,
+        feedback: undefined,
+      });
 
-    setIsSubmitting(false);
-    setStep('submitted');
+      // Confirmar con contraseña (en producción, el código vendría por email)
+      // Por ahora simulamos que el código es válido
+      setStep('submitted');
+    } catch (err) {
+      setError('Error al procesar la solicitud. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const handleCancelDeletion = async () => {
+    setIsSubmitting(true);
+    try {
+      await privacyService.cancelAccountDeletion();
+      setDeletionStatus(null);
+      setStep('reason');
+    } catch (err) {
+      setError('Error al cancelar la solicitud');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Vista de solicitud pendiente
+  if (step === 'pending' && deletionStatus) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gray-50 py-12">
+          <div className="max-w-lg mx-auto px-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FiClock className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                Solicitud de eliminación en proceso
+              </h1>
+              <p className="text-gray-600 mb-6 text-center">
+                Tu cuenta será eliminada el{' '}
+                <strong>
+                  {new Date(deletionStatus.gracePeriodEndsAt).toLocaleDateString('es-DO')}
+                </strong>
+              </p>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex">
+                  <FiMail className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium">Días restantes: {deletionStatus.daysRemaining}</p>
+                    <p>Puedes cancelar esta solicitud antes de que expire el período de gracia.</p>
+                  </div>
+                </div>
+              </div>
+
+              {deletionStatus.canCancel && (
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleCancelDeletion}
+                    disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <FiLoader className="animate-spin mr-2" />
+                    ) : (
+                      <FiX className="mr-2" />
+                    )}
+                    Cancelar eliminación
+                  </button>
+                  <Link
+                    to="/privacy-center"
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    <FiArrowLeft className="mr-2" />
+                    Volver
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (step === 'submitted') {
     return (
@@ -286,7 +380,7 @@ const DeleteAccountPage = () => {
                   ))}
                 </div>
 
-                {selectedReason === 'other' && (
+                {selectedReason === 'Other' && (
                   <textarea
                     value={otherReason}
                     onChange={(e) => setOtherReason(e.target.value)}

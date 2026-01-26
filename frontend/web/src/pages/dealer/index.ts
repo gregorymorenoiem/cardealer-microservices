@@ -28,3 +28,7 @@ export { default as DealerInquiriesPage } from './DealerInquiriesPage';
 // Team Management (UserService UI - Dealer Employees)
 export { default as DealerEmployeesPage } from './DealerEmployeesPage';
 export { default as DealerEmployeePermissionsPage } from './DealerEmployeePermissionsPage';
+
+// Inventory Management
+export { default as CSVImportPage } from './CSVImportPage';
+export { default as LocationsPage } from './LocationsPage';

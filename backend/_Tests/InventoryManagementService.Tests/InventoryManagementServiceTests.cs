@@ -294,4 +294,48 @@ public class InventoryManagementServiceTests
         InventoryVisibility.Public.ToString().Should().Be("Public");
         InventoryVisibility.Private.ToString().Should().Be("Private");
     }
+
+    [Fact]
+    public void InventoryItem_ShouldRecordOffer()
+    {
+        // Arrange
+        var item = new InventoryItem
+        {
+            Id = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
+            VehicleId = Guid.NewGuid(),
+            ListPrice = 25000m,
+            OfferCount = 0
+        };
+        var offerAmount = 22000m;
+
+        // Act
+        item.RecordOffer(offerAmount);
+
+        // Assert
+        item.OfferCount.Should().Be(1);
+        item.HighestOffer.Should().Be(offerAmount);
+        item.UpdatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void InventoryItem_ShouldArchive()
+    {
+        // Arrange
+        var item = new InventoryItem
+        {
+            Id = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
+            VehicleId = Guid.NewGuid(),
+            ListPrice = 25000m,
+            Status = InventoryStatus.Active
+        };
+
+        // Act
+        item.Archive();
+
+        // Assert
+        item.Status.Should().Be(InventoryStatus.Archived);
+        item.UpdatedAt.Should().NotBeNull();
+    }
 }

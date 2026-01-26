@@ -85,8 +85,13 @@ public class InventoryController : ControllerBase
     {
         try
         {
-            // TODO: Implement GetInventoryItemByIdQuery
-            return NotFound();
+            var query = new GetInventoryItemByIdQuery { Id = id };
+            var result = await _mediator.Send(query);
+            
+            if (result == null)
+                return NotFound(new { message = "Inventory item not found" });
+                
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -193,12 +198,26 @@ public class InventoryController : ControllerBase
     /// Delete an inventory item
     /// </summary>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, [FromQuery] Guid? dealerId = null)
     {
         try
         {
-            // TODO: Implement DeleteInventoryItemCommand
+            var command = new DeleteInventoryItemCommand 
+            { 
+                Id = id,
+                DealerId = dealerId ?? Guid.Empty
+            };
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result)
+                return NotFound(new { message = "Inventory item not found" });
+                
             return NoContent();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -212,12 +231,17 @@ public class InventoryController : ControllerBase
     /// </summary>
     [HttpGet("featured")]
     [AllowAnonymous]
-    public async Task<ActionResult<List<InventoryItemDto>>> GetFeatured([FromQuery] Guid dealerId)
+    public async Task<ActionResult<List<InventoryItemDto>>> GetFeatured([FromQuery] Guid dealerId, [FromQuery] int maxItems = 10)
     {
         try
         {
-            // TODO: Implement GetFeaturedItemsQuery
-            return Ok(new List<InventoryItemDto>());
+            var query = new GetFeaturedItemsQuery 
+            { 
+                DealerId = dealerId,
+                MaxItems = maxItems 
+            };
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -230,12 +254,17 @@ public class InventoryController : ControllerBase
     /// Get hot items (high activity) for a dealer
     /// </summary>
     [HttpGet("hot")]
-    public async Task<ActionResult<List<InventoryItemDto>>> GetHotItems([FromQuery] Guid dealerId)
+    public async Task<ActionResult<List<InventoryItemDto>>> GetHotItems([FromQuery] Guid dealerId, [FromQuery] int maxItems = 20)
     {
         try
         {
-            // TODO: Implement GetHotItemsQuery
-            return Ok(new List<InventoryItemDto>());
+            var query = new GetHotItemsQuery 
+            { 
+                DealerId = dealerId,
+                MaxItems = maxItems 
+            };
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -248,12 +277,13 @@ public class InventoryController : ControllerBase
     /// Get overdue items (90+ days) for a dealer
     /// </summary>
     [HttpGet("overdue")]
-    public async Task<ActionResult<List<InventoryItemDto>>> GetOverdue([FromQuery] Guid dealerId)
+    public async Task<ActionResult<OverdueItemsResultDto>> GetOverdue([FromQuery] Guid dealerId)
     {
         try
         {
-            // TODO: Implement GetOverdueItemsQuery
-            return Ok(new List<InventoryItemDto>());
+            var query = new GetOverdueItemsQuery { DealerId = dealerId };
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
         catch (Exception ex)
         {

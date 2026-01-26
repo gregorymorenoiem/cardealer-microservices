@@ -5,11 +5,11 @@
  * según el derecho de Acceso de la Ley 172-13.
  *
  * @module pages/user/DataDownloadPage
- * @version 1.0.0
- * @since Enero 25, 2026
+ * @version 2.0.0
+ * @since Enero 26, 2026
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiDownload,
@@ -24,51 +24,73 @@ import {
   FiLoader,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
-
-type DownloadFormat = 'json' | 'pdf';
-type RequestStatus = 'idle' | 'submitting' | 'pending' | 'ready' | 'expired';
-
-interface PreviousDownload {
-  id: string;
-  format: DownloadFormat;
-  requestedAt: string;
-  readyAt?: string;
-  expiresAt?: string;
-  status: RequestStatus;
-  fileSize?: string;
-}
+import { privacyService } from '../../services/privacyService';
+import type { ExportFormat, DataExportStatus } from '../../services/privacyService';
 
 const DataDownloadPage = () => {
-  const [selectedFormat, setSelectedFormat] = useState<DownloadFormat>('json');
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('Json');
   const [includeActivity, setIncludeActivity] = useState(true);
   const [includeMessages, setIncludeMessages] = useState(true);
   const [includeFavorites, setIncludeFavorites] = useState(true);
   const [includeTransactions, setIncludeTransactions] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [exportStatus, setExportStatus] = useState<DataExportStatus | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock previous downloads
-  const previousDownloads: PreviousDownload[] = [
-    {
-      id: '1',
-      format: 'json',
-      requestedAt: '2026-01-15T10:30:00',
-      readyAt: '2026-01-15T10:35:00',
-      expiresAt: '2026-01-22T10:35:00',
-      status: 'expired',
-      fileSize: '2.4 MB',
-    },
-  ];
+  // Verificar si hay una exportación pendiente
+  useEffect(() => {
+    const checkExportStatus = async () => {
+      try {
+        const status = await privacyService.getExportStatus();
+        if (status) {
+          setExportStatus(status);
+        }
+      } catch {
+        // No hay exportación pendiente
+      }
+    };
+    checkExportStatus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      await privacyService.requestDataExport({
+        format: selectedFormat,
+        includeProfile: true,
+        includeActivity,
+        includeMessages,
+        includeFavorites,
+        includeTransactions,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setError('Error al solicitar la exportación. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    setIsSubmitting(false);
-    setSubmitted(true);
+  const handleDownload = async () => {
+    if (!exportStatus?.downloadToken) return;
+
+    try {
+      const blob = await privacyService.downloadExport(exportStatus.downloadToken);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mis-datos-okla.${selectedFormat.toLowerCase()}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError('Error al descargar el archivo');
+    }
   };
 
   const dataCategories = [
@@ -204,7 +226,7 @@ const DataDownloadPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <label
                   className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
-                    selectedFormat === 'json'
+                    selectedFormat === 'Json'
                       ? 'border-purple-500 ring-2 ring-purple-500'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
@@ -213,8 +235,8 @@ const DataDownloadPage = () => {
                     type="radio"
                     name="format"
                     value="json"
-                    checked={selectedFormat === 'json'}
-                    onChange={() => setSelectedFormat('json')}
+                    checked={selectedFormat === 'Json'}
+                    onChange={() => setSelectedFormat('Json')}
                     className="sr-only"
                   />
                   <div className="flex items-center">
@@ -227,7 +249,7 @@ const DataDownloadPage = () => {
                 </label>
                 <label
                   className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
-                    selectedFormat === 'pdf'
+                    selectedFormat === 'Pdf'
                       ? 'border-purple-500 ring-2 ring-purple-500'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
@@ -236,8 +258,8 @@ const DataDownloadPage = () => {
                     type="radio"
                     name="format"
                     value="pdf"
-                    checked={selectedFormat === 'pdf'}
-                    onChange={() => setSelectedFormat('pdf')}
+                    checked={selectedFormat === 'Pdf'}
+                    onChange={() => setSelectedFormat('Pdf')}
                     className="sr-only"
                   />
                   <div className="flex items-center">
@@ -313,45 +335,48 @@ const DataDownloadPage = () => {
             </div>
           </form>
 
-          {/* Previous Downloads */}
-          {previousDownloads.length > 0 && (
+          {/* Previous Downloads / Current Export Status */}
+          {exportStatus && (
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Descargas anteriores</h2>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-200">
-                {previousDownloads.map((download) => (
-                  <div key={download.id} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center">
-                      {download.format === 'json' ? (
-                        <FiFile className="w-8 h-8 text-purple-500 mr-3" />
-                      ) : (
-                        <FiFileText className="w-8 h-8 text-red-500 mr-3" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          datos-personales.{download.format}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Solicitado: {new Date(download.requestedAt).toLocaleDateString('es-DO')}
-                          {download.fileSize && ` • ${download.fileSize}`}
-                        </p>
-                      </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Estado de exportación</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <FiFile className="w-8 h-8 text-purple-500 mr-3" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        datos-personales.{exportStatus.format.toLowerCase()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Solicitado: {new Date(exportStatus.requestedAt).toLocaleDateString('es-DO')}
+                        {exportStatus.fileSize && ` • ${exportStatus.fileSize}`}
+                      </p>
                     </div>
-                    {download.status === 'expired' ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                        <FiClock className="mr-1" /> Expirado
-                      </span>
-                    ) : download.status === 'ready' ? (
-                      <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
-                        <FiDownload className="mr-1" /> Descargar
-                      </button>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        <FiClock className="mr-1" /> Procesando
-                      </span>
-                    )}
                   </div>
-                ))}
+                  {exportStatus.status === 'Expired' ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                      <FiClock className="mr-1" /> Expirado
+                    </span>
+                  ) : exportStatus.status === 'Ready' && exportStatus.downloadToken ? (
+                    <button
+                      onClick={handleDownload}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+                    >
+                      <FiDownload className="mr-1" /> Descargar
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <FiClock className="mr-1" /> Procesando
+                    </span>
+                  )}
+                </div>
               </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
             </div>
           )}
 

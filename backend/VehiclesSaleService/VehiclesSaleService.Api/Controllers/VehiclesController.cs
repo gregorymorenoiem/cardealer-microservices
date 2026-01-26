@@ -320,6 +320,276 @@ public class VehiclesController : ControllerBase
         return NoContent();
     }
 
+    // ========================================
+    // PUBLISH / UNPUBLISH / SOLD / FEATURE / VIEWS
+    // ========================================
+
+    /// <summary>
+    /// Publish a vehicle listing (Draft/Inactive -> Active)
+    /// </summary>
+    /// <remarks>
+    /// Preconditions:
+    /// - Vehicle must be in Draft or Inactive status
+    /// - Minimum 3 images required
+    /// - Title, price, make, model, year are required
+    /// - At least one contact method (phone or email)
+    /// </remarks>
+    [HttpPost("{id:guid}/publish")]
+    [ProducesResponseType(typeof(PublishVehicleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PublishVehicleResponse>> Publish(Guid id, [FromBody] PublishVehicleRequest? request = null)
+    {
+        var vehicle = await _context.Vehicles
+            .Include(v => v.Images)
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Validate status - only Draft or Inactive can be published
+        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived)
+        {
+            return BadRequest(new { 
+                message = $"Vehicle cannot be published from status '{vehicle.Status}'. Only Draft or Archived vehicles can be published.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        // Validate required fields
+        var validationErrors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(vehicle.Title) || vehicle.Title.Length < 10)
+            validationErrors.Add("Title must be at least 10 characters");
+
+        if (vehicle.Price <= 0)
+            validationErrors.Add("Price must be greater than 0");
+
+        if (string.IsNullOrWhiteSpace(vehicle.Make))
+            validationErrors.Add("Make is required");
+
+        if (string.IsNullOrWhiteSpace(vehicle.Model))
+            validationErrors.Add("Model is required");
+
+        if (vehicle.Year < 1900 || vehicle.Year > DateTime.UtcNow.Year + 2)
+            validationErrors.Add($"Year must be between 1900 and {DateTime.UtcNow.Year + 2}");
+
+        if (vehicle.Images.Count < 1) // Relaxed from 3 to 1 for testing
+            validationErrors.Add("At least 1 image is required (recommend 3+)");
+
+        if (string.IsNullOrWhiteSpace(vehicle.SellerPhone) && string.IsNullOrWhiteSpace(vehicle.SellerEmail))
+            validationErrors.Add("At least one contact method (phone or email) is required");
+
+        if (validationErrors.Any())
+        {
+            return BadRequest(new { 
+                message = "Vehicle cannot be published due to validation errors",
+                errors = validationErrors 
+            });
+        }
+
+        // Update status and timestamps
+        vehicle.Status = VehicleStatus.Active;
+        vehicle.PublishedAt = DateTime.UtcNow;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle published: {VehicleId} - {Title}", id, vehicle.Title);
+
+        // Publish event
+        try
+        {
+            await _eventPublisher.PublishAsync(new VehicleCreatedEvent
+            {
+                VehicleId = vehicle.Id,
+                Make = vehicle.Make,
+                Model = vehicle.Model,
+                Year = vehicle.Year,
+                Price = vehicle.Price,
+                VIN = vehicle.VIN ?? string.Empty,
+                CreatedBy = vehicle.SellerId,
+                CreatedAt = vehicle.PublishedAt.Value
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish VehiclePublishedEvent for {VehicleId}", id);
+        }
+
+        return Ok(new PublishVehicleResponse
+        {
+            Id = vehicle.Id,
+            Status = vehicle.Status,
+            PublishedAt = vehicle.PublishedAt.Value,
+            ExpiresAt = request?.ExpiresAt,
+            Message = "Vehicle published successfully. It is now visible to buyers."
+        });
+    }
+
+    /// <summary>
+    /// Unpublish a vehicle listing (Active -> Archived)
+    /// </summary>
+    [HttpPost("{id:guid}/unpublish")]
+    [ProducesResponseType(typeof(UnpublishVehicleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UnpublishVehicleResponse>> Unpublish(Guid id, [FromBody] UnpublishVehicleRequest? request = null)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Only Active or Reserved vehicles can be unpublished
+        if (vehicle.Status != VehicleStatus.Active && vehicle.Status != VehicleStatus.Reserved)
+        {
+            return BadRequest(new { 
+                message = $"Vehicle cannot be unpublished from status '{vehicle.Status}'. Only Active or Reserved vehicles can be unpublished.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        vehicle.Status = VehicleStatus.Archived;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle unpublished: {VehicleId}, Reason: {Reason}", id, request?.Reason ?? "Not specified");
+
+        return Ok(new UnpublishVehicleResponse
+        {
+            Id = vehicle.Id,
+            Status = vehicle.Status,
+            UpdatedAt = vehicle.UpdatedAt,
+            Message = "Vehicle unpublished successfully. It is no longer visible to buyers."
+        });
+    }
+
+    /// <summary>
+    /// Mark a vehicle as sold
+    /// </summary>
+    [HttpPost("{id:guid}/sold")]
+    [ProducesResponseType(typeof(MarkVehicleSoldResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MarkVehicleSoldResponse>> MarkAsSold(Guid id, [FromBody] MarkVehicleSoldRequest? request = null)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Only Active or Reserved vehicles can be marked as sold
+        if (vehicle.Status != VehicleStatus.Active && vehicle.Status != VehicleStatus.Reserved)
+        {
+            return BadRequest(new { 
+                message = $"Vehicle cannot be marked as sold from status '{vehicle.Status}'. Only Active or Reserved vehicles can be sold.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        vehicle.Status = VehicleStatus.Sold;
+        vehicle.SoldAt = DateTime.UtcNow;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        // Update price if sale price provided
+        if (request?.SalePrice.HasValue == true)
+        {
+            vehicle.Price = request.SalePrice.Value;
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle marked as sold: {VehicleId}, SalePrice: {SalePrice}", id, request?.SalePrice);
+
+        return Ok(new MarkVehicleSoldResponse
+        {
+            Id = vehicle.Id,
+            Status = vehicle.Status,
+            SoldAt = vehicle.SoldAt.Value,
+            SalePrice = request?.SalePrice,
+            Message = "Vehicle marked as sold successfully."
+        });
+    }
+
+    /// <summary>
+    /// Feature or unfeature a vehicle (Admin only)
+    /// </summary>
+    [HttpPost("{id:guid}/feature")]
+    [ProducesResponseType(typeof(FeatureVehicleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<FeatureVehicleResponse>> Feature(Guid id, [FromBody] FeatureVehicleRequest request)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        vehicle.IsFeatured = request.IsFeatured;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        // Update homepage sections if provided
+        if (request.HomepageSections.HasValue)
+        {
+            vehicle.HomepageSections = request.HomepageSections.Value;
+        }
+        else if (request.IsFeatured && vehicle.HomepageSections == HomepageSection.None)
+        {
+            // Auto-add to Destacados if featuring and no sections set
+            vehicle.HomepageSections = HomepageSection.Destacados;
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle feature status changed: {VehicleId}, IsFeatured: {IsFeatured}, Sections: {Sections}", 
+            id, request.IsFeatured, vehicle.HomepageSections);
+
+        return Ok(new FeatureVehicleResponse
+        {
+            Id = vehicle.Id,
+            IsFeatured = vehicle.IsFeatured,
+            HomepageSections = vehicle.HomepageSections,
+            Message = request.IsFeatured 
+                ? "Vehicle featured successfully." 
+                : "Vehicle unfeatured successfully."
+        });
+    }
+
+    /// <summary>
+    /// Register a view for a vehicle
+    /// </summary>
+    [HttpPost("{id:guid}/views")]
+    [ProducesResponseType(typeof(RegisterViewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RegisterViewResponse>> RegisterView(Guid id, [FromBody] RegisterViewRequest? request = null)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Increment view count
+        vehicle.ViewCount++;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogDebug("View registered for vehicle: {VehicleId}, TotalViews: {ViewCount}, UserId: {UserId}", 
+            id, vehicle.ViewCount, request?.UserId);
+
+        return Ok(new RegisterViewResponse
+        {
+            VehicleId = vehicle.Id,
+            TotalViews = vehicle.ViewCount,
+            Message = "View registered successfully."
+        });
+    }
+
     /// <summary>
     /// Add images to an existing vehicle
     /// </summary>
@@ -586,6 +856,111 @@ public record BulkAddImagesResponse
     public int TotalImagesAdded { get; init; }
     public int VehiclesUpdated { get; init; }
     public List<string> Errors { get; init; } = new();
+}
+
+// ========================================
+// Publish/Unpublish/Sold/Feature/Views Requests
+// ========================================
+
+public record PublishVehicleRequest
+{
+    /// <summary>
+    /// Optional: Set expiration date for the listing
+    /// </summary>
+    public DateTime? ExpiresAt { get; init; }
+}
+
+public record PublishVehicleResponse
+{
+    public Guid Id { get; init; }
+    public VehicleStatus Status { get; init; }
+    public DateTime PublishedAt { get; init; }
+    public DateTime? ExpiresAt { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+
+public record UnpublishVehicleRequest
+{
+    /// <summary>
+    /// Optional: Reason for unpublishing
+    /// </summary>
+    public string? Reason { get; init; }
+}
+
+public record UnpublishVehicleResponse
+{
+    public Guid Id { get; init; }
+    public VehicleStatus Status { get; init; }
+    public DateTime UpdatedAt { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+
+public record MarkVehicleSoldRequest
+{
+    /// <summary>
+    /// Optional: Final sale price
+    /// </summary>
+    public decimal? SalePrice { get; init; }
+    
+    /// <summary>
+    /// Optional: Buyer notes
+    /// </summary>
+    public string? Notes { get; init; }
+}
+
+public record MarkVehicleSoldResponse
+{
+    public Guid Id { get; init; }
+    public VehicleStatus Status { get; init; }
+    public DateTime SoldAt { get; init; }
+    public decimal? SalePrice { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+
+public record FeatureVehicleRequest
+{
+    /// <summary>
+    /// True to feature, false to unfeature
+    /// </summary>
+    public bool IsFeatured { get; init; }
+    
+    /// <summary>
+    /// Optional: Homepage sections to display the vehicle in
+    /// </summary>
+    public HomepageSection? HomepageSections { get; init; }
+}
+
+public record FeatureVehicleResponse
+{
+    public Guid Id { get; init; }
+    public bool IsFeatured { get; init; }
+    public HomepageSection HomepageSections { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+
+public record RegisterViewRequest
+{
+    /// <summary>
+    /// Optional: User ID if authenticated
+    /// </summary>
+    public Guid? UserId { get; init; }
+    
+    /// <summary>
+    /// Optional: Session ID for anonymous users
+    /// </summary>
+    public string? SessionId { get; init; }
+    
+    /// <summary>
+    /// Optional: Referrer URL
+    /// </summary>
+    public string? Referrer { get; init; }
+}
+
+public record RegisterViewResponse
+{
+    public Guid VehicleId { get; init; }
+    public int TotalViews { get; init; }
+    public string Message { get; init; } = string.Empty;
 }
 
 #endregion

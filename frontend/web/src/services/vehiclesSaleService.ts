@@ -441,6 +441,199 @@ export const getVehicleModels = async (makeId: string): Promise<VehicleModel[]> 
   }
 };
 
+// ============================================================
+// VEHICLE LIFECYCLE API (Publish/Unpublish/Sold/Feature/Views)
+// ============================================================
+
+export interface PublishVehicleRequest {
+  expiresAt?: string;
+}
+
+export interface PublishVehicleResponse {
+  id: string;
+  status: number;
+  publishedAt: string;
+  expiresAt?: string;
+  message: string;
+}
+
+export interface UnpublishVehicleRequest {
+  reason?: string;
+}
+
+export interface UnpublishVehicleResponse {
+  id: string;
+  status: number;
+  updatedAt: string;
+  message: string;
+}
+
+export interface MarkSoldRequest {
+  salePrice?: number;
+  notes?: string;
+}
+
+export interface MarkSoldResponse {
+  id: string;
+  status: number;
+  soldAt: string;
+  salePrice?: number;
+  message: string;
+}
+
+export interface FeatureVehicleRequest {
+  isFeatured: boolean;
+  homepageSections?: number;
+}
+
+export interface FeatureVehicleResponse {
+  id: string;
+  isFeatured: boolean;
+  homepageSections: number;
+  message: string;
+}
+
+export interface RegisterViewRequest {
+  userId?: string;
+  sessionId?: string;
+  referrer?: string;
+}
+
+export interface RegisterViewResponse {
+  vehicleId: string;
+  totalViews: number;
+  message: string;
+}
+
+/**
+ * Publish a vehicle (Draft/Inactive -> Active)
+ */
+export const publishVehicle = async (
+  vehicleId: string,
+  request?: PublishVehicleRequest
+): Promise<PublishVehicleResponse> => {
+  const response = await vehiclesApi.post<PublishVehicleResponse>(
+    `/api/vehicles/${vehicleId}/publish`,
+    request || {}
+  );
+  return response.data;
+};
+
+/**
+ * Unpublish a vehicle (Active -> Archived)
+ */
+export const unpublishVehicle = async (
+  vehicleId: string,
+  request?: UnpublishVehicleRequest
+): Promise<UnpublishVehicleResponse> => {
+  const response = await vehiclesApi.post<UnpublishVehicleResponse>(
+    `/api/vehicles/${vehicleId}/unpublish`,
+    request || {}
+  );
+  return response.data;
+};
+
+/**
+ * Mark a vehicle as sold
+ */
+export const markVehicleAsSold = async (
+  vehicleId: string,
+  request?: MarkSoldRequest
+): Promise<MarkSoldResponse> => {
+  const response = await vehiclesApi.post<MarkSoldResponse>(
+    `/api/vehicles/${vehicleId}/sold`,
+    request || {}
+  );
+  return response.data;
+};
+
+/**
+ * Feature or unfeature a vehicle (Admin only)
+ */
+export const featureVehicle = async (
+  vehicleId: string,
+  request: FeatureVehicleRequest
+): Promise<FeatureVehicleResponse> => {
+  const response = await vehiclesApi.post<FeatureVehicleResponse>(
+    `/api/vehicles/${vehicleId}/feature`,
+    request
+  );
+  return response.data;
+};
+
+/**
+ * Register a view for a vehicle
+ */
+export const registerVehicleView = async (
+  vehicleId: string,
+  request?: RegisterViewRequest
+): Promise<RegisterViewResponse> => {
+  const response = await vehiclesApi.post<RegisterViewResponse>(
+    `/api/vehicles/${vehicleId}/views`,
+    request || {}
+  );
+  return response.data;
+};
+
+// ============================================================
+// VIN DECODE API
+// ============================================================
+
+export interface VinSuggestedData {
+  make: string;
+  model: string;
+  year: number;
+  trim?: string;
+  vehicleType: string;
+  bodyStyle: string;
+  fuelType: string;
+  transmission: string;
+  driveType: string;
+  engineSize?: string;
+  horsepower?: number;
+  cylinders?: number;
+}
+
+export interface VinDecodeResponse {
+  vin: string;
+  isValid: boolean;
+  make: string;
+  model: string;
+  year: number;
+  trim?: string;
+  vehicleType: string;
+  bodyStyle: string;
+  doors?: number;
+  engineSize?: string;
+  cylinders?: number;
+  horsepower?: number;
+  fuelType: string;
+  transmission: string;
+  driveType: string;
+  plantCity?: string;
+  plantCountry?: string;
+  manufacturer?: string;
+  series?: string;
+  gvwr?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  suggestedData?: VinSuggestedData;
+}
+
+/**
+ * Decode a VIN number using NHTSA API
+ * Returns vehicle information for form auto-fill
+ */
+export const decodeVin = async (vin: string): Promise<VinDecodeResponse | null> => {
+  try {
+    const response = await vehiclesApi.get<VinDecodeResponse>(`/api/catalog/vin/${vin}/decode`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error decoding VIN ${vin}:`, error);
+    return null;
+  }
+};
+
 // Default export for convenience
 export default {
   getVehicles,
@@ -452,4 +645,12 @@ export default {
   getVehiclesByBodyStyle,
   getVehicleMakes,
   getVehicleModels,
+  // Lifecycle
+  publishVehicle,
+  unpublishVehicle,
+  markVehicleAsSold,
+  featureVehicle,
+  registerVehicleView,
+  // VIN
+  decodeVin,
 };

@@ -31,6 +31,7 @@ import DealerRegistrationPage from './pages/DealerRegistrationPage';
 import DealerDashboard from './pages/DealerDashboard';
 // Inventory Management pages (Sprint 6)
 import InventoryManagementPage from './pages/InventoryManagementPage';
+import { CSVImportPage, LocationsPage } from './pages/dealer';
 // Public Dealer Profile pages (Sprint 7)
 import PublicDealerProfilePage from './pages/PublicDealerProfilePage';
 import DealerProfileEditorPage from './pages/DealerProfileEditorPage';
@@ -73,6 +74,7 @@ import SecuritySettingsPage from './pages/user/SecuritySettingsPage';
 import PrivacyCenterPage from './pages/user/PrivacyCenterPage';
 import DataDownloadPage from './pages/user/DataDownloadPage';
 import DeleteAccountPage from './pages/user/DeleteAccountPage';
+import MyDataPage from './pages/user/MyDataPage';
 // Recently Viewed (Recommendations)
 import RecentlyViewedPage from './pages/vehicles/RecentlyViewedPage';
 // Media Viewers (360 & Video Tours)
@@ -355,6 +357,14 @@ function App() {
             }
           />
           <Route
+            path="/settings/privacy/my-data"
+            element={
+              <ProtectedRoute>
+                <MyDataPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/settings/privacy/download-my-data"
             element={
               <ProtectedRoute>
@@ -528,6 +538,22 @@ function App() {
             element={
               <ProtectedRoute requireDealer>
                 <DealerVehicleEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/import"
+            element={
+              <ProtectedRoute requireDealer>
+                <CSVImportPage dealerId="" userId="" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/locations"
+            element={
+              <ProtectedRoute requireDealer>
+                <LocationsPage dealerId="" />
               </ProtectedRoute>
             }
           />

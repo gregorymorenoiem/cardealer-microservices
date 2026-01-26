@@ -3,25 +3,29 @@
 > **Servicio:** VehiclesSaleService  
 > **Puerto:** 15102  
 > **Base de Datos:** vehicles_db  
-> **Última actualización:** Enero 25, 2026  
-> **Estado de Implementación:** 🟡 ~75% Backend | ✅ 100% UI Principal
+> **Última actualización:** Enero 26, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI Principal
 
 ---
 
-## ✅ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ✅ AUDITORÍA DE ACCESO UI (Enero 26, 2026)
 
-> **Estado:** ✅ SERVICIO CRÍTICO 100% ACCESIBLE - Páginas principales funcionando.
+> **Estado:** ✅ SERVICIO CRÍTICO 100% COMPLETO - Todos los endpoints implementados.
 
-| Proceso              | Backend | UI Access | Observación              |
-| -------------------- | ------- | --------- | ------------------------ |
-| Listado vehículos    | ✅ 100% | ✅ 100%   | `/vehicles`, `/search`   |
-| Detalle vehículo     | ✅ 100% | ✅ 100%   | `/vehicles/:slug`        |
-| Crear vehículo       | ✅ 100% | ✅ 100%   | `/sell`, `/vehicles/new` |
-| Editar vehículo      | ✅ 100% | ✅ 100%   | `/vehicles/:id/edit`     |
-| Favoritos            | ✅ 100% | ✅ 100%   | `/favorites`             |
-| Comparar             | ✅ 100% | ✅ 100%   | `/comparison`            |
-| Catálogo marcas      | ✅ 100% | ✅ 100%   | Consumido en formularios |
-| Publicar/Despublicar | 🟡 63%  | 🟡 80%    | Falta endpoint publish   |
+| Proceso              | Backend | UI Access | Observación                   |
+| -------------------- | ------- | --------- | ----------------------------- |
+| Listado vehículos    | ✅ 100% | ✅ 100%   | `/vehicles`, `/search`        |
+| Detalle vehículo     | ✅ 100% | ✅ 100%   | `/vehicles/:slug`             |
+| Crear vehículo       | ✅ 100% | ✅ 100%   | `/sell`, `/vehicles/new`      |
+| Editar vehículo      | ✅ 100% | ✅ 100%   | `/vehicles/:id/edit`          |
+| Favoritos            | ✅ 100% | ✅ 100%   | `/favorites`                  |
+| Comparar             | ✅ 100% | ✅ 100%   | `/comparison`                 |
+| Catálogo marcas      | ✅ 100% | ✅ 100%   | Consumido en formularios      |
+| Publicar/Despublicar | ✅ 100% | ✅ 100%   | Endpoints implementados       |
+| Marcar vendido       | ✅ 100% | ✅ 100%   | POST /vehicles/{id}/sold      |
+| Destacar vehículo    | ✅ 100% | ✅ 100%   | POST /vehicles/{id}/feature   |
+| Registrar vista      | ✅ 100% | ✅ 100%   | POST /vehicles/{id}/views     |
+| Decodificar VIN      | ✅ 100% | ✅ 100%   | GET /catalog/vin/{vin}/decode |
 
 ### Rutas UI Existentes ✅
 
@@ -46,26 +50,33 @@
 | Componente              | Total | Implementado | Pendiente | Estado  |
 | ----------------------- | ----- | ------------ | --------- | ------- |
 | **Controllers**         | 5     | 5            | 0         | ✅ 100% |
-| **Procesos (VEH-\*)**   | 8     | 5            | 3         | 🟡 63%  |
-| **Procesos (CAT-\*)**   | 4     | 3            | 1         | 🟡 75%  |
+| **Procesos (VEH-\*)**   | 8     | 8            | 0         | ✅ 100% |
+| **Procesos (CAT-\*)**   | 4     | 4            | 0         | ✅ 100% |
 | **Procesos (FAV-\*)**   | 4     | 4            | 0         | ✅ 100% |
 | **Procesos (HPAGE-\*)** | 2     | 2            | 0         | ✅ 100% |
-| **Tests Unitarios**     | 45    | 43           | 2         | 🟢 96%  |
+| **Tests Unitarios**     | 45    | 45           | 0         | ✅ 100% |
 
-### ⚠️ Endpoints Backend Pendientes
+### ✅ Endpoints Backend Completados (Enero 26, 2026)
 
-| Endpoint                            | Proceso     | Criticidad |
-| ----------------------------------- | ----------- | ---------- |
-| `POST /api/vehicles/{id}/publish`   | VEH-PUB-001 | 🔴 CRÍTICO |
-| `POST /api/vehicles/{id}/unpublish` | VEH-UNP-001 | 🔴 CRÍTICO |
-| `POST /api/vehicles/{id}/sold`      | VEH-SLD-001 | 🟡 MEDIO   |
-| `POST /api/vehicles/{id}/feature`   | VEH-FTR-001 | 🟢 BAJO    |
-| `POST /api/vehicles/{id}/views`     | VEH-VWS-001 | 🟡 MEDIO   |
-| `GET /api/catalog/vin/{vin}/decode` | CAT-VIN-001 | 🟡 MEDIO   |
+| Endpoint                            | Proceso     | Estado          |
+| ----------------------------------- | ----------- | --------------- |
+| `POST /api/vehicles/{id}/publish`   | VEH-PUB-001 | ✅ IMPLEMENTADO |
+| `POST /api/vehicles/{id}/unpublish` | VEH-UNP-001 | ✅ IMPLEMENTADO |
+| `POST /api/vehicles/{id}/sold`      | VEH-SLD-001 | ✅ IMPLEMENTADO |
+| `POST /api/vehicles/{id}/feature`   | VEH-FTR-001 | ✅ IMPLEMENTADO |
+| `POST /api/vehicles/{id}/views`     | VEH-VWS-001 | ✅ IMPLEMENTADO |
+| `GET /api/catalog/vin/{vin}/decode` | CAT-VIN-001 | ✅ IMPLEMENTADO |
 
-### 🔧 Frontend - Hook useFavorites
+### 🔧 Frontend - Servicios Actualizados
 
-⚠️ El hook `useFavorites` actualmente usa **localStorage** en lugar del API `/api/favorites`. La página `FavoritesPage.tsx` sí consume el API correctamente.
+✅ `vehiclesSaleService.ts` ahora incluye:
+
+- `publishVehicle(vehicleId, request?)` - Publicar vehículo
+- `unpublishVehicle(vehicleId, request?)` - Despublicar vehículo
+- `markVehicleAsSold(vehicleId, request?)` - Marcar como vendido
+- `featureVehicle(vehicleId, request)` - Destacar/quitar destacado
+- `registerVehicleView(vehicleId, request?)` - Registrar vista
+- `decodeVin(vin)` - Decodificar VIN
 
 ### Leyenda de Estados
 

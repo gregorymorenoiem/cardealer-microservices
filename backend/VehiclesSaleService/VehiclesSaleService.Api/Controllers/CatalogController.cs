@@ -279,6 +279,240 @@ public class CatalogController : ControllerBase
     }
 
     // ========================================
+    // VIN DECODING
+    // ========================================
+
+    /// <summary>
+    /// Decode a Vehicle Identification Number (VIN) to extract vehicle information.
+    /// Uses NHTSA VPIC API for decoding.
+    /// </summary>
+    /// <remarks>
+    /// Example VIN: 1HGCV1F32LA000001 (2020 Honda Accord)
+    /// 
+    /// Returns decoded information:
+    /// - Make, Model, Year
+    /// - Body Style, Vehicle Type
+    /// - Engine Size, Fuel Type
+    /// - Transmission, Drive Type
+    /// - Manufacturing Location
+    /// </remarks>
+    [HttpGet("vin/{vin}/decode")]
+    [ProducesResponseType(typeof(VinDecodeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<VinDecodeResponse>> DecodeVin(string vin)
+    {
+        // Validate VIN format (17 characters, alphanumeric except I, O, Q)
+        if (string.IsNullOrWhiteSpace(vin) || vin.Length != 17)
+        {
+            return BadRequest(new { message = "Invalid VIN format. VIN must be exactly 17 characters." });
+        }
+
+        vin = vin.ToUpperInvariant();
+
+        // Check for invalid characters (I, O, Q are not used in VINs)
+        if (vin.Any(c => c == 'I' || c == 'O' || c == 'Q'))
+        {
+            return BadRequest(new { message = "Invalid VIN. VINs cannot contain I, O, or Q characters." });
+        }
+
+        try
+        {
+            // Call NHTSA VPIC API
+            using var httpClient = new HttpClient();
+            var nhtsaUrl = $"https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json";
+            
+            _logger.LogInformation("Decoding VIN: {VIN} via NHTSA API", vin);
+            
+            var response = await httpClient.GetAsync(nhtsaUrl);
+            response.EnsureSuccessStatusCode();
+            
+            var content = await response.Content.ReadAsStringAsync();
+            var nhtsaResponse = System.Text.Json.JsonSerializer.Deserialize<NhtsaVinResponse>(content, 
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (nhtsaResponse?.Results == null || !nhtsaResponse.Results.Any())
+            {
+                return BadRequest(new { message = "Unable to decode VIN. No results returned from NHTSA." });
+            }
+
+            var result = nhtsaResponse.Results.First();
+
+            // Check for error codes
+            if (!string.IsNullOrEmpty(result.ErrorCode) && result.ErrorCode != "0")
+            {
+                _logger.LogWarning("VIN decode returned error: {ErrorCode} - {ErrorText}", 
+                    result.ErrorCode, result.ErrorText);
+            }
+
+            // Parse year
+            int.TryParse(result.ModelYear, out var year);
+            
+            // Parse engine info
+            int.TryParse(result.EngineHP, out var horsepower);
+            int.TryParse(result.EngineCylinders, out var cylinders);
+
+            // Map fuel type
+            var fuelType = MapFuelType(result.FuelTypePrimary);
+            var transmission = MapTransmission(result.TransmissionStyle);
+            var driveType = MapDriveType(result.DriveType);
+            var bodyStyle = MapBodyStyle(result.BodyClass);
+            var vehicleType = MapVehicleType(result.VehicleType);
+
+            var vinResponse = new VinDecodeResponse
+            {
+                VIN = vin,
+                IsValid = string.IsNullOrEmpty(result.ErrorCode) || result.ErrorCode == "0",
+                
+                // Basic Info
+                Make = result.Make ?? string.Empty,
+                Model = result.Model ?? string.Empty,
+                Year = year,
+                Trim = result.Trim,
+                
+                // Type & Body
+                VehicleType = vehicleType,
+                BodyStyle = bodyStyle,
+                Doors = ParseInt(result.Doors),
+                
+                // Engine
+                EngineSize = result.DisplacementL != null ? $"{result.DisplacementL}L" : result.EngineModel,
+                Cylinders = cylinders > 0 ? cylinders : null,
+                Horsepower = horsepower > 0 ? horsepower : null,
+                FuelType = fuelType,
+                
+                // Transmission & Drive
+                Transmission = transmission,
+                DriveType = driveType,
+                
+                // Manufacturing
+                PlantCity = result.PlantCity,
+                PlantCountry = result.PlantCountry,
+                Manufacturer = result.Manufacturer,
+                
+                // Additional
+                Series = result.Series,
+                GVWR = result.GVWR,
+                ErrorCode = result.ErrorCode,
+                ErrorMessage = result.ErrorText,
+                
+                // Suggested data for form auto-fill
+                SuggestedData = new VinSuggestedData
+                {
+                    Make = result.Make ?? string.Empty,
+                    Model = result.Model ?? string.Empty,
+                    Year = year,
+                    Trim = result.Trim,
+                    VehicleType = vehicleType,
+                    BodyStyle = bodyStyle,
+                    FuelType = fuelType,
+                    Transmission = transmission,
+                    DriveType = driveType,
+                    EngineSize = result.DisplacementL != null ? $"{result.DisplacementL}L" : null,
+                    Horsepower = horsepower > 0 ? horsepower : null,
+                    Cylinders = cylinders > 0 ? cylinders : null
+                }
+            };
+
+            _logger.LogInformation("VIN decoded successfully: {VIN} -> {Year} {Make} {Model}", 
+                vin, year, result.Make, result.Model);
+
+            return Ok(vinResponse);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Failed to call NHTSA API for VIN: {VIN}", vin);
+            return BadRequest(new { message = "Failed to decode VIN. NHTSA service unavailable." });
+        }
+    }
+
+    // VIN Decode helper methods
+    private static int? ParseInt(string? value)
+    {
+        if (int.TryParse(value, out var result))
+            return result;
+        return null;
+    }
+
+    private static string MapFuelType(string? nhtsaFuelType)
+    {
+        if (string.IsNullOrEmpty(nhtsaFuelType)) return "Gasoline";
+        
+        return nhtsaFuelType.ToLowerInvariant() switch
+        {
+            // Check plug-in hybrid first (before electric/hybrid checks)
+            var f when f.Contains("plug") || f.Contains("phev") => "PlugInHybrid",
+            var f when f.Contains("diesel") => "Diesel",
+            var f when f.Contains("hybrid") => "Hybrid",
+            var f when f.Contains("electric") => "Electric",
+            var f when f.Contains("flex") => "FlexFuel",
+            var f when f.Contains("hydrogen") => "Hydrogen",
+            var f when f.Contains("natural gas") || f.Contains("cng") => "NaturalGas",
+            _ => "Gasoline"
+        };
+    }
+
+    private static string MapTransmission(string? nhtsaTransmission)
+    {
+        if (string.IsNullOrEmpty(nhtsaTransmission)) return "Automatic";
+        
+        return nhtsaTransmission.ToLowerInvariant() switch
+        {
+            var t when t.Contains("cvt") => "CVT",
+            var t when t.Contains("dual") || t.Contains("dct") => "DualClutch",
+            var t when t.Contains("automated") => "Automated",
+            var t when t.Contains("manual") => "Manual",
+            _ => "Automatic"
+        };
+    }
+
+    private static string MapDriveType(string? nhtsaDriveType)
+    {
+        if (string.IsNullOrEmpty(nhtsaDriveType)) return "FWD";
+        
+        return nhtsaDriveType.ToLowerInvariant() switch
+        {
+            var d when d.Contains("4x4") || d.Contains("4wd") || d.Contains("four") => "FourWD",
+            var d when d.Contains("awd") || d.Contains("all") => "AWD",
+            var d when d.Contains("rwd") || d.Contains("rear") => "RWD",
+            _ => "FWD"
+        };
+    }
+
+    private static string MapBodyStyle(string? nhtsaBodyClass)
+    {
+        if (string.IsNullOrEmpty(nhtsaBodyClass)) return "Sedan";
+        
+        return nhtsaBodyClass.ToLowerInvariant() switch
+        {
+            var b when b.Contains("suv") || b.Contains("sport utility") => "SUV",
+            var b when b.Contains("pickup") || b.Contains("truck") => "Pickup",
+            var b when b.Contains("van") && b.Contains("mini") => "Minivan",
+            var b when b.Contains("van") => "Van",
+            var b when b.Contains("coupe") => "Coupe",
+            var b when b.Contains("convertible") => "Convertible",
+            var b when b.Contains("hatchback") => "Hatchback",
+            var b when b.Contains("wagon") => "Wagon",
+            var b when b.Contains("crossover") => "Crossover",
+            _ => "Sedan"
+        };
+    }
+
+    private static string MapVehicleType(string? nhtsaVehicleType)
+    {
+        if (string.IsNullOrEmpty(nhtsaVehicleType)) return "Car";
+        
+        return nhtsaVehicleType.ToLowerInvariant() switch
+        {
+            var v when v.Contains("truck") => "Truck",
+            var v when v.Contains("suv") || v.Contains("multipurpose") => "SUV",
+            var v when v.Contains("van") => "Van",
+            var v when v.Contains("motorcycle") => "Motorcycle",
+            var v when v.Contains("bus") => "Commercial",
+            _ => "Car"
+        };
+    }
+
+    // ========================================
     // STATS & HEALTH
     // ========================================
 
@@ -573,4 +807,110 @@ public record TrimDto
 
     // Pricing reference
     public decimal? BaseMSRP { get; init; }
+}
+
+// ========================================
+// VIN DECODE DTOs
+// ========================================
+
+/// <summary>
+/// Response from VIN decoding
+/// </summary>
+public record VinDecodeResponse
+{
+    public string VIN { get; init; } = string.Empty;
+    public bool IsValid { get; init; }
+    
+    // Basic Info
+    public string Make { get; init; } = string.Empty;
+    public string Model { get; init; } = string.Empty;
+    public int Year { get; init; }
+    public string? Trim { get; init; }
+    
+    // Type & Body
+    public string VehicleType { get; init; } = "Car";
+    public string BodyStyle { get; init; } = "Sedan";
+    public int? Doors { get; init; }
+    
+    // Engine
+    public string? EngineSize { get; init; }
+    public int? Cylinders { get; init; }
+    public int? Horsepower { get; init; }
+    public string FuelType { get; init; } = "Gasoline";
+    
+    // Transmission & Drive
+    public string Transmission { get; init; } = "Automatic";
+    public string DriveType { get; init; } = "FWD";
+    
+    // Manufacturing
+    public string? PlantCity { get; init; }
+    public string? PlantCountry { get; init; }
+    public string? Manufacturer { get; init; }
+    
+    // Additional
+    public string? Series { get; init; }
+    public string? GVWR { get; init; }
+    public string? ErrorCode { get; init; }
+    public string? ErrorMessage { get; init; }
+    
+    // Suggested data for form auto-fill
+    public VinSuggestedData? SuggestedData { get; init; }
+}
+
+/// <summary>
+/// Suggested values for form auto-fill based on VIN
+/// </summary>
+public record VinSuggestedData
+{
+    public string Make { get; init; } = string.Empty;
+    public string Model { get; init; } = string.Empty;
+    public int Year { get; init; }
+    public string? Trim { get; init; }
+    public string VehicleType { get; init; } = "Car";
+    public string BodyStyle { get; init; } = "Sedan";
+    public string FuelType { get; init; } = "Gasoline";
+    public string Transmission { get; init; } = "Automatic";
+    public string DriveType { get; init; } = "FWD";
+    public string? EngineSize { get; init; }
+    public int? Horsepower { get; init; }
+    public int? Cylinders { get; init; }
+}
+
+/// <summary>
+/// NHTSA VPIC API Response
+/// </summary>
+public class NhtsaVinResponse
+{
+    public int Count { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string SearchCriteria { get; set; } = string.Empty;
+    public List<NhtsaVinResult> Results { get; set; } = new();
+}
+
+/// <summary>
+/// NHTSA VPIC Result item
+/// </summary>
+public class NhtsaVinResult
+{
+    public string? Make { get; set; }
+    public string? Model { get; set; }
+    public string? ModelYear { get; set; }
+    public string? Trim { get; set; }
+    public string? Series { get; set; }
+    public string? VehicleType { get; set; }
+    public string? BodyClass { get; set; }
+    public string? Doors { get; set; }
+    public string? DriveType { get; set; }
+    public string? TransmissionStyle { get; set; }
+    public string? FuelTypePrimary { get; set; }
+    public string? DisplacementL { get; set; }
+    public string? EngineModel { get; set; }
+    public string? EngineCylinders { get; set; }
+    public string? EngineHP { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? PlantCity { get; set; }
+    public string? PlantCountry { get; set; }
+    public string? GVWR { get; set; }
+    public string? ErrorCode { get; set; }
+    public string? ErrorText { get; set; }
 }

@@ -8,11 +8,11 @@
  * - Oposición: Oponerse a tratamiento de datos
  *
  * @module pages/user/PrivacyCenterPage
- * @version 1.0.0
- * @since Enero 25, 2026
+ * @version 2.0.0
+ * @since Enero 26, 2026
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiShield,
@@ -26,45 +26,64 @@ import {
   FiLock,
   FiMail,
   FiEye,
-  FiToggleLeft,
-  FiToggleRight,
+  FiLoader,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
-
-interface PrivacyAction {
-  id: string;
-  type: 'access' | 'rectification' | 'cancellation' | 'opposition';
-  status: 'pending' | 'processing' | 'completed';
-  createdAt: string;
-  completedAt?: string;
-  description: string;
-}
+import {
+  privacyService,
+  requestStatusLabels,
+  requestStatusColors,
+} from '../../services/privacyService';
+import type {
+  CommunicationPreferences,
+  PrivacyRequestHistory,
+} from '../../services/privacyService';
 
 const PrivacyCenterPage = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
-  const [marketingConsent, setMarketingConsent] = useState(true);
-  const [analyticsConsent, setAnalyticsConsent] = useState(true);
-  const [thirdPartyConsent, setThirdPartyConsent] = useState(false);
+  const [preferences, setPreferences] = useState<CommunicationPreferences | null>(null);
+  const [requestHistory, setRequestHistory] = useState<PrivacyRequestHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for request history
-  const requestHistory: PrivacyAction[] = [
-    {
-      id: '1',
-      type: 'access',
-      status: 'completed',
-      createdAt: '2026-01-15T10:30:00',
-      completedAt: '2026-01-17T14:20:00',
-      description: 'Solicitud de acceso a datos personales',
-    },
-    {
-      id: '2',
-      type: 'rectification',
-      status: 'completed',
-      createdAt: '2026-01-10T09:00:00',
-      completedAt: '2026-01-11T16:45:00',
-      description: 'Actualización de dirección de correo',
-    },
-  ];
+  // Cargar preferencias y historial
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [prefs, history] = await Promise.all([
+          privacyService.getCommunicationPreferences(),
+          privacyService.getPrivacyRequestHistory(),
+        ]);
+        setPreferences(prefs);
+        setRequestHistory(history.requests);
+      } catch (err) {
+        console.error('Error loading privacy data:', err);
+        setError('Error al cargar los datos de privacidad');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Actualizar preferencia individual
+  const updatePreference = async (key: string, value: boolean) => {
+    if (!preferences) return;
+    setSaving(true);
+    try {
+      const updated = await privacyService.updateCommunicationPreferences({
+        [key]: value,
+      });
+      setPreferences(updated);
+    } catch (err) {
+      console.error('Error updating preference:', err);
+      setError('Error al actualizar preferencia');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const arcoRights = [
     {
@@ -114,37 +133,41 @@ const PrivacyCenterPage = () => {
   ];
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <FiCheck className="mr-1" /> Completado
-          </span>
-        );
-      case 'processing':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <FiClock className="mr-1" /> Procesando
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            Pendiente
-          </span>
-        );
-    }
+    const statusKey = status as keyof typeof requestStatusLabels;
+    const colorClass = requestStatusColors[statusKey] || 'bg-gray-100 text-gray-800';
+    const label = requestStatusLabels[statusKey] || status;
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+      >
+        {status === 'Completed' && <FiCheck className="mr-1" />}
+        {status === 'Processing' && <FiClock className="mr-1" />}
+        {label}
+      </span>
+    );
   };
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      access: 'Acceso',
-      rectification: 'Rectificación',
-      cancellation: 'Cancelación',
-      opposition: 'Oposición',
+      Access: 'Acceso',
+      Rectification: 'Rectificación',
+      Cancellation: 'Cancelación',
+      Opposition: 'Oposición',
+      Portability: 'Portabilidad',
     };
     return labels[type] || type;
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <FiLoader className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -266,7 +289,13 @@ const PrivacyCenterPage = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FiLock className="mr-2 text-gray-600" />
                   Gestión de Consentimientos
+                  {saving && <FiLoader className="ml-2 w-4 h-4 animate-spin text-blue-500" />}
                 </h3>
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-4">
                   {/* Marketing Consent */}
                   <div className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -277,14 +306,17 @@ const PrivacyCenterPage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => setMarketingConsent(!marketingConsent)}
+                      onClick={() =>
+                        updatePreference('emailPromotions', !preferences?.email.promotions)
+                      }
+                      disabled={saving}
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        marketingConsent ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
+                        preferences?.email.promotions ? 'bg-blue-600' : 'bg-gray-200'
+                      } ${saving ? 'opacity-50' : ''}`}
                     >
                       <span
                         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          marketingConsent ? 'translate-x-5' : 'translate-x-0'
+                          preferences?.email.promotions ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
                     </button>
@@ -299,14 +331,17 @@ const PrivacyCenterPage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => setAnalyticsConsent(!analyticsConsent)}
+                      onClick={() =>
+                        updatePreference('allowAnalytics', !preferences?.privacy.allowAnalytics)
+                      }
+                      disabled={saving}
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        analyticsConsent ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
+                        preferences?.privacy.allowAnalytics ? 'bg-blue-600' : 'bg-gray-200'
+                      } ${saving ? 'opacity-50' : ''}`}
                     >
                       <span
                         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          analyticsConsent ? 'translate-x-5' : 'translate-x-0'
+                          preferences?.privacy.allowAnalytics ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
                     </button>
@@ -321,14 +356,22 @@ const PrivacyCenterPage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => setThirdPartyConsent(!thirdPartyConsent)}
+                      onClick={() =>
+                        updatePreference(
+                          'allowThirdPartySharing',
+                          !preferences?.privacy.allowThirdPartySharing
+                        )
+                      }
+                      disabled={saving}
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        thirdPartyConsent ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
+                        preferences?.privacy.allowThirdPartySharing ? 'bg-blue-600' : 'bg-gray-200'
+                      } ${saving ? 'opacity-50' : ''}`}
                     >
                       <span
                         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          thirdPartyConsent ? 'translate-x-5' : 'translate-x-0'
+                          preferences?.privacy.allowThirdPartySharing
+                            ? 'translate-x-5'
+                            : 'translate-x-0'
                         }`}
                       />
                     </button>
