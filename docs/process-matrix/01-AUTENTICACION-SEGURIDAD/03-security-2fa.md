@@ -4,7 +4,7 @@
 > **Puerto:** 5001  
 > **Última actualización:** Enero 25, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Estado de Implementación:** ✅ 100% Backend | ✅ 90% UI
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI | ✅ 100% Tests
 
 ---
 
@@ -19,13 +19,13 @@
 
 ### Rutas UI Existentes ✅
 
-- `/settings/security` → SecuritySettingsPage (toggle 2FA)
-- `/login/2fa` → LoginTwoFactorPage (verificación TOTP)
+- `/settings/security` → SecuritySettingsPage (toggle 2FA + wizard completo)
+- `/login/2fa` → TwoFactorVerifyPage (verificación TOTP)
 - `/login/recovery` → RecoveryCodePage (usar código backup)
 
 ### Rutas UI Faltantes 🔴
 
-- `/settings/2fa/setup` → Wizard guiado de configuración (mejora UX)
+- ~~`/settings/2fa/setup` → Wizard guiado de configuración~~ ✅ **Integrado en SecuritySettingsPage**
 
 **Verificación Backend:** AuthService/TwoFactorController existe en `/backend/AuthService/` ✅
 
@@ -33,11 +33,23 @@
 
 ## 📊 Resumen de Implementación
 
-| Componente                | Total | Implementado | Pendiente | Estado  |
-| ------------------------- | ----- | ------------ | --------- | ------- |
-| **Controllers**           | 1     | 1            | 0         | ✅ 100% |
-| **Procesos (SEC-2FA-\*)** | 7     | 7            | 0         | ✅ 100% |
-| **Tests Unitarios**       | 7     | 7            | 0         | ✅ 100% |
+| Componente                      | Total | Implementado | Pendiente | Estado  |
+| ------------------------------- | ----- | ------------ | --------- | ------- |
+| **Controllers**                 | 1     | 1            | 0         | ✅ 100% |
+| **Procesos (SEC-2FA-\*)**       | 7     | 7            | 0         | ✅ 100% |
+| **Tests Unitarios de Handlers** | 29    | 29           | 0         | ✅ 100% |
+
+### Tests de 2FA Handlers (29 tests - 100% passing)
+
+| Archivo de Tests                        | Tests | Estado     |
+| --------------------------------------- | ----- | ---------- |
+| Enable2FAHandlerTests.cs                | 7     | ✅ Passing |
+| Verify2FAHandlerTests.cs                | 6     | ✅ Passing |
+| Disable2FAHandlerTests.cs               | 5     | ✅ Passing |
+| GenerateRecoveryCodesHandlerTests.cs    | 5     | ✅ Passing |
+| TwoFactorLoginHandlerTests.cs           | 6     | ✅ Passing |
+
+**Ubicación:** `AuthService.Tests/Unit/Handlers/TwoFactor/`
 
 ### Leyenda de Estados
 
