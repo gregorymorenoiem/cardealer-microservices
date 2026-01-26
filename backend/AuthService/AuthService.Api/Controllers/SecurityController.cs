@@ -5,6 +5,7 @@ using AuthService.Application.Features.Auth.Commands.RevokeAllSessions;
 using AuthService.Application.Features.Auth.Commands.RequestSessionRevocation;
 using AuthService.Application.Features.Auth.Queries.GetActiveSessions;
 using AuthService.Domain.Interfaces.Repositories;
+using AuthService.Domain.Interfaces.Services;
 using AuthService.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,19 +30,22 @@ public class SecurityController : ControllerBase
     private readonly ILoginHistoryRepository _loginHistoryRepository;
     private readonly IUserRepository _userRepository;
     private readonly IMediator _mediator;
+    private readonly IGeoLocationService _geoLocationService;
 
     public SecurityController(
         ILogger<SecurityController> logger,
         IUserSessionRepository sessionRepository,
         ILoginHistoryRepository loginHistoryRepository,
         IUserRepository userRepository,
-        IMediator mediator)
+        IMediator mediator,
+        IGeoLocationService geoLocationService)
     {
         _logger = logger;
         _sessionRepository = sessionRepository;
         _loginHistoryRepository = loginHistoryRepository;
         _userRepository = userRepository;
         _mediator = mediator;
+        _geoLocationService = geoLocationService;
     }
 
     /// <summary>
@@ -76,6 +80,28 @@ public class SecurityController : ControllerBase
             // Obtener sesiones activas
             var activeSessions = await _sessionRepository.GetActiveSessionsByUserIdAsync(userId, cancellationToken);
             var currentSessionId = GetCurrentSessionId();
+
+            // Update sessions that don't have location (legacy sessions before geolocation was implemented)
+            foreach (var session in activeSessions.Where(s => string.IsNullOrEmpty(s.Location) && string.IsNullOrEmpty(s.Country)))
+            {
+                try
+                {
+                    var geoLocation = await _geoLocationService.GetLocationFromIpAsync(session.IpAddress, cancellationToken);
+                    if (geoLocation != null)
+                    {
+                        var locationString = !string.IsNullOrEmpty(geoLocation.City) && !string.IsNullOrEmpty(geoLocation.Country)
+                            ? $"{geoLocation.City}, {geoLocation.Country}"
+                            : geoLocation.Country ?? geoLocation.City ?? "Unknown location";
+                        session.UpdateLocation(locationString, geoLocation.Country, geoLocation.City);
+                        await _sessionRepository.UpdateAsync(session, cancellationToken);
+                        _logger.LogDebug("Updated location for session {SessionId}: {Location}", session.Id, locationString);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to get geolocation for session {SessionId}", session.Id);
+                }
+            }
 
             var sessionDtos = activeSessions.Select(s => new ActiveSessionDto(
                 Id: s.Id.ToString(),
