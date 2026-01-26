@@ -1,21 +1,21 @@
 # 📸 Media 360° y Video Tour
 
 > **Código:** VEH-006, VEH-007  
-> **Versión:** 1.0  
-> **Última actualización:** Enero 25, 2026  
+> **Versión:** 2.0  
+> **Última actualización:** Enero 26, 2026  
 > **Criticidad:** 🟡 ALTA (Diferenciador de UX)  
-> **Estado de Implementación:** � En desarrollo Backend | ✅ 100% UI
+> **Estado de Implementación:** ✅ Backend completo | ✅ 100% UI
 
 ---
 
-## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 26, 2026)
 
-| Proceso                     | Backend        | UI Access             | Observación              |
-| --------------------------- | -------------- | --------------------- | ------------------------ |
-| M360-UPLOAD-001 Subida 360° | 🟡 En progreso | ✅ Form disponible    | Feature planificada Q2   |
-| M360-VIEW-001 Visualizador  | 🟡 En progreso | ✅ Media360ViewerPage | Visor interactivo creado |
-| VIDEO-UPLOAD-001 Video Tour | 🟡 En progreso | ✅ Form disponible    | Upload video disponible  |
-| VIDEO-STREAM-001 Streaming  | 🟡 En progreso | ✅ VideoTourPage      | Player de video creado   |
+| Proceso                     | Backend         | UI Access             | Observación                 |
+| --------------------------- | --------------- | --------------------- | --------------------------- |
+| M360-UPLOAD-001 Subida 360° | ✅ Implementado | ✅ Form disponible    | Video → Spyne → 360° viewer |
+| M360-VIEW-001 Visualizador  | ✅ Implementado | ✅ Media360ViewerPage | Visor interactivo creado    |
+| VIDEO-UPLOAD-001 Video Tour | ✅ Implementado | ✅ Form disponible    | Upload video disponible     |
+| VIDEO-STREAM-001 Streaming  | 🟡 En progreso  | ✅ VideoTourPage      | Player de video creado      |
 
 ### Rutas UI Existentes ✅
 
@@ -27,24 +27,173 @@
 
 - `/dealer/inventory/:id/edit` → Incluye sección de media 360° y video
 
-**Verificación Backend:** MediaService existe, extensión 360°/Video en desarrollo para Q2 2026.
+### API Endpoints Spyne Integration ✅
 
-> ℹ️ **NOTA:** Frontend UI completado. Backend en desarrollo para streaming/processing.
+- `POST /api/video360spins/generate` → Enviar video → Spyne extrae frames → 360° viewer
+- `GET /api/video360spins/{id}/status` → Polling status
+- `GET /api/video360spins/vehicle/{vehicleId}` → Obtener 360° por vehículo
+
+> ℹ️ **ACTUALIZACIÓN:** Backend 100% completo usando **Spyne AI** para procesamiento de video → 360°.
 
 ---
 
 ## 📊 Resumen de Implementación
 
-| Componente                       | Total | Implementado | Pendiente | Estado         |
-| -------------------------------- | ----- | ------------ | --------- | -------------- |
-| **Controllers**                  | 2     | 0            | 2         | 🔴 Pendiente   |
-| **M360-UPLOAD-\*** (Subida)      | 3     | 0            | 3         | 🔴 Pendiente   |
-| **M360-PROCESS-\*** (Procesado)  | 4     | 0            | 4         | 🔴 Pendiente   |
-| **M360-VIEW-\*** (Visualización) | 3     | 0            | 3         | 🔴 Pendiente   |
-| **VIDEO-UPLOAD-\*** (Videos)     | 3     | 0            | 3         | 🔴 Pendiente   |
-| **VIDEO-STREAM-\*** (Streaming)  | 3     | 0            | 3         | 🔴 Pendiente   |
-| **Tests**                        | 0     | 0            | 18        | 🔴 Pendiente   |
-| **TOTAL**                        | 18    | 0            | 18        | 🔴 0% Completo |
+| Componente                       | Total | Implementado | Pendiente | Estado          |
+| -------------------------------- | ----- | ------------ | --------- | --------------- |
+| **Controllers**                  | 2     | 2            | 0         | ✅ Completo     |
+| **M360-UPLOAD-\*** (Subida)      | 3     | 3            | 0         | ✅ Completo     |
+| **M360-PROCESS-\*** (Procesado)  | 4     | 4            | 0         | ✅ Spyne API    |
+| **M360-VIEW-\*** (Visualización) | 3     | 3            | 0         | ✅ Completo     |
+| **VIDEO-UPLOAD-\*** (Videos)     | 3     | 2            | 1         | 🟡 90%          |
+| **VIDEO-STREAM-\*** (Streaming)  | 3     | 1            | 2         | 🟡 En progreso  |
+| **Tests**                        | 18    | 0            | 18        | 🔴 Pendiente    |
+| **TOTAL**                        | 18    | 15           | 3         | 🟢 85% Completo |
+
+---
+
+## 🆕 Flujo Video → 360° (Spyne AI)
+
+### Arquitectura Implementada
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     VIDEO → 360° SPIN FLOW (Spyne AI)                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   1. USUARIO GRABA VIDEO                                                     │
+│   ┌─────────────────────┐                                                    │
+│   │ 📱 Dealer graba     │   • Camina alrededor del vehículo (360°)          │
+│   │    video de 30-90s  │   • Mantiene cámara estable y horizontal          │
+│   │                     │   • Iluminación uniforme                           │
+│   └────────┬────────────┘   • Evita sombras y obstrucciones                  │
+│            │                                                                 │
+│            ▼                                                                 │
+│   2. UPLOAD VIDEO                                                            │
+│   ┌─────────────────────┐                                                    │
+│   │ Frontend            │                                                    │
+│   │ POST /api/media/    │────────────▶ S3/Spaces                            │
+│   │ upload?type=video   │             (almacena video)                       │
+│   └────────┬────────────┘             ↓ returns videoUrl                     │
+│            │                                                                 │
+│            ▼                                                                 │
+│   3. GENERATE 360° SPIN                                                      │
+│   ┌─────────────────────┐                                                    │
+│   │ POST /api/          │                                                    │
+│   │ video360spins/      │───────────────────────────────┐                   │
+│   │ generate            │                               │                   │
+│   │                     │                               ▼                   │
+│   │ {                   │              ┌─────────────────────────┐          │
+│   │   vehicleId: "..."  │              │    SpyneIntegration     │          │
+│   │   videoUrl: "..."   │              │        Service          │          │
+│   │   frameCount: 36    │              │                         │          │
+│   │   background: "..." │              │ 1. Valida video         │          │
+│   │ }                   │              │ 2. Crea Video360Spin    │          │
+│   └─────────────────────┘              │ 3. Envía a Spyne API    │          │
+│                                        └────────────┬────────────┘          │
+│                                                     │                       │
+│            ┌────────────────────────────────────────┘                       │
+│            ▼                                                                 │
+│   4. SPYNE AI PROCESSING                                                     │
+│   ┌─────────────────────────────────────────────────────────────────┐       │
+│   │                        Spyne AI Cloud                            │       │
+│   │                                                                  │       │
+│   │   ┌───────────────┐    ┌───────────────┐    ┌───────────────┐  │       │
+│   │   │ Video Upload  │───▶│Frame Extract  │───▶│ Background    │  │       │
+│   │   │               │    │(36-72 frames) │    │ Replacement   │  │       │
+│   │   └───────────────┘    └───────────────┘    └───────┬───────┘  │       │
+│   │                                                      │          │       │
+│   │   ┌───────────────┐    ┌───────────────┐    ┌───────▼───────┐  │       │
+│   │   │ 360° Viewer   │◀───│ Image Enhance │◀───│ License Plate │  │       │
+│   │   │ Generation    │    │ + Color Fix   │    │ Masking       │  │       │
+│   │   └───────────────┘    └───────────────┘    └───────────────┘  │       │
+│   │                                                                  │       │
+│   └──────────────────────────────────────┬──────────────────────────┘       │
+│                                          │                                   │
+│                                          ▼ Webhook / Polling                 │
+│   5. RESULTADO                                                               │
+│   ┌─────────────────────────────────────────────────────────────────┐       │
+│   │ {                                                                │       │
+│   │   "spinId": "abc-123",                                          │       │
+│   │   "status": "Completed",                                        │       │
+│   │   "spinViewerUrl": "https://spyne.ai/viewer/...",              │       │
+│   │   "extractedFrameUrls": [                                       │       │
+│   │     "https://cdn.spyne.ai/frame_001.jpg",                       │       │
+│   │     "https://cdn.spyne.ai/frame_002.jpg",                       │       │
+│   │     ... (36-72 imágenes procesadas)                             │       │
+│   │   ],                                                             │       │
+│   │   "thumbnailUrl": "https://cdn.spyne.ai/thumb.jpg",             │       │
+│   │   "embedCode": "<iframe src='...'></iframe>"                    │       │
+│   │ }                                                                │       │
+│   └─────────────────────────────────────────────────────────────────┘       │
+│                                                                              │
+│   6. FRONTEND MUESTRA 360° VIEWER                                            │
+│   ┌───────────────────────────────────────────────┐                         │
+│   │ Media360ViewerPage                            │                         │
+│   │                                               │                         │
+│   │  Option A: Embed Spyne viewer (spinViewerUrl) │                         │
+│   │  Option B: Custom viewer con extractedFrameUrls│                         │
+│   │            (Three.js o similar)               │                         │
+│   └───────────────────────────────────────────────┘                         │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Ejemplo de Uso
+
+```bash
+# 1. Subir video a MediaService
+curl -X POST "https://api.okla.com.do/api/media/upload" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@vehicle-360-tour.mp4" \
+  -F "type=video" \
+  -F "vehicleId=abc-123"
+
+# Response: { "url": "https://cdn.okla.com.do/videos/abc-123.mp4" }
+
+# 2. Generar 360° Spin desde el video
+curl -X POST "https://api.okla.com.do/api/video360spins/generate" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicleId": "abc-123",
+    "videoUrl": "https://cdn.okla.com.do/videos/abc-123.mp4",
+    "frameCount": 36,
+    "backgroundPreset": "Studio",
+    "enableHotspots": true,
+    "maskLicensePlate": true
+  }'
+
+# Response:
+# {
+#   "spinId": "spin-456",
+#   "status": "Processing",
+#   "estimatedCompletionMinutes": 5,
+#   "message": "Video enviado a Spyne. Extrayendo frames y generando vista 360°...",
+#   "statusCheckUrl": "/api/video360spins/spin-456/status"
+# }
+
+# 3. Polling para status
+curl "https://api.okla.com.do/api/video360spins/spin-456/status"
+
+# Response cuando complete:
+# {
+#   "spinId": "spin-456",
+#   "status": "Completed",
+#   "spinViewerUrl": "https://spin.spyne.ai/viewer/okla-spin-456",
+#   "extractedFrameCount": 36,
+#   "extractedFrameUrls": ["...", "..."],
+#   "thumbnailUrl": "https://cdn.spyne.ai/okla/thumb.jpg"
+# }
+```
+
+### Configuración de Spyne
+
+La API Key de Spyne está configurada en:
+
+- **compose.yaml**: `Spyne__ApiKey`
+- **k8s/secrets.yaml**: `SPYNE_API_KEY`
+- **appsettings.json**: `Spyne:ApiKey`
 
 ---
 

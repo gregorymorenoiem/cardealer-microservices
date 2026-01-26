@@ -145,6 +145,13 @@ const DealerPortalLayout = ({ children }: DealerPortalLayoutProps) => {
           href: '/dealer/analytics/advanced',
           requiredPlan: ['pro', 'enterprise'],
         },
+        {
+          id: 'market-analysis',
+          label: 'Análisis de Mercado',
+          icon: FiTarget,
+          href: '/dealer/market-analysis',
+          requiredPlan: ['pro', 'enterprise'],
+        },
       ],
     },
     {

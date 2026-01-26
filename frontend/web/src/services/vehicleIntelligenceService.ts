@@ -90,6 +90,61 @@ export interface CreateDemandPredictionRequest {
   transmission?: string;
 }
 
+// New DTOs for Market Analysis and ML Dashboard
+export interface CategoryDemandDto {
+  category: string;
+  demandLevel: string;
+  demandScore: number;
+  avgDaysToSale: number;
+  totalSearches: number;
+  activeListings: number;
+  updatedAt: string;
+}
+
+export interface MarketAnalysisDto {
+  make: string;
+  model: string;
+  year: number;
+  totalListings: number;
+  avgPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  avgDaysToSale: number;
+  medianDaysToSale: number;
+  priceTrend: string;
+  demandTrend: string;
+  competitorCount: number;
+  marketShare: number;
+  recommendations: string[];
+}
+
+export interface MLStatisticsDto {
+  totalInferences: number;
+  successRate: number;
+  errorsLast24h: number;
+  lastUpdated: string;
+}
+
+export interface ModelPerformanceDto {
+  modelName: string;
+  accuracy: number;
+  mae: number;
+  rmse: number;
+  lastTrained: string;
+  nextTraining: string;
+  status: 'healthy' | 'warning' | 'error';
+}
+
+export interface InferenceMetricsDto {
+  totalInferences: number;
+  successRate: number;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
+  errorsLast24h: number;
+  lastUpdated: string;
+}
+
 // ==========================================
 // VEHICLE INTELLIGENCE SERVICE
 // ==========================================
@@ -191,6 +246,89 @@ class VehicleIntelligenceService {
       }
       throw error;
     }
+  }
+
+  // ==========================================
+  // MARKET ANALYSIS (VehicleIntelligenceService)
+  // ==========================================
+
+  /**
+   * Obtiene demanda por categoría para dashboard de dealers
+   */
+  async getDemandByCategory(): Promise<CategoryDemandDto[]> {
+    const response = await this.api.get<CategoryDemandDto[]>(
+      '/vehicleintelligence/demand/categories'
+    );
+    return response.data;
+  }
+
+  /**
+   * Obtiene análisis de mercado para make/model/year específico
+   */
+  async getMarketAnalysis(
+    make: string,
+    model: string,
+    year: number
+  ): Promise<MarketAnalysisDto | null> {
+    try {
+      const response = await this.api.get<MarketAnalysisDto>(
+        `/vehicleintelligence/market-analysis/${make}/${model}/${year}`
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene dashboard de análisis de mercado con filtros opcionales
+   */
+  async getMarketAnalysisDashboard(filters?: {
+    make?: string;
+    model?: string;
+    minYear?: number;
+    maxYear?: number;
+    fuelType?: string;
+    bodyType?: string;
+  }): Promise<MarketAnalysisDto[]> {
+    const response = await this.api.get<MarketAnalysisDto[]>(
+      '/vehicleintelligence/market-analysis/dashboard',
+      { params: filters }
+    );
+    return response.data;
+  }
+
+  // ==========================================
+  // ML METRICS (Admin Only)
+  // ==========================================
+
+  /**
+   * Obtiene estadísticas del servicio ML (admin only)
+   */
+  async getMLStatistics(): Promise<MLStatisticsDto> {
+    const response = await this.api.get<MLStatisticsDto>('/vehicleintelligence/ml/statistics');
+    return response.data;
+  }
+
+  /**
+   * Obtiene performance de modelos ML (admin only)
+   */
+  async getModelPerformance(): Promise<ModelPerformanceDto[]> {
+    const response = await this.api.get<ModelPerformanceDto[]>(
+      '/vehicleintelligence/ml/performance'
+    );
+    return response.data;
+  }
+
+  /**
+   * Obtiene métricas de inferencia (admin only)
+   */
+  async getInferenceMetrics(): Promise<InferenceMetricsDto> {
+    const response = await this.api.get<InferenceMetricsDto>('/vehicleintelligence/ml/metrics');
+    return response.data;
   }
 
   // ==========================================

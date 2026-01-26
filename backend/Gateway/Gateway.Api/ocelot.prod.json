@@ -1,6 +1,131 @@
 {
   "Routes": [
     {
+      "UpstreamPathTemplate": "/api/ai/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/process",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/aiprocessing/process",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 120000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/process/batch",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/aiprocessing/process/batch",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 300000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/spin360/generate",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/aiprocessing/spin360/generate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 300000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/jobs/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/jobs/{id}/cancel",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/jobs/{id}/retry",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}/retry",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/analyze",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/aiprocessing/analyze",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/backgrounds",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/backgrounds",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ai/stats/queue",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/aiprocessing/stats/queue",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "RouteClaimsRequirement": { "role": "Admin" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/errors/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",

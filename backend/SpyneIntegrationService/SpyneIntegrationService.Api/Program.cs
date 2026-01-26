@@ -8,6 +8,7 @@ using SpyneIntegrationService.Application.Validators;
 using SpyneIntegrationService.Domain.Interfaces;
 using SpyneIntegrationService.Infrastructure.Persistence;
 using SpyneIntegrationService.Infrastructure.Persistence.Repositories;
+using SpyneIntegrationService.Infrastructure.Repositories;
 using SpyneIntegrationService.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,7 @@ builder.Services.AddScoped<ISpinGenerationRepository, SpinGenerationRepository>(
 builder.Services.AddScoped<IVideoGenerationRepository, VideoGenerationRepository>();
 builder.Services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
 builder.Services.AddScoped<IWebhookEventRepository, WebhookEventRepository>();
+builder.Services.AddScoped<IVideo360SpinRepository, Video360SpinRepository>();
 
 // Spyne API Client Configuration
 builder.Services.Configure<SpyneApiClientOptions>(
@@ -90,10 +92,17 @@ builder.Services.AddSwaggerGen(c =>
             - License plate masking
             - Shadow generation
             
-            ### Fase 2: 360° Spin
-            - Generate interactive 360° views
+            ### Fase 2: 360° Spin (desde imágenes)
+            - Generate interactive 360° views from multiple images
             - Embed code for web integration
             - Multiple background options
+            
+            ### Fase 2.5: 360° Spin desde Video 🆕
+            - Upload video walkthrough around vehicle
+            - Spyne extracts frames automatically (36-72 images)
+            - Processes each frame (background, enhancement)
+            - Returns interactive 360° viewer + extracted images
+            - POST /api/video360spins/generate
             
             ### Fase 3: Video Generation
             - Cinematic vehicle videos

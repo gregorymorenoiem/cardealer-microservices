@@ -87,6 +87,7 @@ import UsersManagementPage from './pages/admin/UsersManagementPage';
 import AdminListingsPage from './pages/admin/AdminListingsPage';
 import AdminReportsPage from './pages/admin/AdminReportsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import MLDashboardPage from './pages/admin/MLDashboardPage';
 import CategoriesManagementPage from './pages/admin/CategoriesManagementPage';
 import KYCAdminReviewPage from './pages/admin/KYCAdminReviewPage';
 // KYC Admin Queue, Watchlist, STR pages (Sprint - KYC Service Compliance)
@@ -114,6 +115,7 @@ import {
   DealerVehicleEditPage,
   DealerEmployeesPage,
   DealerEmployeePermissionsPage,
+  MarketAnalysisPage,
 } from './pages/dealer';
 import DealerListingsPage from './pages/dealer/DealerListingsPage';
 import DealerSalesPage from './pages/dealer/DealerSalesPage';
@@ -484,6 +486,16 @@ function App() {
             }
           />
 
+          {/* Market Intelligence - Market Analysis (VehicleIntelligenceService) */}
+          <Route
+            path="/dealer/market-analysis"
+            element={
+              <ProtectedRoute requireDealer>
+                <MarketAnalysisPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Dealer Benchmarks - Market Comparison */}
           <Route
             path="/dealer/benchmarks"
@@ -837,6 +849,16 @@ function App() {
                 <AdminLayout>
                   <AdminSettingsPage />
                 </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ML Dashboard (VehicleIntelligenceService Monitoring) */}
+          <Route
+            path="/admin/ml/dashboard"
+            element={
+              <ProtectedRoute requireAdmin>
+                <MLDashboardPage />
               </ProtectedRoute>
             }
           />

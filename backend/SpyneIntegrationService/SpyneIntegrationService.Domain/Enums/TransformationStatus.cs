@@ -18,5 +18,14 @@ public enum TransformationStatus
     Failed = 3,
     
     /// <summary>Cancelled by user</summary>
-    Cancelled = 4
+    Cancelled = 4,
+    
+    /// <summary>File is being uploaded</summary>
+    Uploading = 5,
+    
+    /// <summary>Waiting for video frames to be extracted</summary>
+    ExtractingFrames = 6,
+    
+    /// <summary>Video is being transcoded</summary>
+    Transcoding = 7
 }

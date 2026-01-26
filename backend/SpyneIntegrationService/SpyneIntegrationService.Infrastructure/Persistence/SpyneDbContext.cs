@@ -12,6 +12,7 @@ public class SpyneDbContext : DbContext
     public DbSet<ImageTransformation> ImageTransformations => Set<ImageTransformation>();
     public DbSet<SpinGeneration> SpinGenerations => Set<SpinGeneration>();
     public DbSet<VideoGeneration> VideoGenerations => Set<VideoGeneration>();
+    public DbSet<Video360Spin> Video360Spins => Set<Video360Spin>();
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<ChatLeadInfo> ChatLeadInfos => Set<ChatLeadInfo>();
@@ -232,6 +233,71 @@ public class SpyneDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             
             entity.HasIndex(e => e.Preset).HasDatabaseName("ix_background_presets_preset");
+        });
+
+        // Video360Spin - Video-based 360° spin generation
+        modelBuilder.Entity<Video360Spin>(entity =>
+        {
+            entity.ToTable("video_360_spins");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.VehicleId).HasColumnName("vehicle_id").IsRequired();
+            entity.Property(e => e.DealerId).HasColumnName("dealer_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.SpyneJobId).HasColumnName("spyne_job_id").HasMaxLength(200);
+            entity.Property(e => e.SpyneSkuId).HasColumnName("spyne_sku_id").HasMaxLength(200);
+            
+            // Input video properties
+            entity.Property(e => e.SourceVideoUrl).HasColumnName("source_video_url").HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.VideoDurationSeconds).HasColumnName("video_duration_seconds");
+            entity.Property(e => e.VideoFileSizeBytes).HasColumnName("video_file_size_bytes");
+            entity.Property(e => e.VideoFormat).HasColumnName("video_format").HasMaxLength(20);
+            entity.Property(e => e.VideoResolution).HasColumnName("video_resolution").HasMaxLength(20);
+            
+            // Processing options
+            entity.Property(e => e.Type).HasColumnName("type").HasConversion<string>();
+            entity.Property(e => e.BackgroundPreset).HasColumnName("background_preset").HasConversion<string>();
+            entity.Property(e => e.CustomBackgroundId).HasColumnName("custom_background_id").HasMaxLength(100);
+            entity.Property(e => e.FrameCount).HasColumnName("frame_count");
+            entity.Property(e => e.EnableHotspots).HasColumnName("enable_hotspots");
+            entity.Property(e => e.MaskLicensePlate).HasColumnName("mask_license_plate");
+            
+            // Output properties
+            entity.Property(e => e.SpinViewerUrl).HasColumnName("spin_viewer_url").HasMaxLength(2000);
+            entity.Property(e => e.SpinEmbedCode).HasColumnName("spin_embed_code");
+            entity.Property(e => e.FallbackImageUrl).HasColumnName("fallback_image_url").HasMaxLength(2000);
+            entity.Property(e => e.PreviewGifUrl).HasColumnName("preview_gif_url").HasMaxLength(2000);
+            entity.Property(e => e.ThumbnailUrl).HasColumnName("thumbnail_url").HasMaxLength(2000);
+            entity.Property(e => e.ExtractedFrameUrls).HasColumnName("extracted_frame_urls")
+                .HasConversion(
+                    v => string.Join(";", v),
+                    v => v.Split(";", StringSplitOptions.RemoveEmptyEntries).ToList());
+            entity.Property(e => e.ExtractedFrameCount).HasColumnName("extracted_frame_count");
+            entity.Property(e => e.HotspotsJson).HasColumnName("hotspots_json").HasColumnType("jsonb");
+            
+            // Status & tracking
+            entity.Property(e => e.Status).HasColumnName("status").HasConversion<string>();
+            entity.Property(e => e.ErrorMessage).HasColumnName("error_message").HasMaxLength(2000);
+            entity.Property(e => e.ProgressPercent).HasColumnName("progress_percent");
+            entity.Property(e => e.ProcessingTimeMs).HasColumnName("processing_time_ms");
+            entity.Property(e => e.CreditsCost).HasColumnName("credits_cost").HasPrecision(10, 4);
+            entity.Property(e => e.QualityScore).HasColumnName("quality_score");
+            entity.Property(e => e.QualityIssues).HasColumnName("quality_issues")
+                .HasConversion(
+                    v => string.Join(";", v),
+                    v => v.Split(";", StringSplitOptions.RemoveEmptyEntries).ToList());
+            
+            // Timestamps
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.StartedAt).HasColumnName("started_at");
+            entity.Property(e => e.CompletedAt).HasColumnName("completed_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            
+            // Indexes
+            entity.HasIndex(e => e.VehicleId).HasDatabaseName("ix_video_360_spins_vehicle_id");
+            entity.HasIndex(e => e.DealerId).HasDatabaseName("ix_video_360_spins_dealer_id");
+            entity.HasIndex(e => e.SpyneJobId).HasDatabaseName("ix_video_360_spins_spyne_job_id");
+            entity.HasIndex(e => e.Status).HasDatabaseName("ix_video_360_spins_status");
         });
     }
 }

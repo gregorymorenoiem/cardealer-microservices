@@ -4,15 +4,17 @@
  * Permite visualizar vehículos con rotación 360° interactiva,
  * incluyendo vistas interiores y exteriores.
  *
- * Feature premium planificada para Q2 2026.
+ * Soporta dos modos:
+ * - Option A: Embed Spyne viewer (spinViewerUrl) - iframe embed
+ * - Option B: Custom viewer con extractedFrameUrls - rotación con imágenes
  *
  * @module pages/vehicles/Media360ViewerPage
- * @version 1.0.0
- * @since Enero 25, 2026
+ * @version 2.0.0
+ * @since Enero 26, 2026
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   FiRotateCw,
   FiZoomIn,
@@ -22,150 +24,253 @@ import {
   FiArrowLeft,
   FiInfo,
   FiCamera,
-  FiGrid,
   FiCircle,
   FiPlay,
   FiPause,
   FiRefreshCw,
+  FiLoader,
+  FiAlertCircle,
+  FiExternalLink,
+  FiLayers,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
+
+// Types
+interface Video360SpinData {
+  spinId: string;
+  vehicleId: string;
+  status: 'Pending' | 'Processing' | 'Completed' | 'Failed';
+  spinViewerUrl?: string;
+  spinEmbedCode?: string;
+  extractedFrameUrls: string[];
+  extractedFrameCount: number;
+  thumbnailUrl?: string;
+  progressPercent: number;
+  errorMessage?: string;
+}
 
 interface Hotspot {
   id: string;
   x: number;
   y: number;
+  degrees: number; // Ángulo en el que aparece (0-360)
   label: string;
   description: string;
+  type: 'feature' | 'damage' | 'upgrade' | 'info';
 }
 
-interface View360 {
-  id: string;
-  name: string;
-  type: 'exterior' | 'interior';
-  frameCount: number;
-  thumbnail: string;
-  hotspots: Hotspot[];
-}
+type ViewerMode = 'embed' | 'custom' | 'loading' | 'error';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
 const Media360ViewerPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameRefs = useRef<Map<number, HTMLImageElement>>(new Map());
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'exterior' | 'interior'>('exterior');
+  // Estado del visor
+  const [viewerMode, setViewerMode] = useState<ViewerMode>('loading');
+  const [spinData, setSpinData] = useState<Video360SpinData | null>(null);
+  const [loadedFrames, setLoadedFrames] = useState<Set<number>>(new Set());
+  const [preloadProgress, setPreloadProgress] = useState(0);
+
+  // Estado de interacción
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isAutoRotating, setIsAutoRotating] = useState(false);
+  const [autoRotateSpeed, setAutoRotateSpeed] = useState(100); // ms per frame
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [showHotspots, setShowHotspots] = useState(true);
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
+  const [useEmbedViewer, setUseEmbedViewer] = useState(false);
 
-  // Mock vehicle data
+  // Mock vehicle data (en producción vendría del API)
   const vehicle = {
     title: 'Toyota Camry 2023 XSE',
     slug: slug || 'toyota-camry-2023',
     price: 1850000,
+    vehicleId: searchParams.get('vehicleId') || 'mock-vehicle-id',
   };
 
-  // Mock 360 views
-  const views: View360[] = [
+  // Mock hotspots (en producción vendrían del API junto con el spin)
+  const hotspots: Hotspot[] = [
     {
-      id: '1',
-      name: 'Exterior 360°',
-      type: 'exterior',
-      frameCount: 36, // 36 frames = 10° per frame
-      thumbnail: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=200',
-      hotspots: [
-        {
-          id: 'h1',
-          x: 45,
-          y: 60,
-          label: 'Faros LED',
-          description: 'Faros LED adaptativos con luz diurna integrada',
-        },
-        {
-          id: 'h2',
-          x: 75,
-          y: 55,
-          label: 'Rines 19"',
-          description: 'Rines de aleación de 19 pulgadas con diseño deportivo',
-        },
-        {
-          id: 'h3',
-          x: 55,
-          y: 35,
-          label: 'Techo solar',
-          description: 'Techo panorámico de cristal con apertura eléctrica',
-        },
-      ],
+      id: 'h1',
+      x: 45,
+      y: 60,
+      degrees: 0,
+      label: 'Faros LED',
+      description: 'Faros LED adaptativos con luz diurna integrada',
+      type: 'feature',
     },
     {
-      id: '2',
-      name: 'Interior 360°',
-      type: 'interior',
-      frameCount: 36,
-      thumbnail: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=200',
-      hotspots: [
-        {
-          id: 'h4',
-          x: 50,
-          y: 45,
-          label: 'Pantalla táctil',
-          description: 'Pantalla táctil de 12.3" con Apple CarPlay y Android Auto',
-        },
-        {
-          id: 'h5',
-          x: 35,
-          y: 50,
-          label: 'Asientos de cuero',
-          description: 'Asientos deportivos de cuero sintético con calefacción',
-        },
-        {
-          id: 'h6',
-          x: 65,
-          y: 60,
-          label: 'Consola central',
-          description: 'Consola central con cargador inalámbrico y compartimentos',
-        },
-      ],
+      id: 'h2',
+      x: 75,
+      y: 55,
+      degrees: 90,
+      label: 'Rines 19"',
+      description: 'Rines de aleación de 19 pulgadas con diseño deportivo',
+      type: 'feature',
+    },
+    {
+      id: 'h3',
+      x: 55,
+      y: 35,
+      degrees: 180,
+      label: 'Techo solar',
+      description: 'Techo panorámico de cristal con apertura eléctrica',
+      type: 'upgrade',
     },
   ];
 
-  const currentViewData = views.find((v) => v.type === currentView) || views[0];
-  const totalFrames = currentViewData.frameCount;
+  const totalFrames = spinData?.extractedFrameCount || 36;
+  const rotationAngle = Math.round((currentFrame / totalFrames) * 360);
 
-  // Simulate loading frames
+  // Fetch spin data from API
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, [currentView]);
+    const fetchSpinData = async () => {
+      try {
+        setViewerMode('loading');
+
+        // Intentar obtener datos del spin por vehicleId
+        const response = await fetch(
+          `${API_BASE_URL}/api/video360spins/vehicle/${vehicle.vehicleId}`
+        );
+
+        if (response.ok) {
+          const data: Video360SpinData = await response.json();
+          setSpinData(data);
+
+          if (data.status === 'Completed') {
+            // Decidir modo de visor
+            if (data.extractedFrameUrls.length > 0) {
+              setViewerMode('custom');
+              // Precargar frames
+              preloadFrames(data.extractedFrameUrls);
+            } else if (data.spinViewerUrl) {
+              setViewerMode('embed');
+              setUseEmbedViewer(true);
+            } else {
+              setViewerMode('error');
+            }
+          } else if (data.status === 'Processing') {
+            // Polling para status
+            const pollInterval = setInterval(async () => {
+              const statusRes = await fetch(
+                `${API_BASE_URL}/api/video360spins/${data.spinId}/status`
+              );
+              if (statusRes.ok) {
+                const statusData = await statusRes.json();
+                setSpinData(statusData);
+                if (statusData.status === 'Completed') {
+                  clearInterval(pollInterval);
+                  if (statusData.extractedFrameUrls?.length > 0) {
+                    setViewerMode('custom');
+                    preloadFrames(statusData.extractedFrameUrls);
+                  } else if (statusData.spinViewerUrl) {
+                    setViewerMode('embed');
+                    setUseEmbedViewer(true);
+                  }
+                } else if (statusData.status === 'Failed') {
+                  clearInterval(pollInterval);
+                  setViewerMode('error');
+                }
+              }
+            }, 3000);
+
+            return () => clearInterval(pollInterval);
+          } else if (data.status === 'Failed') {
+            setViewerMode('error');
+          }
+        } else if (response.status === 404) {
+          // No hay spin, usar mock data para demo
+          useMockData();
+        } else {
+          setViewerMode('error');
+        }
+      } catch (error) {
+        console.error('Error fetching spin data:', error);
+        // Fallback a mock data para demo
+        useMockData();
+      }
+    };
+
+    fetchSpinData();
+  }, [vehicle.vehicleId]);
+
+  // Mock data para demo cuando no hay spin real
+  const useMockData = () => {
+    const mockFrames = Array.from(
+      { length: 36 },
+      (_, i) =>
+        `https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=1200&q=80&frame=${i}`
+    );
+
+    setSpinData({
+      spinId: 'mock-spin',
+      vehicleId: vehicle.vehicleId,
+      status: 'Completed',
+      extractedFrameUrls: mockFrames,
+      extractedFrameCount: 36,
+      thumbnailUrl: mockFrames[0],
+      progressPercent: 100,
+    });
+    setViewerMode('custom');
+    setPreloadProgress(100);
+    setLoadedFrames(new Set(Array.from({ length: 36 }, (_, i) => i)));
+  };
+
+  // Preload frames for smooth rotation
+  const preloadFrames = useCallback((urls: string[]) => {
+    let loadedCount = 0;
+    const newLoadedFrames = new Set<number>();
+
+    urls.forEach((url, index) => {
+      const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        newLoadedFrames.add(index);
+        setLoadedFrames(new Set(newLoadedFrames));
+        setPreloadProgress(Math.round((loadedCount / urls.length) * 100));
+        frameRefs.current.set(index, img);
+      };
+      img.onerror = () => {
+        loadedCount++;
+        setPreloadProgress(Math.round((loadedCount / urls.length) * 100));
+      };
+      img.src = url;
+    });
+  }, []);
 
   // Auto-rotation effect
   useEffect(() => {
-    if (!isAutoRotating) return;
+    if (!isAutoRotating || viewerMode !== 'custom') return;
 
     const interval = setInterval(() => {
       setCurrentFrame((prev) => (prev + 1) % totalFrames);
-    }, 100);
+    }, autoRotateSpeed);
 
     return () => clearInterval(interval);
-  }, [isAutoRotating, totalFrames]);
+  }, [isAutoRotating, totalFrames, autoRotateSpeed, viewerMode]);
 
-  // Mouse drag for rotation
+  // Mouse/Touch handlers for rotation
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (viewerMode !== 'custom') return;
     setIsDragging(true);
     setStartX(e.clientX);
     setIsAutoRotating(false);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || viewerMode !== 'custom') return;
 
     const deltaX = e.clientX - startX;
-    if (Math.abs(deltaX) > 10) {
-      const frameChange = deltaX > 0 ? 1 : -1;
+    const sensitivity = 5; // pixels per frame change
+    if (Math.abs(deltaX) > sensitivity) {
+      const frameChange = Math.sign(deltaX);
       setCurrentFrame((prev) => (prev + frameChange + totalFrames) % totalFrames);
       setStartX(e.clientX);
     }
@@ -175,31 +280,59 @@ const Media360ViewerPage = () => {
     setIsDragging(false);
   };
 
-  // Touch events for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (viewerMode !== 'custom') return;
     setIsDragging(true);
     setStartX(e.touches[0].clientX);
     setIsAutoRotating(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || viewerMode !== 'custom') return;
 
     const deltaX = e.touches[0].clientX - startX;
-    if (Math.abs(deltaX) > 10) {
-      const frameChange = deltaX > 0 ? 1 : -1;
+    if (Math.abs(deltaX) > 5) {
+      const frameChange = Math.sign(deltaX);
       setCurrentFrame((prev) => (prev + frameChange + totalFrames) % totalFrames);
       setStartX(e.touches[0].clientX);
     }
   };
 
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + 0.25, 3));
-  };
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (viewerMode !== 'custom') return;
 
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - 0.25, 1));
-  };
+      switch (e.key) {
+        case 'ArrowLeft':
+          setCurrentFrame((prev) => (prev - 1 + totalFrames) % totalFrames);
+          setIsAutoRotating(false);
+          break;
+        case 'ArrowRight':
+          setCurrentFrame((prev) => (prev + 1) % totalFrames);
+          setIsAutoRotating(false);
+          break;
+        case ' ':
+          e.preventDefault();
+          setIsAutoRotating((prev) => !prev);
+          break;
+        case 'r':
+        case 'R':
+          resetView();
+          break;
+        case 'f':
+        case 'F':
+          toggleFullscreen();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewerMode, totalFrames]);
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 1));
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -217,8 +350,14 @@ const Media360ViewerPage = () => {
     setIsAutoRotating(false);
   };
 
-  // Calculate rotation angle for display
-  const rotationAngle = Math.round((currentFrame / totalFrames) * 360);
+  // Filtrar hotspots visibles según el ángulo actual
+  const visibleHotspots = hotspots.filter((h) => {
+    const angleDiff = Math.abs(h.degrees - rotationAngle);
+    return angleDiff < 30 || angleDiff > 330; // Visible ±30°
+  });
+
+  // Get current frame URL
+  const currentFrameUrl = spinData?.extractedFrameUrls?.[currentFrame] || spinData?.thumbnailUrl;
 
   return (
     <MainLayout>
@@ -235,33 +374,48 @@ const Media360ViewerPage = () => {
               </Link>
               <div>
                 <h1 className="text-white font-semibold">{vehicle.title}</h1>
-                <p className="text-gray-400 text-sm">Vista 360° interactiva</p>
+                <p className="text-gray-400 text-sm">
+                  Vista 360° interactiva
+                  {spinData?.status === 'Processing' && (
+                    <span className="ml-2 text-yellow-400">
+                      <FiLoader className="inline animate-spin mr-1" />
+                      Procesando...
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 text-sm hidden sm:block">Arrastra para rotar</span>
-              <div className="flex bg-gray-700 rounded-lg p-1">
-                <button
-                  onClick={() => setCurrentView('exterior')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    currentView === 'exterior'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Exterior
-                </button>
-                <button
-                  onClick={() => setCurrentView('interior')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    currentView === 'interior'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Interior
-                </button>
-              </div>
+
+            <div className="flex items-center space-x-3">
+              {/* Viewer mode toggle */}
+              {spinData?.spinViewerUrl && spinData?.extractedFrameUrls?.length > 0 && (
+                <div className="flex bg-gray-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setUseEmbedViewer(false)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center ${
+                      !useEmbedViewer ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="Visor personalizado con frames extraídos"
+                  >
+                    <FiLayers className="mr-1" />
+                    Custom
+                  </button>
+                  <button
+                    onClick={() => setUseEmbedViewer(true)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center ${
+                      useEmbedViewer ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="Visor embed de Spyne"
+                  >
+                    <FiExternalLink className="mr-1" />
+                    Embed
+                  </button>
+                </div>
+              )}
+
+              <span className="text-gray-400 text-sm hidden sm:block">
+                {viewerMode === 'custom' ? 'Arrastra para rotar • Flechas ← →' : ''}
+              </span>
             </div>
           </div>
         </div>
@@ -277,42 +431,114 @@ const Media360ViewerPage = () => {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleMouseUp}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          style={{
+            cursor: viewerMode === 'custom' ? (isDragging ? 'grabbing' : 'grab') : 'default',
+          }}
         >
-          {isLoading ? (
+          {/* Loading State */}
+          {viewerMode === 'loading' && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
                 <p className="text-gray-400">Cargando vista 360°...</p>
+                {spinData?.status === 'Processing' && (
+                  <div className="mt-4">
+                    <div className="w-48 bg-gray-700 rounded-full h-2 mx-auto">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all"
+                        style={{ width: `${spinData.progressPercent}%` }}
+                      />
+                    </div>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Procesando: {spinData.progressPercent}%
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* Error State */}
+          {viewerMode === 'error' && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <FiAlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                <h3 className="text-white text-xl font-semibold mb-2">
+                  Error al cargar vista 360°
+                </h3>
+                <p className="text-gray-400 mb-4">
+                  {spinData?.errorMessage || 'No se pudo cargar la vista 360° del vehículo.'}
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Embed Viewer (Spyne iframe) */}
+          {(viewerMode === 'embed' || useEmbedViewer) && spinData?.spinViewerUrl && (
+            <div className="absolute inset-0">
+              <iframe
+                src={spinData.spinViewerUrl}
+                className="w-full h-full border-0"
+                title="360° Vehicle Viewer"
+                allow="fullscreen; autoplay"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {/* Custom Frame Viewer */}
+          {viewerMode === 'custom' && !useEmbedViewer && (
             <>
-              {/* 360 Image Container */}
-              <div
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-100"
-                style={{
-                  transform: `scale(${zoom})`,
-                }}
-              >
-                {/* Placeholder for 360 frames - in production this would be actual images */}
-                <div className="relative w-full max-w-4xl aspect-video bg-gray-800 rounded-lg overflow-hidden">
-                  <img
-                    src={currentViewData.thumbnail}
-                    alt={`${vehicle.title} - ${currentView}`}
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
-                  {/* Rotation indicator overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-24 h-24 border-4 border-blue-500/30 rounded-full relative">
+              {/* Preload Progress */}
+              {preloadProgress < 100 && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-900/80">
+                  <div className="text-center">
+                    <div className="w-64 bg-gray-700 rounded-full h-2 mx-auto mb-3">
                       <div
-                        className="absolute w-2 h-2 bg-blue-500 rounded-full"
+                        className="bg-blue-500 h-2 rounded-full transition-all"
+                        style={{ width: `${preloadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-gray-400 text-sm">Cargando imágenes: {preloadProgress}%</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 360 Frame Container */}
+              <div
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-75"
+                style={{ transform: `scale(${zoom})` }}
+              >
+                <div className="relative w-full max-w-5xl aspect-video bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+                  {/* Current Frame Image */}
+                  {currentFrameUrl && (
+                    <img
+                      src={currentFrameUrl}
+                      alt={`${vehicle.title} - Vista 360° (${rotationAngle}°)`}
+                      className="w-full h-full object-contain"
+                      draggable={false}
+                      loading="eager"
+                    />
+                  )}
+
+                  {/* Rotation Compass Indicator */}
+                  <div className="absolute bottom-4 right-4 pointer-events-none">
+                    <div className="w-16 h-16 border-2 border-blue-500/40 rounded-full relative bg-gray-900/60">
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-mono">
+                        {rotationAngle}°
+                      </div>
+                      <div
+                        className="absolute w-1.5 h-6 bg-blue-500 rounded-full left-1/2 -ml-0.75"
                         style={{
-                          top: '50%',
-                          left: '50%',
-                          transform: `rotate(${rotationAngle}deg) translateY(-40px) translate(-50%, -50%)`,
-                          transformOrigin: '0 0',
+                          transformOrigin: 'bottom center',
+                          transform: `rotate(${rotationAngle}deg)`,
+                          top: '4px',
                         }}
                       />
                     </div>
@@ -320,10 +546,10 @@ const Media360ViewerPage = () => {
 
                   {/* Hotspots */}
                   {showHotspots &&
-                    currentViewData.hotspots.map((hotspot) => (
+                    visibleHotspots.map((hotspot) => (
                       <button
                         key={hotspot.id}
-                        className="absolute w-8 h-8 -ml-4 -mt-4 group"
+                        className="absolute w-8 h-8 -ml-4 -mt-4 group z-20"
                         style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -331,7 +557,15 @@ const Media360ViewerPage = () => {
                         }}
                       >
                         <span className="absolute inset-0 animate-ping bg-blue-500 rounded-full opacity-50" />
-                        <span className="relative block w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+                        <span
+                          className={`relative block w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${
+                            hotspot.type === 'damage'
+                              ? 'bg-red-600'
+                              : hotspot.type === 'upgrade'
+                                ? 'bg-green-600'
+                                : 'bg-blue-600'
+                          }`}
+                        >
                           <FiInfo className="w-4 h-4 text-white" />
                         </span>
                       </button>
@@ -341,128 +575,177 @@ const Media360ViewerPage = () => {
 
               {/* Hotspot Info Panel */}
               {activeHotspot && (
-                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-xl p-4 max-w-sm animate-in fade-in slide-in-from-bottom-4">
-                  <h3 className="font-semibold text-gray-900 mb-1">{activeHotspot.label}</h3>
-                  <p className="text-sm text-gray-600">{activeHotspot.description}</p>
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-xl p-4 max-w-sm z-30 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="flex items-start">
+                    <span
+                      className={`w-3 h-3 rounded-full mr-2 mt-1 ${
+                        activeHotspot.type === 'damage'
+                          ? 'bg-red-500'
+                          : activeHotspot.type === 'upgrade'
+                            ? 'bg-green-500'
+                            : 'bg-blue-500'
+                      }`}
+                    />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{activeHotspot.label}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{activeHotspot.description}</p>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {/* Frame Timeline (thumbnail strip) */}
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-gray-800/90 backdrop-blur rounded-lg p-2 hidden lg:block">
+                <div className="flex space-x-1 overflow-x-auto max-w-2xl">
+                  {spinData?.extractedFrameUrls
+                    ?.filter((_, i) => i % 4 === 0)
+                    .map((url, idx) => {
+                      const frameIndex = idx * 4;
+                      return (
+                        <button
+                          key={frameIndex}
+                          onClick={() => {
+                            setCurrentFrame(frameIndex);
+                            setIsAutoRotating(false);
+                          }}
+                          className={`flex-shrink-0 w-12 h-8 rounded overflow-hidden border-2 transition-all ${
+                            Math.abs(currentFrame - frameIndex) < 2
+                              ? 'border-blue-500 opacity-100'
+                              : 'border-transparent opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
             </>
           )}
 
           {/* Control Bar */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-800/90 backdrop-blur rounded-lg px-4 py-3 flex items-center space-x-4">
-            {/* Auto Rotate */}
-            <button
-              onClick={() => setIsAutoRotating(!isAutoRotating)}
-              className={`p-2 rounded-lg transition-colors ${
-                isAutoRotating
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-              title={isAutoRotating ? 'Detener rotación' : 'Auto-rotar'}
-            >
-              {isAutoRotating ? <FiPause /> : <FiPlay />}
-            </button>
-
-            {/* Rotation Slider */}
-            <div className="flex items-center space-x-2">
-              <FiRotateCw className="text-gray-400" />
-              <input
-                type="range"
-                min="0"
-                max={totalFrames - 1}
-                value={currentFrame}
-                onChange={(e) => {
-                  setCurrentFrame(parseInt(e.target.value));
-                  setIsAutoRotating(false);
-                }}
-                className="w-32 accent-blue-500"
-              />
-              <span className="text-gray-300 text-sm w-12">{rotationAngle}°</span>
-            </div>
-
-            {/* Zoom Controls */}
-            <div className="flex items-center space-x-1 border-l border-gray-600 pl-4">
+          {viewerMode === 'custom' && !useEmbedViewer && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-800/90 backdrop-blur rounded-lg px-4 py-3 flex items-center space-x-4">
+              {/* Auto Rotate */}
               <button
-                onClick={handleZoomOut}
-                disabled={zoom <= 1}
-                className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setIsAutoRotating(!isAutoRotating)}
+                className={`p-2 rounded-lg transition-colors ${
+                  isAutoRotating
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                title={isAutoRotating ? 'Detener (Espacio)' : 'Auto-rotar (Espacio)'}
               >
-                <FiZoomOut />
+                {isAutoRotating ? <FiPause /> : <FiPlay />}
               </button>
-              <span className="text-gray-300 text-sm w-12 text-center">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button
-                onClick={handleZoomIn}
-                disabled={zoom >= 3}
-                className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+
+              {/* Rotation Slider */}
+              <div className="flex items-center space-x-2">
+                <FiRotateCw className="text-gray-400" />
+                <input
+                  type="range"
+                  min="0"
+                  max={totalFrames - 1}
+                  value={currentFrame}
+                  onChange={(e) => {
+                    setCurrentFrame(parseInt(e.target.value));
+                    setIsAutoRotating(false);
+                  }}
+                  className="w-32 accent-blue-500"
+                />
+                <span className="text-gray-300 text-sm w-12">{rotationAngle}°</span>
+              </div>
+
+              {/* Speed Control */}
+              <select
+                value={autoRotateSpeed}
+                onChange={(e) => setAutoRotateSpeed(parseInt(e.target.value))}
+                className="bg-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1.5 border-0"
+                title="Velocidad de rotación"
               >
-                <FiZoomIn />
+                <option value={200}>Lento</option>
+                <option value={100}>Normal</option>
+                <option value={50}>Rápido</option>
+              </select>
+
+              {/* Zoom Controls */}
+              <div className="flex items-center space-x-1 border-l border-gray-600 pl-4">
+                <button
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 1}
+                  className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50"
+                  title="Alejar"
+                >
+                  <FiZoomOut />
+                </button>
+                <span className="text-gray-300 text-sm w-12 text-center">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 3}
+                  className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50"
+                  title="Acercar"
+                >
+                  <FiZoomIn />
+                </button>
+              </div>
+
+              {/* Hotspots Toggle */}
+              <button
+                onClick={() => setShowHotspots(!showHotspots)}
+                className={`p-2 rounded-lg transition-colors border-l border-gray-600 pl-4 ${
+                  showHotspots
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                title={showHotspots ? 'Ocultar hotspots' : 'Mostrar hotspots'}
+              >
+                <FiCircle />
+              </button>
+
+              {/* Reset */}
+              <button
+                onClick={resetView}
+                className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600"
+                title="Reiniciar (R)"
+              >
+                <FiRefreshCw />
+              </button>
+
+              {/* Fullscreen */}
+              <button
+                onClick={toggleFullscreen}
+                className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600"
+                title={isFullscreen ? 'Salir (F)' : 'Pantalla completa (F)'}
+              >
+                {isFullscreen ? <FiMinimize2 /> : <FiMaximize2 />}
               </button>
             </div>
-
-            {/* Hotspots Toggle */}
-            <button
-              onClick={() => setShowHotspots(!showHotspots)}
-              className={`p-2 rounded-lg transition-colors border-l border-gray-600 pl-4 ${
-                showHotspots
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-              title={showHotspots ? 'Ocultar puntos de interés' : 'Mostrar puntos de interés'}
-            >
-              <FiCircle />
-            </button>
-
-            {/* Reset */}
-            <button
-              onClick={resetView}
-              className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600"
-              title="Reiniciar vista"
-            >
-              <FiRefreshCw />
-            </button>
-
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600"
-              title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            >
-              {isFullscreen ? <FiMinimize2 /> : <FiMaximize2 />}
-            </button>
-          </div>
+          )}
 
           {/* Frame Counter */}
-          <div className="absolute top-4 right-4 bg-gray-800/80 backdrop-blur rounded-lg px-3 py-2 text-gray-300 text-sm">
-            Frame {currentFrame + 1} / {totalFrames}
-          </div>
-
-          {/* View Thumbnails */}
-          <div className="absolute top-4 left-4 space-y-2">
-            {views.map((view) => (
-              <button
-                key={view.id}
-                onClick={() => setCurrentView(view.type)}
-                className={`block w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                  currentView === view.type
-                    ? 'border-blue-500 shadow-lg shadow-blue-500/30'
-                    : 'border-transparent opacity-60 hover:opacity-100'
-                }`}
-              >
-                <img src={view.thumbnail} alt={view.name} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {viewerMode === 'custom' && !useEmbedViewer && (
+            <div className="absolute top-4 right-4 bg-gray-800/80 backdrop-blur rounded-lg px-3 py-2 text-gray-300 text-sm">
+              Frame {currentFrame + 1} / {totalFrames}
+            </div>
+          )}
         </div>
 
         {/* Bottom Info Bar */}
         <div className="bg-gray-800 border-t border-gray-700 px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="text-gray-400 text-sm">
-              <FiCamera className="inline mr-2" />
-              {currentViewData.hotspots.length} puntos de interés disponibles
+            <div className="text-gray-400 text-sm flex items-center space-x-4">
+              <span>
+                <FiCamera className="inline mr-2" />
+                {hotspots.length} puntos de interés
+              </span>
+              {spinData?.extractedFrameCount && (
+                <span>
+                  <FiLayers className="inline mr-2" />
+                  {spinData.extractedFrameCount} imágenes
+                </span>
+              )}
             </div>
             <div className="flex items-center space-x-4">
               <Link

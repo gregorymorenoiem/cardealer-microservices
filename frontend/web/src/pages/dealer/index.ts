@@ -32,3 +32,6 @@ export { default as DealerEmployeePermissionsPage } from './DealerEmployeePermis
 // Inventory Management
 export { default as CSVImportPage } from './CSVImportPage';
 export { default as LocationsPage } from './LocationsPage';
+
+// Market Intelligence (VehicleIntelligenceService)
+export { default as MarketAnalysisPage } from './MarketAnalysisPage';

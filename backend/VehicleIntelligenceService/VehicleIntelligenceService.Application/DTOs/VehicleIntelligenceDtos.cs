@@ -21,6 +21,49 @@ public record PriceSuggestionDto(
 
 public record CategoryDemandDto(
     string Category,
+    string DemandLevel,
     int DemandScore,
-    string Trend,
+    int AvgDaysToSale,
+    int TotalSearches,
+    int ActiveListings,
     DateTime UpdatedAt);
+
+public record MarketAnalysisDto(
+    string Make,
+    string Model,
+    int Year,
+    int TotalListings,
+    decimal AvgPrice,
+    decimal MinPrice,
+    decimal MaxPrice,
+    int AvgDaysToSale,
+    int MedianDaysToSale,
+    string PriceTrend,
+    string DemandTrend,
+    int CompetitorCount,
+    decimal MarketShare,
+    List<string> Recommendations);
+
+public record MLStatisticsDto(
+    int TotalInferences,
+    decimal SuccessRate,
+    int ErrorsLast24h,
+    DateTime LastUpdated);
+
+public record ModelPerformanceDto(
+    string ModelName,
+    decimal Accuracy,
+    decimal Mae,
+    decimal Rmse,
+    DateTime LastTrained,
+    DateTime NextTraining,
+    string Status);
+
+public record InferenceMetricsDto(
+    int TotalInferences,
+    decimal SuccessRate,
+    double AvgLatencyMs,
+    double P95LatencyMs,
+    double P99LatencyMs,
+    int ErrorsLast24h,
+    DateTime LastUpdated);
