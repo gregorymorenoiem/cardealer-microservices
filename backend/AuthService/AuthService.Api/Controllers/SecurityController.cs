@@ -89,9 +89,7 @@ public class SecurityController : ControllerBase
                     var geoLocation = await _geoLocationService.GetLocationFromIpAsync(session.IpAddress, cancellationToken);
                     if (geoLocation != null)
                     {
-                        var locationString = !string.IsNullOrEmpty(geoLocation.City) && !string.IsNullOrEmpty(geoLocation.Country)
-                            ? $"{geoLocation.City}, {geoLocation.Country}"
-                            : geoLocation.Country ?? geoLocation.City ?? "Unknown location";
+                        var locationString = FormatLocationString(geoLocation.City, geoLocation.Country);
                         session.UpdateLocation(locationString, geoLocation.Country, geoLocation.City);
                         await _sessionRepository.UpdateAsync(session, cancellationToken);
                         _logger.LogDebug("Updated location for session {SessionId}: {Location}", session.Id, locationString);
@@ -592,6 +590,20 @@ public class SecurityController : ControllerBase
     private string? GetCurrentSessionId()
     {
         return User.FindFirst("SessionId")?.Value;
+    }
+
+    /// <summary>
+    /// Formats city and country into a location string
+    /// </summary>
+    private static string FormatLocationString(string? city, string? country)
+    {
+        if (!string.IsNullOrEmpty(city) && !string.IsNullOrEmpty(country))
+            return $"{city}, {country}";
+        if (!string.IsNullOrEmpty(country))
+            return country;
+        if (!string.IsNullOrEmpty(city))
+            return city;
+        return "Red Local";  // Default for private IPs
     }
 
     private static string GetLocationString(string? city, string? country)

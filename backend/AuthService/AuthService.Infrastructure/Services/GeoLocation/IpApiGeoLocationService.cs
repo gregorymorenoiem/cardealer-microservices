@@ -46,14 +46,14 @@ public class IpApiGeoLocationService : IGeoLocationService
         {
             _logger.LogDebug("Skipping geolocation for private/local IP: {IpAddress}", ipAddress);
             return new GeoLocationResult(
-                Country: "Local Network",
+                Country: "Red Local",
                 CountryCode: "LO",
-                City: "Local",
+                City: "",
                 Region: "",
                 Timezone: "",
                 Latitude: null,
                 Longitude: null,
-                Isp: "Local Network"
+                Isp: "Red Local"
             );
         }
 
