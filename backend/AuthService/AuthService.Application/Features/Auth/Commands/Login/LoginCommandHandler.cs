@@ -33,6 +33,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly IDistributedCache _cache;
     private readonly IAuthNotificationService _notificationService;
     private readonly IRevokedDeviceService _revokedDeviceService;
+    private readonly IGeoLocationService _geoLocationService;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     private const int CAPTCHA_REQUIRED_AFTER_ATTEMPTS = 2;
@@ -53,6 +54,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         IDistributedCache cache,
         IAuthNotificationService notificationService,
         IRevokedDeviceService revokedDeviceService,
+        IGeoLocationService geoLocationService,
         ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
@@ -67,6 +69,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         _cache = cache;
         _notificationService = notificationService;
         _revokedDeviceService = revokedDeviceService;
+        _geoLocationService = geoLocationService;
         _logger = logger;
     }
 
@@ -220,6 +223,28 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var browser = ParseBrowser(_requestContext.UserAgent);
         var operatingSystem = ParseOperatingSystem(_requestContext.UserAgent);
 
+        // Get geolocation from IP address
+        string? locationString = null;
+        string? country = null;
+        string? city = null;
+        try
+        {
+            var geoLocation = await _geoLocationService.GetLocationFromIpAsync(_requestContext.IpAddress);
+            if (geoLocation != null)
+            {
+                country = geoLocation.Country;
+                city = geoLocation.City;
+                locationString = !string.IsNullOrEmpty(city) && !string.IsNullOrEmpty(country)
+                    ? $"{city}, {country}"
+                    : country ?? city ?? "Unknown location";
+                _logger.LogDebug("Geolocation for IP {IpAddress}: {Location}", _requestContext.IpAddress, locationString);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get geolocation for IP {IpAddress}", _requestContext.IpAddress);
+        }
+
         // Check if there's an existing active session for the same device/browser/IP
         var existingSession = await _sessionRepository.GetActiveSessionByDeviceAsync(
             user.Id,
@@ -232,6 +257,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         {
             // Reuse existing session - update with new refresh token
             existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt);
+            // Update location if we got one
+            if (!string.IsNullOrEmpty(locationString))
+            {
+                existingSession.UpdateLocation(locationString, country, city);
+            }
             await _sessionRepository.UpdateAsync(existingSession, cancellationToken);
             _logger.LogInformation("Renewed existing session {SessionId} for user {UserId}", existingSession.Id, user.Id);
         }
@@ -247,8 +277,16 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 ipAddress: _requestContext.IpAddress,
                 expiresAt: sessionExpiresAt
             );
+            
+            // Set location if available
+            if (!string.IsNullOrEmpty(locationString))
+            {
+                userSession.UpdateLocation(locationString, country, city);
+            }
+            
             await _sessionRepository.AddAsync(userSession, cancellationToken);
-            _logger.LogInformation("Created new session {SessionId} for user {UserId}", userSession.Id, user.Id);
+            _logger.LogInformation("Created new session {SessionId} for user {UserId} from {Location}", 
+                userSession.Id, user.Id, locationString ?? "Unknown location");
 
             // Send new session notification email
             try
@@ -259,7 +297,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                     OperatingSystem: operatingSystem,
                     IpAddress: _requestContext.IpAddress,
                     LoginTime: DateTime.UtcNow,
-                    Location: null // Will be populated if geolocation service is available
+                    Location: locationString
                 );
                 await _notificationService.SendNewSessionNotificationAsync(user.Email!, sessionNotification);
                 _logger.LogInformation("New session notification sent to {Email}", user.Email);

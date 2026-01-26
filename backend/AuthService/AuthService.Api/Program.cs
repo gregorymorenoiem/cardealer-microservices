@@ -17,6 +17,7 @@ using AuthService.Infrastructure.Middleware;
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Infrastructure.External;
 using AuthService.Infrastructure.Services.Notification;
+using AuthService.Infrastructure.Services.GeoLocation;
 using AuthService.Application.Services;
 using Microsoft.Extensions.Options;
 using CarDealer.Shared.Database;
@@ -212,6 +213,9 @@ builder.Services.AddScoped<IAuthNotificationService>(provider =>
 
 // AUTH-SEC-005: Revoked device service for tracking revoked devices
 builder.Services.AddScoped<IRevokedDeviceService, RevokedDeviceService>();
+
+// Geolocation service for IP-based location lookup
+builder.Services.AddHttpClient<IGeoLocationService, IpApiGeoLocationService>();
 
 // 🚨 CONSTRUIR LA APLICACIÓN
 var app = builder.Build();
