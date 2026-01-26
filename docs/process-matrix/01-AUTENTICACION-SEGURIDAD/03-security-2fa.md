@@ -41,13 +41,13 @@
 
 ### Tests de 2FA Handlers (29 tests - 100% passing)
 
-| Archivo de Tests                        | Tests | Estado     |
-| --------------------------------------- | ----- | ---------- |
-| Enable2FAHandlerTests.cs                | 7     | ✅ Passing |
-| Verify2FAHandlerTests.cs                | 6     | ✅ Passing |
-| Disable2FAHandlerTests.cs               | 5     | ✅ Passing |
-| GenerateRecoveryCodesHandlerTests.cs    | 5     | ✅ Passing |
-| TwoFactorLoginHandlerTests.cs           | 6     | ✅ Passing |
+| Archivo de Tests                     | Tests | Estado     |
+| ------------------------------------ | ----- | ---------- |
+| Enable2FAHandlerTests.cs             | 7     | ✅ Passing |
+| Verify2FAHandlerTests.cs             | 6     | ✅ Passing |
+| Disable2FAHandlerTests.cs            | 5     | ✅ Passing |
+| GenerateRecoveryCodesHandlerTests.cs | 5     | ✅ Passing |
+| TwoFactorLoginHandlerTests.cs        | 6     | ✅ Passing |
 
 **Ubicación:** `AuthService.Tests/Unit/Handlers/TwoFactor/`
 
