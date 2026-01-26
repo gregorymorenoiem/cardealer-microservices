@@ -65,7 +65,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -90,7 +90,7 @@ services:
       - "5672:5672" # AMQP
       - "15672:15672" # Management UI
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
@@ -113,7 +113,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -140,7 +140,7 @@ services:
     environment:
       CONSUL_BIND_INTERFACE: eth0
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - consul_data:/consul/data
     healthcheck:
@@ -171,7 +171,7 @@ services:
       - "5341:80" # Web UI + Ingestion
       - "5342:5341" # API / Ingestion endpoint
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - seq_data:/data
     healthcheck:
@@ -205,7 +205,7 @@ services:
       - "14268:14268" # Jaeger HTTP receiver
       - "14250:14250" # Jaeger gRPC receiver
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:14269/"]
       interval: 30s
@@ -246,6 +246,10 @@ services:
       RabbitMQ__Enabled: "true"
       Redis__Host: "redis:6379"
       Consul__Host: "http://consul:8500"
+      # OAuth Providers - Use environment variables or docker secrets
+      # See compose.secrets.example.yaml for production setup
+      Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-your-google-client-id}"
+      Authentication__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET:-your-google-client-secret}"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
       Observability__Otlp__Endpoint: "http://jaeger:4317"
@@ -264,7 +268,7 @@ services:
       consul:
         condition: service_started
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/AuthService:/app/AuthService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -332,7 +336,7 @@ services:
       jaeger:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     # Usar command para forzar rebuild dentro del contenedor
     command:
       [
@@ -423,7 +427,7 @@ services:
       authservice:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/MediaService:/app/MediaService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -463,7 +467,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -491,7 +495,7 @@ services:
       jaeger:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/UserService:/app/UserService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -532,7 +536,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -547,7 +551,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     # Sin volúmenes para usar código del build
     healthcheck:
       test:
@@ -581,7 +585,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -596,7 +600,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/NotificationService:/app/NotificationService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -632,7 +636,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -647,7 +651,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/AdminService:/app/AdminService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -689,7 +693,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -713,7 +717,7 @@ services:
       jaeger:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -747,7 +751,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -776,7 +780,7 @@ services:
       errorservice:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/EventTrackingService:/app/EventTrackingService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -813,7 +817,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -825,7 +829,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/RoleService:/app/RoleService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -867,7 +871,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -900,7 +904,7 @@ services:
       jaeger:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/BillingService:/app/BillingService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -945,7 +949,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -957,7 +961,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/DealerManagementService:/app/DealerManagementService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -993,7 +997,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1005,7 +1009,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/DealerAnalyticsService:/app/DealerAnalyticsService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1041,7 +1045,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1053,7 +1057,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/CRMService:/app/CRMService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1089,7 +1093,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1101,7 +1105,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/SearchService:/app/SearchService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1143,7 +1147,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1155,7 +1159,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/AlertService:/app/AlertService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1197,7 +1201,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1209,7 +1213,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/MaintenanceService:/app/MaintenanceService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1251,7 +1255,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1263,7 +1267,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/ComparisonService:/app/ComparisonService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1306,7 +1310,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1318,7 +1322,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/ReviewService:/app/ReviewService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1360,7 +1364,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=financeservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1372,7 +1376,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/FinanceService:/app/FinanceService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1414,7 +1418,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featuretoggleservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1426,7 +1430,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/FeatureToggleService:/app/FeatureToggleService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1468,7 +1472,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1480,7 +1484,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/ReportsService:/app/ReportsService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1522,7 +1526,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1534,7 +1538,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/SchedulerService:/app/SchedulerService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1576,7 +1580,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
@@ -1588,7 +1592,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/AuditService:/app/AuditService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -1625,14 +1629,14 @@ services:
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15120:80"
     depends_on:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1670,7 +1674,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=appointmentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1681,7 +1685,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1719,7 +1723,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=inventorymanagementservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1730,7 +1734,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1768,7 +1772,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=invoicingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1779,7 +1783,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1817,7 +1821,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=marketingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -1828,7 +1832,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1866,7 +1870,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recommendationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
     ports:
       - "15126:80"
@@ -1876,7 +1880,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1908,11 +1912,11 @@ services:
       ASPNETCORE_URLS: http://+:80
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15127:80"
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1951,7 +1955,7 @@ services:
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15128:80"
     depends_on:
@@ -1960,7 +1964,7 @@ services:
       postgres_db:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -1997,7 +2001,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehicleintelligenceservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -2008,7 +2012,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2046,7 +2050,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=userbehaviorservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2060,7 +2064,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2092,11 +2096,11 @@ services:
       ASPNETCORE_URLS: http://+:80
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15131:80"
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2134,14 +2138,14 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=loggingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15132:80"
     depends_on:
       postgres_db:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2179,14 +2183,14 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=backupdrservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15133:80"
     depends_on:
       postgres_db:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2224,14 +2228,14 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=configurationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15134:80"
     depends_on:
       postgres_db:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2269,7 +2273,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=integrationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -2280,7 +2284,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test: ["CMD-SHELL", "exit 0"]
       interval: 30s
@@ -2309,14 +2313,14 @@ services:
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15136:80"
     depends_on:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2356,7 +2360,7 @@ services:
       RabbitMQ__Port: "5672"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15137:80"
     depends_on:
@@ -2365,7 +2369,7 @@ services:
       postgres_db:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2403,14 +2407,14 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=filestorageservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15138:5012"
     depends_on:
       postgres_db:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2458,7 +2462,7 @@ services:
   #     rabbitmq:
   #       condition: service_healthy
   #   networks:
-  #     - cargurus-net
+  #     - okla-net
   #   healthcheck:
   #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
   #     interval: 30s
@@ -2502,7 +2506,7 @@ services:
   #     rabbitmq:
   #       condition: service_healthy
   #   networks:
-  #     - cargurus-net
+  #     - okla-net
   #   healthcheck:
   #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
   #     interval: 30s
@@ -2546,7 +2550,7 @@ services:
   #     rabbitmq:
   #       condition: service_healthy
   #   networks:
-  #     - cargurus-net
+  #     - okla-net
   #   healthcheck:
   #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
   #     interval: 30s
@@ -2580,7 +2584,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=realestateservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
@@ -2591,7 +2595,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2628,7 +2632,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=chatbotservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-sk-placeholder}"
@@ -2640,7 +2644,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2677,7 +2681,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=stripepaymentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Stripe__SecretKey: "${STRIPE_SECRET_KEY:-sk_test_placeholder}"
       Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}"
       Redis__ConnectionString: "redis:6379"
@@ -2691,7 +2695,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2729,7 +2733,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=azulpaymentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Azul__MerchantId: "${AZUL_MERCHANT_ID:-placeholder}"
       Azul__AuthKey: "${AZUL_AUTH_KEY:-placeholder}"
       Redis__ConnectionString: "redis:6379"
@@ -2743,7 +2747,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2775,11 +2779,11 @@ services:
       ASPNETCORE_URLS: http://+:80
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
     ports:
       - "15146:80"
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2853,7 +2857,7 @@ services:
       jaeger:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     volumes:
       - ./backend/Gateway:/app/Gateway
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
@@ -2900,7 +2904,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycdb;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2914,7 +2918,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2949,7 +2953,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -2963,7 +2967,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -2998,7 +3002,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=escrowservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3012,7 +3016,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3047,7 +3051,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contractservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3061,7 +3065,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3096,7 +3100,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=legaldocumentservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3110,7 +3114,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3145,7 +3149,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=disputeservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3159,7 +3163,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3198,7 +3202,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featurestoreservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3212,7 +3216,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3247,7 +3251,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=leadscoringservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3261,7 +3265,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3300,7 +3304,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=spyneintegrationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3314,7 +3318,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3349,7 +3353,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=regulatoryalertservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3363,7 +3367,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3398,7 +3402,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceintegrationservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3412,7 +3416,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3447,7 +3451,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportingservice;Username=postgres;Password=password"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "CarGurus-Dev"
+      Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
@@ -3461,7 +3465,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     healthcheck:
       test:
         [
@@ -3499,7 +3503,7 @@ services:
       authservice:
         condition: service_healthy
     networks:
-      - cargurus-net
+      - okla-net
     environment:
       - NODE_OPTIONS=--max-old-space-size=1536
       - VITE_API_URL=http://localhost:18443
@@ -3526,7 +3530,7 @@ services:
 # NETWORKS
 # ============================================================================
 networks:
-  cargurus-net:
+  okla-net:
     driver: bridge
 
 # ============================================================================

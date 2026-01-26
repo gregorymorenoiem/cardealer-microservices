@@ -26,6 +26,7 @@ using Polly;
 using Polly.Extensions.Http;
 using AuthService.Application.Common.Interfaces;
 using AuthService.Infrastructure.Services;
+using AuthService.Infrastructure.Services.GeoLocation;
 
 namespace AuthService.Infrastructure.Extensions;
 
@@ -33,6 +34,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // MemoryCache - Required for IGeoLocationService
+        services.AddMemoryCache();
+
         // Secret Provider (reads from ENV vars and Docker secrets)
         services.AddSecretProvider();
 
@@ -158,6 +162,10 @@ public static class ServiceCollectionExtensions
 
         // US-18.5: Security Audit Service for SIEM integration
         services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+
+        // GeoLocation Service (ip-api.com for session location tracking)
+        services.AddHttpClient<IGeoLocationService, IpApiGeoLocationService>()
+            .AddPolicyHandler(GetRetryPolicy());
 
         // External Services - NotificationServiceClient
         services.AddHttpClient<NotificationServiceClient>()

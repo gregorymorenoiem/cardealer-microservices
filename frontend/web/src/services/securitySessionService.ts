@@ -132,10 +132,22 @@ class SecuritySessionService {
       }
 
       // Map lastActiveAt to lastActive (backend uses camelCase but field name differs)
-      sessions = sessions.map((session) => ({
-        ...session,
-        lastActive: session.lastActive || session.lastActiveAt || session.createdAt,
-      }));
+      // Also handle case where property might come as LastActiveAt (PascalCase)
+      sessions = sessions.map((session) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s = session as any;
+        const lastActiveValue =
+          s.lastActive ||
+          s.lastActiveAt ||
+          s.LastActiveAt ||
+          s.createdAt ||
+          s.CreatedAt ||
+          new Date().toISOString();
+        return {
+          ...session,
+          lastActive: lastActiveValue,
+        };
+      });
 
       // Deduplicate sessions by device + browser + IP (keep most recent)
       const uniqueSessions = this.deduplicateSessions(sessions);
@@ -327,31 +339,40 @@ class SecuritySessionService {
    * @param dateString - ISO 8601 date string
    */
   formatRelativeTime(dateString: string | undefined | null): string {
-    if (!dateString) return 'Recently';
+    if (!dateString) return 'Just now';
 
-    const date = new Date(dateString);
+    try {
+      const date = new Date(dateString);
 
-    // Check for invalid date
-    if (isNaN(date.getTime())) {
-      return 'Recently';
+      // Check for invalid date
+      if (isNaN(date.getTime())) {
+        return 'Just now';
+      }
+
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+
+      // Handle future dates or negative diff
+      if (diffMs < 0) return 'Just now';
+
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+
+      // For older dates, format nicely instead of using toLocaleDateString which can fail
+      const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+      if (date.getFullYear() !== now.getFullYear()) {
+        options.year = 'numeric';
+      }
+      return date.toLocaleDateString('en-US', options);
+    } catch {
+      return 'Just now';
     }
-
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-
-    // Handle future dates or negative diff
-    if (diffMs < 0) return 'Just now';
-
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-
-    return date.toLocaleDateString();
   }
 
   /**

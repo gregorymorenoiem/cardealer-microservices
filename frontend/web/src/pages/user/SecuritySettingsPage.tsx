@@ -949,7 +949,13 @@ export default function SecuritySettingsPage() {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleString();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Recently';
+      return date.toLocaleString();
+    } catch {
+      return 'Recently';
+    }
   };
 
   // Get device icon based on device string
