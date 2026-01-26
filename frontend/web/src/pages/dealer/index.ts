@@ -24,3 +24,6 @@ export { default as DealerOnboardingStatusPage } from './DealerOnboardingStatusP
 export { default as CreateSellerPage } from './CreateSellerPage';
 export { default as DealerVehicleEditPage } from './DealerVehicleEditPage';
 export { default as DealerInquiriesPage } from './DealerInquiriesPage';
+// Team Management (UserService UI - Dealer Employees)
+export { default as DealerEmployeesPage } from './DealerEmployeesPage';
+export { default as DealerEmployeePermissionsPage } from './DealerEmployeePermissionsPage';

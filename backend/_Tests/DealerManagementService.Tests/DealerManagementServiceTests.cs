@@ -20,7 +20,7 @@ public class DealerManagementServiceTests
             Phone = "809-555-1234",
             Status = DealerStatus.Pending,
             VerificationStatus = VerificationStatus.NotVerified,
-            CurrentPlan = DealerPlan.None,
+            CurrentPlan = DealerPlan.Free,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -31,11 +31,11 @@ public class DealerManagementServiceTests
         dealer.RNC.Should().Be("123456789");
         dealer.Status.Should().Be(DealerStatus.Pending);
         dealer.VerificationStatus.Should().Be(VerificationStatus.NotVerified);
-        dealer.CurrentPlan.Should().Be(DealerPlan.None);
+        dealer.CurrentPlan.Should().Be(DealerPlan.Free);
     }
 
     [Fact]
-    public void Dealer_ShouldUpdatePlan_ToStarter()
+    public void Dealer_ShouldUpdatePlan_ToBasic()
     {
         // Arrange
         var dealer = new Dealer
@@ -47,18 +47,18 @@ public class DealerManagementServiceTests
             Email = "test@motors.com",
             Phone = "809-555-0000",
             Status = DealerStatus.Pending,
-            CurrentPlan = DealerPlan.None,
+            CurrentPlan = DealerPlan.Free,
             CreatedAt = DateTime.UtcNow
         };
 
         // Act
-        dealer.CurrentPlan = DealerPlan.Starter;
-        dealer.MaxActiveListings = 15;
+        dealer.CurrentPlan = DealerPlan.Basic;
+        dealer.MaxActiveListings = 50;
         dealer.IsSubscriptionActive = true;
 
         // Assert
-        dealer.CurrentPlan.Should().Be(DealerPlan.Starter);
-        dealer.MaxActiveListings.Should().Be(15);
+        dealer.CurrentPlan.Should().Be(DealerPlan.Basic);
+        dealer.MaxActiveListings.Should().Be(50);
         dealer.IsSubscriptionActive.Should().BeTrue();
     }
 
@@ -74,18 +74,18 @@ public class DealerManagementServiceTests
             RNC = "123456789",
             Email = "test@motors.com",
             Phone = "809-555-0000",
-            CurrentPlan = DealerPlan.None,
+            CurrentPlan = DealerPlan.Free,
             CreatedAt = DateTime.UtcNow
         };
 
         // Act
         dealer.CurrentPlan = DealerPlan.Pro;
-        dealer.MaxActiveListings = 50;
+        dealer.MaxActiveListings = 200;
         dealer.IsSubscriptionActive = true;
 
         // Assert
         dealer.CurrentPlan.Should().Be(DealerPlan.Pro);
-        dealer.MaxActiveListings.Should().Be(50);
+        dealer.MaxActiveListings.Should().Be(200);
         dealer.IsSubscriptionActive.Should().BeTrue();
     }
 
@@ -101,7 +101,7 @@ public class DealerManagementServiceTests
             RNC = "123456789",
             Email = "test@motors.com",
             Phone = "809-555-0000",
-            CurrentPlan = DealerPlan.None,
+            CurrentPlan = DealerPlan.Free,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -190,9 +190,9 @@ public class DealerManagementServiceTests
     [Fact]
     public void DealerPlan_ShouldHaveExpectedValues()
     {
-        // Assert
-        ((int)DealerPlan.None).Should().Be(0);
-        ((int)DealerPlan.Starter).Should().Be(1);
+        // Assert - Updated to match actual enum values
+        ((int)DealerPlan.Free).Should().Be(0);
+        ((int)DealerPlan.Basic).Should().Be(1);
         ((int)DealerPlan.Pro).Should().Be(2);
         ((int)DealerPlan.Enterprise).Should().Be(3);
     }

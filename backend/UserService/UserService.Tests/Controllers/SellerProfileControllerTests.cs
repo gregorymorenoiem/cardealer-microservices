@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using UserService.Api.Controllers;
 using UserService.Application.DTOs;
@@ -14,153 +15,119 @@ namespace UserService.Tests.Controllers;
 /// </summary>
 public class SellerProfileControllerTests
 {
-    private readonly Mock<ISellerProfileRepository> _mockRepository;
+    private readonly Mock<ISellerProfileRepository> _mockSellerProfileRepository;
+    private readonly Mock<IUserRepository> _mockUserRepository;
+    private readonly Mock<IEventPublisher> _mockEventPublisher;
+    private readonly Mock<ILogger<SellerProfileController>> _mockLogger;
     private readonly SellerProfileController _controller;
 
     public SellerProfileControllerTests()
     {
-        _mockRepository = new Mock<ISellerProfileRepository>();
-        _controller = new SellerProfileController(_mockRepository.Object);
+        _mockSellerProfileRepository = new Mock<ISellerProfileRepository>();
+        _mockUserRepository = new Mock<IUserRepository>();
+        _mockEventPublisher = new Mock<IEventPublisher>();
+        _mockLogger = new Mock<ILogger<SellerProfileController>>();
+        
+        _controller = new SellerProfileController(
+            _mockSellerProfileRepository.Object,
+            _mockUserRepository.Object,
+            _mockEventPublisher.Object,
+            _mockLogger.Object);
     }
 
     #region SELLER-001: View Public Profile Tests
 
     [Fact]
-    public async Task GetPublicProfile_WithValidId_ReturnsProfile()
+    public async Task GetSellerProfile_WithValidId_ReturnsOkResult()
+    {
+        // Arrange
+        var sellerId = Guid.NewGuid();
+        var profile = CreateTestSellerProfile(sellerId);
+        var badges = new List<SellerBadgeAssignment>();
+        
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
+            .ReturnsAsync(profile);
+        _mockSellerProfileRepository.Setup(r => r.GetBadgesAsync(sellerId))
+            .ReturnsAsync(badges);
+        _mockSellerProfileRepository.Setup(r => r.UpdateLastActiveAsync(sellerId))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.GetSellerProfile(sellerId);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetSellerProfile_WithInvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        var sellerId = Guid.NewGuid();
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
+            .ReturnsAsync((SellerProfile?)null);
+
+        // Act
+        var result = await _controller.GetSellerProfile(sellerId);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetSellerProfile_WithDeletedProfile_ReturnsNotFound()
+    {
+        // Arrange
+        var sellerId = Guid.NewGuid();
+        var profile = CreateTestSellerProfile(sellerId);
+        profile.IsDeleted = true;
+        
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await _controller.GetSellerProfile(sellerId);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetSellerListings_WithValidSeller_ReturnsListingsResponse()
     {
         // Arrange
         var sellerId = Guid.NewGuid();
         var profile = CreateTestSellerProfile(sellerId);
         
-        _mockRepository.Setup(r => r.GetByIdAsync(sellerId))
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
             .ReturnsAsync(profile);
-        _mockRepository.Setup(r => r.GetBadgesAsync(sellerId))
-            .ReturnsAsync(new List<SellerBadgeAssignment>());
 
         // Act
-        var result = await _controller.GetPublicProfile(sellerId);
+        var result = await _controller.GetSellerListings(sellerId, 1, 12, null);
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        okResult!.Value.Should().BeOfType<SellerPublicProfileDto>();
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult!.Value.Should().BeOfType<SellerListingsResponse>();
     }
 
     [Fact]
-    public async Task GetPublicProfile_WithInvalidId_ReturnsNotFound()
+    public async Task GetSellerReviews_WithValidSeller_ReturnsReviewsResponse()
     {
         // Arrange
         var sellerId = Guid.NewGuid();
-        _mockRepository.Setup(r => r.GetByIdAsync(sellerId))
-            .ReturnsAsync((SellerProfile?)null);
-
-        // Act
-        var result = await _controller.GetPublicProfile(sellerId);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
-    }
-
-    [Fact]
-    public async Task GetSellerListings_ReturnsListingsWithPagination()
-    {
-        // Arrange
-        var sellerId = Guid.NewGuid();
-        var listings = new List<(Guid Id, string Title, decimal Price, int Year, int Mileage, string? MainImageUrl, string Status, string Slug)>
-        {
-            (Guid.NewGuid(), "Toyota Corolla 2020", 850000, 2020, 45000, null, "Active", "toyota-corolla-2020"),
-            (Guid.NewGuid(), "Honda Civic 2021", 950000, 2021, 30000, null, "Active", "honda-civic-2021")
-        };
+        var profile = CreateTestSellerProfile(sellerId);
         
-        _mockRepository.Setup(r => r.GetListingsAsync(sellerId, 1, 10, null))
-            .ReturnsAsync((listings, 2));
-
-        // Act
-        var result = await _controller.GetSellerListings(sellerId, 1, 10, null);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as SellerListingsResponse;
-        response!.Listings.Should().HaveCount(2);
-        response.TotalCount.Should().Be(2);
-    }
-
-    [Fact]
-    public async Task GetSellerReviews_ReturnsReviews()
-    {
-        // Arrange
-        var sellerId = Guid.NewGuid();
-        var reviews = new List<SellerReviewDto>
-        {
-            new() { Id = Guid.NewGuid(), Rating = 5, Comment = "Excellent seller!", ReviewerName = "Juan" },
-            new() { Id = Guid.NewGuid(), Rating = 4, Comment = "Good experience", ReviewerName = "Maria" }
-        };
-        
-        _mockRepository.Setup(r => r.GetReviewsAsync(sellerId, 1, 10))
-            .ReturnsAsync((reviews, 2));
-
-        // Act
-        var result = await _controller.GetSellerReviews(sellerId, 1, 10);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as SellerReviewsResponse;
-        response!.Reviews.Should().HaveCount(2);
-    }
-
-    #endregion
-
-    #region SELLER-002: Manage Profile Tests
-
-    [Fact]
-    public async Task UpdateMyProfile_WithValidData_ReturnsSuccess()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var profile = CreateTestSellerProfile(userId);
-        var updateRequest = new UpdateMyProfileRequest
-        {
-            DisplayName = "New Display Name",
-            Bio = "Updated bio",
-            City = "Santiago",
-            Province = "Santiago"
-        };
-        
-        _mockRepository.Setup(r => r.GetByUserIdAsync(userId))
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
             .ReturnsAsync(profile);
-        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<SellerProfile>()))
-            .Returns(Task.CompletedTask);
 
-        // Act - Note: Would need to mock HttpContext.User to test properly
-        // This is a simplified test structure
-        
+        // Act
+        var result = await _controller.GetSellerReviews(sellerId, 1, 10, null);
+
         // Assert
-        profile.DisplayName.Should().NotBeNullOrEmpty();
-    }
-
-    [Fact]
-    public async Task CreateProfile_WithValidData_ReturnsCreatedProfile()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var request = new CreateSellerProfileRequest
-        {
-            SellerType = "Individual",
-            DisplayName = "Test Seller",
-            Bio = "Test bio",
-            City = "Santo Domingo",
-            Province = "Distrito Nacional"
-        };
-        
-        _mockRepository.Setup(r => r.GetByUserIdAsync(userId))
-            .ReturnsAsync((SellerProfile?)null);
-        _mockRepository.Setup(r => r.CreateAsync(It.IsAny<SellerProfile>()))
-            .Returns(Task.CompletedTask);
-
-        // Act & Assert - Would need proper HttpContext mock
-        request.DisplayName.Should().Be("Test Seller");
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult!.Value.Should().BeOfType<SellerReviewsResponse>();
     }
 
     #endregion
@@ -168,48 +135,60 @@ public class SellerProfileControllerTests
     #region SELLER-003: Contact Preferences Tests
 
     [Fact]
-    public async Task GetContactPreferences_ReturnsPreferences()
+    public async Task GetSellerContactPreferences_WithExistingPreferences_ReturnsPreferences()
     {
         // Arrange
         var sellerId = Guid.NewGuid();
         var profile = CreateTestSellerProfile(sellerId);
-        profile.ContactPreferences = CreateTestContactPreferences(sellerId);
+        var preferences = CreateTestContactPreferences(sellerId);
         
-        _mockRepository.Setup(r => r.GetByIdAsync(sellerId))
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
+            .ReturnsAsync(profile);
+        _mockSellerProfileRepository.Setup(r => r.GetContactPreferencesAsync(sellerId))
+            .ReturnsAsync(preferences);
+
+        // Act
+        var result = await _controller.GetSellerContactPreferences(sellerId);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetSellerContactPreferences_WithNoPreferences_ReturnsDefaultPreferences()
+    {
+        // Arrange
+        var sellerId = Guid.NewGuid();
+        var profile = CreateTestSellerProfile(sellerId);
+        
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
+            .ReturnsAsync(profile);
+        _mockSellerProfileRepository.Setup(r => r.GetContactPreferencesAsync(sellerId))
+            .ReturnsAsync((ContactPreferences?)null);
+
+        // Act
+        var result = await _controller.GetSellerContactPreferences(sellerId);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetSellerContactPreferences_WithInactiveSeller_ReturnsNotFound()
+    {
+        // Arrange
+        var sellerId = Guid.NewGuid();
+        var profile = CreateTestSellerProfile(sellerId);
+        profile.IsActive = false;
+        
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
             .ReturnsAsync(profile);
 
         // Act
         var result = await _controller.GetSellerContactPreferences(sellerId);
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        okResult!.Value.Should().BeOfType<ContactPreferencesDto>();
-    }
-
-    [Fact]
-    public async Task UpdateContactPreferences_WithValidData_ReturnsSuccess()
-    {
-        // Arrange
-        var updateRequest = new UpdateContactPreferencesRequest
-        {
-            AllowPhoneCalls = true,
-            AllowWhatsApp = true,
-            AllowInAppChat = true,
-            AllowEmail = false,
-            ShowPhoneNumber = false,
-            ShowWhatsAppNumber = true,
-            ShowEmail = false,
-            ContactHoursStart = "09:00",
-            ContactHoursEnd = "18:00",
-            ContactDays = new List<string> { "Lunes", "Martes", "Miércoles", "Jueves", "Viernes" },
-            AutoReplyEnabled = true,
-            AutoReplyMessage = "Gracias por contactarme"
-        };
-
-        // Assert
-        updateRequest.AllowWhatsApp.Should().BeTrue();
-        updateRequest.ContactDays.Should().HaveCount(5);
+        result.Should().BeOfType<NotFoundObjectResult>();
     }
 
     #endregion
@@ -217,93 +196,53 @@ public class SellerProfileControllerTests
     #region SELLER-004: Statistics Tests
 
     [Fact]
-    public async Task GetSellerStats_ReturnsPublicStats()
+    public async Task GetSellerStats_WithValidSeller_ReturnsPublicStats()
     {
         // Arrange
         var sellerId = Guid.NewGuid();
         var profile = CreateTestSellerProfile(sellerId);
         profile.ResponseRate = 95;
-        profile.ViewsThisMonth = 1500;
-        profile.LeadsThisMonth = 45;
+        profile.TotalListings = 50;
+        profile.ActiveListings = 12;
+        profile.TotalSales = 38;
         
-        _mockRepository.Setup(r => r.GetByIdAsync(sellerId))
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
             .ReturnsAsync(profile);
 
         // Act
         var result = await _controller.GetSellerStats(sellerId);
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
         var stats = okResult!.Value as SellerPublicStatsDto;
         stats!.ResponseRate.Should().Be(95);
+        stats.TotalListings.Should().Be(50);
+        stats.ActiveListings.Should().Be(12);
+        stats.SoldCount.Should().Be(38);
     }
 
     [Fact]
-    public async Task GetMyStats_ReturnsDetailedStats()
+    public async Task GetSellerStats_WithInactiveSeller_ReturnsNotFound()
     {
         // Arrange
-        var stats = new SellerMyStatsDto
-        {
-            ViewsThisMonth = 2500,
-            LeadsThisMonth = 75,
-            ResponseRate = 98,
-            AverageResponseTime = "2 horas",
-            ActiveListings = 12,
-            TotalListings = 50,
-            SoldCount = 38,
-            ConversionRate = 76,
-            AverageRating = 4.8,
-            ReviewCount = 45,
-            PendingResponses = 3
-        };
+        var sellerId = Guid.NewGuid();
+        var profile = CreateTestSellerProfile(sellerId);
+        profile.IsActive = false;
+        
+        _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await _controller.GetSellerStats(sellerId);
 
         // Assert
-        stats.ViewsThisMonth.Should().Be(2500);
-        stats.ConversionRate.Should().Be(76);
-        stats.AverageRating.Should().BeApproximately(4.8, 0.01);
+        result.Should().BeOfType<NotFoundObjectResult>();
     }
 
     #endregion
 
     #region SELLER-005: Badges Tests
-
-    [Fact]
-    public async Task AssignBadge_ToSeller_ReturnsSuccess()
-    {
-        // Arrange
-        var sellerId = Guid.NewGuid();
-        var profile = CreateTestSellerProfile(sellerId);
-        var request = new AssignBadgeRequest
-        {
-            Badge = "FastResponder",
-            Reason = "Achieved 95%+ response rate"
-        };
-        
-        _mockRepository.Setup(r => r.GetByIdAsync(sellerId))
-            .ReturnsAsync(profile);
-        _mockRepository.Setup(r => r.AssignBadgeAsync(sellerId, SellerBadge.FastResponder, It.IsAny<string>()))
-            .Returns(Task.CompletedTask);
-
-        // Assert
-        request.Badge.Should().Be("FastResponder");
-        Enum.TryParse<SellerBadge>(request.Badge, out var badge).Should().BeTrue();
-        badge.Should().Be(SellerBadge.FastResponder);
-    }
-
-    [Fact]
-    public async Task RemoveBadge_FromSeller_ReturnsSuccess()
-    {
-        // Arrange
-        var sellerId = Guid.NewGuid();
-        var badge = SellerBadge.TopSeller;
-        
-        _mockRepository.Setup(r => r.RemoveBadgeAsync(sellerId, badge))
-            .Returns(Task.CompletedTask);
-
-        // Assert
-        badge.Should().Be(SellerBadge.TopSeller);
-    }
 
     [Fact]
     public void SellerBadge_Enum_HasExpectedValues()
@@ -316,132 +255,181 @@ public class SellerProfileControllerTests
         Enum.GetValues<SellerBadge>().Should().Contain(SellerBadge.FounderMember);
     }
 
-    #endregion
-
-    #region Search & Discovery Tests
-
     [Fact]
-    public async Task SearchSellers_WithFilters_ReturnsResults()
+    public void SellerVerificationStatus_Enum_HasExpectedValues()
     {
-        // Arrange
-        var sellers = new List<SellerProfile>
-        {
-            CreateTestSellerProfile(Guid.NewGuid()),
-            CreateTestSellerProfile(Guid.NewGuid())
-        };
-        
-        _mockRepository.Setup(r => r.SearchAsync(
-            It.IsAny<string?>(),
-            It.IsAny<string?>(),
-            It.IsAny<string?>(),
-            It.IsAny<SellerType?>(),
-            It.IsAny<bool?>(),
-            It.IsAny<int>(),
-            It.IsAny<int>()))
-            .ReturnsAsync((sellers, 2));
-
-        // Act
-        var result = await _controller.SearchSellers("Santo Domingo", null, null, null, 1, 10);
-
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
+        Enum.GetValues<SellerVerificationStatus>().Should().Contain(SellerVerificationStatus.NotSubmitted);
+        Enum.GetValues<SellerVerificationStatus>().Should().Contain(SellerVerificationStatus.PendingReview);
+        Enum.GetValues<SellerVerificationStatus>().Should().Contain(SellerVerificationStatus.Verified);
+        Enum.GetValues<SellerVerificationStatus>().Should().Contain(SellerVerificationStatus.Rejected);
     }
 
     [Fact]
-    public async Task GetTopSellers_ReturnsRankedList()
+    public void AssignBadgeRequest_ShouldHaveCorrectStructure()
     {
-        // Arrange
-        var topSellers = new List<SellerProfile>
+        // Arrange & Act
+        var request = new AssignBadgeRequest
         {
-            CreateTestSellerProfile(Guid.NewGuid()),
-            CreateTestSellerProfile(Guid.NewGuid()),
-            CreateTestSellerProfile(Guid.NewGuid())
+            SellerProfileId = Guid.NewGuid(),
+            Badge = SellerBadge.FastResponder,
+            ExpiresAt = DateTime.UtcNow.AddYears(1),
+            Reason = "Achieved 95%+ response rate"
         };
-        
-        _mockRepository.Setup(r => r.GetTopSellersAsync(10))
-            .ReturnsAsync(topSellers);
-
-        // Act
-        var result = await _controller.GetTopSellers(10);
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var sellers = okResult!.Value as List<SellerPublicProfileDto>;
-        sellers!.Should().HaveCount(3);
+        request.Badge.Should().Be(SellerBadge.FastResponder);
+        request.Reason.Should().NotBeNullOrEmpty();
+        request.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
     }
 
     #endregion
 
-    #region Admin Operations Tests
+    #region DTO Validation Tests
 
     [Fact]
-    public async Task VerifySeller_UpdatesVerificationStatus()
+    public void SellerPublicProfileDto_ShouldMapCorrectly()
     {
-        // Arrange
-        var sellerId = Guid.NewGuid();
-        var profile = CreateTestSellerProfile(sellerId);
-        profile.VerificationStatus = "Pending";
-        
-        _mockRepository.Setup(r => r.GetByIdAsync(sellerId))
-            .ReturnsAsync(profile);
-        _mockRepository.Setup(r => r.UpdateVerificationStatusAsync(
-            sellerId,
-            "Verified",
-            It.IsAny<Guid>(),
-            It.IsAny<string?>()))
-            .Returns(Task.CompletedTask);
-
-        // Assert - Verification request structure
-        var request = new VerifySellerRequest
+        // Arrange & Act
+        var dto = new SellerPublicProfileDto
         {
-            IsApproved = true,
-            RejectionReason = null
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            DisplayName = "Test Seller",
+            Type = SellerType.Individual,
+            Bio = "Test bio",
+            City = "Santo Domingo",
+            Province = "Distrito Nacional",
+            MemberSince = DateTime.UtcNow.AddMonths(-6),
+            IsVerified = true,
+            Badges = new List<string> { "Verified", "FastResponder" },
+            Stats = new SellerPublicStatsDto()
         };
-        request.IsApproved.Should().BeTrue();
+
+        // Assert
+        dto.DisplayName.Should().Be("Test Seller");
+        dto.Type.Should().Be(SellerType.Individual);
+        dto.IsVerified.Should().BeTrue();
+        dto.Badges.Should().HaveCount(2);
     }
 
     [Fact]
-    public async Task GetPendingVerifications_ReturnsOnlyPending()
+    public void SellerMyStatsDto_ShouldHaveAllRequiredProperties()
     {
-        // Arrange
-        var pendingSellers = new List<SellerProfile>
+        // Arrange & Act
+        var stats = new SellerMyStatsDto
         {
-            CreateTestSellerProfile(Guid.NewGuid()),
-            CreateTestSellerProfile(Guid.NewGuid())
+            SellerId = Guid.NewGuid(),
+            TotalListings = 50,
+            ActiveListings = 12,
+            PendingListings = 2,
+            SoldListings = 38,
+            ExpiredListings = 0,
+            TotalViews = 10000,
+            ViewsThisMonth = 2500,
+            ViewsChange = 15,
+            TotalInquiries = 300,
+            InquiriesThisMonth = 75,
+            UnrespondedInquiries = 3,
+            TotalValue = 5000000m,
+            AveragePrice = 100000m,
+            AverageRating = 4.8,
+            ReviewCount = 45,
+            ResponseTimeMinutes = 120,
+            ResponseRate = 98,
+            MaxActiveListings = 50,
+            RemainingListings = 38,
+            CanSellHighValue = true,
+            Badges = new List<SellerBadgeDto>(),
+            VerificationStatus = SellerVerificationStatus.Verified
         };
-        pendingSellers.ForEach(s => s.VerificationStatus = "Pending");
-        
-        _mockRepository.Setup(r => r.GetPendingVerificationsAsync())
-            .ReturnsAsync(pendingSellers);
-
-        // Act
-        var result = await _controller.GetPendingVerifications();
 
         // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
+        stats.TotalListings.Should().Be(50);
+        stats.ActiveListings.Should().Be(12);
+        stats.ViewsThisMonth.Should().Be(2500);
+        stats.ResponseRate.Should().Be(98);
+        stats.VerificationStatus.Should().Be(SellerVerificationStatus.Verified);
+    }
+
+    [Fact]
+    public void ContactPreferencesDto_ShouldHaveAllChannelOptions()
+    {
+        // Arrange & Act
+        var dto = new ContactPreferencesDto
+        {
+            Id = Guid.NewGuid(),
+            SellerId = Guid.NewGuid(),
+            AllowPhoneCalls = true,
+            AllowWhatsApp = true,
+            AllowEmail = false,
+            AllowInAppChat = true,
+            ContactHoursStart = "09:00",
+            ContactHoursEnd = "18:00",
+            ContactDays = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" },
+            ShowPhoneNumber = false,
+            ShowWhatsAppNumber = true,
+            ShowEmail = false,
+            PreferredContactMethod = "WhatsApp"
+        };
+
+        // Assert
+        dto.AllowWhatsApp.Should().BeTrue();
+        dto.AllowEmail.Should().BeFalse();
+        dto.ContactDays.Should().HaveCount(5);
+        dto.PreferredContactMethod.Should().Be("WhatsApp");
+    }
+
+    [Fact]
+    public void UpdateContactPreferencesRequest_ShouldAcceptPartialUpdates()
+    {
+        // Arrange & Act
+        var request = new UpdateContactPreferencesRequest
+        {
+            AllowWhatsApp = true,
+            ShowPhoneNumber = false
+        };
+
+        // Assert - All other properties should be null (optional)
+        request.AllowWhatsApp.Should().BeTrue();
+        request.ShowPhoneNumber.Should().BeFalse();
+        request.AllowPhoneCalls.Should().BeNull();
+        request.ContactDays.Should().BeNull();
     }
 
     #endregion
 
     #region Helper Methods
 
-    private static SellerProfile CreateTestSellerProfile(Guid userId)
+    private static SellerProfile CreateTestSellerProfile(Guid sellerId)
     {
         return new SellerProfile
         {
-            Id = Guid.NewGuid(),
-            UserId = userId,
+            Id = sellerId,
+            UserId = Guid.NewGuid(),
             SellerType = SellerType.Individual,
             DisplayName = "Test Seller",
+            FullName = "Test Seller Full Name",
             Bio = "Test seller bio",
             City = "Santo Domingo",
-            Province = "Distrito Nacional",
+            State = "Distrito Nacional",
+            Country = "DO",
+            Phone = "809-555-1234",
+            Email = "test@seller.com",
+            Address = "Test Address",
             IsActive = true,
-            VerificationStatus = "NotVerified",
+            VerificationStatus = SellerVerificationStatus.NotSubmitted,
             ResponseRate = 90,
             ViewsThisMonth = 1000,
             LeadsThisMonth = 50,
+            TotalListings = 25,
+            ActiveListings = 10,
+            TotalSales = 15,
+            AverageRating = 4.5m,
+            TotalReviews = 20,
+            ResponseTimeMinutes = 60,
+            MaxActiveListings = 50,
+            CanSellHighValue = true,
             CreatedAt = DateTime.UtcNow.AddMonths(-6)
         };
     }
@@ -459,12 +447,11 @@ public class SellerProfileControllerTests
             ShowPhoneNumber = false,
             ShowWhatsAppNumber = true,
             ShowEmail = false,
-            ContactHoursStart = "09:00",
-            ContactHoursEnd = "18:00",
-            ContactDays = new List<string> { "Lunes", "Martes", "Miércoles", "Jueves", "Viernes" },
-            AutoReplyEnabled = false,
+            ContactHoursStart = TimeSpan.FromHours(9),
+            ContactHoursEnd = TimeSpan.FromHours(18),
+            ContactDays = "Monday,Tuesday,Wednesday,Thursday,Friday",
             RequireVerifiedBuyers = false,
-            BlockNewAccounts = false
+            BlockAnonymousContacts = false
         };
     }
 

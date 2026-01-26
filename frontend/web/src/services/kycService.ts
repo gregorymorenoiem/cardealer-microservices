@@ -487,7 +487,6 @@ class KYCService {
       [KYCStatus.InProgress]: 'En Progreso',
       [KYCStatus.DocumentsRequired]: 'Documentos Requeridos',
       [KYCStatus.UnderReview]: 'En Revisión',
-      [KYCStatus.PendingReview]: 'Pendiente de Revisión',
       [KYCStatus.Approved]: 'Aprobado',
       [KYCStatus.Rejected]: 'Rechazado',
       [KYCStatus.Expired]: 'Expirado',
@@ -504,7 +503,6 @@ class KYCService {
       [KYCStatus.InProgress]: 'blue',
       [KYCStatus.DocumentsRequired]: 'orange',
       [KYCStatus.UnderReview]: 'orange',
-      [KYCStatus.PendingReview]: 'yellow',
       [KYCStatus.Approved]: 'green',
       [KYCStatus.Rejected]: 'red',
       [KYCStatus.Expired]: 'purple',
@@ -533,14 +531,16 @@ class KYCService {
 
   // Helper: Get document type label
   getDocumentTypeLabel(type: DocumentType): string {
-    const labels: Record<DocumentType, string> = {
+    const labels: Record<number, string> = {
       [DocumentType.Cedula]: 'Cédula',
       [DocumentType.Passport]: 'Pasaporte',
       [DocumentType.DriverLicense]: 'Licencia de Conducir',
+      [DocumentType.ResidencyCard]: 'Carnet de Residencia',
+      [DocumentType.RNC]: 'RNC',
+      [DocumentType.Other]: 'Otro Documento',
       [DocumentType.UtilityBill]: 'Factura de Servicios',
       [DocumentType.BankStatement]: 'Estado de Cuenta',
       [DocumentType.LeaseAgreement]: 'Contrato de Alquiler',
-      [DocumentType.RNC]: 'RNC',
       [DocumentType.MercantileRegistry]: 'Registro Mercantil',
       [DocumentType.BusinessLicense]: 'Licencia Comercial',
       [DocumentType.TaxCertificate]: 'Certificación DGII',
@@ -702,3 +702,6 @@ class KYCService {
 }
 
 export const kycService = new KYCService();
+
+// Default export for compatibility
+export default kycService;

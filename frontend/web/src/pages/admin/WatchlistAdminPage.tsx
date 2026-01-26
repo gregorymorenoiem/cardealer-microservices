@@ -13,7 +13,9 @@ import {
   FiDownload,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
-import kycService, { WatchlistEntry, WatchlistType } from '../../services/kycService';
+import { kycService } from '../../services/kycService';
+import type { WatchlistEntry } from '../../services/kycService';
+import { WatchlistType } from '../../services/kycService';
 
 const WatchlistAdminPage: React.FC = () => {
   const [entries, setEntries] = useState<WatchlistEntry[]>([]);

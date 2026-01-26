@@ -13,7 +13,9 @@ import {
   FiXCircle,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
-import kycService, { SuspiciousTransactionReport, STRStatus } from '../../services/kycService';
+import { kycService } from '../../services/kycService';
+import type { SuspiciousTransactionReport } from '../../services/kycService';
+import { STRStatus } from '../../services/kycService';
 
 const STRReportsPage: React.FC = () => {
   const [reports, setReports] = useState<SuspiciousTransactionReport[]>([]);

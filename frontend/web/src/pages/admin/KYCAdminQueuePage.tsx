@@ -12,7 +12,9 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
-import kycService, { KYCProfile, KYCStatus } from '../../services/kycService';
+import { kycService } from '../../services/kycService';
+import type { KYCProfile } from '../../services/kycService';
+import { KYCStatus } from '../../services/kycService';
 
 interface KYCQueueItem {
   profile: KYCProfile;

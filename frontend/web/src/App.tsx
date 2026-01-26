@@ -110,6 +110,8 @@ import {
   DealerAnalyticsPage,
   DealerSettingsPage,
   DealerVehicleEditPage,
+  DealerEmployeesPage,
+  DealerEmployeePermissionsPage,
 } from './pages/dealer';
 import DealerListingsPage from './pages/dealer/DealerListingsPage';
 import DealerSalesPage from './pages/dealer/DealerSalesPage';
@@ -718,6 +720,24 @@ function App() {
             element={
               <ProtectedRoute requireDealer>
                 <DealerSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dealer Employees Routes (UserService UI) */}
+          <Route
+            path="/dealer/employees"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerEmployeesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dealer/employees/:employeeId/permissions"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerEmployeePermissionsPage />
               </ProtectedRoute>
             }
           />
