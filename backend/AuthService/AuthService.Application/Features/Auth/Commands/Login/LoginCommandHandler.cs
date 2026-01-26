@@ -249,6 +249,26 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             );
             await _sessionRepository.AddAsync(userSession, cancellationToken);
             _logger.LogInformation("Created new session {SessionId} for user {UserId}", userSession.Id, user.Id);
+
+            // Send new session notification email
+            try
+            {
+                var sessionNotification = new NewSessionNotificationDto(
+                    DeviceInfo: deviceInfo,
+                    Browser: browser,
+                    OperatingSystem: operatingSystem,
+                    IpAddress: _requestContext.IpAddress,
+                    LoginTime: DateTime.UtcNow,
+                    Location: null // Will be populated if geolocation service is available
+                );
+                await _notificationService.SendNewSessionNotificationAsync(user.Email!, sessionNotification);
+                _logger.LogInformation("New session notification sent to {Email}", user.Email);
+            }
+            catch (Exception ex)
+            {
+                // Don't fail login if notification fails
+                _logger.LogWarning(ex, "Failed to send new session notification to {Email}", user.Email);
+            }
         }
 
         user.ResetAccessFailedCount();

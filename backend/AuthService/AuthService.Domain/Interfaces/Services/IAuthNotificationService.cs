@@ -27,7 +27,25 @@ public interface IAuthNotificationService
     /// US-18.2: Failed login attempts, lockouts, etc.
     /// </summary>
     Task SendSecurityAlertAsync(string email, SecurityAlertDto alert);
+    
+    /// <summary>
+    /// Sends a notification email when a new session is created from a new device/location.
+    /// This is a security measure to alert users of new logins.
+    /// </summary>
+    Task SendNewSessionNotificationAsync(string email, NewSessionNotificationDto sessionInfo);
 }
+
+/// <summary>
+/// DTO for new session notification
+/// </summary>
+public record NewSessionNotificationDto(
+    string DeviceInfo,
+    string Browser,
+    string OperatingSystem,
+    string IpAddress,
+    DateTime LoginTime,
+    string? Location = null
+);
 
 /// <summary>
 /// DTO for security alert notifications (US-18.2)

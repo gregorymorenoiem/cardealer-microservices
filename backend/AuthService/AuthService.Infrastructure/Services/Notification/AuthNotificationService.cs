@@ -889,4 +889,143 @@ public class AuthNotificationService : IAuthNotificationService
     }
 
     #endregion
+
+    #region New Session Notification Methods
+
+    /// <summary>
+    /// Sends a notification email when a new session is created from a new device/location.
+    /// This is a security measure to alert users of new logins.
+    /// </summary>
+    public async Task SendNewSessionNotificationAsync(string email, NewSessionNotificationDto sessionInfo)
+    {
+        if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
+        {
+            await SendNewSessionNotificationViaRabbitMQ(email, sessionInfo);
+        }
+        else
+        {
+            await SendNewSessionNotificationViaHttp(email, sessionInfo);
+        }
+    }
+
+    private async Task SendNewSessionNotificationViaRabbitMQ(string email, NewSessionNotificationDto sessionInfo)
+    {
+        try
+        {
+            var notification = new EmailNotificationEvent
+            {
+                To = email,
+                Subject = "🔐 Nuevo inicio de sesión en tu cuenta OKLA",
+                TemplateName = "NewSessionNotification",
+                Body = GenerateNewSessionNotificationEmailBody(sessionInfo),
+                Data = new Dictionary<string, object>
+                {
+                    ["deviceInfo"] = sessionInfo.DeviceInfo,
+                    ["browser"] = sessionInfo.Browser,
+                    ["operatingSystem"] = sessionInfo.OperatingSystem,
+                    ["ipAddress"] = sessionInfo.IpAddress,
+                    ["loginTime"] = sessionInfo.LoginTime,
+                    ["location"] = sessionInfo.Location ?? "Unknown"
+                },
+                IsHtml = true
+            };
+
+            await _notificationProducer.PublishNotificationAsync(notification);
+            _logger.LogInformation("New session notification sent via RabbitMQ to {Email}", email);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send new session notification via RabbitMQ to {Email}. Falling back to HTTP.", email);
+            await SendNewSessionNotificationViaHttp(email, sessionInfo);
+        }
+    }
+
+    private async Task SendNewSessionNotificationViaHttp(string email, NewSessionNotificationDto sessionInfo)
+    {
+        var subject = "🔐 Nuevo inicio de sesión en tu cuenta OKLA";
+        var body = GenerateNewSessionNotificationEmailBody(sessionInfo);
+
+        var success = await _notificationServiceClient.SendEmailAsync(email, subject, body, true);
+
+        if (success)
+        {
+            _logger.LogInformation("New session notification sent via HTTP to {Email}", email);
+        }
+        else
+        {
+            _logger.LogError("Failed to send new session notification via HTTP to {Email}", email);
+        }
+    }
+
+    private string GenerateNewSessionNotificationEmailBody(NewSessionNotificationDto sessionInfo)
+    {
+        var loginTime = sessionInfo.LoginTime.ToString("yyyy-MM-dd HH:mm:ss UTC");
+        var location = sessionInfo.Location ?? "Ubicación desconocida";
+        var securityUrl = $"{_settings.FrontendBaseUrl}/settings/security";
+        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/forgot-password";
+
+        return $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                    .header h2 {{ margin: 0; font-size: 24px; }}
+                    .info-box {{ background: #e8f5e9; border-left: 4px solid #4CAF50; padding: 15px; margin: 15px 0; }}
+                    .details {{ background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0; }}
+                    .details p {{ margin: 8px 0; }}
+                    .warning {{ background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                    .btn {{ display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }}
+                    .btn-danger {{ background: #dc3545; }}
+                    .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h2>🔐 Nuevo Inicio de Sesión</h2>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <p>Hemos detectado un nuevo inicio de sesión en tu cuenta de OKLA.</p>
+                    </div>
+                    
+                    <div class='details'>
+                        <h3>📋 Detalles de la Sesión:</h3>
+                        <p><strong>📱 Dispositivo:</strong> {sessionInfo.DeviceInfo}</p>
+                        <p><strong>🌐 Navegador:</strong> {sessionInfo.Browser}</p>
+                        <p><strong>💻 Sistema Operativo:</strong> {sessionInfo.OperatingSystem}</p>
+                        <p><strong>📍 Ubicación:</strong> {location}</p>
+                        <p><strong>🔢 Dirección IP:</strong> {sessionInfo.IpAddress}</p>
+                        <p><strong>🕐 Fecha y Hora:</strong> {loginTime}</p>
+                    </div>
+                    
+                    <div class='warning'>
+                        <p><strong>⚠️ ¿No fuiste tú?</strong></p>
+                        <p>Si no reconoces este inicio de sesión, te recomendamos:</p>
+                        <ol>
+                            <li>Cambiar tu contraseña inmediatamente</li>
+                            <li>Revisar y cerrar las sesiones desconocidas</li>
+                            <li>Habilitar autenticación de dos factores (2FA)</li>
+                        </ol>
+                    </div>
+                    
+                    <p style='text-align: center;'>
+                        <a href='{securityUrl}' class='btn'>Ver Mis Sesiones</a>
+                        <a href='{changePasswordUrl}' class='btn btn-danger'>Cambiar Contraseña</a>
+                    </p>
+                    
+                    <div class='footer'>
+                        <p>Esta es una notificación de seguridad automática de OKLA.</p>
+                        <p>Si tienes preguntas, contáctanos en <a href='mailto:support@okla.com.do'>support@okla.com.do</a></p>
+                        <p>© 2026 OKLA - Marketplace de Vehículos</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+    }
+
+    #endregion
 }
