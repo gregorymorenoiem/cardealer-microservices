@@ -90,4 +90,23 @@ public class UserSessionRepository : IUserSessionRepository
     {
         return await _context.UserSessions.AnyAsync(s => s.Id == id, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<UserSession?> GetActiveSessionByDeviceAsync(
+        string userId,
+        string deviceInfo,
+        string browser,
+        string ipAddress,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.UserSessions
+            .Where(s => s.UserId == userId 
+                && s.DeviceInfo == deviceInfo 
+                && s.Browser == browser 
+                && s.IpAddress == ipAddress 
+                && !s.IsRevoked 
+                && (!s.ExpiresAt.HasValue || s.ExpiresAt > DateTime.UtcNow))
+            .OrderByDescending(s => s.LastActiveAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

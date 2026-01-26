@@ -58,6 +58,17 @@ public class UserSession
         LastActiveAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Updates the session for a new login (renews the session instead of creating a duplicate).
+    /// Updates the refresh token, expiration, and last active time.
+    /// </summary>
+    public void RenewSession(string newRefreshTokenId, DateTime? newExpiresAt = null)
+    {
+        RefreshTokenId = newRefreshTokenId;
+        ExpiresAt = newExpiresAt;
+        LastActiveAt = DateTime.UtcNow;
+    }
+
     public void UpdateLocation(string? location, string? country, string? city)
     {
         Location = location;

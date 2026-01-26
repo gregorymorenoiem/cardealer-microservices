@@ -17,4 +17,15 @@ public interface IUserSessionRepository
     Task RevokeSessionAsync(Guid sessionId, string reason = "User requested", CancellationToken cancellationToken = default);
     Task RevokeAllUserSessionsAsync(string userId, Guid? exceptSessionId = null, string reason = "User requested", CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Gets an existing active session for the same user, device, browser, and IP address.
+    /// Used to prevent duplicate sessions for the same device/browser combination.
+    /// </summary>
+    Task<UserSession?> GetActiveSessionByDeviceAsync(
+        string userId,
+        string deviceInfo,
+        string browser,
+        string ipAddress,
+        CancellationToken cancellationToken = default);
 }

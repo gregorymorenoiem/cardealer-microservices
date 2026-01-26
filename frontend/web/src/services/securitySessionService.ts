@@ -24,7 +24,8 @@ export interface ActiveSessionDto {
   operatingSystem: string;
   location: string;
   ipAddress: string; // Partially masked (e.g., "192.168.1.***")
-  lastActive: string; // ISO 8601 format
+  lastActive: string; // ISO 8601 format (mapped from lastActiveAt)
+  lastActiveAt?: string; // Original field from backend
   createdAt: string;
   isCurrent: boolean;
   isExpiringSoon: boolean; // True if session expires in less than 1 hour
@@ -111,6 +112,7 @@ class SecuritySessionService {
    * - Current session is marked
    * - Sessions expiring soon are flagged
    * - XSS sanitized output
+   * - Deduplicates sessions from same device/browser
    */
   async getActiveSessions(): Promise<GetActiveSessionsResponse> {
     try {
@@ -119,18 +121,31 @@ class SecuritySessionService {
         { headers: this.getAuthHeaders() }
       );
 
+      let sessions: ActiveSessionDto[] = [];
+
       if (response.data.success && response.data.data) {
-        return response.data.data;
+        sessions = response.data.data.sessions || [];
+      } else {
+        // Fallback for legacy API format
+        const data = response.data as unknown as GetActiveSessionsResponse;
+        sessions = data.sessions || [];
       }
 
-      // Fallback for legacy API format
-      const data = response.data as unknown as GetActiveSessionsResponse;
+      // Map lastActiveAt to lastActive (backend uses camelCase but field name differs)
+      sessions = sessions.map((session) => ({
+        ...session,
+        lastActive: session.lastActive || session.lastActiveAt || session.createdAt,
+      }));
+
+      // Deduplicate sessions by device + browser + IP (keep most recent)
+      const uniqueSessions = this.deduplicateSessions(sessions);
+
       return {
         success: true,
         message: 'Sessions retrieved successfully',
-        sessions: data.sessions || [],
-        totalCount: data.totalCount || 0,
-        currentSessionId: data.currentSessionId || null,
+        sessions: uniqueSessions,
+        totalCount: uniqueSessions.length,
+        currentSessionId: response.data.data?.currentSessionId || null,
       };
     } catch (error) {
       console.error('Failed to fetch active sessions:', error);
@@ -139,6 +154,46 @@ class SecuritySessionService {
       }
       throw new Error('Failed to fetch active sessions');
     }
+  }
+
+  /**
+   * Deduplicate sessions by device + browser + IP address.
+   * Keeps the most recently active session for each unique combination.
+   * This handles cases where multiple sessions exist for the same device.
+   */
+  private deduplicateSessions(sessions: ActiveSessionDto[]): ActiveSessionDto[] {
+    const sessionMap = new Map<string, ActiveSessionDto>();
+
+    for (const session of sessions) {
+      // Create a unique key based on device, browser, and IP
+      const key = `${session.device}|${session.browser}|${session.ipAddress}`;
+
+      const existing = sessionMap.get(key);
+      if (!existing) {
+        sessionMap.set(key, session);
+      } else {
+        // Keep the current session or the most recent one
+        if (session.isCurrent) {
+          sessionMap.set(key, session);
+        } else if (!existing.isCurrent) {
+          // Compare by lastActive date
+          const existingDate = new Date(existing.lastActive || existing.createdAt);
+          const sessionDate = new Date(session.lastActive || session.createdAt);
+          if (sessionDate > existingDate) {
+            sessionMap.set(key, session);
+          }
+        }
+      }
+    }
+
+    // Sort: current session first, then by most recent activity
+    return Array.from(sessionMap.values()).sort((a, b) => {
+      if (a.isCurrent) return -1;
+      if (b.isCurrent) return 1;
+      const dateA = new Date(a.lastActive || a.createdAt);
+      const dateB = new Date(b.lastActive || b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
   }
 
   /**
@@ -271,10 +326,22 @@ class SecuritySessionService {
    * Format relative time for session activity
    * @param dateString - ISO 8601 date string
    */
-  formatRelativeTime(dateString: string): string {
+  formatRelativeTime(dateString: string | undefined | null): string {
+    if (!dateString) return 'Recently';
+
     const date = new Date(dateString);
+
+    // Check for invalid date
+    if (isNaN(date.getTime())) {
+      return 'Recently';
+    }
+
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+
+    // Handle future dates or negative diff
+    if (diffMs < 0) return 'Just now';
+
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);

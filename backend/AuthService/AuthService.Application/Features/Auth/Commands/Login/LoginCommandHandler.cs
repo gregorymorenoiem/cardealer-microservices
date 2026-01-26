@@ -204,28 +204,52 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var accessToken = _jwtGenerator.GenerateToken(user);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
         var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var sessionExpiresAt = DateTime.UtcNow.AddDays(7);
 
         var refreshTokenEntity = new RefreshTokenEntity(
             user.Id,
             refreshTokenValue,
-            DateTime.UtcNow.AddDays(7),
+            sessionExpiresAt,
             _requestContext.IpAddress
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
 
-        // Create user session for session management
-        var userSession = new UserSession(
-            userId: user.Id,
-            refreshTokenId: refreshTokenEntity.Id.ToString(),
-            deviceInfo: ParseDeviceInfo(_requestContext.UserAgent),
-            browser: ParseBrowser(_requestContext.UserAgent),
-            operatingSystem: ParseOperatingSystem(_requestContext.UserAgent),
-            ipAddress: _requestContext.IpAddress,
-            expiresAt: DateTime.UtcNow.AddDays(7)
-        );
-        await _sessionRepository.AddAsync(userSession, cancellationToken);
-        _logger.LogInformation("Created session {SessionId} for user {UserId}", userSession.Id, user.Id);
+        // Parse device info once
+        var deviceInfo = ParseDeviceInfo(_requestContext.UserAgent);
+        var browser = ParseBrowser(_requestContext.UserAgent);
+        var operatingSystem = ParseOperatingSystem(_requestContext.UserAgent);
+
+        // Check if there's an existing active session for the same device/browser/IP
+        var existingSession = await _sessionRepository.GetActiveSessionByDeviceAsync(
+            user.Id,
+            deviceInfo,
+            browser,
+            _requestContext.IpAddress,
+            cancellationToken);
+
+        if (existingSession != null)
+        {
+            // Reuse existing session - update with new refresh token
+            existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt);
+            await _sessionRepository.UpdateAsync(existingSession, cancellationToken);
+            _logger.LogInformation("Renewed existing session {SessionId} for user {UserId}", existingSession.Id, user.Id);
+        }
+        else
+        {
+            // Create new session only if no matching session exists
+            var userSession = new UserSession(
+                userId: user.Id,
+                refreshTokenId: refreshTokenEntity.Id.ToString(),
+                deviceInfo: deviceInfo,
+                browser: browser,
+                operatingSystem: operatingSystem,
+                ipAddress: _requestContext.IpAddress,
+                expiresAt: sessionExpiresAt
+            );
+            await _sessionRepository.AddAsync(userSession, cancellationToken);
+            _logger.LogInformation("Created new session {SessionId} for user {UserId}", userSession.Id, user.Id);
+        }
 
         user.ResetAccessFailedCount();
         await _userRepository.UpdateAsync(user, cancellationToken);
