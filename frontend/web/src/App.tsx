@@ -116,6 +116,7 @@ import {
 import DealerListingsPage from './pages/dealer/DealerListingsPage';
 import DealerSalesPage from './pages/dealer/DealerSalesPage';
 import DealerAlertsPage from './pages/dealer/DealerAlertsPage';
+import DealerBenchmarksPage from './pages/dealer/DealerBenchmarksPage';
 import CRMPage from './pages/dealer/CRMPage';
 import AnalyticsPage from './pages/dealer/AnalyticsPage';
 import DealerOnboardingPage from './pages/dealer/DealerOnboardingPage';
@@ -469,6 +470,16 @@ function App() {
             element={
               <ProtectedRoute requireDealer>
                 <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dealer Benchmarks - Market Comparison */}
+          <Route
+            path="/dealer/benchmarks"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerBenchmarksPage />
               </ProtectedRoute>
             }
           />

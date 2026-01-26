@@ -8,6 +8,7 @@ export { default as DealerHomePage } from './DealerHomePage';
 export { default as DealerInventoryPage } from './DealerInventoryPage';
 export { default as DealerAddVehiclePage } from './DealerAddVehiclePage';
 export { default as DealerAnalyticsPage } from './DealerAnalyticsPage';
+export { default as DealerBenchmarksPage } from './DealerBenchmarksPage';
 export { default as DealerSettingsPage } from './DealerSettingsPage';
 export { default as DealerListingsPage } from './DealerListingsPage';
 export { default as CRMPage } from './CRMPage';
