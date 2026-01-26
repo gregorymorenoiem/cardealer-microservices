@@ -4,7 +4,7 @@
 > **Puerto:** 5001  
 > **Última actualización:** Enero 26, 2026  
 > **Estado:** 🟢 ACTIVO  
-> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% Tests | ✅ 95% UI
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% Tests | ✅ 100% UI
 
 ---
 
@@ -16,17 +16,14 @@
 | AUTH-SEC-002 Revocar Sesión       | ✅ SecurityController | ✅ ActiveSessionsPage | Con código email       |
 | AUTH-SEC-003 Revocar Todas        | ✅ SecurityController | ✅ Modal confirmación | Logout global          |
 | AUTH-SEC-004 Cambiar Password     | ✅ SecurityController | ✅ ChangePasswordPage | Con validación         |
-| AUTH-SEC-005 Dispositivo Revocado | ✅ SecurityController | 🟡 Parcial            | Falta página bloqueada |
+| AUTH-SEC-005 Dispositivo Revocado | ✅ SecurityController | ✅ LoginPage (inline) | Verificación integrada |
 
 ### Rutas UI Existentes ✅
 
 - `/settings/security` → SecuritySettingsPage (general)
 - `/settings/sessions` → ActiveSessionsPage (lista de sesiones)
 - `/settings/password` → ChangePasswordPage
-
-### Rutas UI Faltantes 🔴
-
-- `/blocked-device` → Página cuando dispositivo está revocado
+- `/login` → LoginPage (incluye verificación de dispositivo revocado inline)
 
 **Verificación Backend:** AuthService/SecurityController existe en `/backend/AuthService/` ✅
 
