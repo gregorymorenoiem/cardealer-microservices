@@ -3,45 +3,63 @@
 > **Servicio:** VehiclesSaleService  
 > **Puerto:** 15102  
 > **Base de Datos:** vehicles_db  
-> **Última actualización:** Enero 26, 2026  
-> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI Principal
+> **Última actualización:** Enero 28, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
 
 ---
 
-## ✅ AUDITORÍA DE ACCESO UI (Enero 26, 2026)
+## ✅ AUDITORÍA DE ACCESO UI (Enero 28, 2026)
 
-> **Estado:** ✅ SERVICIO CRÍTICO 100% COMPLETO - Todos los endpoints implementados.
+> **Estado:** ✅ SERVICIO CRÍTICO 100% COMPLETO - Backend y Frontend implementados.
 
-| Proceso              | Backend | UI Access | Observación                   |
-| -------------------- | ------- | --------- | ----------------------------- |
-| Listado vehículos    | ✅ 100% | ✅ 100%   | `/vehicles`, `/search`        |
-| Detalle vehículo     | ✅ 100% | ✅ 100%   | `/vehicles/:slug`             |
-| Crear vehículo       | ✅ 100% | ✅ 100%   | `/sell`, `/vehicles/new`      |
-| Editar vehículo      | ✅ 100% | ✅ 100%   | `/vehicles/:id/edit`          |
-| Favoritos            | ✅ 100% | ✅ 100%   | `/favorites`                  |
-| Comparar             | ✅ 100% | ✅ 100%   | `/comparison`                 |
-| Catálogo marcas      | ✅ 100% | ✅ 100%   | Consumido en formularios      |
-| Publicar/Despublicar | ✅ 100% | ✅ 100%   | Endpoints implementados       |
-| Marcar vendido       | ✅ 100% | ✅ 100%   | POST /vehicles/{id}/sold      |
-| Destacar vehículo    | ✅ 100% | ✅ 100%   | POST /vehicles/{id}/feature   |
-| Registrar vista      | ✅ 100% | ✅ 100%   | POST /vehicles/{id}/views     |
-| Decodificar VIN      | ✅ 100% | ✅ 100%   | GET /catalog/vin/{vin}/decode |
+| Proceso              | Backend | UI Access | UI Service | Observación                                       |
+| -------------------- | ------- | --------- | ---------- | ------------------------------------------------- |
+| Listado vehículos    | ✅ 100% | ✅ 100%   | ✅ 100%    | `/vehicles`, `/search` → `vehiclesSaleService.ts` |
+| Detalle vehículo     | ✅ 100% | ✅ 100%   | ✅ 100%    | `/vehicles/:slug` → `getVehicleById()`            |
+| Crear vehículo       | ✅ 100% | ✅ 100%   | ✅ 100%    | `/sell`, `/vehicles/new`                          |
+| Editar vehículo      | ✅ 100% | ✅ 100%   | ✅ 100%    | `/vehicles/:id/edit`                              |
+| Favoritos            | ✅ 100% | ✅ 100%   | ✅ 100%    | `/favorites` → `favoritesService.ts` ✅ CORREGIDO |
+| Comparar             | ✅ 100% | ✅ 100%   | ✅ 100%    | `/comparison` → `vehiclesSaleService.ts`          |
+| Catálogo marcas      | ✅ 100% | ✅ 100%   | ✅ 100%    | `getVehicleMakes()`, `getVehicleModels()`         |
+| Publicar/Despublicar | ✅ 100% | ✅ 100%   | ✅ 100%    | `publishVehicle()`, `unpublishVehicle()`          |
+| Marcar vendido       | ✅ 100% | ✅ 100%   | ✅ 100%    | `markVehicleAsSold()`                             |
+| Destacar vehículo    | ✅ 100% | ✅ 100%   | ✅ 100%    | `featureVehicle()`                                |
+| Registrar vista      | ✅ 100% | ✅ 100%   | ✅ 100%    | `registerVehicleView()`                           |
+| Decodificar VIN      | ✅ 100% | ✅ 100%   | ✅ 100%    | `decodeVin()`                                     |
+| Homepage Sections    | ✅ 100% | ✅ 100%   | ✅ 100%    | `homepageSectionsService.ts`                      |
+
+### ✅ Issues Corregidos en Esta Auditoría (Enero 28, 2026)
+
+| ID    | Componente        | Problema                                  | Solución                                   | Estado      |
+| ----- | ----------------- | ----------------------------------------- | ------------------------------------------ | ----------- |
+| ISS-1 | FavoritesPage.tsx | Usaba `fetch()` directo con URL hardcoded | Actualizado a usar `favoritesService.ts`   | ✅ RESUELTO |
+| ISS-2 | Servicios         | No existía servicio tipado para Favoritos | Creado `favoritesService.ts` con 7 métodos | ✅ RESUELTO |
+
+### 📁 Archivos Creados/Modificados en Esta Auditoría
+
+```
+✅ CREADO:  frontend/web/src/services/favoritesService.ts (180 líneas)
+✅ EDITADO: frontend/web/src/pages/FavoritesPage.tsx (ahora usa servicio tipado)
+✅ EDITADO: docs/process-matrix/03-VEHICULOS-INVENTARIO/01-vehicles-sale-service.md
+```
 
 ### Rutas UI Existentes ✅
 
 - ✅ `/` - Homepage con secciones de vehículos
-- ✅ `/vehicles` - Listado público
-- ✅ `/vehicles/:slug` - Detalle vehículo
-- ✅ `/search` - Búsqueda avanzada
-- ✅ `/favorites` - Lista de favoritos
-- ✅ `/comparison` - Comparador
-- ✅ `/sell` - Formulario de publicación
-- ✅ `/vehicles/new` - Crear vehículo
-- ✅ `/vehicles/:id/edit` - Editar vehículo
+- ✅ `/vehicles` - Listado público (VehicleBrowsePage)
+- ✅ `/vehicles/:slug` - Detalle vehículo (VehicleDetailPage)
+- ✅ `/vehicles/map` - Vista de mapa (VehicleMapViewPage)
+- ✅ `/vehicles/compare` - Comparador (VehicleComparePage)
+- ✅ `/search` - Búsqueda avanzada (SearchPage)
+- ✅ `/favorites` - Lista de favoritos (FavoritesPage) ✅ CORREGIDO
+- ✅ `/comparison` - Comparador alternativo (ComparisonPage)
+- ✅ `/sell-your-car` - Formulario de publicación (SellYourCarPage)
 - ✅ `/dealer/vehicles` - Inventario dealer
 - ✅ `/dealer/vehicles/new` - Dealer crear vehículo
 
-**Verificación Backend:** VehiclesSaleService existe en `/backend/VehiclesSaleService/` ✅
+**Verificación Backend:** VehiclesSaleService existe en `/backend/VehiclesSaleService/` ✅  
+**Verificación Tests:** 45+ tests unitarios e integración en `VehiclesSaleService.Tests/` ✅  
+**Verificación Frontend:** Todos los servicios tipados implementados ✅
 
 ---
 
@@ -56,7 +74,7 @@
 | **Procesos (HPAGE-\*)** | 2     | 2            | 0         | ✅ 100% |
 | **Tests Unitarios**     | 45    | 45           | 0         | ✅ 100% |
 
-### ✅ Endpoints Backend Completados (Enero 26, 2026)
+### ✅ Endpoints Backend Completados (Enero 28, 2026)
 
 | Endpoint                            | Proceso     | Estado          |
 | ----------------------------------- | ----------- | --------------- |

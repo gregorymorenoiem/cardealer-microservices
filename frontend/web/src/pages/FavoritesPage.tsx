@@ -6,28 +6,17 @@ import Input from '@/components/atoms/Input';
 import VehicleCard from '@/components/organisms/VehicleCard';
 import VehicleCardSkeleton from '@/components/organisms/VehicleCardSkeleton';
 import EmptyState from '@/components/organisms/EmptyState';
-
-interface Favorite {
-  id: string;
-  vehicleId: string;
-  vehicle: {
-    id: string;
-    title: string;
-    make: string;
-    model: string;
-    year: number;
-    price: number;
-    mileage: number;
-    imageUrl: string;
-  };
-  notes: string;
-  notifyOnPriceChange: boolean;
-  addedAt: string;
-}
+import {
+  getFavorites,
+  removeFavorite as removeFavoriteApi,
+  updateFavorite,
+  type FavoriteVehicle,
+} from '@/services/favoritesService';
 
 export function FavoritesPage() {
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteVehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
 
@@ -36,41 +25,28 @@ export function FavoritesPage() {
   }, []);
 
   const loadFavorites = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      // ProtectedRoute ya se encarga de la redirección, no necesitamos hacerlo aquí
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetch('https://api.okla.com.do/api/favorites', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
+      setLoading(true);
+      setError(null);
+      const data = await getFavorites();
       setFavorites(data);
-    } catch (error) {
-      console.error('Failed to load favorites:', error);
+    } catch (err) {
+      console.error('Failed to load favorites:', err);
+      setError('Error al cargar favoritos. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
-  const removeFavorite = async (vehicleId: string) => {
+  const handleRemoveFavorite = async (vehicleId: string) => {
     if (!confirm('¿Estás seguro de eliminar este favorito?')) return;
 
-    const token = localStorage.getItem('accessToken');
     try {
-      const response = await fetch(`https://api.okla.com.do/api/favorites/${vehicleId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        setFavorites(favorites.filter((f) => f.vehicleId !== vehicleId));
-      }
-    } catch (error) {
-      console.error('Failed to remove favorite:', error);
+      await removeFavoriteApi(vehicleId);
+      setFavorites(favorites.filter((f) => f.id !== vehicleId));
+    } catch (err) {
+      console.error('Failed to remove favorite:', err);
+      alert('Error al eliminar favorito. Por favor, intenta de nuevo.');
     }
   };
 
@@ -89,6 +65,21 @@ export function FavoritesPage() {
           <div className="text-center py-12">
             <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
             <p className="mt-4 text-gray-600">Cargando favoritos...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-red-600">{error}</p>
+            <Button onClick={loadFavorites} className="mt-4">
+              Reintentar
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -118,17 +109,17 @@ export function FavoritesPage() {
           />
         ) : (
           <div className="space-y-4">
-            {favorites.map((favorite) => (
+            {favorites.map((vehicle) => (
               <div
-                key={favorite.id}
+                key={vehicle.id}
                 className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col md:flex-row">
                   {/* Image */}
                   <div className="md:w-1/3">
                     <img
-                      src={favorite.vehicle.imageUrl}
-                      alt={favorite.vehicle.title}
+                      src={vehicle.primaryImageUrl || '/placeholder-vehicle.jpg'}
+                      alt={vehicle.title}
                       className="w-full h-48 md:h-full object-cover"
                     />
                   </div>
@@ -137,34 +128,37 @@ export function FavoritesPage() {
                   <div className="flex-1 p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-2xl font-bold mb-2">{favorite.vehicle.title}</h3>
+                        <h3 className="text-2xl font-bold mb-2">{vehicle.title}</h3>
                         <p className="text-gray-600">
-                          {favorite.vehicle.year} • {favorite.vehicle.mileage.toLocaleString()} km
+                          {vehicle.year} • {vehicle.make} {vehicle.model} •{' '}
+                          {vehicle.mileage?.toLocaleString() || 'N/A'} km
                         </p>
                       </div>
                       <p className="text-3xl font-bold text-blue-600">
-                        {formatPrice(favorite.vehicle.price)}
+                        {formatPrice(vehicle.price)}
                       </p>
                     </div>
 
-                    {/* Notes Section */}
-                    {favorite.notes && (
-                      <div className="mb-4 bg-gray-50 p-3 rounded-md">
-                        <p className="text-sm text-gray-700">{favorite.notes}</p>
-                      </div>
-                    )}
+                    {/* Vehicle Info */}
+                    <div className="mb-4 flex gap-4 text-sm text-gray-600">
+                      <span>{vehicle.fuelType}</span>
+                      <span>•</span>
+                      <span>{vehicle.transmission}</span>
+                      <span>•</span>
+                      <span>{vehicle.bodyStyle}</span>
+                    </div>
 
                     {/* Actions */}
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => (window.location.href = `/vehicles/${favorite.vehicleId}`)}
+                        onClick={() => (window.location.href = `/vehicles/${vehicle.id}`)}
                         leftIcon={<FiExternalLink />}
                       >
                         Ver Detalles
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => removeFavorite(favorite.vehicleId)}
+                        onClick={() => handleRemoveFavorite(vehicle.id)}
                         leftIcon={<FiTrash2 />}
                       >
                         Eliminar
