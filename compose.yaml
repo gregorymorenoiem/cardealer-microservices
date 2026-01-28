@@ -922,6 +922,184 @@ services:
       timeout: 10s
       retries: 3
 
+  # ──────────────────────────────────────────────────────────────────────
+  # 🎬 SERVICIOS DE PROCESAMIENTO 360
+  # ──────────────────────────────────────────────────────────────────────
+
+  # Video360Service - Puerto 15060 (Extracción de frames de videos 360)
+  video360service:
+    build:
+      context: ./backend
+      dockerfile: Video360Service/Video360Service.Api/Dockerfile.dev
+    container_name: video360service
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          memory: 1024M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=video360service;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      # Configuración de procesamiento
+      Processing__MaxConcurrentJobs: "3"
+      Processing__FrameCount: "6"
+      Processing__OutputWidth: "1920"
+      Processing__OutputHeight: "1080"
+      Processing__JpegQuality: "90"
+    ports:
+      - "15060:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - okla-net
+    volumes:
+      - ./backend/Video360Service:/app/Video360Service
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - video360_temp:/app/temp
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # BackgroundRemovalService - Puerto 15061 (Remoción de fondos con IA)
+  backgroundremovalservice:
+    build:
+      context: ./backend
+      dockerfile: BackgroundRemovalService/BackgroundRemovalService.Api/Dockerfile.dev
+    container_name: backgroundremovalservice
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          memory: 1024M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=backgroundremovalservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      # Configuración de proveedores de remoción de fondos
+      BackgroundRemoval__DefaultProvider: "local"
+      BackgroundRemoval__RemoveBg__ApiKey: "${REMOVEBG_API_KEY:-}"
+      BackgroundRemoval__Photoroom__ApiKey: "${PHOTOROOM_API_KEY:-}"
+    ports:
+      - "15061:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - okla-net
+    volumes:
+      - ./backend/BackgroundRemovalService:/app/BackgroundRemovalService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vehicle360ProcessingService - Puerto 15062 (Orquestador de procesamiento 360)
+  vehicle360processingservice:
+    build:
+      context: ./backend
+      dockerfile: Vehicle360ProcessingService/Vehicle360ProcessingService.Api/Dockerfile.dev
+    container_name: vehicle360processingservice
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=vehicle360processingservice;Username=postgres;Password=password"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      # URLs de servicios downstream
+      ServiceUrls__MediaService: "http://mediaservice:80"
+      ServiceUrls__Video360Service: "http://video360service:80"
+      ServiceUrls__BackgroundRemovalService: "http://backgroundremovalservice:80"
+      # Configuración de resiliencia (Polly)
+      Resilience__RetryCount: "3"
+      Resilience__CircuitBreakerThreshold: "5"
+      Resilience__CircuitBreakerDurationSeconds: "30"
+    ports:
+      - "15062:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mediaservice:
+        condition: service_healthy
+      video360service:
+        condition: service_healthy
+      backgroundremovalservice:
+        condition: service_healthy
+    networks:
+      - okla-net
+    volumes:
+      - ./backend/Vehicle360ProcessingService:/app/Vehicle360ProcessingService
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # DealerManagementService - Puerto 15039 (Gestión de Dealers)
   dealermanagementservice:
     build:
@@ -3543,3 +3721,5 @@ volumes:
   consul_data:
   # FASE 2: Observability volumes
   seq_data:
+  # Video360 Processing
+  video360_temp:

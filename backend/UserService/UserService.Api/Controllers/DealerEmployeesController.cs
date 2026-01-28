@@ -144,6 +144,27 @@ public class DealerEmployeesController : ControllerBase
     }
 
     /// <summary>
+    /// Resend an invitation that is pending or expired
+    /// </summary>
+    [HttpPost("invitations/{invitationId}/resend")]
+    [ProducesResponseType(typeof(DealerEmployeeInvitationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<DealerEmployeeInvitationDto>> ResendInvitation(
+        Guid dealerId, 
+        Guid invitationId)
+    {
+        _logger.LogInformation("Resending invitation {InvitationId} for dealer {DealerId}", invitationId, dealerId);
+
+        // TODO: Get current user ID from JWT claims
+        var currentUserId = Guid.Empty; // Placeholder - should come from User.Claims
+        
+        var result = await _mediator.Send(new ResendInvitationCommand(dealerId, invitationId, currentUserId));
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get available roles
     /// </summary>
     [HttpGet("~/api/dealer-roles")]

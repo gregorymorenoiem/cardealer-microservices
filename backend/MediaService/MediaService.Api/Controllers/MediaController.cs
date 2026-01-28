@@ -23,6 +23,50 @@ public class MediaController : ControllerBase
     }
 
     /// <summary>
+    /// Generic file upload endpoint - supports videos and other files
+    /// </summary>
+    [HttpPost("upload")]
+    [RequestSizeLimit(524_288_000)] // 500MB limit for videos
+    public async Task<ActionResult<object>> Upload(
+        [FromForm] IFormFile file, 
+        [FromForm] string? folder = "uploads",
+        [FromForm] string? type = "file")
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { error = "No file provided" });
+        }
+
+        try
+        {
+            // Generate storage key
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var storageKey = $"{folder}/{DateTime.UtcNow:yyyy/MM/dd}/{fileName}";
+
+            // Upload to storage
+            using var stream = file.OpenReadStream();
+            await _storageService.UploadFileAsync(storageKey, stream, file.ContentType);
+
+            // Get public URL
+            var url = await _storageService.GetFileUrlAsync(storageKey);
+
+            return Ok(new
+            {
+                url = url,
+                publicId = storageKey,
+                storageKey = storageKey,
+                size = file.Length,
+                contentType = file.ContentType,
+                fileName = file.FileName
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = $"Upload failed: {ex.Message}" });
+        }
+    }
+
+    /// <summary>
     /// Simple direct file upload endpoint for KYC documents and other use cases
     /// </summary>
     [HttpPost("upload/image")]

@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using ChatbotService.Application.Features.Conversations.Commands;
-using ChatbotService.Application.Features.Conversations.Queries;
 using ChatbotService.Application.DTOs;
+using ChatbotService.Application.Features.Sessions.Commands;
+using ChatbotService.Domain.Interfaces;
 
 namespace ChatbotService.Api.Controllers;
 
@@ -13,129 +13,249 @@ public class ChatController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ChatController> _logger;
+    private readonly IChatSessionRepository _sessionRepository;
+    private readonly IChatMessageRepository _messageRepository;
 
-    public ChatController(IMediator mediator, ILogger<ChatController> logger)
+    public ChatController(
+        IMediator mediator,
+        ILogger<ChatController> logger,
+        IChatSessionRepository sessionRepository,
+        IChatMessageRepository messageRepository)
     {
         _mediator = mediator;
         _logger = logger;
+        _sessionRepository = sessionRepository;
+        _messageRepository = messageRepository;
     }
 
     /// <summary>
-    /// Create a new conversation (alternative to SignalR for REST clients)
+    /// Start a new chat session
     /// </summary>
-    [HttpPost("conversations")]
-    [ProducesResponseType(typeof(ConversationDto), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ConversationDto>> CreateConversation([FromBody] CreateConversationDto request)
-    {
-        var command = new CreateConversationCommand(
-            request.UserId,
-            request.SessionId,
-            request.VehicleId,
-            request.UserEmail,
-            request.UserName,
-            request.UserPhone,
-            request.VehicleContext
-        );
-
-        var conversation = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetConversation), new { id = conversation.Id }, conversation);
-    }
-
-    /// <summary>
-    /// Get a conversation by ID
-    /// </summary>
-    [HttpGet("conversations/{id:guid}")]
-    [ProducesResponseType(typeof(ConversationDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ConversationDto>> GetConversation(Guid id)
-    {
-        var query = new GetConversationQuery(id);
-        var conversation = await _mediator.Send(query);
-
-        if (conversation == null)
-            return NotFound();
-
-        return Ok(conversation);
-    }
-
-    /// <summary>
-    /// Get conversations for a user
-    /// </summary>
-    [HttpGet("conversations/user/{userId:guid}")]
-    [Authorize]
-    [ProducesResponseType(typeof(List<ConversationSummaryDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<ConversationSummaryDto>>> GetUserConversations(
-        Guid userId,
-        [FromQuery] int skip = 0,
-        [FromQuery] int take = 20)
-    {
-        var query = new GetUserConversationsQuery(userId, skip, take);
-        var conversations = await _mediator.Send(query);
-        return Ok(conversations);
-    }
-
-    /// <summary>
-    /// Send a message (alternative to SignalR for REST clients)
-    /// </summary>
-    [HttpPost("conversations/{conversationId:guid}/messages")]
-    [ProducesResponseType(typeof(ChatbotResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ChatbotResponseDto>> SendMessage(
-        Guid conversationId,
-        [FromBody] ChatSendMessageRequest request)
+    [HttpPost("start")]
+    [ProducesResponseType(typeof(StartSessionResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> StartSession([FromBody] StartSessionRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var command = new SendMessageCommand(conversationId, request.Content, request.VehicleContext);
-            var response = await _mediator.Send(command);
-            return Ok(response);
+            var command = new StartSessionCommand(
+                request.UserId,
+                request.UserName,
+                request.UserEmail,
+                request.UserPhone,
+                request.SessionType.ToString(),
+                request.Channel,
+                request.ChannelUserId,
+                request.UserAgent,
+                request.IpAddress,
+                request.DeviceType,
+                request.Language ?? "es",
+                request.DealerId);
+
+            var result = await _mediator.Send(command, cancellationToken);
+            return Ok(result);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return NotFound(ex.Message);
+            _logger.LogError(ex, "Error starting session");
+            return StatusCode(500, new { error = "Internal server error" });
         }
     }
 
     /// <summary>
-    /// End a conversation
+    /// Send a message to the chatbot
     /// </summary>
-    [HttpPost("conversations/{conversationId:guid}/end")]
-    [ProducesResponseType(typeof(ConversationDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ConversationDto>> EndConversation(
-        Guid conversationId,
-        [FromBody] EndConversationRequest request)
+    [HttpPost("message")]
+    [ProducesResponseType(typeof(ChatbotResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var command = new EndConversationCommand(conversationId, request.Reason);
-            var conversation = await _mediator.Send(command);
-            return Ok(conversation);
+            var command = new SendMessageCommand(
+                request.SessionToken,
+                request.Message,
+                request.Type.ToString(),
+                request.MediaUrl);
+
+            var result = await _mediator.Send(command, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
-            return NotFound(ex.Message);
+            _logger.LogWarning(ex, "Invalid operation sending message");
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending message");
+            return StatusCode(500, new { error = "Internal server error" });
         }
     }
 
     /// <summary>
-    /// Get chat analytics
+    /// End a chat session
     /// </summary>
-    [HttpGet("analytics")]
-    [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ChatAnalyticsDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ChatAnalyticsDto>> GetAnalytics(
-        [FromQuery] DateTime? from = null,
-        [FromQuery] DateTime? to = null)
+    [HttpPost("end")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> EndSession([FromBody] EndSessionRequest request, CancellationToken cancellationToken)
     {
-        var startDate = from ?? DateTime.UtcNow.AddMonths(-1);
-        var endDate = to ?? DateTime.UtcNow;
-        var query = new GetChatAnalyticsQuery(startDate, endDate);
-        var analytics = await _mediator.Send(query);
-        return Ok(analytics);
+        try
+        {
+            var command = new EndSessionCommand(request.SessionToken, request.EndReason);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result)
+            {
+                return NotFound(new { error = "Session not found" });
+            }
+
+            return Ok(new { message = "Session ended successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error ending session");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Transfer session to a human agent
+    /// </summary>
+    [HttpPost("transfer")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> TransferToAgent([FromBody] TransferToAgentRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new TransferToAgentCommand(request.SessionToken, request.TransferReason, null);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+            {
+                return NotFound(new { error = "Session not found or transfer failed" });
+            }
+
+            return Ok(new { message = "Session transferred to agent", result.AgentName, result.EstimatedWaitTimeMinutes });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error transferring to agent");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Get session by token
+    /// </summary>
+    [HttpGet("session")]
+    [ProducesResponseType(typeof(ChatSessionDto), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetSessionByToken([FromQuery] string token, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessionRepository.GetByTokenAsync(token, cancellationToken);
+            if (session == null)
+            {
+                return NotFound(new { error = "Session not found" });
+            }
+
+            var dto = new ChatSessionDto
+            {
+                Id = session.Id,
+                SessionToken = session.SessionToken,
+                UserId = session.UserId,
+                UserName = session.UserName,
+                UserEmail = session.UserEmail,
+                SessionType = session.SessionType,
+                Channel = session.Channel,
+                Status = session.Status,
+                MessageCount = session.MessageCount,
+                InteractionCount = session.InteractionCount,
+                MaxInteractionsPerSession = session.MaxInteractionsPerSession,
+                InteractionLimitReached = session.InteractionLimitReached,
+                CreatedAt = session.CreatedAt,
+                LastActivityAt = session.LastActivityAt
+            };
+
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting session");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Get messages for a session
+    /// </summary>
+    [HttpGet("session/{sessionToken}/messages")]
+    [ProducesResponseType(typeof(IEnumerable<ChatMessageDto>), 200)]
+    public async Task<IActionResult> GetSessionMessages(string sessionToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var messages = await _messageRepository.GetBySessionTokenAsync(sessionToken, cancellationToken);
+
+            var dtos = messages.Select(m => new ChatMessageDto
+            {
+                Id = m.Id,
+                SessionId = m.SessionId,
+                Type = m.Type,
+                Content = m.Content,
+                MediaUrl = m.MediaUrl,
+                IntentName = m.DialogflowIntentName,
+                ConfidenceScore = m.ConfidenceScore,
+                IsFromBot = m.IsFromBot,
+                ResponseTimeMs = m.ResponseTimeMs,
+                ConsumedInteraction = m.ConsumedInteraction,
+                CreatedAt = m.CreatedAt
+            });
+
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting session messages");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Get active sessions count
+    /// </summary>
+    [HttpGet("sessions/active/count")]
+    [ProducesResponseType(typeof(int), 200)]
+    public async Task<IActionResult> GetActiveSessionsCount(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var sessions = await _sessionRepository.GetActiveSessionsAsync(cancellationToken);
+            return Ok(new { count = sessions.Count() });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting active sessions count");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Health check
+    /// </summary>
+    [HttpGet("health")]
+    [AllowAnonymous]
+    public IActionResult HealthCheck()
+    {
+        return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
     }
 }
-
-// Request DTOs
-public record ChatSendMessageRequest(string Content, VehicleContextDto? VehicleContext);
-public record EndConversationRequest(string Reason);

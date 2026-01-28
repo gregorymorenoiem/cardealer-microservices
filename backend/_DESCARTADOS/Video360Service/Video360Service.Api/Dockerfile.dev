@@ -1,0 +1,32 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+# Instalar FFmpeg para procesamiento de video
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
+# Capa de build para desarrollo con hot-reload
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Instalar FFmpeg en la capa de build también
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
+# Copiar archivos de proyecto para restore
+COPY ["Video360Service/Video360Service.Api/Video360Service.Api.csproj", "Video360Service/Video360Service.Api/"]
+COPY ["Video360Service/Video360Service.Application/Video360Service.Application.csproj", "Video360Service/Video360Service.Application/"]
+COPY ["Video360Service/Video360Service.Domain/Video360Service.Domain.csproj", "Video360Service/Video360Service.Domain/"]
+COPY ["Video360Service/Video360Service.Infrastructure/Video360Service.Infrastructure.csproj", "Video360Service/Video360Service.Infrastructure/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+
+# Restore de dependencias
+RUN dotnet restore "Video360Service/Video360Service.Api/Video360Service.Api.csproj"
+
+# Copiar todo el código fuente
+COPY . .
+
+# Desarrollo con hot-reload
+WORKDIR "/src/Video360Service/Video360Service.Api"
+ENTRYPOINT ["dotnet", "watch", "run", "--no-launch-profile", "--urls", "http://+:80"]

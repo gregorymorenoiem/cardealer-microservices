@@ -1,22 +1,23 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
-EXPOSE 80
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project files
-COPY ["ChatbotService/ChatbotService.Api/ChatbotService.Api.csproj", "ChatbotService.Api/"]
-COPY ["ChatbotService/ChatbotService.Application/ChatbotService.Application.csproj", "ChatbotService.Application/"]
-COPY ["ChatbotService/ChatbotService.Infrastructure/ChatbotService.Infrastructure.csproj", "ChatbotService.Infrastructure/"]
-COPY ["ChatbotService/ChatbotService.Domain/ChatbotService.Domain.csproj", "ChatbotService.Domain/"]
+COPY ["ChatbotService.Api/ChatbotService.Api.csproj", "ChatbotService.Api/"]
+COPY ["ChatbotService.Application/ChatbotService.Application.csproj", "ChatbotService.Application/"]
+COPY ["ChatbotService.Domain/ChatbotService.Domain.csproj", "ChatbotService.Domain/"]
+COPY ["ChatbotService.Infrastructure/ChatbotService.Infrastructure.csproj", "ChatbotService.Infrastructure/"]
 
 # Restore dependencies
 RUN dotnet restore "ChatbotService.Api/ChatbotService.Api.csproj"
 
-# Copy everything else
-COPY ChatbotService/ .
+# Copy source code
+COPY . .
 
 # Build
 WORKDIR "/src/ChatbotService.Api"
@@ -28,5 +29,12 @@ RUN dotnet publish "ChatbotService.Api.csproj" -c Release -o /app/publish /p:Use
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENV ASPNETCORE_URLS=http://+:80
+
+# Create logs directory
+RUN mkdir -p /app/logs && chmod 755 /app/logs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl --fail http://localhost:8080/health || exit 1
+
 ENTRYPOINT ["dotnet", "ChatbotService.Api.dll"]

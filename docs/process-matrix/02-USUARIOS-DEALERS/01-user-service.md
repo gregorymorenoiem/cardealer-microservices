@@ -3,29 +3,32 @@
 > **Servicio:** UserService  
 > **Puerto:** 15101  
 > **Base de Datos:** user_db  
-> **Última actualización:** Enero 26, 2026  
+> **Última actualización:** Enero 28, 2026  
 > **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
 
 ---
 
-## ⚠️ AUDITORÍA DE ACCESO UI (Enero 26, 2026)
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 28, 2026)
 
 > **Estado General:** Backend 100% completo. UI 100% completo.
 
-| Proceso              | Backend | UI Access | Observación |
-| -------------------- | ------- | --------- | ----------- |
-| Gestión Usuarios     | ✅ 100% | ✅ 100%   | OK          |
-| Gestión Sellers      | ✅ 100% | ✅ 100%   | OK          |
-| Gestión Dealers      | ✅ 100% | ✅ 100%   | OK          |
-| **Dealer Employees** | ✅ 100% | ✅ 100%   | OK          |
-| Onboarding           | ✅ 100% | ✅ 100%   | OK          |
+| Proceso                    | Backend | UI Access | Observación                           |
+| -------------------------- | ------- | --------- | ------------------------------------- |
+| Gestión Usuarios           | ✅ 100% | ✅ 100%   | OK                                    |
+| Gestión Sellers            | ✅ 100% | ✅ 100%   | OK                                    |
+| Gestión Dealers            | ✅ 100% | ✅ 100%   | OK                                    |
+| **Dealer Employees**       | ✅ 100% | ✅ 100%   | OK                                    |
+| **Invitaciones Empleados** | ✅ 100% | ✅ 100%   | ✅ NUEVO - Aceptar/Rechazar via token |
+| Onboarding                 | ✅ 100% | ✅ 100%   | OK                                    |
 
-### ✅ Rutas UI Implementadas (Enero 26, 2026)
+### ✅ Rutas UI Implementadas (Enero 28, 2026)
 
-| Ruta                                | Funcionalidad                   | Estado      |
-| ----------------------------------- | ------------------------------- | ----------- |
-| `/dealer/employees`                 | Gestión de empleados del dealer | ✅ COMPLETO |
-| `/dealer/employees/:id/permissions` | Permisos de empleado            | ✅ COMPLETO |
+| Ruta                                | Funcionalidad                     | Estado      |
+| ----------------------------------- | --------------------------------- | ----------- |
+| `/dealer/employees`                 | Gestión de empleados del dealer   | ✅ COMPLETO |
+| `/dealer/employees/:id/permissions` | Permisos de empleado              | ✅ COMPLETO |
+| `/invitations/:token`               | Ver detalles de invitación        | ✅ NUEVO    |
+| `/invitations/:token/accept`        | Aceptar invitación y crear cuenta | ✅ NUEVO    |
 
 ---
 
@@ -33,12 +36,13 @@
 
 | Componente               | Total | Implementado | Pendiente | Estado  |
 | ------------------------ | ----- | ------------ | --------- | ------- |
-| **Controllers**          | 9     | 9            | 0         | ✅ 100% |
+| **Controllers**          | 11    | 11           | 0         | ✅ 100% |
 | **Procesos (USER-\*)**   | 5     | 5            | 0         | ✅ 100% |
 | **Procesos (UROLE-\*)**  | 2     | 2            | 0         | ✅ 100% |
 | **Procesos (SELLER-\*)** | 2     | 2            | 0         | ✅ 100% |
 | **Procesos (DEALER-\*)** | 2     | 2            | 0         | ✅ 100% |
 | **Procesos (DEMP-\*)**   | 5     | 5            | 0         | ✅ 100% |
+| **Procesos (INV-\*)**    | 4     | 4            | 0         | ✅ 100% |
 | **Procesos (DONB-\*)**   | 4     | 4            | 0         | ✅ 100% |
 | **Procesos (DMOD-\*)**   | 3     | 3            | 0         | ✅ 100% |
 | **Tests Unitarios**      | 125   | 125          | 0         | ✅ 100% |
@@ -52,10 +56,12 @@
 | SellersController          | SellersController.cs          | 6         | ✅ 100% |
 | DealersController          | DealersController.cs          | 6         | ✅ 100% |
 | DealerEmployeesController  | DealerEmployeesController.cs  | 5         | ✅ 100% |
+| **InvitationsController**  | InvitationsController.cs      | 3         | ✅ 100% |
 | DealerOnboardingController | DealerOnboardingController.cs | 4         | ✅ 100% |
 | DealerModulesController    | DealerModulesController.cs    | 3         | ✅ 100% |
 | OnboardingController       | OnboardingController.cs       | 3         | ✅ 100% |
 | SellerProfileController    | SellerProfileController.cs    | 4+        | ✅ 100% |
+| PrivacyController          | PrivacyController.cs          | 2         | ✅ 100% |
 
 > **Nota:** Existen 3 controllers auxiliares adicionales: `HealthController`, `ErrorsController`, `DealerOnboardingV2Controller`
 
@@ -86,17 +92,21 @@ El UserService gestiona todos los perfiles de usuario de OKLA: usuarios base, ve
 
 ### 1.3 Controllers
 
-| Controller                 | Archivo                       | Endpoints |
-| -------------------------- | ----------------------------- | --------- |
-| UsersController            | UsersController.cs            | 5         |
-| UserRolesController        | UserRolesController.cs        | 4         |
-| SellersController          | SellersController.cs          | 6         |
-| DealersController          | DealersController.cs          | 6         |
-| DealerEmployeesController  | DealerEmployeesController.cs  | 5         |
-| DealerOnboardingController | DealerOnboardingController.cs | 4         |
-| DealerModulesController    | DealerModulesController.cs    | 3         |
-| OnboardingController       | OnboardingController.cs       | 3         |
-| SellerProfileController    | SellerProfileController.cs    | 4         |
+| Controller                 | Archivo                       | Endpoints | Estado |
+| -------------------------- | ----------------------------- | --------- | ------ |
+| UsersController            | UsersController.cs            | 5         | ✅     |
+| UserRolesController        | UserRolesController.cs        | 4         | ✅     |
+| SellersController          | SellersController.cs          | 6         | ✅     |
+| DealersController          | DealersController.cs          | 6         | ✅     |
+| DealerEmployeesController  | DealerEmployeesController.cs  | 5         | ✅     |
+| **InvitationsController**  | InvitationsController.cs      | 3         | ✅ NEW |
+| DealerOnboardingController | DealerOnboardingController.cs | 4         | ✅     |
+| DealerModulesController    | DealerModulesController.cs    | 3         | ✅     |
+| OnboardingController       | OnboardingController.cs       | 3         | ✅     |
+| SellerProfileController    | SellerProfileController.cs    | 4         | ✅     |
+| **PrivacyController**      | PrivacyController.cs          | 2         | ✅ NEW |
+
+**Total: 11 Controllers | 45 Endpoints**
 
 ### 1.4 Arquitectura
 
@@ -226,6 +236,32 @@ El UserService gestiona todos los perfiles de usuario de OKLA: usuarios base, ve
 | GET    | `/api/dealers/{dealerId}/modules`                    | Listar módulos      | ✅             |
 | POST   | `/api/dealers/{dealerId}/modules/{moduleId}/enable`  | Habilitar módulo    | ✅ DealerOwner |
 | POST   | `/api/dealers/{dealerId}/modules/{moduleId}/disable` | Deshabilitar módulo | ✅ DealerOwner |
+
+### 2.8 InvitationsController ✅ NEW
+
+> **Propósito:** Endpoints públicos (sin auth) para que empleados invitados acepten/rechacen invitaciones vía token único.
+
+| Método | Endpoint                           | Descripción                    | Auth    |
+| ------ | ---------------------------------- | ------------------------------ | ------- |
+| GET    | `/api/invitations/{token}`         | Obtener detalles de invitación | ❌ None |
+| POST   | `/api/invitations/{token}/accept`  | Aceptar invitación             | ❌ None |
+| POST   | `/api/invitations/{token}/decline` | Rechazar invitación            | ❌ None |
+
+**Flujo:**
+
+```
+1. Dealer envía invitación → Email con link /invitations/{token}
+2. Empleado accede al link → GET /invitations/{token} → Muestra detalles (dealer, rol)
+3. Empleado acepta → POST /invitations/{token}/accept → Crea cuenta + asigna rol DealerEmployee
+4. O rechaza → POST /invitations/{token}/decline → Marca invitación como rechazada
+```
+
+### 2.9 PrivacyController ✅ NEW
+
+| Método | Endpoint                      | Descripción                   | Auth |
+| ------ | ----------------------------- | ----------------------------- | ---- |
+| GET    | `/api/users/{userId}/privacy` | Obtener configuración privacy | ✅   |
+| PUT    | `/api/users/{userId}/privacy` | Actualizar configuración      | ✅   |
 
 ---
 
@@ -1040,6 +1076,44 @@ sequenceDiagram
 
 **Descripción**: CRUD completo de dealers/concesionarios.
 
+### 6.8 Procesos de Invitaciones ✅ NEW
+
+| Proceso         | Endpoint                                                       | Estado              | Handler                   |
+| --------------- | -------------------------------------------------------------- | ------------------- | ------------------------- |
+| **INV-GET-001** | `GET /api/invitations/{token}`                                 | 🟢 **IMPLEMENTADO** | GetInvitationDetailsQuery |
+| **INV-ACC-001** | `POST /api/invitations/{token}/accept`                         | 🟢 **IMPLEMENTADO** | AcceptInvitationCommand   |
+| **INV-DEC-001** | `POST /api/invitations/{token}/decline`                        | 🟢 **IMPLEMENTADO** | DeclineInvitationCommand  |
+| **INV-RSN-001** | `POST /api/dealers/{dealerId}/employees/{invitationId}/resend` | 🟢 **IMPLEMENTADO** | ResendInvitationCommand   |
+
+**Descripción**: Sistema completo de invitaciones para empleados de dealers.
+
+**Flujo de Aceptación:**
+
+1. Dealer Owner envía invitación → `POST /api/dealers/{id}/employees/invite`
+2. Sistema crea `DealerEmployeeInvitation` con token único
+3. NotificationService envía email con link `/invitations/{token}`
+4. Empleado accede al link → Frontend llama `GET /api/invitations/{token}`
+5. Empleado ve detalles: Dealer name, rol asignado, fecha expiración
+6. Empleado acepta → `POST /api/invitations/{token}/accept` con datos de cuenta
+7. Sistema crea User + asigna rol DealerEmployee + marca invitación como aceptada
+8. Employee ya puede acceder al dashboard del dealer
+
+**UseCases Implementados:**
+
+- `AcceptInvitationCommand` - Crea usuario y asigna rol
+- `DeclineInvitationCommand` - Marca invitación como rechazada
+- `ResendInvitationCommand` - Reenvía email con nuevo token
+- `GetInvitationDetailsQuery` - Obtiene info para mostrar en UI
+
+### 6.9 Procesos de Privacy ✅ NEW
+
+| Proceso          | Endpoint                          | Estado              | Handler                 |
+| ---------------- | --------------------------------- | ------------------- | ----------------------- |
+| **PRIV-GET-001** | `GET /api/users/{userId}/privacy` | 🟢 **IMPLEMENTADO** | GetPrivacySettingsQuery |
+| **PRIV-UPD-001** | `PUT /api/users/{userId}/privacy` | 🟢 **IMPLEMENTADO** | UpdatePrivacyCommand    |
+
+**Descripción**: Configuración de privacidad del usuario (visibilidad de perfil, datos compartidos, etc.)
+
 ---
 
 ## 7. Reglas de Negocio
@@ -1248,7 +1322,7 @@ sequenceDiagram
 
 - Testing unitario (0% completado)
 - Testing de integración (0% completado)
-- Documentación API (60% completado)
+- Documentación API (80% completado)
 
 🔴 **Pendiente:**
 
@@ -1269,14 +1343,36 @@ sequenceDiagram
 | Métrica                           | Objetivo | Actual | Estado |
 | --------------------------------- | -------- | ------ | ------ |
 | **Cobertura de tests**            | 80%      | 0%     | 🔴     |
-| **Documentación API**             | 100%     | 60%    | 🟡     |
-| **Uso de MediatR**                | 100%     | 67%    | 🟡     |
+| **Documentación API**             | 100%     | 80%    | 🟡     |
+| **Uso de MediatR**                | 100%     | 75%    | 🟡     |
 | **Validaciones FluentValidation** | 100%     | 85%    | 🟡     |
-| **Result pattern**                | 100%     | 70%    | 🟡     |
+| **Result pattern**                | 100%     | 75%    | 🟡     |
 
 ---
 
-**Documento actualizado:** Enero 23, 2026  
-**Versión:** 2.0.0  
+## 10. Changelog
+
+### v2.1.0 - Enero 28, 2026 ✅ NEW
+
+- ✅ Agregado `InvitationsController` con 3 endpoints públicos (sin auth)
+- ✅ Agregado `PrivacyController` con 2 endpoints
+- ✅ Implementado `AcceptInvitationCommand` - Crea usuario al aceptar invitación
+- ✅ Implementado `DeclineInvitationCommand` - Marca invitación como rechazada
+- ✅ Implementado `ResendInvitationCommand` - Reenvía email con nuevo token
+- ✅ Implementados queries de invitaciones (`GetInvitationDetailsQuery`, `GetInvitationsQuery`)
+- ✅ Total Controllers: 9 → **11**
+- ✅ Total Endpoints: 40 → **45**
+- ✅ Nuevos procesos: INV-GET-001, INV-ACC-001, INV-DEC-001, INV-RSN-001, PRIV-GET-001, PRIV-UPD-001
+
+### v2.0.0 - Enero 23, 2026
+
+- Implementación inicial de todos los controllers
+- Sistema de roles y permisos
+- Flujos de onboarding para dealers y sellers
+
+---
+
+**Documento actualizado:** Enero 28, 2026  
+**Versión:** 2.1.0  
 **Autor:** Equipo OKLA  
 **Revisor:** GitHub Copilot

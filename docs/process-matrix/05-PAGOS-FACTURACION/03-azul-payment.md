@@ -20,7 +20,7 @@
 
 ### Rutas UI Existentes ✅
 
-- `/checkout` → CheckoutPage (selector Stripe/Azul)
+- `/checkout` → CheckoutPage (AZUL como método único)
 - `/dealer/checkout` → DealerCheckoutPage (suscripción con Azul)
 - `/dealer/billing` → BillingHistoryPage (historial)
 
@@ -89,7 +89,7 @@ Integración con la pasarela de pagos AZUL del Banco Popular Dominicano para pro
 
 ### 1.3 Características AZUL
 
-- **Comisión:** ~2.5% (menor que Stripe)
+- **Comisión:** ~2.5% (competitiva en el mercado)
 - **Depósito:** 24-48 horas (más rápido)
 - **Moneda:** DOP (Pesos Dominicanos)
 - **Tarjetas:** Visa, MasterCard, American Express
@@ -126,6 +126,112 @@ Integración con la pasarela de pagos AZUL del Banco Popular Dominicano para pro
 ---
 
 ## 3. Entidades y Enums
+
+### 3.0 Diagrama de Arquitectura AZUL
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                 ARQUITECTURA AZUL (Banco Popular) - OKLA                   │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────────────┐  │
+│  │                              DEALER/SELLER                               │  │
+│  │  ┌─────────────────────────┐   Paga con tarjeta   ┌────────────────────────┐  │  │
+│  │  │  Suscripción Dealer   │   dominicana       │  Publicación Individual │  │  │
+│  │  │  $49-299/mes         │─────────────────▶│         $29              │  │  │
+│  │  └─────────────────────────┘                   └────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────────────────────────────┘  │
+│                              │                                              │
+│                              ▼                                              │
+│  ┌───────────────────────────────────────────────────────────────────────────────┐  │
+│  │                    AZULPAYMENTSERVICE (:5025)                            │  │
+│  │                                                                         │  │
+│  │  ┌─────────────────────────┐   ┌─────────────────────────────────────┐    │  │
+│  │  │  PaymentsController     │   │  WebhooksController                   │    │  │
+│  │  │  • POST /charge          │   │  • POST /callback/approved           │    │  │
+│  │  │  • POST /refund          │   │  • POST /callback/declined           │    │  │
+│  │  │  • GET /transaction/{id} │   │  • Validación por firma HMAC         │    │  │
+│  │  └────────────┬────────────┘   └──────────────┬──────────────────────┘    │  │
+│  │               │                              │                          │  │
+│  │  ┌────────────┴─────────────────────────────┴───────────────────────┐    │  │
+│  │  │                         AZUL HTTP CLIENT                          │    │  │
+│  │  │  • Credenciales: MerchantId, AuthHash                              │    │  │
+│  │  │  • Endpoint: https://pagos.azul.com.do/webservices/JSON           │    │  │
+│  │  │  • Moneda: DOP (Pesos Dominicanos)                                │    │  │
+│  │  └─────────────────────────────────────────────────────────────────┘    │  │
+│  └───────────────────────────────────────────────────────────────────────────────┘  │
+│                              │                                              │
+│                              ▼                                              │
+│  ┌───────────────────────────────────────────────────────────────────────────────┐  │
+│  │                      AZUL - BANCO POPULAR DOMINICANO                    │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌───────────────┐    │  │
+│  │  │ Autorización │  │Tokenización │  │  3D Secure  │  │  Depósito OKLA │    │  │
+│  │  │   de cobro  │  │  de tarjeta │  │  (si req.)  │  │   24-48 hrs   │    │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └───────────────┘    │  │
+│  └───────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.0.1 Diagrama de Flujo de Pago AZUL
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE PAGO AZUL (DOP)                                 │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│     CLIENTE           FRONTEND         BACKEND            AZUL             │
+│    ─────────          ─────────         ─────────          ────────          │
+│        │                 │                │                 │               │
+│        │  1. Click Pagar │                │                 │               │
+│        │──────────────▶│                │                 │               │
+│        │                 │                │                 │               │
+│        │  2. Ingresar    │                │                 │               │
+│        │     tarjeta     │                │                 │               │
+│        │──────────────▶│                │                 │               │
+│        │                 │                │                 │               │
+│        │                 │ 3. Tokenizar   │                 │               │
+│        │                 │    tarjeta     │                 │               │
+│        │                 │─────────────────────────────────▶│               │
+│        │                 │◀─── token_tarjeta ───────────────────┤               │
+│        │                 │                │                 │               │
+│        │                 │ 4. POST /charge│                 │               │
+│        │                 │──────────────▶│                 │               │
+│        │                 │                │                 │               │
+│        │                 │                │ 5. Verificar    │               │
+│        │                 │                │    idempotencia │               │
+│        │                 │                │                 │               │
+│        │                 │                │ 6. Enviar cobro │               │
+│        │                 │                │───────────────▶│               │
+│        │                 │                │                 │               │
+│        │                 │                │     ┌───────────────────┐       │
+│        │                 │                │     │ 7. Validar tarjeta │       │
+│        │                 │                │     │    con banco emisor │      │
+│        │                 │                │     └─────────┬─────────┘       │
+│        │                 │                │               │               │
+│        │                 │                │◀── ResponseCode ─┘               │
+│        │                 │                │    + AuthCode                  │
+│        │                 │                │    + RRN                       │
+│        │                 │                │                                │
+│        │                 │     ┌───────────┴───────────────┐                    │
+│        │                 │     │ 8. ResponseCode = "00"? │                    │
+│        │                 │     └──────────┬───────────────┘                    │
+│        │                 │              │                                  │
+│        │              ┌──┼──────────────┴────────────────┐                   │
+│        │              ▼ Sí                               ▼ No               │
+│        │       ┌───────────────────┐              ┌───────────────────┐      │
+│        │       │ 9. ✅ APROBADO     │              │ 9. ❌ RECHAZADO    │      │
+│        │       │ - Guardar TX      │              │ - Registrar error │      │
+│        │       │ - Generar NCF     │              │ - Sugerir acción  │      │
+│        │       │ - Publicar evento │              └─────────┬─────────┘      │
+│        │       │ - Enviar email    │                        │              │
+│        │       └─────────┬─────────┘                        │              │
+│        │               │                                  │              │
+│        │◀──── 10. Resultado ──────────────────────────────────────┘              │
+│        │                 │                │                                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ### 3.1 TransactionStatus (Enum)
 
@@ -684,5 +790,4 @@ El sistema de suscripciones debe manejar renovaciones mensuales:
 
 - [AZUL Developer Portal](https://developer.azul.com.do/)
 - [01-billing-service.md](01-billing-service.md) - Facturación principal
-- [02-stripe-payment.md](02-stripe-payment.md) - Pagos internacionales
 - [04-dealer-onboarding.md](../02-USUARIOS-DEALERS/04-dealer-onboarding.md) - Onboarding de dealers

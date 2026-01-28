@@ -1,37 +1,65 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using FluentValidation;
+using MediatR;
+using ChatbotService.Application;
+using ChatbotService.Infrastructure;
 using ChatbotService.Infrastructure.Persistence;
-using ChatbotService.Infrastructure.Persistence.Repositories;
-using ChatbotService.Infrastructure.Services;
-using ChatbotService.Domain.Interfaces;
-using ChatbotService.Api.Hubs;
+using ChatbotService.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Service", "ChatbotService")
+    .WriteTo.Console()
+    .WriteTo.File("logs/chatbotservice-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Swagger configuration
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "OKLA Chatbot Service", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Description = "JWT Authorization header using the Bearer scheme",
+        Title = "ChatbotService API",
+        Version = "v1",
+        Description = "API for Chatbot with Dialogflow ES integration - OKLA Marketplace",
+        Contact = new OpenApiContact
+        {
+            Name = "OKLA Team",
+            Email = "dev@okla.com.do"
+        }
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
         Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
@@ -40,105 +68,133 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Database
-builder.Services.AddDbContext<ChatbotDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured"));
 
-// MediatR
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(ChatbotService.Application.Features.Conversations.Commands.CreateConversationCommand).Assembly));
-
-// Repositories
-builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
-
-// Services
-builder.Services.AddScoped<ILeadScoringEngine, LeadScoringEngine>();
-builder.Services.AddHttpClient<IOpenAIService, OpenAIService>();
-builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
-
-// SignalR
-builder.Services.AddSignalR();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 // CORS
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowedOrigins", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "https://okla.com.do",
-                "https://www.okla.com.do")
-            .AllowAnyHeader()
+        policy.WithOrigins(corsOrigins)
             .AllowAnyMethod()
+            .AllowAnyHeader()
             .AllowCredentials();
     });
 });
 
-// JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "super-secret-key-for-development-only-change-in-production";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "okla-api";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "okla-clients";
+// Add Application and Infrastructure layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
+// Add Hosted Services for maintenance tasks
+if (builder.Configuration.GetValue<bool>("Maintenance:EnableAutomatedTasks"))
+{
+    builder.Services.AddHostedService<MaintenanceWorkerService>();
+}
 
-        // Allow JWT in query string for SignalR
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat"))
-                {
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-builder.Services.AddAuthorization();
-
-// Health Checks
+// Health checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ChatbotDbContext>("database");
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "postgresql",
+        tags: new[] { "db", "sql", "postgresql" })
+    .AddRedis(
+        builder.Configuration["Redis:ConnectionString"] ?? "redis:6379",
+        name: "redis",
+        tags: new[] { "cache", "redis" });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatbotService API v1");
+        c.RoutePrefix = "swagger";
+    });
 }
 
-app.UseCors("AllowFrontend");
+app.UseSerilogRequestLogging();
+
+app.UseCors("AllowedOrigins");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ChatHub>("/hubs/chat");
-app.MapHealthChecks("/health");
 
-// Auto-migrate database
-using (var scope = app.Services.CreateScope())
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
-    var db = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
-    db.Database.EnsureCreated();
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds
+            }),
+            totalDuration = report.TotalDuration.TotalMilliseconds
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
+
+// Apply migrations on startup (development only)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+        Log.Information("Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Could not apply migrations - database may not be ready");
+    }
 }
 
-app.Run();
+Log.Information("ChatbotService starting on port 8080");
+
+try
+{
+    await app.RunAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "ChatbotService terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

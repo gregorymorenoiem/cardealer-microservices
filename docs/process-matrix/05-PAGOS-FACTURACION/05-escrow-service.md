@@ -375,9 +375,9 @@ public class EscrowDispute
 
 | Paso | Acción                   | Sistema             | Validación           |
 | ---- | ------------------------ | ------------------- | -------------------- |
-| 1    | Comprador elige método   | Frontend            | Transferencia/Stripe |
+| 1    | Comprador elige método   | Frontend            | Transferencia        |
 | 2    | Si transferencia         | Bank                | ACH/Wire             |
-| 3    | Si Stripe/AZUL           | BillingService      | Procesar pago        |
+| 3    | Si AZUL                  | BillingService      | Procesar pago        |
 | 4    | Verificar monto completo | EscrowService       | == totalAmount       |
 | 5    | Actualizar escrow        | Database            | Status = Funded      |
 | 6    | Retener fondos           | Account             | Cuenta escrow        |
@@ -616,6 +616,5 @@ escrow_dispute_resolution_time_days
 ## 📚 Referencias
 
 - [01-billing-service.md](01-billing-service.md) - Pagos
-- [02-stripe-payment.md](02-stripe-payment.md) - Stripe
 - [03-azul-payment.md](03-azul-payment.md) - AZUL
 - [04-invoicing-service.md](04-invoicing-service.md) - Facturación

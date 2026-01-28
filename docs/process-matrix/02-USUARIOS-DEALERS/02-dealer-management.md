@@ -4,7 +4,7 @@
 > **Puerto:** 5039  
 > **Base de Datos:** PostgreSQL (dealermanagement_db)  
 > **Tecnología:** .NET 8, MediatR, Entity Framework Core  
-> **Última actualización:** Enero 26, 2026  
+> **Última actualización:** Enero 27, 2026  
 > **Estado de Implementación:** ✅ 100% (Completo)
 
 ---
@@ -77,10 +77,9 @@
 │   └────────────────┘  │           │  │ Controllers                   │  │    │
 │   ┌────────────────┐  │           │  │ • DealersController           │  │    │
 │   │ Admin Panel    │──┼──────────▶│  │ • SubscriptionsController     │  │    │
-│   │ (Verification) │  │           │  │ • DocumentsController         │  │    │
-│   └────────────────┘  │           │  └───────────────────────────────┘  │    │
-│   ┌────────────────┐  │           │  ┌───────────────────────────────┐  │    │
-│   │ Public Site    │──┘           │  │ Application (CQRS + MediatR)  │  │    │
+│   │ (Verification) │  │           │  └───────────────────────────────┘  │    │
+│   └────────────────┘  │           │  ┌───────────────────────────────┐  │    │
+│   ┌────────────────┐  │           │  │ Application (CQRS + MediatR)  │  │    │
 │   │ (Dealer Prof.) │              │  │ • CreateDealerCommand         │  │    │
 │   └────────────────┘              │  │ • VerifyDealerCommand         │  │    │
 │                                   │  │ • ChangePlanCommand           │  │    │
