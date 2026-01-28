@@ -2,32 +2,66 @@
 
 > **Servicio:** VehiclesSaleService (Controllers adicionales)  
 > **Puerto:** 5020  
-> **Última actualización:** Enero 25, 2026  
+> **Última actualización:** Enero 28, 2026  
 > **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
 
 ---
 
-## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 28, 2026)
 
-| Proceso                  | Backend                       | UI Access             | Observación         |
-| ------------------------ | ----------------------------- | --------------------- | ------------------- |
-| CAT-MAKE-001 Marcas      | ✅ CatalogController          | ✅ PublishVehiclePage | Dropdown marcas     |
-| CAT-MODEL-001 Modelos    | ✅ CatalogController          | ✅ PublishVehiclePage | Dropdown modelos    |
-| FAV-CRUD-001 Agregar Fav | ✅ FavoritesController        | ✅ VehicleCard        | Botón corazón       |
-| FAV-CRUD-002 Listar Favs | ✅ FavoritesController        | ✅ FavoritesPage      | Lista completa      |
-| HOME-SECT-001 Secciones  | ✅ HomepageSectionsController | ✅ HomePage           | Secciones dinámicas |
-| HOME-ADMIN-001 Config    | ✅ HomepageSectionsController | ✅ AdminHomepagePage  | Configuración admin |
+| Proceso                  | Backend                       | UI Access            | Observación          |
+| ------------------------ | ----------------------------- | -------------------- | -------------------- |
+| CAT-MAKE-001 Marcas      | ✅ CatalogController          | ✅ SellYourCarPage   | Dropdown marcas      |
+| CAT-MODEL-001 Modelos    | ✅ CatalogController          | ✅ SellYourCarPage   | Dropdown modelos     |
+| FAV-CRUD-001 Agregar Fav | ✅ FavoritesController        | ✅ VehicleCard       | Botón corazón        |
+| FAV-CRUD-002 Listar Favs | ✅ FavoritesController        | ✅ FavoritesPage     | Lista completa       |
+| HOME-SECT-001 Secciones  | ✅ HomepageSectionsController | ✅ HomePage          | Secciones dinámicas  |
+| HOME-ADMIN-001 Config    | ✅ HomepageSectionsController | ✅ AdminHomepagePage | CRUD secciones admin |
 
 ### Rutas UI Existentes ✅
 
-- `/` → HomePage (secciones dinámicas)
+- `/` → HomePage (secciones dinámicas via `useHomepageSections` hook)
 - `/favorites` → FavoritesPage (lista de favoritos)
-- `/sell` → PublishVehiclePage (catálogo en dropdowns)
-- `/admin/homepage` → AdminHomepagePage (config secciones)
+- `/sell-your-car` → SellYourCarPage (catálogo en dropdowns via `vehicleCatalogService`)
+- `/search` → SearchPage (usa catálogo para filtros)
+- `/admin/homepage` → AdminHomepagePage (CRUD secciones admin)
 
 ### Rutas UI Faltantes 🔴
 
-- Ninguna - Catálogo, favoritos y homepage 100% funcionales
+- Ninguna - Todas las funcionalidades están implementadas ✅
+
+### Servicios Frontend Verificados ✅
+
+| Servicio                   | Archivo                      | Estado | Endpoints Cubiertos                               |
+| -------------------------- | ---------------------------- | ------ | ------------------------------------------------- |
+| vehicleCatalogService      | `vehicleCatalogService.ts`   | ✅     | makes, models, years, trims                       |
+| favoritesService           | `favoritesService.ts`        | ✅     | CRUD favoritos completo                           |
+| homepageSectionsService    | `homepageSectionsService.ts` | ✅     | GET + CRUD Admin (create, update, delete, assign) |
+| useHomepageSections (hook) | `useHomepageSections.ts`     | ✅     | React Query hook para homepage                    |
+
+### Backend Controllers Verificados ✅
+
+| Controller                 | Archivo                         | Endpoints | Estado |
+| -------------------------- | ------------------------------- | --------- | ------ |
+| CatalogController          | `CatalogController.cs`          | 10        | ✅     |
+| FavoritesController        | `FavoritesController.cs`        | 6         | ✅     |
+| HomepageSectionsController | `HomepageSectionsController.cs` | 9         | ✅     |
+
+### Repositorios Backend Verificados ✅
+
+| Repositorio               | Interface                      | Implementación          | Estado |
+| ------------------------- | ------------------------------ | ----------------------- | ------ |
+| IVehicleCatalogRepository | `IVehicleCatalogRepository.cs` | `VehicleCatalogRepo.cs` | ✅     |
+| IFavoriteRepository       | `IFavoriteRepository.cs`       | `FavoriteRepository.cs` | ✅     |
+
+### Entidades Domain Verificadas ✅
+
+- `VehicleMake.cs` - Marcas de vehículos
+- `VehicleModel.cs` - Modelos de vehículos
+- `VehicleTrim.cs` - Versiones con especificaciones
+- `Favorite.cs` - Favoritos de usuarios
+- `HomepageSectionConfig.cs` - Configuración de secciones
+- `VehicleHomepageSection.cs` - Relación vehículo-sección
 
 **Verificación Backend:** VehiclesSaleService controllers existen en `/backend/VehiclesSaleService/` ✅
 
@@ -44,7 +78,34 @@
 | **HOME-SECT-\*** (Homepage)      | 4     | 4            | 0         | ✅ 100% |
 | **HOME-ADMIN-\*** (Admin Config) | 3     | 3            | 0         | ✅ 100% |
 | **Tests**                        | 20    | 20           | 0         | ✅ 100% |
-| **TOTAL**                        | 43    | 43           | 0         | ✅ 100% |
+| **Frontend Services**            | 4     | 4            | 0         | ✅ 100% |
+| **Frontend Pages**               | 4     | 4            | 0         | ✅ 100% |
+| **TOTAL Backend**                | 43    | 43           | 0         | ✅ 100% |
+| **TOTAL UI**                     | 4     | 4            | 0         | ✅ 100% |
+
+### ✅ AdminHomepagePage Implementada
+
+**Funcionalidades implementadas:**
+
+- ✅ CRUD de secciones del homepage (crear, editar, eliminar)
+- ✅ Reordenar secciones (move up/down)
+- ✅ Asignar/remover vehículos a secciones
+- ✅ Configurar MaxItems, IsActive, AccentColor, LayoutType
+- ✅ Modal de creación/edición con validación
+
+**Ruta:** `/admin/homepage` → `AdminHomepagePage.tsx`
+
+**Archivo creado:** `frontend/web/src/pages/admin/AdminHomepagePage.tsx`
+
+**Endpoints backend utilizados (Admin):**
+
+- `POST /api/homepagesections` - Crear sección
+- `PUT /api/homepagesections/{slug}` - Actualizar sección
+- `DELETE /api/homepagesections/{slug}` - Eliminar sección
+- `POST /api/homepagesections/{slug}/vehicles` - Asignar vehículo
+- `DELETE /api/homepagesections/{slug}/vehicles/{vehicleId}` - Remover vehículo
+- `POST /api/homepagesections/{slug}/vehicles` - Asignar vehículo
+- `DELETE /api/homepagesections/{slug}/vehicles/{vehicleId}` - Remover vehículo
 
 ---
 

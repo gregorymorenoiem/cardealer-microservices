@@ -87,6 +87,7 @@ import UsersManagementPage from './pages/admin/UsersManagementPage';
 import AdminListingsPage from './pages/admin/AdminListingsPage';
 import AdminReportsPage from './pages/admin/AdminReportsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminHomepagePage from './pages/admin/AdminHomepagePage';
 import MLDashboardPage from './pages/admin/MLDashboardPage';
 import CategoriesManagementPage from './pages/admin/CategoriesManagementPage';
 import KYCAdminReviewPage from './pages/admin/KYCAdminReviewPage';
@@ -859,6 +860,16 @@ function App() {
               <ProtectedRoute requireAdmin>
                 <AdminLayout>
                   <AdminSettingsPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/homepage"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout>
+                  <AdminHomepagePage />
                 </AdminLayout>
               </ProtectedRoute>
             }
