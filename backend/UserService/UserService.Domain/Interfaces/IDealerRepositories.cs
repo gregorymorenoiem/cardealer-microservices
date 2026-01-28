@@ -45,6 +45,7 @@ namespace UserService.Domain.Interfaces
 
         // Invitation operations
         Task<DealerEmployeeInvitation?> GetInvitationByIdAsync(Guid dealerId, Guid invitationId);
+        Task<DealerEmployeeInvitation?> GetInvitationByTokenAsync(string token);
         Task<DealerEmployeeInvitation?> GetPendingInvitationByEmailAsync(Guid dealerId, string email);
         Task<IEnumerable<DealerEmployeeInvitation>> GetPendingInvitationsAsync(Guid dealerId);
         Task<DealerEmployeeInvitation> AddInvitationAsync(DealerEmployeeInvitation invitation);

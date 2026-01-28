@@ -1,8 +1,9 @@
 /**
- * Admin Sidebar - Menú Optimizado
+ * Admin Sidebar - Menú Optimizado con Control de Acceso por Rol
  *
  * Sidebar con navegación jerárquica para el portal de administrador
  * Incluye gestión de dealers, publicidad, analytics y sistema
+ * Filtrado por platformRole: super_admin, admin, moderator, support, analyst
  */
 
 import { useState } from 'react';
@@ -57,7 +58,13 @@ import {
   Gem,
   Eye,
   Globe,
+  Lock,
+  MessageSquare,
+  HelpCircle,
+  Headphones,
 } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { PlatformRole } from '@/shared/types';
 
 interface MenuItem {
   id: string;
@@ -69,17 +76,58 @@ interface MenuItem {
   badge?: string | number;
   badgeColor?: string;
   highlight?: boolean;
+  // Roles que pueden ver este item (si no se especifica, todos pueden verlo)
+  allowedRoles?: PlatformRole[];
 }
+
+// Roles con acceso a cada sección
+const ROLE_ACCESS = {
+  // Todos los roles de admin
+  ALL: [
+    PlatformRole.SUPER_ADMIN,
+    PlatformRole.ADMIN,
+    PlatformRole.MODERATOR,
+    PlatformRole.SUPPORT,
+    PlatformRole.ANALYST,
+  ],
+  // Solo super_admin y admin
+  ADMIN_ONLY: [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN],
+  // Solo super_admin
+  SUPER_ADMIN_ONLY: [PlatformRole.SUPER_ADMIN],
+  // Moderadores
+  MODERATION: [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN, PlatformRole.MODERATOR],
+  // Soporte
+  SUPPORT: [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN, PlatformRole.SUPPORT],
+  // Analistas y arriba
+  ANALYTICS: [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN, PlatformRole.ANALYST],
+  // Contabilidad (solo admin y super_admin)
+  FISCAL: [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN],
+  // Publicidad (admin level)
+  ADVERTISING: [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN, PlatformRole.ANALYST],
+  // Configuración sistema
+  SYSTEM: [PlatformRole.SUPER_ADMIN],
+};
 
 const AdminSidebar = () => {
   const location = useLocation();
   const [expandedSections, setExpandedSections] = useState<string[]>(['dashboard', 'advertising']);
+  const { user } = useAuthStore();
+
+  // Obtener el rol de plataforma del usuario actual
+  const platformRole = (user?.platformRole as PlatformRole) || PlatformRole.SUPPORT;
+
+  // Verificar si el usuario tiene acceso a un item
+  const hasRoleAccess = (allowedRoles?: PlatformRole[]) => {
+    if (!allowedRoles) return true; // Si no se especifican roles, todos tienen acceso
+    return allowedRoles.includes(platformRole);
+  };
 
   const menuItems: MenuItem[] = [
     {
       id: 'dashboard',
       label: 'Dashboard',
       icon: LayoutDashboard,
+      allowedRoles: ROLE_ACCESS.ALL,
       children: [
         {
           id: 'dashboard-home',
@@ -93,6 +141,7 @@ const AdminSidebar = () => {
           label: 'Dealers activos',
           icon: Building2,
           path: '/admin/dealers-active',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'dashboard-listings',
@@ -105,12 +154,14 @@ const AdminSidebar = () => {
           label: 'Leads generados',
           icon: Users,
           path: '/admin/leads-summary',
+          allowedRoles: ROLE_ACCESS.ANALYTICS,
         },
         {
           id: 'dashboard-subscriptions',
           label: 'Ingresos suscripciones',
           icon: CreditCard,
           path: '/admin/subscription-revenue',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'dashboard-advertising',
@@ -119,6 +170,7 @@ const AdminSidebar = () => {
           path: '/admin/advertising-revenue',
           badge: '💰',
           highlight: true,
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'dashboard-alerts',
@@ -134,6 +186,7 @@ const AdminSidebar = () => {
       id: 'dealers',
       label: 'Dealers (Clientes)',
       icon: Building2,
+      allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
       children: [
         {
           id: 'dealers-list',
@@ -161,6 +214,7 @@ const AdminSidebar = () => {
       id: 'marketplace',
       label: 'Marketplace Público',
       icon: ShoppingBag,
+      allowedRoles: ROLE_ACCESS.MODERATION,
       children: [
         {
           id: 'marketplace-pending',
@@ -194,6 +248,7 @@ const AdminSidebar = () => {
       id: 'moderation',
       label: 'Moderación y Seguridad',
       icon: Shield,
+      allowedRoles: ROLE_ACCESS.MODERATION,
       children: [
         {
           id: 'moderation-reports',
@@ -205,10 +260,40 @@ const AdminSidebar = () => {
         { id: 'moderation-blacklist', label: 'Lista negra', icon: ListX, path: '/admin/blacklist' },
       ],
     },
+    // Sección de Soporte - Para support y arriba
+    {
+      id: 'support',
+      label: 'Soporte al Cliente',
+      icon: Headphones,
+      allowedRoles: ROLE_ACCESS.SUPPORT,
+      children: [
+        {
+          id: 'support-tickets',
+          label: 'Tickets de Soporte',
+          icon: MessageSquare,
+          path: '/admin/support/tickets',
+          badge: 8,
+          badgeColor: 'bg-blue-500',
+        },
+        {
+          id: 'support-faq',
+          label: 'Gestión de FAQ',
+          icon: HelpCircle,
+          path: '/admin/support/faq',
+        },
+        {
+          id: 'support-users',
+          label: 'Asistencia a Usuarios',
+          icon: Users,
+          path: '/admin/support/users',
+        },
+      ],
+    },
     {
       id: 'billing',
       label: 'Facturación SaaS',
       icon: Receipt,
+      allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
       children: [
         {
           id: 'billing-subscriptions',
@@ -232,11 +317,69 @@ const AdminSidebar = () => {
       ],
     },
     {
+      id: 'fiscal',
+      label: 'Contabilidad & NCF (DGII)',
+      icon: Receipt,
+      badge: '🧾',
+      allowedRoles: ROLE_ACCESS.FISCAL,
+      children: [
+        {
+          id: 'fiscal-invoices-new',
+          label: 'Nueva factura',
+          icon: Plus,
+          path: '/admin/fiscal/invoices/new',
+        },
+        {
+          id: 'fiscal-invoices-list',
+          label: 'Facturas emitidas',
+          icon: FileText,
+          path: '/admin/fiscal/invoices',
+        },
+        {
+          id: 'fiscal-credit-notes',
+          label: 'Notas de crédito/débito',
+          icon: CreditCard,
+          path: '/admin/fiscal/credit-notes',
+        },
+        {
+          id: 'fiscal-void',
+          label: 'Anulación de comprobantes',
+          icon: AlertTriangle,
+          path: '/admin/fiscal/void',
+        },
+        {
+          id: 'fiscal-ncf-sequences',
+          label: 'Secuencias NCF',
+          icon: ClipboardList,
+          path: '/admin/fiscal/ncf-sequences',
+        },
+        {
+          id: 'fiscal-dgii-607',
+          label: 'Reporte 607 (Ventas)',
+          icon: FileText,
+          path: '/admin/fiscal/dgii/607',
+        },
+        {
+          id: 'fiscal-dgii-608',
+          label: 'Reporte 608 (Compras)',
+          icon: FileText,
+          path: '/admin/fiscal/dgii/608',
+        },
+        {
+          id: 'fiscal-config',
+          label: 'Configuración fiscal',
+          icon: SettingsIcon,
+          path: '/admin/fiscal/settings',
+        },
+      ],
+    },
+    {
       id: 'advertising',
       label: 'Publicidad de Plataforma',
       icon: Gem,
       badge: '🏆 PRINCIPAL',
       highlight: true,
+      allowedRoles: ROLE_ACCESS.ADVERTISING,
       children: [
         {
           id: 'ad-products',
@@ -279,18 +422,21 @@ const AdminSidebar = () => {
           label: 'Configuración de Precios',
           icon: Tag,
           path: '/admin/advertising/pricing',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'ad-discounts',
           label: 'Descuentos por volumen',
           icon: Percent,
           path: '/admin/advertising/discounts',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'ad-offers',
           label: 'Ofertas especiales',
           icon: Gift,
           path: '/admin/advertising/offers',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'ad-reports',
@@ -322,6 +468,7 @@ const AdminSidebar = () => {
       id: 'analytics',
       label: 'Analítica y BI',
       icon: Activity,
+      allowedRoles: ROLE_ACCESS.ANALYTICS,
       children: [
         {
           id: 'analytics-traffic',
@@ -376,18 +523,21 @@ const AdminSidebar = () => {
           label: 'Rentabilidad',
           icon: LineChart,
           path: '/admin/analytics/revenue',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'analytics-cac-ltv',
           label: 'CAC vs LTV',
           icon: TrendingDown,
           path: '/admin/analytics/cac-ltv',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
         {
           id: 'analytics-projection',
           label: 'Proyección crecimiento',
           icon: TrendingUp,
           path: '/admin/analytics/projection',
+          allowedRoles: ROLE_ACCESS.ADMIN_ONLY,
         },
       ],
     },
@@ -395,6 +545,7 @@ const AdminSidebar = () => {
       id: 'system',
       label: 'Sistema',
       icon: Settings,
+      allowedRoles: ROLE_ACCESS.SYSTEM,
       children: [
         {
           id: 'system-config',
@@ -421,6 +572,7 @@ const AdminSidebar = () => {
       label: 'Roles y Permisos (RBAC)',
       icon: Shield,
       badge: '🔐',
+      allowedRoles: ROLE_ACCESS.SUPER_ADMIN_ONLY,
       children: [
         { id: 'rbac-roles', label: 'Gestión de Roles', icon: Shield, path: '/admin/roles' },
         {
@@ -460,8 +612,33 @@ const AdminSidebar = () => {
     const isExpanded = expandedSections.includes(item.id);
     const active = item.path ? isActive(item.path, item.exact) : false;
     const sectionActive = isSectionActive(item);
+    const hasAccess = hasRoleAccess(item.allowedRoles);
+
+    // Si no tiene acceso por rol, mostrar bloqueado
+    if (!hasAccess) {
+      return (
+        <div
+          key={item.id}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 cursor-not-allowed opacity-50 ${
+            isChild ? 'ml-4 text-sm' : ''
+          }`}
+          title="No tienes permisos para acceder a esta sección"
+        >
+          <Icon className={isChild ? 'w-4 h-4' : 'w-5 h-5'} />
+          <span className="flex-1">{item.label}</span>
+          <Lock className="w-4 h-4" />
+        </div>
+      );
+    }
 
     if (hasChildren) {
+      // Filtrar children por rol
+      const accessibleChildren = item.children!.filter((child) =>
+        hasRoleAccess(child.allowedRoles)
+      );
+
+      if (accessibleChildren.length === 0) return null;
+
       return (
         <div key={item.id} className="space-y-1">
           <button
@@ -504,7 +681,7 @@ const AdminSidebar = () => {
                 item.highlight ? 'border-amber-200' : 'border-gray-100'
               }`}
             >
-              {item.children!.map((child) => renderMenuItem(child, true))}
+              {accessibleChildren.map((child) => renderMenuItem(child, true))}
             </div>
           )}
         </div>
@@ -540,9 +717,32 @@ const AdminSidebar = () => {
     );
   };
 
+  // Filtrar menu items por rol del usuario
+  const accessibleMenuItems = menuItems.filter((item) => hasRoleAccess(item.allowedRoles));
+
+  // Obtener nombre legible del rol
+  const getRoleName = (role: PlatformRole): string => {
+    const roleNames: Record<PlatformRole, string> = {
+      [PlatformRole.SUPER_ADMIN]: 'Super Administrador',
+      [PlatformRole.ADMIN]: 'Administrador',
+      [PlatformRole.MODERATOR]: 'Moderador',
+      [PlatformRole.SUPPORT]: 'Soporte',
+      [PlatformRole.ANALYST]: 'Analista',
+    };
+    return roleNames[role] || role;
+  };
+
   return (
     <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-200px)] pr-2">
-      {menuItems.map((item) => renderMenuItem(item))}
+      {/* Role Indicator */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-100">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-indigo-600" />
+          <span className="text-sm font-medium text-indigo-900">{getRoleName(platformRole)}</span>
+        </div>
+      </div>
+
+      {accessibleMenuItems.map((item) => renderMenuItem(item))}
     </nav>
   );
 };

@@ -51,23 +51,32 @@ export default function NavbarSimple() {
   };
 
   // Links principales - SOLO LO ESENCIAL
-  // Link inteligente para dealers:
-  // - No autenticado o no-dealer → Landing de marketing
-  // - Dealer autenticado → Dashboard directo
-  const dealerLink = (() => {
-    if (
-      isAuthenticated &&
-      user &&
-      (user.accountType === 'dealer' || user.accountType === 'dealer_employee')
-    ) {
-      return { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiBriefcase };
+  // Link inteligente según tipo de cuenta:
+  // - Admin/Platform Employee → Admin Panel
+  // - Dealer/Dealer Employee → Dashboard del dealer
+  // - Individual/Guest → Landing de marketing para dealers
+  const getContextLink = () => {
+    if (!isAuthenticated || !user) {
+      return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
     }
-    return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
-  })();
 
-  const mainNavLinks = [{ href: '/vehicles', label: 'Vehículos', icon: FaCar }, dealerLink];
+    switch (user.accountType) {
+      case 'admin':
+      case 'platform_employee':
+        return { href: '/admin', label: 'Admin Panel', icon: FiShield };
+      case 'dealer':
+      case 'dealer_employee':
+        return { href: '/dealer/dashboard', label: 'Mi Dashboard', icon: FiBriefcase };
+      default:
+        return { href: '/dealer/landing', label: 'Para Dealers', icon: FiBriefcase };
+    }
+  };
 
-  // Links del usuario - para el dropdown del perfil
+  const contextLink = getContextLink();
+
+  const mainNavLinks = [{ href: '/vehicles', label: 'Vehículos', icon: FaCar }, contextLink];
+
+  // Links del usuario individual - para el dropdown del perfil
   const userLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: FiGrid },
     { href: '/favorites', label: 'Favoritos', icon: FiHeart },
@@ -83,6 +92,32 @@ export default function NavbarSimple() {
     { href: '/dealer/crm', label: 'Leads', icon: FiTarget },
     { href: '/dealer/analytics', label: 'Analytics', icon: FiBarChart2 },
   ];
+
+  // Links para admins - para el dropdown del perfil
+  const adminLinks = [
+    { href: '/admin', label: 'Dashboard Admin', icon: FiGrid },
+    { href: '/admin/dealers', label: 'Gestión Dealers', icon: FiBriefcase },
+    { href: '/admin/pending', label: 'Pendientes', icon: FiBell },
+    { href: '/admin/analytics', label: 'Analytics', icon: FiBarChart2 },
+  ];
+
+  // Obtener links según tipo de cuenta
+  const getProfileLinks = () => {
+    if (!user) return userLinks;
+
+    switch (user.accountType) {
+      case 'admin':
+      case 'platform_employee':
+        return adminLinks;
+      case 'dealer':
+      case 'dealer_employee':
+        return dealerLinks;
+      default:
+        return userLinks;
+    }
+  };
+
+  const profileLinks = getProfileLinks();
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
@@ -146,13 +181,13 @@ export default function NavbarSimple() {
 
             {isAuthenticated && user ? (
               <>
-                {/* CTA Vender - Prominente */}
+                {/* CTA Publicar - Prominente */}
                 <Link
                   to="/sell"
                   className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white rounded-xl font-semibold text-sm shadow-lg hover:scale-105 transition-all duration-200"
                 >
                   <FiPlusCircle className="w-4 h-4" />
-                  <span>Vender</span>
+                  <span>Publicar</span>
                 </Link>
 
                 {/* Notification Bell - Con dropdown */}
@@ -199,42 +234,55 @@ export default function NavbarSimple() {
                                 Dealer
                               </span>
                             )}
+                            {(user.accountType === 'admin' ||
+                              user.accountType === 'platform_employee') && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
+                                <FiShield className="w-3 h-3" />
+                                Admin
+                              </span>
+                            )}
                           </div>
                         </div>
 
                         <div className="py-2">
-                          {/* Links contextales según tipo de usuario */}
-                          {user.accountType === 'dealer' || user.accountType === 'dealer_employee'
-                            ? dealerLinks.map((link) => (
-                                <Link
-                                  key={link.href}
-                                  to={link.href}
-                                  onClick={() => setIsUserMenuOpen(false)}
-                                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
+                          {/* Links contextales según tipo de usuario - usando profileLinks */}
+                          {profileLinks.map((link) => {
+                            // Determinar el color según el tipo de cuenta
+                            const isAdmin =
+                              user.accountType === 'admin' ||
+                              user.accountType === 'platform_employee';
+                            const isDealer =
+                              user.accountType === 'dealer' ||
+                              user.accountType === 'dealer_employee';
+                            const bgColor = isAdmin
+                              ? 'bg-purple-100'
+                              : isDealer
+                                ? 'bg-emerald-100'
+                                : 'bg-blue-100';
+                            const iconColor = isAdmin
+                              ? 'text-purple-600'
+                              : isDealer
+                                ? 'text-emerald-600'
+                                : 'text-blue-600';
+
+                            return (
+                              <Link
+                                key={link.href}
+                                to={link.href}
+                                onClick={() => setIsUserMenuOpen(false)}
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
+                              >
+                                <div
+                                  className={`w-8 h-8 ${bgColor} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}
                                 >
-                                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <link.icon className="w-4 h-4 text-emerald-600" />
-                                  </div>
-                                  <span className="font-medium text-gray-900 text-sm">
-                                    {link.label}
-                                  </span>
-                                </Link>
-                              ))
-                            : userLinks.map((link) => (
-                                <Link
-                                  key={link.href}
-                                  to={link.href}
-                                  onClick={() => setIsUserMenuOpen(false)}
-                                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
-                                >
-                                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <link.icon className="w-4 h-4 text-blue-600" />
-                                  </div>
-                                  <span className="font-medium text-gray-900 text-sm">
-                                    {link.label}
-                                  </span>
-                                </Link>
-                              ))}
+                                  <link.icon className={`w-4 h-4 ${iconColor}`} />
+                                </div>
+                                <span className="font-medium text-gray-900 text-sm">
+                                  {link.label}
+                                </span>
+                              </Link>
+                            );
+                          })}
                         </div>
 
                         <div className="border-t border-gray-200 pt-2">
@@ -318,7 +366,7 @@ export default function NavbarSimple() {
                 );
               })}
 
-              {/* CTA Vender Mobile */}
+              {/* CTA Publicar Mobile */}
               {isAuthenticated && user && (
                 <Link
                   to="/sell"
@@ -326,7 +374,7 @@ export default function NavbarSimple() {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <FiPlusCircle className="w-5 h-5" />
-                  <span className="text-base">Vender mi Vehículo</span>
+                  <span className="text-base">Publicar Vehículo</span>
                 </Link>
               )}
             </div>
@@ -336,33 +384,45 @@ export default function NavbarSimple() {
               <>
                 <hr className="my-4 border-gray-200" />
                 <div className="px-3 space-y-2">
-                  {user.accountType === 'dealer' || user.accountType === 'dealer_employee'
-                    ? dealerLinks.map((link) => (
-                        <Link
-                          key={link.href}
-                          to={link.href}
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-emerald-50 rounded-xl transition-all font-medium"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                  {/* Links contextales según tipo de usuario - usando profileLinks */}
+                  {profileLinks.map((link) => {
+                    // Determinar el color según el tipo de cuenta
+                    const isAdmin =
+                      user.accountType === 'admin' || user.accountType === 'platform_employee';
+                    const isDealer =
+                      user.accountType === 'dealer' || user.accountType === 'dealer_employee';
+                    const hoverBg = isAdmin
+                      ? 'hover:bg-purple-50'
+                      : isDealer
+                        ? 'hover:bg-emerald-50'
+                        : 'hover:bg-blue-50';
+                    const bgColor = isAdmin
+                      ? 'bg-purple-100'
+                      : isDealer
+                        ? 'bg-emerald-100'
+                        : 'bg-blue-100';
+                    const iconColor = isAdmin
+                      ? 'text-purple-600'
+                      : isDealer
+                        ? 'text-emerald-600'
+                        : 'text-blue-600';
+
+                    return (
+                      <Link
+                        key={link.href}
+                        to={link.href}
+                        className={`flex items-center gap-3 px-4 py-3 text-gray-700 ${hoverBg} rounded-xl transition-all font-medium`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div
+                          className={`w-8 h-8 ${bgColor} rounded-lg flex items-center justify-center`}
                         >
-                          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                            <link.icon className="w-4 h-4 text-emerald-600" />
-                          </div>
-                          <span className="text-base">{link.label}</span>
-                        </Link>
-                      ))
-                    : userLinks.map((link) => (
-                        <Link
-                          key={link.href}
-                          to={link.href}
-                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition-all font-medium"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <link.icon className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <span className="text-base">{link.label}</span>
-                        </Link>
-                      ))}
+                          <link.icon className={`w-4 h-4 ${iconColor}`} />
+                        </div>
+                        <span className="text-base">{link.label}</span>
+                      </Link>
+                    );
+                  })}
 
                   <button
                     onClick={() => {

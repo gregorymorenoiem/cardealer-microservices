@@ -76,6 +76,12 @@ public class DealerEmployeeRepository : IDealerEmployeeRepository
             .FirstOrDefaultAsync(i => i.Id == invitationId && i.DealerId == dealerId);
     }
 
+    public async Task<DealerEmployeeInvitation?> GetInvitationByTokenAsync(string token)
+    {
+        return await _context.DealerEmployeeInvitations
+            .FirstOrDefaultAsync(i => i.Token == token);
+    }
+
     public async Task<DealerEmployeeInvitation?> GetPendingInvitationByEmailAsync(Guid dealerId, string email)
     {
         return await _context.DealerEmployeeInvitations

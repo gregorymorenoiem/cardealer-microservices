@@ -624,6 +624,43 @@
     },
 
     {
+      "UpstreamPathTemplate": "/api/invitations/{token}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/invitations/{token}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/invitations/{token}/accept",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/invitations/{token}/accept",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/invitations/{token}/decline",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/invitations/{token}/decline",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
       "UpstreamPathTemplate": "/api/users/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
@@ -1091,6 +1128,51 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/employees",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/admin/employees",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/employees/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/admin/employees/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/invitations/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "DELETE"],
+      "DownstreamPathTemplate": "/api/admin/invitations/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
     },
     {
       "UpstreamPathTemplate": "/api/admin/{everything}",
@@ -1603,6 +1685,156 @@
       "DownstreamPathTemplate": "/api/webhooks/spyne",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "spyneintegrationservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🎬 VEHICLE 360 PROCESSING SERVICE (Orquestador de procesamiento 360)
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehicle360processingservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/vehicle360jobs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehicle360processingservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/vehicle360jobs/{jobId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehicle360processingservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/cancel",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/vehicle360jobs/{jobId}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehicle360processingservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/retry",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/vehicle360jobs/{jobId}/retry",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehicle360processingservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/user/jobs",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/vehicle360jobs/user",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehicle360processingservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🎥 VIDEO360 SERVICE (Extracción de frames de videos 360)
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      "UpstreamPathTemplate": "/api/video360/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/video360/process",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/video360/process",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 120000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/video360/jobs/{jobId}/result",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/result",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🖼️ BACKGROUND REMOVAL SERVICE (Remoción de fondos con IA)
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      "UpstreamPathTemplate": "/api/backgroundremoval/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "backgroundremovalservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/backgroundremoval/remove",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/backgroundremoval/remove",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "backgroundremovalservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/backgroundremoval/jobs/{jobId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/backgroundremoval/jobs/{jobId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "backgroundremovalservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,

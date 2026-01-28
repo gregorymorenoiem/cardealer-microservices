@@ -699,6 +699,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Alias: /dealer/leads -> CRMPage (para compatibilidad con documentación) */}
+          <Route
+            path="/dealer/leads"
+            element={
+              <ProtectedRoute requireDealer>
+                <DealerPortalLayout>
+                  <CRMPage />
+                </DealerPortalLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dealer/appointments"
             element={
