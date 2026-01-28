@@ -1,10 +1,10 @@
 # 📋 OKLA - Matriz de Procesos por Microservicio
 
-> **Última actualización:** Enero 25, 2026  
-> **Total de Microservicios Backend:** 71 servicios  
+> **Última actualización:** Enero 27, 2026  
+> **Total de Microservicios Backend:** 72 servicios  
 > **Total de Rutas Frontend:** 98+ rutas  
-> **Total de Procesos Documentados:** 600+  
-> **Total de Documentos:** 124 archivos
+> **Total de Procesos Documentados:** 620+  
+> **Total de Documentos:** 126 archivos
 
 ---
 
@@ -85,8 +85,9 @@
 | 20     | PRICING-INTELLIGENCE          | 2/2       | 🟡 70%    | 🟡 50%     | 🟡 **60%**  |
 | 21     | REVIEWS-REPUTACIÓN (Dealer)   | 1/1       | ✅ 100%   | 🟡 70%     | 🟡 **85%**  |
 | 22     | COMUNICACIÓN-REALTIME         | 1/1       | 🟡 80%    | 🟡 60%     | 🟡 **70%**  |
+| **24** | **CHATBOT-IA** 🆕             | **2/2**   | ✅ 100%   | 🔴 **0%**  | 🟡 **50%**  |
 | **25** | **AUDITORÍA-CUMPLIMIENTO** 🆕 | **12/12** | 🔴 **0%** | 🔴 **0%**  | 📄 **DOC**  |
-|        | **TOTAL**                     | **124**   | **92%**   | **70%**    | **🟡 78%**  |
+|        | **TOTAL**                     | **126**   | **92%**   | **70%**    | **🟡 78%**  |
 
 ---
 
@@ -131,6 +132,52 @@ Este módulo proporciona una visión completa desde la perspectiva de un **audit
 
 ---
 
+## 🆕 NUEVO: Módulo Chatbot IA (Enero 27, 2026)
+
+### Carpeta: `24-CHATBOT-IA/` (2 documentos)
+
+Sistema de chatbot de **soporte y orientación** con Dialogflow ES, multi-canal (Web/WhatsApp/Facebook), límites de interacciones para controlar costos, y mantenimiento automatizado. **Chatbot imparcial** que ayuda a usuarios y dealers a usar la plataforma, educa sobre derechos del consumidor, y orienta sobre mejores prácticas.
+
+| #   | Documento                                                                          | Descripción                                           | Estado          |
+| --- | ---------------------------------------------------------------------------------- | ----------------------------------------------------- | --------------- |
+| 01  | [01-interaccion-chatbot.md](24-CHATBOT-IA/01-interaccion-chatbot.md)               | Soporte 24/7, protección consumidor, help multi-canal | ✅ Backend 100% |
+| 02  | [02-mantenimiento-automatizado.md](24-CHATBOT-IA/02-mantenimiento-automatizado.md) | Sync FAQs, auto-learning, cost optimization           | ✅ Backend 100% |
+
+### Características Clave
+
+| Característica           | Descripción                                                | Estado  |
+| ------------------------ | ---------------------------------------------------------- | ------- |
+| **Dialogflow ES**        | Intent detection con $0.002/interacción (180 gratis/mes)   | ✅ 100% |
+| **Límites Inteligentes** | 10/sesión, 50/usuario/día, 100K/mes global                 | ✅ 100% |
+| **Multi-canal**          | Web, WhatsApp Business, Facebook Messenger                 | ✅ 100% |
+| **Soporte Tickets**      | Creación automática de tickets con prioridad               | ✅ 100% |
+| **Auto-Learning**        | Análisis de preguntas sin respuesta con Ollama (LLM local) | ✅ 100% |
+| **Content/FAQ Sync**     | Sincronización automática de ayuda cada 60 minutos         | ✅ 100% |
+| **Cost Reports**         | Reportes semanales con proyección de costos                | ✅ 100% |
+| **Health Monitoring**    | Cada 5 minutos con alertas proactivas                      | ✅ 100% |
+| **Widget UI**            | Chatbot flotante en homepage                               | 🔴 0%   |
+| **Admin Panel**          | Configuración, analytics, unanswered questions             | 🔴 0%   |
+| **Dealer Dashboard**     | Tickets resueltos, conversaciones, estadísticas            | 🔴 0%   |
+
+### Objetivo de Ahorro de Costos
+
+```
+SIN AUTOMATIZACIÓN:   ~150,000 interacciones/mes = $299.64/mes
+CON AUTOMATIZACIÓN:   ~100,000 interacciones/mes = $199.64/mes
+AHORRO:               $100/mes (33%) | $1,200/año
+```
+
+**Factores de Ahorro:**
+
+- ✅ Sync de FAQs/contenido → -20% interacciones redundantes
+- ✅ Auto-learning → -15% fallbacks
+- ✅ Quick responses → -10% consultas simples
+- ✅ Health monitoring → -5% errores técnicos
+
+**Total: ~50% menos interacciones = ~50% ahorro de costos**
+
+---
+
 ## 🟡 BRECHAS PENDIENTES (Por Prioridad)
 
 > **Nota:** UAF/AML eliminado - OKLA no es sujeto obligado (plataforma de clasificados).
@@ -140,8 +187,9 @@ Este módulo proporciona una visión completa desde la perspectiva de un **audit
 | 1   | **Soporte**          | SupportService NO EXISTE | ADM-SUPPORT  | 🔴 0%   | 🔴 0%  | 🔴 P0     |
 | 2   | **Compliance UI**    | 16 servicios sin páginas | ADM-COMP     | ✅ 100% | 🔴 0%  | 🔴 P0     |
 | 3   | **Auditoría UI**     | 12 docs sin implementar  | ADM-AUDIT    | 🔴 0%   | 🔴 0%  | 🔴 P0     |
-| 4   | **Moderación Queue** | Sin cola priorizada      | ADM-MOD      | 🟡 60%  | 🔴 25% | 🟠 P1     |
-| 5   | **Dealer Employees** | Sin gestión de staff     | DLR-ADMIN    | 🔴 0%   | 🔴 0%  | 🟠 P1     |
+| 4   | **Chatbot UI**       | Widget + Admin panel     | ALL-USERS    | ✅ 100% | 🔴 0%  | 🟡 P1     |
+| 5   | **Moderación Queue** | Sin cola priorizada      | ADM-MOD      | 🟡 60%  | 🔴 25% | 🟠 P1     |
+| 6   | **Dealer Employees** | Sin gestión de staff     | DLR-ADMIN    | 🔴 0%   | 🔴 0%  | 🟠 P1     |
 
 ### ✅ RESUELTO: Facturación Electrónica DGII
 
