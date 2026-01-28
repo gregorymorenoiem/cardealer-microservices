@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using UserService.Application.DTOs;
+using UserService.Application.Interfaces;
 using UserService.Domain.Entities;
+using UserService.Domain.Events;
 using UserService.Domain.Interfaces;
 
 namespace UserService.Api.Controllers;
@@ -23,17 +25,23 @@ public class SellerProfileController : ControllerBase
     private readonly ISellerProfileRepository _sellerProfileRepository;
     private readonly IUserRepository _userRepository;
     private readonly IEventPublisher _eventPublisher;
+    private readonly IVehiclesSaleServiceClient _vehiclesClient;
+    private readonly IReviewServiceClient _reviewClient;
     private readonly ILogger<SellerProfileController> _logger;
 
     public SellerProfileController(
         ISellerProfileRepository sellerProfileRepository,
         IUserRepository userRepository,
         IEventPublisher eventPublisher,
+        IVehiclesSaleServiceClient vehiclesClient,
+        IReviewServiceClient reviewClient,
         ILogger<SellerProfileController> logger)
     {
         _sellerProfileRepository = sellerProfileRepository;
         _userRepository = userRepository;
         _eventPublisher = eventPublisher;
+        _vehiclesClient = vehiclesClient;
+        _reviewClient = reviewClient;
         _logger = logger;
     }
 
@@ -84,13 +92,33 @@ public class SellerProfileController : ControllerBase
             return NotFound(new { message = "Vendedor no encontrado" });
         }
 
-        // TODO: Integrar con VehiclesSaleService para obtener listados reales
+        // Obtener listados reales desde VehiclesSaleService
+        var listingsResult = await _vehiclesClient.GetSellerListingsAsync(sellerId, page, pageSize, status);
+        
         var response = new SellerListingsResponse
         {
-            Listings = new List<SellerListingDto>(),
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = 0
+            Listings = listingsResult.Listings.Select(l => new SellerListingDto
+            {
+                Id = l.Id,
+                Title = l.Title,
+                Slug = l.Slug,
+                Price = l.Price,
+                Currency = l.Currency,
+                Status = l.Status,
+                MainImageUrl = l.MainImageUrl,
+                Year = l.Year,
+                Make = l.Make,
+                Model = l.Model,
+                Mileage = l.Mileage,
+                Transmission = l.Transmission,
+                FuelType = l.FuelType,
+                Views = l.Views,
+                Favorites = l.Favorites,
+                CreatedAt = l.CreatedAt
+            }).ToList(),
+            Page = listingsResult.Page,
+            PageSize = listingsResult.PageSize,
+            TotalCount = listingsResult.TotalCount
         };
 
         return Ok(response);
@@ -115,18 +143,33 @@ public class SellerProfileController : ControllerBase
             return NotFound(new { message = "Vendedor no encontrado" });
         }
 
-        // TODO: Integrar con ReviewService para obtener reseñas reales
+        // Obtener reseñas reales desde ReviewService
+        var reviewsResult = await _reviewClient.GetSellerReviewsAsync(sellerId, page, pageSize, rating);
+        
         var response = new SellerReviewsResponse
         {
-            Reviews = new List<SellerReviewDto>(),
-            AverageRating = (double)profile.AverageRating,
-            TotalCount = profile.TotalReviews,
-            RatingDistribution = new Dictionary<int, int>
+            Reviews = reviewsResult.Reviews.Select(r => new SellerReviewDto
             {
-                { 5, 0 }, { 4, 0 }, { 3, 0 }, { 2, 0 }, { 1, 0 }
-            },
-            Page = page,
-            PageSize = pageSize
+                Id = r.Id,
+                ReviewerId = r.ReviewerId,
+                ReviewerName = r.ReviewerName,
+                ReviewerPhotoUrl = r.ReviewerPhotoUrl,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+                VehicleTitle = r.VehicleTitle,
+                IsVerifiedPurchase = r.IsVerifiedPurchase,
+                Reply = r.Reply != null ? new UserService.Application.DTOs.SellerReviewReplyDto
+                {
+                    Content = r.Reply.Content,
+                    RepliedAt = r.Reply.RepliedAt
+                } : null
+            }).ToList(),
+            AverageRating = reviewsResult.AverageRating > 0 ? reviewsResult.AverageRating : (double)profile.AverageRating,
+            TotalCount = reviewsResult.TotalCount > 0 ? reviewsResult.TotalCount : profile.TotalReviews,
+            RatingDistribution = reviewsResult.RatingDistribution,
+            Page = reviewsResult.Page,
+            PageSize = reviewsResult.PageSize
         };
 
         return Ok(response);
@@ -334,8 +377,21 @@ public class SellerProfileController : ControllerBase
 
         await _sellerProfileRepository.UpdateAsync(profile);
 
-        // TODO: Create typed SellerProfileUpdatedEvent
-        // await _eventPublisher.PublishAsync(new SellerProfileUpdatedEvent { ... });
+        // Publicar evento de actualización de perfil
+        var updatedFields = new List<string>();
+        if (request.DisplayName != null) updatedFields.Add("DisplayName");
+        if (request.Bio != null) updatedFields.Add("Bio");
+        if (request.City != null) updatedFields.Add("City");
+        if (request.Province != null) updatedFields.Add("Province");
+        if (request.Phone != null) updatedFields.Add("Phone");
+        if (request.WhatsApp != null) updatedFields.Add("WhatsApp");
+        if (request.Website != null) updatedFields.Add("Website");
+        
+        await _eventPublisher.PublishAsync(SellerProfileUpdatedEvent.Create(
+            profile.Id,
+            profile.UserId,
+            updatedFields
+        ));
 
         return Ok(MapToSellerProfileDto(profile));
     }
@@ -436,8 +492,14 @@ public class SellerProfileController : ControllerBase
             await _sellerProfileRepository.UpdateContactPreferencesAsync(preferences);
         }
 
-        // TODO: Create typed SellerPreferencesUpdatedEvent
-        // await _eventPublisher.PublishAsync(new SellerPreferencesUpdatedEvent { ... });
+        // Publicar evento de actualización de preferencias
+        await _eventPublisher.PublishAsync(SellerPreferencesUpdatedEvent.Create(
+            profile.Id,
+            profile.UserId,
+            preferences.PreferredContactMethod ?? "WhatsApp",
+            preferences.AllowPhoneCalls,
+            preferences.AllowWhatsApp
+        ));
 
         return Ok(MapToContactPreferencesDto(preferences));
     }
@@ -557,8 +619,15 @@ public class SellerProfileController : ControllerBase
             Reason = "Nuevo vendedor en OKLA"
         });
 
-        // TODO: Create typed SellerProfileCreatedEvent
-        // await _eventPublisher.PublishAsync(new SellerProfileCreatedEvent { ... });
+        // Publicar evento de creación de perfil
+        await _eventPublisher.PublishAsync(SellerProfileCreatedEvent.Create(
+            profile.Id,
+            profile.UserId,
+            profile.FullName ?? "",
+            profile.Email ?? "",
+            profile.SellerType.ToString(),
+            profile.City ?? ""
+        ));
 
         return CreatedAtAction(nameof(GetMyProfile), MapToSellerProfileDto(profile));
     }
@@ -594,8 +663,13 @@ public class SellerProfileController : ControllerBase
             Reason = request.Reason
         });
 
-        // TODO: Create typed SellerBadgeEarnedEvent
-        // await _eventPublisher.PublishAsync(new SellerBadgeEarnedEvent { ... });
+        // Publicar evento de badge asignado
+        await _eventPublisher.PublishAsync(SellerBadgeEarnedEvent.Create(
+            profile.Id,
+            badge.Badge.ToString(),
+            badge.Reason ?? "Badge asignado por administrador",
+            badge.ExpiresAt
+        ));
 
         return Ok(new { 
             message = $"Badge {request.Badge} asignado exitosamente",
@@ -620,14 +694,24 @@ public class SellerProfileController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveBadge(Guid sellerId, SellerBadge badge)
     {
+        var profile = await _sellerProfileRepository.GetByIdAsync(sellerId);
+        if (profile == null)
+        {
+            return NotFound(new { message = "Vendedor no encontrado" });
+        }
+
         var removed = await _sellerProfileRepository.RemoveBadgeAsync(sellerId, badge);
         if (!removed)
         {
             return NotFound(new { message = "Badge no encontrado" });
         }
 
-        // TODO: Create typed SellerBadgeLostEvent
-        // await _eventPublisher.PublishAsync(new SellerBadgeLostEvent { ... });
+        // Publicar evento de badge removido
+        await _eventPublisher.PublishAsync(SellerBadgeLostEvent.Create(
+            sellerId,
+            badge.ToString(),
+            "Badge removido por administrador"
+        ));
 
         return Ok(new { message = $"Badge {badge} removido exitosamente" });
     }
@@ -642,14 +726,25 @@ public class SellerProfileController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> VerifySeller(Guid sellerId, [FromBody] VerifySellerProfileRequest request)
     {
-        var success = await _sellerProfileRepository.VerifyAsync(sellerId, request.VerifiedByUserId, request.Notes);
-        if (!success)
+        var profile = await _sellerProfileRepository.GetByIdAsync(sellerId);
+        if (profile == null)
         {
             return NotFound(new { message = "Vendedor no encontrado" });
         }
 
-        // TODO: Create typed SellerVerifiedEvent
-        // await _eventPublisher.PublishAsync(new SellerVerifiedEvent { ... });
+        var success = await _sellerProfileRepository.VerifyAsync(sellerId, request.VerifiedByUserId, request.Notes);
+        if (!success)
+        {
+            return BadRequest(new { message = "Error al verificar vendedor" });
+        }
+
+        // Publicar evento de verificación
+        await _eventPublisher.PublishAsync(SellerVerifiedEvent.Create(
+            sellerId,
+            profile.UserId,
+            request.VerifiedByUserId,
+            request.Notes ?? "Vendedor verificado por administrador"
+        ));
 
         return Ok(new { message = "Vendedor verificado exitosamente" });
     }

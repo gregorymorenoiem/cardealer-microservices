@@ -235,6 +235,24 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IErrorServiceC
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// VehiclesSaleService Client - Para obtener listings del vendedor
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IVehiclesSaleServiceClient, UserService.Infrastructure.External.VehiclesSaleServiceClient>(client =>
+{
+    var vehiclesServiceUrl = builder.Configuration["ServiceUrls:VehiclesSaleService"] ?? "http://vehiclessaleservice:80";
+    client.BaseAddress = new Uri(vehiclesServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// ReviewService Client - Para obtener reviews del vendedor
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IReviewServiceClient, UserService.Infrastructure.External.ReviewServiceClient>(client =>
+{
+    var reviewServiceUrl = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:80";
+    client.BaseAddress = new Uri(reviewServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<UserService.Application.Metrics.UserServiceMetrics>();
 

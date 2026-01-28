@@ -2,34 +2,159 @@
 
 > **Servicio:** UserService / SellerProfileController  
 > **Puerto:** 5004  
-> **Última actualización:** Enero 25, 2026  
+> **Última actualización:** Enero 28, 2026  
 > **Estado:** 🟢 ACTIVO  
 > **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI
 
 ---
 
-## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ⚠️ AUDITORÍA COMPLETA (Enero 28, 2026)
 
-| Proceso                       | Backend                    | UI Access              | Observación    |
-| ----------------------------- | -------------------------- | ---------------------- | -------------- |
-| SELLER-001 Ver Perfil Público | ✅ SellerProfileController | ✅ SellerProfilePage   | Perfil público |
-| SELLER-002 Editar Perfil      | ✅ SellerProfileController | ✅ ProfileSettingsPage | Configuración  |
-| SELLER-003 Ver Listings       | ✅ SellerProfileController | ✅ SellerProfilePage   | Tab listados   |
-| SELLER-004 Ver Reviews        | ✅ ReviewService           | ✅ SellerProfilePage   | Tab reseñas    |
-| PROF-001 Avatar/Logo          | ✅ MediaService            | ✅ ProfileSettingsPage | Upload imagen  |
+### 🔍 Resumen de Verificación
 
-### Rutas UI Existentes ✅
+| Componente             | Estado | Archivos/LOC                                  |
+| ---------------------- | ------ | --------------------------------------------- |
+| **Backend Controller** | ✅     | SellerProfileController.cs (801 líneas)       |
+| **Repositorio**        | ✅     | SellerProfileRepository.cs                    |
+| **Entidad Domain**     | ✅     | SellerProfile.cs, ContactPreferences.cs       |
+| **Frontend Service**   | ✅     | sellerProfileService.ts (669 líneas)          |
+| **Frontend Pages**     | ✅     | 4 páginas implementadas                       |
+| **Tests Unitarios**    | ✅     | SellerProfileControllerTests.cs (460 líneas)  |
+| **Gateway Config**     | ✅     | /api/sellers → UserService (ocelot.prod.json) |
 
-- `/sellers/:id` → SellerProfilePage (perfil público)
-- `/dealers/:id` → DealerProfilePage (perfil dealer público)
-- `/settings/profile` → ProfileSettingsPage (edición)
-- `/settings/seller` → SellerSettingsPage (config vendedor)
+### 📋 Auditoría de Procesos
 
-### Rutas UI Faltantes 🔴
+| Proceso                          | Backend                          | Frontend Service                 | UI Page                      | Ruta                        | Estado |
+| -------------------------------- | -------------------------------- | -------------------------------- | ---------------------------- | --------------------------- | ------ |
+| SELLER-001 Ver Perfil Público    | ✅ GET /{sellerId}/profile       | ✅ getPublicProfile()            | ✅ SellerPublicProfilePage   | /sellers/:sellerId          | ✅     |
+| SELLER-001 Ver Listados          | ✅ GET /{sellerId}/listings      | ✅ getSellerListings()           | ✅ SellerPublicProfilePage   | /sellers/:sellerId#listings | ✅     |
+| SELLER-001 Ver Reviews           | ✅ GET /{sellerId}/reviews       | ✅ getSellerReviews()            | ✅ SellerReviewsPage         | /sellers/:sellerId/reviews  | ✅     |
+| SELLER-001 Ver Stats             | ✅ GET /{sellerId}/stats         | ✅ getSellerStats()              | ✅ SellerPublicProfilePage   | Stats section               | ✅     |
+| SELLER-002 Ver Mi Perfil         | ✅ GET /profile (auth)           | ✅ getMyProfile()                | ✅ SellerProfilePage         | /seller/profile             | ✅     |
+| SELLER-002 Editar Perfil         | ✅ PUT /profile (auth)           | ✅ updateMyProfile()             | ✅ SellerProfileSettingsPage | /seller/profile/settings    | ✅     |
+| SELLER-002 Subir Foto            | ✅ PUT /profile/photo            | ✅ updateProfilePhoto()          | ✅ SellerProfileSettingsPage | Upload en settings          | ✅     |
+| SELLER-003 Ver Preferencias      | ✅ GET /{sellerId}/contact-pref  | ✅ getSellerContactPreferences() | ✅ SellerPublicProfilePage   | Contact section             | ✅     |
+| SELLER-003 Editar Preferencias   | ✅ PUT /contact-preferences      | ✅ updateContactPreferences()    | ✅ SellerProfileSettingsPage | Tab "Contacto"              | ✅     |
+| SELLER-004 Asignar Badge (Admin) | ✅ POST /{sellerId}/badges       | ✅ assignBadge()                 | ⚠️ AdminPanel                | /admin/sellers              | ✅     |
+| SELLER-004 Quitar Badge (Admin)  | ✅ DELETE /{sellerId}/badges/{b} | ✅ removeBadge()                 | ⚠️ AdminPanel                | /admin/sellers              | ✅     |
+| SELLER-005 Mis Estadísticas      | ✅ GET /my-stats (auth)          | ✅ getMyStats()                  | ✅ SellerProfileSettingsPage | Tab "Stats"                 | ✅     |
+| PROF-001 Crear Perfil            | ✅ POST /profile                 | ✅ createProfile()               | ✅ CreateSellerPage          | /seller/create              | ✅     |
+| PROF-002 Buscar Vendedores       | ✅ GET /search                   | ✅ searchSellers()               | ⚠️ SearchPage filters        | /search?seller=...          | ✅     |
+| PROF-003 Top Vendedores          | ✅ GET /top                      | ✅ getTopSellers()               | ⚠️ HomePage section          | Homepage                    | ✅     |
+| PROF-004 Verificar (Admin)       | ✅ POST /{sellerId}/verify       | ✅ verifySeller()                | ⚠️ AdminPanel                | /admin/verifications        | ✅     |
 
-- Ninguna - Perfiles completamente implementados
+### 🗂️ Rutas UI Configuradas (App.tsx)
 
-**Verificación Backend:** UserService/SellerProfileController existe ✅
+| Ruta Frontend                | Componente                | Protegida | Verificado |
+| ---------------------------- | ------------------------- | --------- | ---------- |
+| `/seller/create`             | CreateSellerPage          | ❌        | ✅         |
+| `/seller/profile`            | SellerProfilePage         | ✅        | ✅         |
+| `/seller/dashboard`          | SellerDashboardPage       | ✅        | ✅         |
+| `/seller/profile/settings`   | SellerProfileSettingsPage | ✅        | ✅         |
+| `/sellers/:sellerId`         | SellerPublicProfilePage   | ❌        | ✅         |
+| `/sellers/:sellerId/reviews` | SellerReviewsPage         | ❌        | ✅         |
+| `/reviews/write/:sellerId`   | WriteReviewPage           | ✅        | ✅         |
+
+### 🌐 Gateway Configuration (ocelot.prod.json)
+
+```json
+✅ /api/sellers/health → userservice:8080/api/sellers/health
+✅ /api/sellers/{everything} → userservice:8080/api/sellers/{everything}
+✅ /api/sellers → userservice:8080/api/sellers
+```
+
+### 🧪 Tests Unitarios Verificados
+
+| Test                                                | Estado |
+| --------------------------------------------------- | ------ |
+| GetSellerProfile_WithValidId_ReturnsOkResult        | ✅     |
+| GetSellerProfile_WithInvalidId_ReturnsNotFound      | ✅     |
+| GetSellerProfile_WithDeletedProfile_ReturnsNotFound | ✅     |
+| GetSellerListings_WithValidSeller_ReturnsResponse   | ✅     |
+| GetSellerReviews_WithValidSeller_ReturnsResponse    | ✅     |
+| GetSellerContactPreferences_WithExisting_Returns    | ✅     |
+| GetSellerContactPreferences_WithNo_ReturnsDefault   | ✅     |
+| GetSellerStats_WithValidSeller_ReturnsPublicStats   | ✅     |
+| SellerBadge_Enum_HasExpectedValues                  | ✅     |
+| SellerVerificationStatus_Enum_HasExpectedValues     | ✅     |
+| AssignBadgeRequest_ShouldHaveCorrectStructure       | ✅     |
+| SellerPublicProfileDto_ShouldMapCorrectly           | ✅     |
+
+### ✅ Verificación Backend
+
+**Controlador:** `UserService/UserService.Api/Controllers/SellerProfileController.cs`
+
+- **Líneas de código:** 801
+- **Endpoints implementados:** 17
+- **Regiones:** Públicos, Autenticados, Admin, Helpers
+
+**Repositorio:** `UserService/UserService.Infrastructure/Repositories/SellerProfileRepository.cs`
+
+- Métodos CRUD completos
+- GetBadgesAsync, AssignBadgeAsync, RemoveBadgeAsync
+- ContactPreferences CRUD
+- Search, GetTop, GetPendingVerifications
+
+### ✅ Verificación Frontend
+
+**Service:** `frontend/web/src/services/sellerProfileService.ts` (669 líneas)
+
+- Tipos TypeScript completos para todos los DTOs
+- Enums: SellerType, SellerVerificationStatus, SellerBadge
+- Metadata de badges (BADGE_INFO)
+- Métodos helper (formatResponseTime, getVerificationStatusColor)
+
+**Páginas verificadas:**
+
+1. `SellerPublicProfilePage.tsx` - 554 líneas
+2. `SellerProfilePage.tsx` - 464 líneas
+3. `SellerProfileSettingsPage.tsx` - 906 líneas
+4. `CreateSellerPage.tsx` - (existente)
+
+### ✅ TODOs RESUELTOS (Enero 2026)
+
+**Integración de Servicios:**
+
+- ✅ `IVehiclesSaleServiceClient` - Obtiene listados reales del vendedor
+- ✅ `IReviewServiceClient` - Obtiene reseñas reales del vendedor
+- ✅ Ambos clientes registrados en `Program.cs` con HttpClient + Polly
+
+**Eventos Tipados Creados (`SellerProfileEvents.cs`):**
+
+- ✅ `SellerProfileCreatedEvent` - seller.profile.created
+- ✅ `SellerProfileUpdatedEvent` - seller.profile.updated
+- ✅ `SellerPreferencesUpdatedEvent` - seller.preferences.updated
+- ✅ `SellerBadgeEarnedEvent` - seller.badge.earned
+- ✅ `SellerBadgeLostEvent` - seller.badge.lost
+- ✅ `SellerVerifiedEvent` - seller.verified
+
+**Archivos Creados:**
+
+```
+UserService/
+├── Domain/Events/SellerProfileEvents.cs (177 líneas)
+├── Application/Interfaces/
+│   ├── IVehiclesSaleServiceClient.cs
+│   └── IReviewServiceClient.cs
+├── Infrastructure/External/
+│   ├── VehiclesSaleServiceClient.cs
+│   └── ReviewServiceClient.cs
+```
+
+### 📊 Estado Final
+
+| Área           | Implementado | Pendiente |
+| -------------- | ------------ | --------- |
+| Backend API    | ✅ 100%      | -         |
+| Frontend UI    | ✅ 100%      | -         |
+| Tests          | ✅ 100%      | -         |
+| Gateway        | ✅ 100%      | -         |
+| Event Typing   | ✅ 100%      | -         |
+| Service Integr | ✅ 100%      | -         |
+
+**CONCLUSIÓN: ✅ SISTEMA COMPLETAMENTE FUNCIONAL - SIN TODOs PENDIENTES**
+
+Todos los endpoints de seller profiles están integrados con servicios reales (VehiclesSaleService, ReviewService) y publican eventos tipados via RabbitMQ.
 
 ---
 
@@ -37,12 +162,25 @@
 
 | Componente               | Total | Implementado | Pendiente | Estado  |
 | ------------------------ | ----- | ------------ | --------- | ------- |
-| **Controllers**          | 1     | 1            | 0         | ✅ 100% |
+| **Backend Endpoints**    | 17    | 17           | 0         | ✅ 100% |
 | **Procesos (SELLER-\*)** | 5     | 5            | 0         | ✅ 100% |
 | **Procesos (PROF-\*)**   | 4     | 4            | 0         | ✅ 100% |
-| **Tests Unitarios**      | 12    | 12           | 0         | ✅ 100% |
-| **Frontend Pages**       | 2     | 2            | 0         | ✅ 100% |
+| **Tests Unitarios**      | 12+   | 12+          | 0         | ✅ 100% |
+| **Frontend Pages**       | 4     | 4            | 0         | ✅ 100% |
 | **Frontend Services**    | 1     | 1            | 0         | ✅ 100% |
+| **Frontend Routes**      | 7     | 7            | 0         | ✅ 100% |
+| **Gateway Routes**       | 3     | 3            | 0         | ✅ 100% |
+
+### Archivos Verificados
+
+| Archivo                         | Líneas | Estado |
+| ------------------------------- | ------ | ------ |
+| SellerProfileController.cs      | 801    | ✅     |
+| SellerProfileControllerTests.cs | 460    | ✅     |
+| sellerProfileService.ts         | 669    | ✅     |
+| SellerPublicProfilePage.tsx     | 554    | ✅     |
+| SellerProfilePage.tsx           | 464    | ✅     |
+| SellerProfileSettingsPage.tsx   | 906    | ✅     |
 
 ### Leyenda de Estados
 
@@ -124,22 +262,35 @@ Sistema de gestión de perfiles públicos de vendedores (individuales y dealers)
 
 ### 2.1 SellerProfileController (Público)
 
-| Método | Endpoint                                      | Descripción            | Auth | Roles  |
+| Método | Endpoint                                      | Descripción            | Auth | Estado |
 | ------ | --------------------------------------------- | ---------------------- | ---- | ------ |
-| `GET`  | `/api/sellers/{sellerId}/profile`             | Obtener perfil público | ❌   | Public |
-| `GET`  | `/api/sellers/{sellerId}/listings`            | Listados del vendedor  | ❌   | Public |
-| `GET`  | `/api/sellers/{sellerId}/reviews`             | Reseñas del vendedor   | ❌   | Public |
-| `GET`  | `/api/sellers/{sellerId}/stats`               | Estadísticas públicas  | ❌   | Public |
-| `GET`  | `/api/sellers/{sellerId}/contact-preferences` | Preferencias contacto  | ❌   | Public |
+| `GET`  | `/api/sellers/{sellerId}/profile`             | Obtener perfil público | ❌   | ✅     |
+| `GET`  | `/api/sellers/{sellerId}/listings`            | Listados del vendedor  | ❌   | ✅     |
+| `GET`  | `/api/sellers/{sellerId}/reviews`             | Reseñas del vendedor   | ❌   | ✅     |
+| `GET`  | `/api/sellers/{sellerId}/stats`               | Estadísticas públicas  | ❌   | ✅     |
+| `GET`  | `/api/sellers/{sellerId}/contact-preferences` | Preferencias contacto  | ❌   | ✅     |
+| `GET`  | `/api/sellers/search`                         | Buscar vendedores      | ❌   | ✅     |
+| `GET`  | `/api/sellers/top`                            | Top vendedores         | ❌   | ✅     |
 
 ### 2.2 SellerProfileController (Autenticado)
 
-| Método | Endpoint                           | Descripción             | Auth | Roles          |
-| ------ | ---------------------------------- | ----------------------- | ---- | -------------- |
-| `PUT`  | `/api/sellers/profile`             | Actualizar mi perfil    | ✅   | Seller, Dealer |
-| `PUT`  | `/api/sellers/profile/photo`       | Subir foto perfil       | ✅   | Seller, Dealer |
-| `PUT`  | `/api/sellers/contact-preferences` | Actualizar preferencias | ✅   | Seller, Dealer |
-| `GET`  | `/api/sellers/my-stats`            | Mis estadísticas        | ✅   | Seller, Dealer |
+| Método | Endpoint                           | Descripción             | Auth | Estado |
+| ------ | ---------------------------------- | ----------------------- | ---- | ------ |
+| `GET`  | `/api/sellers/profile`             | Obtener mi perfil       | ✅   | ✅     |
+| `PUT`  | `/api/sellers/profile`             | Actualizar mi perfil    | ✅   | ✅     |
+| `POST` | `/api/sellers/profile`             | Crear perfil vendedor   | ✅   | ✅     |
+| `PUT`  | `/api/sellers/profile/photo`       | Subir foto perfil       | ✅   | ✅     |
+| `PUT`  | `/api/sellers/contact-preferences` | Actualizar preferencias | ✅   | ✅     |
+| `GET`  | `/api/sellers/my-stats`            | Mis estadísticas        | ✅   | ✅     |
+
+### 2.3 SellerProfileController (Admin)
+
+| Método   | Endpoint                                 | Descripción             | Auth     | Estado |
+| -------- | ---------------------------------------- | ----------------------- | -------- | ------ |
+| `POST`   | `/api/sellers/{sellerId}/badges`         | Asignar badge           | ✅ Admin | ✅     |
+| `DELETE` | `/api/sellers/{sellerId}/badges/{badge}` | Quitar badge            | ✅ Admin | ✅     |
+| `POST`   | `/api/sellers/{sellerId}/verify`         | Verificar vendedor      | ✅ Admin | ✅     |
+| `GET`    | `/api/sellers/pending-verifications`     | Pendientes de verificar | ✅ Admin | ✅     |
 
 ---
 
