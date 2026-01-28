@@ -138,6 +138,162 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/inventory/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/inventory",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/stats",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/inventory/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/featured",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/inventory/featured",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/hot",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/inventory/hot",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/overdue",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/inventory/overdue",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/bulk/status",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/inventory/bulk/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/bulkimport",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/inventory/bulkimport",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/bulkimport/upload",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/inventory/bulkimport/upload",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 120000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/bulkimport/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/inventory/bulkimport/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/bulkimport/{id}/cancel",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/inventory/bulkimport/{id}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/inventory/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/inventory-service/swagger/{everything}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "inventorymanagementservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/errors/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
@@ -930,6 +1086,50 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealermanagementservice", "Port": 80 }
       ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/locations",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/locations",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}/set-primary",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}/set-primary",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{everything}",

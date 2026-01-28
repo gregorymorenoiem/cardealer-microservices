@@ -10,6 +10,10 @@ import {
   FiClock,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
+import dealerService, {
+  DealerManagedLocation,
+  CreateLocationRequest,
+} from '../../services/dealerService';
 
 interface DealerLocation {
   id: string;
@@ -34,12 +38,33 @@ interface LocationsPageProps {
   dealerId: string;
 }
 
+// Transform API response to local interface
+const transformLocation = (loc: DealerManagedLocation): DealerLocation => ({
+  id: loc.id,
+  name: loc.name,
+  type: loc.type,
+  address: loc.address,
+  city: loc.city,
+  province: loc.province,
+  postalCode: loc.postalCode,
+  phone: loc.phone,
+  email: loc.email,
+  isPrimary: loc.isPrimary,
+  isActive: loc.isActive,
+  openingHours: loc.openingHours,
+  vehicleCount: loc.vehicleCount || 0,
+  latitude: loc.latitude,
+  longitude: loc.longitude,
+  createdAt: loc.createdAt,
+});
+
 export default function LocationsPage({ dealerId }: LocationsPageProps) {
   const [locations, setLocations] = useState<DealerLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingLocation, setEditingLocation] = useState<DealerLocation | null>(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     type: 'Showroom' as DealerLocation['type'],
@@ -61,60 +86,12 @@ export default function LocationsPage({ dealerId }: LocationsPageProps) {
   const loadLocations = async () => {
     try {
       setLoading(true);
-      // TODO: Call API to get locations
-      // const data = await dealerService.getLocations(dealerId);
-      // setLocations(data);
-
-      // Mock data for now
-      setLocations([
-        {
-          id: '1',
-          name: 'Sede Principal',
-          type: 'Headquarters',
-          address: 'Av. Winston Churchill #45',
-          city: 'Santo Domingo',
-          province: 'Distrito Nacional',
-          postalCode: '10147',
-          phone: '809-555-0100',
-          email: 'principal@dealer.com',
-          isPrimary: true,
-          isActive: true,
-          openingHours: 'Lun-Vie: 8:00 AM - 6:00 PM, Sáb: 9:00 AM - 3:00 PM',
-          vehicleCount: 45,
-          latitude: 18.4664,
-          longitude: -69.9325,
-          createdAt: '2024-01-15',
-        },
-        {
-          id: '2',
-          name: 'Sucursal Santiago',
-          type: 'Branch',
-          address: 'Av. 27 de Febrero #123',
-          city: 'Santiago',
-          province: 'Santiago',
-          phone: '809-555-0200',
-          isPrimary: false,
-          isActive: true,
-          openingHours: 'Lun-Vie: 8:00 AM - 5:00 PM',
-          vehicleCount: 28,
-          createdAt: '2024-03-20',
-        },
-        {
-          id: '3',
-          name: 'Showroom Mall',
-          type: 'Showroom',
-          address: 'Blue Mall, Local 105',
-          city: 'Santo Domingo',
-          province: 'Distrito Nacional',
-          phone: '809-555-0300',
-          isPrimary: false,
-          isActive: true,
-          vehicleCount: 12,
-          createdAt: '2024-06-10',
-        },
-      ]);
+      setError(null);
+      const data = await dealerService.getDealerLocations(dealerId);
+      setLocations(data.map(transformLocation));
     } catch (err: any) {
-      setError(err.message || 'Error al cargar las ubicaciones');
+      console.error('Error loading locations:', err);
+      setError(err.response?.data?.message || err.message || 'Error al cargar las ubicaciones');
     } finally {
       setLoading(false);
     }
@@ -122,23 +99,38 @@ export default function LocationsPage({ dealerId }: LocationsPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setError(null);
 
     try {
+      const locationData: CreateLocationRequest = {
+        name: formData.name,
+        type: formData.type,
+        address: formData.address,
+        city: formData.city,
+        province: formData.province,
+        postalCode: formData.postalCode || undefined,
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
+        openingHours: formData.openingHours || undefined,
+        isPrimary: formData.isPrimary,
+        isActive: formData.isActive,
+      };
+
       if (editingLocation) {
-        // TODO: Call API to update location
-        // await dealerService.updateLocation(editingLocation.id, formData);
-        console.log('Updating location:', editingLocation.id, formData);
+        await dealerService.updateLocation(dealerId, editingLocation.id, locationData);
       } else {
-        // TODO: Call API to create location
-        // await dealerService.createLocation(dealerId, formData);
-        console.log('Creating location:', formData);
+        await dealerService.createLocation(dealerId, locationData);
       }
 
       setShowModal(false);
       resetForm();
-      loadLocations();
+      await loadLocations();
     } catch (err: any) {
-      setError(err.message || 'Error al guardar la ubicación');
+      console.error('Error saving location:', err);
+      setError(err.response?.data?.message || err.message || 'Error al guardar la ubicación');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -164,23 +156,25 @@ export default function LocationsPage({ dealerId }: LocationsPageProps) {
     if (!confirm('¿Está seguro de eliminar esta ubicación?')) return;
 
     try {
-      // TODO: Call API to delete location
-      // await dealerService.deleteLocation(id);
-      console.log('Deleting location:', id);
-      loadLocations();
+      setError(null);
+      await dealerService.deleteLocation(dealerId, id);
+      await loadLocations();
     } catch (err: any) {
-      setError(err.message || 'Error al eliminar la ubicación');
+      console.error('Error deleting location:', err);
+      setError(err.response?.data?.message || err.message || 'Error al eliminar la ubicación');
     }
   };
 
   const handleSetPrimary = async (id: string) => {
     try {
-      // TODO: Call API to set primary location
-      // await dealerService.setPrimaryLocation(id);
-      console.log('Setting primary location:', id);
-      loadLocations();
+      setError(null);
+      await dealerService.setPrimaryLocation(dealerId, id);
+      await loadLocations();
     } catch (err: any) {
-      setError(err.message || 'Error al establecer ubicación principal');
+      console.error('Error setting primary location:', err);
+      setError(
+        err.response?.data?.message || err.message || 'Error al establecer ubicación principal'
+      );
     }
   };
 

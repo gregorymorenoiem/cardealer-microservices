@@ -94,19 +94,24 @@ public class GetDealerByIdQueryHandler : IRequestHandler<GetDealerByIdQuery, Dea
                 l.DealerId,
                 l.Name,
                 l.Type.ToString(),
-                l.IsPrimary,
                 l.Address,
                 l.City,
                 l.Province,
                 l.ZipCode,
                 l.Country,
-                l.Latitude,
-                l.Longitude,
                 l.Phone,
                 l.Email,
                 l.WorkingHours,
+                l.IsPrimary,
                 l.IsActive,
-                l.CreatedAt
+                l.Latitude,
+                l.Longitude,
+                l.HasShowroom,
+                l.HasServiceCenter,
+                l.HasParking,
+                l.ParkingSpaces,
+                l.CreatedAt,
+                l.UpdatedAt
             )).ToList()
         );
     }

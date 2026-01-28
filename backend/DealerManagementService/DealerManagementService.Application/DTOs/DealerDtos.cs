@@ -61,19 +61,24 @@ public record DealerLocationDto(
     Guid DealerId,
     string Name,
     string Type, // LocationType as string
-    bool IsPrimary,
     string Address,
     string City,
     string Province,
     string? ZipCode,
     string Country,
-    double? Latitude,
-    double? Longitude,
     string Phone,
     string? Email,
     string? WorkingHours,
+    bool IsPrimary,
     bool IsActive,
-    DateTime CreatedAt
+    double? Latitude,
+    double? Longitude,
+    bool HasShowroom,
+    bool HasServiceCenter,
+    bool HasParking,
+    int? ParkingSpaces,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt
 );
 
 public record CreateDealerRequest(

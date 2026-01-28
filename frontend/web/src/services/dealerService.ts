@@ -151,6 +151,161 @@ const transformVehicleToListing = (vehicle: BackendVehicle): DealerListing => {
 };
 
 // ============================================================
+// DEALER LOCATION MANAGEMENT INTERFACES
+// ============================================================
+
+export interface DealerManagedLocation {
+  id: string;
+  dealerId: string;
+  name: string;
+  type: 'Headquarters' | 'Branch' | 'Showroom' | 'ServiceCenter' | 'Warehouse';
+  address: string;
+  city: string;
+  province: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  latitude?: number;
+  longitude?: number;
+  isPrimary: boolean;
+  isActive: boolean;
+  openingHours?: string;
+  hasShowroom?: boolean;
+  hasServiceCenter?: boolean;
+  hasParking?: boolean;
+  parkingSpaces?: number;
+  vehicleCount?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateLocationRequest {
+  name: string;
+  type: 'Headquarters' | 'Branch' | 'Showroom' | 'ServiceCenter' | 'Warehouse';
+  address: string;
+  city: string;
+  province: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  latitude?: number;
+  longitude?: number;
+  isPrimary?: boolean;
+  isActive?: boolean;
+  openingHours?: string;
+  hasShowroom?: boolean;
+  hasServiceCenter?: boolean;
+  hasParking?: boolean;
+  parkingSpaces?: number;
+}
+
+export interface UpdateLocationRequest extends Partial<CreateLocationRequest> {
+  id: string;
+}
+
+// ============================================================
+// DEALER LOCATIONS API FUNCTIONS
+// ============================================================
+
+/**
+ * Get all locations for a specific dealer
+ */
+export const getDealerLocations = async (dealerId: string): Promise<DealerManagedLocation[]> => {
+  try {
+    const response = await axios.get<DealerManagedLocation[]>(
+      `${VEHICLES_API_BASE}/dealers/${dealerId}/locations`
+    );
+    return response.data || [];
+  } catch (error) {
+    console.error('❌ Error fetching dealer locations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a specific location by ID
+ */
+export const getLocationById = async (
+  dealerId: string,
+  locationId: string
+): Promise<DealerManagedLocation | null> => {
+  try {
+    const response = await axios.get<DealerManagedLocation>(
+      `${VEHICLES_API_BASE}/dealers/${dealerId}/locations/${locationId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error fetching location by ID:', error);
+    return null;
+  }
+};
+
+/**
+ * Create a new dealer location
+ */
+export const createLocation = async (
+  dealerId: string,
+  data: CreateLocationRequest
+): Promise<DealerManagedLocation> => {
+  try {
+    const response = await axios.post<DealerManagedLocation>(
+      `${VEHICLES_API_BASE}/dealers/${dealerId}/locations`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error creating location:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing dealer location
+ */
+export const updateLocation = async (
+  dealerId: string,
+  locationId: string,
+  data: Partial<CreateLocationRequest>
+): Promise<DealerManagedLocation> => {
+  try {
+    const response = await axios.put<DealerManagedLocation>(
+      `${VEHICLES_API_BASE}/dealers/${dealerId}/locations/${locationId}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error updating location:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a dealer location
+ */
+export const deleteLocation = async (dealerId: string, locationId: string): Promise<void> => {
+  try {
+    await axios.delete(`${VEHICLES_API_BASE}/dealers/${dealerId}/locations/${locationId}`);
+  } catch (error) {
+    console.error('❌ Error deleting location:', error);
+    throw error;
+  }
+};
+
+/**
+ * Set a location as the primary location for a dealer
+ */
+export const setPrimaryLocation = async (dealerId: string, locationId: string): Promise<void> => {
+  try {
+    await axios.post(
+      `${VEHICLES_API_BASE}/dealers/${dealerId}/locations/${locationId}/set-primary`
+    );
+  } catch (error) {
+    console.error('❌ Error setting primary location:', error);
+    throw error;
+  }
+};
+
+// ============================================================
 // MAIN SERVICE FUNCTIONS
 // ============================================================
 
@@ -315,6 +470,13 @@ export const getDealerById = async (dealerId: string): Promise<DealerLocation | 
 const dealerService = {
   getDealersWithVehicles,
   getDealerById,
+  // Location management
+  getDealerLocations,
+  getLocationById,
+  createLocation,
+  updateLocation,
+  deleteLocation,
+  setPrimaryLocation,
 };
 
 export default dealerService;
