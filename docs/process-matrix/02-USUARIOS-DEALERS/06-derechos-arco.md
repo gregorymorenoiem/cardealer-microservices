@@ -2,20 +2,20 @@
 
 > **Marco Legal:** Ley 172-13 - Protección de Datos Personales  
 > **Regulador:** Superintendencia de Bancos / Procuraduría General  
-> **Última actualización:** Enero 26, 2026  
-> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI | ✅ 100% Tests
+> **Última actualización:** Enero 28, 2026  
+> **Estado de Implementación:** ✅ 100% Backend | ✅ 100% UI | ✅ 100% Tests | ✅ 100% Gateway
 
 ---
 
-## ⚠️ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ⚠️ AUDITORÍA DE ACCESO UI (Enero 28, 2026)
 
-| Proceso                          | Backend        | UI Access            | Observación          |
-| -------------------------------- | -------------- | -------------------- | -------------------- |
-| ARCO-ACCESS-001 Ver mis datos    | ✅ UserService | ✅ MyDataPage        | Datos completos      |
-| ARCO-RECT-001 Corregir datos     | ✅ UserService | ✅ SettingsPage      | Formulario edición   |
-| ARCO-CANCEL-001 Eliminar cuenta  | ✅ Completo    | ✅ DeleteAccountPage | Flow completo        |
-| ARCO-OPP-001 Oposición marketing | ✅ Completo    | ✅ PrivacyCenterPage | Centro de privacidad |
-| ARCO-PORT-001 Portabilidad       | ✅ Completo    | ✅ DataDownloadPage  | Exportación JSON/PDF |
+| Proceso                          | Backend        | UI Access            | Gateway           | Observación          |
+| -------------------------------- | -------------- | -------------------- | ----------------- | -------------------- |
+| ARCO-ACCESS-001 Ver mis datos    | ✅ UserService | ✅ MyDataPage        | ✅ Configurado    | Datos completos      |
+| ARCO-RECT-001 Corregir datos     | ✅ UserService | ✅ SettingsPage      | ✅ Via /api/users | Formulario edición   |
+| ARCO-CANCEL-001 Eliminar cuenta  | ✅ Completo    | ✅ DeleteAccountPage | ✅ Configurado    | Flow completo        |
+| ARCO-OPP-001 Oposición marketing | ✅ Completo    | ✅ PrivacyCenterPage | ✅ Configurado    | Centro de privacidad |
+| ARCO-PORT-001 Portabilidad       | ✅ Completo    | ✅ DataDownloadPage  | ✅ Configurado    | Exportación JSON/PDF |
 
 ### Rutas UI Existentes ✅
 
@@ -39,7 +39,8 @@
 | **ARCO-OPP-\*** (Oposición)      | 3     | 3            | 0         | ✅ Completo      |
 | **ARCO-PORT-\*** (Portabilidad)  | 4     | 4            | 0         | ✅ Completo      |
 | **Tests**                        | 15    | 15           | 0         | ✅ 100% Coverage |
-| **TOTAL**                        | 32    | 32           | 0         | ✅ 100% Backend  |
+| **Gateway Routes**               | 14    | 14           | 0         | ✅ Configurado   |
+| **TOTAL**                        | 46    | 46           | 0         | ✅ 100% Completo |
 
 ---
 

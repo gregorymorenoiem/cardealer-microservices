@@ -699,6 +699,199 @@
     },
 
     {
+      "UpstreamPathTemplate": "/api/privacy/rights-info",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/rights-info",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/my-data",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/my-data",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/my-data/full",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/my-data/full",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/export/request",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/privacy/export/request",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/export/status",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/export/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/export/download/{token}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/export/download/{token}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 120000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/delete-account/request",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/privacy/delete-account/request",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/delete-account/confirm",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/privacy/delete-account/confirm",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/delete-account/cancel",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/privacy/delete-account/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/delete-account/status",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/delete-account/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/preferences",
+      "UpstreamHttpMethod": ["GET", "PUT"],
+      "DownstreamPathTemplate": "/api/privacy/preferences",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/preferences/unsubscribe-all",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/privacy/preferences/unsubscribe-all",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/privacy/requests",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/privacy/requests",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
       "UpstreamPathTemplate": "/api/dealer-roles",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/dealer-roles",
