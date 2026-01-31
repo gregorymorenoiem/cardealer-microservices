@@ -2,12 +2,12 @@
 
 > **Servicio:** ReviewService  
 > **Puerto:** 5030  
-> **Última actualización:** Enero 25, 2026  
-> **Estado de Implementación:** ✅ Backend 100% | ✅ UI 90%
+> **Última actualización:** Enero 27, 2026  
+> **Estado de Implementación:** ✅ Backend 100% | ✅ UI 100%
 
 ---
 
-## ✅ AUDITORÍA DE ACCESO UI (Enero 25, 2026)
+## ✅ AUDITORÍA DE ACCESO UI (Enero 27, 2026)
 
 > **Estado:** ✅ Servicio funcional con UI completa.
 
@@ -17,8 +17,8 @@
 | Escribir review  | ✅ 100% | ✅ 100%   | Post-transacción          |
 | Votar review     | ✅ 100% | ✅ 100%   | Botón útil/no útil        |
 | Responder review | ✅ 100% | ✅ 100%   | Para dealers              |
-| Badges           | ✅ 100% | 🟡 70%    | Parcialmente visible      |
-| Moderar reviews  | ✅ 100% | 🟡 60%    | En `/admin/users`         |
+| Badges           | ✅ 100% | ✅ 100%   | Visible en perfil         |
+| Moderar reviews  | ✅ 100% | ✅ 100%   | En `/admin/reviews`       |
 
 ### Rutas UI Existentes ✅
 
@@ -38,10 +38,40 @@
 | **Controllers**                | 2     | 2            | 0         | ✅ 100% |
 | **REV-CRUD-\*** (CRUD Reviews) | 5     | 5            | 0         | ✅ 100% |
 | **REV-VOTE-\*** (Votos)        | 3     | 3            | 0         | ✅ 100% |
-| **REV-MOD-\*** (Moderación)    | 4     | 3            | 1         | 🟡 75%  |
-| **REV-BADGE-\*** (Badges)      | 3     | 2            | 1         | 🟡 67%  |
+| **REV-MOD-\*** (Moderación)    | 4     | 4            | 0         | ✅ 100% |
+| **REV-BADGE-\*** (Badges)      | 3     | 3            | 0         | ✅ 100% |
 | **REV-STAT-\*** (Estadísticas) | 3     | 3            | 0         | ✅ 100% |
-| **Tests**                      | 18    | 15           | 3         | 🟡 83%  |
+| **Tests**                      | 18    | 18           | 0         | ✅ 100% |
+
+### Detalle de Componentes
+
+#### REV-MOD (Moderación) ✅ 4/4
+
+| ID        | Funcionalidad                  | Estado | Ubicación                                       |
+| --------- | ------------------------------ | ------ | ----------------------------------------------- |
+| REV-MOD-1 | Aprobar/Rechazar review        | ✅     | `POST /api/reviews/{reviewId}/moderate`         |
+| REV-MOD-2 | Responder a review (vendedor)  | ✅     | `POST /api/reviews/{reviewId}/respond`          |
+| REV-MOD-3 | Listar reviews pendientes      | ✅     | `IReviewRepository.GetPendingModerationAsync()` |
+| REV-MOD-4 | Filtrar reviews por moderación | ✅     | `GetSellerReviewsQuery` con `OnlyApproved`      |
+
+#### REV-BADGE (Badges) ✅ 3/3
+
+| ID          | Funcionalidad                  | Estado | Ubicación                                                |
+| ----------- | ------------------------------ | ------ | -------------------------------------------------------- |
+| REV-BADGE-1 | Obtener badges de vendedor     | ✅     | `GET /api/reviews/seller/{sellerId}/badges`              |
+| REV-BADGE-2 | Recalcular badges manualmente  | ✅     | `POST /api/reviews/seller/{sellerId}/badges/recalculate` |
+| REV-BADGE-3 | Cálculo automático post-review | ✅     | `BadgeCalculationService.CalculateAsync()`               |
+
+#### Tests ✅ 18/18
+
+| Categoría                | Tests | Archivo                           |
+| ------------------------ | ----- | --------------------------------- |
+| Domain Entities (Review) | 5     | `ReviewServiceTests.cs`           |
+| ReviewSummary            | 4     | `ReviewServiceTests.cs`           |
+| ReviewResponse           | 1     | `ReviewServiceTests.cs`           |
+| ReviewHelpfulVote        | 3     | `Sprint15AdvancedReviewsTests.cs` |
+| SellerBadge              | 4     | `Sprint15AdvancedReviewsTests.cs` |
+| ReviewRequest            | 1     | `Sprint15AdvancedReviewsTests.cs` |
 
 ---
 
@@ -114,10 +144,11 @@
 
 ### Moderación
 
-| Método | Endpoint                           | Descripción                | Auth | Roles  |
-| ------ | ---------------------------------- | -------------------------- | ---- | ------ |
-| `POST` | `/api/reviews/{reviewId}/moderate` | Aprobar/Rechazar review    | ✅   | Admin  |
-| `POST` | `/api/reviews/{reviewId}/respond`  | Vendedor responde a review | ✅   | Seller |
+| Método | Endpoint                           | Descripción                   | Auth | Roles  |
+| ------ | ---------------------------------- | ----------------------------- | ---- | ------ |
+| `GET`  | `/api/reviews/pending`             | Reviews pendientes moderación | ✅   | Admin  |
+| `POST` | `/api/reviews/{reviewId}/moderate` | Aprobar/Rechazar review       | ✅   | Admin  |
+| `POST` | `/api/reviews/{reviewId}/respond`  | Vendedor responde a review    | ✅   | Seller |
 
 ### Votos de Utilidad
 
@@ -128,10 +159,11 @@
 
 ### Badges de Vendedor
 
-| Método | Endpoint                                            | Descripción                 | Auth | Roles   |
-| ------ | --------------------------------------------------- | --------------------------- | ---- | ------- |
-| `GET`  | `/api/reviews/seller/{sellerId}/badges`             | Badges activos del vendedor | ❌   | Público |
-| `POST` | `/api/reviews/seller/{sellerId}/badges/recalculate` | Recalcular badges           | ✅   | Admin   |
+| Método | Endpoint                                            | Descripción                   | Auth | Roles   |
+| ------ | --------------------------------------------------- | ----------------------------- | ---- | ------- |
+| `GET`  | `/api/reviews/seller/{sellerId}/badges`             | Badges activos del vendedor   | ❌   | Público |
+| `GET`  | `/api/reviews/seller/{sellerId}/badges/history`     | Historial completo de badges  | ✅   | Admin   |
+| `POST` | `/api/reviews/seller/{sellerId}/badges/recalculate` | Recalcular badges manualmente | ✅   | Admin   |
 
 ### Solicitudes Automáticas
 
@@ -607,8 +639,128 @@ Este link expira en 30 días.
 - [Review Entity](../../backend/ReviewService/ReviewService.Domain/Entities/Review.cs)
 - [SellerBadge Entity](../../backend/ReviewService/ReviewService.Domain/Entities/SellerBadge.cs)
 - [ReviewRequest Entity](../../backend/ReviewService/ReviewService.Domain/Entities/ReviewRequest.cs)
+- [BadgeCalculationService](../../backend/ReviewService/ReviewService.Domain/Services/BadgeCalculationService.cs)
+- [ReviewServiceTests](../../backend/_Tests/ReviewService.Tests/ReviewServiceTests.cs)
+- [Sprint15AdvancedReviewsTests](../../backend/_Tests/ReviewService.Tests/Sprint15AdvancedReviewsTests.cs)
 
 ---
 
-**Última actualización:** Enero 21, 2026  
-**Versión:** 1.0.0
+## 🔧 PROCESO 6: Moderación de Reviews (Panel Admin)
+
+#### Endpoint: `GET /api/reviews/pending`
+
+| Paso | Actor | Acción                       | Sistema                  | Resultado            |
+| ---- | ----- | ---------------------------- | ------------------------ | -------------------- |
+| 1    | Admin | Solicita reviews pendientes  | HTTP GET                 | Request recibido     |
+| 2    | Auth  | Valida rol Admin             | JWT Claims               | Autorizado           |
+| 3    | Query | Obtiene reviews no aprobadas | WHERE IsApproved = false | Lista de reviews     |
+| 4    | Query | Ordena por fecha             | ORDER BY CreatedAt ASC   | Más antiguas primero |
+| 5    | Query | Incluye datos de comprador   | Include Buyer info       | Info completa        |
+| 6    | Query | Incluye datos de vendedor    | Include Seller info      | Info completa        |
+| 7    | API   | Retorna lista paginada       | HTTP 200                 | PendingReviewsDto    |
+
+#### Response (200 OK)
+
+```json
+{
+  "items": [
+    {
+      "id": "review-uuid",
+      "buyerId": "buyer-uuid",
+      "buyerName": "Juan Pérez",
+      "sellerId": "seller-uuid",
+      "sellerName": "AutoDealer Pro",
+      "vehicleId": "vehicle-uuid",
+      "vehicleTitle": "Toyota Corolla 2022",
+      "rating": 2,
+      "title": "Mala experiencia",
+      "content": "El vehículo tenía problemas que no mencionaron...",
+      "isVerifiedPurchase": true,
+      "fraudScore": 85,
+      "flaggedWords": ["estafa", "robo"],
+      "createdAt": "2026-01-20T10:30:00Z"
+    }
+  ],
+  "totalCount": 12,
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+---
+
+## 🔧 PROCESO 7: Historial de Badges (Admin)
+
+#### Endpoint: `GET /api/reviews/seller/{sellerId}/badges/history`
+
+| Paso | Actor | Acción                      | Sistema                 | Resultado          |
+| ---- | ----- | --------------------------- | ----------------------- | ------------------ |
+| 1    | Admin | Solicita historial          | HTTP GET                | Request recibido   |
+| 2    | Auth  | Valida rol Admin            | JWT Claims              | Autorizado         |
+| 3    | Query | Obtiene todos los badges    | GetAllBySellerIdAsync() | Lista completa     |
+| 4    | Query | Incluye activos y revocados | WHERE SellerId = x      | Historial completo |
+| 5    | Query | Ordena por fecha ganados    | ORDER BY EarnedAt DESC  | Cronológico        |
+| 6    | API   | Retorna historial           | HTTP 200                | BadgeHistoryDto    |
+
+#### Response (200 OK)
+
+```json
+{
+  "sellerId": "seller-uuid",
+  "sellerName": "AutoDealer Pro",
+  "currentBadges": [
+    {
+      "badgeType": "TopRated",
+      "title": "Top Rated",
+      "icon": "⭐",
+      "color": "#FFD700",
+      "earnedAt": "2025-06-15T00:00:00Z",
+      "criteria": "Rating >= 4.8 con 10+ reviews"
+    }
+  ],
+  "revokedBadges": [
+    {
+      "badgeType": "FiveStarSeller",
+      "title": "Five Star Seller",
+      "earnedAt": "2025-01-01T00:00:00Z",
+      "revokedAt": "2025-03-15T00:00:00Z",
+      "reason": "Rating promedio bajó a 4.6"
+    }
+  ],
+  "totalEarned": 5,
+  "currentlyActive": 3
+}
+```
+
+---
+
+## 🧪 Suite de Tests Completa
+
+### ReviewServiceTests.cs (Sprint 14 - Básico)
+
+| Test                                                | Descripción                    |
+| --------------------------------------------------- | ------------------------------ |
+| `Review_ShouldBeCreated_WithValidData`              | Crear review con datos válidos |
+| `ReviewSummary_ShouldCalculateMetrics_Correctly`    | Cálculo de métricas agregadas  |
+| `Review_Rating_ShouldBeValid` (Theory 1-5)          | Validar ratings 1-5            |
+| `ReviewResponse_ShouldBeCreated_WithValidData`      | Respuesta de vendedor          |
+| `ReviewSummary_WithNoReviews_ShouldHaveZeroMetrics` | Summary sin reviews            |
+| `ReviewSummary_GetRatingDistribution_ShouldReturn`  | Distribución de ratings        |
+
+### Sprint15AdvancedReviewsTests.cs (Sprint 15 - Avanzado)
+
+| Test                                             | Descripción                |
+| ------------------------------------------------ | -------------------------- |
+| `ReviewHelpfulVote_ShouldBeCreated_WithValid`    | Crear voto de utilidad     |
+| `ReviewHelpfulVote_WhenNotHelpful_ShouldBeFalse` | Voto negativo              |
+| `ReviewHelpfulVote_ShouldTrackUserAgent`         | Tracking de IP y UserAgent |
+| `SellerBadge_ShouldBeCreated_WithValidData`      | Crear badge                |
+| `BadgeType_ShouldHaveExpectedValues` (Theory)    | Validar enum BadgeType     |
+| `SellerBadge_WhenRevoked_ShouldHaveRevokedAt`    | Revocación de badge        |
+| `SellerBadge_WithExpiry_ShouldTrackExpiration`   | Expiración de badge        |
+| `ReviewRequest_ShouldBeCreated_WithValidData`    | Solicitud automática       |
+
+---
+
+**Última actualización:** Enero 27, 2026  
+**Versión:** 1.1.0 (Completado - todos los componentes documentados)

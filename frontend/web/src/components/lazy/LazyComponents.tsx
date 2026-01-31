@@ -1,7 +1,7 @@
 /**
  * Lazy Loading Components - Code splitting by vertical
  * Only load code when needed to reduce initial bundle size
- * 
+ *
  * Features:
  * - Route-based code splitting
  * - Preloading on hover/focus
@@ -44,26 +44,33 @@ class LazyErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundar
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
-          <div className="w-16 h-16 mb-4 text-red-500">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+      return (
+        this.props.fallback || (
+          <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+            <div className="w-16 h-16 mb-4 text-red-500">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Error al cargar el contenido
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Hubo un problema cargando esta sección. Por favor, recarga la página.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Recargar página
+            </button>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Error al cargar el contenido
-          </h3>
-          <p className="text-gray-500 mb-4">
-            Hubo un problema cargando esta sección. Por favor, recarga la página.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Recargar página
-          </button>
-        </div>
+        )
       );
     }
 
@@ -75,8 +82,8 @@ class LazyErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundar
 // Loading Fallbacks
 // ============================================
 
-export const PageLoadingFallback: React.FC<{ type?: 'browse' | 'detail' | 'hero' | 'list' }> = ({ 
-  type = 'browse' 
+export const PageLoadingFallback: React.FC<{ type?: 'browse' | 'detail' | 'hero' | 'list' }> = ({
+  type = 'browse',
 }) => {
   switch (type) {
     case 'detail':
@@ -111,7 +118,7 @@ interface LazyComponentOptions {
   minDelay?: number; // Minimum loading time to avoid flash
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function createLazyComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   options: LazyComponentOptions = {}
@@ -124,10 +131,10 @@ export function createLazyComponent<T extends ComponentType<any>>(
   // Create lazy component
   const LazyComponent = lazy(() => {
     const start = Date.now();
-    return importFn().then(module => {
+    return importFn().then((module) => {
       const elapsed = Date.now() - start;
       if (elapsed < minDelay) {
-        return new Promise<{ default: T }>(resolve => {
+        return new Promise<{ default: T }>((resolve) => {
           setTimeout(() => resolve(module), minDelay - elapsed);
         });
       }
@@ -139,7 +146,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
   const preload = importFn;
 
   // Wrapped component with Suspense and Error Boundary
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const Component: React.FC<React.ComponentProps<T>> = (props: any) => (
     <LazyErrorBoundary fallback={errorFallback}>
       <Suspense fallback={fallback || <PageLoadingFallback />}>
@@ -161,12 +168,7 @@ interface PreloadLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
   children: React.ReactNode;
 }
 
-export const PreloadLink: React.FC<PreloadLinkProps> = ({ 
-  preload, 
-  to, 
-  children, 
-  ...props 
-}) => {
+export const PreloadLink: React.FC<PreloadLinkProps> = ({ preload, to, children, ...props }) => {
   const [isPreloaded, setIsPreloaded] = useState(false);
 
   const handlePreload = useCallback(() => {
@@ -176,12 +178,7 @@ export const PreloadLink: React.FC<PreloadLinkProps> = ({
   }, [isPreloaded, preload]);
 
   return (
-    <a
-      href={to}
-      onMouseEnter={handlePreload}
-      onFocus={handlePreload}
-      {...props}
-    >
+    <a href={to} onMouseEnter={handlePreload} onFocus={handlePreload} {...props}>
       {children}
     </a>
   );
@@ -237,11 +234,14 @@ export const usePrefetchOnIdle = (preloadFn: () => Promise<unknown>) => {
     let cancelled = false;
 
     if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(() => {
-        if (!cancelled) {
-          preloadFn();
-        }
-      }, { timeout: 5000 });
+      const id = window.requestIdleCallback(
+        () => {
+          if (!cancelled) {
+            preloadFn();
+          }
+        },
+        { timeout: 5000 }
+      );
 
       return () => {
         cancelled = true;
@@ -266,11 +266,9 @@ export default {
   createLazyComponent,
   PreloadLink,
   PageLoadingFallback,
-  LazyVehicleBrowse,
-  LazyVehicleDetail,
-  LazyPropertyBrowse,
-  LazyPropertyDetail,
-  LazyMarketplaceHome,
+  LazyAdminDashboard,
+  LazyAdminCategories,
+  LazyBillingDashboard,
   useRoutePreloader,
   usePrefetchOnIdle,
 };

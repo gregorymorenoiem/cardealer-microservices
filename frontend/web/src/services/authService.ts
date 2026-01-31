@@ -167,6 +167,7 @@ interface RevokedDeviceCodeRequest {
 
 interface RevokedDeviceCodeResponse {
   success: boolean;
+  message?: string;
   data: {
     requiresVerification: boolean;
     message: string;
@@ -178,10 +179,18 @@ interface RevokedDeviceCodeResponse {
 interface RevokedDeviceVerifyRequest {
   verificationToken: string;
   code: string;
+  email?: string;
+  deviceFingerprint?: string;
+  verificationCode?: string;
+  password?: string;
 }
 
 interface RevokedDeviceVerifyResponse {
   success: boolean;
+  message?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  userId?: string;
   data: {
     success: boolean;
     message: string;

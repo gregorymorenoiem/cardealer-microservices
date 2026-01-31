@@ -608,6 +608,59 @@
     },
 
     {
+      "UpstreamPathTemplate": "/api/favorites",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/favorites",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/favorites/count",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/favorites/count",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/favorites/check/{vehicleId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/favorites/check/{vehicleId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
+      "UpstreamHttpMethod": ["OPTIONS", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
       "UpstreamPathTemplate": "/api/catalog",
       "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/catalog",
@@ -2022,7 +2075,7 @@
     {
       "UpstreamPathTemplate": "/api/azul-payment/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/azul-payment/{everything}",
+      "DownstreamPathTemplate": "/api/azul/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "azulpaymentservice", "Port": 80 }],
       "QoSOptions": {

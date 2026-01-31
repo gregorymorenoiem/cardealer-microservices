@@ -11,17 +11,18 @@ import type { Vehicle } from '@/services/vehicleService';
 const RECOMMENDATIONS_SERVICE_ENABLED = false;
 
 export const ForYouSection = () => {
-  // If service is disabled, don't render anything
-  if (!RECOMMENDATIONS_SERVICE_ENABLED) {
-    return null;
-  }
-
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadRecommendations = useCallback(async () => {
+    // If service is disabled, skip loading
+    if (!RECOMMENDATIONS_SERVICE_ENABLED) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
@@ -36,7 +37,7 @@ export const ForYouSection = () => {
         vehicleIds.map((id) => vehicleService.getVehicleById(id))
       );
       setVehicles(vehiclesData.filter((v: Vehicle | null) => v !== null) as Vehicle[]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Silently handle errors - service may not be deployed
       // Don't log to console to avoid spam
       setRecommendations([]);
@@ -56,6 +57,11 @@ export const ForYouSection = () => {
       console.error('Error marking recommendation as clicked:', err);
     }
   };
+
+  // If service is disabled, don't render anything
+  if (!RECOMMENDATIONS_SERVICE_ENABLED) {
+    return null;
+  }
 
   if (loading) {
     return (

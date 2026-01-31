@@ -1,12 +1,29 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FiMessageCircle, FiX, FiSend, FiMinimize2, FiMaximize2 } from 'react-icons/fi';
-import { chatbotService } from '@/services/chatbotService';
-import type {
-  VehicleContext,
-  ChatMessage,
-  QuickReply,
-  Conversation,
+import {
+  chatbotService,
+  type ConversationDto,
+  type MessageDto,
+  MessageRole,
 } from '@/services/chatbotService';
+
+// Types for this component
+interface VehicleContext {
+  vehicleId: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  dealerId?: string;
+  dealerName?: string;
+  dealerWhatsApp?: string;
+}
+
+interface QuickReply {
+  id: string;
+  label: string;
+  value: string;
+}
 
 interface ChatWidgetProps {
   vehicleContext?: VehicleContext;
@@ -21,10 +38,10 @@ export default function ChatWidget({
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<MessageDto[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [conversation, setConversation] = useState<ConversationDto | null>(null);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -48,62 +65,79 @@ export default function ChatWidget({
     setError(null);
 
     try {
-      // Try SignalR first, fallback to REST
-      const token = localStorage.getItem('token');
+      // Get or create session/user info
+      const userId = localStorage.getItem('userId') || getOrCreateSessionId();
+      const userName = localStorage.getItem('userName') || undefined;
+      const userEmail = localStorage.getItem('userEmail') || undefined;
 
+      // Start conversation via REST API
+      const newConversation = await chatbotService.startConversation({
+        userId,
+        userName,
+        userEmail,
+        vehicleId: vehicleContext?.vehicleId,
+        vehicleTitle: vehicleContext
+          ? `${vehicleContext.year} ${vehicleContext.make} ${vehicleContext.model}`
+          : undefined,
+        vehiclePrice: vehicleContext?.price,
+        dealerId: vehicleContext?.dealerId,
+        dealerName: vehicleContext?.dealerName,
+        dealerWhatsApp: vehicleContext?.dealerWhatsApp,
+      });
+
+      setConversation(newConversation);
+
+      // Try to connect to SignalR for real-time updates
       try {
-        await chatbotService.connectSignalR(token || undefined);
+        await chatbotService.connectToHub();
+        await chatbotService.joinConversation(newConversation.id);
 
-        // Setup listeners
-        chatbotService.onTypingIndicator((indicator) => {
-          setIsTyping(indicator.isTyping);
+        // Setup typing indicator listener
+        chatbotService.onTypingIndicator((event) => {
+          if (event.conversationId === newConversation.id) {
+            setIsTyping(event.isTyping);
+          }
         });
 
-        const newConversation = await chatbotService.startConversationSignalR({
-          sessionId: getOrCreateSessionId(),
-          vehicleContext,
+        // Setup message received listener
+        chatbotService.onMessageReceived((event) => {
+          if (event.conversationId === newConversation.id) {
+            setMessages((prev) => [...prev, event.message]);
+          }
         });
-
-        setConversation(newConversation);
-        if (newConversation.messages.length > 0) {
-          setMessages(newConversation.messages);
-        }
-      } catch {
-        // Fallback to REST API
-        console.log('SignalR failed, using REST API');
-        const newConversation = await chatbotService.createConversation({
-          sessionId: getOrCreateSessionId(),
-          vehicleContext,
-        });
-
-        setConversation(newConversation);
-        if (newConversation.messages.length > 0) {
-          setMessages(newConversation.messages);
-        }
+      } catch (hubError) {
+        console.log('SignalR connection failed, using REST only:', hubError);
       }
 
-      // Add welcome message if no messages
-      if (messages.length === 0) {
-        const welcomeMessage: ChatMessage = {
+      // Get existing messages if any
+      const existingMessages = await chatbotService.getMessages(newConversation.id);
+      if (existingMessages.length > 0) {
+        setMessages(existingMessages);
+      } else {
+        // Add welcome message
+        const welcomeMessage: MessageDto = {
           id: 'welcome',
-          role: 'Assistant',
+          conversationId: newConversation.id,
+          role: MessageRole.Assistant,
+          type: 'Text' as MessageDto['type'],
           content: vehicleContext
             ? `¡Hola! 👋 Soy el asistente de OKLA. Veo que estás viendo el **${vehicleContext.year} ${vehicleContext.make} ${vehicleContext.model}** por RD$${vehicleContext.price.toLocaleString()}. ¿Tienes alguna pregunta sobre este vehículo?`
             : '¡Hola! 👋 Soy el asistente de OKLA, el marketplace #1 de vehículos en República Dominicana. ¿En qué puedo ayudarte hoy?',
-          type: 'Text',
-          createdAt: new Date().toISOString(),
-          suggestedReplies: getInitialQuickReplies(vehicleContext),
+          metadata: null,
+          sentAt: new Date().toISOString(),
         };
         setMessages([welcomeMessage]);
-        setQuickReplies(welcomeMessage.suggestedReplies || []);
       }
+
+      // Set initial quick replies
+      setQuickReplies(getInitialQuickReplies(vehicleContext));
     } catch (err) {
       console.error('Failed to initialize chat:', err);
       setError('No se pudo conectar. Por favor, intenta de nuevo.');
     } finally {
       setIsConnecting(false);
     }
-  }, [conversation, vehicleContext, messages.length]);
+  }, [conversation, vehicleContext]);
 
   useEffect(() => {
     if (isOpen && !conversation) {
@@ -114,19 +148,25 @@ export default function ChatWidget({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      chatbotService.removeAllListeners();
+      if (conversation) {
+        chatbotService.leaveConversation(conversation.id).catch(() => {});
+      }
+      chatbotService.offAllEvents();
+      chatbotService.disconnectFromHub().catch(() => {});
     };
-  }, []);
+  }, [conversation]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping || !conversation) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage: MessageDto = {
       id: Date.now().toString(),
-      role: 'User',
+      conversationId: conversation.id,
+      role: MessageRole.User,
+      type: 'Text' as MessageDto['type'],
       content: inputValue.trim(),
-      type: 'Text',
-      createdAt: new Date().toISOString(),
+      metadata: null,
+      sentAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -136,47 +176,30 @@ export default function ChatWidget({
     setError(null);
 
     try {
-      // Try SignalR, fallback to REST
-      let response;
-      try {
-        response = await chatbotService.sendMessageSignalR(
-          conversation.id,
-          userMessage.content,
-          vehicleContext
-        );
-      } catch {
-        response = await chatbotService.sendMessage(
-          conversation.id,
-          userMessage.content,
-          vehicleContext
-        );
-      }
+      // Send message via REST API
+      const response = await chatbotService.sendMessage(conversation.id, {
+        content: userMessage.content || '',
+        role: MessageRole.User,
+      });
 
-      setMessages((prev) => [...prev, response.assistantMessage]);
-      setQuickReplies(response.suggestedReplies || []);
+      setMessages((prev) => [...prev, response]);
+      setIsTyping(false);
 
-      if (response.shouldTransferToAgent) {
-        // Show transfer notification
-        const transferMessage: ChatMessage = {
-          id: 'transfer-' + Date.now(),
-          role: 'System',
-          content: '📞 Tu consulta será transferida a un agente humano. Pronto te contactaremos.',
-          type: 'System',
-          createdAt: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, transferMessage]);
-      }
+      // Update quick replies based on context
+      // In a real implementation, these would come from the AI response
+      setQuickReplies([]);
     } catch (err) {
       console.error('Failed to send message:', err);
       setError('No se pudo enviar el mensaje. Intenta de nuevo.');
-    } finally {
       setIsTyping(false);
     }
   };
 
   const handleQuickReply = (reply: QuickReply) => {
     setInputValue(reply.value);
-    setTimeout(() => handleSend(), 100);
+    setTimeout(() => {
+      handleSend();
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -356,13 +379,13 @@ export default function ChatWidget({
 
 // Message Bubble Component
 interface MessageBubbleProps {
-  message: ChatMessage;
+  message: MessageDto;
   primaryColor: string;
 }
 
 function MessageBubble({ message, primaryColor }: MessageBubbleProps) {
-  const isUser = message.role === 'User';
-  const isSystem = message.role === 'System';
+  const isUser = message.role === MessageRole.User;
+  const isSystem = message.role === MessageRole.System;
 
   if (isSystem) {
     return (
@@ -384,7 +407,7 @@ function MessageBubble({ message, primaryColor }: MessageBubbleProps) {
       >
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         <span className={`text-xs mt-1 block ${isUser ? 'text-white/70' : 'text-gray-400'}`}>
-          {formatTime(message.createdAt)}
+          {formatTime(message.sentAt)}
         </span>
       </div>
     </div>

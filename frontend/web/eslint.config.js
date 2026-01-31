@@ -26,17 +26,14 @@ export default [
       '@typescript-eslint': tseslint.plugin,
     },
     rules: {
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': 'off', // Disabled - many files export utilities alongside components
       // Disable strict rules for CI
       'no-undef': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      'react-hooks/rules-of-hooks': 'warn',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/rules-of-hooks': 'error', // Keep this as error - important!
+      'react-hooks/exhaustive-deps': 'off', // Disabled - many intentional on-mount effects
     },
   },
 ]

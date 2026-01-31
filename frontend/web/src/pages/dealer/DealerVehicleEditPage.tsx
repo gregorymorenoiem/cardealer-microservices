@@ -5,7 +5,7 @@
  * Conectado al backend VehiclesSaleService
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import DealerPortalLayout from '@/layouts/DealerPortalLayout';
 import {
@@ -23,15 +23,30 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiEye,
+  FiVideo,
+  FiRotateCw,
+  FiUpload,
+  FiRefreshCw,
+  FiExternalLink,
 } from 'react-icons/fi';
 import { getVehicleById, updateVehicle, type Vehicle } from '@/services/vehicleService';
 import { generateListingUrl } from '@/utils/seoSlug';
+import {
+  startProcessing,
+  getJobStatus,
+  getVehicleViewer,
+  retryJob,
+  type Vehicle360JobStatus,
+  type JobStatusResponse,
+  type Vehicle360ViewerData,
+} from '@/services/vehicle360Service';
 
-type TabType = 'basic' | 'details' | 'images' | 'pricing';
+type TabType = 'basic' | 'details' | 'images' | 'media360' | 'pricing';
 
 export default function DealerVehicleEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +54,13 @@ export default function DealerVehicleEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('basic');
+
+  // Media 360 state
+  const [media360Data, setMedia360Data] = useState<Vehicle360ViewerData | null>(null);
+  const [media360JobStatus, setMedia360JobStatus] = useState<JobStatusResponse | null>(null);
+  const [isUploading360, setIsUploading360] = useState(false);
+  const [upload360Progress, setUpload360Progress] = useState(0);
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -107,6 +129,127 @@ export default function DealerVehicleEditPage() {
     fetchVehicle();
   }, [id]);
 
+  // Fetch Media 360 data
+  useEffect(() => {
+    const fetchMedia360 = async () => {
+      if (!id) return;
+      try {
+        const data = await getVehicleViewer(id);
+        setMedia360Data(data);
+      } catch {
+        // No hay datos 360 para este vehículo, es normal
+        setMedia360Data(null);
+      }
+    };
+    fetchMedia360();
+  }, [id]);
+
+  // Handle 360 video upload
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar formato y tamaño
+      const validFormats = ['video/mp4', 'video/quicktime', 'video/webm'];
+      if (!validFormats.includes(file.type)) {
+        setError('Formato de video no válido. Use MP4, MOV o WebM.');
+        return;
+      }
+      if (file.size > 500 * 1024 * 1024) {
+        setError('El video no puede superar los 500MB');
+        return;
+      }
+      setSelectedVideoFile(file);
+      setError(null);
+    }
+  };
+
+  const handleUpload360Video = async () => {
+    if (!selectedVideoFile || !id) return;
+
+    try {
+      setIsUploading360(true);
+      setUpload360Progress(10);
+
+      // Iniciar procesamiento
+      const response = await startProcessing({
+        vehicleId: id,
+        video: selectedVideoFile,
+        frameCount: 6,
+        options: {
+          outputFormat: 'png',
+          backgroundColor: 'transparent',
+          smartFrameSelection: true,
+          autoCorrectExposure: true,
+          generateThumbnails: true,
+        },
+      });
+
+      setUpload360Progress(30);
+
+      // Iniciar polling del status
+      const pollStatus = async () => {
+        try {
+          const status = await getJobStatus(response.jobId);
+          setMedia360JobStatus(status);
+          setUpload360Progress(30 + status.progress.percentage * 0.6);
+
+          if (status.isComplete) {
+            setUpload360Progress(100);
+            // Recargar datos del visor
+            const viewerData = await getVehicleViewer(id);
+            setMedia360Data(viewerData);
+            setSuccess('Video 360° procesado correctamente');
+            setIsUploading360(false);
+            setSelectedVideoFile(null);
+            setTimeout(() => setSuccess(null), 3000);
+          } else if (status.isFailed) {
+            setError(status.errorMessage || 'Error al procesar el video');
+            setIsUploading360(false);
+          } else {
+            // Continuar polling
+            setTimeout(pollStatus, 3000);
+          }
+        } catch (pollError) {
+          console.error('Error polling status:', pollError);
+          setIsUploading360(false);
+        }
+      };
+
+      pollStatus();
+    } catch (err) {
+      console.error('Error uploading 360 video:', err);
+      setError('Error al subir el video');
+      setIsUploading360(false);
+    }
+  };
+
+  const handleRetry360 = async () => {
+    if (!media360JobStatus?.jobId) return;
+    try {
+      await retryJob(media360JobStatus.jobId);
+      setSuccess('Reintentando procesamiento...');
+    } catch {
+      setError('Error al reintentar');
+    }
+  };
+
+  const getStatusColor = (status?: Vehicle360JobStatus | string) => {
+    switch (status) {
+      case 'Completed':
+        return 'text-green-600 bg-green-100';
+      case 'Processing':
+      case 'ExtractingFrames':
+      case 'RemovingBackground':
+        return 'text-blue-600 bg-blue-100';
+      case 'Failed':
+      case 'ValidationFailed':
+      case 'ExtractionFailed':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -165,6 +308,7 @@ export default function DealerVehicleEditPage() {
     { id: 'basic' as TabType, label: 'Información Básica', icon: FiInfo },
     { id: 'details' as TabType, label: 'Detalles', icon: FiSettings },
     { id: 'images' as TabType, label: 'Imágenes', icon: FiImage },
+    { id: 'media360' as TabType, label: 'Media 360°', icon: FiRotateCw },
     { id: 'pricing' as TabType, label: 'Precio', icon: FiDollarSign },
   ];
 
@@ -571,6 +715,156 @@ export default function DealerVehicleEditPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Media 360° Tab */}
+            {activeTab === 'media360' && (
+              <div className="space-y-6">
+                {/* Status actual */}
+                {media360Data && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <FiRotateCw className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-green-900">Vista 360° Activa</h4>
+                          <p className="text-sm text-green-700">
+                            {media360Data.spinData?.frameUrls?.length || 0} frames procesados
+                          </p>
+                        </div>
+                      </div>
+                      <a
+                        href={`/vehicles/${id}/360`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      >
+                        <FiExternalLink className="w-4 h-4" />
+                        Ver 360°
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Job status */}
+                {media360JobStatus && !media360Data && (
+                  <div
+                    className={`p-4 rounded-lg border ${getStatusColor(media360JobStatus.currentStep)}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">Estado: {media360JobStatus.currentStep}</h4>
+                        <p className="text-sm mt-1">
+                          Progreso: {media360JobStatus.progress.percentage}%
+                        </p>
+                        {media360JobStatus.isFailed && (
+                          <p className="text-sm text-red-600 mt-2">
+                            {media360JobStatus.errorMessage}
+                          </p>
+                        )}
+                      </div>
+                      {media360JobStatus.isFailed && (
+                        <button
+                          type="button"
+                          onClick={handleRetry360}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          <FiRefreshCw className="w-4 h-4" />
+                          Reintentar
+                        </button>
+                      )}
+                    </div>
+                    {!media360JobStatus.isComplete && !media360JobStatus.isFailed && (
+                      <div className="mt-3">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${media360JobStatus.progress.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Upload section */}
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6">
+                  <div className="text-center">
+                    <FiVideo className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {media360Data ? 'Reemplazar Video 360°' : 'Subir Video 360°'}
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      Sube un video en 360° del vehículo para generar una vista interactiva
+                    </p>
+
+                    {selectedVideoFile ? (
+                      <div className="p-4 bg-gray-50 rounded-lg mb-4">
+                        <p className="font-medium text-gray-900">{selectedVideoFile.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {(selectedVideoFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <input
+                      ref={videoInputRef}
+                      type="file"
+                      accept="video/mp4,video/quicktime,video/webm"
+                      onChange={handleVideoSelect}
+                      className="hidden"
+                    />
+
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        type="button"
+                        onClick={() => videoInputRef.current?.click()}
+                        disabled={isUploading360}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        <FiUpload className="inline w-4 h-4 mr-2" />
+                        Seleccionar Video
+                      </button>
+
+                      {selectedVideoFile && (
+                        <button
+                          type="button"
+                          onClick={handleUpload360Video}
+                          disabled={isUploading360}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {isUploading360 ? (
+                            <>
+                              <FiLoader className="inline w-4 h-4 mr-2 animate-spin" />
+                              Procesando... {Math.round(upload360Progress)}%
+                            </>
+                          ) : (
+                            <>
+                              <FiRotateCw className="inline w-4 h-4 mr-2" />
+                              Procesar Video
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-gray-400 mt-4">MP4, MOV o WebM hasta 500MB</p>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">💡 Sobre Media 360°</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• El video debe mostrar una vuelta completa al vehículo</li>
+                    <li>• Se extraerán los mejores frames automáticamente</li>
+                    <li>• El fondo se removerá para una presentación profesional</li>
+                    <li>• Los compradores podrán rotar el vehículo interactivamente</li>
+                  </ul>
+                </div>
               </div>
             )}
 

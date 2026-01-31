@@ -1,3 +1,4 @@
+import axiosModule, { isAxiosError, type AxiosError } from 'axios';
 import api from './api';
 
 // API Gateway URL (routes to appropriate microservices)
@@ -341,8 +342,8 @@ export const getAllVehicles = async (
       totalPages:
         data.totalPages || Math.ceil((data.totalCount || vehicles.length) / pageSize) || 1,
     };
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.message) {
+  } catch (error: unknown) {
+    if (isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
     console.error('Error fetching vehicles:', error);
@@ -363,7 +364,7 @@ export const getFeaturedVehicles = async (limit: number = 6): Promise<Vehicle[]>
     const data = response.data;
     const vehiclesArray = data.vehicles || [];
     return Array.isArray(vehiclesArray) ? vehiclesArray.map(transformBackendVehicleToFrontend) : [];
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching featured vehicles:', error);
     return [];
   }
@@ -382,8 +383,8 @@ export const getVehicleById = async (id: string): Promise<Vehicle> => {
     }
 
     return transformBackendVehicleToFrontend(response.data);
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
       if (error.response?.status === 404) {
         throw new Error('Vehicle not found');
       }
@@ -445,8 +446,8 @@ export const createVehicle = async (vehicleData: Partial<VehicleFormData>): Prom
 
     // Backend returns the created vehicle directly
     return transformBackendVehicleToFrontend(response.data);
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
@@ -695,6 +696,10 @@ export interface VehicleFormData {
   sellerPhone: string;
   sellerEmail: string;
   sellerType: 'private' | 'dealer';
+  // Optional fields from VIN decode
+  trim?: string;
+  doors?: number;
+  seats?: number;
 }
 
 /**
@@ -795,8 +800,8 @@ export const updateVehicle = async (
     }
 
     return transformBackendVehicleToFrontend(response.data);
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.message) {
+  } catch (error: unknown) {
+    if (isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
     console.error('Error updating vehicle:', error);
@@ -816,8 +821,8 @@ export const deleteVehicle = async (id: string): Promise<void> => {
         Authorization: `Bearer ${token}`,
       },
     });
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.message) {
+  } catch (error: unknown) {
+    if (isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
     console.error('Error deleting vehicle:', error);
@@ -843,7 +848,7 @@ export const getMyVehicles = async (sellerId: string): Promise<Vehicle[]> => {
     );
 
     return (response.data || []).map(transformProductToVehicle);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching my vehicles:', error);
     return [];
   }
@@ -882,7 +887,7 @@ export const getDealerVehicles = async (dealerId: string): Promise<DealerInvento
       soldCount,
       draftCount,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching dealer vehicles:', error);
     return {
       vehicles: [],
@@ -990,7 +995,7 @@ export const getCategories = async (): Promise<Category[]> => {
     const response = await axios.get<BackendCategory[]>(`${PRODUCT_API_URL}/Categories`);
 
     return (response.data || []).map(transformCategory);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching categories:', error);
     return [];
   }
@@ -1004,7 +1009,7 @@ export const getRootCategories = async (): Promise<Category[]> => {
     const response = await axios.get<BackendCategory[]>(`${PRODUCT_API_URL}/Categories/root`);
 
     return (response.data || []).map(transformCategory);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching root categories:', error);
     return [];
   }
@@ -1023,7 +1028,7 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
     }
 
     return transformCategory(response.data);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching category:', error);
     return null;
   }
@@ -1125,9 +1130,9 @@ export const updateVehicleStatus = async (id: string, status: number): Promise<v
         },
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error updating vehicle status:', error);
-    if (axios.isAxiosError(error) && error.response?.data?.message) {
+    if (isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
     throw new Error('Failed to update vehicle status');
@@ -1168,7 +1173,7 @@ export const compareVehicles = async (vehicleIds: string[]): Promise<Vehicle[]> 
     // Transform backend data to frontend format
     const vehicles = Array.isArray(response.data) ? response.data : [];
     return vehicles.map(transformBackendVehicleToFrontend);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Error comparing vehicles:', error);
     throw error;
   }

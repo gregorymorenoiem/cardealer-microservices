@@ -50,10 +50,10 @@ export default apiClient;
 // filepath: src/types/media.ts
 
 export enum MediaType {
-  Image = 'Image',
-  Video = 'Video',
-  Document = 'Document',
-  Audio = 'Audio',
+  Image = "Image",
+  Video = "Video",
+  Document = "Document",
+  Audio = "Audio",
 }
 
 export interface UploadedMedia {
@@ -71,7 +71,7 @@ export interface UploadedMedia {
 export interface UploadProgress {
   file: File;
   progress: number;
-  status: 'pending' | 'uploading' | 'success' | 'error';
+  status: "pending" | "uploading" | "success" | "error";
   error?: string;
   result?: UploadedMedia;
 }
@@ -240,32 +240,36 @@ export const mediaService = {
 
 ```typescript
 // filepath: src/hooks/useMedia.ts
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { mediaService } from '@/services/api/mediaService';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { mediaService } from "@/services/api/mediaService";
 
 export const useUploadImage = () => {
   return useMutation({
-    mutationFn: ({ file, onProgress }: { file: File; onProgress?: (p: number) => void }) =>
-      mediaService.uploadImage(file, onProgress),
+    mutationFn: ({
+      file,
+      onProgress,
+    }: {
+      file: File;
+      onProgress?: (p: number) => void;
+    }) => mediaService.uploadImage(file, onProgress),
   });
 };
 
 export const useUploadMultiple = () => {
   return useMutation({
-    mutationFn: ({ 
-      files, 
-      onFileProgress 
-    }: { 
-      files: File[]; 
-      onFileProgress?: (index: number, progress: number) => void 
-    }) =>
-      mediaService.uploadMultiple(files, onFileProgress),
+    mutationFn: ({
+      files,
+      onFileProgress,
+    }: {
+      files: File[];
+      onFileProgress?: (index: number, progress: number) => void;
+    }) => mediaService.uploadMultiple(files, onFileProgress),
   });
 };
 
 export const useMedia = (mediaId: string) => {
   return useQuery({
-    queryKey: ['media', mediaId],
+    queryKey: ["media", mediaId],
     queryFn: () => mediaService.getMediaById(mediaId),
     enabled: !!mediaId,
   });
@@ -277,7 +281,7 @@ export const useDeleteMedia = () => {
   return useMutation({
     mutationFn: (mediaId: string) => mediaService.deleteMedia(mediaId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['media']);
+      queryClient.invalidateQueries(["media"]);
     },
   });
 };
@@ -568,9 +572,9 @@ export const CreateVehiclePage = () => {
   return (
     <div>
       <h2>Fotos del Vehículo</h2>
-      <MultipleImageUploader 
-        onUploadComplete={handleImagesUpload} 
-        maxFiles={20} 
+      <MultipleImageUploader
+        onUploadComplete={handleImagesUpload}
+        maxFiles={20}
       />
     </div>
   );
@@ -581,13 +585,13 @@ export const CreateVehiclePage = () => {
 
 ## 🎯 Resumen de Endpoints Documentados
 
-| Método | Endpoint                           | Autenticación | Descripción                      |
-|--------|------------------------------------|---------------|----------------------------------|
-| POST   | \`/api/media/upload\`                | ✅            | Upload genérico (max 100MB)      |
-| POST   | \`/api/media/upload/image\`          | ✅            | Upload imagen optimizada (10MB)  |
-| POST   | \`/api/media/upload/init\`           | ✅            | Iniciar upload por chunks        |
-| POST   | \`/api/media/upload/finalize/{id}\`  | ✅            | Finalizar upload por chunks      |
-| GET    | \`/api/media/{mediaId}\`             | No            | Obtener info de archivo          |
+| Método | Endpoint                            | Autenticación | Descripción                     |
+| ------ | ----------------------------------- | ------------- | ------------------------------- |
+| POST   | \`/api/media/upload\`               | ✅            | Upload genérico (max 100MB)     |
+| POST   | \`/api/media/upload/image\`         | ✅            | Upload imagen optimizada (10MB) |
+| POST   | \`/api/media/upload/init\`          | ✅            | Iniciar upload por chunks       |
+| POST   | \`/api/media/upload/finalize/{id}\` | ✅            | Finalizar upload por chunks     |
+| GET    | \`/api/media/{mediaId}\`            | No            | Obtener info de archivo         |
 
 **Total: 5 endpoints documentados** ✅
 

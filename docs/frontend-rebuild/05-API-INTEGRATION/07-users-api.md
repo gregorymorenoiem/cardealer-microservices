@@ -22,18 +22,18 @@ Utiliza el cliente HTTP configurado en [01-cliente-http.md](01-cliente-http.md).
 
 ```typescript
 // filepath: src/services/api/apiClient.ts
-import axios from 'axios';
+import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://api.okla.com.do',
+  baseURL: process.env.REACT_APP_API_URL || "https://api.okla.com.do",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Interceptor para agregar token automáticamente
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -51,9 +51,9 @@ export default apiClient;
 // filepath: src/types/user.ts
 
 export enum AccountType {
-  Individual = 'Individual',
-  Dealer = 'Dealer',
-  Admin = 'Admin',
+  Individual = "Individual",
+  Dealer = "Dealer",
+  Admin = "Admin",
 }
 
 export interface User {
@@ -71,11 +71,11 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
-  
+
   // Campos adicionales para dealers
   dealerId?: string;
   businessName?: string;
-  
+
   // Preferencias
   preferredLanguage?: string;
   timezone?: string;
@@ -137,14 +137,14 @@ export interface UserListRequest {
 
 ```typescript
 // filepath: src/services/api/usersService.ts
-import apiClient from './apiClient';
+import apiClient from "./apiClient";
 import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
   UserListRequest,
   UserListResponse,
-} from '@/types/user';
+} from "@/types/user";
 
 export const usersService = {
   /**
@@ -152,7 +152,7 @@ export const usersService = {
    * Requiere autenticación: Admin o Dealer (solo puede ver sus propios usuarios)
    */
   async getUsers(params?: UserListRequest): Promise<UserListResponse> {
-    const response = await apiClient.get<UserListResponse>('/users', {
+    const response = await apiClient.get<UserListResponse>("/users", {
       params: {
         page: params?.page || 1,
         pageSize: params?.pageSize || 20,
@@ -177,7 +177,7 @@ export const usersService = {
    * Nota: Los usuarios normales se crean a través del endpoint /auth/register
    */
   async createUser(data: CreateUserRequest): Promise<User> {
-    const response = await apiClient.post<User>('/users', data);
+    const response = await apiClient.post<User>("/users", data);
     return response.data;
   },
 
@@ -203,7 +203,7 @@ export const usersService = {
    * Requiere autenticación
    */
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>('/auth/me');
+    const response = await apiClient.get<User>("/auth/me");
     return response.data;
   },
 
@@ -222,17 +222,17 @@ export const usersService = {
    */
   async uploadAvatar(userId: string, file: File): Promise<string> {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId);
+    formData.append("file", file);
+    formData.append("userId", userId);
 
     const response = await apiClient.post<{ url: string }>(
-      '/media/upload/avatar',
+      "/media/upload/avatar",
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     // Actualizar usuario con nueva URL de avatar
@@ -246,7 +246,9 @@ export const usersService = {
    * Requiere autenticación: Admin
    */
   async verifyEmail(userId: string): Promise<User> {
-    const response = await apiClient.post<User>(`/users/${userId}/verify-email`);
+    const response = await apiClient.post<User>(
+      `/users/${userId}/verify-email`,
+    );
     return response.data;
   },
 
@@ -271,20 +273,20 @@ export const usersService = {
 
 ```typescript
 // filepath: src/hooks/useUsers.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersService } from '@/services/api/usersService';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { usersService } from "@/services/api/usersService";
 import type {
   CreateUserRequest,
   UpdateUserRequest,
   UserListRequest,
-} from '@/types/user';
+} from "@/types/user";
 
 /**
  * Hook para obtener lista de usuarios con filtros
  */
 export const useUsers = (params?: UserListRequest) => {
   return useQuery({
-    queryKey: ['users', 'list', params],
+    queryKey: ["users", "list", params],
     queryFn: () => usersService.getUsers(params),
     keepPreviousData: true,
   });
@@ -295,7 +297,7 @@ export const useUsers = (params?: UserListRequest) => {
  */
 export const useUser = (userId: string) => {
   return useQuery({
-    queryKey: ['users', userId],
+    queryKey: ["users", userId],
     queryFn: () => usersService.getUserById(userId),
     enabled: !!userId,
   });
@@ -306,7 +308,7 @@ export const useUser = (userId: string) => {
  */
 export const useCurrentUser = () => {
   return useQuery({
-    queryKey: ['users', 'current'],
+    queryKey: ["users", "current"],
     queryFn: () => usersService.getCurrentUser(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false, // No reintentar si falla (probablemente no autenticado)
@@ -322,7 +324,7 @@ export const useCreateUser = () => {
   return useMutation({
     mutationFn: (data: CreateUserRequest) => usersService.createUser(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['users', 'list']);
+      queryClient.invalidateQueries(["users", "list"]);
     },
   });
 };
@@ -334,13 +336,18 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: UpdateUserRequest }) =>
-      usersService.updateUser(userId, data),
+    mutationFn: ({
+      userId,
+      data,
+    }: {
+      userId: string;
+      data: UpdateUserRequest;
+    }) => usersService.updateUser(userId, data),
     onSuccess: (updatedUser) => {
-      queryClient.invalidateQueries(['users', updatedUser.id]);
-      queryClient.invalidateQueries(['users', 'list']);
+      queryClient.invalidateQueries(["users", updatedUser.id]);
+      queryClient.invalidateQueries(["users", "list"]);
       // Si es el usuario actual, actualizar cache
-      queryClient.setQueryData(['users', 'current'], updatedUser);
+      queryClient.setQueryData(["users", "current"], updatedUser);
     },
   });
 };
@@ -355,8 +362,8 @@ export const useUpdateCurrentUser = () => {
     mutationFn: (data: UpdateUserRequest) =>
       usersService.updateCurrentUser(data),
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(['users', 'current'], updatedUser);
-      queryClient.invalidateQueries(['users', updatedUser.id]);
+      queryClient.setQueryData(["users", "current"], updatedUser);
+      queryClient.invalidateQueries(["users", updatedUser.id]);
     },
   });
 };
@@ -370,7 +377,7 @@ export const useDeleteUser = () => {
   return useMutation({
     mutationFn: (userId: string) => usersService.deleteUser(userId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['users', 'list']);
+      queryClient.invalidateQueries(["users", "list"]);
     },
   });
 };
@@ -385,8 +392,8 @@ export const useUploadAvatar = () => {
     mutationFn: ({ userId, file }: { userId: string; file: File }) =>
       usersService.uploadAvatar(userId, file),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['users', variables.userId]);
-      queryClient.invalidateQueries(['users', 'current']);
+      queryClient.invalidateQueries(["users", variables.userId]);
+      queryClient.invalidateQueries(["users", "current"]);
     },
   });
 };
@@ -400,7 +407,7 @@ export const useVerifyEmail = () => {
   return useMutation({
     mutationFn: (userId: string) => usersService.verifyEmail(userId),
     onSuccess: (updatedUser) => {
-      queryClient.invalidateQueries(['users', updatedUser.id]);
+      queryClient.invalidateQueries(["users", updatedUser.id]);
     },
   });
 };
@@ -415,8 +422,8 @@ export const useToggleUserStatus = () => {
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
       usersService.toggleUserStatus(userId, isActive),
     onSuccess: (updatedUser) => {
-      queryClient.invalidateQueries(['users', updatedUser.id]);
-      queryClient.invalidateQueries(['users', 'list']);
+      queryClient.invalidateQueries(["users", updatedUser.id]);
+      queryClient.invalidateQueries(["users", "list"]);
     },
   });
 };
@@ -872,13 +879,13 @@ export const UsersListPage: React.FC = () => {
 
 ## 🎯 Resumen de Endpoints Documentados
 
-| Método   | Endpoint                     | Autenticación | Descripción                     |
-| -------- | ---------------------------- | ------------- | ------------------------------- |
-| `GET`    | `/api/users`                 | ✅ Admin/Dealer| Listar usuarios con filtros    |
-| `GET`    | `/api/users/{userId}`        | ✅ Admin/Self  | Obtener usuario por ID          |
-| `POST`   | `/api/users`                 | ✅ Admin       | Crear nuevo usuario             |
-| `PUT`    | `/api/users/{userId}`        | ✅ Admin/Self  | Actualizar usuario              |
-| `DELETE` | `/api/users/{userId}`        | ✅ Admin       | Eliminar usuario (soft delete)  |
+| Método   | Endpoint              | Autenticación   | Descripción                    |
+| -------- | --------------------- | --------------- | ------------------------------ |
+| `GET`    | `/api/users`          | ✅ Admin/Dealer | Listar usuarios con filtros    |
+| `GET`    | `/api/users/{userId}` | ✅ Admin/Self   | Obtener usuario por ID         |
+| `POST`   | `/api/users`          | ✅ Admin        | Crear nuevo usuario            |
+| `PUT`    | `/api/users/{userId}` | ✅ Admin/Self   | Actualizar usuario             |
+| `DELETE` | `/api/users/{userId}` | ✅ Admin        | Eliminar usuario (soft delete) |
 
 ### Endpoints Adicionales (extendidos en el servicio):
 

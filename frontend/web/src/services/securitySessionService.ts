@@ -134,7 +134,7 @@ class SecuritySessionService {
       // Map lastActiveAt to lastActive (backend uses camelCase but field name differs)
       // Also handle case where property might come as LastActiveAt (PascalCase)
       sessions = sessions.map((session) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const s = session as any;
         const lastActiveValue =
           s.lastActive ||

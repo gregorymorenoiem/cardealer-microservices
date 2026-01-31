@@ -249,9 +249,9 @@ export function AlertsPage() {
           <div className="space-y-4">
             {priceAlerts.length === 0 ? (
               <EmptyState
-                icon={FiBell}
+                icon={<FiBell className="text-gray-400" size={64} />}
                 title="No tienes alertas de precio"
-                description="Crea alertas para recibir notificaciones cuando el precio baje"
+                message="Crea alertas para recibir notificaciones cuando el precio baje"
                 actionLabel="Buscar Vehículos"
                 onAction={() => (window.location.href = '/search')}
               />
@@ -312,9 +312,9 @@ export function AlertsPage() {
           <div className="space-y-4">
             {savedSearches.length === 0 ? (
               <EmptyState
-                icon={FiSearch}
+                icon={<FiSearch className="text-gray-400" size={64} />}
                 title="No tienes búsquedas guardadas"
-                description="Guarda tus búsquedas para recibir notificaciones de nuevos vehículos"
+                message="Guarda tus búsquedas para recibir notificaciones de nuevos vehículos"
                 actionLabel="Buscar Vehículos"
                 onAction={() => (window.location.href = '/search')}
               />

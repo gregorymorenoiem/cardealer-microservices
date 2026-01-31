@@ -34,8 +34,14 @@ import {
   FiLayers,
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
+import {
+  getVehicleViewer,
+  getJobStatus,
+  type Vehicle360ViewerData,
+  type JobStatusResponse,
+} from '../../services/vehicle360Service';
 
-// Types
+// Types - Usar tipo del servicio con alias local para compatibilidad
 interface Video360SpinData {
   spinId: string;
   vehicleId: string;
@@ -60,8 +66,6 @@ interface Hotspot {
 }
 
 type ViewerMode = 'embed' | 'custom' | 'loading' | 'error';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:18443';
 
 const Media360ViewerPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -129,72 +133,94 @@ const Media360ViewerPage = () => {
   const totalFrames = spinData?.extractedFrameCount || 36;
   const rotationAngle = Math.round((currentFrame / totalFrames) * 360);
 
-  // Fetch spin data from API
+  // Convertir Vehicle360ViewerData del servicio a formato local
+  const mapViewerDataToSpinData = (data: Vehicle360ViewerData): Video360SpinData => ({
+    spinId: data.viewId,
+    vehicleId: data.vehicleId,
+    status: data.status,
+    spinViewerUrl: data.spinViewerUrl,
+    spinEmbedCode: data.spinEmbedCode,
+    extractedFrameUrls: data.extractedFrameUrls,
+    extractedFrameCount: data.extractedFrameCount,
+    thumbnailUrl: data.thumbnailUrl,
+    progressPercent: data.progressPercent,
+    errorMessage: data.errorMessage,
+  });
+
+  // Fetch spin data from API usando el servicio vehicle360Service
   useEffect(() => {
     const fetchSpinData = async () => {
       try {
         setViewerMode('loading');
 
-        // Intentar obtener datos del spin por vehicleId
-        const response = await fetch(
-          `${API_BASE_URL}/api/video360spins/vehicle/${vehicle.vehicleId}`
-        );
+        // Obtener datos del visor 360° usando el servicio correcto
+        const viewerData = await getVehicleViewer(vehicle.vehicleId);
+        const data = mapViewerDataToSpinData(viewerData);
+        setSpinData(data);
 
-        if (response.ok) {
-          const data: Video360SpinData = await response.json();
-          setSpinData(data);
-
-          if (data.status === 'Completed') {
-            // Decidir modo de visor
-            if (data.extractedFrameUrls.length > 0) {
-              setViewerMode('custom');
-              // Precargar frames
-              preloadFrames(data.extractedFrameUrls);
-            } else if (data.spinViewerUrl) {
-              setViewerMode('embed');
-              setUseEmbedViewer(true);
-            } else {
-              setViewerMode('error');
-            }
-          } else if (data.status === 'Processing') {
-            // Polling para status
-            const pollInterval = setInterval(async () => {
-              const statusRes = await fetch(
-                `${API_BASE_URL}/api/video360spins/${data.spinId}/status`
-              );
-              if (statusRes.ok) {
-                const statusData = await statusRes.json();
-                setSpinData(statusData);
-                if (statusData.status === 'Completed') {
-                  clearInterval(pollInterval);
-                  if (statusData.extractedFrameUrls?.length > 0) {
-                    setViewerMode('custom');
-                    preloadFrames(statusData.extractedFrameUrls);
-                  } else if (statusData.spinViewerUrl) {
-                    setViewerMode('embed');
-                    setUseEmbedViewer(true);
-                  }
-                } else if (statusData.status === 'Failed') {
-                  clearInterval(pollInterval);
-                  setViewerMode('error');
-                }
-              }
-            }, 3000);
-
-            return () => clearInterval(pollInterval);
-          } else if (data.status === 'Failed') {
+        if (data.status === 'Completed') {
+          // Decidir modo de visor
+          if (data.extractedFrameUrls.length > 0) {
+            setViewerMode('custom');
+            // Precargar frames
+            preloadFrames(data.extractedFrameUrls);
+          } else if (data.spinViewerUrl) {
+            setViewerMode('embed');
+            setUseEmbedViewer(true);
+          } else {
             setViewerMode('error');
           }
-        } else if (response.status === 404) {
-          // No hay spin, usar mock data para demo
-          useMockData();
-        } else {
+        } else if (data.status === 'Processing') {
+          // Polling para status usando el servicio
+          const pollInterval = setInterval(async () => {
+            try {
+              const statusData = await getJobStatus(data.spinId);
+              // Actualizar progreso
+              setSpinData((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      progressPercent: statusData.progress.percentage,
+                      status: statusData.isComplete
+                        ? 'Completed'
+                        : statusData.isFailed
+                          ? 'Failed'
+                          : 'Processing',
+                      errorMessage: statusData.errorMessage,
+                    }
+                  : null
+              );
+
+              if (statusData.isComplete) {
+                clearInterval(pollInterval);
+                // Recargar datos completos
+                const updatedData = await getVehicleViewer(vehicle.vehicleId);
+                const updated = mapViewerDataToSpinData(updatedData);
+                setSpinData(updated);
+                if (updated.extractedFrameUrls?.length > 0) {
+                  setViewerMode('custom');
+                  preloadFrames(updated.extractedFrameUrls);
+                } else if (updated.spinViewerUrl) {
+                  setViewerMode('embed');
+                  setUseEmbedViewer(true);
+                }
+              } else if (statusData.isFailed) {
+                clearInterval(pollInterval);
+                setViewerMode('error');
+              }
+            } catch (pollError) {
+              console.error('Error polling status:', pollError);
+            }
+          }, 3000);
+
+          return () => clearInterval(pollInterval);
+        } else if (data.status === 'Failed') {
           setViewerMode('error');
         }
       } catch (error) {
         console.error('Error fetching spin data:', error);
         // Fallback a mock data para demo
-        useMockData();
+        loadMockData();
       }
     };
 
@@ -202,7 +228,7 @@ const Media360ViewerPage = () => {
   }, [vehicle.vehicleId]);
 
   // Mock data para demo cuando no hay spin real
-  const useMockData = () => {
+  const loadMockData = () => {
     const mockFrames = Array.from(
       { length: 36 },
       (_, i) =>

@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Persistence;
 using VehiclesSaleService.Infrastructure.Repositories;
@@ -73,9 +76,10 @@ builder.Services.AddSwaggerGen(c =>
 // DATABASE
 // ========================================
 
-var connectionString = MicroserviceSecretsConfiguration.GetDatabaseConnectionString(
-    builder.Configuration,
-    "DefaultConnection");
+// Priority: Environment variable > Docker config > appsettings.json
+var connectionString = builder.Configuration["Database:ConnectionStrings:PostgreSQL"]
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? MicroserviceSecretsConfiguration.GetDatabaseConnectionString(builder.Configuration, "VehiclesSaleService");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -99,6 +103,41 @@ builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
 // RabbitMQ Event Publisher
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
+
+// ========================================
+// JWT AUTHENTICATION
+// ========================================
+
+var jwtSecret = builder.Configuration["Jwt:Key"] 
+    ?? builder.Configuration["JWT:Secret"]
+    ?? Environment.GetEnvironmentVariable("JWT_SECRET")
+    ?? "DefaultDevSecretKeyThatIsAtLeast32Characters!";
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] 
+    ?? builder.Configuration["JWT:Issuer"] 
+    ?? "CarDealerPlatform";
+
+var jwtAudience = builder.Configuration["Jwt:Audience"] 
+    ?? builder.Configuration["JWT:Audience"] 
+    ?? "CarDealerAPI";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = false, // Allow any audience since Gateway forwards requests
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5),
+            NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // ========================================
 // CORS
@@ -168,6 +207,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

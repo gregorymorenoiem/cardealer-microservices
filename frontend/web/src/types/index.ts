@@ -49,12 +49,19 @@ export interface RegisterRequest {
   password: string;
 }
 
-export type AccountType = 'guest' | 'individual' | 'dealer' | 'dealer_employee' | 'admin' | 'platform_employee';
+export type AccountType =
+  | 'guest'
+  | 'individual'
+  | 'dealer'
+  | 'dealer_employee'
+  | 'admin'
+  | 'platform_employee';
 
 export interface User {
   id: string;
   email: string;
   name?: string;
+  fullName?: string;
   username?: string;
   firstName?: string;
   lastName?: string;
@@ -72,6 +79,7 @@ export interface User {
   };
   permissions?: string[];
   isVerified?: boolean;
+  emailVerified?: boolean;
   memberSince?: string;
 }
 

@@ -20,7 +20,7 @@ import {
 } from 'react-icons/fi';
 import { useQuery } from '@tanstack/react-query';
 import vehicleIntelligenceService, {
-  CategoryDemandDto,
+  type CategoryDemandDto,
 } from '@/services/vehicleIntelligenceService';
 import { useAuthStore } from '@/store/authStore';
 

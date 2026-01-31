@@ -3,6 +3,8 @@
  *
  * This service aggregates vehicles by dealer and provides location data
  * for displaying dealers on Google Maps
+ *
+ * @updated 2026-01-29
  */
 
 import axios from 'axios';
@@ -313,9 +315,9 @@ export const setPrimaryLocation = async (dealerId: string, locationId: string): 
  * Fetch all vehicles from backend and group them by dealer
  */
 export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
-  const fetchVehicles = async (baseUrl: string) => {
+  const fetchVehicles = async (baseUrl: string): Promise<BackendVehicle[]> => {
     console.log('🗺️ Fetching dealers with vehicles from:', `${baseUrl}/vehicles`);
-    const response = await axios.get<{ vehicles: BackendVehicle[] }>(`${baseUrl}/vehicles`, {
+    const response = await axios.get<{ vehicles: BackendVehicle[] } | BackendVehicle[]>(`${baseUrl}/vehicles`, {
       params: {
         page: 1,
         pageSize: 500,
@@ -324,7 +326,11 @@ export const getDealersWithVehicles = async (): Promise<DealerLocation[]> => {
       },
       timeout: 10000, // 10 second timeout
     });
-    return response.data?.vehicles || response.data || [];
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return data?.vehicles || [];
   };
 
   try {

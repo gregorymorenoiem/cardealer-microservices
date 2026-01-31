@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/layouts/MainLayout';
 import { LocalizedContent } from '@/components/common';
-import ImageGallery from '@/components/organisms/ImageGallery';
+import VehicleMediaGallery from '@/components/organisms/VehicleMediaGallery';
 import VehicleSpecs from '@/components/organisms/VehicleSpecs';
 import ContactSellerForm from '@/components/organisms/ContactSellerForm';
 import SimilarVehicles from '@/components/organisms/SimilarVehicles';
@@ -165,8 +165,13 @@ export default function VehicleDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Images & Details */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Image Gallery */}
-              <ImageGallery images={vehicle.images} alt={vehicleTitle} />
+              {/* Media Gallery with 360° View */}
+              <VehicleMediaGallery
+                vehicleId={vehicle.id}
+                vehicleSlug={slug || vehicle.id}
+                images={vehicle.images}
+                alt={vehicleTitle}
+              />
 
               {/* Description */}
               <div className="bg-white rounded-xl shadow-card p-6">

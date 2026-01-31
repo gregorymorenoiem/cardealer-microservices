@@ -11,8 +11,8 @@ import {
 } from 'react-icons/fi';
 import MainLayout from '../../layouts/MainLayout';
 import dealerService, {
-  DealerManagedLocation,
-  CreateLocationRequest,
+  type DealerManagedLocation,
+  type CreateLocationRequest,
 } from '../../services/dealerService';
 
 interface DealerLocation {

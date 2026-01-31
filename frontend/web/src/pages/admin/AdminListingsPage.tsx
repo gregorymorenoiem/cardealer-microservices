@@ -18,7 +18,7 @@ export default function AdminListingsPage() {
 
   useEffect(() => {
     loadVehicles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [currentPage, statusFilter]);
 
   const loadVehicles = async () => {

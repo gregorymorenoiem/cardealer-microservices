@@ -306,6 +306,43 @@ const CRMPage = () => {
   // Check CRM access - allow for dealers regardless of plan for now
   const hasAccess = portalAccess.crm || isDealer || isDealerEmployee;
 
+  // Get current pipeline from TanStack Query data
+  const currentPipeline = useMemo(() => {
+    const allPipelines = pipelines.data ?? [];
+    return allPipelines.find((p) => p.id === selectedPipeline) || allPipelines[0];
+  }, [pipelines.data, selectedPipeline]);
+
+  // Filter deals by search
+  const filteredDeals = useMemo(() => {
+    return deals.filter((deal) => {
+      const matchesSearch =
+        searchQuery === '' || deal.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [deals, searchQuery]);
+
+  // Pipeline stats
+  const pipelineStats = useMemo(() => {
+    const pipelineDeals = filteredDeals;
+    const openDeals = pipelineDeals.filter((d) => d.status === 'Open');
+    const wonDeals = pipelineDeals.filter((d) => d.status === 'Won');
+
+    return {
+      totalDeals: pipelineDeals.length,
+      totalValue: pipelineDeals.reduce((sum, d) => sum + d.value, 0),
+      openValue: openDeals.reduce((sum, d) => sum + d.value, 0),
+      wonValue: wonDeals.reduce((sum, d) => sum + d.value, 0),
+      avgDealSize:
+        pipelineDeals.length > 0
+          ? pipelineDeals.reduce((sum, d) => sum + d.value, 0) / pipelineDeals.length
+          : 0,
+      conversionRate:
+        pipelineDeals.length > 0
+          ? ((wonDeals.length / pipelineDeals.length) * 100).toFixed(1)
+          : '0',
+    };
+  }, [filteredDeals]);
+
   if (!hasAccess) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -333,21 +370,6 @@ const CRMPage = () => {
     );
   }
 
-  // Get current pipeline from TanStack Query data
-  const currentPipeline = useMemo(() => {
-    const allPipelines = pipelines.data ?? [];
-    return allPipelines.find((p) => p.id === selectedPipeline) || allPipelines[0];
-  }, [pipelines.data, selectedPipeline]);
-
-  // Filter deals by search
-  const filteredDeals = useMemo(() => {
-    return deals.filter((deal) => {
-      const matchesSearch =
-        searchQuery === '' || deal.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSearch;
-    });
-  }, [deals, searchQuery]);
-
   // Get deals by stage
   const getDealsByStage = (stageId: string) => {
     return filteredDeals.filter((d) => d.stageId === stageId);
@@ -373,28 +395,6 @@ const CRMPage = () => {
       data: { stageId: newStage.id },
     });
   };
-
-  // Pipeline stats
-  const pipelineStats = useMemo(() => {
-    const pipelineDeals = filteredDeals;
-    const openDeals = pipelineDeals.filter((d) => d.status === 'Open');
-    const wonDeals = pipelineDeals.filter((d) => d.status === 'Won');
-
-    return {
-      totalDeals: pipelineDeals.length,
-      totalValue: pipelineDeals.reduce((sum, d) => sum + d.value, 0),
-      openValue: openDeals.reduce((sum, d) => sum + d.value, 0),
-      wonValue: wonDeals.reduce((sum, d) => sum + d.value, 0),
-      avgDealSize:
-        pipelineDeals.length > 0
-          ? pipelineDeals.reduce((sum, d) => sum + d.value, 0) / pipelineDeals.length
-          : 0,
-      conversionRate:
-        pipelineDeals.length > 0
-          ? ((wonDeals.length / pipelineDeals.length) * 100).toFixed(1)
-          : '0',
-    };
-  }, [filteredDeals]);
 
   const formatValue = (value: number) => {
     if (value >= 1000000) {

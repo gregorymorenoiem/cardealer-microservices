@@ -526,7 +526,7 @@ function AdvancedFilters({ onFilterChange, onSortChange, currentFilters, current
         </button>
       )}
     </div>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   ), [localFilters, currentSort, expandedSections]);
 
   return (

@@ -101,9 +101,9 @@ export function FavoritesPage() {
 
         {favorites.length === 0 ? (
           <EmptyState
-            icon={FiHeart}
+            icon={<FiHeart className="text-gray-400" size={64} />}
             title="No tienes favoritos aún"
-            description="Marca los vehículos que te gusten para verlos aquí más tarde"
+            message="Marca los vehículos que te gusten para verlos aquí más tarde"
             actionLabel="Buscar Vehículos"
             onAction={() => (window.location.href = '/search')}
           />
