@@ -2,6 +2,7 @@
 
 > **Tiempo estimado:** 20 minutos
 > **Prerrequisitos:** Proyecto Next.js creado, Tailwind instalado
+> **Tema visual:** Inspirado en CarGurus.com (USA) - Verde esmeralda + UI limpia
 
 ---
 
@@ -9,11 +10,14 @@
 
 Establecer tokens de diseño consistentes para:
 
-- Colores de marca y semánticos
-- Tipografía con escala predefinida
+- **Colores de marca:** Verde primario (#00A870) estilo CarGurus
+- **Sistema de Deal Rating:** Badges de calificación de precio
+- Tipografía con escala predefinida (Inter/Roboto)
 - Espaciado consistente
-- Sombras y bordes
+- Sombras sutiles y bordes
 - Breakpoints responsive
+
+> 📖 **Referencia:** Ver [00-TEMA-CARGURUS-AUDITORIA.md](./00-TEMA-CARGURUS-AUDITORIA.md) para detalles del tema
 
 ---
 
@@ -45,51 +49,51 @@ const config: Config = {
     },
     extend: {
       // ===================
-      // COLORES DE MARCA
+      // COLORES DE MARCA - TEMA CARGURUS
       // ===================
       colors: {
-        // Colores primarios
+        // Color primario - Verde CarGurus (Esmeralda)
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6", // Principal
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
-          DEFAULT: "#3b82f6",
+          50: "#E6F7F0", // Background sutil
+          100: "#B3E8D4", // Highlight muy claro
+          200: "#80D9B8", // Hover backgrounds
+          300: "#4DCA9C", // Active states
+          400: "#26BD85", // Lighter primary
+          500: "#00A870", // ⭐ PRINCIPAL - Verde CarGurus
+          600: "#008C5A", // Hover
+          700: "#007048", // Active/Pressed
+          800: "#005436", // Dark variant
+          900: "#003824", // Darkest
+          950: "#001C12", // Near black
+          DEFAULT: "#00A870",
           foreground: "#ffffff",
         },
 
-        // Secundario (para acentos)
+        // Secundario - Navy (texto y elementos oscuros)
         secondary: {
-          50: "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          300: "#cbd5e1",
-          400: "#94a3b8",
-          500: "#64748b",
-          600: "#475569",
-          700: "#334155",
-          800: "#1e293b",
-          900: "#0f172a",
-          950: "#020617",
-          DEFAULT: "#64748b",
+          50: "#F5F5F8",
+          100: "#E8E8EE",
+          200: "#D1D1DD",
+          300: "#ABABC2",
+          400: "#7A7A9C",
+          500: "#4A4A68", // Texto secundario
+          600: "#2D2D44", // Texto principal
+          700: "#1A1A2E", // ⭐ Navy oscuro - Headlines
+          800: "#12121F",
+          900: "#0A0A14",
+          950: "#05050A",
+          DEFAULT: "#1A1A2E",
           foreground: "#ffffff",
         },
 
-        // Success (verde)
+        // Success (verde más claro que primary)
         success: {
           50: "#f0fdf4",
           100: "#dcfce7",
           200: "#bbf7d0",
           300: "#86efac",
           400: "#4ade80",
-          500: "#22c55e", // Principal
+          500: "#22c55e",
           600: "#16a34a",
           700: "#15803d",
           800: "#166534",
@@ -98,52 +102,76 @@ const config: Config = {
           foreground: "#ffffff",
         },
 
-        // Warning (amarillo/naranja)
+        // Warning (naranja - Fair Deal)
         warning: {
-          50: "#fffbeb",
-          100: "#fef3c7",
-          200: "#fde68a",
-          300: "#fcd34d",
-          400: "#fbbf24",
-          500: "#f59e0b", // Principal
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
-          DEFAULT: "#f59e0b",
+          50: "#FFF8E1",
+          100: "#FFECB3",
+          200: "#FFE082",
+          300: "#FFD54F",
+          400: "#FFCA28",
+          500: "#FFA726", // ⭐ Fair Deal
+          600: "#FB8C00",
+          700: "#F57C00",
+          800: "#EF6C00",
+          900: "#E65100",
+          DEFAULT: "#FFA726",
           foreground: "#000000",
         },
 
-        // Error/Danger (rojo)
+        // Error/Danger (rojo - High Price)
         danger: {
-          50: "#fef2f2",
-          100: "#fee2e2",
-          200: "#fecaca",
-          300: "#fca5a5",
-          400: "#f87171",
-          500: "#ef4444", // Principal
-          600: "#dc2626",
-          700: "#b91c1c",
-          800: "#991b1b",
-          900: "#7f1d1d",
-          DEFAULT: "#ef4444",
+          50: "#FFEBEE",
+          100: "#FFCDD2",
+          200: "#EF9A9A",
+          300: "#E57373",
+          400: "#EF5350", // ⭐ High Price
+          500: "#F44336",
+          600: "#E53935",
+          700: "#D32F2F",
+          800: "#C62828",
+          900: "#B71C1C", // ⭐ Overpriced
+          DEFAULT: "#EF5350",
           foreground: "#ffffff",
         },
 
-        // Info (cian)
+        // Info (azul - links e información)
         info: {
-          50: "#ecfeff",
-          100: "#cffafe",
-          200: "#a5f3fc",
-          300: "#67e8f9",
-          400: "#22d3ee",
-          500: "#06b6d4", // Principal
-          600: "#0891b2",
-          700: "#0e7490",
-          800: "#155e75",
-          900: "#164e63",
-          DEFAULT: "#06b6d4",
+          50: "#E3F2FD",
+          100: "#BBDEFB",
+          200: "#90CAF9",
+          300: "#64B5F6",
+          400: "#42A5F5",
+          500: "#2196F3", // ⭐ Info principal
+          600: "#1E88E5",
+          700: "#1976D2",
+          800: "#1565C0",
+          900: "#0D47A1",
+          DEFAULT: "#2196F3",
           foreground: "#ffffff",
+        },
+
+        // Deal Rating Colors - Sistema CarGurus
+        deal: {
+          great: "#00A870", // Verde - Excelente Precio
+          good: "#7CB342", // Verde lima - Buen Precio
+          fair: "#FFA726", // Naranja - Precio Justo
+          high: "#EF5350", // Rojo claro - Precio Alto
+          overpriced: "#B71C1C", // Rojo oscuro - Sobreprecio
+          none: "#9E9E9E", // Gris - Sin análisis
+        },
+
+        // Grises para UI (más cálidos, estilo CarGurus)
+        gray: {
+          50: "#FAFAFA", // Page background
+          100: "#F5F5F5", // Card background, inputs
+          200: "#EEEEEE", // Borders sutiles
+          300: "#E0E0E0", // Borders
+          400: "#BDBDBD", // Placeholder, disabled icons
+          500: "#9E9E9E", // Icons secondary
+          600: "#757575", // Text muted
+          700: "#616161", // Text secondary
+          800: "#424242", // Text primary light
+          900: "#212121", // Text primary
         },
 
         // Colores semánticos para UI
@@ -173,15 +201,15 @@ const config: Config = {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
 
-        // Colores específicos de OKLA
+        // Colores específicos de OKLA - Tema CarGurus
         okla: {
-          blue: "#0052CC",
-          "blue-dark": "#003D99",
-          "blue-light": "#4C9AFF",
-          orange: "#FF5630",
-          "orange-dark": "#DE350B",
-          green: "#00875A",
-          gold: "#FFAB00",
+          green: "#00A870", // ⭐ Principal (antes era blue)
+          "green-dark": "#008C5A",
+          "green-light": "#00C785",
+          navy: "#1A1A2E", // Texto headlines
+          "navy-light": "#2D2D44",
+          orange: "#FFA726", // Fair Deal
+          gold: "#FFC107", // Badges premium
         },
       },
 
@@ -282,29 +310,34 @@ const config: Config = {
       },
 
       // ===================
-      // SOMBRAS
+      // SOMBRAS - Estilo CarGurus (sutiles)
       // ===================
       boxShadow: {
-        // Sombras sutiles para cards
-        "card-sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        card: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-        "card-md":
-          "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-        "card-lg":
-          "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        // Sombras muy sutiles para UI limpia
+        xs: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        "card-sm": "0 2px 4px rgba(0, 0, 0, 0.06)",
+        card: "0 2px 8px rgba(0, 0, 0, 0.08)",
+        "card-md": "0 4px 12px rgba(0, 0, 0, 0.08)",
+        "card-lg": "0 8px 24px rgba(0, 0, 0, 0.12)",
 
-        // Sombras para botones hover
-        "button-primary": "0 4px 14px 0 rgb(59 130 246 / 0.4)",
-        "button-danger": "0 4px 14px 0 rgb(239 68 68 / 0.4)",
-        "button-success": "0 4px 14px 0 rgb(34 197 94 / 0.4)",
+        // Sombra hover para cards (distintivo CarGurus)
+        "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12)",
+
+        // Sombras para botones - Verde primario
+        "button-primary": "0 4px 12px rgba(0, 168, 112, 0.25)",
+        "button-danger": "0 4px 12px rgba(239, 83, 80, 0.25)",
+        "button-success": "0 4px 12px rgba(34, 197, 94, 0.25)",
 
         // Sombras para modales/dropdowns
-        modal: "0 25px 50px -12px rgb(0 0 0 / 0.25)",
-        dropdown: "0 10px 40px -10px rgb(0 0 0 / 0.2)",
+        modal: "0 16px 48px rgba(0, 0, 0, 0.20)",
+        dropdown: "0 4px 16px rgba(0, 0, 0, 0.12)",
 
-        // Glow effects
-        "glow-primary": "0 0 20px rgb(59 130 246 / 0.3)",
-        "glow-success": "0 0 20px rgb(34 197 94 / 0.3)",
+        // Glow effects - Verde CarGurus
+        "glow-primary": "0 0 20px rgba(0, 168, 112, 0.25)",
+        "glow-success": "0 0 20px rgba(34, 197, 94, 0.25)",
+
+        // Navbar shadow
+        navbar: "0 2px 4px rgba(0, 0, 0, 0.04)",
       },
 
       // ===================
@@ -423,80 +456,80 @@ export default config;
   :root {
     /* Background & Foreground */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 10%;
 
     /* Card */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 10%;
 
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 10%;
 
-    /* Primary */
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Verde CarGurus (#00A870) */
+    --primary: 158 100% 33%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary */
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Navy (#1A1A2E) */
+    --secondary: 240 30% 14%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 240 5% 46%;
 
-    /* Accent */
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Verde claro */
+    --accent: 158 80% 95%;
+    --accent-foreground: 158 100% 25%;
 
     /* Destructive */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 4 80% 63%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Border & Input */
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    /* Border & Input - Grises sutiles */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 158 100% 33%;
 
     /* Radius */
     --radius: 0.5rem;
 
-    /* Chart colors */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Chart colors - Paleta CarGurus */
+    --chart-1: 158 100% 33%;
+    --chart-2: 84 55% 47%;
+    --chart-3: 36 100% 57%;
+    --chart-4: 4 80% 63%;
+    --chart-5: 207 90% 54%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 240 10% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 10% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 158 80% 45%;
+    --primary-foreground: 240 10% 6%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 240 20% 20%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 158 50% 15%;
+    --accent-foreground: 158 80% 70%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 158 80% 45%;
   }
 }
 
@@ -543,10 +576,10 @@ export default config;
   }
 
   .container-wide {
-    @apply mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
   }
 
-  /* Gradient backgrounds */
+  /* Gradient backgrounds - Verde CarGurus */
   .gradient-primary {
     @apply bg-gradient-to-r from-primary-600 to-primary-500;
   }
@@ -556,7 +589,11 @@ export default config;
   }
 
   .gradient-hero {
-    @apply bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400;
+    @apply bg-gradient-to-br from-gray-50 via-white to-gray-100;
+  }
+
+  .gradient-hero-green {
+    @apply bg-gradient-to-br from-primary-50 via-white to-primary-100;
   }
 
   /* Text gradients */
@@ -577,9 +614,9 @@ export default config;
     @apply bg-white/95 backdrop-blur-lg dark:bg-gray-900/95;
   }
 
-  /* Card hover effects */
+  /* Card hover effects - Estilo CarGurus */
   .card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-lg;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover;
   }
 
   /* Skeleton loading */
@@ -763,34 +800,106 @@ export default function RootLayout({
 /**
  * Design Tokens exportados como constantes TypeScript
  * Para usar en componentes que necesitan valores programáticos
+ *
+ * TEMA: CarGurus USA - Verde esmeralda como primario
  */
 
+// ⭐ COLORES PRINCIPALES - Tema CarGurus
 export const COLORS = {
+  // Verde CarGurus - Color primario
   primary: {
-    50: "#eff6ff",
-    100: "#dbeafe",
-    200: "#bfdbfe",
-    300: "#93c5fd",
-    400: "#60a5fa",
-    500: "#3b82f6",
-    600: "#2563eb",
-    700: "#1d4ed8",
-    800: "#1e40af",
-    900: "#1e3a8a",
+    50: "#E6F7F0",
+    100: "#B3E8D4",
+    200: "#80D9B8",
+    300: "#4DCA9C",
+    400: "#26BD85",
+    500: "#00A870", // ⭐ Principal
+    600: "#008C5A",
+    700: "#007048",
+    800: "#005436",
+    900: "#003824",
+  },
+  // Navy para texto
+  secondary: {
+    500: "#4A4A68",
+    600: "#2D2D44",
+    700: "#1A1A2E", // ⭐ Headlines
+  },
+  // Grises UI
+  gray: {
+    50: "#FAFAFA",
+    100: "#F5F5F5",
+    200: "#EEEEEE",
+    300: "#E0E0E0",
+    400: "#BDBDBD",
+    500: "#9E9E9E",
   },
   success: {
     500: "#22c55e",
     600: "#16a34a",
   },
   warning: {
-    500: "#f59e0b",
-    600: "#d97706",
+    500: "#FFA726",
+    600: "#FB8C00",
   },
   danger: {
-    500: "#ef4444",
-    600: "#dc2626",
+    400: "#EF5350",
+    500: "#F44336",
+    900: "#B71C1C",
+  },
+  info: {
+    500: "#2196F3",
+    600: "#1E88E5",
   },
 } as const;
+
+// ⭐ DEAL RATING - Sistema distintivo de CarGurus
+export const DEAL_RATING = {
+  great: {
+    label: "Excelente Precio",
+    labelEn: "Great Deal",
+    color: "#FFFFFF",
+    bgColor: "#00A870",
+    icon: "🔥",
+  },
+  good: {
+    label: "Buen Precio",
+    labelEn: "Good Deal",
+    color: "#FFFFFF",
+    bgColor: "#7CB342",
+    icon: "👍",
+  },
+  fair: {
+    label: "Precio Justo",
+    labelEn: "Fair Deal",
+    color: "#000000",
+    bgColor: "#FFA726",
+    icon: "➖",
+  },
+  high: {
+    label: "Precio Alto",
+    labelEn: "High Price",
+    color: "#FFFFFF",
+    bgColor: "#EF5350",
+    icon: "⚠️",
+  },
+  overpriced: {
+    label: "Sobreprecio",
+    labelEn: "Overpriced",
+    color: "#FFFFFF",
+    bgColor: "#B71C1C",
+    icon: "❌",
+  },
+  none: {
+    label: "Sin Análisis",
+    labelEn: "No Analysis",
+    color: "#FFFFFF",
+    bgColor: "#9E9E9E",
+    icon: "❓",
+  },
+} as const;
+
+export type DealRatingType = keyof typeof DEAL_RATING;
 
 export const BREAKPOINTS = {
   sm: 640,

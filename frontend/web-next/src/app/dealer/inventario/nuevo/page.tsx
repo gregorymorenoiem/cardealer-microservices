@@ -436,7 +436,10 @@ export default function NewVehiclePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bodyType">Tipo de Carrocería</Label>
-                  <Select value={formData.bodyType} onValueChange={v => handleChange('bodyType', v)}>
+                  <Select
+                    value={formData.bodyType}
+                    onValueChange={v => handleChange('bodyType', v)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar tipo" />
                     </SelectTrigger>
@@ -461,7 +464,10 @@ export default function NewVehiclePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="condition">Condición *</Label>
-                  <Select value={formData.condition} onValueChange={v => handleChange('condition', v)}>
+                  <Select
+                    value={formData.condition}
+                    onValueChange={v => handleChange('condition', v)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar condición" />
                     </SelectTrigger>
@@ -501,7 +507,10 @@ export default function NewVehiclePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fuel">Combustible *</Label>
-                  <Select value={formData.fuelType} onValueChange={v => handleChange('fuelType', v)}>
+                  <Select
+                    value={formData.fuelType}
+                    onValueChange={v => handleChange('fuelType', v)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
@@ -552,7 +561,10 @@ export default function NewVehiclePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="province">Provincia</Label>
-                  <Select value={formData.province} onValueChange={v => handleChange('province', v)}>
+                  <Select
+                    value={formData.province}
+                    onValueChange={v => handleChange('province', v)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
@@ -684,9 +696,7 @@ export default function NewVehiclePage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="mx-auto mb-3 h-10 w-10 text-gray-400" />
-                <p className="mb-1 text-gray-600">
-                  Haz clic o arrastra fotos aquí
-                </p>
+                <p className="mb-1 text-gray-600">Haz clic o arrastra fotos aquí</p>
                 <p className="text-xs text-gray-500">
                   PNG, JPG hasta 10MB • Máximo 20 fotos • {20 - images.length} restantes
                 </p>
@@ -758,8 +768,8 @@ export default function NewVehiclePage() {
             <h3 className="mb-4 font-semibold text-emerald-800">Resumen</h3>
             <div className="space-y-2 text-sm">
               <p>
-                <span className="text-emerald-600">Vehículo:</span>{' '}
-                {formData.year} {formData.make} {formData.model}
+                <span className="text-emerald-600">Vehículo:</span> {formData.year} {formData.make}{' '}
+                {formData.model}
               </p>
               <p>
                 <span className="text-emerald-600">Precio:</span>{' '}

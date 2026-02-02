@@ -2,6 +2,7 @@
 
 > **Tiempo estimado:** 45 minutos
 > **Prerrequisitos:** Design tokens configurados, shadcn/ui instalado
+> **Tema visual:** CarGurus USA - Verde esmeralda (#00A870) como primario
 
 ---
 
@@ -9,10 +10,13 @@
 
 Crear componentes base reutilizables con:
 
+- **Tema CarGurus:** Verde primario, UI limpia, sombras sutiles
 - Accesibilidad completa (WCAG 2.1 AA)
 - Variants y sizes configurables
 - Animaciones sutiles
 - TypeScript estricto
+
+> 📖 **Referencia:** Ver [00-TEMA-CARGURUS-AUDITORIA.md](./00-TEMA-CARGURUS-AUDITORIA.md) para guía de diseño
 
 ---
 
@@ -54,7 +58,7 @@ pnpm dlx shadcn@latest add accordion
 
 ---
 
-## 🔧 PASO 2: Extender Button con variants OKLA
+## 🔧 PASO 2: Extender Button con variants OKLA (Tema CarGurus)
 
 ### Código a crear
 
@@ -66,28 +70,43 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Button variants - Tema CarGurus
+ *
+ * Primary: Verde esmeralda (#00A870) - CTAs principales
+ * Secondary: Outline gris - Acciones secundarias
+ * Ghost: Transparente con hover verde suave
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
+        // ⭐ Verde CarGurus - CTA principal
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-600 hover:shadow-button-primary active:scale-[0.98]",
+          "bg-primary text-white shadow-button-primary hover:bg-primary-600 active:bg-primary-700 active:scale-[0.98]",
+        // Rojo para acciones destructivas
         destructive:
-          "bg-danger text-white shadow-sm hover:bg-danger-600 hover:shadow-button-danger active:scale-[0.98]",
+          "bg-danger text-white shadow-sm hover:bg-danger-600 active:scale-[0.98]",
+        // Outline gris - Acciones secundarias
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
+          "border border-gray-300 bg-white text-secondary-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 active:scale-[0.98]",
+        // Secondary sutil
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary-200 active:scale-[0.98]",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "bg-gray-100 text-secondary-700 hover:bg-gray-200 active:scale-[0.98]",
+        // Ghost - hover verde suave
+        ghost: "text-secondary-600 hover:bg-primary-50 hover:text-primary-600",
+        // Link verde
         link: "text-primary underline-offset-4 hover:underline",
+        // Success verde claro
         success:
-          "bg-success text-white shadow-sm hover:bg-success-600 hover:shadow-button-success active:scale-[0.98]",
+          "bg-success text-white shadow-button-success hover:bg-success-600 active:scale-[0.98]",
+        // Warning naranja
         warning:
           "bg-warning text-black shadow-sm hover:bg-warning-600 active:scale-[0.98]",
       },
       size: {
-        default: "h-10 px-4 py-2",
+        default: "h-10 px-5 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-12 rounded-lg px-6 text-base",
         xl: "h-14 rounded-xl px-8 text-lg",
@@ -890,6 +909,264 @@ pnpm test __tests__/components/
 pnpm build
 # No debería haber errores de TypeScript
 ```
+
+---
+
+## 🔧 PASO 8: Crear DealRatingBadge (Distintivo CarGurus)
+
+### Descripción
+
+El **DealRatingBadge** es el componente distintivo que diferencia a CarGurus de otros marketplaces. Muestra una calificación visual del precio del vehículo comparado con el mercado.
+
+### Código a crear
+
+```tsx
+// filepath: src/components/vehicles/DealRatingBadge.tsx
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { DEAL_RATING, type DealRatingType } from "@/lib/design-tokens";
+import {
+  Flame,
+  ThumbsUp,
+  Minus,
+  AlertTriangle,
+  XCircle,
+  HelpCircle,
+} from "lucide-react";
+
+interface DealRatingBadgeProps {
+  rating: DealRatingType;
+  size?: "sm" | "md" | "lg";
+  showIcon?: boolean;
+  showLabel?: boolean;
+  className?: string;
+}
+
+const iconMap = {
+  great: Flame,
+  good: ThumbsUp,
+  fair: Minus,
+  high: AlertTriangle,
+  overpriced: XCircle,
+  none: HelpCircle,
+} as const;
+
+const sizeClasses = {
+  sm: "text-[10px] px-1.5 py-0.5 gap-0.5",
+  md: "text-xs px-2 py-1 gap-1",
+  lg: "text-sm px-3 py-1.5 gap-1.5",
+} as const;
+
+const iconSizes = {
+  sm: "h-3 w-3",
+  md: "h-3.5 w-3.5",
+  lg: "h-4 w-4",
+} as const;
+
+export function DealRatingBadge({
+  rating,
+  size = "md",
+  showIcon = true,
+  showLabel = true,
+  className,
+}: DealRatingBadgeProps) {
+  const config = DEAL_RATING[rating];
+  const Icon = iconMap[rating];
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center font-semibold uppercase rounded shadow-sm",
+        sizeClasses[size],
+        className,
+      )}
+      style={{
+        backgroundColor: config.bgColor,
+        color: config.color,
+      }}
+      title={config.label}
+    >
+      {showIcon && <Icon className={iconSizes[size]} />}
+      {showLabel && <span>{config.label}</span>}
+    </span>
+  );
+}
+
+// Variante para mostrar ahorro estimado
+interface DealRatingWithSavingsProps extends DealRatingBadgeProps {
+  savings?: number;
+  marketPrice?: number;
+}
+
+export function DealRatingWithSavings({
+  rating,
+  savings,
+  marketPrice,
+  size = "md",
+  className,
+}: DealRatingWithSavingsProps) {
+  const config = DEAL_RATING[rating];
+
+  if (!savings && !marketPrice) {
+    return (
+      <DealRatingBadge rating={rating} size={size} className={className} />
+    );
+  }
+
+  const savingsText = savings
+    ? `RD$ ${savings.toLocaleString("es-DO")} bajo mercado`
+    : marketPrice
+      ? `Mercado: RD$ ${marketPrice.toLocaleString("es-DO")}`
+      : null;
+
+  return (
+    <div className={cn("flex flex-col gap-0.5", className)}>
+      <DealRatingBadge rating={rating} size={size} />
+      {savingsText && (
+        <span className="text-xs font-medium" style={{ color: config.bgColor }}>
+          ↓ {savingsText}
+        </span>
+      )}
+    </div>
+  );
+}
+```
+
+### Uso del componente
+
+```tsx
+// Ejemplo de uso en VehicleCard
+import { DealRatingBadge, DealRatingWithSavings } from '@/components/vehicles/DealRatingBadge';
+
+// Badge simple
+<DealRatingBadge rating="great" />
+<DealRatingBadge rating="good" size="lg" />
+<DealRatingBadge rating="fair" showIcon={false} />
+
+// Badge con ahorro
+<DealRatingWithSavings
+  rating="great"
+  savings={85000}
+  size="md"
+/>
+
+// En VehicleCard
+<div className="absolute left-3 top-3">
+  <DealRatingBadge rating={vehicle.dealRating} />
+</div>
+```
+
+### Tests E2E para DealRatingBadge
+
+```typescript
+// filepath: e2e/components/deal-rating-badge.spec.ts
+import { test, expect } from "@playwright/test";
+
+test.describe("DealRatingBadge", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/storybook/deal-rating-badge");
+  });
+
+  test("muestra todos los ratings correctamente", async ({ page }) => {
+    // Great Deal - Verde
+    const greatBadge = page.locator('[data-rating="great"]');
+    await expect(greatBadge).toBeVisible();
+    await expect(greatBadge).toHaveCSS("background-color", "rgb(0, 168, 112)");
+
+    // Good Deal - Verde lima
+    const goodBadge = page.locator('[data-rating="good"]');
+    await expect(goodBadge).toHaveCSS("background-color", "rgb(124, 179, 66)");
+
+    // Fair Deal - Naranja
+    const fairBadge = page.locator('[data-rating="fair"]');
+    await expect(fairBadge).toHaveCSS("background-color", "rgb(255, 167, 38)");
+
+    // High Price - Rojo
+    const highBadge = page.locator('[data-rating="high"]');
+    await expect(highBadge).toHaveCSS("background-color", "rgb(239, 83, 80)");
+  });
+
+  test("muestra iconos según el rating", async ({ page }) => {
+    const greatBadge = page.locator('[data-rating="great"]');
+    await expect(greatBadge.locator("svg")).toBeVisible();
+  });
+
+  test("oculta label cuando showLabel=false", async ({ page }) => {
+    const iconOnlyBadge = page.locator('[data-testid="icon-only-badge"]');
+    await expect(iconOnlyBadge.locator("svg")).toBeVisible();
+    await expect(iconOnlyBadge).not.toContainText("Excelente");
+  });
+});
+```
+
+---
+
+## 🎨 GUÍA VISUAL - Tema CarGurus
+
+### Paleta de colores de referencia
+
+| Elemento    | Color    | Hex       | Uso                                |
+| ----------- | -------- | --------- | ---------------------------------- |
+| Primary CTA | Verde    | `#00A870` | Botones principales, links activos |
+| Headlines   | Navy     | `#1A1A2E` | Títulos, texto importante          |
+| Body text   | Gray 700 | `#616161` | Texto de párrafos                  |
+| Muted text  | Gray 500 | `#9E9E9E` | Texto secundario, placeholders     |
+| Background  | Gray 50  | `#FAFAFA` | Fondo de página                    |
+| Card bg     | White    | `#FFFFFF` | Fondo de cards                     |
+| Border      | Gray 200 | `#EEEEEE` | Bordes de cards e inputs           |
+
+### Jerarquía de botones
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  PRIORIDAD ALTA                                        │
+│  ┌─────────────────────┐                               │
+│  │   Contactar Vendedor │  ← Verde #00A870 (default)   │
+│  └─────────────────────┘                               │
+│                                                         │
+│  PRIORIDAD MEDIA                                       │
+│  ┌─────────────────────┐                               │
+│  │   Guardar Búsqueda  │  ← Outline gris (outline)     │
+│  └─────────────────────┘                               │
+│                                                         │
+│  PRIORIDAD BAJA                                        │
+│  ┌─────────────────────┐                               │
+│  │   Ver más detalles  │  ← Ghost verde (ghost)        │
+│  └─────────────────────┘                               │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Cards de vehículos
+
+```
+┌─────────────────────────────────────┐
+│  ┌───────────────────────────────┐  │
+│  │        IMAGEN 4:3             │  │
+│  │                               │  │
+│  │ ┌─────────────────┐           │  │
+│  │ │ EXCELENTE PRECIO│   ← Badge │  │
+│  │ └─────────────────┘           │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  2024 Toyota Camry SE               │  ← Navy #1A1A2E
+│  32,450 km · Santo Domingo          │  ← Gray #616161
+│                                     │
+│  RD$ 1,250,000                      │  ← Verde #00A870 (bold)
+│  ↓ RD$ 50,000 bajo mercado          │  ← Verde #00A870 (small)
+│                                     │
+└─────────────────────────────────────┘
+    ↑
+    Border: #EEEEEE, Shadow: card-sm
+    Hover: shadow-card-hover, translateY(-4px)
+```
+
+---
+
+## ➡️ SIGUIENTE PASO
+
+Continuar con: `docs/frontend-rebuild/02-UX-DESIGN-SYSTEM/04-patrones-ux.md`
 
 ---
 

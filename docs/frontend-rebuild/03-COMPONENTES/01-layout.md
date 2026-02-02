@@ -223,249 +223,186 @@ export default function MainGroupLayout({
 
 ## 🔧 PASO 3: Header/Navbar
 
+> **ACTUALIZADO: Enero 31, 2026** - Nueva estructura de navegación optimizada para RD
+
+### Estructura de Navegación Principal
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [O] OKLA  │ 🚗 Comprar │ + Vender │ 🏢 Dealers │  [Iniciar Sesión / Registrarse]  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Decisiones de diseño:**
+
+- **3 links principales:** Comprar, Vender, Dealers (optimizado para conversión en RD)
+- **Sin barra de búsqueda en navbar:** La búsqueda está en el Hero de la homepage
+- **Botón de auth único:** "Iniciar Sesión / Registrarse" (estilo CarGurus adaptado)
+- **Color OKLA verde:** `#00A870` en todo el tema (NO azul)
+
 ### Header Component
 
 ```typescript
-// filepath: src/components/navigation/Header.tsx
+// filepath: src/components/layout/navbar.tsx
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Menu, Search, Heart, Bell, User, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Logo } from "@/components/brand/Logo";
-import { SearchBar } from "@/components/search/SearchBar";
-import { UserMenu } from "@/components/navigation/UserMenu";
-import { NotificationsMenu } from "@/components/navigation/NotificationsMenu";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Menu,
+  X,
+  Heart,
+  User,
+  Car,
+  Bell,
+  MessageSquare,
+  LogOut,
+  Plus,
+  Building2,
+} from "lucide-react";
 
-const NAV_LINKS = [
-  { href: "/vehiculos", label: "Vehículos" },
-  { href: "/marcas", label: "Marcas" },
-  { href: "/dealers", label: "Dealers" },
-  { href: "/noticias", label: "Noticias" },
-] as const;
+// =============================================================================
+// NAVIGATION DATA - Optimized for República Dominicana
+// =============================================================================
 
-export function Header() {
+/**
+ * Main navigation links
+ * Structure: Comprar | Vender | Dealers
+ * - Simple, clear actions for buyers and sellers
+ * - Dealers link for B2B monetization
+ * - Search removed from navbar (exists in hero section)
+ */
+const mainNavLinks = [
+  { href: "/vehiculos", label: "Comprar", icon: <Car className="h-4 w-4" /> },
+  { href: "/vender", label: "Vender", icon: <Plus className="h-4 w-4" /> },
+  { href: "/dealers", label: "Dealers", icon: <Building2 className="h-4 w-4" /> },
+];
+
+const userNavLinks = [
+  { href: "/cuenta/favoritos", label: "Favoritos", icon: <Heart className="h-4 w-4" /> },
+  { href: "/cuenta/mensajes", label: "Mensajes", icon: <MessageSquare className="h-4 w-4" /> },
+  { href: "/cuenta/notificaciones", label: "Alertas", icon: <Bell className="h-4 w-4" /> },
+];
+
+// =============================================================================
+// LOGO COMPONENT
+// =============================================================================
+
+function Logo() {
+  return (
+    <Link href="/" className="group flex items-center gap-2.5">
+      <div className="relative">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg shadow-[#00A870]/20">
+          <span className="text-xl font-bold text-white">O</span>
+        </div>
+      </div>
+      <span className="text-2xl font-bold tracking-tight text-gray-900">OKLA</span>
+    </Link>
+  );
+}
+
+// =============================================================================
+// RIGHT SIDE ACTIONS
+// =============================================================================
+
+function RightActions({ isAuthenticated, onMobileMenuToggle, isMobileMenuOpen }) {
+  return (
+    <div className="flex items-center gap-2 sm:gap-3">
+      {/* Auth Button - OKLA Theme (only when not authenticated) */}
+      {!isAuthenticated && (
+        <Button
+          asChild
+          size="sm"
+          className="hidden gap-1.5 rounded-full bg-[#00A870] px-5 py-2.5 text-sm font-semibold shadow-md transition-all hover:bg-[#009663] hover:shadow-lg sm:flex"
+        >
+          <Link href="/login">
+            <span>Iniciar Sesión / Registrarse</span>
+          </Link>
+        </Button>
+      )}
+
+      {/* User Menu with Dropdown - Desktop (only when authenticated) */}
+      {isAuthenticated && (
+        <div className="relative hidden lg:block">
+          <button className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-200 bg-white hover:border-gray-300">
+            <User className="h-5 w-5 text-gray-600" />
+          </button>
+          {/* Dropdown menu content */}
+        </div>
+      )}
+
+      {/* Mobile Menu Button */}
+      <button
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-600 lg:hidden"
+        onClick={onMobileMenuToggle}
+      >
+        {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
+    </div>
+  );
+}
+
+// =============================================================================
+// MAIN NAVBAR COMPONENT
+// =============================================================================
+
+export function Navbar() {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
 
-  const isLoading = status === "loading";
-  const isAuthenticated = !!session?.user;
+  // TODO: Replace with actual auth state from next-auth
+  const isAuthenticated = false;
 
   return (
-    <header className="sticky top-0 z-header w-full border-b border-gray-200 bg-white">
-      <nav className="container" aria-label="Navegación principal">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md"
-            aria-label="Ir al inicio"
-          >
-            <Logo className="h-8 w-auto" />
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex lg:items-center lg:gap-8">
-            {NAV_LINKS.map((link) => (
+    <header className={cn(
+      "sticky top-0 z-50 w-full transition-all duration-300",
+      isScrolled ? "border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur-md" : "bg-white"
+    )}>
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-8">
+          <Logo />
+          {/* Desktop Navigation - Main Links */}
+          <div className="hidden items-center gap-1 lg:flex">
+            {mainNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary-600",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md px-1",
-                  pathname === link.href || pathname.startsWith(link.href + "/")
-                    ? "text-primary-600"
-                    : "text-gray-700"
+                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  pathname.startsWith(link.href)
+                    ? "text-[#00A870]"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
+                {link.icon}
                 {link.label}
               </Link>
             ))}
           </div>
-
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:block flex-1 max-w-md mx-4">
-            <SearchBar />
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            {/* Mobile Search Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              aria-label={isSearchOpen ? "Cerrar búsqueda" : "Abrir búsqueda"}
-            >
-              {isSearchOpen ? <X size={20} /> : <Search size={20} />}
-            </Button>
-
-            {isLoading ? (
-              // Loading skeleton
-              <div className="flex items-center gap-2">
-                <div className="h-9 w-9 animate-pulse rounded-full bg-gray-200" />
-                <div className="h-9 w-24 animate-pulse rounded-md bg-gray-200" />
-              </div>
-            ) : isAuthenticated ? (
-              // Authenticated user
-              <>
-                <Link href="/favoritos" className="hidden sm:block">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Ver favoritos"
-                  >
-                    <Heart size={20} />
-                  </Button>
-                </Link>
-
-                <NotificationsMenu />
-
-                <Link href="/publicar">
-                  <Button size="sm" className="hidden sm:flex">
-                    <Plus size={16} className="mr-1" />
-                    Publicar
-                  </Button>
-                </Link>
-
-                <UserMenu user={session.user} />
-              </>
-            ) : (
-              // Not authenticated
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    Iniciar Sesión
-                  </Button>
-                </Link>
-                <Link href="/registro" className="hidden sm:block">
-                  <Button size="sm">Registrarse</Button>
-                </Link>
-              </>
-            )}
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </Button>
-          </div>
         </div>
 
-        {/* Mobile Search - Expandable */}
-        {isSearchOpen && (
-          <div className="py-3 md:hidden">
-            <SearchBar autoFocus onClose={() => setIsSearchOpen(false)} />
-          </div>
-        )}
-
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <MobileMenu
-            isOpen={isMobileMenuOpen}
-            onClose={() => setIsMobileMenuOpen(false)}
-            isAuthenticated={isAuthenticated}
-          />
-        )}
+        <RightActions
+          isAuthenticated={isAuthenticated}
+          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          isMobileMenuOpen={isMobileMenuOpen}
+        />
       </nav>
     </header>
   );
 }
-
-interface MobileMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  isAuthenticated: boolean;
-}
-
-function MobileMenu({ isOpen, onClose, isAuthenticated }: MobileMenuProps) {
-  const pathname = usePathname();
-
-  React.useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  return (
-    <div className="lg:hidden border-t border-gray-200 bg-white py-4">
-      <div className="flex flex-col gap-2">
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            onClick={onClose}
-            className={cn(
-              "px-3 py-2 text-base font-medium rounded-md transition-colors",
-              pathname === link.href || pathname.startsWith(link.href + "/")
-                ? "bg-primary-50 text-primary-600"
-                : "text-gray-700 hover:bg-gray-50"
-            )}
-          >
-            {link.label}
-          </Link>
-        ))}
-
-        {isAuthenticated && (
-          <>
-            <hr className="my-2" />
-            <Link
-              href="/favoritos"
-              onClick={onClose}
-              className="px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md"
-            >
-              Mis Favoritos
-            </Link>
-            <Link
-              href="/publicar"
-              onClick={onClose}
-              className="px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md"
-            >
-              Publicar Vehículo
-            </Link>
-          </>
-        )}
-
-        {!isAuthenticated && (
-          <>
-            <hr className="my-2" />
-            <Link
-              href="/login"
-              onClick={onClose}
-              className="px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link
-              href="/registro"
-              onClick={onClose}
-              className="px-3 py-2 text-base font-medium text-primary-600 hover:bg-primary-50 rounded-md"
-            >
-              Registrarse
-            </Link>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 ```
+
+### Estructura de Navegación por Estado de Usuario
+
+| Estado             | Navbar Desktop                                                                   | Navbar Mobile                                    |
+| ------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **No autenticado** | Logo + Comprar/Vender/Dealers + Botón "Iniciar Sesión / Registrarse"             | Hamburger menu con las mismas opciones           |
+| **Autenticado**    | Logo + Comprar/Vender/Dealers + [Favoritos][Mensajes][Alertas] + Avatar dropdown | Hamburger con todas las opciones + Cerrar Sesión |
 
 ### User Menu
 

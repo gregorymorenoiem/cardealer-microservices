@@ -26,11 +26,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from 'lucide-react';
-import {
-  useDashboardStats,
-  useRecentActivity,
-  usePendingActions,
-} from '@/hooks/use-admin';
+import { useDashboardStats, useRecentActivity, usePendingActions } from '@/hooks/use-admin';
 
 // =============================================================================
 // SKELETON
@@ -132,7 +128,9 @@ export default function AdminDashboardPage() {
     {
       label: 'Usuarios Totales',
       value: stats?.totalUsers.toLocaleString() || '0',
-      change: stats?.usersChange ? `${stats.usersChange > 0 ? '+' : ''}${stats.usersChange}%` : '0%',
+      change: stats?.usersChange
+        ? `${stats.usersChange > 0 ? '+' : ''}${stats.usersChange}%`
+        : '0%',
       trend: (stats?.usersChange || 0) >= 0 ? 'up' : 'down',
       icon: Users,
       color: 'text-blue-600',

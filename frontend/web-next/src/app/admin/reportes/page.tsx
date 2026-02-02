@@ -168,10 +168,16 @@ export default function AdminReportesPage() {
     }));
   };
 
-  const handleUpdateStatus = async (id: string, status: 'investigating' | 'resolved' | 'dismissed', resolutionText?: string) => {
+  const handleUpdateStatus = async (
+    id: string,
+    status: 'investigating' | 'resolved' | 'dismissed',
+    resolutionText?: string
+  ) => {
     try {
       await updateStatusMutation.mutateAsync({ id, status, resolution: resolutionText });
-      toast.success(`Reporte ${status === 'resolved' ? 'resuelto' : status === 'dismissed' ? 'descartado' : 'actualizado'}`);
+      toast.success(
+        `Reporte ${status === 'resolved' ? 'resuelto' : status === 'dismissed' ? 'descartado' : 'actualizado'}`
+      );
       setResolvingId(null);
       setResolution('');
     } catch {
@@ -349,7 +355,10 @@ export default function AdminReportesPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Link href={report.type === 'vehicle' ? `/vehiculos/${report.targetId}` : `#`} className="hover:underline">
+                  <Link
+                    href={report.type === 'vehicle' ? `/vehiculos/${report.targetId}` : `#`}
+                    className="hover:underline"
+                  >
                     <div className="flex items-center gap-2">
                       <Car className="h-4 w-4 text-gray-500" />
                       <span className="font-medium">{report.targetTitle}</span>
@@ -393,7 +402,10 @@ export default function AdminReportesPage() {
                         >
                           <Clock className="h-4 w-4" />
                         </Button>
-                        <AlertDialog open={resolvingId === report.id} onOpenChange={(open) => !open && setResolvingId(null)}>
+                        <AlertDialog
+                          open={resolvingId === report.id}
+                          onOpenChange={open => !open && setResolvingId(null)}
+                        >
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
@@ -408,7 +420,8 @@ export default function AdminReportesPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Resolver reporte</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Describe la resolución del reporte. Esta información será visible en el historial.
+                                Describe la resolución del reporte. Esta información será visible en
+                                el historial.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <Textarea
@@ -422,7 +435,9 @@ export default function AdminReportesPage() {
                                 Cancelar
                               </AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleUpdateStatus(report.id, 'resolved', resolution)}
+                                onClick={() =>
+                                  handleUpdateStatus(report.id, 'resolved', resolution)
+                                }
                                 disabled={!resolution || updateStatusMutation.isPending}
                                 className="bg-emerald-600 hover:bg-emerald-700"
                               >
@@ -444,13 +459,20 @@ export default function AdminReportesPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>¿Descartar reporte?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                El reporte será marcado como descartado. Úsalo cuando el reporte no sea válido.
+                                El reporte será marcado como descartado. Úsalo cuando el reporte no
+                                sea válido.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleUpdateStatus(report.id, 'dismissed', 'Descartado por el administrador')}
+                                onClick={() =>
+                                  handleUpdateStatus(
+                                    report.id,
+                                    'dismissed',
+                                    'Descartado por el administrador'
+                                  )
+                                }
                               >
                                 Descartar
                               </AlertDialogAction>
@@ -461,7 +483,10 @@ export default function AdminReportesPage() {
                     )}
                     {report.status === 'investigating' && (
                       <>
-                        <AlertDialog open={resolvingId === report.id} onOpenChange={(open) => !open && setResolvingId(null)}>
+                        <AlertDialog
+                          open={resolvingId === report.id}
+                          onOpenChange={open => !open && setResolvingId(null)}
+                        >
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
@@ -490,7 +515,9 @@ export default function AdminReportesPage() {
                                 Cancelar
                               </AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleUpdateStatus(report.id, 'resolved', resolution)}
+                                onClick={() =>
+                                  handleUpdateStatus(report.id, 'resolved', resolution)
+                                }
                                 disabled={!resolution || updateStatusMutation.isPending}
                                 className="bg-emerald-600 hover:bg-emerald-700"
                               >

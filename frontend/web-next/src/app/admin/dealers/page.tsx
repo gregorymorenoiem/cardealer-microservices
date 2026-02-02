@@ -368,9 +368,7 @@ export default function AdminDealersPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium">{dealer.name}</p>
-                      {dealer.verified && (
-                        <CheckCircle className="h-4 w-4 text-blue-500" />
-                      )}
+                      {dealer.verified && <CheckCircle className="h-4 w-4 text-blue-500" />}
                     </div>
                     <p className="flex items-center gap-1 text-sm text-gray-500">
                       <MapPin className="h-3 w-3" />

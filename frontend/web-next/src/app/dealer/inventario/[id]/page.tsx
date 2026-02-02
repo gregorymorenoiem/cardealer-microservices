@@ -268,7 +268,7 @@ export default function DealerEditVehiclePage() {
             <p className="mb-4 text-slate-400">
               El vehículo que buscas no existe o no tienes permiso para editarlo.
             </p>
-            <div className="flex gap-3 justify-center">
+            <div className="flex justify-center gap-3">
               <Button variant="outline" onClick={() => refetch()}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar

@@ -90,7 +90,18 @@ const steps = [
 
 const fuelTypes = ['Gasolina', 'Diesel', 'Híbrido', 'Eléctrico', 'GLP'];
 const transmissions = ['Automática', 'Manual', 'CVT', 'Dual Clutch'];
-const colors = ['Blanco', 'Negro', 'Gris', 'Plata', 'Rojo', 'Azul', 'Verde', 'Marrón', 'Dorado', 'Otro'];
+const colors = [
+  'Blanco',
+  'Negro',
+  'Gris',
+  'Plata',
+  'Rojo',
+  'Azul',
+  'Verde',
+  'Marrón',
+  'Dorado',
+  'Otro',
+];
 const conditions = ['Nuevo', 'Usado - Excelente', 'Usado - Bueno', 'Usado - Regular'];
 const years = Array.from({ length: 30 }, (_, i) => 2025 - i);
 const provinces = [
@@ -174,7 +185,7 @@ export default function PublicarPage() {
 
   const handleChange = (field: keyof VehicleFormData, value: string | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Reset model when make changes
     if (field === 'makeId') {
       setFormData(prev => ({ ...prev, modelId: '' }));
@@ -193,16 +204,12 @@ export default function PublicarPage() {
   const handlePhotoUpload = async (files: FileList, category: string) => {
     setIsUploading(true);
     try {
-      const results = await uploadImages(
-        Array.from(files),
-        'vehicles',
-        (index, progress) => {
-          setUploadProgress(prev => ({
-            ...prev,
-            [`${category}-${index}`]: progress.percentage,
-          }));
-        }
-      );
+      const results = await uploadImages(Array.from(files), 'vehicles', (index, progress) => {
+        setUploadProgress(prev => ({
+          ...prev,
+          [`${category}-${index}`]: progress.percentage,
+        }));
+      });
 
       const newPhotos: UploadedPhoto[] = results.map((result, index) => ({
         id: `${category}-${Date.now()}-${index}`,
@@ -241,7 +248,13 @@ export default function PublicarPage() {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(formData.makeId && formData.modelId && formData.year && formData.fuelType && formData.transmission);
+        return !!(
+          formData.makeId &&
+          formData.modelId &&
+          formData.year &&
+          formData.fuelType &&
+          formData.transmission
+        );
       case 2:
         return formData.photos.length >= 3;
       case 3:
@@ -372,10 +385,7 @@ export default function PublicarPage() {
                   {makesLoading ? (
                     <Skeleton className="h-10 w-full" />
                   ) : (
-                    <Select
-                      value={formData.makeId}
-                      onValueChange={v => handleChange('makeId', v)}
-                    >
+                    <Select value={formData.makeId} onValueChange={v => handleChange('makeId', v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecciona marca" />
                       </SelectTrigger>
@@ -418,10 +428,7 @@ export default function PublicarPage() {
                 {/* Year */}
                 <div className="space-y-2">
                   <Label>Año *</Label>
-                  <Select
-                    value={formData.year}
-                    onValueChange={v => handleChange('year', v)}
-                  >
+                  <Select value={formData.year} onValueChange={v => handleChange('year', v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona año" />
                     </SelectTrigger>
@@ -499,10 +506,7 @@ export default function PublicarPage() {
                 {/* Color */}
                 <div className="space-y-2">
                   <Label>Color</Label>
-                  <Select
-                    value={formData.color}
-                    onValueChange={v => handleChange('color', v)}
-                  >
+                  <Select value={formData.color} onValueChange={v => handleChange('color', v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona color" />
                     </SelectTrigger>
@@ -539,10 +543,7 @@ export default function PublicarPage() {
                 {/* Doors */}
                 <div className="space-y-2">
                   <Label>Puertas</Label>
-                  <Select
-                    value={formData.doors}
-                    onValueChange={v => handleChange('doors', v)}
-                  >
+                  <Select value={formData.doors} onValueChange={v => handleChange('doors', v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -570,7 +571,7 @@ export default function PublicarPage() {
                       />
                       <label
                         htmlFor={feature}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         {feature}
                       </label>
@@ -656,11 +657,9 @@ export default function PublicarPage() {
                           className="object-cover"
                         />
                         {photo.isPrimary && (
-                          <Badge className="absolute left-2 top-2 bg-emerald-500">
-                            Principal
-                          </Badge>
+                          <Badge className="absolute top-2 left-2 bg-emerald-500">Principal</Badge>
                         )}
-                        <div className="absolute bottom-2 right-2 flex gap-1">
+                        <div className="absolute right-2 bottom-2 flex gap-1">
                           {!photo.isPrimary && (
                             <Button
                               variant="secondary"
@@ -820,10 +819,8 @@ export default function PublicarPage() {
                     fill
                     className="object-cover"
                   />
-                  <div className="absolute bottom-4 right-4">
-                    <Badge variant="secondary">
-                      {formData.photos.length} fotos
-                    </Badge>
+                  <div className="absolute right-4 bottom-4">
+                    <Badge variant="secondary">{formData.photos.length} fotos</Badge>
                   </div>
                 </div>
               )}
@@ -832,8 +829,7 @@ export default function PublicarPage() {
               <div className="rounded-lg border p-4">
                 <h3 className="mb-4 text-lg font-semibold">
                   {makes?.find((m: any) => m.id === formData.makeId)?.name}{' '}
-                  {models?.find((m: any) => m.id === formData.modelId)?.name}{' '}
-                  {formData.year}
+                  {models?.find((m: any) => m.id === formData.modelId)?.name} {formData.year}
                   {formData.version && ` ${formData.version}`}
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
@@ -862,7 +858,10 @@ export default function PublicarPage() {
                   </div>
                   <div>
                     <span className="text-gray-500">Ubicación:</span>
-                    <p>{formData.province}{formData.city && `, ${formData.city}`}</p>
+                    <p>
+                      {formData.province}
+                      {formData.city && `, ${formData.city}`}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -891,9 +890,7 @@ export default function PublicarPage() {
 
               {/* Options */}
               <div className="flex flex-wrap gap-2">
-                {formData.negotiable && (
-                  <Badge variant="outline">Precio negociable</Badge>
-                )}
+                {formData.negotiable && <Badge variant="outline">Precio negociable</Badge>}
                 {formData.acceptTrades && (
                   <Badge variant="outline">Acepta vehículos en parte de pago</Badge>
                 )}
@@ -906,8 +903,8 @@ export default function PublicarPage() {
                   <div className="text-sm">
                     <p className="font-medium text-emerald-800">Información importante</p>
                     <p className="text-emerald-700">
-                      Tu publicación será revisada por nuestro equipo antes de ser publicada.
-                      El proceso de revisión toma aproximadamente 24 horas hábiles.
+                      Tu publicación será revisada por nuestro equipo antes de ser publicada. El
+                      proceso de revisión toma aproximadamente 24 horas hábiles.
                     </p>
                   </div>
                 </div>
@@ -918,11 +915,7 @@ export default function PublicarPage() {
 
         {/* Navigation Buttons */}
         <div className="mt-8 flex justify-between">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-          >
+          <Button variant="outline" onClick={prevStep} disabled={currentStep === 1}>
             <ChevronLeft className="mr-2 h-4 w-4" />
             Anterior
           </Button>

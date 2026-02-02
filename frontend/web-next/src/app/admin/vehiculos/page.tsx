@@ -339,7 +339,7 @@ export default function AdminVehiclesPage() {
                 fill
                 className="object-cover"
               />
-              <div className="absolute left-2 top-2 flex gap-2">
+              <div className="absolute top-2 left-2 flex gap-2">
                 {getStatusBadge(vehicle.status)}
                 {vehicle.featured && (
                   <Badge className="bg-purple-600 text-white">
@@ -349,7 +349,7 @@ export default function AdminVehiclesPage() {
                 )}
               </div>
               {vehicle.reportsCount > 0 && (
-                <div className="absolute right-2 top-2">
+                <div className="absolute top-2 right-2">
                   <Badge className="bg-red-600 text-white">
                     <Flag className="mr-1 h-3 w-3" />
                     {vehicle.reportsCount} reportes
@@ -373,9 +373,7 @@ export default function AdminVehiclesPage() {
                   <Eye className="h-4 w-4" />
                   {vehicle.views}
                 </span>
-                <span>
-                  {new Date(vehicle.createdAt).toLocaleDateString('es-DO')}
-                </span>
+                <span>{new Date(vehicle.createdAt).toLocaleDateString('es-DO')}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link href={`/vehiculos/${vehicle.id}`} target="_blank">
@@ -399,7 +397,10 @@ export default function AdminVehiclesPage() {
                       )}
                       Aprobar
                     </Button>
-                    <AlertDialog open={rejectingId === vehicle.id} onOpenChange={(open) => !open && setRejectingId(null)}>
+                    <AlertDialog
+                      open={rejectingId === vehicle.id}
+                      onOpenChange={open => !open && setRejectingId(null)}
+                    >
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="outline"
@@ -450,7 +451,9 @@ export default function AdminVehiclesPage() {
                     onClick={() => handleToggleFeatured(vehicle.id, vehicle.featured)}
                     disabled={toggleFeaturedMutation.isPending}
                   >
-                    <Star className={`mr-1 h-4 w-4 ${vehicle.featured ? 'fill-amber-500 text-amber-500' : ''}`} />
+                    <Star
+                      className={`mr-1 h-4 w-4 ${vehicle.featured ? 'fill-amber-500 text-amber-500' : ''}`}
+                    />
                     {vehicle.featured ? 'Quitar' : 'Destacar'}
                   </Button>
                 )}
@@ -464,7 +467,8 @@ export default function AdminVehiclesPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Eliminar vehículo?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Se eliminará permanentemente este vehículo.
+                        Esta acción no se puede deshacer. Se eliminará permanentemente este
+                        vehículo.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

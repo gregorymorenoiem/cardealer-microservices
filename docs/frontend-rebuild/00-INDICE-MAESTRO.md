@@ -1,14 +1,14 @@
 # 📚 ÍNDICE MAESTRO - Reconstrucción Frontend OKLA
 
 > **Propósito:** Documentación ejecutable para que un modelo de IA pueda implementar sin errores
-> **Fecha:** Enero 31, 2026 (Auditoría 13 - Sincronización Índice)
-> **Estado:** ✅ DOCUMENTACIÓN COMPLETA + 🔍 AUDITORÍAS 1-13 COMPLETADAS
+> **Fecha:** Enero 31, 2026 (Auditoría 14 - Navbar Optimizado)
+> **Estado:** ✅ DOCUMENTACIÓN COMPLETA + 🔍 AUDITORÍAS 1-14 COMPLETADAS
 
 ---
 
 ## ✅ AUDITORÍA DE DOCUMENTACIÓN COMPLETADA
 
-**Estado:** 13 de 15 auditorías completadas.
+**Estado:** 14 de 15 auditorías completadas.
 
 ### 📊 Resumen de Auditorías
 
@@ -17,23 +17,55 @@
 - **Auditoría 11:** Referencias internas corregidas entre documentos
 - **Auditoría 12:** Índice maestro actualizado con nueva estructura
 - **Auditoría 13:** ✅ Sincronización índice con archivos reales + eliminación de duplicados
+- **Auditoría 14:** ✅ Navbar optimizado para RD (Comprar/Vender/Dealers + Auth button)
 
-**Pendientes:** Auditorías 14-15 (script validación, backend docs)
+**Pendientes:** Auditoría 15 (backend docs)
 
 ---
 
 ## 🎯 OBJETIVO PRINCIPAL
 
-Crear un frontend **profesional nivel CarGurus** con:
+Crear un frontend **profesional con tema visual OKLA** con:
 
-1. **UX excepcional** - Flujos intuitivos, feedback inmediato, accesibilidad
-2. **Performance óptimo** - < 1.5s FCP, < 500 KB bundle
-3. **Testing robusto** - > 80% coverage, E2E críticos
-4. **Código mantenible** - TypeScript estricto, patrones consistentes
+1. **Tema OKLA** - Verde esmeralda (#00A870), UI limpia, sombras sutiles
+2. **Sistema Deal Rating** - Badges de calificación de precio (Great, Good, Fair, High)
+3. **UX excepcional** - Flujos intuitivos, feedback inmediato, accesibilidad
+4. **Performance óptimo** - < 1.5s FCP, < 500 KB bundle
+5. **Testing robusto** - > 80% coverage, E2E críticos
+6. **Código mantenible** - TypeScript estricto, patrones consistentes
+
+> 📖 **Guía de tema:** Ver [02-UX-DESIGN-SYSTEM/00-TEMA-CARGURUS-AUDITORIA.md](./02-UX-DESIGN-SYSTEM/00-TEMA-CARGURUS-AUDITORIA.md)
 
 ---
 
-## 📁 ESTRUCTURA DE DOCUMENTOS (ACTUALIZADA - Enero 29, 2026)
+## 🧭 NAVBAR - ESTRUCTURA ACTUALIZADA (Enero 31, 2026)
+
+### Diseño Final
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [O] OKLA  │ 🚗 Comprar │ + Vender │ 🏢 Dealers │  [Iniciar Sesión / Registrarse]  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Decisiones de Diseño
+
+| Elemento                     | Implementación                 | Razón                            |
+| ---------------------------- | ------------------------------ | -------------------------------- |
+| **3 links principales**      | Comprar, Vender, Dealers       | Optimizado para conversión en RD |
+| **Sin búsqueda en navbar**   | Búsqueda en Hero               | Evita redundancia, UX limpio     |
+| **Botón auth único**         | "Iniciar Sesión / Registrarse" | Menos fricción, un solo click    |
+| **Color verde**              | `#00A870`                      | Tema OKLA consistente            |
+| **Sin corazón de favoritos** | Eliminado                      | Disponible en menú de usuario    |
+
+### Ubicación del Código
+
+- **Archivo:** `frontend/web-next/src/components/layout/navbar.tsx`
+- **Documentación:** `docs/frontend-rebuild/03-COMPONENTES/01-layout.md`
+
+---
+
+## 📁 ESTRUCTURA DE DOCUMENTOS (ACTUALIZADA - Enero 31, 2026)
 
 ```
 docs/frontend-rebuild/
@@ -44,7 +76,7 @@ docs/frontend-rebuild/
 ├── AUDITORIA-GATEWAY-ENDPOINTS.md    # 🔍 Auditoría completa de endpoints (187)
 ├── AUDITORIA-RESUMEN-VISUAL.md       # 📈 Dashboard visual de cobertura
 │
-├── 01-SETUP/                         # ⚙️ Configuración Inicial (12 archivos)
+├── 01-SETUP/                         # ⚙️ Configuración Inicial (17 archivos)
 │   ├── 01-crear-proyecto.md         # Crear proyecto Next.js
 │   ├── 02-configurar-typescript.md  # tsconfig.json completo
 │   ├── 03-configurar-eslint.md      # ESLint strict mode
@@ -56,27 +88,38 @@ docs/frontend-rebuild/
 │   ├── 09-environment-variables.md  # 🆕 Variables de entorno por ambiente
 │   ├── 10-deploy-production.md      # 🆕 Deploy a producción (Docker, K8s, CI/CD)
 │   ├── 11-architecture-diagrams.md  # 🆕 Diagramas de arquitectura del sistema
-│   └── 12-migracion-vite-nextjs.md  # 🆕 Guía migración Vite → Next.js
+│   ├── 12-migracion-vite-nextjs.md  # 🆕 Guía migración Vite → Next.js
+│   ├── 13-routing-map.md            # 🆕✅ Mapa completo de rutas (~96 rutas)
+│   ├── 14-architecture-decisions.md # 🆕✅ ADR: Decisiones arquitectónicas (10 ADRs)
+│   ├── 15-storybook-config.md       # 🆕✅ Configuración Storybook + shadcn/ui
+│   ├── 16-deployment-checklist.md   # 🆕✅ Checklist pre-producción completo
+│   └── 17-changelog-template.md     # 🆕✅ Template CHANGELOG + Conventional Commits
 │
-├── 02-UX-DESIGN-SYSTEM/             # 🎨 Sistema de Diseño (8 archivos)
+├── 02-UX-DESIGN-SYSTEM/             # 🎨 Sistema de Diseño (9 archivos) - TEMA CARGURUS
+│   ├── 00-TEMA-CARGURUS-AUDITORIA.md # 🆕⭐ Auditoría tema CarGurus USA (verde #00A870)
 │   ├── 01-principios-ux.md          # 10 principios de UX OKLA
-│   ├── 02-design-tokens.md          # Colores, tipografía, espaciado
-│   ├── 03-componentes-base.md       # Button, Card, Input, etc.
+│   ├── 02-design-tokens.md          # Colores verde, tipografía, espaciado
+│   ├── 03-componentes-base.md       # Button (verde), Card, Input, DealRatingBadge
 │   ├── 04-patrones-ux.md            # Loading, errors, empty states
 │   ├── 05-animaciones.md            # Framer Motion guidelines
 │   ├── 06-accesibilidad.md          # WCAG 2.1 AA checklist
 │   ├── 07-error-handling.md         # 🆕 Error Boundaries, Sentry, fallbacks
 │   └── 08-api-error-codes.md        # 🆕 Códigos de error por servicio
 │
-├── 03-COMPONENTES/                  # 🧩 Componentes Reutilizables (6 archivos)
+├── 03-COMPONENTES/                  # 🧩 Componentes Reutilizables (9 archivos)
+│   ├── 00-metodologia-componentes.md # 🆕✅ Metodología: estilos centralizados, páginas limpias
+│   ├── 00-global-types.md           # 🆕✅ Tipos TypeScript centralizados (Vehicle, User, Dealer, etc.)
 │   ├── 01-layout.md                 # Navbar, Footer, MainLayout
 │   ├── 02-formularios.md            # Form components con validación
 │   ├── 03-vehiculos.md              # VehicleCard, Gallery, Filters
 │   ├── 04-dealers.md                # DealerCard, DealerProfile
 │   ├── 05-usuarios.md               # UserProfile, UserMenu
-│   └── 06-vehicle-360-viewer.md     # Visor 360° de vehículos
+│   ├── 06-vehicle-360-viewer.md     # Visor 360° de vehículos
+│   └── 07-homepage-components.md    # 🆕✅ HeroCarousel, FeaturedSection, FeaturedListingGrid
 │
 ├── 04-PAGINAS/                      # 📄 Páginas Completas (103 archivos, 9 subcarpetas)
+│   │
+│   ├── 00-reglas-paginas.md         # 🆕✅ Reglas: páginas solo componen componentes
 │   │
 │   ├── 01-PUBLICO/                  # 🌐 Páginas Públicas (10 docs)
 │   │   ├── 01-home.md               # Homepage con secciones dinámicas
@@ -90,13 +133,14 @@ docs/frontend-rebuild/
 │   │   ├── 09-vehicle-browse.md     # Navegación de vehículos por categoría
 │   │   └── 10-static-pages.md       # About, Terms, Privacy, Contact
 │   │
-│   ├── 02-AUTH/                     # 🔐 Autenticación (6 docs)
+│   ├── 02-AUTH/                     # 🔐 Autenticación (7 docs)
 │   │   ├── 01-auth-login-register.md   # Login y registro combinado
 │   │   ├── 02-verification-flows.md    # Flujos de verificación (email, phone)
 │   │   ├── 03-oauth-management.md      # Gestión de cuentas OAuth
 │   │   ├── 04-kyc-verificacion.md      # Verificación de identidad (KYC)
 │   │   ├── 05-privacy-gdpr.md          # Privacidad y GDPR
-│   │   └── 06-user-security-privacy.md # Seguridad y privacidad de usuario
+│   │   ├── 06-user-security-privacy.md # Seguridad y privacidad de usuario
+│   │   └── 07-auth-flow-diagrams.md    # 🆕✅ Diagramas de flujo de auth (7 flujos ASCII)
 │   │
 │   ├── 03-COMPRADOR/                # 🛒 Flujo del Comprador (14 docs)
 │   │   ├── 01-perfil.md                      # Perfil del comprador
@@ -194,8 +238,7 @@ docs/frontend-rebuild/
 │       ├── 04-vehicle-media.md               # Galería, 360°, Video
 │       ├── 05-video-tour.md                  # Video tour interactivo
 │       └── 06-event-tracking-sdk.md          # SDK de analytics
-│
-├── 05-API-INTEGRATION/              # 🔌 Integración con APIs (8 archivos)
+│9 archivos)
 │   ├── 01-cliente-http.md           # ✅ Cliente Axios base
 │   ├── 02-autenticacion.md          # ✅ Auth endpoints (8)
 │   ├── 03-formularios.md            # ✅ Patrones de formularios
@@ -203,11 +246,14 @@ docs/frontend-rebuild/
 │   ├── 05-vehicle-360-api.md        # ✅ Vehicle360 API (6 endpoints)
 │   ├── 08-rate-limits-pagination.md # 🆕 Rate limits y paginación
 │   ├── 31-state-management.md       # 🆕 Zustand stores (auth, favorites, etc.)
-│   └── 32-realtime-websockets.md    # 🆕 WebSocket para chat y notificaciones
-│
-├── 06-TESTING/                      # 🧪 Testing (4 archivos)
+│   ├── 32-realtime-websockets.md    # 🆕 WebSocket para chat y notificaciones
+│   └── 33-mock-data-examples.md     # 🆕✅ Mock data y ejemplos de respuestas API.)
+│   └── 32-realtime-websockets.md    # 🆕 WebSocket5 archivos)
 │   ├── 01-estrategia-testing.md     # Estrategia de testing
 │   ├── 02-coverage-ci.md            # Coverage y CI/CD
+│   ├── 03-e2e-fixtures.md           # 🆕 Factories y fixtures para E2E
+│   ├── 04-ci-cd-integration.md      # 🆕 GitHub Actions, Playwright CI
+│   └── 05-implementation-checklists.md # 🆕✅ Checklists por tipo de componente
 │   ├── 03-e2e-fixtures.md           # 🆕 Factories y fixtures para E2E
 │   └── 04-ci-cd-integration.md      # 🆕 GitHub Actions, Playwright CI
 │
@@ -220,12 +266,12 @@ docs/frontend-rebuild/
 | **Carpeta**               | **Archivos** | **Estado**              |
 | ------------------------- | ------------ | ----------------------- |
 | **00-ROOT**               | 5            | ✅ Completo             |
-| **01-SETUP**              | 9            | ✅ Completo (+4 nuevos) |
-| **02-UX-DESIGN-SYSTEM**   | 7            | ✅ Completo (+1 nuevo)  |
-| **03-COMPONENTES**        | 6            | ✅ Completo             |
-| **04-PAGINAS/**           | **103**      | ✅ Completo             |
+| **01-SETUP**              | 14           | ✅ Completo (+6 nuevos) |
+| **02-UX-DESIGN-SYSTEM**   | 8            | ✅ Completo (+2 nuevos) |
+| **03-COMPONENTES**        | 7            | ✅ Completo (+1 nuevo)  |
+| **04-PAGINAS/**           | **104**      | ✅ Completo             |
 | └─ 01-PUBLICO             | 10           | ✅ Completo             |
-| └─ 02-AUTH                | 6            | ✅ Completo             |
+| └─ 02-AUTH                | 7            | ✅ Completo (+1 nuevo)  |
 | └─ 03-COMPRADOR           | 14           | ✅ Completo             |
 | └─ 04-VENDEDOR            | 5            | ✅ Completo             |
 | └─ 05-DEALER              | 25           | ✅ Completo             |
@@ -233,24 +279,21 @@ docs/frontend-rebuild/
 | └─ 07-PAGOS               | 5            | ✅ Completo             |
 | └─ 08-DGII-COMPLIANCE     | 8            | ✅ Completo             |
 | └─ 09-COMPONENTES-COMUNES | 6            | ✅ Completo             |
-| **05-API-INTEGRATION**    | 32           | ✅ Completo             |
-| **06-TESTING**            | 4            | ✅ Completo (+2 nuevos) |
+| **05-API-INTEGRATION**    | 33           | ✅ Completo (+1 nuevo)  |
+| **06-TESTING**            | 5            | ✅ Completo (+3 nuevos) |
 | **07-BACKEND-SUPPORT**    | 12           | ✅ Completo             |
-| **TOTAL**                 | **173**      | ✅ 100%                 |
+| **TOTAL**                 | **179**      | ✅ 100%                 |
 
-### 🆕 Documentos Agregados (Enero 2026 - Post Auditoría)
+### 🆕 Documentos Agregados (Enero 31, 2026 - Auditoría IA)
 
-| Archivo                                        | Descripción                           | Prioridad |
-| ---------------------------------------------- | ------------------------------------- | --------- |
-| `01-SETUP/06-internationalization.md`          | i18n con next-intl, es-DO/en-US       | 🔴 P0     |
-| `01-SETUP/07-performance-optimization.md`      | Core Web Vitals, bundle, lazy loading | 🟠 P1     |
-| `01-SETUP/08-seo-configuration.md`             | SEO, JSON-LD, sitemap, meta tags      | 🟠 P1     |
-| `01-SETUP/09-environment-variables.md`         | Variables de entorno por ambiente     | 🟡 P2     |
-| `02-UX-DESIGN-SYSTEM/07-error-handling.md`     | Error Boundaries, Sentry, fallbacks   | 🔴 P0     |
-| `05-API-INTEGRATION/31-state-management.md`    | Zustand stores, SSR hydration         | 🔴 P0     |
-| `05-API-INTEGRATION/32-realtime-websockets.md` | WebSocket, chat, notificaciones       | 🟠 P1     |
-| `06-TESTING/03-e2e-fixtures.md`                | Factories, fixtures, MSW mocking      | 🟡 P2     |
-| `06-TESTING/04-ci-cd-integration.md`           | GitHub Actions, Playwright CI         | 🟡 P2     |
+| Archivo                                       | Descripción                           | Prioridad |
+| --------------------------------------------- | ------------------------------------- | --------- |
+| `01-SETUP/13-routing-map.md`                  | ✅ Mapa completo de rutas (~96 rutas) | 🔴 P0     |
+| `01-SETUP/14-architecture-decisions.md`       | ✅ ADR: 10 decisiones arquitectónicas | 🔴 P0     |
+| `03-COMPONENTES/00-global-types.md`           | ✅ Tipos TypeScript centralizados     | 🔴 P0     |
+| `04-PAGINAS/02-AUTH/07-auth-flow-diagrams.md` | ✅ 7 flujos de auth con diagramas     | 🔴 P0     |
+| `05-API-INTEGRATION/33-mock-data-examples.md` | ✅ Mock data para testing (10 APIs)   | 🟠 P1     |
+| `06-TESTING/05-implementation-checklists.md`  | ✅ Checklists por tipo de componente  | 🟠 P1     |
 
 ---
 
@@ -487,8 +530,42 @@ Backend:              ███████████████████�
 Docs Páginas:         ████████████████████ 100% (80 docs en 9 subcarpetas)
 Docs APIs:            ████████████████████ 100% (187 endpoints auditados)
 Tests E2E Docs:       ████████████████████ 100% (secciones agregadas)
-Frontend Código:      ░░░░░░░░░░░░░░░░░░░░   0% (pendiente implementación)
+Frontend Código:      ████░░░░░░░░░░░░░░░░  20% (Next.js implementación en progreso)
 ```
+
+### 🚀 Progreso de Implementación Frontend (Next.js)
+
+> **Proyecto:** `frontend/web-next/`  
+> **Stack:** Next.js 16.1.6 + React 19 + TypeScript + TailwindCSS 4.x  
+> **Última actualización:** Enero 2026
+
+#### ✅ Implementado
+
+| Categoría    | Componente/Página     | Archivo                                             | Estado |
+| ------------ | --------------------- | --------------------------------------------------- | ------ |
+| **Setup**    | Proyecto Next.js      | `frontend/web-next/`                                | ✅     |
+| **Setup**    | TypeScript + ESLint   | `tsconfig.json`, `eslint.config.mjs`                | ✅     |
+| **Setup**    | TailwindCSS 4.x       | `postcss.config.mjs`, `globals.css`                 | ✅     |
+| **UI Base**  | Dialog, Select, Tabs  | `src/components/ui/`                                | ✅     |
+| **UI Base**  | VehicleCard, Badge    | `src/components/ui/`                                | ✅     |
+| **Homepage** | HeroCarousel          | `src/components/homepage/hero-carousel.tsx`         | ✅     |
+| **Homepage** | FeaturedSection       | `src/components/homepage/featured-section.tsx`      | ✅     |
+| **Homepage** | FeaturedListingGrid   | `src/components/homepage/featured-listing-grid.tsx` | ✅     |
+| **Páginas**  | Homepage (/)          | `src/app/page.tsx`                                  | ✅     |
+| **Páginas**  | Búsqueda (/vehiculos) | `src/app/vehiculos/page.tsx`                        | ✅     |
+| **Services** | homepage-sections     | `src/services/homepage-sections.ts`                 | ✅     |
+| **Hooks**    | useHomepageSections   | `src/hooks/use-homepage-sections.ts`                | ✅     |
+
+#### ⏳ Pendiente
+
+| Categoría       | Componente/Página | Doc de Referencia                              |
+| --------------- | ----------------- | ---------------------------------------------- |
+| **Páginas**     | Detalle Vehículo  | `04-PAGINAS/01-PUBLICO/02-detalle-vehiculo.md` |
+| **Páginas**     | Help Center       | `04-PAGINAS/01-PUBLICO/09-help-center.md`      |
+| **Páginas**     | Login/Register    | `04-PAGINAS/02-AUTENTICACION/`                 |
+| **Páginas**     | Dashboard Dealer  | `04-PAGINAS/03-DEALER/`                        |
+| **Componentes** | Forms avanzados   | `03-COMPONENTES/03-forms.md`                   |
+| **Auth**        | Zustand store     | `03-COMPONENTES/05-state-management.md`        |
 
 ### ✅ Auditorías Completadas (14/15)
 
@@ -529,14 +606,31 @@ Frontend Código:      ░░░░░░░░░░░░░░░░░░░
 □ Actualizar endpoints faltantes
 ```
 
-### Implementar Frontend (Post-Auditorías)
+### Implementar Frontend (En Progreso ✅)
 
 ```bash
-# Una vez completadas las 15 auditorías:
-□ Ejecutar 01-SETUP/01-crear-proyecto.md
-□ Ejecutar 01-SETUP/02-configurar-typescript.md
-□ Ejecutar 01-SETUP/03-configurar-eslint.md
-□ Seguir roadmap de fases en orden
+# Setup (COMPLETADO ✅)
+✅ Proyecto Next.js 16.1.6 + TypeScript + TailwindCSS 4.x
+✅ ESLint + Prettier configurados
+✅ Radix UI + Framer Motion + Lucide React instalados
+
+# Homepage (COMPLETADO ✅)
+✅ HeroCarousel con auto-play (5s), swipe, badges
+✅ FeaturedListingGrid con favoritos toggle
+✅ FeaturedSection horizontal scroll con snap
+✅ Integración API /homepagesections/homepage
+✅ useHomepageSections hook (React Query)
+
+# Búsqueda (COMPLETADO ✅)
+✅ Página /vehiculos con filtros
+✅ VehicleCard component
+✅ Paginación y grids responsivos
+
+# Siguiente Fase:
+□ Página detalle vehículo (/vehiculos/[slug])
+□ Sistema de autenticación (Zustand + JWT)
+□ Dashboard para dealers
+□ Help Center
 ```
 
 ---
@@ -650,8 +744,8 @@ Un proceso está **COMPLETADO** cuando:
 
 **✅ DOCUMENTO MAESTRO ACTUALIZADO**
 
-_Este índice refleja el estado real de la documentación al 29 de Enero, 2026._
-_Próxima actualización: Después de completar Sprint 1 de APIs._
+_Este índice refleja el estado real de la documentación e implementación._
+_Última actualización: Enero 2026 - Homepage + Búsqueda implementados en Next.js._
 
 ---
 

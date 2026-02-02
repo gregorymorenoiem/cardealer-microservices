@@ -1,8 +1,19 @@
 # 📁 04-PAGINAS - Índice Maestro
 
-> **Total:** 103 documentos organizados en 9 secciones  
+> **Total:** 104 documentos organizados en 9 secciones  
 > **Última actualización:** Enero 31, 2026  
 > **Estado:** ✅ Reorganizado y sincronizado
+
+---
+
+## ⚠️ LECTURA OBLIGATORIA
+
+Antes de implementar cualquier página, leer:
+
+| Documento                                                                                          | Descripción                                                                                            |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [00-reglas-paginas.md](00-reglas-paginas.md)                                                       | **Reglas de desarrollo de páginas** - Las páginas solo componen componentes, no tienen estilos propios |
+| [../03-COMPONENTES/00-metodologia-componentes.md](../03-COMPONENTES/00-metodologia-componentes.md) | **Metodología de componentes** - Los estilos viven en los componentes                                  |
 
 ---
 

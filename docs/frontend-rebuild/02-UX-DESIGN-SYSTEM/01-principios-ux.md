@@ -1,14 +1,36 @@
 # 🎨 Principios de UX - OKLA
 
 > **Objetivo:** Definir los principios de experiencia de usuario que guiarán todo el desarrollo
-> **Inspiración:** CarGurus, Autotrader, Cars.com
+> **Tema visual:** CarGurus USA - Verde esmeralda (#00A870) + UI limpia y profesional
 > **Prioridad:** 🔴 CRÍTICO - Leer antes de implementar cualquier componente
 
 ---
 
 ## 🎯 OBJETIVO DE UX
 
-> **"Que encontrar y comprar un vehículo en República Dominicana sea tan fácil como pedir comida por delivery"**
+> **"Que encontrar y comprar un vehículo en República Dominicana sea tan fácil y transparente como en CarGurus"**
+
+### Diferenciadores clave (estilo CarGurus):
+
+- ✅ **Precio transparente** - Sistema de Deal Rating que califica cada precio
+- ✅ **UI verde profesional** - Color primario que transmite confianza y ahorro
+- ✅ **Sombras sutiles** - Diseño limpio sin ruido visual
+- ✅ **Focus en el vehículo** - Cards claras con información esencial
+
+---
+
+## 🎨 PALETA DE COLORES PRINCIPAL
+
+| Rol            | Color          | Hex       | Uso                           |
+| -------------- | -------------- | --------- | ----------------------------- |
+| **Primary**    | Verde CarGurus | `#00A870` | CTAs, links, badges positivos |
+| **Secondary**  | Navy           | `#1A1A2E` | Headlines, texto importante   |
+| **Text**       | Gray 700       | `#616161` | Texto normal                  |
+| **Muted**      | Gray 500       | `#9E9E9E` | Texto secundario              |
+| **Background** | Gray 50        | `#FAFAFA` | Fondo de página               |
+| **Card**       | White          | `#FFFFFF` | Fondo de cards                |
+
+> 📖 Ver guía completa: [00-TEMA-CARGURUS-AUDITORIA.md](./00-TEMA-CARGURUS-AUDITORIA.md)
 
 ---
 
@@ -61,7 +83,7 @@ const handleClick = async () => {
 **Regla:** Cada elemento debe tener un propósito obvio. Si necesitas explicarlo, rediseñalo.
 
 ```tsx
-// ✅ CORRECTO: Obvio qué hace
+// ✅ CORRECTO: Obvio qué hace - Botones verdes para CTA
 <Button>Contactar Vendedor</Button>
 <Button variant="outline">Guardar en Favoritos</Button>
 
@@ -76,7 +98,8 @@ const handleClick = async () => {
 | Buscar | "Buscar Vehículos" | "Buscar" |
 | Guardar | "Guardar Cambios" | "OK" |
 | Eliminar | "Eliminar Vehículo" | "Eliminar" |
-| Contactar | "Enviar Mensaje al Vendedor" | "Contactar" |
+| Contactar | "Contactar Vendedor" | "Contactar" |
+| Ver detalles | "Ver Vehículo" | "Ver más" |
 
 ---
 

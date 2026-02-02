@@ -115,9 +115,17 @@ const getTypeBadge = (type: string) => {
     case 'buyer':
       return <Badge variant="outline">Comprador</Badge>;
     case 'seller':
-      return <Badge variant="outline" className="border-purple-300 text-purple-700">Vendedor</Badge>;
+      return (
+        <Badge variant="outline" className="border-purple-300 text-purple-700">
+          Vendedor
+        </Badge>
+      );
     case 'dealer':
-      return <Badge variant="outline" className="border-blue-300 text-blue-700">Dealer</Badge>;
+      return (
+        <Badge variant="outline" className="border-blue-300 text-blue-700">
+          Dealer
+        </Badge>
+      );
     default:
       return <Badge variant="outline">{type}</Badge>;
   }
@@ -155,7 +163,9 @@ export default function AdminUsersPage() {
   const handleStatusChange = async (userId: string, status: 'active' | 'suspended' | 'banned') => {
     try {
       await updateStatusMutation.mutateAsync({ id: userId, status });
-      toast.success(`Usuario ${status === 'active' ? 'activado' : status === 'suspended' ? 'suspendido' : 'baneado'}`);
+      toast.success(
+        `Usuario ${status === 'active' ? 'activado' : status === 'suspended' ? 'suspendido' : 'baneado'}`
+      );
     } catch {
       toast.error('Error al actualizar estado');
     }
@@ -316,7 +326,9 @@ export default function AdminUsersPage() {
                   <th className="p-4 text-left text-sm font-medium text-gray-600">Tipo</th>
                   <th className="p-4 text-left text-sm font-medium text-gray-600">Estado</th>
                   <th className="p-4 text-left text-sm font-medium text-gray-600">Verificado</th>
-                  <th className="p-4 text-left text-sm font-medium text-gray-600">Última Actividad</th>
+                  <th className="p-4 text-left text-sm font-medium text-gray-600">
+                    Última Actividad
+                  </th>
                   <th className="p-4 text-right text-sm font-medium text-gray-600">Acciones</th>
                 </tr>
               </thead>

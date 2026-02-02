@@ -75,12 +75,14 @@ export default function PublicarFotosPage() {
   // Initialize photos from existing vehicle data
   useState(() => {
     if (vehicle?.images) {
-      setPhotos(vehicle.images.map((img: any, index: number) => ({
-        id: `existing-${index}`,
-        url: img.url,
-        category: img.category || 'general',
-        isPrimary: img.isPrimary || index === 0,
-      })));
+      setPhotos(
+        vehicle.images.map((img: any, index: number) => ({
+          id: `existing-${index}`,
+          url: img.url,
+          category: img.category || 'general',
+          isPrimary: img.isPrimary || index === 0,
+        }))
+      );
     }
   });
 
@@ -109,16 +111,12 @@ export default function PublicarFotosPage() {
   const handlePhotoUpload = async (files: FileList, category: string) => {
     setIsUploading(true);
     try {
-      const results = await uploadImages(
-        Array.from(files),
-        'vehicles',
-        (index, progress) => {
-          setUploadProgressMap(prev => ({
-            ...prev,
-            [`upload-${index}`]: progress.percentage,
-          }));
-        }
-      );
+      const results = await uploadImages(Array.from(files), 'vehicles', (index, progress) => {
+        setUploadProgressMap(prev => ({
+          ...prev,
+          [`upload-${index}`]: progress.percentage,
+        }));
+      });
 
       const newPhotos: UploadedPhoto[] = results.map((result, index) => ({
         id: `${category}-${Date.now()}-${index}`,
@@ -149,10 +147,12 @@ export default function PublicarFotosPage() {
   };
 
   const handleSetPrimary = (id: string) => {
-    setPhotos(prev => prev.map(p => ({
-      ...p,
-      isPrimary: p.id === id,
-    })));
+    setPhotos(prev =>
+      prev.map(p => ({
+        ...p,
+        isPrimary: p.id === id,
+      }))
+    );
   };
 
   const handleSave = async () => {
@@ -309,8 +309,11 @@ export default function PublicarFotosPage() {
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-12 w-12 animate-spin text-emerald-500" />
                     <p className="text-lg font-medium text-gray-900">Subiendo fotos...</p>
-                    <Progress 
-                      value={Object.values(uploadProgressMap).reduce((a, b) => a + b, 0) / Object.keys(uploadProgressMap).length || 0} 
+                    <Progress
+                      value={
+                        Object.values(uploadProgressMap).reduce((a, b) => a + b, 0) /
+                          Object.keys(uploadProgressMap).length || 0
+                      }
                       className="h-2 w-48"
                     />
                   </div>
@@ -330,12 +333,17 @@ export default function PublicarFotosPage() {
                       type="file"
                       multiple
                       accept="image/*"
-                      onChange={e => e.target.files && handlePhotoUpload(e.target.files, selectedCategory)}
+                      onChange={e =>
+                        e.target.files && handlePhotoUpload(e.target.files, selectedCategory)
+                      }
                       className="hidden"
                       id="photo-upload"
                     />
                     <label htmlFor="photo-upload">
-                      <Button className="cursor-pointer bg-emerald-600 hover:bg-emerald-700" asChild>
+                      <Button
+                        className="cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+                        asChild
+                      >
                         <span>
                           <ImagePlus className="mr-2 h-4 w-4" />
                           Seleccionar Archivos
@@ -360,7 +368,7 @@ export default function PublicarFotosPage() {
               <CardContent>
                 {photos.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                    {photos.map((photo) => (
+                    {photos.map(photo => (
                       <div
                         key={photo.id}
                         className={`group relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 ${
@@ -376,16 +384,13 @@ export default function PublicarFotosPage() {
                         />
 
                         {/* Category badge */}
-                        <Badge
-                          variant="secondary"
-                          className="absolute left-2 top-2 text-xs"
-                        >
+                        <Badge variant="secondary" className="absolute top-2 left-2 text-xs">
                           {photoCategories.find(c => c.id === photo.category)?.label || 'General'}
                         </Badge>
 
                         {/* Primary badge */}
                         {photo.isPrimary && (
-                          <Badge className="absolute right-2 top-2 bg-emerald-500">
+                          <Badge className="absolute top-2 right-2 bg-emerald-500">
                             <Star className="mr-1 h-3 w-3" />
                             Principal
                           </Badge>
@@ -395,8 +400,8 @@ export default function PublicarFotosPage() {
                         <Button
                           variant="destructive"
                           size="icon"
-                          className="absolute bottom-2 right-2 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
-                          onClick={(e) => {
+                          className="absolute right-2 bottom-2 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                          onClick={e => {
                             e.stopPropagation();
                             handleRemovePhoto(photo.id);
                           }}
