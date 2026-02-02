@@ -1,0 +1,405 @@
+/**
+ * Admin Service - API client for admin operations
+ * Connects via API Gateway to AdminService
+ */
+
+import { apiClient } from '@/lib/api-client';
+
+// ============================================================
+// TYPES
+// ============================================================
+
+// Dashboard
+export interface DashboardStats {
+  totalUsers: number;
+  totalVehicles: number;
+  activeVehicles: number;
+  totalDealers: number;
+  activeDealers: number;
+  pendingApprovals: number;
+  pendingVerifications: number;
+  totalReports: number;
+  openSupportTickets: number;
+  mrr: number;
+  mrrChange: number;
+  usersChange: number;
+  vehiclesChange: number;
+  dealersChange: number;
+}
+
+export interface RecentActivity {
+  id: string;
+  action: string;
+  subject: string;
+  subjectType: 'user' | 'dealer' | 'vehicle' | 'payment' | 'report';
+  subjectId: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PendingAction {
+  type: 'moderation' | 'verification' | 'report' | 'support';
+  title: string;
+  count: number;
+  priority: 'high' | 'medium' | 'low';
+  href: string;
+}
+
+// Users
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  type: 'buyer' | 'seller' | 'dealer';
+  status: 'active' | 'suspended' | 'pending' | 'banned';
+  verified: boolean;
+  emailVerified: boolean;
+  createdAt: string;
+  lastActiveAt?: string;
+  vehiclesCount: number;
+  favoritesCount: number;
+  dealsCount: number;
+}
+
+export interface UserFilters {
+  search?: string;
+  type?: string;
+  status?: string;
+  verified?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// Vehicles
+export interface AdminVehicle {
+  id: string;
+  title: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  currency: string;
+  image: string;
+  status: 'active' | 'pending' | 'rejected' | 'sold' | 'paused';
+  sellerId: string;
+  sellerName: string;
+  sellerType: 'individual' | 'dealer';
+  views: number;
+  leads: number;
+  featured: boolean;
+  reportsCount: number;
+  createdAt: string;
+  publishedAt?: string;
+  rejectionReason?: string;
+}
+
+export interface VehicleFilters {
+  search?: string;
+  status?: string;
+  sellerType?: string;
+  featured?: boolean;
+  hasReports?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// Dealers
+export interface AdminDealer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: 'active' | 'pending' | 'suspended' | 'rejected';
+  verified: boolean;
+  plan: 'starter' | 'pro' | 'enterprise' | 'none';
+  vehiclesCount: number;
+  salesCount: number;
+  rating: number;
+  reviewsCount: number;
+  location: string;
+  createdAt: string;
+  mrr: number;
+  documentsCount: number;
+  pendingDocuments: number;
+}
+
+export interface DealerFilters {
+  search?: string;
+  status?: string;
+  plan?: string;
+  verified?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// Reports
+export interface AdminReport {
+  id: string;
+  type: 'vehicle' | 'user' | 'message' | 'dealer';
+  targetId: string;
+  targetTitle: string;
+  reason: string;
+  description: string;
+  reportedById: string;
+  reportedByEmail: string;
+  status: 'pending' | 'investigating' | 'resolved' | 'dismissed';
+  priority: 'high' | 'medium' | 'low';
+  createdAt: string;
+  resolvedAt?: string;
+  resolvedById?: string;
+  resolution?: string;
+  reportCount: number;
+}
+
+export interface ReportFilters {
+  type?: string;
+  status?: string;
+  priority?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+// Paginated Response
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const response = await apiClient.get<DashboardStats>('/api/admin/dashboard/stats');
+  return response.data;
+}
+
+export async function getRecentActivity(limit: number = 10): Promise<RecentActivity[]> {
+  const response = await apiClient.get<RecentActivity[]>('/api/admin/dashboard/activity', {
+    params: { limit },
+  });
+  return response.data;
+}
+
+export async function getPendingActions(): Promise<PendingAction[]> {
+  const response = await apiClient.get<PendingAction[]>('/api/admin/dashboard/pending');
+  return response.data;
+}
+
+// ============================================================
+// USERS
+// ============================================================
+
+export async function getUsers(filters: UserFilters = {}): Promise<PaginatedResponse<AdminUser>> {
+  const response = await apiClient.get<PaginatedResponse<AdminUser>>('/api/admin/users', {
+    params: filters,
+  });
+  return response.data;
+}
+
+export async function getUserById(id: string): Promise<AdminUser> {
+  const response = await apiClient.get<AdminUser>(`/api/admin/users/${id}`);
+  return response.data;
+}
+
+export async function updateUserStatus(
+  id: string,
+  status: 'active' | 'suspended' | 'banned'
+): Promise<void> {
+  await apiClient.patch(`/api/admin/users/${id}/status`, { status });
+}
+
+export async function verifyUser(id: string): Promise<void> {
+  await apiClient.post(`/api/admin/users/${id}/verify`);
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  await apiClient.delete(`/api/admin/users/${id}`);
+}
+
+export async function getUserStats(): Promise<{
+  total: number;
+  active: number;
+  suspended: number;
+  pending: number;
+  newThisMonth: number;
+}> {
+  const response = await apiClient.get('/api/admin/users/stats');
+  return response.data;
+}
+
+// ============================================================
+// VEHICLES
+// ============================================================
+
+export async function getAdminVehicles(
+  filters: VehicleFilters = {}
+): Promise<PaginatedResponse<AdminVehicle>> {
+  const response = await apiClient.get<PaginatedResponse<AdminVehicle>>('/api/admin/vehicles', {
+    params: filters,
+  });
+  return response.data;
+}
+
+export async function getVehicleById(id: string): Promise<AdminVehicle> {
+  const response = await apiClient.get<AdminVehicle>(`/api/admin/vehicles/${id}`);
+  return response.data;
+}
+
+export async function approveVehicle(id: string): Promise<void> {
+  await apiClient.post(`/api/admin/vehicles/${id}/approve`);
+}
+
+export async function rejectVehicle(id: string, reason: string): Promise<void> {
+  await apiClient.post(`/api/admin/vehicles/${id}/reject`, { reason });
+}
+
+export async function toggleFeatured(id: string, featured: boolean): Promise<void> {
+  await apiClient.patch(`/api/admin/vehicles/${id}/featured`, { featured });
+}
+
+export async function deleteVehicle(id: string): Promise<void> {
+  await apiClient.delete(`/api/admin/vehicles/${id}`);
+}
+
+export async function getVehicleStats(): Promise<{
+  total: number;
+  active: number;
+  pending: number;
+  rejected: number;
+  featured: number;
+  withReports: number;
+}> {
+  const response = await apiClient.get('/api/admin/vehicles/stats');
+  return response.data;
+}
+
+// ============================================================
+// DEALERS
+// ============================================================
+
+export async function getAdminDealers(
+  filters: DealerFilters = {}
+): Promise<PaginatedResponse<AdminDealer>> {
+  const response = await apiClient.get<PaginatedResponse<AdminDealer>>('/api/admin/dealers', {
+    params: filters,
+  });
+  return response.data;
+}
+
+export async function getDealerById(id: string): Promise<AdminDealer> {
+  const response = await apiClient.get<AdminDealer>(`/api/admin/dealers/${id}`);
+  return response.data;
+}
+
+export async function verifyDealer(id: string): Promise<void> {
+  await apiClient.post(`/api/admin/dealers/${id}/verify`);
+}
+
+export async function suspendDealer(id: string, reason: string): Promise<void> {
+  await apiClient.post(`/api/admin/dealers/${id}/suspend`, { reason });
+}
+
+export async function reactivateDealer(id: string): Promise<void> {
+  await apiClient.post(`/api/admin/dealers/${id}/reactivate`);
+}
+
+export async function deleteDealer(id: string): Promise<void> {
+  await apiClient.delete(`/api/admin/dealers/${id}`);
+}
+
+export async function getDealerStats(): Promise<{
+  total: number;
+  active: number;
+  pending: number;
+  suspended: number;
+  totalMrr: number;
+  byPlan: { starter: number; pro: number; enterprise: number };
+}> {
+  const response = await apiClient.get('/api/admin/dealers/stats');
+  return response.data;
+}
+
+// ============================================================
+// REPORTS
+// ============================================================
+
+export async function getReports(
+  filters: ReportFilters = {}
+): Promise<PaginatedResponse<AdminReport>> {
+  const response = await apiClient.get<PaginatedResponse<AdminReport>>('/api/admin/reports', {
+    params: filters,
+  });
+  return response.data;
+}
+
+export async function getReportById(id: string): Promise<AdminReport> {
+  const response = await apiClient.get<AdminReport>(`/api/admin/reports/${id}`);
+  return response.data;
+}
+
+export async function updateReportStatus(
+  id: string,
+  status: 'investigating' | 'resolved' | 'dismissed',
+  resolution?: string
+): Promise<void> {
+  await apiClient.patch(`/api/admin/reports/${id}/status`, { status, resolution });
+}
+
+export async function getReportStats(): Promise<{
+  total: number;
+  pending: number;
+  investigating: number;
+  resolved: number;
+  dismissed: number;
+  highPriority: number;
+}> {
+  const response = await apiClient.get('/api/admin/reports/stats');
+  return response.data;
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+
+export const adminService = {
+  // Dashboard
+  getDashboardStats,
+  getRecentActivity,
+  getPendingActions,
+  // Users
+  getUsers,
+  getUserById,
+  updateUserStatus,
+  verifyUser,
+  deleteUser,
+  getUserStats,
+  // Vehicles
+  getAdminVehicles,
+  getVehicleById,
+  approveVehicle,
+  rejectVehicle,
+  toggleFeatured,
+  deleteVehicle,
+  getVehicleStats,
+  // Dealers
+  getAdminDealers,
+  getDealerById,
+  verifyDealer,
+  suspendDealer,
+  reactivateDealer,
+  deleteDealer,
+  getDealerStats,
+  // Reports
+  getReports,
+  getReportById,
+  updateReportStatus,
+  getReportStats,
+};
+
+export default adminService;
