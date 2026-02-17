@@ -388,6 +388,5 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
     </div>
-    </div>
   );
 }
