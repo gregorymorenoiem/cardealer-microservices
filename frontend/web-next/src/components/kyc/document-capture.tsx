@@ -16,7 +16,7 @@ import dynamic from 'next/dynamic';
 import type ReactWebcam from 'react-webcam';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Webcam = dynamic((() => import('react-webcam')) as any, {
+const Webcam = dynamic<any>((() => import('react-webcam')) as any, {
   ssr: false,
   loading: () => (
     <div className="bg-muted flex h-64 w-full items-center justify-center rounded-lg">
