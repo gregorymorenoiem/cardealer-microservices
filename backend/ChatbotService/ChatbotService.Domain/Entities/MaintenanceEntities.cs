@@ -86,15 +86,15 @@ public class MaintenanceTaskLog
 }
 
 /// <summary>
-/// Intención de Dialogflow sincronizada
+/// Intent registrado para el chatbot
 /// </summary>
-public class DialogflowIntent
+public class ChatbotIntent
 {
     public Guid Id { get; set; }
     public Guid ChatbotConfigurationId { get; set; }
     
-    // Información de Dialogflow
-    public string DialogflowIntentId { get; set; } = string.Empty;
+    // Información del intent
+    public string IntentId { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public string? Description { get; set; }
     public IntentCategory Category { get; set; }
@@ -291,8 +291,8 @@ public class QuickResponse
     public int UsageCount { get; set; }
     public DateTime? LastUsedAt { get; set; }
     
-    // Si esta respuesta evita llamar a Dialogflow (ahorra interacción)
-    public bool BypassDialogflow { get; set; } = true;
+    // Si esta respuesta evita llamar al LLM (ahorra interacción)
+    public bool BypassLlm { get; set; } = true;
     
     // Timestamps
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

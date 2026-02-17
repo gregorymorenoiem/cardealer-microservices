@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MediatR;
 using ChatbotService.Application.DTOs;
 using ChatbotService.Application.Features.Sessions.Commands;
@@ -32,6 +33,7 @@ public class ChatController : ControllerBase
     /// Start a new chat session
     /// </summary>
     [HttpPost("start")]
+    [EnableRateLimiting("SessionStart")]
     [ProducesResponseType(typeof(StartSessionResponse), 200)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> StartSession([FromBody] StartSessionRequest request, CancellationToken cancellationToken)
@@ -50,7 +52,9 @@ public class ChatController : ControllerBase
                 request.IpAddress,
                 request.DeviceType,
                 request.Language ?? "es",
-                request.DealerId);
+                request.DealerId,
+                request.ChatMode,
+                request.VehicleId);
 
             var result = await _mediator.Send(command, cancellationToken);
             return Ok(result);
@@ -66,6 +70,7 @@ public class ChatController : ControllerBase
     /// Send a message to the chatbot
     /// </summary>
     [HttpPost("message")]
+    [EnableRateLimiting("ChatMessage")]
     [ProducesResponseType(typeof(ChatbotResponse), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
@@ -213,7 +218,7 @@ public class ChatController : ControllerBase
                 Type = m.Type,
                 Content = m.Content,
                 MediaUrl = m.MediaUrl,
-                IntentName = m.DialogflowIntentName,
+                IntentName = m.IntentName,
                 ConfidenceScore = m.ConfidenceScore,
                 IsFromBot = m.IsFromBot,
                 ResponseTimeMs = m.ResponseTimeMs,
@@ -258,4 +263,66 @@ public class ChatController : ControllerBase
     {
         return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // HANDOFF: Bot ↔ Human endpoints
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Dealer takes over a chat session (bot→human handoff)
+    /// </summary>
+    [HttpPost("handoff/takeover")]
+    [Authorize(Roles = "Dealer,Admin")]
+    [ProducesResponseType(typeof(HandoffResult), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> TakeOverSession([FromBody] TakeOverRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new TakeOverSessionCommand(
+                request.SessionToken,
+                request.AgentId,
+                request.AgentName,
+                request.Reason);
+
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+                return NotFound(new { error = result.Message });
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in handoff takeover");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Return control to bot (human→bot handoff)
+    /// </summary>
+    [HttpPost("handoff/return-to-bot")]
+    [Authorize(Roles = "Dealer,Admin")]
+    [ProducesResponseType(typeof(HandoffResult), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ReturnToBot([FromBody] ReturnToBotRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new ReturnToBotCommand(request.SessionToken);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+                return NotFound(new { error = result.Message });
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error returning to bot");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+}
 }

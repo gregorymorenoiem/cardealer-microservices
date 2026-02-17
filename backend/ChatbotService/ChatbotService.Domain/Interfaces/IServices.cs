@@ -4,44 +4,36 @@ using ChatbotService.Domain.Models;
 namespace ChatbotService.Domain.Interfaces;
 
 /// <summary>
-/// Servicio de integración con Dialogflow ES
+/// Servicio de inferencia LLM.
+/// Se comunica con el servidor llama.cpp que sirve el modelo GGUF fine-tuned.
 /// </summary>
-public interface IDialogflowService
+public interface ILlmService
 {
     /// <summary>
-    /// Detecta la intención del usuario en base al mensaje
+    /// Genera una respuesta del chatbot usando el modelo LLM fine-tuned.
     /// </summary>
-    Task<DialogflowDetectionResult> DetectIntentAsync(string sessionId, string text, string? languageCode = null, CancellationToken ct = default);
+    /// <param name="systemPrompt">Optional per-dealer system prompt. If null, uses the default from settings.</param>
+    Task<LlmDetectionResult> GenerateResponseAsync(string sessionId, string text, string? languageCode = null, string? systemPrompt = null, CancellationToken ct = default);
     
     /// <summary>
-    /// Obtiene información del agente de Dialogflow
+    /// Obtiene información del modelo LLM cargado
     /// </summary>
-    Task<DialogflowAgentInfo> GetAgentInfoAsync(CancellationToken ct = default);
+    Task<LlmModelInfo> GetModelInfoAsync(CancellationToken ct = default);
     
     /// <summary>
-    /// Entrena el agente con los cambios
-    /// </summary>
-    Task<bool> TrainAgentAsync(CancellationToken ct = default);
-    
-    /// <summary>
-    /// Crea un nuevo intent en Dialogflow
-    /// </summary>
-    Task<bool> CreateIntentAsync(SuggestedIntent intent, CancellationToken ct = default);
-    
-    /// <summary>
-    /// Agrega frases de entrenamiento a un intent existente
-    /// </summary>
-    Task<bool> AddTrainingPhrasesAsync(string intentName, IEnumerable<string> phrases, CancellationToken ct = default);
-    
-    /// <summary>
-    /// Verifica conectividad con Dialogflow
+    /// Verifica conectividad con el servidor LLM
     /// </summary>
     Task<bool> TestConnectivityAsync(CancellationToken ct = default);
     
     /// <summary>
-    /// Obtiene el estado de salud del servicio Dialogflow
+    /// Obtiene el estado de salud del servidor LLM
     /// </summary>
-    Task<DialogflowHealthStatus> GetHealthStatusAsync(CancellationToken ct = default);
+    Task<LlmHealthStatus> GetHealthStatusAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene el historial de mensajes recientes de una sesión para contexto
+    /// </summary>
+    Task<IEnumerable<LlmChatMessage>> GetSessionContextAsync(string sessionId, int maxMessages = 10, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -117,9 +109,9 @@ public interface IHealthMonitoringService
     Task<ChatbotHealthReport> GenerateHealthReportAsync(Guid configurationId, CancellationToken ct = default);
     
     /// <summary>
-    /// Verifica la salud de Dialogflow
+    /// Verifica la salud del servidor LLM
     /// </summary>
-    Task<bool> CheckDialogflowHealthAsync(CancellationToken ct = default);
+    Task<bool> CheckLlmHealthAsync(CancellationToken ct = default);
     
     /// <summary>
     /// Verifica la salud de la base de datos

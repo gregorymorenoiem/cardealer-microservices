@@ -15,11 +15,11 @@ public class ChatbotConfiguration
     // Alias para compatibilidad con código que usa IsEnabled
     public bool IsEnabled { get => IsActive; set => IsActive = value; }
     
-    // Dialogflow Configuration
-    public string DialogflowProjectId { get; set; } = string.Empty;
-    public string DialogflowAgentId { get; set; } = string.Empty;
-    public string DialogflowLanguageCode { get; set; } = "es";
-    public string? DialogflowCredentialsJson { get; set; } // Encriptado
+    // LLM Configuration
+    public string LlmProjectId { get; set; } = string.Empty;
+    public string LlmModelId { get; set; } = string.Empty;
+    public string LanguageCode { get; set; } = "es";
+    public string? SystemPromptText { get; set; } // System prompt personalizado por dealer
     
     // Plan y costos
     public ChatbotPlan Plan { get; set; } = ChatbotPlan.Standard;

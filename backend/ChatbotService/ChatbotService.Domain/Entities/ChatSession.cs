@@ -3,7 +3,8 @@ using ChatbotService.Domain.Enums;
 namespace ChatbotService.Domain.Entities;
 
 /// <summary>
-/// Representa una sesión de conversación con el chatbot
+/// Representa una sesión de conversación con el chatbot.
+/// Soporta dos modos: SingleVehicle (1 vehículo) y DealerInventory (inventario completo).
 /// </summary>
 public class ChatSession
 {
@@ -12,6 +13,25 @@ public class ChatSession
     
     // Configuración del chatbot
     public Guid ChatbotConfigurationId { get; set; }
+    
+    // ══════════════════════════════════════════════════════════════
+    // MODO DE CHAT — Determina la estrategia de contexto
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// Modo de operación: SingleVehicle, DealerInventory, o General
+    /// </summary>
+    public ChatMode ChatMode { get; set; } = ChatMode.General;
+    
+    /// <summary>
+    /// ID del vehículo específico (solo en modo SingleVehicle)
+    /// </summary>
+    public Guid? VehicleId { get; set; }
+    
+    /// <summary>
+    /// ID del dealer (requerido en modo DealerInventory, opcional en SingleVehicle)
+    /// </summary>
+    public Guid? DealerId { get; set; }
     
     // Usuario (puede ser anónimo)
     public Guid? UserId { get; set; }
@@ -22,19 +42,48 @@ public class ChatSession
     // Información del canal
     public SessionType SessionType { get; set; }
     public string Channel { get; set; } = "web"; // web, whatsapp, facebook, etc.
-    public string? ChannelUserId { get; set; } // ID del usuario en el canal externo
+    public string? ChannelUserId { get; set; } // ID del usuario en el canal externo (ej: WhatsApp phone number)
     
     // Estado de la sesión
     public SessionStatus Status { get; set; } = SessionStatus.Active;
-    public string? ContextData { get; set; } // JSON con contexto de Dialogflow
+    public string? ContextData { get; set; } // JSON con contexto de la sesión
     
     // Métricas de la sesión
     public int MessageCount { get; set; }
-    public int InteractionCount { get; set; } // Interacciones con Dialogflow
+    public int InteractionCount { get; set; } // Interacciones con el LLM
     public int MaxInteractionsPerSession { get; set; } = 10; // Límite configurable
     public bool InteractionLimitReached { get; set; }
     
-    // Contexto del vehículo si están buscando uno específico
+    // ══════════════════════════════════════════════════════════════
+    // WHATSAPP HANDOFF — Bot ↔ Humano
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// Estado actual del handoff bot↔humano
+    /// </summary>
+    public HandoffStatus HandoffStatus { get; set; } = HandoffStatus.BotActive;
+    
+    /// <summary>
+    /// ID del agente humano que tomó control (null = bot activo)
+    /// </summary>
+    public Guid? HandoffAgentId { get; set; }
+    
+    /// <summary>
+    /// Nombre del agente humano que tomó control
+    /// </summary>
+    public string? HandoffAgentName { get; set; }
+    
+    /// <summary>
+    /// Cuándo el agente tomó control
+    /// </summary>
+    public DateTime? HandoffAt { get; set; }
+    
+    /// <summary>
+    /// Razón del handoff (automático por PII, solicitado por usuario, etc.)
+    /// </summary>
+    public string? HandoffReason { get; set; }
+    
+    // Contexto del vehículo (legacy — usar VehicleId para modo SingleVehicle)
     public Guid? CurrentVehicleId { get; set; }
     public string? CurrentVehicleName { get; set; }
     
@@ -57,6 +106,20 @@ public class ChatSession
     public virtual ChatbotConfiguration Configuration { get; set; } = null!;
     public virtual ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
     public virtual ChatLead? Lead { get; set; }
+    
+    // ══════════════════════════════════════════════════════════════
+    // HELPERS
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// ¿El bot está activo en esta sesión? (false = humano respondiendo)
+    /// </summary>
+    public bool IsBotActive => HandoffStatus == HandoffStatus.BotActive || HandoffStatus == HandoffStatus.ReturnedToBot;
+    
+    /// <summary>
+    /// ¿Es una sesión de WhatsApp?
+    /// </summary>
+    public bool IsWhatsApp => SessionType == SessionType.WhatsApp || Channel == "whatsapp";
 }
 
 /// <summary>
@@ -73,13 +136,13 @@ public class ChatMessage
     public string? MediaUrl { get; set; }
     public string? MediaType { get; set; }
     
-    // Información de Dialogflow
-    public string? DialogflowIntentName { get; set; }
-    public string? DialogflowIntentId { get; set; }
+    // Información del intent detectado por el LLM
+    public string? IntentName { get; set; }
+    public string? LlmIntentId { get; set; }
     public IntentCategory IntentCategory { get; set; }
     public decimal ConfidenceScore { get; set; }
     public ConfidenceLevel ConfidenceLevel { get; set; }
-    public string? DialogflowParameters { get; set; } // JSON
+    public string? IntentParameters { get; set; } // JSON
     
     // Análisis de sentimiento
     public SentimentType Sentiment { get; set; } = SentimentType.Neutral;
@@ -93,7 +156,7 @@ public class ChatMessage
     public bool IsFromBot { get; set; }
     public int? ResponseTimeMs { get; set; }
     
-    // Si se usó una interacción de Dialogflow
+    // Si se consumió una interacción del LLM
     public bool ConsumedInteraction { get; set; }
     public decimal? InteractionCost { get; set; } // Costo en USD
     

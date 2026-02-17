@@ -11,6 +11,7 @@ public interface IChatSessionRepository
     Task<ChatSession?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<ChatSession?> GetByTokenAsync(string sessionToken, CancellationToken ct = default);
     Task<ChatSession?> GetActiveByUserIdAsync(Guid userId, CancellationToken ct = default);
+    Task<ChatSession?> GetByChannelUserIdAsync(string channel, string channelUserId, CancellationToken ct = default);
     Task<IEnumerable<ChatSession>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
     Task<IEnumerable<ChatSession>> GetActiveSessionsAsync(CancellationToken ct = default);
     Task<IEnumerable<ChatSession>> GetExpiredSessionsAsync(int timeoutMinutes, CancellationToken ct = default);
@@ -31,7 +32,8 @@ public interface IChatMessageRepository
     Task<ChatMessage> CreateAsync(ChatMessage message, CancellationToken ct = default);
     Task<IEnumerable<ChatMessage>> GetRecentMessagesAsync(Guid configurationId, int count, CancellationToken ct = default);
     Task<IEnumerable<ChatMessage>> GetFallbackMessagesAsync(Guid configurationId, DateTime since, CancellationToken ct = default);
-    Task<int> GetDialogflowCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default);
+    Task<IEnumerable<ChatMessage>> GetRecentBySessionTokenAsync(string sessionToken, int maxMessages, CancellationToken ct = default);
+    Task<int> GetLlmCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -93,19 +95,19 @@ public interface IMaintenanceTaskRepository
 }
 
 /// <summary>
-/// Repositorio para intenciones de Dialogflow
+/// Repositorio para intents del chatbot
 /// </summary>
-public interface IDialogflowIntentRepository
+public interface IChatbotIntentRepository
 {
-    Task<DialogflowIntent?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<DialogflowIntent?> GetByDialogflowIdAsync(string dialogflowIntentId, CancellationToken ct = default);
-    Task<IEnumerable<DialogflowIntent>> GetByConfigurationIdAsync(Guid configurationId, CancellationToken ct = default);
-    Task<IEnumerable<DialogflowIntent>> GetByCategoryAsync(Guid configurationId, IntentCategory category, CancellationToken ct = default);
-    Task<IEnumerable<DialogflowIntent>> GetWithPendingSuggestionsAsync(Guid configurationId, CancellationToken ct = default);
-    Task<DialogflowIntent> CreateAsync(DialogflowIntent intent, CancellationToken ct = default);
-    Task UpdateAsync(DialogflowIntent intent, CancellationToken ct = default);
+    Task<ChatbotIntent?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<ChatbotIntent?> GetByIntentIdAsync(string intentId, CancellationToken ct = default);
+    Task<IEnumerable<ChatbotIntent>> GetByConfigurationIdAsync(Guid configurationId, CancellationToken ct = default);
+    Task<IEnumerable<ChatbotIntent>> GetByCategoryAsync(Guid configurationId, IntentCategory category, CancellationToken ct = default);
+    Task<IEnumerable<ChatbotIntent>> GetWithPendingSuggestionsAsync(Guid configurationId, CancellationToken ct = default);
+    Task<ChatbotIntent> CreateAsync(ChatbotIntent intent, CancellationToken ct = default);
+    Task UpdateAsync(ChatbotIntent intent, CancellationToken ct = default);
     Task IncrementMatchCountAsync(Guid id, decimal confidenceScore, CancellationToken ct = default);
-    Task SyncFromDialogflowAsync(Guid configurationId, IEnumerable<DialogflowIntent> intents, CancellationToken ct = default);
+    Task SyncIntentsAsync(Guid configurationId, IEnumerable<ChatbotIntent> intents, CancellationToken ct = default);
 }
 
 /// <summary>

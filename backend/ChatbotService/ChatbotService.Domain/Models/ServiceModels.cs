@@ -1,9 +1,10 @@
 namespace ChatbotService.Domain.Models;
 
 /// <summary>
-/// Resultado de la detección de intent en Dialogflow
+/// Resultado de la inferencia LLM.
+/// El modelo Llama 3 retorna JSON con estos campos.
 /// </summary>
-public class DialogflowDetectionResult
+public class LlmDetectionResult
 {
     public string? DetectedIntent { get; set; }
     public float ConfidenceScore { get; set; }
@@ -15,21 +16,63 @@ public class DialogflowDetectionResult
     public string? QueryText { get; set; }
     public List<string>? OutputContexts { get; set; }
     public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
+    
+    // Campos adicionales del LLM
+    public int TokensUsed { get; set; }
+    public double ResponseTimeMs { get; set; }
+    public LlmLeadSignals? LeadSignals { get; set; }
+
+    /// <summary>Suggested next action from the model (e.g., "show_financing", "transfer_agent").</summary>
+    public string? SuggestedAction { get; set; }
+
+    /// <summary>Quick reply options suggested by the model for the UI.</summary>
+    public List<string>? QuickReplies { get; set; }
 }
 
 /// <summary>
-/// Información del agente de Dialogflow
+/// Señales de lead detectadas por el modelo LLM.
+/// MUST match the training data JSON schema exactly:
+///   "leadSignals": { "mentionedBudget": bool, "requestedTestDrive": bool, 
+///                     "askedFinancing": bool, "providedContactInfo": bool }
 /// </summary>
-public class DialogflowAgentInfo
+public class LlmLeadSignals
 {
-    public string? DisplayName { get; set; }
-    public string? DefaultLanguageCode { get; set; }
-    public List<string> SupportedLanguageCodes { get; set; } = new();
-    public string? TimeZone { get; set; }
-    public string? Description { get; set; }
-    public DateTime? LastTrainedAt { get; set; }
-    public int IntentCount { get; set; }
-    public int EntityTypeCount { get; set; }
+    /// <summary>Whether the user mentioned a budget or price range.</summary>
+    public bool MentionedBudget { get; set; }
+
+    /// <summary>Whether the user requested a test drive.</summary>
+    public bool RequestedTestDrive { get; set; }
+
+    /// <summary>Whether the user asked about financing options.</summary>
+    public bool AskedFinancing { get; set; }
+
+    /// <summary>Whether the user provided contact information.</summary>
+    public bool ProvidedContactInfo { get; set; }
+}
+
+/// <summary>
+/// Mensaje de chat para contexto del LLM
+/// </summary>
+public class LlmChatMessage
+{
+    public string Role { get; set; } = string.Empty;   // "system", "user", "assistant"
+    public string Content { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Información del modelo LLM
+/// </summary>
+public class LlmModelInfo
+{
+    public string? ModelId { get; set; }
+    public string? ModelPath { get; set; }
+    public string? ModelType { get; set; }
+    public string? Quantization { get; set; }
+    public int ContextLength { get; set; }
+    public int GpuLayers { get; set; }
+    public int Threads { get; set; }
+    public string? BaseModel { get; set; }
+    public string? FineTunedFor { get; set; }
     public bool IsHealthy { get; set; }
     public string? HealthMessage { get; set; }
 }
@@ -42,7 +85,7 @@ public class ChatbotHealthReport
     public Guid ChatbotConfigurationId { get; set; }
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public ChatbotHealthStatus OverallStatus { get; set; }
-    public DialogflowHealthStatus DialogflowStatus { get; set; } = new();
+    public LlmHealthStatus LlmStatus { get; set; } = new();
     public DatabaseHealthStatus DatabaseStatus { get; set; } = new();
     public SystemMetrics SystemMetrics { get; set; } = new();
     public List<HealthAlert> Alerts { get; set; } = new();
@@ -57,14 +100,21 @@ public enum ChatbotHealthStatus
     Unknown
 }
 
-public class DialogflowHealthStatus
+/// <summary>
+/// Estado de salud del servidor LLM
+/// </summary>
+public class LlmHealthStatus
 {
     public bool IsConnected { get; set; }
     public double ResponseTimeMs { get; set; }
     public DateTime? LastSuccessfulCall { get; set; }
     public int FailedCallsLast24h { get; set; }
     public string? LastError { get; set; }
-    public DialogflowAgentInfo? AgentInfo { get; set; }
+    public LlmModelInfo? ModelInfo { get; set; }
+    public bool ModelLoaded { get; set; }
+    public double UptimeSeconds { get; set; }
+    public int TotalRequests { get; set; }
+    public double AvgResponseTimeMs { get; set; }
 }
 
 public class DatabaseHealthStatus
@@ -156,7 +206,7 @@ public class CostAnalysisReport
     public int FreeInteractionsUsed { get; set; }
     public int PaidInteractions { get; set; }
     public int QuickResponseInteractions { get; set; }
-    public int DialogflowInteractions { get; set; }
+    public int LlmInteractions { get; set; }
     
     // Costos
     public decimal TotalCost { get; set; }

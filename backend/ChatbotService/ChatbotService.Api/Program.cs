@@ -1,5 +1,8 @@
+using CarDealer.Shared.Middleware;
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -25,7 +28,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Swagger configuration
@@ -35,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "ChatbotService API",
         Version = "v1",
-        Description = "API for Chatbot with Dialogflow ES integration - OKLA Marketplace",
+        Description = "API for Chatbot with LLM integration - OKLA Marketplace",
         Contact = new OpenApiContact
         {
             Name = "OKLA Team",
@@ -109,6 +116,49 @@ builder.Services.AddCors(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Policy: Chat messages — max 20 requests per minute per IP
+    options.AddPolicy("ChatMessage", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 4,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 2
+            }));
+
+    // Policy: Session start — max 5 per minute per IP (prevent session flooding)
+    options.AddPolicy("SessionStart", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    // Global fallback — 100 requests per minute per IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "global",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
+
 // Add Hosted Services for maintenance tasks
 if (builder.Configuration.GetValue<bool>("Maintenance:EnableAutomatedTasks"))
 {
@@ -129,8 +179,12 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
@@ -142,6 +196,8 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 app.UseCors("AllowedOrigins");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -168,19 +224,46 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
     }
 });
 
-// Apply migrations on startup (development only)
-if (app.Environment.IsDevelopment())
+// Apply migrations or create database on startup (development/docker)
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
     try
     {
-        await dbContext.Database.MigrateAsync();
-        Log.Information("Database migrations applied successfully");
+        // Try migrations first; if none exist, fall back to EnsureCreated
+        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+        if (pendingMigrations.Any())
+        {
+            await dbContext.Database.MigrateAsync();
+            Log.Information("Database migrations applied successfully");
+        }
+        else
+        {
+            await dbContext.Database.EnsureCreatedAsync();
+            Log.Information("Database schema created via EnsureCreated");
+        }
+
+        // Seed test data (only if DB is empty)
+        await ChatbotDataSeeder.SeedAsync(dbContext);
+        Log.Information("Database seed check completed");
     }
     catch (Exception ex)
     {
-        Log.Warning(ex, "Could not apply migrations - database may not be ready");
+        Log.Warning(ex, "Could not apply migrations, trying EnsureCreated...");
+        try
+        {
+            await dbContext.Database.EnsureCreatedAsync();
+            Log.Information("Database schema created via EnsureCreated (fallback)");
+            
+            // Seed test data (only if DB is empty)
+            await ChatbotDataSeeder.SeedAsync(dbContext);
+            Log.Information("Database seed check completed (fallback path)");
+        }
+        catch (Exception ex2)
+        {
+            Log.Error(ex2, "Failed to create database schema");
+        }
     }
 }
 

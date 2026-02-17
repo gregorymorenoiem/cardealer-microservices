@@ -1,6 +1,39 @@
 namespace ChatbotService.Domain.Enums;
 
 /// <summary>
+/// Modo de operación del chatbot — determina la estrategia de contexto
+/// </summary>
+public enum ChatMode
+{
+    /// <summary>Chat sobre un vehículo específico (contexto fijo)</summary>
+    SingleVehicle = 1,
+    
+    /// <summary>Chat con acceso al inventario completo del dealer (RAG + function calling)</summary>
+    DealerInventory = 2,
+    
+    /// <summary>Chat general sin contexto de vehículo (FAQ, soporte)</summary>
+    General = 3
+}
+
+/// <summary>
+/// Estado del handoff bot ↔ humano para WhatsApp
+/// </summary>
+public enum HandoffStatus
+{
+    /// <summary>Bot responde automáticamente</summary>
+    BotActive = 1,
+    
+    /// <summary>Agente humano tomó control</summary>
+    HumanActive = 2,
+    
+    /// <summary>Handoff solicitado, esperando agente</summary>
+    PendingHuman = 3,
+    
+    /// <summary>Agente devolvió control al bot</summary>
+    ReturnedToBot = 4
+}
+
+/// <summary>
 /// Tipos de sesión de chat
 /// </summary>
 public enum SessionType
@@ -24,7 +57,33 @@ public enum SessionStatus
     Completed = 3,
     Expired = 4,
     TransferredToAgent = 5,
-    Abandoned = 6
+    Abandoned = 6,
+    /// <summary>Sesión en modo humano (dealer respondiendo)</summary>
+    HumanTakeover = 7
+}
+
+/// <summary>
+/// Tipo de function call que el LLM puede solicitar
+/// </summary>
+public enum FunctionCallType
+{
+    /// <summary>Buscar vehículos en inventario del dealer</summary>
+    SearchInventory = 1,
+    
+    /// <summary>Comparar 2-3 vehículos lado a lado</summary>
+    CompareVehicles = 2,
+    
+    /// <summary>Agendar cita para ver un vehículo</summary>
+    ScheduleAppointment = 3,
+    
+    /// <summary>Obtener detalles de un vehículo específico</summary>
+    GetVehicleDetails = 4,
+    
+    /// <summary>Calcular financiamiento</summary>
+    CalculateFinancing = 5,
+    
+    /// <summary>Obtener info del dealer (horarios, ubicación)</summary>
+    GetDealerInfo = 6
 }
 
 /// <summary>
@@ -193,7 +252,7 @@ public enum MaintenanceTaskType
 }
 
 /// <summary>
-/// Plan de suscripción del chatbot (Dialogflow ES)
+/// Plan de suscripción del chatbot
 /// </summary>
 public enum ChatbotPlan
 {

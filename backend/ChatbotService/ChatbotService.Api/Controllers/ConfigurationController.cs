@@ -145,7 +145,7 @@ public class ConfigurationController : ControllerBase
                 Response = r.Response,
                 Priority = r.Priority,
                 IsActive = r.IsActive,
-                BypassDialogflow = r.BypassDialogflow,
+                BypassLlm = r.BypassLlm,
                 UsageCount = r.UsageCount,
                 LastUsedAt = r.LastUsedAt
             });
