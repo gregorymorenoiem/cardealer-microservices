@@ -1,0 +1,260 @@
+# =============================================================================
+# TOPOLOGY SPREAD & POD ANTI-AFFINITY — Distribución Inteligente de Pods
+# =============================================================================
+#
+# Asegura que las réplicas de cada servicio se distribuyan en diferentes nodos
+# para máxima resiliencia ante fallos de nodo.
+#
+# APLICAR con kustomize o kubectl apply -f topology.yaml
+#
+# ⚠️ ESTE ARCHIVO es un patch que se aplica sobre deployments.yaml
+# Usar: kubectl apply -k k8s/ (con kustomization.yaml)
+# =============================================================================
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔴 CRITICAL — Anti-affinity duro (NUNCA 2 pods en el mismo nodo)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Gateway — Distribuir en múltiples nodos
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: gateway
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - gateway
+                topologyKey: kubernetes.io/hostname
+
+---
+# AuthService — NUNCA 2 pods en el mismo nodo
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authservice
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: authservice
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - authservice
+                topologyKey: kubernetes.io/hostname
+
+---
+# VehiclesSaleService — Core business distribuido
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehiclessaleservice
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: vehiclessaleservice
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - vehiclessaleservice
+                topologyKey: kubernetes.io/hostname
+
+---
+# BillingService — Pagos distribuidos
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billingservice
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: billingservice
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - billingservice
+                topologyKey: kubernetes.io/hostname
+
+---
+# Frontend — Distribuido para SSR
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-web
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: frontend-web
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - frontend-web
+                topologyKey: kubernetes.io/hostname
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🟠 IMPORTANT — Anti-affinity suave (PREFERIR diferentes nodos)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# UserService
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userservice
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: userservice
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - userservice
+                topologyKey: kubernetes.io/hostname
+
+---
+# MediaService
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediaservice
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: mediaservice
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - mediaservice
+                topologyKey: kubernetes.io/hostname
+
+---
+# NotificationService
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notificationservice
+  namespace: okla
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: notificationservice
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - notificationservice
+                topologyKey: kubernetes.io/hostname

@@ -1,0 +1,107 @@
+# =============================================================================
+# CLUSTER AUTOSCALER — Digital Ocean Node Pool Auto-Scaling
+# =============================================================================
+#
+# Cuando los HPAs necesitan más pods pero no hay capacidad en los nodos,
+# el Cluster Autoscaler de Digital Ocean crea nuevos nodos automáticamente.
+#
+# CONFIGURACIÓN en doctl:
+#   doctl kubernetes cluster node-pool update okla-cluster pool-okla-workers \
+#     --auto-scale \
+#     --min-nodes 2 \
+#     --max-nodes 6 \
+#     --count 3
+#
+# FLUJO DE AUTO-SCALING COMPLETO:
+#
+#   1. 📈 Tráfico aumenta
+#   2. 🔄 HPA detecta CPU >50% → crea más pods
+#   3. ⚠️  Pods quedan en "Pending" (no hay nodos con capacidad)
+#   4. 🖥️  Cluster Autoscaler detecta pods Pending
+#   5. 🚀 DO crea nuevo nodo (droplet) automáticamente
+#   6. ✅ Pods se schedulean en el nuevo nodo
+#   7. 📉 Tráfico baja → HPA reduce pods → CA elimina nodos vacíos
+#
+# ============================================================================
+
+---
+# ConfigMap con la configuración del Cluster Autoscaler
+# (DO DOKS maneja esto automáticamente, pero documentamos para referencia)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-config
+  namespace: okla
+data:
+  # Configuración de referencia para doctl CLI
+  CLUSTER_NAME: "okla-cluster"
+  NODE_POOL_NAME: "pool-okla-workers"
+
+  # Node sizing (cada nodo)
+  NODE_SIZE: "s-4vcpu-8gb" # 4 vCPU, 8GB RAM, $48/mo
+
+  # Auto-scaling limits
+  MIN_NODES: "2" # Mínimo 2 nodos (HA)
+  MAX_NODES: "6" # Máximo 6 nodos (cost cap)
+  INITIAL_NODES: "3" # Inicio con 3 nodos
+
+  # Capacidad total del cluster
+  # 3 nodos: 12 vCPU, 24GB RAM → ~80 pods
+  # 6 nodos: 24 vCPU, 48GB RAM → ~160 pods
+
+  # Scale-down configuration
+  SCALE_DOWN_DELAY_AFTER_ADD: "10m" # Esperar 10 min después de agregar nodo
+  SCALE_DOWN_UNNEEDED_TIME: "10m" # Nodo vacío por 10 min → eliminar
+  SCALE_DOWN_UTILIZATION_THRESHOLD: "0.5" # Eliminar si utilización <50%
+
+---
+# Alerta de Prometheus para nodos cercanos a capacidad
+# (Para monitoreo proactivo antes de que CA actúe)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autoscaling-alerts
+  namespace: okla
+data:
+  alerts.yaml: |
+    groups:
+      - name: autoscaling
+        rules:
+          # Alerta cuando más del 80% de los pods del quota están en uso
+          - alert: HighPodCount
+            expr: count(kube_pod_info{namespace="okla"}) / 100 > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod count approaching quota limit"
+              description: "{{ $value | humanizePercentage }} of pod quota used"
+          
+          # Alerta cuando un HPA está al máximo
+          - alert: HPAMaxedOut
+            expr: kube_horizontalpodautoscaler_status_current_replicas{namespace="okla"} == kube_horizontalpodautoscaler_spec_max_replicas{namespace="okla"}
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: "HPA {{ $labels.horizontalpodautoscaler }} at max replicas"
+              description: "Consider increasing maxReplicas or adding more nodes"
+          
+          # Alerta cuando pods están Pending (esperando nodos)
+          - alert: PodsPending
+            expr: count(kube_pod_status_phase{namespace="okla", phase="Pending"}) > 0
+            for: 3m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pods pending scheduling in okla namespace"
+              description: "{{ $value }} pods pending — cluster autoscaler should be adding nodes"
+          
+          # Alerta cuando un nodo tiene alta utilización
+          - alert: NodeHighUtilization
+            expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Node {{ $labels.instance }} memory utilization >85%"

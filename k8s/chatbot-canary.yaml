@@ -1,0 +1,185 @@
+# ============================================================================
+# Canary Deployment Configuration — LLM Server
+# ============================================================================
+# R14 (MLOps): Canary deployment for LLM Server using native Kubernetes.
+# This enables gradual traffic shifting between stable and canary versions.
+#
+# Strategy: Weight-based canary using replica ratio.
+# Both deployments use the same Service selector (app: llm-server).
+# Adjusting replica counts controls traffic distribution:
+#   - Stable 1 replica + Canary 1 replica = 50/50
+#   - Stable 3 replicas + Canary 1 replica = 75/25
+#   - Stable 9 replicas + Canary 1 replica = 90/10
+#
+# For advanced traffic splitting (header-based, percentage-based), use:
+#   - Istio VirtualService (see commented section at bottom)
+#   - Flagger for automated canary promotion
+#
+# Apply:
+#   kubectl apply -f k8s/chatbot-canary.yaml -n okla
+# ============================================================================
+
+---
+# ── Canary Deployment ────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-server-canary
+  namespace: okla
+  labels:
+    app: llm-server
+    track: canary
+    version: v2
+  annotations:
+    app.okla.com/component: "llm-inference-canary"
+    app.okla.com/managed-by: "github-actions"
+    app.okla.com/pipeline: "chatbot-cicd.yml"
+    app.okla.com/canary: "true"
+spec:
+  replicas: 0 # Scale to 1 to enable canary traffic
+  selector:
+    matchLabels:
+      app: llm-server
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: llm-server
+        track: canary
+        version: v2
+    spec:
+      containers:
+        - name: llm-server
+          image: ghcr.io/okla-rd/llm-server:canary
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            - name: MODEL_PATH
+              value: "/models/okla-llama3-8b-q4_k_m.gguf"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8000"
+            - name: N_CTX
+              value: "2048"
+            - name: N_GPU_LAYERS
+              value: "0"
+            - name: N_THREADS
+              value: "4"
+            - name: MAX_TOKENS
+              value: "512"
+            - name: CANARY
+              value: "true"
+          resources:
+            requests:
+              cpu: "2000m"
+              memory: "6Gi"
+            limits:
+              cpu: "4000m"
+              memory: "8Gi"
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: llm-model-pvc
+
+---
+# ── Canary Service (for separate monitoring) ─────────────────────────────────
+# This service selects ONLY canary pods, useful for direct testing.
+# The main llm-server Service still load-balances across both stable + canary.
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-server-canary
+  namespace: okla
+  labels:
+    app: llm-server
+    track: canary
+spec:
+  selector:
+    app: llm-server
+    track: canary
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+  type: ClusterIP
+
+---
+# ── Canary Runbook (ConfigMap) ───────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: canary-runbook
+  namespace: okla
+  labels:
+    app: mlops
+data:
+  CANARY_PROCEDURE.md: |
+    # 🐤 Canary Deployment Procedure — LLM Server
+
+    ## Start Canary (10% traffic)
+    ```bash
+    # 1. Tag new image as canary
+    docker tag ghcr.io/okla-rd/llm-server:v2.0.0 ghcr.io/okla-rd/llm-server:canary
+    docker push ghcr.io/okla-rd/llm-server:canary
+
+    # 2. Scale canary to 1 replica (stable stays at 1 → 50/50)
+    kubectl scale deployment llm-server-canary --replicas=1 -n okla
+
+    # 3. Monitor for 30 minutes
+    kubectl logs -f deployment/llm-server-canary -n okla
+    ```
+
+    ## Monitoring Checklist
+    - [ ] Error rate < 5% (check Prometheus)
+    - [ ] P95 latency < 10s
+    - [ ] No OOM kills
+    - [ ] Fallback rate not increased
+
+    ## Promote Canary → Stable
+    ```bash
+    # 1. Update stable image
+    kubectl set image deployment/llm-server llm-server=ghcr.io/okla-rd/llm-server:v2.0.0 -n okla
+
+    # 2. Scale down canary
+    kubectl scale deployment llm-server-canary --replicas=0 -n okla
+
+    # 3. Verify
+    kubectl rollout status deployment/llm-server -n okla
+    ```
+
+    ## Rollback Canary
+    ```bash
+    # Immediately scale down canary
+    kubectl scale deployment llm-server-canary --replicas=0 -n okla
+
+    # Verify stable is handling all traffic
+    kubectl get pods -l app=llm-server -n okla
+    ```

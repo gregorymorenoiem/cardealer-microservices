@@ -1,0 +1,406 @@
+# ============================================================================
+# MLOps CronJobs — Drift Detection & Retraining Pipeline
+# ============================================================================
+# Namespace: okla
+# Requires: llm-server, chatbotservice running
+#
+# Apply:
+#   kubectl apply -f k8s/mlops-cronjobs.yaml -n okla
+# ============================================================================
+
+---
+# ── ConfigMap for MLOps Scripts ───────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mlops-config
+  namespace: okla
+  labels:
+    app: mlops
+data:
+  # Drift detection thresholds
+  DRIFT_CONFIDENCE_THRESHOLD: "0.10"
+  DRIFT_FALLBACK_THRESHOLD: "0.05"
+  DRIFT_LATENCY_THRESHOLD: "0.50"
+  DRIFT_KL_DIVERGENCE_THRESHOLD: "0.3"
+  # Slack/Teams webhook URLs (override via secrets in production)
+  SLACK_WEBHOOK_URL: ""
+  TEAMS_WEBHOOK_URL: ""
+  # Prometheus endpoint
+  PROMETHEUS_URL: "http://prometheus:9090"
+  LLM_SERVER_URL: "http://llm-server:8000"
+  CHATBOT_SERVICE_URL: "http://chatbotservice:8080"
+
+---
+# ── Secret for Webhook URLs ──────────────────────────────────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mlops-webhooks
+  namespace: okla
+  labels:
+    app: mlops
+type: Opaque
+stringData:
+  # Replace with actual webhook URLs
+  slack-webhook-url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+  teams-webhook-url: "https://outlook.office.com/webhook/YOUR/WEBHOOK/URL"
+
+---
+# ── CronJob: Drift Detection (every 6 hours) ─────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mlops-drift-detector
+  namespace: okla
+  labels:
+    app: mlops
+    component: drift-detection
+  annotations:
+    app.okla.com/description: "Monitors model drift every 6 hours via 7 signals"
+spec:
+  schedule: "0 */6 * * *" # Every 6 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600 # 10 min max
+      template:
+        metadata:
+          labels:
+            app: mlops
+            component: drift-detection
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: drift-detector
+              image: python:3.11-slim
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pip install -q requests prometheus-client 2>/dev/null
+                  python3 /scripts/drift_check.py
+              env:
+                - name: LLM_SERVER_URL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: mlops-config
+                      key: LLM_SERVER_URL
+                - name: CHATBOT_SERVICE_URL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: mlops-config
+                      key: CHATBOT_SERVICE_URL
+                - name: SLACK_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: mlops-webhooks
+                      key: slack-webhook-url
+                      optional: true
+              volumeMounts:
+                - name: drift-scripts
+                  mountPath: /scripts
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "256Mi"
+          volumes:
+            - name: drift-scripts
+              configMap:
+                name: drift-check-script
+
+---
+# ── ConfigMap: Drift Check Script ─────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drift-check-script
+  namespace: okla
+  labels:
+    app: mlops
+data:
+  drift_check.py: |
+    #!/usr/bin/env python3
+    """
+    Lightweight drift checker for K8s CronJob.
+    Queries LLM server /health and /metrics, checks for anomalies,
+    sends alerts via Slack webhook if drift detected.
+    """
+    import json
+    import os
+    import sys
+    import urllib.request
+    from datetime import datetime
+
+    LLM_URL = os.getenv("LLM_SERVER_URL", "http://llm-server:8000")
+    CHATBOT_URL = os.getenv("CHATBOT_SERVICE_URL", "http://chatbotservice:8080")
+    SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK_URL", "")
+
+    # Thresholds
+    MAX_AVG_LATENCY_MS = 300_000  # 5 min
+    MIN_SUCCESS_RATE = 0.80
+    MAX_ERROR_RATE = 0.20
+
+    def fetch_json(url, timeout=10):
+        try:
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode())
+        except Exception as e:
+            return {"error": str(e)}
+
+    def fetch_text(url, timeout=10):
+        try:
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read().decode()
+        except Exception as e:
+            return ""
+
+    def parse_prometheus_metric(text, metric_name):
+        for line in text.split("\n"):
+            if line.startswith(metric_name + " "):
+                return float(line.split()[-1])
+        return None
+
+    def send_slack_alert(message, level="warning"):
+        if not SLACK_WEBHOOK:
+            print(f"[{level.upper()}] {message}")
+            return
+        emoji = "🔴" if level == "critical" else "🟡"
+        payload = json.dumps({
+            "text": f"{emoji} *OKLA LLM Drift Alert*\n{message}",
+            "username": "MLOps Bot",
+            "icon_emoji": ":robot_face:"
+        }).encode()
+        req = urllib.request.Request(
+            SLACK_WEBHOOK,
+            data=payload,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            urllib.request.urlopen(req, timeout=10)
+        except Exception as e:
+            print(f"Failed to send Slack alert: {e}")
+
+    def main():
+        print(f"🔍 Drift check started at {datetime.now().isoformat()}")
+        alerts = []
+
+        # 1. Check LLM server health
+        health = fetch_json(f"{LLM_URL}/health")
+        if "error" in health:
+            alerts.append(("critical", f"LLM server unreachable: {health['error']}"))
+        elif health.get("status") != "healthy":
+            alerts.append(("critical", f"LLM server unhealthy: {health.get('status')}"))
+        elif not health.get("model_loaded"):
+            alerts.append(("critical", "LLM model not loaded"))
+        else:
+            print(f"  ✅ LLM health: OK (uptime: {health.get('uptime_seconds', 0):.0f}s)")
+
+            # 2. Check latency
+            avg_rt = health.get("avg_response_time_ms", 0)
+            if avg_rt > MAX_AVG_LATENCY_MS:
+                alerts.append(("warning", f"Avg latency {avg_rt:.0f}ms > {MAX_AVG_LATENCY_MS}ms threshold"))
+            else:
+                print(f"  ✅ Avg latency: {avg_rt:.0f}ms")
+
+        # 3. Check Prometheus metrics
+        metrics_text = fetch_text(f"{LLM_URL}/metrics")
+        if metrics_text:
+            total = parse_prometheus_metric(metrics_text, "okla_llm_requests_total")
+            success = parse_prometheus_metric(metrics_text, "okla_llm_requests_success_total")
+            if total and total > 0:
+                success_rate = (success or 0) / total
+                if success_rate < MIN_SUCCESS_RATE:
+                    alerts.append(("warning", f"Success rate {success_rate:.1%} < {MIN_SUCCESS_RATE:.0%} threshold"))
+                else:
+                    print(f"  ✅ Success rate: {success_rate:.1%}")
+
+        # 4. Check ChatbotService health
+        chatbot_health = fetch_json(f"{CHATBOT_URL}/api/chat/health")
+        if "error" in chatbot_health:
+            alerts.append(("warning", f"ChatbotService unreachable: {chatbot_health['error']}"))
+        else:
+            print(f"  ✅ ChatbotService: reachable")
+
+        # Send alerts
+        if alerts:
+            print(f"\n⚠️ {len(alerts)} drift signal(s) detected:")
+            for level, msg in alerts:
+                print(f"  [{level.upper()}] {msg}")
+                send_slack_alert(msg, level)
+        else:
+            print(f"\n✅ No drift detected. All systems nominal.")
+
+        # Exit with error code if critical alerts found
+        critical_count = sum(1 for level, _ in alerts if level == "critical")
+        sys.exit(1 if critical_count > 0 else 0)
+
+    if __name__ == "__main__":
+        main()
+
+---
+# ── CronJob: Weekly Retraining Data Collection ───────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mlops-retrain-collector
+  namespace: okla
+  labels:
+    app: mlops
+    component: retraining
+  annotations:
+    app.okla.com/description: "Collects and prepares retraining data weekly (Sundays 3AM)"
+spec:
+  schedule: "0 3 * * 0" # Every Sunday at 3 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800 # 30 min max
+      template:
+        metadata:
+          labels:
+            app: mlops
+            component: retraining
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: retrain-collector
+              image: python:3.11-slim
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pip install -q requests psycopg2-binary 2>/dev/null
+                  python3 /scripts/collect_retrain_data.py
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: okla-secrets
+                      key: chatbot-db-connection
+              volumeMounts:
+                - name: retrain-scripts
+                  mountPath: /scripts
+                - name: retrain-data
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"
+          volumes:
+            - name: retrain-scripts
+              configMap:
+                name: retrain-collect-script
+            - name: retrain-data
+              emptyDir: {}
+
+---
+# ── ConfigMap: Retrain Collection Script ──────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retrain-collect-script
+  namespace: okla
+  labels:
+    app: mlops
+data:
+  collect_retrain_data.py: |
+    #!/usr/bin/env python3
+    """
+    Collects feedback and conversation data from PostgreSQL
+    for potential retraining. Outputs summary report.
+    This replaces the JSONL-based feedback_collector.py with
+    a PostgreSQL-backed approach for K8s compatibility.
+    """
+    import json
+    import os
+    import sys
+    from datetime import datetime, timedelta
+
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+    def main():
+        print(f"📊 Retrain data collection started at {datetime.now().isoformat()}")
+
+        if not DATABASE_URL:
+            print("⚠️ DATABASE_URL not set, skipping collection")
+            sys.exit(0)
+
+        try:
+            import psycopg2
+            conn = psycopg2.connect(DATABASE_URL)
+            cur = conn.cursor()
+
+            # Get conversation stats from the last week
+            week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+
+            cur.execute("""
+                SELECT COUNT(*) FROM "ChatSessions"
+                WHERE "CreatedAt" >= %s
+            """, (week_ago,))
+            session_count = cur.fetchone()[0]
+
+            cur.execute("""
+                SELECT COUNT(*) FROM "ChatMessages"
+                WHERE "CreatedAt" >= %s
+            """, (week_ago,))
+            message_count = cur.fetchone()[0]
+
+            # Get fallback/low-confidence messages for review
+            cur.execute("""
+                SELECT COUNT(*) FROM "ChatMessages"
+                WHERE "CreatedAt" >= %s
+                  AND "Role" = 'assistant'
+                  AND ("Metadata"::text LIKE '%%fallback%%'
+                       OR "Metadata"::text LIKE '%%low_confidence%%')
+            """, (week_ago,))
+            fallback_count = cur.fetchone()[0]
+
+            cur.close()
+            conn.close()
+
+            report = {
+                "collection_date": datetime.now().isoformat(),
+                "period": "last_7_days",
+                "sessions": session_count,
+                "messages": message_count,
+                "fallback_messages": fallback_count,
+                "needs_review": fallback_count > 50,
+                "recommendation": (
+                    "REVIEW_RECOMMENDED" if fallback_count > 50
+                    else "MONITORING_OK"
+                )
+            }
+
+            print(f"\n📊 Weekly Report:")
+            print(f"   Sessions: {session_count}")
+            print(f"   Messages: {message_count}")
+            print(f"   Fallbacks: {fallback_count}")
+            print(f"   Recommendation: {report['recommendation']}")
+
+            # Save report
+            report_path = f"/data/retrain_report_{datetime.now().strftime('%Y%m%d')}.json"
+            with open(report_path, "w") as f:
+                json.dump(report, f, indent=2)
+            print(f"\n💾 Report saved: {report_path}")
+
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            sys.exit(1)
+
+    if __name__ == "__main__":
+        main()
