@@ -39,19 +39,20 @@ public static class ServiceCollectionExtensions
         services.Configure<S3StorageOptions>(configuration.GetSection("Storage:S3"));
 
         // Storage Services - Registro dinámico
+        // Performance: Storage services are thread-safe → use Singleton to reuse TCP connections
         var storageProvider = configuration["Storage:Provider"]?.ToLowerInvariant() ?? "local";
         switch (storageProvider)
         {
             case "azure":
-                services.AddScoped<IMediaStorageService, AzureBlobStorageService>();
+                services.AddSingleton<IMediaStorageService, AzureBlobStorageService>();
                 break;
             case "s3":
             case "aws":
-                services.AddScoped<IMediaStorageService, S3StorageService>();
+                services.AddSingleton<IMediaStorageService, S3StorageService>();
                 break;
             case "local":
             default:
-                services.AddScoped<IMediaStorageService>(provider =>
+                services.AddSingleton<IMediaStorageService>(provider =>
                 {
                     var logger = provider.GetRequiredService<ILogger<LocalStorageService>>();
                     var basePath = configuration["Storage:Local:BasePath"] ?? "wwwroot/uploads";
@@ -62,9 +63,9 @@ public static class ServiceCollectionExtensions
                 break;
         }
 
-        // Processing Services
-        services.AddScoped<IImageProcessor, ImageSharpProcessor>();
-        services.AddScoped<IVideoProcessor, FfmpegVideoProcessor>();
+        // Processing Services - Singleton (stateless, thread-safe)
+        services.AddSingleton<IImageProcessor, ImageSharpProcessor>();
+        services.AddSingleton<IVideoProcessor, FfmpegVideoProcessor>();
 
         // Health Checks
         services.AddHealthChecks()

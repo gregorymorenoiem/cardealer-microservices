@@ -49,7 +49,9 @@ public class RabbitMQNotificationConsumer : BackgroundService
                 UserName = rabbitMqSettings.Value.Username,
                 Password = rabbitMqSettings.Value.Password,
                 VirtualHost = rabbitMqSettings.Value.VirtualHost,
-                DispatchConsumersAsync = true
+                DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
 
             _connection = factory.CreateConnection();
@@ -76,39 +78,53 @@ public class RabbitMQNotificationConsumer : BackgroundService
             durable: true,
             autoDelete: false);
 
-        // Cola general
+        // Dead Letter Exchange for persistent DLQ (CRIT-01: replaces InMemoryDeadLetterQueue)
+        var dlxExchange = $"{_settings.ExchangeName}.dlx";
+        _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true, autoDelete: false);
+
+        // DLQ arguments — rejected messages are routed to DLQ automatically by RabbitMQ
+        var dlqArgs = new Dictionary<string, object>
+        {
+            { "x-dead-letter-exchange", dlxExchange }
+        };
+
+        // Cola general with DLQ
         _channel.QueueDeclare(
             queue: _settings.QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: dlqArgs);
+
+        // DLQ queue for general notifications
+        _channel.QueueDeclare($"{_settings.QueueName}.dlq", durable: true, exclusive: false, autoDelete: false);
+        _channel.QueueBind($"{_settings.QueueName}.dlq", dlxExchange, _settings.RoutingKey);
 
         _channel.QueueBind(
             queue: _settings.QueueName,
             exchange: _settings.ExchangeName,
             routingKey: _settings.RoutingKey);
 
-        // Cola específica para emails
+        // Cola específica para emails with DLQ
         _channel.QueueDeclare(
             queue: _settings.EmailQueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: dlqArgs);
 
         _channel.QueueBind(
             queue: _settings.EmailQueueName,
             exchange: _settings.ExchangeName,
             routingKey: "notification.email");
 
-        // Cola específica para SMS
+        // Cola específica para SMS with DLQ
         _channel.QueueDeclare(
             queue: _settings.SmsQueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: dlqArgs);
 
         _channel.QueueBind(
             queue: _settings.SmsQueueName,

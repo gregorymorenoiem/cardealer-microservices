@@ -15,6 +15,7 @@ public class MediaDto
     public DateTime? UpdatedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
     public string? ProcessingError { get; set; }
+    public string StorageKey { get; set; } = string.Empty;
     public List<MediaVariantDto> Variants { get; set; } = new();
 
     public static MediaDto FromEntity(Domain.Entities.MediaAsset entity)
@@ -29,6 +30,7 @@ public class MediaDto
             ContentType = entity.ContentType,
             SizeBytes = entity.SizeBytes,
             Status = entity.Status.ToString(),
+            StorageKey = entity.StorageKey,
             CdnUrl = entity.CdnUrl,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,

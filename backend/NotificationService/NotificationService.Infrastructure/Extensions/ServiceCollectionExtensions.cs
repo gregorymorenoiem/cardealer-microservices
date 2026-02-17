@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 using NotificationService.Domain.Interfaces.Repositories;
 using NotificationService.Domain.Interfaces.External;
 using NotificationService.Infrastructure.Messaging;
 using NotificationService.Infrastructure.Persistence;
+using NotificationService.Infrastructure.Providers;
 using NotificationService.Infrastructure.Services;
 using NotificationService.Infrastructure.Templates;
 using NotificationService.Infrastructure.BackgroundServices;
@@ -19,50 +21,85 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Multi-tenancy support
+        // ── Core ──────────────────────────────────────────────
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddMemoryCache();
 
-        // RabbitMQ Configuration
+        // ── Configuration Bindings ────────────────────────────
         services.Configure<RabbitMQSettings>(configuration.GetSection("RabbitMQ"));
         services.Configure<NotificationServiceRabbitMQSettings>(configuration.GetSection("NotificationService"));
-        
-        // ✅ NotificationSettings Configuration (for Resend, Twilio, Firebase)
         services.Configure<NotificationSettings>(configuration.GetSection("NotificationSettings"));
 
-        // ✅ Register Repositories
+        // ── Repositories ──────────────────────────────────────
         services.AddScoped<INotificationRepository, EfNotificationRepository>();
         services.AddScoped<INotificationTemplateRepository, EfNotificationTemplateRepository>();
         services.AddScoped<INotificationQueueRepository, EfNotificationQueueRepository>();
         services.AddScoped<IScheduledNotificationRepository, EfScheduledNotificationRepository>();
         services.AddScoped<INotificationLogRepository, EfNotificationLogRepository>();
 
-        // ✅ Register External Providers (Email, SMS, Push)
-        // Resend for emails (replacing SendGrid)
+        // ── Email Providers ───────────────────────────────────
         services.AddHttpClient("Resend");
         services.AddScoped<IEmailProvider, ResendEmailService>();
-        services.AddScoped<ISmsProvider, TwilioSmsService>();
-        services.AddScoped<IPushNotificationProvider, FirebasePushService>();
-        
-        // ✅ Email Service (adapter que usa IEmailProvider)
         services.AddScoped<IEmailService, EmailService>();
 
-        // ✅ Register Template Engine
+        // ── SMS Provider ──────────────────────────────────────
+        services.AddScoped<ISmsProvider, TwilioSmsService>();
+
+        // ── Push Provider ─────────────────────────────────────
+        services.AddScoped<IPushNotificationProvider, FirebasePushService>();
+
+        // ── WhatsApp Providers (Strategy/Factory pattern) ─────
+        services.AddScoped<TwilioWhatsAppService>();
+        services.AddScoped<MockWhatsAppService>();
+        services.AddScoped<IWhatsAppProviderFactory, WhatsAppProviderFactory>();
+        services.AddScoped<IWhatsAppProvider>(sp =>
+        {
+            var factory = sp.GetRequiredService<IWhatsAppProviderFactory>();
+            return factory.GetProviderAsync().GetAwaiter().GetResult();
+        });
+
+        // ── Webhook Providers (Teams + Slack) ─────────────────
+        services.AddHttpClient<ITeamsProvider, TeamsProvider>();
+        services.AddHttpClient<ISlackProvider, SlackProvider>();
+
+        // ── Admin Alert Service ───────────────────────────────
+        services.AddScoped<IAdminAlertService, AdminAlertService>();
+
+        // ── ConfigurationService Client ───────────────────────
+        var configServiceUrl = configuration["Services:ConfigurationService"] ?? "http://localhost:15124";
+        services.AddHttpClient<ConfigurationServiceClient>(client =>
+        {
+            client.BaseAddress = new Uri(configServiceUrl);
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
+        services.AddScoped<IConfigurationServiceClient>(sp =>
+            sp.GetRequiredService<ConfigurationServiceClient>());
+
+        // ── Meta WhatsApp HTTP Client ─────────────────────────
+        services.AddHttpClient<MetaWhatsAppService>(client =>
+        {
+            client.DefaultRequestHeaders.Add("User-Agent", "OKLA-NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
+        // ── ErrorService Client ───────────────────────────────
+        services.AddHttpClient<ErrorServiceClient>(client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:ErrorService"] ?? "http://errorservice:80");
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+        });
+
+        // ── Template Engine & Services ────────────────────────
         services.AddScoped<ITemplateEngine, TemplateEngine>();
-
-        // ✅ Register Scheduling Service
         services.AddScoped<ISchedulingService, SchedulingService>();
-
-        // Register Queue Service
         services.AddScoped<NotificationQueueService>();
 
-        // ✅ Register Memory Cache
-        services.AddMemoryCache();
-
-        // Background Services
-        services.AddHostedService<RabbitMQNotificationConsumer>(); // Para mensajes externos de RabbitMQ
-        services.AddHostedService<NotificationQueueBackgroundService>(); // Para procesar colas internas
-        services.AddHostedService<ScheduledNotificationWorker>(); // ✅ Para procesar notificaciones programadas
+        // ── Background Services ───────────────────────────────
+        services.AddHostedService<RabbitMQNotificationConsumer>();
+        services.AddHostedService<NotificationQueueBackgroundService>();
+        services.AddHostedService<ScheduledNotificationWorker>();
 
         return services;
     }

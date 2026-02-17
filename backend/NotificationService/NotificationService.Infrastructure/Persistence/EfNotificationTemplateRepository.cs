@@ -22,12 +22,14 @@ public class EfNotificationTemplateRepository : INotificationTemplateRepository
     public async Task<NotificationTemplate?> GetByNameAsync(string name)
     {
         return await _context.NotificationTemplates
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Name == name && t.IsActive);
     }
 
     public async Task<IEnumerable<NotificationTemplate>> GetByTypeAsync(NotificationType type)
     {
         return await _context.NotificationTemplates
+            .AsNoTracking()
             .Where(t => t.Type == type && t.IsActive)
             .ToListAsync();
     }
@@ -35,6 +37,7 @@ public class EfNotificationTemplateRepository : INotificationTemplateRepository
     public async Task<IEnumerable<NotificationTemplate>> GetActiveTemplatesAsync()
     {
         return await _context.NotificationTemplates
+            .AsNoTracking()
             .Where(t => t.IsActive)
             .ToListAsync();
     }
@@ -65,6 +68,7 @@ public class EfNotificationTemplateRepository : INotificationTemplateRepository
     public async Task<bool> ExistsAsync(string name)
     {
         return await _context.NotificationTemplates
+            .AsNoTracking()
             .AnyAsync(t => t.Name == name);
     }
 }

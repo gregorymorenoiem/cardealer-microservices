@@ -17,6 +17,7 @@ public class ContactRequestRepository : IContactRequestRepository
     public async Task<ContactRequest?> GetByIdAsync(Guid id)
     {
         return await _context.ContactRequests
+            .IgnoreQueryFilters()
             .Include(cr => cr.Messages)
             .FirstOrDefaultAsync(cr => cr.Id == id);
     }
@@ -24,27 +25,35 @@ public class ContactRequestRepository : IContactRequestRepository
     public async Task<List<ContactRequest>> GetByBuyerIdAsync(Guid buyerId)
     {
         return await _context.ContactRequests
+            .AsNoTracking()
+            .IgnoreQueryFilters()
             .Include(cr => cr.Messages)
             .Where(cr => cr.BuyerId == buyerId)
             .OrderByDescending(cr => cr.CreatedAt)
+            .Take(200) // Safety limit
             .ToListAsync();
     }
 
     public async Task<List<ContactRequest>> GetBySellerIdAsync(Guid sellerId)
     {
         return await _context.ContactRequests
+            .AsNoTracking()
+            .IgnoreQueryFilters()
             .Include(cr => cr.Messages)
             .Where(cr => cr.SellerId == sellerId)
             .OrderByDescending(cr => cr.CreatedAt)
+            .Take(200) // Safety limit
             .ToListAsync();
     }
 
     public async Task<List<ContactRequest>> GetByVehicleIdAsync(Guid vehicleId)
     {
         return await _context.ContactRequests
+            .AsNoTracking()
             .Include(cr => cr.Messages)
             .Where(cr => cr.VehicleId == vehicleId)
             .OrderByDescending(cr => cr.CreatedAt)
+            .Take(200) // Safety limit
             .ToListAsync();
     }
 
@@ -75,6 +84,7 @@ public class ContactRequestRepository : IContactRequestRepository
     public async Task<int> GetUnreadCountForSellerAsync(Guid sellerId)
     {
         return await _context.ContactRequests
+            .AsNoTracking()
             .Where(cr => cr.SellerId == sellerId && cr.Status != "Closed")
             .CountAsync(cr => cr.Messages.Any(m => !m.IsRead && m.IsFromBuyer));
     }

@@ -2,6 +2,7 @@ using MediatR;
 using NotificationService.Domain.Entities;
 using NotificationService.Domain.Interfaces.Repositories;
 using NotificationService.Domain.Interfaces.External;
+using NotificationService.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using ErrorService.Shared.Exceptions;
 using NotificationService.Application.DTOs;
@@ -14,17 +15,20 @@ public class SendSmsNotificationCommandHandler
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationLogRepository _logRepository;
     private readonly ISmsProvider _smsProvider;
+    private readonly IConfigurationServiceClient _configClient;
     private readonly ILogger<SendSmsNotificationCommandHandler> _logger;
 
     public SendSmsNotificationCommandHandler(
         INotificationRepository notificationRepository,
         INotificationLogRepository logRepository,
         ISmsProvider smsProvider,
+        IConfigurationServiceClient configClient,
         ILogger<SendSmsNotificationCommandHandler> logger)
     {
         _notificationRepository = notificationRepository;
         _logRepository = logRepository;
         _smsProvider = smsProvider;
+        _configClient = configClient;
         _logger = logger;
     }
 
@@ -33,6 +37,18 @@ public class SendSmsNotificationCommandHandler
         CancellationToken cancellationToken)
     {
         var request = command.Request;
+
+        // ✅ Check if SMS channel is enabled in admin configuration
+        var smsEnabled = await _configClient.IsEnabledAsync("sms.enabled", cancellationToken);
+        if (!smsEnabled)
+        {
+            _logger.LogInformation("SMS channel is disabled in configuration. Skipping send to {To}", request.To);
+            return new SendSmsNotificationResponse(
+                Guid.NewGuid(),
+                "Skipped",
+                "SMS channel is disabled in platform configuration"
+            );
+        }
 
         _logger.LogInformation("Creating SMS notification for {To}", request.To);
 

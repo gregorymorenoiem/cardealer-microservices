@@ -122,8 +122,8 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
             {
                 HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
                 Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
-                UserName = _configuration["RabbitMQ:Username"] ?? "guest",
-                Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                UserName = _configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+                Password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
@@ -174,9 +174,42 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
 
         try
         {
-            // Obtener información del dealer (en producción, esto vendría de UserService)
-            // Por ahora usamos datos del evento
-            var dealerEmail = "dealer@example.com"; // TODO: Obtener email real del dealer
+            // Resolve dealer email from event data
+            string? dealerEmail = null;
+
+            if (!string.IsNullOrWhiteSpace(eventData.DealerEmail))
+            {
+                dealerEmail = eventData.DealerEmail;
+            }
+            else if (eventData.UserId != Guid.Empty)
+            {
+                // Fallback: try to resolve via UserService
+                try
+                {
+                    var httpClientFactory = scope.ServiceProvider.GetService<IHttpClientFactory>();
+                    if (httpClientFactory != null)
+                    {
+                        var client = httpClientFactory.CreateClient("UserService");
+                        var response = await client.GetAsync($"/api/users/{eventData.UserId}/email", cancellationToken);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            dealerEmail = await response.Content.ReadAsStringAsync(cancellationToken);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to resolve dealer email from UserService for UserId: {UserId}", eventData.UserId);
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(dealerEmail))
+            {
+                _logger.LogWarning(
+                    "Could not resolve dealer email for VehicleId: {VehicleId}, UserId: {UserId}. Skipping email notification.",
+                    eventData.VehicleId, eventData.UserId);
+                return;
+            }
 
             var subject = $"Nuevo Vehículo Publicado: {eventData.Year} {eventData.Make} {eventData.Model}";
 
@@ -197,7 +230,7 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
                     <p>Tu vehículo ahora está visible para los compradores en la plataforma.</p>
                     
                     <p style='margin-top: 30px;'>
-                        <a href='https://cardealer.com/vehicles/{eventData.VehicleId}' 
+                        <a href='https://okla.com.do/vehiculos/{eventData.VehicleId}' 
                            style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
                             Ver Vehículo
                         </a>
@@ -206,7 +239,7 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
                     <hr style='margin: 30px 0; border: none; border-top: 1px solid #dee2e6;'>
                     
                     <p style='color: #6c757d; font-size: 12px;'>
-                        Este es un mensaje automático de CarDealer. No responder a este correo.
+                        Este es un mensaje automático de OKLA. No responder a este correo.
                     </p>
                 </body>
                 </html>
@@ -221,6 +254,30 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
             _logger.LogInformation(
                 "Vehicle creation notification sent to dealer for VehicleId: {VehicleId}",
                 eventData.VehicleId);
+
+            // ✅ Send admin alert for new listing pending
+            try
+            {
+                var adminAlertService = scope.ServiceProvider.GetRequiredService<IAdminAlertService>();
+                await adminAlertService.SendAlertAsync(
+                    alertType: "new_listing_pending",
+                    title: "Nueva publicación de vehículo",
+                    message: $"Se ha publicado un nuevo vehículo: {eventData.Year} {eventData.Make} {eventData.Model} - ${eventData.Price:N2}",
+                    severity: "Info",
+                    metadata: new Dictionary<string, string>
+                    {
+                        ["VehicleId"] = eventData.VehicleId.ToString(),
+                        ["Make"] = eventData.Make,
+                        ["Model"] = eventData.Model,
+                        ["Year"] = eventData.Year.ToString(),
+                        ["Price"] = $"${eventData.Price:N2}"
+                    },
+                    ct: cancellationToken);
+            }
+            catch (Exception alertEx)
+            {
+                _logger.LogWarning(alertEx, "Failed to send admin alert for new listing. Non-critical.");
+            }
         }
         catch (Exception ex)
         {

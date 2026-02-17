@@ -42,6 +42,9 @@ public class UpdateDealerCommandHandler : IRequestHandler<UpdateDealerCommand, D
         if (req.BannerUrl != null) dealer.BannerUrl = req.BannerUrl;
         if (req.EstablishedDate.HasValue) dealer.EstablishedDate = req.EstablishedDate;
         if (req.EmployeeCount.HasValue) dealer.EmployeeCount = req.EmployeeCount;
+        if (req.FacebookUrl != null) dealer.FacebookUrl = req.FacebookUrl;
+        if (req.InstagramUrl != null) dealer.InstagramUrl = req.InstagramUrl;
+        if (req.WhatsAppNumber != null) dealer.WhatsAppNumber = req.WhatsAppNumber;
         
         dealer.UpdatedAt = DateTime.UtcNow;
         
@@ -87,7 +90,10 @@ public class UpdateDealerCommandHandler : IRequestHandler<UpdateDealerCommand, D
             dealer.UpdatedAt,
             dealer.VerifiedAt,
             null,
-            null
+            null,
+            dealer.FacebookUrl,
+            dealer.InstagramUrl,
+            dealer.WhatsAppNumber
         );
     }
 }

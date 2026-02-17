@@ -54,6 +54,9 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
             Description = req.Description,
             EstablishedDate = req.EstablishedDate,
             EmployeeCount = req.EmployeeCount,
+            FacebookUrl = req.FacebookUrl,
+            InstagramUrl = req.InstagramUrl,
+            WhatsAppNumber = req.WhatsAppNumber,
             CurrentPlan = DealerPlan.Free,
             MaxActiveListings = 3, // Free plan limit
             CurrentActiveListings = 0,
@@ -102,7 +105,10 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
             dealer.UpdatedAt,
             dealer.VerifiedAt,
             null,
-            null
+            null,
+            dealer.FacebookUrl,
+            dealer.InstagramUrl,
+            dealer.WhatsAppNumber
         );
     }
 }

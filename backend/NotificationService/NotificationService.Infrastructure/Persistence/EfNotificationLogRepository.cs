@@ -16,16 +16,20 @@ public class EfNotificationLogRepository : INotificationLogRepository
     public async Task<IEnumerable<NotificationLog>> GetByNotificationIdAsync(Guid notificationId)
     {
         return await _context.NotificationLogs
+            .AsNoTracking()
             .Where(l => l.NotificationId == notificationId)
             .OrderByDescending(l => l.Timestamp)
+            .Take(500)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<NotificationLog>> GetByActionAsync(string action, DateTime startDate, DateTime endDate)
     {
         return await _context.NotificationLogs
+            .AsNoTracking()
             .Where(l => l.Action == action && l.Timestamp >= startDate && l.Timestamp <= endDate)
             .OrderByDescending(l => l.Timestamp)
+            .Take(1000)
             .ToListAsync();
     }
 
@@ -44,16 +48,15 @@ public class EfNotificationLogRepository : INotificationLogRepository
     public async Task<int> GetLogCountByNotificationAsync(Guid notificationId)
     {
         return await _context.NotificationLogs
+            .AsNoTracking()
             .CountAsync(l => l.NotificationId == notificationId);
     }
 
     public async Task<int> CleanupOldLogsAsync(DateTime cutoffDate)
     {
-        var oldLogs = await _context.NotificationLogs
+        // Performance: Use ExecuteDeleteAsync instead of loading entities into memory
+        return await _context.NotificationLogs
             .Where(l => l.Timestamp < cutoffDate)
-            .ToListAsync();
-
-        _context.NotificationLogs.RemoveRange(oldLogs);
-        return await _context.SaveChangesAsync();
+            .ExecuteDeleteAsync();
     }
 }

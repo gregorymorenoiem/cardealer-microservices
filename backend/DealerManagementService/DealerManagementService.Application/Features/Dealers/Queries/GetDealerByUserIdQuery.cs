@@ -61,7 +61,10 @@ public class GetDealerByUserIdQueryHandler : IRequestHandler<GetDealerByUserIdQu
             dealer.UpdatedAt,
             dealer.VerifiedAt,
             null,
-            null
+            null,
+            dealer.FacebookUrl,
+            dealer.InstagramUrl,
+            dealer.WhatsAppNumber
         );
     }
 }

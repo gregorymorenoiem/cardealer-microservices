@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using CarDealer.Contracts.Events.Error;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NotificationService.Domain.Interfaces;
@@ -12,12 +13,13 @@ namespace NotificationService.Infrastructure.Messaging;
 
 /// <summary>
 /// Background service that consumes ErrorCriticalEvent messages from RabbitMQ
-/// and sends alerts to Microsoft Teams.
+/// and sends alerts to Microsoft Teams, Slack, and admin email channels.
 /// </summary>
 public class ErrorCriticalEventConsumer : BackgroundService
 {
     private readonly ILogger<ErrorCriticalEventConsumer> _logger;
     private readonly ITeamsProvider _teamsProvider;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IConfiguration _configuration;
     private IConnection? _connection;
     private IModel? _channel;
@@ -25,10 +27,12 @@ public class ErrorCriticalEventConsumer : BackgroundService
     public ErrorCriticalEventConsumer(
         ILogger<ErrorCriticalEventConsumer> logger,
         ITeamsProvider teamsProvider,
+        IServiceProvider serviceProvider,
         IConfiguration configuration)
     {
         _logger = logger;
         _teamsProvider = teamsProvider;
+        _serviceProvider = serviceProvider;
         _configuration = configuration;
     }
 
@@ -65,9 +69,35 @@ public class ErrorCriticalEventConsumer : BackgroundService
                             errorEvent.ErrorId,
                             errorEvent.ServiceName);
 
-                        var success = await _teamsProvider.SendCriticalErrorAlertAsync(errorEvent, stoppingToken);
+                        // Send Teams alert (existing behavior)
+                        var teamsSuccess = await _teamsProvider.SendCriticalErrorAlertAsync(errorEvent, stoppingToken);
 
-                        if (success)
+                        // Also send via Admin Alert Service (email, SMS, Slack based on config)
+                        try
+                        {
+                            using var scope = _serviceProvider.CreateScope();
+                            var adminAlertService = scope.ServiceProvider.GetRequiredService<IAdminAlertService>();
+                            await adminAlertService.SendAlertAsync(
+                                alertType: "system_errors",
+                                title: $"Error Crítico en {errorEvent.ServiceName}",
+                                message: errorEvent.Message,
+                                severity: "Critical",
+                                metadata: new Dictionary<string, string>
+                                {
+                                    ["ErrorId"] = errorEvent.ErrorId.ToString(),
+                                    ["Service"] = errorEvent.ServiceName,
+                                    ["ExceptionType"] = errorEvent.ExceptionType,
+                                    ["Endpoint"] = errorEvent.Endpoint ?? "N/A",
+                                    ["StatusCode"] = errorEvent.StatusCode.ToString()
+                                },
+                                ct: stoppingToken);
+                        }
+                        catch (Exception alertEx)
+                        {
+                            _logger.LogWarning(alertEx, "Failed to send admin alert for critical error. Non-critical.");
+                        }
+
+                        if (teamsSuccess)
                         {
                             _channel.BasicAck(ea.DeliveryTag, false);
                             _logger.LogInformation(
@@ -128,9 +158,10 @@ public class ErrorCriticalEventConsumer : BackgroundService
         {
             var hostName = _configuration["RabbitMQ:HostName"] ?? "localhost";
             var port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672");
-            var userName = _configuration["RabbitMQ:UserName"] ?? "guest";
-            var password = _configuration["RabbitMQ:Password"] ?? "guest";
+            var userName = _configuration["RabbitMQ:UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured");
+            var password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
             var exchangeName = _configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
+            var queueName = "notification-service.error-critical";
 
             _logger.LogInformation(
                 "Initializing RabbitMQ connection: Host={Host}, Port={Port}, Exchange={Exchange}",
@@ -156,14 +187,27 @@ public class ErrorCriticalEventConsumer : BackgroundService
                 durable: true,
                 autoDelete: false);
 
-            // Declarar queue específico para ErrorCriticalEvent
-            var queueName = "notification.error.critical";
+            // Dead Letter Exchange for persistent DLQ
+            var dlxExchange = $"{exchangeName}.dlx";
+            _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true, autoDelete: false);
+
+            // DLQ queue for error critical events
+            var dlqQueueName = $"{queueName}.dlq";
+            _channel.QueueDeclare(dlqQueueName, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueBind(dlqQueueName, dlxExchange, "error.critical");
+
+            // Declarar queue específico para ErrorCriticalEvent with DLX
+            var dlqArgs = new Dictionary<string, object>
+            {
+                { "x-dead-letter-exchange", dlxExchange },
+                { "x-dead-letter-routing-key", "error.critical" }
+            };
             _channel.QueueDeclare(
                 queue: queueName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: null);
+                arguments: dlqArgs);
 
             // Bind queue al exchange con routing key "error.critical"
             _channel.QueueBind(

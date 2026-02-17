@@ -17,6 +17,7 @@ public class ContactMessageRepository : IContactMessageRepository
     public async Task<ContactMessage?> GetByIdAsync(Guid id)
     {
         return await _context.ContactMessages
+            .AsNoTracking()
             .Include(cm => cm.ContactRequest)
             .FirstOrDefaultAsync(cm => cm.Id == id);
     }
@@ -24,8 +25,10 @@ public class ContactMessageRepository : IContactMessageRepository
     public async Task<List<ContactMessage>> GetByContactRequestIdAsync(Guid contactRequestId)
     {
         return await _context.ContactMessages
+            .AsNoTracking()
             .Where(cm => cm.ContactRequestId == contactRequestId)
             .OrderBy(cm => cm.SentAt)
+            .Take(500) // Safety limit
             .ToListAsync();
     }
 
@@ -48,7 +51,10 @@ public class ContactMessageRepository : IContactMessageRepository
 
     public async Task<int> GetUnreadCountForUserAsync(Guid userId)
     {
+        // Performance: Removed Include — EF generates proper JOIN for count without materializing entities
         return await _context.ContactMessages
+            .AsNoTracking()
+            .IgnoreQueryFilters()
             .Where(cm => !cm.IsRead)
             .Where(cm => (cm.IsFromBuyer && cm.ContactRequest!.SellerId == userId) ||
                         (!cm.IsFromBuyer && cm.ContactRequest!.BuyerId == userId))

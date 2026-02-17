@@ -17,6 +17,7 @@ public class MediaRepository : IMediaRepository
     public async Task<MediaAsset?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         return await _context.MediaAssets
+            .AsNoTracking()
             .Include(x => x.Variants)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -24,6 +25,7 @@ public class MediaRepository : IMediaRepository
     public async Task<IEnumerable<MediaAsset>> GetByOwnerIdAsync(string ownerId, string? context = null, CancellationToken cancellationToken = default)
     {
         var query = _context.MediaAssets
+            .AsNoTracking()
             .Where(x => x.OwnerId == ownerId);
 
         if (!string.IsNullOrEmpty(context))
@@ -34,38 +36,49 @@ public class MediaRepository : IMediaRepository
         return await query
             .Include(x => x.Variants)
             .OrderByDescending(x => x.CreatedAt)
+            .Take(500) // Safety limit — use paginated endpoint for large datasets
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<MediaAsset>> GetByTypeAsync(Domain.Enums.MediaType type, CancellationToken cancellationToken = default)
     {
         return await _context.MediaAssets
+            .AsNoTracking()
             .Where(x => x.Type == type)
             .Include(x => x.Variants)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(500) // Safety limit
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<MediaAsset>> GetByStatusAsync(Domain.Enums.MediaStatus status, CancellationToken cancellationToken = default)
     {
         return await _context.MediaAssets
+            .AsNoTracking()
             .Where(x => x.Status == status)
             .Include(x => x.Variants)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(500) // Safety limit
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<ImageMedia>> GetUnprocessedImagesAsync(CancellationToken cancellationToken = default)
     {
         return await _context.ImageMedia
+            .AsNoTracking()
             .Where(x => x.Status == Domain.Enums.MediaStatus.Uploaded)
             .Include(x => x.Variants)
+            .Take(100) // Process in batches
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<VideoMedia>> GetUnprocessedVideosAsync(CancellationToken cancellationToken = default)
     {
         return await _context.VideoMedia
+            .AsNoTracking()
             .Where(x => x.Status == Domain.Enums.MediaStatus.Uploaded)
             .Include(x => x.Variants)
+            .Take(50) // Process in batches
             .ToListAsync(cancellationToken);
     }
 
@@ -113,7 +126,7 @@ public class MediaRepository : IMediaRepository
             query = query.Where(x => x.CreatedAt <= toDate.Value);
         }
 
-        var totalCount = await query.CountAsync();
+        var totalCount = await query.AsNoTracking().CountAsync();
 
         // Sorting
         if (!string.IsNullOrEmpty(sortBy))
@@ -172,12 +185,13 @@ public class MediaRepository : IMediaRepository
     public async Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
     {
         return await _context.MediaAssets
+            .AsNoTracking()
             .AnyAsync(x => x.Id == id, cancellationToken);
     }
 
     public async Task<int> GetTotalCountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.MediaAssets.CountAsync(cancellationToken);
+        return await _context.MediaAssets.AsNoTracking().CountAsync(cancellationToken);
     }
 
     public async Task<MediaStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
@@ -194,19 +208,28 @@ public class MediaRepository : IMediaRepository
             query = query.Where(x => x.CreatedAt <= toDate.Value);
         }
 
-        var totalMedia = await query.CountAsync(cancellationToken);
-        var images = await query.CountAsync(x => x.Type == Domain.Enums.MediaType.Image, cancellationToken);
-        var videos = await query.CountAsync(x => x.Type == Domain.Enums.MediaType.Video, cancellationToken);
-        var documents = await query.CountAsync(x => x.Type == Domain.Enums.MediaType.Document, cancellationToken);
-        var audio = await query.CountAsync(x => x.Type == Domain.Enums.MediaType.Audio, cancellationToken);
-        var processed = await query.CountAsync(x => x.Status == Domain.Enums.MediaStatus.Processed, cancellationToken);
-        var processing = await query.CountAsync(x => x.Status == Domain.Enums.MediaStatus.Processing, cancellationToken);
-        var failed = await query.CountAsync(x => x.Status == Domain.Enums.MediaStatus.Failed, cancellationToken);
-        var totalStorageBytes = await query.SumAsync(x => x.SizeBytes, cancellationToken);
-        var firstMediaDate = await query.MinAsync(x => (DateTime?)x.CreatedAt, cancellationToken);
-        var lastMediaDate = await query.MaxAsync(x => (DateTime?)x.CreatedAt, cancellationToken);
+        // Performance: Consolidated single query instead of 11 separate round-trips
+        var stats = await query
+            .AsNoTracking()
+            .GroupBy(x => 1) // Single group for aggregation
+            .Select(g => new
+            {
+                TotalMedia = g.Count(),
+                Images = g.Count(x => x.Type == Domain.Enums.MediaType.Image),
+                Videos = g.Count(x => x.Type == Domain.Enums.MediaType.Video),
+                Documents = g.Count(x => x.Type == Domain.Enums.MediaType.Document),
+                Audio = g.Count(x => x.Type == Domain.Enums.MediaType.Audio),
+                Processed = g.Count(x => x.Status == Domain.Enums.MediaStatus.Processed),
+                Processing = g.Count(x => x.Status == Domain.Enums.MediaStatus.Processing),
+                Failed = g.Count(x => x.Status == Domain.Enums.MediaStatus.Failed),
+                TotalStorageBytes = g.Sum(x => x.SizeBytes),
+                FirstMediaDate = g.Min(x => (DateTime?)x.CreatedAt),
+                LastMediaDate = g.Max(x => (DateTime?)x.CreatedAt)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
         var mediaByContext = await query
+            .AsNoTracking()
             .Where(x => x.Context != null)
             .GroupBy(x => x.Context!)
             .Select(g => new { Context = g.Key, Count = g.Count() })
@@ -214,17 +237,17 @@ public class MediaRepository : IMediaRepository
 
         return new MediaStatistics
         {
-            TotalMedia = totalMedia,
-            Images = images,
-            Videos = videos,
-            Documents = documents,
-            Audio = audio,
-            Processed = processed,
-            Processing = processing,
-            Failed = failed,
-            TotalStorageBytes = totalStorageBytes,
-            FirstMediaDate = firstMediaDate,
-            LastMediaDate = lastMediaDate,
+            TotalMedia = stats?.TotalMedia ?? 0,
+            Images = stats?.Images ?? 0,
+            Videos = stats?.Videos ?? 0,
+            Documents = stats?.Documents ?? 0,
+            Audio = stats?.Audio ?? 0,
+            Processed = stats?.Processed ?? 0,
+            Processing = stats?.Processing ?? 0,
+            Failed = stats?.Failed ?? 0,
+            TotalStorageBytes = stats?.TotalStorageBytes ?? 0,
+            FirstMediaDate = stats?.FirstMediaDate,
+            LastMediaDate = stats?.LastMediaDate,
             MediaByContext = mediaByContext
         };
     }

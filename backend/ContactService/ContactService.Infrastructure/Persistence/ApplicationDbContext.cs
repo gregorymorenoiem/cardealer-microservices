@@ -54,5 +54,26 @@ namespace ContactService.Infrastructure.Persistence
                 entity.HasIndex(e => e.IsRead);
             });
         }
+
+        // ✅ AUDIT FIX: Auto-update timestamps on all entities
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var utcNow = DateTime.UtcNow;
+
+            foreach (var entry in ChangeTracker.Entries<ContactRequest>())
+            {
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.UpdatedAt = utcNow;
+                }
+                else if (entry.State == EntityState.Added)
+                {
+                    if (entry.Entity.CreatedAt == default)
+                        entry.Entity.CreatedAt = utcNow;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
     }
 }

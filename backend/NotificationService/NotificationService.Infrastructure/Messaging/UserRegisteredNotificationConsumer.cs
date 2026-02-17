@@ -67,8 +67,8 @@ public class UserRegisteredNotificationConsumer : BackgroundService
             {
                 HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
                 Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
-                UserName = _configuration["RabbitMQ:Username"] ?? "guest",
-                Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                UserName = _configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+                Password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
                 DispatchConsumersAsync = true
             };
@@ -217,12 +217,30 @@ public class UserRegisteredNotificationConsumer : BackgroundService
             eventData.RegisteredAt
         );
 
-        // TODO: Aquí se pueden agregar otras acciones que SÍ deben ocurrir al registrarse:
-        // - Registrar en analytics/métricas
-        // - Crear perfil inicial en otros servicios
-        // - Notificar a admins de nuevo registro (si es necesario)
-        
-        await Task.CompletedTask; // Placeholder para operaciones futuras
+        // ✅ Send admin alert for new user registration
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var adminAlertService = scope.ServiceProvider.GetRequiredService<IAdminAlertService>();
+            
+            await adminAlertService.SendAlertAsync(
+                alertType: "new_user_registered",
+                title: "Nuevo usuario registrado",
+                message: $"Se ha registrado un nuevo usuario: {eventData.Email} ({eventData.FullName ?? "N/A"})",
+                severity: "Info",
+                metadata: new Dictionary<string, string>
+                {
+                    ["UserId"] = eventData.UserId.ToString(),
+                    ["Email"] = eventData.Email,
+                    ["Name"] = eventData.FullName ?? "N/A",
+                    ["RegisteredAt"] = eventData.RegisteredAt.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                },
+                ct: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send admin alert for new user registration. Non-critical.");
+        }
     }
 
     /// <summary>

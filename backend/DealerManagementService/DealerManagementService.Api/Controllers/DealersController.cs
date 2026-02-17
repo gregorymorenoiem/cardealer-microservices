@@ -38,6 +38,34 @@ public class DealersController : ControllerBase
     }
 
     /// <summary>
+    /// Get current dealer profile (from JWT)
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(DealerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<DealerDto>> GetCurrentDealer()
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value
+                       ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "User ID not found in token" });
+        }
+
+        var query = new GetDealerByUserIdQuery(userId);
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+        {
+            return NotFound(new { message = "No dealer profile found for current user" });
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get dealer by ID
     /// </summary>
     [HttpGet("{id:guid}")]
@@ -158,6 +186,44 @@ public class DealersController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Get stats for a specific dealer
+    /// </summary>
+    [HttpGet("{id:guid}/stats")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> GetDealerStats(Guid id)
+    {
+        // Verify dealer exists
+        var query = new GetDealerByIdQuery(id);
+        var dealer = await _mediator.Send(query);
+
+        if (dealer == null)
+        {
+            return NotFound(new { message = $"Dealer with ID {id} not found" });
+        }
+
+        // Return stats from dealer data (real aggregation can be added later)
+        return Ok(new
+        {
+            totalListings = dealer.CurrentActiveListings,
+            activeListings = dealer.CurrentActiveListings,
+            totalViews = 0,
+            viewsThisMonth = 0,
+            viewsChange = 0.0,
+            totalInquiries = 0,
+            inquiriesThisMonth = 0,
+            inquiriesChange = 0.0,
+            pendingInquiries = 0,
+            responseRate = 0.0,
+            avgResponseTimeMinutes = 0.0,
+            totalRevenue = 0.0,
+            revenueThisMonth = 0.0,
+            revenueChange = 0.0
+        });
     }
 
     /// <summary>

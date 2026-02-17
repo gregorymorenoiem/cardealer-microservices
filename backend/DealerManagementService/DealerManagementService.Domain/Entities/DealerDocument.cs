@@ -48,6 +48,7 @@ public enum DocumentType
     PowerOfAttorney = 7,            // Poder notarial (if applicable)
     PreviousSalesRecords = 8,       // Récords de ventas anteriores
     InsurancePolicy = 9,            // Póliza de seguro
+    ElectricityBill = 10,           // Factura de luz (validación de domicilio)
     
     // Additional
     Other = 99

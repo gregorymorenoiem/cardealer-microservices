@@ -1,16 +1,24 @@
 using ContactService.Domain.Interfaces;
 using ContactService.Infrastructure.Persistence;
 using ContactService.Infrastructure.Repositories;
+using ContactService.Application.Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using CarDealer.Shared.MultiTenancy;
 using Serilog;
 using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.Middleware;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
+using System.Threading.RateLimiting;
+
+using CarDealer.Shared.Configuration;
 
 const string ServiceName = "ContactService";
 const string ServiceVersion = "1.0.0";
@@ -51,7 +59,21 @@ builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
 builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
 
-// JWT Authentication
+// ============= HTTP CLIENTS WITH RESILIENCE (Retry + Circuit Breaker + Timeout) =============
+var gatewayUrl = builder.Configuration["Gateway:Url"] ?? "http://gateway:8080";
+
+builder.Services.AddResilientHttpClient<INotificationServiceClient, NotificationServiceClient>(
+    builder.Configuration,
+    clientName: "NotificationService",
+    configureClient: client =>
+    {
+        client.BaseAddress = new Uri(gatewayUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+
+// ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -61,23 +83,50 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException()))
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
         };
     });
 
-// CORS
+// CORS — configurable origins from appsettings
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? (builder.Environment.IsDevelopment()
+        ? new[] { "http://localhost:3000", "http://localhost:5173" }
+        : new[] { "https://okla.com.do" });
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://okla.com.do")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
+        policy.WithOrigins(allowedOrigins)
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
               .AllowCredentials();
     });
+});
+
+// ============= RATE LIMITING =============
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 60;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 5;
+    });
+    options.OnRejected = async (context, ct) =>
+    {
+        Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
+            context.HttpContext.Connection.RemoteIpAddress,
+            context.HttpContext.Request.Path);
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", ct);
+    };
 });
 
 // Health Checks
@@ -85,30 +134,51 @@ builder.Services.AddHealthChecks();
 
     var app = builder.Build();
 
-    // ============= MIDDLEWARE =============
-    // Global exception handling (first in pipeline)
+    // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
+    // 1. Global exception handling — ALWAYS FIRST
     app.UseGlobalErrorHandling();
 
-    // Audit middleware
-    app.UseAuditMiddleware();
+    // 2. Security Headers (OWASP) — early in pipeline
+    app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
-    // Configure the HTTP request pipeline.
+    // 3. Request Logging
+    app.UseRequestLogging();
+
+    // 4. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+    if (!app.Environment.IsProduction())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    // 5. Swagger — development only
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
 
-    app.UseCors("AllowFrontend");
+    // 6. CORS — before auth
+    app.UseCors();
+
+    // 7. Rate Limiting
+    app.UseRateLimiter();
+
+    // 8. Authentication & Authorization
     app.UseAuthentication();
     app.UseAuthorization();
 
+    // 7. Audit middleware — after auth (has userId context)
+    app.UseAuditMiddleware();
+
+    // 8. Endpoints
     app.MapControllers();
     app.MapHealthChecks("/health");
 
-    // Auto-migrate database
-    using (var scope = app.Services.CreateScope())
+    // Apply database migrations conditionally (disabled in production to avoid race conditions with HPA replicas)
+    var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);
+    if (autoMigrate)
     {
+        using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         try
         {
@@ -119,6 +189,10 @@ builder.Services.AddHealthChecks();
         {
             Log.Error(ex, "An error occurred while migrating the database for {ServiceName}", ServiceName);
         }
+    }
+    else
+    {
+        Log.Information("Database auto-migration disabled for {ServiceName}. Run migrations via CI/CD pipeline.", ServiceName);
     }
 
     Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);

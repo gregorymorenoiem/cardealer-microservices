@@ -42,6 +42,7 @@ namespace ContactService.Domain.Entities
         public string Status { get; set; } = "Open"; // Open, InProgress, Responded, Closed
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }  // ✅ AUDIT FIX: Track status changes
         public DateTime? RespondedAt { get; set; }
         
         // Navigation property

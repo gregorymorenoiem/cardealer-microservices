@@ -99,7 +99,9 @@ public class RabbitMQMediaConsumer : BackgroundService
                     UserName = _settings.UserName,
                     Password = _settings.Password,
                     VirtualHost = _settings.VirtualHost,
-                    DispatchConsumersAsync = true
+                    DispatchConsumersAsync = true,
+                    AutomaticRecoveryEnabled = true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
                 };
 
                 _connection = factory.CreateConnection();
@@ -107,7 +109,21 @@ public class RabbitMQMediaConsumer : BackgroundService
 
                 // Ensure exchanges and queues are declared (same as producer)
                 _channel.ExchangeDeclare(_settings.MediaCommandsExchange, ExchangeType.Direct, durable: true);
-                _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false);
+
+                // Dead Letter Exchange for persistent DLQ (CRIT-01: replaces InMemoryDeadLetterQueue)
+                var dlxExchange = $"{_settings.MediaCommandsExchange}.dlx";
+                var dlqQueue = $"{_settings.ProcessMediaQueue}.dlq";
+                _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true);
+                _channel.QueueDeclare(dlqQueue, durable: true, exclusive: false, autoDelete: false);
+                _channel.QueueBind(dlqQueue, dlxExchange, _settings.ProcessMediaRoutingKey);
+
+                // Main queue with DLX arguments — rejected messages are routed to DLQ automatically
+                var queueArgs = new Dictionary<string, object>
+                {
+                    { "x-dead-letter-exchange", dlxExchange },
+                    { "x-dead-letter-routing-key", _settings.ProcessMediaRoutingKey }
+                };
+                _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false, arguments: queueArgs);
                 _channel.QueueBind(_settings.ProcessMediaQueue, _settings.MediaCommandsExchange, _settings.ProcessMediaRoutingKey);
 
                 // Configure quality of service
@@ -155,7 +171,9 @@ public class RabbitMQMediaConsumer : BackgroundService
                 UserName = _settings.UserName,
                 Password = _settings.Password,
                 VirtualHost = _settings.VirtualHost,
-                DispatchConsumersAsync = true
+                DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
 
             _connection = factory.CreateConnection();
@@ -163,7 +181,21 @@ public class RabbitMQMediaConsumer : BackgroundService
 
             // Ensure exchanges and queues are declared (same as producer)
             _channel.ExchangeDeclare(_settings.MediaCommandsExchange, ExchangeType.Direct, durable: true);
-            _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false);
+
+            // Dead Letter Exchange for persistent DLQ
+            var dlxExchange = $"{_settings.MediaCommandsExchange}.dlx";
+            var dlqQueue = $"{_settings.ProcessMediaQueue}.dlq";
+            _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true);
+            _channel.QueueDeclare(dlqQueue, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueBind(dlqQueue, dlxExchange, _settings.ProcessMediaRoutingKey);
+
+            // Main queue with DLX arguments
+            var queueArgs = new Dictionary<string, object>
+            {
+                { "x-dead-letter-exchange", dlxExchange },
+                { "x-dead-letter-routing-key", _settings.ProcessMediaRoutingKey }
+            };
+            _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false, arguments: queueArgs);
             _channel.QueueBind(_settings.ProcessMediaQueue, _settings.MediaCommandsExchange, _settings.ProcessMediaRoutingKey);
 
             // Configure quality of service

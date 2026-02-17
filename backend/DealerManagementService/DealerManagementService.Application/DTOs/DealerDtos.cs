@@ -37,7 +37,10 @@ public record DealerDto(
     DateTime? UpdatedAt,
     DateTime? VerifiedAt,
     List<DealerDocumentDto>? Documents,
-    List<DealerLocationDto>? Locations
+    List<DealerLocationDto>? Locations,
+    string? FacebookUrl = null,
+    string? InstagramUrl = null,
+    string? WhatsAppNumber = null
 );
 
 public record DealerDocumentDto(
@@ -98,7 +101,10 @@ public record CreateDealerRequest(
     string? ZipCode,
     string? Description,
     DateTime? EstablishedDate,
-    int? EmployeeCount
+    int? EmployeeCount,
+    string? FacebookUrl = null,
+    string? InstagramUrl = null,
+    string? WhatsAppNumber = null
 );
 
 public record UpdateDealerRequest(
@@ -117,7 +123,10 @@ public record UpdateDealerRequest(
     string? LogoUrl,
     string? BannerUrl,
     DateTime? EstablishedDate,
-    int? EmployeeCount
+    int? EmployeeCount,
+    string? FacebookUrl = null,
+    string? InstagramUrl = null,
+    string? WhatsAppNumber = null
 );
 
 public record UploadDocumentRequest(

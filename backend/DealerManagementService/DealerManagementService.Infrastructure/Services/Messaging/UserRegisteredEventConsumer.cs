@@ -44,8 +44,8 @@ public class UserRegisteredEventConsumer : BackgroundService
             {
                 HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost",
                 Port = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ?? "5672"),
-                UserName = Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? "guest",
-                Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? "guest",
+                UserName = Environment.GetEnvironmentVariable("RABBITMQ_USER") ?? throw new InvalidOperationException("RABBITMQ_USER environment variable is not configured"),
+                Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? throw new InvalidOperationException("RABBITMQ_PASSWORD environment variable is not configured"),
                 DispatchConsumersAsync = true
             };
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NotificationService.Application.DTOs;
 using NotificationService.Domain.Entities;
@@ -9,6 +10,7 @@ namespace NotificationService.Api.Controllers;
 /// Controller for managing user notifications (in-app notifications shown in header)
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/notifications")]
 public class UserNotificationsController : ControllerBase
 {
@@ -29,10 +31,11 @@ public class UserNotificationsController : ControllerBase
     public ActionResult<UserNotificationsListResponse> GetNotifications(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] bool unreadOnly = false,
-        [FromHeader(Name = "X-User-Id")] string? headerUserId = null)
+        [FromQuery] bool unreadOnly = false)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? headerUserId ?? "demo-user";
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { Message = "User ID not found in token" });
         
         _logger.LogInformation("Getting notifications for user {UserId}, page {Page}, pageSize {PageSize}", 
             userId, page, pageSize);
@@ -71,10 +74,11 @@ public class UserNotificationsController : ControllerBase
     /// Get unread notification count
     /// </summary>
     [HttpGet("unread/count")]
-    public ActionResult<UnreadCountResponse> GetUnreadCount(
-        [FromHeader(Name = "X-User-Id")] string? headerUserId = null)
+    public ActionResult<UnreadCountResponse> GetUnreadCount()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? headerUserId ?? "demo-user";
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { Message = "User ID not found in token" });
         
         var count = _notifications.Count(n => 
             (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && !n.IsRead);
@@ -105,10 +109,11 @@ public class UserNotificationsController : ControllerBase
     /// Mark all notifications as read
     /// </summary>
     [HttpPatch("read-all")]
-    public ActionResult MarkAllAsRead(
-        [FromHeader(Name = "X-User-Id")] string? headerUserId = null)
+    public ActionResult MarkAllAsRead()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? headerUserId ?? "demo-user";
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { Message = "User ID not found in token" });
         
         var userNotifications = _notifications
             .Where(n => (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && !n.IsRead);
@@ -146,10 +151,11 @@ public class UserNotificationsController : ControllerBase
     /// Delete all read notifications
     /// </summary>
     [HttpDelete("read")]
-    public ActionResult DeleteAllRead(
-        [FromHeader(Name = "X-User-Id")] string? headerUserId = null)
+    public ActionResult DeleteAllRead()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? headerUserId ?? "demo-user";
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { Message = "User ID not found in token" });
         
         var readNotifications = _notifications
             .Where(n => (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && n.IsRead)

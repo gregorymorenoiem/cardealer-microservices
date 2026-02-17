@@ -112,7 +112,10 @@ public class GetDealerByIdQueryHandler : IRequestHandler<GetDealerByIdQuery, Dea
                 l.ParkingSpaces,
                 l.CreatedAt,
                 l.UpdatedAt
-            )).ToList()
+            )).ToList(),
+            dealer.FacebookUrl,
+            dealer.InstagramUrl,
+            dealer.WhatsAppNumber
         );
     }
 }

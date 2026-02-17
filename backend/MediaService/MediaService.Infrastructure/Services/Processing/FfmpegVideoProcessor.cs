@@ -39,8 +39,9 @@ public class FfmpegVideoProcessor : IVideoProcessor
         {
             _logger.LogInformation("Processing video: {FileName}", originalFileName);
 
-            // Guardar stream temporal
-            tempInputPath = Path.Combine(Path.GetTempPath(), $"input_{Guid.NewGuid()}{Path.GetExtension(originalFileName)}");
+            // Security (CWE-78): Sanitize filename extension to prevent command injection
+            var safeExtension = SanitizeFileExtension(Path.GetExtension(originalFileName));
+            tempInputPath = Path.Combine(Path.GetTempPath(), $"input_{Guid.NewGuid()}{safeExtension}");
             tempOutputDir = Path.Combine(Path.GetTempPath(), $"output_{Guid.NewGuid()}");
             Directory.CreateDirectory(tempOutputDir);
 
@@ -348,9 +349,11 @@ public class FfmpegVideoProcessor : IVideoProcessor
 
     private async Task<Stream> ExtractAudioInternalAsync(string inputPath, string outputDir, string audioFormat)
     {
-        var outputPath = Path.Combine(outputDir, $"audio.{audioFormat}");
+        // Security (CWE-78): Sanitize audio format to prevent injection
+        var safeFormat = SanitizeAudioFormat(audioFormat);
+        var outputPath = Path.Combine(outputDir, $"audio.{safeFormat}");
 
-        var codec = audioFormat.ToLower() switch
+        var codec = safeFormat switch
         {
             "mp3" => "libmp3lame",
             "aac" => "aac",
@@ -498,12 +501,18 @@ public class FfmpegVideoProcessor : IVideoProcessor
         var startInfo = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        // Security (CWE-78): Use ArgumentList for safe argument passing.
+        // Arguments are added individually, preventing shell metacharacter injection.
+        foreach (var arg in SplitArguments(arguments))
+        {
+            startInfo.ArgumentList.Add(arg);
+        }
 
         using var process = new Process { StartInfo = startInfo };
         var output = new StringBuilder();
@@ -534,6 +543,78 @@ public class FfmpegVideoProcessor : IVideoProcessor
         }
 
         return output.ToString();
+    }
+
+    /// <summary>
+    /// Security (CWE-78): Splits a command-line argument string into individual arguments,
+    /// respecting quoted strings. This allows us to use ArgumentList which prevents injection.
+    /// </summary>
+    private static List<string> SplitArguments(string arguments)
+    {
+        var args = new List<string>();
+        var current = new StringBuilder();
+        bool inQuote = false;
+
+        for (int i = 0; i < arguments.Length; i++)
+        {
+            char c = arguments[i];
+
+            if (c == '"')
+            {
+                inQuote = !inQuote;
+                // Don't add the quote character — ArgumentList handles escaping
+                continue;
+            }
+
+            if (c == ' ' && !inQuote)
+            {
+                if (current.Length > 0)
+                {
+                    args.Add(current.ToString());
+                    current.Clear();
+                }
+                continue;
+            }
+
+            current.Append(c);
+        }
+
+        if (current.Length > 0)
+        {
+            args.Add(current.ToString());
+        }
+
+        return args;
+    }
+
+    /// <summary>
+    /// Security (CWE-78): Sanitizes file extensions to prevent command injection via
+    /// crafted filenames like "video.mp4; rm -rf /". Only allows alphanumeric extensions.
+    /// </summary>
+    private static string SanitizeFileExtension(string extension)
+    {
+        if (string.IsNullOrEmpty(extension)) return ".mp4";
+
+        // Strip the dot, sanitize, then re-add
+        var ext = extension.TrimStart('.');
+        var sanitized = Regex.Replace(ext, @"[^a-zA-Z0-9]", "");
+
+        if (string.IsNullOrEmpty(sanitized)) return ".mp4";
+
+        return $".{sanitized}";
+    }
+
+    /// <summary>
+    /// Security (CWE-78): Validates audio format to prevent injection through format string.
+    /// </summary>
+    private static string SanitizeAudioFormat(string format)
+    {
+        var allowedFormats = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "mp3", "aac", "opus", "wav", "flac", "ogg"
+        };
+
+        return allowedFormats.Contains(format) ? format.ToLower() : "aac";
     }
 
     #endregion

@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using DealerManagementService.Application.DTOs;
 using DealerManagementService.Domain.Interfaces;
 using DealerManagementService.Infrastructure.Persistence;
@@ -5,7 +6,10 @@ using DealerManagementService.Infrastructure.Persistence.Repositories;
 using DealerManagementService.Infrastructure.Services.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Text;
 using Serilog;
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
@@ -83,7 +87,7 @@ builder.Services.AddSwaggerGen(c =>
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=postgres;Port=5432;Database=dealermanagement_db;Username=postgres;Password=postgres";
+    ?? "Host=postgres_db;Port=5432;Database=dealermanagement_db;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<DealerDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -94,6 +98,9 @@ builder.Services.AddScoped<IDealerLocationRepository, DealerLocationRepository>(
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DealerDto).Assembly));
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(DealerManagementService.Application.Behaviors.ValidationBehavior<,>));
 
 // Background Services - Event Consumers
 // Consumer for UserRegisteredEvent from AuthService - auto-creates dealer profiles
@@ -119,6 +126,33 @@ builder.Services.AddCors(options =>
     builder.Services.AddHealthChecks()
         .AddNpgSql(connectionString, name: "database");
 
+    // ========== JWT AUTHENTICATION ==========
+    var jwtKey = builder.Configuration["Jwt:SecretKey"]
+              ?? builder.Configuration["Jwt:Key"]
+              ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
+    var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
     var app = builder.Build();
 
     // ============= MIDDLEWARE =============
@@ -129,8 +163,12 @@ builder.Services.AddCors(options =>
     app.UseAuditMiddleware();
 
     // Configure the HTTP request pipeline
-    if (app.Environment.IsDevelopment())
-    {
+    // OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+if (app.Environment.IsDevelopment())
+{
+
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
@@ -140,6 +178,16 @@ builder.Services.AddCors(options =>
     }
 
     app.UseCors();
+
+    // Serve uploaded documents (dealer verification files)
+    var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+    Directory.CreateDirectory(uploadsPath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+        RequestPath = "/uploads"
+    });
+
     app.UseAuthentication();
     app.UseAuthorization();
 

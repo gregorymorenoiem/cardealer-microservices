@@ -471,3 +471,79 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
         return date.ToString("dd/MM");
     }
 }
+
+/// <summary>
+/// Handler para GetTrendsQuery - obtiene datos de tendencia para una métrica específica
+/// </summary>
+public class GetTrendsQueryHandler : IRequestHandler<GetTrendsQuery, List<TrendDataPointDto>>
+{
+    private readonly IDealerSnapshotRepository _snapshotRepository;
+    private readonly ILogger<GetTrendsQueryHandler> _logger;
+
+    public GetTrendsQueryHandler(
+        IDealerSnapshotRepository snapshotRepository,
+        ILogger<GetTrendsQueryHandler> logger)
+    {
+        _snapshotRepository = snapshotRepository;
+        _logger = logger;
+    }
+
+    public async Task<List<TrendDataPointDto>> Handle(GetTrendsQuery request, CancellationToken ct)
+    {
+        _logger.LogInformation(
+            "Getting {MetricType} trends for dealer {DealerId} from {From} to {To}",
+            request.MetricType, request.DealerId, request.FromDate, request.ToDate);
+
+        try
+        {
+            // Map metric type to the snapshot field name
+            var metricFieldName = request.MetricType.ToLower() switch
+            {
+                "views" => "TotalViews",
+                "contacts" => "TotalContacts",
+                "sales" => "ConvertedLeads",
+                "revenue" => "TotalRevenue",
+                "conversion" => "LeadConversionRate",
+                "leads" => "QualifiedLeads",
+                _ => "TotalViews"
+            };
+
+            var trendData = await _snapshotRepository.GetMetricTrendAsync(
+                request.DealerId, metricFieldName, request.FromDate, request.ToDate, ct);
+
+            var result = trendData
+                .OrderBy(kvp => kvp.Key)
+                .Select(kvp => new TrendDataPointDto
+                {
+                    Date = kvp.Key,
+                    Value = kvp.Value,
+                    Label = kvp.Key.ToString("dd/MM")
+                })
+                .ToList();
+
+            // If no data found, return empty data points for the date range
+            if (result.Count == 0)
+            {
+                var days = (int)(request.ToDate - request.FromDate).TotalDays;
+                for (var i = 0; i <= days; i++)
+                {
+                    var date = request.FromDate.AddDays(i);
+                    result.Add(new TrendDataPointDto
+                    {
+                        Date = date,
+                        Value = 0,
+                        Label = date.ToString("dd/MM")
+                    });
+                }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting trends for dealer {DealerId}", request.DealerId);
+            // Return empty trend data instead of throwing
+            return new List<TrendDataPointDto>();
+        }
+    }
+}
