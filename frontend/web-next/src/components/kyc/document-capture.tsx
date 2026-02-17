@@ -13,9 +13,10 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
+import type ReactWebcam from 'react-webcam';
 
-// @ts-expect-error react-webcam module types incompatible with next/dynamic in Next.js 16
-const Webcam = dynamic(() => import('react-webcam'), {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Webcam = dynamic((() => import('react-webcam')) as any, {
   ssr: false,
   loading: () => (
     <div className="bg-muted flex h-64 w-full items-center justify-center rounded-lg">
@@ -170,7 +171,7 @@ export function DocumentCapture({
   instructions,
   className,
 }: DocumentCaptureProps) {
-  const webcamRef = React.useRef<Webcam>(null);
+  const webcamRef = React.useRef<ReactWebcam>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [cameraEnabled, setCameraEnabled] = React.useState(true); // Auto-activate camera for better UX

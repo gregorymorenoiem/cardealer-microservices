@@ -17,9 +17,10 @@
 import * as React from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import type ReactWebcam from 'react-webcam';
 
-// @ts-expect-error react-webcam module types incompatible with next/dynamic in Next.js 16
-const Webcam = dynamic(() => import('react-webcam'), {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Webcam = dynamic((() => import('react-webcam')) as any, {
   ssr: false,
   loading: () => (
     <div className="bg-muted flex h-64 w-full items-center justify-center rounded-lg">
@@ -135,7 +136,7 @@ export function LivenessChallenge({
   isProcessing = false,
   className,
 }: LivenessChallengeProps) {
-  const webcamRef = React.useRef<Webcam>(null);
+  const webcamRef = React.useRef<ReactWebcam>(null);
 
   const [cameraEnabled, setCameraEnabled] = React.useState(false); // Don't activate camera immediately
   const [hasCamera, setHasCamera] = React.useState(true);
