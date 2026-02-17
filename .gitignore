@@ -150,3 +150,10 @@ pytorch_model.bin
 *.crt
 *.pfx
 *.p12
+# LLM Models (too large for git)
+*.gguf
+*.bin
+backend/ChatbotService/LlmServer/models/
+backend/DealerManagementService/DealerManagementService.Api/uploads/
+nohup.out
+*.webm
