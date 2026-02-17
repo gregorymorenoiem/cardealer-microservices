@@ -1,7 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using AuthService.Domain.Entities;
+using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Shared;
 using Microsoft.Extensions.Options;
@@ -11,68 +13,110 @@ namespace AuthService.Infrastructure.Services.Identity;
 
 public class JwtGenerator : IJwtGenerator
 {
+    // Performance: Reuse handler and credentials — both are thread-safe
+    private static readonly JwtSecurityTokenHandler s_tokenHandler = new();
     private readonly JwtSettings _jwtSettings;
+    private readonly SigningCredentials _signingCredentials;
+    private readonly TokenValidationParameters _validationParameters;
 
     public JwtGenerator(IOptions<JwtSettings> jwtSettings)
     {
         _jwtSettings = jwtSettings.Value;
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+        _signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        _validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ValidateIssuer = true,
+            ValidIssuer = _jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _jwtSettings.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(_jwtSettings.ClockSkewMinutes)
+        };
     }
 
     public string GenerateToken(ApplicationUser user)
     {
-        var claims = new[]
+        return GenerateToken(user, null);
+    }
+
+    /// <inheritdoc />
+    public string GenerateToken(ApplicationUser user, int? expiresMinutes)
+    {
+        var effectiveExpiration = expiresMinutes ?? _jwtSettings.ExpiresMinutes;
+
+        // Security (CWE-359): Only include minimal required claims in JWT.
+        // PII (firstName, lastName, picture) and internal values (security_stamp) 
+        // must NOT be in JWT — they are exposed via /api/auth/me instead.
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
             new Claim(ClaimTypes.Name, user.UserName ?? ""),
             new Claim("email_verified", user.EmailConfirmed.ToString().ToLower()),
-            new Claim("security_stamp", user.SecurityStamp ?? ""),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             // Multi-tenant: dealerId
             new Claim("dealerId", user.DealerId ?? string.Empty),
-            // Account type for role-based UI
-            new Claim("account_type", ((int)user.AccountType).ToString())
+            // Account type as string for frontend compatibility (also keep int for backend services)
+            new Claim("account_type", ((int)user.AccountType).ToString()),
+            new Claim("accountType", user.AccountType.ToString().ToLowerInvariant()),
+            // User intent - what the user wants to do
+            new Claim("userIntent", user.UserIntent.ToClaimValue()),
         };
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        
+        // Add role claims based on AccountType for [Authorize(Roles = "...")] compatibility
+        // AccountType: Guest=0, Buyer=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5, Seller=6
+        switch (user.AccountType)
+        {
+            case Domain.Enums.AccountType.Admin:
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                claims.Add(new Claim(ClaimTypes.Role, "Compliance"));
+                break;
+            case Domain.Enums.AccountType.PlatformEmployee:
+                claims.Add(new Claim(ClaimTypes.Role, "Compliance"));
+                claims.Add(new Claim(ClaimTypes.Role, "PlatformEmployee"));
+                break;
+            case Domain.Enums.AccountType.Dealer:
+                claims.Add(new Claim(ClaimTypes.Role, "Dealer"));
+                break;
+            case Domain.Enums.AccountType.DealerEmployee:
+                claims.Add(new Claim(ClaimTypes.Role, "DealerEmployee"));
+                break;
+            case Domain.Enums.AccountType.Buyer:
+                claims.Add(new Claim(ClaimTypes.Role, "User"));
+                break;
+            case Domain.Enums.AccountType.Seller:
+                claims.Add(new Claim(ClaimTypes.Role, "User"));
+                claims.Add(new Claim(ClaimTypes.Role, "Seller"));
+                break;
+        }
 
         var token = new JwtSecurityToken(
             issuer: _jwtSettings.Issuer,
             audience: _jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresMinutes),
-            signingCredentials: credentials
+            expires: DateTime.UtcNow.AddMinutes(effectiveExpiration),
+            signingCredentials: _signingCredentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return s_tokenHandler.WriteToken(token);
     }
 
     public string GenerateRefreshToken()
     {
-        return Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        // Performance & Security: Use cryptographic random bytes instead of Guid
+        Span<byte> randomBytes = stackalloc byte[32];
+        RandomNumberGenerator.Fill(randomBytes);
+        return Convert.ToBase64String(randomBytes);
     }
 
     public (string userId, string email)? ValidateToken(string token)
     {
         try
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
-                ValidateIssuer = true,
-                ValidIssuer = _jwtSettings.Issuer,
-                ValidateAudience = true,
-                ValidAudience = _jwtSettings.Audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.FromMinutes(_jwtSettings.ClockSkewMinutes)
-            };
-
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+            var principal = s_tokenHandler.ValidateToken(token, _validationParameters, out _);
 
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var email = principal.FindFirst(ClaimTypes.Email)?.Value;
@@ -98,18 +142,15 @@ public class JwtGenerator : IJwtGenerator
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
         var token = new JwtSecurityToken(
             issuer: _jwtSettings.Issuer,
             audience: _jwtSettings.Audience,
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(5), // Corta expiración para 2FA
-            signingCredentials: credentials
+            signingCredentials: _signingCredentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return s_tokenHandler.WriteToken(token);
     }
 
     // NUEVO: Método para validar token temporal para 2FA
@@ -117,22 +158,7 @@ public class JwtGenerator : IJwtGenerator
     {
         try
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
-                ValidateIssuer = true,
-                ValidIssuer = _jwtSettings.Issuer,
-                ValidateAudience = true,
-                ValidAudience = _jwtSettings.Audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.FromMinutes(_jwtSettings.ClockSkewMinutes)
-            };
-
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+            var principal = s_tokenHandler.ValidateToken(token, _validationParameters, out _);
 
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var isTemp = principal.FindFirst("temp_token")?.Value;

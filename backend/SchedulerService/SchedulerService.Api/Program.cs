@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using SchedulerService.Application.Handlers;
@@ -35,6 +36,9 @@ builder.Services.AddSwaggerGen(options =>
 
 // Add MediatR
 builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(SchedulerService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssembly(typeof(CreateJobCommandHandler).Assembly));
 
 // Add Infrastructure layer (includes Hangfire, EF Core, repositories)
@@ -54,8 +58,12 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

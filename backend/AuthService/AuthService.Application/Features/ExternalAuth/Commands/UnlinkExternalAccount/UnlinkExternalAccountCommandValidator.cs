@@ -1,22 +1,36 @@
+using AuthService.Domain.Enums;
 using FluentValidation;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.UnlinkExternalAccount;
 
+/// <summary>
+/// Validator for UnlinkExternalAccountCommand (AUTH-EXT-006)
+/// Validates that the provider is supported.
+/// </summary>
 public class UnlinkExternalAccountCommandValidator : AbstractValidator<UnlinkExternalAccountCommand>
 {
+    private static readonly string[] SupportedProviders = 
+        Enum.GetNames<ExternalAuthProvider>();
+
     public UnlinkExternalAccountCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required");
+            .NotEmpty().WithMessage("User ID is required")
+            .Must(BeValidGuid).WithMessage("User ID must be a valid GUID");
 
         RuleFor(x => x.Provider)
             .NotEmpty().WithMessage("Provider is required")
-            .Must(BeValidProvider).WithMessage("Provider must be either 'Google' or 'Microsoft'");
+            .Must(BeValidProvider)
+            .WithMessage($"Provider must be one of: {string.Join(", ", SupportedProviders)}");
     }
 
-    private bool BeValidProvider(string provider)
+    private static bool BeValidGuid(string userId)
     {
-        return provider.Equals("Google", StringComparison.OrdinalIgnoreCase) ||
-               provider.Equals("Microsoft", StringComparison.OrdinalIgnoreCase);
+        return Guid.TryParse(userId, out _);
+    }
+
+    private static bool BeValidProvider(string provider)
+    {
+        return Enum.TryParse<ExternalAuthProvider>(provider, true, out _);
     }
 }

@@ -1,0 +1,102 @@
+{{- /* R18 (MLOps): ChatbotService Deployment Template */ -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbotservice
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: chatbotservice
+    version: v1
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    app.okla.com/component: "chatbot-backend"
+    app.okla.com/managed-by: "helm"
+spec:
+  replicas: {{ .Values.chatbotservice.replicaCount }}
+  selector:
+    matchLabels:
+      app: chatbotservice
+  template:
+    metadata:
+      labels:
+        app: chatbotservice
+        version: v1
+    spec:
+      containers:
+        - name: chatbotservice
+          image: "{{ .Values.chatbotservice.image.repository }}:{{ .Values.chatbotservice.image.tag }}"
+          imagePullPolicy: {{ .Values.chatbotservice.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_URLS
+              value: {{ .Values.chatbotservice.env.aspnetcoreUrls | quote }}
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.chatbotservice.env.aspnetcoreEnvironment | quote }}
+            - name: LlmService__ServerUrl
+              value: {{ .Values.chatbotservice.config.llmServerUrl | quote }}
+            - name: LlmService__TimeoutSeconds
+              value: {{ .Values.chatbotservice.config.timeoutSeconds | quote }}
+            - name: LlmService__Temperature
+              value: {{ .Values.chatbotservice.config.temperature | quote }}
+            - name: LlmService__MaxTokens
+              value: {{ .Values.chatbotservice.config.maxTokens | quote }}
+            - name: LlmService__CacheEnabled
+              value: {{ .Values.chatbotservice.config.cacheEnabled | quote }}
+            - name: LlmService__CacheTtlMinutes
+              value: {{ .Values.chatbotservice.config.cacheTtlMinutes | quote }}
+            - name: Redis__ConnectionString
+              value: {{ .Values.redis.connectionString | quote }}
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.connectionStringSecret }}
+                  key: {{ .Values.database.connectionStringKey }}
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.jwt.secretName }}
+                  key: {{ .Values.jwt.secretKey }}
+            - name: RabbitMQ__Host
+              value: {{ .Values.rabbitmq.host | quote }}
+            - name: RabbitMQ__Username
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.usernameSecret }}
+                  key: {{ .Values.rabbitmq.usernameKey }}
+            - name: RabbitMQ__Password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.passwordSecret }}
+                  key: {{ .Values.rabbitmq.passwordKey }}
+          resources:
+            {{- toYaml .Values.chatbotservice.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.chatbotservice.probes.liveness.path }}
+              port: {{ .Values.chatbotservice.probes.liveness.port }}
+            initialDelaySeconds: {{ .Values.chatbotservice.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.chatbotservice.probes.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.chatbotservice.probes.readiness.path }}
+              port: {{ .Values.chatbotservice.probes.readiness.port }}
+            initialDelaySeconds: {{ .Values.chatbotservice.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.chatbotservice.probes.readiness.periodSeconds }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbotservice
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: chatbotservice
+spec:
+  selector:
+    app: chatbotservice
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP

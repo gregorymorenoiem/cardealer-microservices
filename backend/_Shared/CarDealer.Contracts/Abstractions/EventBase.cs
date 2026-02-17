@@ -22,4 +22,16 @@ public abstract class EventBase : IEvent
     /// Must be implemented by derived classes.
     /// </summary>
     public abstract string EventType { get; }
+
+    /// <summary>
+    /// Schema version for backward-compatible event evolution.
+    /// Increment when the event payload changes structure.
+    /// Consumers should handle older versions gracefully.
+    /// </summary>
+    public int SchemaVersion { get; set; } = 1;
+
+    /// <summary>
+    /// Correlation ID for distributed tracing across services.
+    /// </summary>
+    public string? CorrelationId { get; set; }
 }

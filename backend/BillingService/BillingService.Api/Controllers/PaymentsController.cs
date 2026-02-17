@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BillingService.Application.DTOs;
 using BillingService.Domain.Entities;
 using BillingService.Domain.Interfaces;
+using CarDealer.Shared.Idempotency.Attributes;
 
 namespace BillingService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentRepository _paymentRepository;
@@ -99,6 +102,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpPost]
+    [Idempotent(RequireKey = true, KeyPrefix = "payment-create")]
     public async Task<ActionResult<PaymentDto>> Create(
         [FromBody] CreatePaymentRequest request,
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
@@ -121,6 +125,7 @@ public class PaymentsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapToDto(created));
     }
 
+    [Idempotent(RequireKey = true, KeyPrefix = "payment-process")]
     [HttpPost("{id:guid}/process")]
     public async Task<ActionResult<PaymentDto>> Process(Guid id, CancellationToken cancellationToken)
     {
@@ -135,6 +140,7 @@ public class PaymentsController : ControllerBase
         return Ok(MapToDto(payment));
     }
 
+    [Idempotent(RequireKey = true, KeyPrefix = "payment-succeed")]
     [HttpPost("{id:guid}/succeed")]
     public async Task<ActionResult<PaymentDto>> Succeed(
         Guid id,

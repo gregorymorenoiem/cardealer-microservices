@@ -35,7 +35,7 @@ public class AuthNotificationService : IAuthNotificationService
 
     public async Task SendPasswordResetEmailAsync(string email, string resetToken)
     {
-        var resetUrl = $"{_settings.FrontendBaseUrl}/reset-password?token={resetToken}";
+        var resetUrl = $"{_settings.FrontendBaseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
 
         if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
         {
@@ -61,7 +61,7 @@ public class AuthNotificationService : IAuthNotificationService
 
     public async Task SendEmailConfirmationAsync(string email, string confirmationToken)
     {
-        var confirmUrl = $"{_settings.FrontendBaseUrl}/confirm-email?token={confirmationToken}";
+        var confirmUrl = $"{_settings.FrontendBaseUrl}/verificar-email?token={Uri.EscapeDataString(confirmationToken)}";
 
         if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
         {
@@ -94,6 +94,30 @@ public class AuthNotificationService : IAuthNotificationService
         else
         {
             await SendTwoFactorBackupCodesViaHttp(email, backupCodes);
+        }
+    }
+
+    public async Task SendNewAuthenticatorSetupAsync(string email, string secret, string qrCodeUri, List<string> recoveryCodes)
+    {
+        if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
+        {
+            await SendNewAuthenticatorSetupViaRabbitMQ(email, secret, qrCodeUri, recoveryCodes);
+        }
+        else
+        {
+            await SendNewAuthenticatorSetupViaHttp(email, secret, qrCodeUri, recoveryCodes);
+        }
+    }
+
+    public async Task SendPasswordChangedConfirmationAsync(string email)
+    {
+        if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
+        {
+            await SendPasswordChangedConfirmationViaRabbitMQ(email);
+        }
+        else
+        {
+            await SendPasswordChangedConfirmationViaHttp(email);
         }
     }
 
@@ -257,6 +281,64 @@ public class AuthNotificationService : IAuthNotificationService
         }
     }
 
+    private async Task SendNewAuthenticatorSetupViaRabbitMQ(string email, string secret, string qrCodeUri, List<string> recoveryCodes)
+    {
+        try
+        {
+            var notification = new EmailNotificationEvent
+            {
+                To = email,
+                Subject = "🔐 New Authenticator Setup Required - Your Device Was Lost",
+                TemplateName = "NewAuthenticatorSetup",
+                Body = GenerateNewAuthenticatorSetupEmailBody(secret, qrCodeUri, recoveryCodes),
+                Data = new Dictionary<string, object>
+                {
+                    ["secret"] = secret,
+                    ["qrCodeUri"] = qrCodeUri,
+                    ["recoveryCodes"] = recoveryCodes,
+                    ["generatedAt"] = System.DateTime.UtcNow
+                },
+                IsHtml = true
+            };
+
+            await _notificationProducer.PublishNotificationAsync(notification);
+            _logger.LogInformation("New authenticator setup sent via RabbitMQ to {Email}", email);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send new authenticator setup via RabbitMQ to {Email}. Falling back to HTTP.", email);
+            await SendNewAuthenticatorSetupViaHttp(email, secret, qrCodeUri, recoveryCodes);
+        }
+    }
+
+    private async Task SendPasswordChangedConfirmationViaRabbitMQ(string email)
+    {
+        try
+        {
+            var notification = new EmailNotificationEvent
+            {
+                To = email,
+                Subject = "🔐 Your Password Has Been Changed",
+                TemplateName = "PasswordChanged",
+                Body = GeneratePasswordChangedEmailBody(),
+                Data = new Dictionary<string, object>
+                {
+                    ["changedAt"] = System.DateTime.UtcNow,
+                    ["email"] = email
+                },
+                IsHtml = true
+            };
+
+            await _notificationProducer.PublishNotificationAsync(notification);
+            _logger.LogInformation("Password changed confirmation sent via RabbitMQ to {Email}", email);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send password changed confirmation via RabbitMQ to {Email}. Falling back to HTTP.", email);
+            await SendPasswordChangedConfirmationViaHttp(email);
+        }
+    }
+
     #endregion
 
     #region HTTP Fallback Methods
@@ -352,6 +434,40 @@ public class AuthNotificationService : IAuthNotificationService
         else
         {
             _logger.LogError("Failed to send 2FA backup codes via HTTP to {Email}", email);
+        }
+    }
+
+    private async Task SendNewAuthenticatorSetupViaHttp(string email, string secret, string qrCodeUri, List<string> recoveryCodes)
+    {
+        var subject = "🔐 New Authenticator Setup Required - Your Device Was Lost";
+        var body = GenerateNewAuthenticatorSetupEmailBody(secret, qrCodeUri, recoveryCodes);
+
+        var success = await _notificationServiceClient.SendEmailAsync(email, subject, body, true);
+
+        if (success)
+        {
+            _logger.LogInformation("New authenticator setup sent via HTTP to {Email}", email);
+        }
+        else
+        {
+            _logger.LogError("Failed to send new authenticator setup via HTTP to {Email}", email);
+        }
+    }
+
+    private async Task SendPasswordChangedConfirmationViaHttp(string email)
+    {
+        var subject = "🔐 Your Password Has Been Changed";
+        var body = GeneratePasswordChangedEmailBody();
+
+        var success = await _notificationServiceClient.SendEmailAsync(email, subject, body, true);
+
+        if (success)
+        {
+            _logger.LogInformation("Password changed confirmation sent via HTTP to {Email}", email);
+        }
+        else
+        {
+            _logger.LogError("Failed to send password changed confirmation via HTTP to {Email}", email);
         }
     }
 
@@ -485,6 +601,426 @@ public class AuthNotificationService : IAuthNotificationService
                     <div class='warning'>
                         <p><strong>Important:</strong> Save these codes in a safe place. Each code can only be used once.</p>
                         <p>If you lose your authenticator app and don't have backup codes, you may lose access to your account.</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+    }
+
+    private string GenerateNewAuthenticatorSetupEmailBody(string secret, string qrCodeUri, List<string> recoveryCodes)
+    {
+        var codesHtml = string.Join("<br/>", recoveryCodes);
+        // Generate QR code image URL using external service
+        var qrImageUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(qrCodeUri)}";
+
+        return $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .alert {{ color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px; margin-bottom: 20px; }}
+                    .qr-section {{ text-align: center; background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+                    .secret {{ font-family: monospace; font-size: 18px; letter-spacing: 2px; background-color: #e9ecef; padding: 10px; border-radius: 4px; word-break: break-all; }}
+                    .codes {{ font-family: monospace; background-color: #f8f9fa; padding: 15px; border-radius: 4px; }}
+                    .warning {{ color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin-top: 20px; }}
+                    .steps {{ background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 4px; }}
+                    .steps ol {{ margin: 0; padding-left: 20px; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='alert'>
+                        <h2>🔐 New Authenticator Setup Required</h2>
+                        <p>You've used all your recovery codes. A NEW authenticator secret has been generated for your account.</p>
+                    </div>
+                    
+                    <div class='steps'>
+                        <h3>Setup Instructions:</h3>
+                        <ol>
+                            <li>Open your authenticator app (Google Authenticator, Authy, etc.)</li>
+                            <li>Scan the QR code below OR enter the secret manually</li>
+                            <li>Your app will start generating 6-digit codes</li>
+                            <li>Use these codes for future logins</li>
+                        </ol>
+                    </div>
+                    
+                    <div class='qr-section'>
+                        <h3>Scan this QR Code:</h3>
+                        <img src='{qrImageUrl}' alt='QR Code for Authenticator' style='max-width: 200px;'/>
+                        <p style='margin-top: 15px;'><strong>Or enter this secret manually:</strong></p>
+                        <div class='secret'>{secret}</div>
+                    </div>
+                    
+                    <h3>New Backup Codes:</h3>
+                    <p>Save these codes in a safe place. Each code can only be used once:</p>
+                    <div class='codes'>{codesHtml}</div>
+                    
+                    <div class='warning'>
+                        <p><strong>⚠️ Security Notice:</strong></p>
+                        <ul>
+                            <li>If you didn't request this, your account may be compromised</li>
+                            <li>Change your password immediately</li>
+                            <li>Contact support if you suspect unauthorized access</li>
+                        </ul>
+                    </div>
+                </div>
+            </body>
+            </html>";
+    }
+
+    private string GeneratePasswordChangedEmailBody()
+    {
+        var changedAt = System.DateTime.UtcNow.ToString("MMMM dd, yyyy 'at' HH:mm 'UTC'");
+        
+        return $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .alert {{ color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 4px; margin-bottom: 20px; }}
+                    .warning {{ color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin-top: 20px; }}
+                    .footer {{ margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 15px; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='alert'>
+                        <h2>🔐 Password Changed Successfully</h2>
+                        <p>Your password was changed on <strong>{changedAt}</strong>.</p>
+                    </div>
+                    
+                    <p>This email confirms that your password has been successfully updated.</p>
+                    
+                    <p><strong>What happened:</strong></p>
+                    <ul>
+                        <li>Your password was reset using the password reset link</li>
+                        <li>All your previous sessions have been logged out for security</li>
+                        <li>You'll need to log in again with your new password</li>
+                    </ul>
+                    
+                    <div class='warning'>
+                        <p><strong>⚠️ Didn't make this change?</strong></p>
+                        <p>If you didn't request this password change, your account may be compromised.</p>
+                        <p>Please contact our support team immediately at <a href='mailto:support@okla.com.do'>support@okla.com.do</a></p>
+                    </div>
+                    
+                    <div class='footer'>
+                        <p>This is an automated security notification from OKLA.</p>
+                        <p>If you have any questions, please contact us at support@okla.com.do</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+    }
+
+    #endregion
+
+    #region US-18.2: Security Alert Methods
+
+    /// <summary>
+    /// US-18.2: Sends a security alert email when suspicious activity is detected.
+    /// Triggers: 3+ failed login attempts, account lockout, etc.
+    /// </summary>
+    public async Task SendSecurityAlertAsync(string email, SecurityAlertDto alert)
+    {
+        if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
+        {
+            await SendSecurityAlertViaRabbitMQ(email, alert);
+        }
+        else
+        {
+            await SendSecurityAlertViaHttp(email, alert);
+        }
+    }
+
+    private async Task SendSecurityAlertViaRabbitMQ(string email, SecurityAlertDto alert)
+    {
+        try
+        {
+            var notification = new EmailNotificationEvent
+            {
+                To = email,
+                Subject = GetSecurityAlertSubject(alert.AlertType),
+                TemplateName = "SecurityAlert",
+                Body = GenerateSecurityAlertEmailBody(alert),
+                Data = new Dictionary<string, object>
+                {
+                    ["alertType"] = alert.AlertType,
+                    ["ipAddress"] = alert.IpAddress,
+                    ["attemptCount"] = alert.AttemptCount,
+                    ["timestamp"] = alert.Timestamp,
+                    ["location"] = alert.Location ?? "Unknown",
+                    ["deviceInfo"] = alert.DeviceInfo ?? "Unknown",
+                    ["lockoutDuration"] = alert.LockoutDuration?.TotalMinutes ?? 0
+                },
+                IsHtml = true
+            };
+
+            await _notificationProducer.PublishNotificationAsync(notification);
+            _logger.LogInformation("Security alert ({AlertType}) sent via RabbitMQ to {Email}", alert.AlertType, email);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send security alert via RabbitMQ to {Email}. Falling back to HTTP.", email);
+            await SendSecurityAlertViaHttp(email, alert);
+        }
+    }
+
+    private async Task SendSecurityAlertViaHttp(string email, SecurityAlertDto alert)
+    {
+        var subject = GetSecurityAlertSubject(alert.AlertType);
+        var body = GenerateSecurityAlertEmailBody(alert);
+
+        var success = await _notificationServiceClient.SendEmailAsync(email, subject, body, true);
+
+        if (success)
+        {
+            _logger.LogInformation("Security alert ({AlertType}) sent via HTTP to {Email}", alert.AlertType, email);
+        }
+        else
+        {
+            _logger.LogError("Failed to send security alert via HTTP to {Email}", email);
+        }
+    }
+
+    private static string GetSecurityAlertSubject(string alertType)
+    {
+        return alertType switch
+        {
+            "FailedLoginAttempts" => "⚠️ Alerta de Seguridad: Intentos de Inicio de Sesión Fallidos",
+            "FailedRecoveryCodeAttempts" => "⚠️ Alerta de Seguridad: Intentos Fallidos con Código de Recuperación",
+            "AccountLockout" => "🔒 Tu cuenta ha sido bloqueada temporalmente",
+            "NewDeviceLogin" => "📱 Inicio de sesión desde un nuevo dispositivo",
+            "SuspiciousActivity" => "⚠️ Actividad Sospechosa Detectada",
+            _ => "⚠️ Alerta de Seguridad - OKLA"
+        };
+    }
+
+    private string GenerateSecurityAlertEmailBody(SecurityAlertDto alert)
+    {
+        var changedAt = alert.Timestamp.ToString("yyyy-MM-dd HH:mm:ss UTC");
+        var location = alert.Location ?? "Ubicación desconocida";
+        var lockoutInfo = alert.LockoutDuration.HasValue 
+            ? $"<p><strong>Duración del bloqueo:</strong> {alert.LockoutDuration.Value.TotalMinutes} minutos</p>" 
+            : "";
+        
+        var alertTypeMessage = alert.AlertType switch
+        {
+            "FailedLoginAttempts" => $"Detectamos <strong>{alert.AttemptCount}</strong> intentos fallidos de inicio de sesión en tu cuenta.",
+            "FailedRecoveryCodeAttempts" => $"Detectamos <strong>{alert.AttemptCount}</strong> intentos fallidos usando códigos de recuperación.",
+            "AccountLockout" => "Tu cuenta ha sido bloqueada temporalmente debido a múltiples intentos fallidos de inicio de sesión.",
+            "NewDeviceLogin" => "Alguien inició sesión en tu cuenta desde un dispositivo nuevo.",
+            "SuspiciousActivity" => "Detectamos actividad sospechosa en tu cuenta.",
+            _ => "Se detectó una actividad inusual en tu cuenta."
+        };
+        
+        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/recuperar-contrasena";
+        var supportUrl = $"{_settings.FrontendBaseUrl}/contacto";
+
+        return $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .alert-banner {{ background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                    .alert-banner h2 {{ margin: 0; font-size: 24px; }}
+                    .info-box {{ background: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin: 15px 0; }}
+                    .details {{ background: #fff3cd; border-radius: 8px; padding: 15px; margin: 15px 0; }}
+                    .details p {{ margin: 8px 0; }}
+                    .warning {{ background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                    .actions {{ background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                    .btn {{ display: inline-block; padding: 12px 24px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }}
+                    .btn-secondary {{ background: #6c757d; }}
+                    .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='alert-banner'>
+                        <h2>⚠️ Alerta de Seguridad - OKLA</h2>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <p>{alertTypeMessage}</p>
+                    </div>
+                    
+                    <div class='details'>
+                        <h3>📋 Detalles del Evento:</h3>
+                        <p><strong>📍 Ubicación:</strong> {location}</p>
+                        <p><strong>🌐 Dirección IP:</strong> {alert.IpAddress}</p>
+                        <p><strong>🕐 Fecha y Hora:</strong> {changedAt}</p>
+                        <p><strong>📊 Intentos:</strong> {alert.AttemptCount}</p>
+                        {lockoutInfo}
+                    </div>
+                    
+                    <div class='warning'>
+                        <p><strong>⚠️ ¿No fuiste tú?</strong></p>
+                        <p>Si no reconoces esta actividad, te recomendamos:</p>
+                        <ol>
+                            <li>Cambiar tu contraseña inmediatamente</li>
+                            <li>Revisar tus dispositivos conectados</li>
+                            <li>Habilitar autenticación de dos factores (2FA)</li>
+                            <li>Contactar a soporte si necesitas ayuda</li>
+                        </ol>
+                    </div>
+                    
+                    <div class='actions'>
+                        <p><strong>🔐 Acciones Recomendadas:</strong></p>
+                        <p style='text-align: center;'>
+                            <a href='{changePasswordUrl}' class='btn'>Cambiar Contraseña</a>
+                            <a href='{supportUrl}' class='btn btn-secondary'>Contactar Soporte</a>
+                        </p>
+                    </div>
+                    
+                    <div class='footer'>
+                        <p>Esta es una notificación de seguridad automática de OKLA.</p>
+                        <p>Si tienes preguntas, contáctanos en <a href='mailto:support@okla.com.do'>support@okla.com.do</a></p>
+                        <p>© 2026 OKLA - Marketplace de Vehículos</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+    }
+
+    #endregion
+
+    #region New Session Notification Methods
+
+    /// <summary>
+    /// Sends a notification email when a new session is created from a new device/location.
+    /// This is a security measure to alert users of new logins.
+    /// </summary>
+    public async Task SendNewSessionNotificationAsync(string email, NewSessionNotificationDto sessionInfo)
+    {
+        if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
+        {
+            await SendNewSessionNotificationViaRabbitMQ(email, sessionInfo);
+        }
+        else
+        {
+            await SendNewSessionNotificationViaHttp(email, sessionInfo);
+        }
+    }
+
+    private async Task SendNewSessionNotificationViaRabbitMQ(string email, NewSessionNotificationDto sessionInfo)
+    {
+        try
+        {
+            var notification = new EmailNotificationEvent
+            {
+                To = email,
+                Subject = "🔐 Nuevo inicio de sesión en tu cuenta OKLA",
+                TemplateName = "NewSessionNotification",
+                Body = GenerateNewSessionNotificationEmailBody(sessionInfo),
+                Data = new Dictionary<string, object>
+                {
+                    ["deviceInfo"] = sessionInfo.DeviceInfo,
+                    ["browser"] = sessionInfo.Browser,
+                    ["operatingSystem"] = sessionInfo.OperatingSystem,
+                    ["ipAddress"] = sessionInfo.IpAddress,
+                    ["loginTime"] = sessionInfo.LoginTime,
+                    ["location"] = sessionInfo.Location ?? "Unknown"
+                },
+                IsHtml = true
+            };
+
+            await _notificationProducer.PublishNotificationAsync(notification);
+            _logger.LogInformation("New session notification sent via RabbitMQ to {Email}", email);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send new session notification via RabbitMQ to {Email}. Falling back to HTTP.", email);
+            await SendNewSessionNotificationViaHttp(email, sessionInfo);
+        }
+    }
+
+    private async Task SendNewSessionNotificationViaHttp(string email, NewSessionNotificationDto sessionInfo)
+    {
+        var subject = "🔐 Nuevo inicio de sesión en tu cuenta OKLA";
+        var body = GenerateNewSessionNotificationEmailBody(sessionInfo);
+
+        var success = await _notificationServiceClient.SendEmailAsync(email, subject, body, true);
+
+        if (success)
+        {
+            _logger.LogInformation("New session notification sent via HTTP to {Email}", email);
+        }
+        else
+        {
+            _logger.LogError("Failed to send new session notification via HTTP to {Email}", email);
+        }
+    }
+
+    private string GenerateNewSessionNotificationEmailBody(NewSessionNotificationDto sessionInfo)
+    {
+        var loginTime = sessionInfo.LoginTime.ToString("yyyy-MM-dd HH:mm:ss UTC");
+        var location = sessionInfo.Location ?? "Ubicación desconocida";
+        var securityUrl = $"{_settings.FrontendBaseUrl}/cuenta/seguridad";
+        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/recuperar-contrasena";
+
+        return $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                    .header h2 {{ margin: 0; font-size: 24px; }}
+                    .info-box {{ background: #e8f5e9; border-left: 4px solid #4CAF50; padding: 15px; margin: 15px 0; }}
+                    .details {{ background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0; }}
+                    .details p {{ margin: 8px 0; }}
+                    .warning {{ background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                    .btn {{ display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }}
+                    .btn-danger {{ background: #dc3545; }}
+                    .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h2>🔐 Nuevo Inicio de Sesión</h2>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <p>Hemos detectado un nuevo inicio de sesión en tu cuenta de OKLA.</p>
+                    </div>
+                    
+                    <div class='details'>
+                        <h3>📋 Detalles de la Sesión:</h3>
+                        <p><strong>📱 Dispositivo:</strong> {sessionInfo.DeviceInfo}</p>
+                        <p><strong>🌐 Navegador:</strong> {sessionInfo.Browser}</p>
+                        <p><strong>💻 Sistema Operativo:</strong> {sessionInfo.OperatingSystem}</p>
+                        <p><strong>📍 Ubicación:</strong> {location}</p>
+                        <p><strong>🔢 Dirección IP:</strong> {sessionInfo.IpAddress}</p>
+                        <p><strong>🕐 Fecha y Hora:</strong> {loginTime}</p>
+                    </div>
+                    
+                    <div class='warning'>
+                        <p><strong>⚠️ ¿No fuiste tú?</strong></p>
+                        <p>Si no reconoces este inicio de sesión, te recomendamos:</p>
+                        <ol>
+                            <li>Cambiar tu contraseña inmediatamente</li>
+                            <li>Revisar y cerrar las sesiones desconocidas</li>
+                            <li>Habilitar autenticación de dos factores (2FA)</li>
+                        </ol>
+                    </div>
+                    
+                    <p style='text-align: center;'>
+                        <a href='{securityUrl}' class='btn'>Ver Mis Sesiones</a>
+                        <a href='{changePasswordUrl}' class='btn btn-danger'>Cambiar Contraseña</a>
+                    </p>
+                    
+                    <div class='footer'>
+                        <p>Esta es una notificación de seguridad automática de OKLA.</p>
+                        <p>Si tienes preguntas, contáctanos en <a href='mailto:support@okla.com.do'>support@okla.com.do</a></p>
+                        <p>© 2026 OKLA - Marketplace de Vehículos</p>
                     </div>
                 </div>
             </body>

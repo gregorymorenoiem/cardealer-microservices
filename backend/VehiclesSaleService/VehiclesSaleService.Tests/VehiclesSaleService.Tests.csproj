@@ -27,6 +27,7 @@
     <ProjectReference Include="../VehiclesSaleService.Domain/VehiclesSaleService.Domain.csproj" />
     <ProjectReference Include="../VehiclesSaleService.Application/VehiclesSaleService.Application.csproj" />
     <ProjectReference Include="../VehiclesSaleService.Infrastructure/VehiclesSaleService.Infrastructure.csproj" />
+    <ProjectReference Include="../VehiclesSaleService.Api/VehiclesSaleService.Api.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 

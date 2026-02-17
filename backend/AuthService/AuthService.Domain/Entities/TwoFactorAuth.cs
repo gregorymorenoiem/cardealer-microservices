@@ -43,6 +43,33 @@ public class TwoFactorAuth
         CreatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Setup 2FA with secret and recovery codes but keep in PendingVerification status.
+    /// User must verify with a code before 2FA is fully enabled.
+    /// </summary>
+    public void SetupPending(string secret, List<string> recoveryCodes)
+    {
+        Secret = secret ?? throw new ArgumentNullException(nameof(secret));
+        RecoveryCodes = recoveryCodes ?? throw new ArgumentNullException(nameof(recoveryCodes));
+        Status = TwoFactorAuthStatus.PendingVerification;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Complete 2FA setup after user verifies with a valid code.
+    /// Changes status from PendingVerification to Enabled.
+    /// </summary>
+    public void ConfirmEnable(List<TwoFactorAuthType>? enabledMethods = null)
+    {
+        if (Status != TwoFactorAuthStatus.PendingVerification)
+            throw new InvalidOperationException("2FA must be in PendingVerification status to confirm");
+
+        EnabledMethods = enabledMethods ?? new List<TwoFactorAuthType> { PrimaryMethod };
+        Status = TwoFactorAuthStatus.Enabled;
+        EnabledAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Enable(string secret, List<string> recoveryCodes, List<TwoFactorAuthType>? enabledMethods = null)
     {
         if (Status == TwoFactorAuthStatus.Enabled)
@@ -131,6 +158,30 @@ public class TwoFactorAuth
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Updates recovery codes with a new set.
+    /// Called when user exhausts all codes and system auto-regenerates.
+    /// </summary>
+    public void UpdateRecoveryCodes(List<string> newCodes)
+    {
+        RecoveryCodes = newCodes ?? throw new ArgumentNullException(nameof(newCodes));
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Resets authenticator with a new secret and recovery codes.
+    /// Called when user loses their authenticator device and uses all recovery codes.
+    /// </summary>
+    public void ResetAuthenticator(string newSecret, List<string> newRecoveryCodes)
+    {
+        if (PrimaryMethod != TwoFactorAuthType.Authenticator)
+            throw new InvalidOperationException("Cannot reset authenticator for non-authenticator 2FA");
+        
+        Secret = newSecret ?? throw new ArgumentNullException(nameof(newSecret));
+        RecoveryCodes = newRecoveryCodes ?? throw new ArgumentNullException(nameof(newRecoveryCodes));
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public bool HasRecoveryCodes => RecoveryCodes.Any();

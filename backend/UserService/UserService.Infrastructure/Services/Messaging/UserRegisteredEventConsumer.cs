@@ -173,10 +173,25 @@ public class UserRegisteredEventConsumer : BackgroundService
             return;
         }
 
-        // Parse FullName into FirstName and LastName
-        var nameParts = @event.FullName.Split(' ', 2);
-        var firstName = nameParts.Length > 0 ? nameParts[0] : @event.FullName;
-        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+        // Use FirstName/LastName if provided, otherwise parse from FullName (backwards compatibility)
+        var firstName = !string.IsNullOrWhiteSpace(@event.FirstName) 
+            ? @event.FirstName 
+            : ParseFirstName(@event.FullName);
+        var lastName = !string.IsNullOrWhiteSpace(@event.LastName) 
+            ? @event.LastName 
+            : ParseLastName(@event.FullName);
+
+        // Determine AccountType from event Metadata (set by AdminManagementController for staff)
+        var accountType = AccountType.Buyer; // Default for normal registrations
+        if (@event.Metadata != null && @event.Metadata.TryGetValue("AccountType", out var accountTypeStr))
+        {
+            if (Enum.TryParse<AccountType>(accountTypeStr, ignoreCase: true, out var parsedType))
+            {
+                accountType = parsedType;
+                _logger.LogInformation("Setting AccountType to {AccountType} for user {UserId} (from event Metadata)",
+                    accountType, @event.UserId);
+            }
+        }
 
         // Create user in UserService
         var user = new User
@@ -186,10 +201,10 @@ public class UserRegisteredEventConsumer : BackgroundService
             PasswordHash = "SYNCED_FROM_AUTH", // Password is managed by AuthService
             FirstName = firstName,
             LastName = lastName,
-            PhoneNumber = "",
+            PhoneNumber = @event.PhoneNumber ?? string.Empty, // Use phone from event
             IsActive = true,
             EmailConfirmed = false, // Will be updated when user confirms email
-            AccountType = AccountType.Individual, // Default type, can be updated later
+            AccountType = accountType, // From Metadata or default Buyer
             CreatedAt = @event.RegisteredAt,
             CreatedBy = null
         };
@@ -197,8 +212,28 @@ public class UserRegisteredEventConsumer : BackgroundService
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Successfully synced user {UserId} ({Email}) from AuthService to UserService",
-            @event.UserId, @event.Email);
+        _logger.LogInformation("Successfully synced user {UserId} ({Email}) from AuthService to UserService with FirstName={FirstName}, LastName={LastName}",
+            @event.UserId, @event.Email, firstName, lastName);
+    }
+
+    /// <summary>
+    /// Parse first name from full name string (for backwards compatibility)
+    /// </summary>
+    private static string ParseFirstName(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', 2);
+        return parts.Length > 0 ? parts[0] : fullName;
+    }
+
+    /// <summary>
+    /// Parse last name from full name string (for backwards compatibility)
+    /// </summary>
+    private static string ParseLastName(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', 2);
+        return parts.Length > 1 ? parts[1] : string.Empty;
     }
 
     public override void Dispose()

@@ -30,8 +30,22 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
 # Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-EXPOSE 80
-COPY --from=publish /app/publish .
+# Create non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup -m appuser && \
+    chown -R appuser:appuser /app
+
+# Set environment
+ENV ASPNETCORE_ENVIRONMENT=Docker
+ENV ASPNETCORE_URLS=http://+:8080
+
+USER appuser
+
+EXPOSE 8080
+COPY --from=publish --chown=appuser:appuser /app/publish .
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl --fail --silent http://localhost:8080/health || exit 1
+
 ENTRYPOINT ["dotnet", "ConfigurationService.Api.dll"]

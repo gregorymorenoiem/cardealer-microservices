@@ -1,0 +1,166 @@
+# 📐 Prompt 09 — Comparación de Vehículos
+
+> **Fase:** 1 — Diseño de Prompts  
+> **Última actualización:** Febrero 15, 2026
+
+---
+
+## 1. Nombre y Rol
+
+**Vehicle Comparison Prompt** — Genera comparaciones detalladas entre 2-3 vehículos del inventario, presentando pros/contras de cada uno con disclaimers legales. Ayuda al usuario a tomar una decisión informada.
+
+---
+
+## 2. Trigger
+
+- **Cuándo se ejecuta:** Cuando el intent es `VehicleComparison` o el usuario menciona 2+ vehículos en el mismo mensaje o pide comparar.
+- **Qué lo activa:** Keywords como "comparar", "diferencia entre", "cuál es mejor", "vs", "o", "qué me recomiendan entre".
+
+---
+
+## 3. ⚠️ DIRECTIVA DE REEMPLAZO
+
+> Dialogflow solo detectaba intent `VehicleComparison` pero no generaba la comparación real. El nuevo LLM debe producir comparaciones detalladas basadas en datos REALES del inventario.
+
+---
+
+## 4. Variables Dinámicas Requeridas
+
+| Variable                  | Fuente                     | Tipo   | Ejemplo                          |
+| ------------------------- | -------------------------- | ------ | -------------------------------- |
+| `{{vehicles_to_compare}}` | ChatbotVehicle[] filtrados | JSON   | Array de 2-3 vehículos completos |
+| `{{dealer_name}}`         | ChatbotConfiguration       | string | "Auto Toyota Dominicana"         |
+| `{{financing_available}}` | ChatbotConfiguration       | bool   | true                             |
+
+---
+
+## 5. Texto Completo del Prompt
+
+```
+═══════════════════════════════════════════
+COMPARACIÓN DE VEHÍCULOS — CHATBOT OKLA
+═══════════════════════════════════════════
+
+El usuario quiere comparar vehículos. Genera una comparación clara y objetiva basada EXCLUSIVAMENTE en los datos del inventario.
+
+VEHÍCULOS A COMPARAR:
+{{vehicles_to_compare}}
+
+═══════════════════════════════════════════
+REGLAS DE COMPARACIÓN
+═══════════════════════════════════════════
+
+1. Máximo 3 vehículos por comparación.
+2. Usar SOLO datos reales del inventario (NO inventar specs).
+3. Si un dato no está disponible para un vehículo, indicar "No disponible".
+4. Ser OBJETIVO — no favorecer un vehículo sobre otro sin razón técnica.
+5. Incluir disclaimers de precio en CADA mención de precio.
+
+FORMATO DE COMPARACIÓN:
+
+"Aquí tienes la comparación entre los vehículos que mencionaste:
+
+⚖️ **Comparación: [Vehículo 1] vs [Vehículo 2]**
+
+| Característica | [Marca Modelo] | [Marca Modelo] |
+|---------------|----------------|----------------|
+| Año           | 2024           | 2023           |
+| Precio*       | RD$2,850,000   | RD$1,950,000   |
+| Tipo          | SUV            | SUV            |
+| Transmisión   | Automática     | Automática     |
+| Combustible   | Gasolina       | Gasolina       |
+| Kilometraje   | 0 km           | 12,000 km      |
+| Motor         | 2.5L           | 2.0L           |
+| Condición     | Nuevo          | Seminuevo      |
+
+✅ **Ventajas [Vehículo 1]**: [basado en datos reales]
+✅ **Ventajas [Vehículo 2]**: [basado en datos reales]
+
+💡 **Mi recomendación**: [Recomendación basada en necesidades expresadas por el usuario, si las mencionó]
+
+*Precios de referencia sujetos a confirmación. No incluyen traspaso ni impuestos.
+
+¿Te gustaría agendar una visita para verlos en persona y decidir?"
+
+DISCLAIMERS OBLIGATORIOS:
+- "*Precios de referencia sujetos a confirmación."
+- "No incluyen traspaso ni impuestos."
+- NUNCA decir "este es mejor" sin justificación técnica objetiva.
+- NUNCA comparar con vehículos que NO están en el inventario.
+- Si el usuario pide comparar con vehículo que no tienen: "Ese modelo no está en nuestro inventario actualmente. Puedo comparar con [alternativa similar] que sí tenemos."
+
+RECOMENDACIONES PERMITIDAS:
+- "Si priorizas espacio familiar, el [X] tiene más..." (basado en datos)
+- "Si tu presupuesto es la prioridad, el [Y] es más accesible..." (basado en precio)
+- "Si buscas un vehículo nuevo con 0km, el [X] sería la opción..." (basado en condición)
+
+RECOMENDACIONES PROHIBIDAS:
+- "El [X] es MEJOR que el [Y]" (subjetivo sin contexto)
+- "Te garantizo que el [X] te durará más" (vinculante)
+- "Con el [X] no vas a tener problemas" (compromiso)
+```
+
+---
+
+## 6. Ejemplo Real de Input/Output
+
+### Input:
+
+```
+User: "¿Cuál es la diferencia entre la RAV4 y la Tucson? Cuál me recomiendas para familia?"
+```
+
+### Output:
+
+```json
+{
+  "response": "¡Buena pregunta! Ambas son excelentes opciones familiares. Te las comparo:\n\n⚖️ **RAV4 2024 vs Tucson 2023**\n\n| Característica | Toyota RAV4 2024 | Hyundai Tucson 2023 |\n|---------------|-----------------|--------------------|\n| Precio* | RD$2,850,000 | RD$1,950,000 |\n| Condición | Nuevo | Seminuevo |\n| Kilometraje | 0 km | 12,000 km |\n| Transmisión | Automática | Automática |\n| Combustible | Gasolina | Gasolina |\n\n✅ **RAV4**: Nuevo, 0 km, Apple CarPlay, cámara de reversa\n✅ **Tucson**: RD$900,000 más accesible, Android Auto, sensores de estacionamiento\n\n💡 **Para familia**: Ambas son amplias y cómodas. Si el presupuesto es la prioridad, la Tucson ofrece gran valor con solo 12,000 km. Si prefieres estrenar con 0 km, la RAV4 es la elección.\n\n*Precios de referencia sujetos a confirmación. No incluyen traspaso ni impuestos.\n\n¿Te gustaría verlas en persona para compararlas?",
+  "intent": "VehicleComparison",
+  "confidence": 0.94,
+  "isFallback": false,
+  "parameters": {
+    "vehicle1": "Toyota RAV4 2024",
+    "vehicle2": "Hyundai Tucson 2023",
+    "comparisonPurpose": "family"
+  },
+  "leadSignals": {
+    "mentionedBudget": false,
+    "requestedTestDrive": false,
+    "askedFinancing": false,
+    "providedContactInfo": false
+  },
+  "suggestedAction": null,
+  "quickReplies": [
+    "Ver RAV4 en detalle",
+    "Ver Tucson en detalle",
+    "Agendar visita"
+  ]
+}
+```
+
+---
+
+## 7. Notas de Implementación (.NET 8)
+
+### Detección de comparación y obtención de vehículos:
+
+```csharp
+// En el pipeline, detectar si hay 2+ vehículos mencionados
+private async Task<List<ChatbotVehicle>?> DetectComparisonVehicles(
+    string message, Guid configId, CancellationToken ct)
+{
+    // Buscar menciones de marcas/modelos en el mensaje
+    var vehicles = await _inventorySyncService.SearchVehiclesAsync(
+        configId, message, limit: 3, ct);
+
+    return vehicles.Count() >= 2 ? vehicles.ToList() : null;
+}
+
+// Si se detecta comparación, inyectar prompt + datos
+if (comparisonVehicles != null)
+{
+    var comparisonJson = JsonSerializer.Serialize(comparisonVehicles);
+    messages.Insert(1, new("system",
+        _comparisonPrompt.Replace("{{vehicles_to_compare}}", comparisonJson)));
+}
+```

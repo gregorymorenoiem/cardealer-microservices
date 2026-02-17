@@ -1,3 +1,0 @@
-services:
-  notificationservice:
-    command: bash -lc "dotnet run --project NotificationService/NotificationService.Api/NotificationService.Api.csproj --urls http://0.0.0.0:80"

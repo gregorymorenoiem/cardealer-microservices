@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using MessageBusService.Application.Interfaces;
 using MessageBusService.Infrastructure.Data;
 using MessageBusService.Infrastructure.Services;
@@ -31,8 +32,8 @@ var factory = new ConnectionFactory
 {
     HostName = rabbitMQConfig["Host"] ?? "localhost",
     Port = int.Parse(rabbitMQConfig["Port"] ?? "5672"),
-    UserName = rabbitMQConfig["Username"] ?? "guest",
-    Password = rabbitMQConfig["Password"] ?? "guest",
+    UserName = rabbitMQConfig["Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+    Password = rabbitMQConfig["Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
     VirtualHost = rabbitMQConfig["VirtualHost"] ?? "/"
 };
 
@@ -40,6 +41,9 @@ builder.Services.AddSingleton<IConnection>(sp => factory.CreateConnection());
 
 // Register MediatR
 builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(MessageBusService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(MessageBusService.Application.Commands.PublishMessageCommand).Assembly);
 });
@@ -62,9 +66,24 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -83,8 +102,12 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

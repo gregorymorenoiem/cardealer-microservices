@@ -24,17 +24,21 @@ public class EfScheduledNotificationRepository : IScheduledNotificationRepositor
     public async Task<IEnumerable<ScheduledNotification>> GetAllAsync()
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .OrderBy(sn => sn.ScheduledFor)
+            .Take(1000) // Safety limit
             .ToListAsync();
     }
 
     public async Task<IEnumerable<ScheduledNotification>> GetByStatusAsync(ScheduledNotificationStatus status)
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .Where(sn => sn.Status == status)
             .OrderBy(sn => sn.ScheduledFor)
+            .Take(500)
             .ToListAsync();
     }
 
@@ -78,31 +82,37 @@ public class EfScheduledNotificationRepository : IScheduledNotificationRepositor
             .Where(sn => sn.Status == ScheduledNotificationStatus.Pending &&
                         (sn.NextExecution != null ? sn.NextExecution <= upTo : sn.ScheduledFor <= upTo))
             .OrderBy(sn => sn.NextExecution ?? sn.ScheduledFor)
+            .Take(200) // Process in batches
             .ToListAsync();
     }
 
     public async Task<IEnumerable<ScheduledNotification>> GetScheduledForDateRangeAsync(DateTime start, DateTime end)
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .Where(sn => sn.ScheduledFor >= start && sn.ScheduledFor <= end)
             .OrderBy(sn => sn.ScheduledFor)
+            .Take(1000)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<ScheduledNotification>> GetRecurringNotificationsAsync()
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .Where(sn => sn.IsRecurring &&
                         (sn.Status == ScheduledNotificationStatus.Pending ||
                          sn.Status == ScheduledNotificationStatus.Executed))
+            .Take(500)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<ScheduledNotification>> GetByNotificationIdAsync(Guid notificationId)
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .Where(sn => sn.NotificationId == notificationId)
             .OrderBy(sn => sn.ScheduledFor)
@@ -122,16 +132,19 @@ public class EfScheduledNotificationRepository : IScheduledNotificationRepositor
     public async Task<IEnumerable<ScheduledNotification>> GetExecutedAsync(DateTime since)
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .Where(sn => sn.Status == ScheduledNotificationStatus.Executed &&
                         sn.LastExecution >= since)
             .OrderByDescending(sn => sn.LastExecution)
+            .Take(500)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<ScheduledNotification>> GetPagedAsync(int pageNumber, int pageSize)
     {
         return await _context.ScheduledNotifications
+            .AsNoTracking()
             .Include(sn => sn.Notification)
             .OrderBy(sn => sn.ScheduledFor)
             .Skip((pageNumber - 1) * pageSize)
@@ -141,33 +154,29 @@ public class EfScheduledNotificationRepository : IScheduledNotificationRepositor
 
     public async Task<int> GetTotalCountAsync()
     {
-        return await _context.ScheduledNotifications.CountAsync();
+        return await _context.ScheduledNotifications.AsNoTracking().CountAsync();
     }
 
     public async Task<int> GetCountByStatusAsync(ScheduledNotificationStatus status)
     {
-        return await _context.ScheduledNotifications.CountAsync(sn => sn.Status == status);
+        return await _context.ScheduledNotifications.AsNoTracking().CountAsync(sn => sn.Status == status);
     }
 
     public async Task<int> CleanupCompletedAsync(DateTime cutoffDate)
     {
-        var completedNotifications = await _context.ScheduledNotifications
+        // Performance: Use ExecuteDeleteAsync instead of loading entities into memory
+        return await _context.ScheduledNotifications
             .Where(sn => sn.Status == ScheduledNotificationStatus.Completed &&
                         sn.LastExecution < cutoffDate)
-            .ToListAsync();
-
-        _context.ScheduledNotifications.RemoveRange(completedNotifications);
-        return await _context.SaveChangesAsync();
+            .ExecuteDeleteAsync();
     }
 
     public async Task<int> CleanupCancelledAsync(DateTime cutoffDate)
     {
-        var cancelledNotifications = await _context.ScheduledNotifications
+        // Performance: Use ExecuteDeleteAsync instead of loading entities into memory
+        return await _context.ScheduledNotifications
             .Where(sn => sn.Status == ScheduledNotificationStatus.Cancelled &&
                         sn.CancelledAt < cutoffDate)
-            .ToListAsync();
-
-        _context.ScheduledNotifications.RemoveRange(cancelledNotifications);
-        return await _context.SaveChangesAsync();
+            .ExecuteDeleteAsync();
     }
 }

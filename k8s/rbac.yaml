@@ -1,0 +1,232 @@
+# =============================================================================
+# RBAC - Role-Based Access Control
+# =============================================================================
+# Principle of Least Privilege: Each service gets only the permissions it needs
+# ServiceAccounts prevent pods from using the default account
+# =============================================================================
+
+---
+# =============================================================================
+# SERVICE ACCOUNTS
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: okla-frontend
+  namespace: okla
+  labels:
+    tier: frontend
+automountServiceAccountToken: false
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: okla-backend
+  namespace: okla
+  labels:
+    tier: backend
+automountServiceAccountToken: false
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: okla-gateway
+  namespace: okla
+  labels:
+    tier: gateway
+automountServiceAccountToken: false
+
+---
+# =============================================================================
+# ROLES
+# =============================================================================
+
+# Backend services: Can read ConfigMaps and Secrets they need
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: okla-backend-role
+  namespace: okla
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+    resourceNames: ["global-config", "gateway-config"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+    # Only specific secrets they need (granular access)
+
+---
+# Frontend: Minimal permissions (no K8s API access needed)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: okla-frontend-role
+  namespace: okla
+rules: []
+  # Frontend containers don't need any K8s API access
+
+---
+# =============================================================================
+# ROLE BINDINGS
+# =============================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: okla-backend-binding
+  namespace: okla
+subjects:
+  - kind: ServiceAccount
+    name: okla-backend
+    namespace: okla
+roleRef:
+  kind: Role
+  name: okla-backend-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: okla-frontend-binding
+  namespace: okla
+subjects:
+  - kind: ServiceAccount
+    name: okla-frontend
+    namespace: okla
+roleRef:
+  kind: Role
+  name: okla-frontend-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# =============================================================================
+# NETWORK POLICIES - Defense in Depth
+# =============================================================================
+
+# Only Gateway can receive external ingress traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: okla
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# Allow ingress controller to reach frontend and gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-frontend
+  namespace: okla
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend-web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8080
+          protocol: TCP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-gateway
+  namespace: okla
+spec:
+  podSelector:
+    matchLabels:
+      app: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8080
+          protocol: TCP
+
+---
+# Allow Gateway to reach all backend services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-backend
+  namespace: okla
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - port: 8080
+          protocol: TCP
+
+---
+# Allow backend services to communicate with each other
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-backend
+  namespace: okla
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              tier: backend
+      ports:
+        - port: 8080
+          protocol: TCP
+
+---
+# Allow backend to reach infrastructure (Redis, RabbitMQ, PostgreSQL)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-infra
+  namespace: okla
+spec:
+  podSelector:
+    matchLabels:
+      tier: infrastructure
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              tier: backend
+      ports:
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+        - port: 5432
+          protocol: TCP

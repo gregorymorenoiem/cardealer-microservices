@@ -19,43 +19,43 @@ on:
   workflow_call:
     inputs:
       service-name:
-        description: 'Nombre del servicio (lowercase, ej: authservice)'
+        description: "Nombre del servicio (lowercase, ej: authservice)"
         required: true
         type: string
       service-path:
-        description: 'Path al servicio (ej: backend/AuthService)'
+        description: "Path al servicio (ej: backend/AuthService)"
         required: true
         type: string
       dotnet-version:
-        description: 'Versión de .NET SDK'
+        description: "Versión de .NET SDK"
         required: false
         type: string
-        default: '8.0.x'
+        default: "8.0.x"
       run-tests:
-        description: 'Ejecutar tests'
+        description: "Ejecutar tests"
         required: false
         type: boolean
         default: true
       run-docker-build:
-        description: 'Construir imagen Docker'
+        description: "Construir imagen Docker"
         required: false
         type: boolean
         default: true
       run-docker-push:
-        description: 'Push imagen a registry'
+        description: "Push imagen a registry"
         required: false
         type: boolean
         default: false
       docker-registry:
-        description: 'Docker registry URL'
+        description: "Docker registry URL"
         required: false
         type: string
-        default: 'ghcr.io'
+        default: "ghcr.io"
       api-folder-name:
-        description: 'Nombre del folder .Api (PascalCase, ej: AuthService.Api)'
+        description: "Nombre del folder .Api (PascalCase, ej: AuthService.Api)"
         required: false
         type: string
-        default: ''
+        default: ""
     secrets:
       REGISTRY_USERNAME:
         required: false
@@ -99,9 +99,28 @@ jobs:
         working-directory: ${{ inputs.service-path }}
         run: dotnet restore
 
-      - name: 🔨 Build
+      - name: 🔨 Build (TreatWarningsAsErrors)
         working-directory: ${{ inputs.service-path }}
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: 🔍 Code Format Check
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet format --no-restore --verify-no-changes --severity warn || echo "⚠️ Format issues found (non-blocking)"
+        continue-on-error: true
+
+      - name: 🛡️ NuGet Vulnerability Audit
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet list package --vulnerable --include-transitive 2>&1 | tee /tmp/nuget-audit.txt
+        continue-on-error: true
+
+      - name: 🚨 Check for Critical Vulnerabilities
+        run: |
+          if grep -qi "Critical" /tmp/nuget-audit.txt 2>/dev/null; then
+            echo "::error::Critical NuGet vulnerabilities detected!"
+            cat /tmp/nuget-audit.txt
+            exit 1
+          fi
+          echo "✅ No critical NuGet vulnerabilities"
 
       - name: 🧪 Run tests
         if: inputs.run-tests
@@ -164,22 +183,11 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME || github.actor }}
           password: ${{ secrets.REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
 
-      - name: 🔧 Determine API folder name
-        id: api-folder
-        run: |
-          if [ -n "${{ inputs.api-folder-name }}" ]; then
-            echo "name=${{ inputs.api-folder-name }}" >> $GITHUB_OUTPUT
-          else
-            # Extract PascalCase service name from path (e.g., backend/AuthService -> AuthService)
-            SERVICE_PASCAL=$(basename "${{ inputs.service-path }}")
-            echo "name=${SERVICE_PASCAL}.Api" >> $GITHUB_OUTPUT
-          fi
-
       - name: 🏗️ Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          file: ${{ inputs.service-path }}/${{ steps.api-folder.outputs.name }}/Dockerfile
+          file: ${{ inputs.service-path }}/Dockerfile
           push: ${{ inputs.run-docker-push }}
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
@@ -199,15 +207,15 @@ jobs:
         if: inputs.run-docker-build
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          image-ref: "${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
         continue-on-error: true
 
       - name: 📤 Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
         continue-on-error: true

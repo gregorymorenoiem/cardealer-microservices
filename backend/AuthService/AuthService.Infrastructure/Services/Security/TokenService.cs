@@ -1,6 +1,7 @@
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Entities;
+using AuthService.Application.Common.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
@@ -11,34 +12,42 @@ public class TokenService : ITokenService
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IDistributedCache _cache;
-    private readonly TimeSpan _refreshTokenExpiration = TimeSpan.FromDays(7);
+    private readonly ISecurityConfigProvider _securityConfig;
 
     public TokenService(
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        IDistributedCache cache)
+        IDistributedCache cache,
+        ISecurityConfigProvider securityConfig)
     {
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _cache = cache;
+        _securityConfig = securityConfig;
     }
 
     public async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(ApplicationUser user, string ipAddress)
     {
-        var accessToken = _jwtGenerator.GenerateToken(user);
+        // Read JWT expiration from ConfigurationService (admin panel: Seguridad → Expiración JWT)
+        var jwtMinutes = await _securityConfig.GetJwtExpiresMinutesAsync();
+        var accessToken = _jwtGenerator.GenerateToken(user, jwtMinutes);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
+
+        // Read refresh token days from ConfigurationService (admin panel: Seguridad → Vida del Refresh Token)
+        var refreshTokenDays = await _securityConfig.GetRefreshTokenDaysAsync();
+        var refreshTokenExpiration = TimeSpan.FromDays(refreshTokenDays);
 
         var refreshToken = new RefreshToken(
             user.Id,
             refreshTokenValue,
-            DateTime.UtcNow.Add(_refreshTokenExpiration),
+            DateTime.UtcNow.Add(refreshTokenExpiration),
             ipAddress
         );
 
         await _refreshTokenRepository.AddAsync(refreshToken);
 
-        // Cache del token de acceso para validación rápida
-        await CacheAccessTokenAsync(accessToken, user.Id);
+        // Cache del token de acceso para validación rápida (reuse jwtMinutes from above)
+        await CacheAccessTokenAsync(accessToken, user.Id, jwtMinutes);
 
         return (accessToken, refreshTokenValue);
     }
@@ -65,11 +74,11 @@ public class TokenService : ITokenService
         return cachedToken == accessToken;
     }
 
-    private async Task CacheAccessTokenAsync(string accessToken, string userId)
+    private async Task CacheAccessTokenAsync(string accessToken, string userId, int jwtMinutes = 60)
     {
         var options = new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60) // Mismo tiempo que expira el JWT
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(jwtMinutes)
         };
 
         await _cache.SetStringAsync($"access_token_{userId}", accessToken, options);

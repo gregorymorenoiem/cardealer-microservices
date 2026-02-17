@@ -28,15 +28,18 @@ public class EfNotificationQueueRepository : INotificationQueueRepository
             .Include(q => q.Notification)
             .Where(q => q.Status == Domain.Enums.QueueStatus.Pending)
             .OrderBy(q => q.QueuedAt)
+            .Take(100) // Process in batches to prevent OOM
             .ToListAsync();
     }
 
     public async Task<IEnumerable<NotificationQueue>> GetRetryQueueAsync()
     {
+        var now = DateTime.UtcNow;
         return await _context.NotificationQueues
             .Include(q => q.Notification)
-            .Where(q => q.Status == Domain.Enums.QueueStatus.Retry && q.NextRetryAt <= DateTime.UtcNow)
+            .Where(q => q.Status == Domain.Enums.QueueStatus.Retry && q.NextRetryAt <= now)
             .OrderBy(q => q.NextRetryAt)
+            .Take(100) // Process in batches
             .ToListAsync();
     }
 
@@ -67,16 +70,15 @@ public class EfNotificationQueueRepository : INotificationQueueRepository
     public async Task<int> GetPendingCountAsync()
     {
         return await _context.NotificationQueues
+            .AsNoTracking()
             .CountAsync(q => q.Status == Domain.Enums.QueueStatus.Pending);
     }
 
     public async Task<int> CleanupProcessedAsync(DateTime cutoffDate)
     {
-        var processedQueues = await _context.NotificationQueues
+        // Performance: Use ExecuteDeleteAsync instead of loading entities into memory
+        return await _context.NotificationQueues
             .Where(q => q.ProcessedAt.HasValue && q.ProcessedAt.Value < cutoffDate)
-            .ToListAsync();
-
-        _context.NotificationQueues.RemoveRange(processedQueues);
-        return await _context.SaveChangesAsync();
+            .ExecuteDeleteAsync();
     }
 }

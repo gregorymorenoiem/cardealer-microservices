@@ -49,7 +49,9 @@ public class RabbitMQNotificationConsumer : BackgroundService
                 UserName = rabbitMqSettings.Value.Username,
                 Password = rabbitMqSettings.Value.Password,
                 VirtualHost = rabbitMqSettings.Value.VirtualHost,
-                DispatchConsumersAsync = true
+                DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
 
             _connection = factory.CreateConnection();
@@ -76,39 +78,53 @@ public class RabbitMQNotificationConsumer : BackgroundService
             durable: true,
             autoDelete: false);
 
-        // Cola general
+        // Dead Letter Exchange for persistent DLQ (CRIT-01: replaces InMemoryDeadLetterQueue)
+        var dlxExchange = $"{_settings.ExchangeName}.dlx";
+        _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true, autoDelete: false);
+
+        // DLQ arguments — rejected messages are routed to DLQ automatically by RabbitMQ
+        var dlqArgs = new Dictionary<string, object>
+        {
+            { "x-dead-letter-exchange", dlxExchange }
+        };
+
+        // Cola general with DLQ
         _channel.QueueDeclare(
             queue: _settings.QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: dlqArgs);
+
+        // DLQ queue for general notifications
+        _channel.QueueDeclare($"{_settings.QueueName}.dlq", durable: true, exclusive: false, autoDelete: false);
+        _channel.QueueBind($"{_settings.QueueName}.dlq", dlxExchange, _settings.RoutingKey);
 
         _channel.QueueBind(
             queue: _settings.QueueName,
             exchange: _settings.ExchangeName,
             routingKey: _settings.RoutingKey);
 
-        // Cola específica para emails
+        // Cola específica para emails with DLQ
         _channel.QueueDeclare(
             queue: _settings.EmailQueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: dlqArgs);
 
         _channel.QueueBind(
             queue: _settings.EmailQueueName,
             exchange: _settings.ExchangeName,
             routingKey: "notification.email");
 
-        // Cola específica para SMS
+        // Cola específica para SMS with DLQ
         _channel.QueueDeclare(
             queue: _settings.SmsQueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null);
+            arguments: dlqArgs);
 
         _channel.QueueBind(
             queue: _settings.SmsQueueName,
@@ -240,20 +256,37 @@ public class RabbitMQNotificationConsumer : BackgroundService
 
     private async Task ProcessSmsMessage(string message, IServiceScope scope)
     {
-        // Using CarDealer.Contracts event type
-        var smsEvent = JsonSerializer.Deserialize<SmsNotificationRequestedEvent>(message, _jsonOptions);
-        if (smsEvent == null)
+        // Parse JSON to extract fields - supports both Message and Body properties
+        using var doc = JsonDocument.Parse(message);
+        var root = doc.RootElement;
+        
+        var to = root.TryGetProperty("to", out var toElem) ? toElem.GetString() 
+                : root.TryGetProperty("To", out var toElem2) ? toElem2.GetString() : null;
+        
+        // Support both "Message" (CarDealer.Contracts) and "Body" (AuthService.Shared) formats
+        var smsMessage = root.TryGetProperty("message", out var msgElem) ? msgElem.GetString()
+                        : root.TryGetProperty("Message", out var msgElem2) ? msgElem2.GetString()
+                        : root.TryGetProperty("body", out var bodyElem) ? bodyElem.GetString()
+                        : root.TryGetProperty("Body", out var bodyElem2) ? bodyElem2.GetString() : null;
+        
+        if (string.IsNullOrEmpty(to) || string.IsNullOrEmpty(smsMessage))
         {
-            _logger.LogWarning("Failed to deserialize SMS message");
+            _logger.LogWarning("Failed to extract SMS fields - To: {To}, Message: {HasMessage}", to, !string.IsNullOrEmpty(smsMessage));
             return;
+        }
+        
+        Dictionary<string, object>? metadata = null;
+        if (root.TryGetProperty("data", out var dataElem) || root.TryGetProperty("Data", out dataElem))
+        {
+            metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(dataElem.GetRawText(), _jsonOptions);
         }
 
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
         var request = new SendSmsNotificationRequest(
-            To: smsEvent.To,
-            Message: smsEvent.Message,
-            Metadata: smsEvent.Data?.ToDictionary(k => k.Key, k => (object)k.Value)
+            To: to,
+            Message: smsMessage,
+            Metadata: metadata
         );
 
         var command = new SendSmsNotificationCommand(request);
@@ -262,11 +295,11 @@ public class RabbitMQNotificationConsumer : BackgroundService
         if (result.NotificationId != Guid.Empty)
         {
             _logger.LogInformation("Successfully processed SMS notification {NotificationId} for {To}",
-                result.NotificationId, smsEvent.To);
+                result.NotificationId, to);
         }
         else
         {
-            _logger.LogWarning("Failed to process SMS notification for {To}", smsEvent.To);
+            _logger.LogWarning("Failed to process SMS notification for {To}", to);
         }
     }
 

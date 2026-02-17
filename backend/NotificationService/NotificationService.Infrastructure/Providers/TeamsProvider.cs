@@ -14,7 +14,7 @@ public class TeamsProvider : ITeamsProvider
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<TeamsProvider> _logger;
-    private readonly string _webhookUrl;
+    private readonly string? _webhookUrl;
 
     public TeamsProvider(
         HttpClient httpClient,
@@ -23,14 +23,26 @@ public class TeamsProvider : ITeamsProvider
     {
         _httpClient = httpClient;
         _logger = logger;
-        _webhookUrl = configuration["NotificationSettings:Teams:WebhookUrl"]
-            ?? throw new InvalidOperationException("Teams webhook URL not configured");
+        _webhookUrl = configuration["NotificationSettings:Teams:WebhookUrl"];
+
+        if (string.IsNullOrWhiteSpace(_webhookUrl))
+        {
+            _logger.LogWarning("Teams webhook URL not configured. Teams notifications will be disabled.");
+        }
     }
+
+    private bool IsConfigured => !string.IsNullOrWhiteSpace(_webhookUrl);
 
     public async Task<bool> SendCriticalErrorAlertAsync(
         ErrorCriticalEvent errorEvent,
         CancellationToken cancellationToken = default)
     {
+        if (!IsConfigured)
+        {
+            _logger.LogDebug("Teams not configured, skipping critical error alert for ErrorId: {ErrorId}", errorEvent.ErrorId);
+            return false;
+        }
+
         try
         {
             _logger.LogInformation(
@@ -74,6 +86,12 @@ public class TeamsProvider : ITeamsProvider
         Dictionary<string, string>? metadata = null,
         CancellationToken cancellationToken = default)
     {
+        if (!IsConfigured)
+        {
+            _logger.LogDebug("Teams not configured, skipping alert: {Title}", title);
+            return false;
+        }
+
         try
         {
             _logger.LogInformation("Sending custom Teams alert: {Title}", title);

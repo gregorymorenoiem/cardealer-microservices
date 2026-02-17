@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VehiclesSaleService.Domain.Entities;
 using CarDealer.Shared.MultiTenancy;
+using CarDealer.Shared.Persistence;
 
 namespace VehiclesSaleService.Infrastructure.Persistence;
 
@@ -20,6 +21,7 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<VehicleModel> VehicleModels => Set<VehicleModel>();
     public DbSet<VehicleTrim> VehicleTrims => Set<VehicleTrim>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
 
     // ========================================
     // HOMEPAGE SECTION ENTITIES
@@ -199,6 +201,14 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.HasIndex(v => new { v.Make, v.Model, v.Year });
             entity.HasIndex(v => new { v.Status, v.IsDeleted });
             entity.HasIndex(v => new { v.State, v.City });
+
+            // ✅ AUDIT FIX: Soft-delete query filter — deleted vehicles excluded from all queries
+            entity.HasQueryFilter(v => !v.IsDeleted);
+
+            // ✅ AUDIT FIX: Concurrency control
+            entity.Property(v => v.ConcurrencyStamp)
+                .IsConcurrencyToken()
+                .HasMaxLength(36);
 
             // Relaciones
             entity.HasOne(v => v.Category)
@@ -648,6 +658,32 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.HasIndex(vhs => vhs.SortOrder);
             entity.HasIndex(vhs => vhs.IsPinned);
         });
+
+        // ========================================
+        // FAVORITES CONFIGURATION
+        // ========================================
+
+        modelBuilder.Entity<Favorite>(entity =>
+        {
+            entity.ToTable("favorites");
+            entity.HasKey(f => f.Id);
+
+            entity.Property(f => f.UserId).IsRequired();
+            entity.Property(f => f.VehicleId).IsRequired();
+            entity.Property(f => f.Notes).HasMaxLength(500);
+            entity.Property(f => f.CreatedAt).IsRequired();
+
+            // Relación con Vehicle
+            entity.HasOne(f => f.Vehicle)
+                .WithMany()
+                .HasForeignKey(f => f.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Índices
+            entity.HasIndex(f => f.UserId);
+            entity.HasIndex(f => f.VehicleId);
+            entity.HasIndex(f => new { f.UserId, f.VehicleId }).IsUnique();
+        });
     }
 
     public override int SaveChanges()
@@ -664,12 +700,42 @@ public class ApplicationDbContext : MultiTenantDbContext
 
     private void UpdateTimestamps()
     {
-        var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is Vehicle && e.State == EntityState.Modified);
+        var utcNow = DateTime.UtcNow;
 
-        foreach (var entry in entries)
+        foreach (var entry in ChangeTracker.Entries())
         {
-            ((Vehicle)entry.Entity).UpdatedAt = DateTime.UtcNow;
+            if (entry.Entity is Vehicle vehicle)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        vehicle.CreatedAt = utcNow;
+                        vehicle.UpdatedAt = utcNow;
+                        vehicle.ConcurrencyStamp = Guid.NewGuid().ToString();
+                        break;
+                    case EntityState.Modified:
+                        vehicle.UpdatedAt = utcNow;
+                        vehicle.ConcurrencyStamp = Guid.NewGuid().ToString();
+                        break;
+                    case EntityState.Deleted:
+                        // ✅ AUDIT FIX: Convert hard delete to soft delete
+                        entry.State = EntityState.Modified;
+                        vehicle.IsDeleted = true;
+                        vehicle.UpdatedAt = utcNow;
+                        vehicle.ConcurrencyStamp = Guid.NewGuid().ToString();
+                        break;
+                }
+            }
+            else if (entry.Entity is VehicleImage image && entry.State == EntityState.Added)
+            {
+                if (image.CreatedAt == default)
+                    image.CreatedAt = utcNow;
+            }
+            else if (entry.Entity is Favorite fav && entry.State == EntityState.Added)
+            {
+                if (fav.CreatedAt == default)
+                    fav.CreatedAt = utcNow;
+            }
         }
     }
 }

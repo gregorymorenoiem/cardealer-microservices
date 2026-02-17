@@ -8,7 +8,7 @@ public class ExternalLoginCommandValidator : AbstractValidator<ExternalLoginComm
     {
         RuleFor(x => x.Provider)
             .NotEmpty().WithMessage("Provider is required")
-            .Must(BeValidProvider).WithMessage("Provider must be either 'Google', 'Microsoft', or 'Facebook'");
+            .Must(BeValidProvider).WithMessage("Provider must be either 'Google', 'Microsoft', 'Facebook', or 'Apple'");
 
         RuleFor(x => x.RedirectUri)
             .NotEmpty().WithMessage("Redirect URI is required")
@@ -19,7 +19,8 @@ public class ExternalLoginCommandValidator : AbstractValidator<ExternalLoginComm
     {
         return provider.Equals("Google", StringComparison.OrdinalIgnoreCase) ||
                provider.Equals("Microsoft", StringComparison.OrdinalIgnoreCase) ||
-               provider.Equals("Facebook", StringComparison.OrdinalIgnoreCase);
+               provider.Equals("Facebook", StringComparison.OrdinalIgnoreCase) ||
+               provider.Equals("Apple", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool BeValidUri(string uri)

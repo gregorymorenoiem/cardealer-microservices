@@ -64,32 +64,32 @@ public static class XssValidator
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }
 
+    // Performance: Pre-compile regex patterns once at class load, not per-invocation
+    private static readonly Regex[] s_xssRegexPatterns = new[]
+    {
+        new Regex(@"<script[\s\S]*?>[\s\S]*?</script>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"javascript\s*:", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"on\w+\s*=", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<iframe[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<object[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<embed[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<img[\s\S]*?onerror\s*=", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"data:text/html", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"eval\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"expression\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled)
+    };
+
     /// <summary>
-    /// Advanced XSS validation using regex patterns.
+    /// Advanced XSS validation using pre-compiled regex patterns.
     /// </summary>
     public static IRuleBuilderOptions<T, string> NoXssAdvanced<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
-        var xssRegexPatterns = new[]
-        {
-            @"<script[\s\S]*?>[\s\S]*?</script>",
-            @"javascript\s*:",
-            @"on\w+\s*=",
-            @"<iframe[\s\S]*?>",
-            @"<object[\s\S]*?>",
-            @"<embed[\s\S]*?>",
-            @"<img[\s\S]*?onerror\s*=",
-            @"data:text/html",
-            @"eval\s*\(",
-            @"expression\s*\("
-        };
-
         return ruleBuilder.Must(input =>
         {
             if (string.IsNullOrWhiteSpace(input))
                 return true;
 
-            return !xssRegexPatterns.Any(pattern =>
-                Regex.IsMatch(input, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+            return !s_xssRegexPatterns.Any(regex => regex.IsMatch(input));
         })
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }

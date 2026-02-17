@@ -31,44 +31,51 @@ public class ExternalAuthService : IExternalAuthService
         {
             // Validar token
             var validationResult = await ValidateTokenAndGetUserInfo(provider, idToken);
-            if (!validationResult.isValid)
+            if (!validationResult.IsValid)
                 throw new UnauthorizedException("Invalid external token");
 
             // Buscar usuario existente por external ID
-            var existingUser = await FindUserByExternalIdAsync(provider, validationResult.userId);
+            var existingUser = await FindUserByExternalIdAsync(provider, validationResult.UserId);
             if (existingUser != null)
             {
+                // Update profile info if missing
+                UpdateUserProfileIfNeeded(existingUser, validationResult);
+                
                 _logger.LogInformation("External user found for {Email} with provider {Provider}",
-                    validationResult.email, provider);
+                    validationResult.Email, provider);
                 return (existingUser, false);
             }
 
             // Buscar usuario por email
-            existingUser = await _userRepository.GetByEmailAsync(validationResult.email);
+            existingUser = await _userRepository.GetByEmailAsync(validationResult.Email);
             if (existingUser != null)
             {
                 // Vincular cuenta externa a usuario existente
                 if (!existingUser.IsExternalUser)
                 {
-                    existingUser.LinkExternalAccount(provider, validationResult.userId);
+                    existingUser.LinkExternalAccount(provider, validationResult.UserId);
+                    UpdateUserProfileIfNeeded(existingUser, validationResult);
                     await _userRepository.UpdateAsync(existingUser);
-                    _logger.LogInformation("Linked external account to existing user {Email}", validationResult.email);
+                    _logger.LogInformation("Linked external account to existing user {Email}", validationResult.Email);
                 }
                 return (existingUser, false);
             }
 
-            // Crear nuevo usuario
-            var userName = GenerateUserName(validationResult.name, validationResult.email);
+            // Crear nuevo usuario con toda la información del perfil
+            var userName = GenerateUserName(validationResult.Name, validationResult.Email);
             var newUser = ApplicationUser.CreateExternalUser(
                 userName,
-                validationResult.email,
+                validationResult.Email,
                 provider,
-                validationResult.userId
+                validationResult.UserId,
+                validationResult.FirstName,
+                validationResult.LastName,
+                validationResult.ProfilePictureUrl
             );
 
             await _userRepository.AddAsync(newUser);
-            _logger.LogInformation("Created new external user for {Email} with provider {Provider}",
-                validationResult.email, provider);
+            _logger.LogInformation("Created new external user for {Email} with provider {Provider} (FirstName: {FirstName}, LastName: {LastName})",
+                validationResult.Email, provider, validationResult.FirstName, validationResult.LastName);
 
             return (newUser, true);
         }
@@ -76,6 +83,35 @@ public class ExternalAuthService : IExternalAuthService
         {
             _logger.LogError(ex, "Error during external authentication with provider {Provider}", provider);
             throw;
+        }
+    }
+
+    private void UpdateUserProfileIfNeeded(ApplicationUser user, ExternalTokenValidationResult validationResult)
+    {
+        bool updated = false;
+        
+        if (string.IsNullOrEmpty(user.FirstName) && !string.IsNullOrEmpty(validationResult.FirstName))
+        {
+            user.FirstName = validationResult.FirstName;
+            updated = true;
+        }
+        
+        if (string.IsNullOrEmpty(user.LastName) && !string.IsNullOrEmpty(validationResult.LastName))
+        {
+            user.LastName = validationResult.LastName;
+            updated = true;
+        }
+        
+        if (string.IsNullOrEmpty(user.ProfilePictureUrl) && !string.IsNullOrEmpty(validationResult.ProfilePictureUrl))
+        {
+            user.ProfilePictureUrl = validationResult.ProfilePictureUrl;
+            updated = true;
+        }
+        
+        if (updated)
+        {
+            user.MarkAsUpdated();
+            _userRepository.UpdateAsync(user).Wait();
         }
     }
 
@@ -87,7 +123,7 @@ public class ExternalAuthService : IExternalAuthService
     public async Task<bool> ValidateTokenAsync(ExternalAuthProvider provider, string idToken)
     {
         var result = await ValidateTokenAndGetUserInfo(provider, idToken);
-        return result.isValid;
+        return result.IsValid;
     }
 
     public async Task<string> GetUserInfoAsync(ExternalAuthProvider provider, string accessToken)
@@ -100,6 +136,8 @@ public class ExternalAuthService : IExternalAuthService
             {
                 ExternalAuthProvider.Google => await GetGoogleUserInfoAsync(accessToken),
                 ExternalAuthProvider.Microsoft => await GetMicrosoftUserInfoAsync(accessToken),
+                ExternalAuthProvider.Facebook => await GetFacebookUserInfoAsync(accessToken),
+                ExternalAuthProvider.Apple => await GetAppleUserInfoAsync(accessToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(provider), $"Unsupported provider: {provider}")
             };
 
@@ -120,17 +158,21 @@ public class ExternalAuthService : IExternalAuthService
         {
             ExternalAuthProvider.Google => ParseGoogleUserInfo(userInfoJson),
             ExternalAuthProvider.Microsoft => ParseMicrosoftUserInfo(userInfoJson),
+            ExternalAuthProvider.Facebook => ParseFacebookUserInfo(userInfoJson),
+            ExternalAuthProvider.Apple => ParseAppleUserInfo(userInfoJson),
             _ => throw new ArgumentOutOfRangeException(nameof(provider), $"Unsupported provider: {provider}")
         };
     }
 
-    private async Task<(bool isValid, string email, string userId, string name)> ValidateTokenAndGetUserInfo(
+    private async Task<ExternalTokenValidationResult> ValidateTokenAndGetUserInfo(
         ExternalAuthProvider provider, string idToken)
     {
         return provider switch
         {
             ExternalAuthProvider.Google => await _tokenValidator.ValidateGoogleTokenAsync(idToken),
             ExternalAuthProvider.Microsoft => await _tokenValidator.ValidateMicrosoftTokenAsync(idToken),
+            ExternalAuthProvider.Facebook => await _tokenValidator.ValidateFacebookTokenAsync(idToken),
+            ExternalAuthProvider.Apple => await _tokenValidator.ValidateAppleTokenAsync(idToken),
             _ => throw new ArgumentOutOfRangeException(nameof(provider), $"Unsupported provider: {provider}")
         };
     }
@@ -204,6 +246,67 @@ public class ExternalAuthService : IExternalAuthService
         return JsonSerializer.Serialize(enrichedInfo, new JsonSerializerOptions { WriteIndented = true });
     }
 
+    private async Task<string> GetFacebookUserInfoAsync(string accessToken)
+    {
+        using var httpClient = new HttpClient();
+
+        var url = $"https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture.type(large)&access_token={accessToken}";
+        var response = await httpClient.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Facebook Graph API returned {response.StatusCode}: {errorContent}");
+        }
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        // Parse and enrich the response
+        var userInfo = JsonSerializer.Deserialize<FacebookUserInfo>(content);
+        var enrichedInfo = new
+        {
+            userInfo?.id,
+            userInfo?.name,
+            userInfo?.email,
+            userInfo?.first_name,
+            userInfo?.last_name,
+            picture = userInfo?.picture?.data?.url,
+            Provider = "Facebook",
+            RetrievedAt = DateTime.UtcNow
+        };
+
+        return JsonSerializer.Serialize(enrichedInfo, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private Task<string> GetAppleUserInfoAsync(string idToken)
+    {
+        // Apple doesn't have a userinfo endpoint like Google/Microsoft/Facebook
+        // User info is embedded in the ID token itself
+        // Parse the JWT to extract claims
+        try
+        {
+            var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(idToken);
+
+            var userInfo = new
+            {
+                sub = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? string.Empty,
+                email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value ?? string.Empty,
+                email_verified = jwtToken.Claims.FirstOrDefault(c => c.Type == "email_verified")?.Value ?? "false",
+                is_private_email = jwtToken.Claims.FirstOrDefault(c => c.Type == "is_private_email")?.Value ?? "false",
+                Provider = "Apple",
+                RetrievedAt = DateTime.UtcNow
+            };
+
+            return Task.FromResult(JsonSerializer.Serialize(userInfo, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing Apple ID token");
+            throw new HttpRequestException($"Failed to parse Apple ID token: {ex.Message}");
+        }
+    }
+
     private ExternalUserInfo ParseGoogleUserInfo(string userInfoJson)
     {
         var userInfo = JsonSerializer.Deserialize<GoogleUserInfo>(userInfoJson);
@@ -258,6 +361,55 @@ public class ExternalAuthService : IExternalAuthService
         );
     }
 
+    private ExternalUserInfo ParseFacebookUserInfo(string userInfoJson)
+    {
+        var userInfo = JsonSerializer.Deserialize<FacebookUserInfo>(userInfoJson);
+
+        if (userInfo == null)
+            throw new InvalidOperationException("Failed to parse Facebook user info");
+
+        var additionalData = new Dictionary<string, object>();
+
+        if (userInfo.picture?.data?.url != null)
+            additionalData["picture_url"] = userInfo.picture.data.url;
+
+        return new ExternalUserInfo(
+            UserId: userInfo.id,
+            Email: userInfo.email ?? $"{userInfo.id}@facebook.com",
+            Name: userInfo.name,
+            FirstName: userInfo.first_name,
+            LastName: userInfo.last_name,
+            PictureUrl: userInfo.picture?.data?.url,
+            Provider: "Facebook",
+            AdditionalData: additionalData
+        );
+    }
+
+    private ExternalUserInfo ParseAppleUserInfo(string userInfoJson)
+    {
+        var userInfo = JsonSerializer.Deserialize<AppleUserInfo>(userInfoJson);
+
+        if (userInfo == null)
+            throw new InvalidOperationException("Failed to parse Apple user info");
+
+        var additionalData = new Dictionary<string, object>
+        {
+            ["email_verified"] = userInfo.email_verified,
+            ["is_private_email"] = userInfo.is_private_email
+        };
+
+        return new ExternalUserInfo(
+            UserId: userInfo.sub,
+            Email: userInfo.email,
+            Name: string.Empty, // Apple doesn't always provide name in token
+            FirstName: string.Empty,
+            LastName: string.Empty,
+            PictureUrl: null,
+            Provider: "Apple",
+            AdditionalData: additionalData
+        );
+    }
+
     private string GenerateUserName(string? name, string email)
     {
         if (!string.IsNullOrWhiteSpace(name))
@@ -296,5 +448,36 @@ public class ExternalAuthService : IExternalAuthService
         public string mobilePhone { get; set; } = string.Empty;
         public string jobTitle { get; set; } = string.Empty;
         public string officeLocation { get; set; } = string.Empty;
+    }
+
+    private class FacebookUserInfo
+    {
+        public string id { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
+        public string email { get; set; } = string.Empty;
+        public string first_name { get; set; } = string.Empty;
+        public string last_name { get; set; } = string.Empty;
+        public FacebookPicture? picture { get; set; }
+    }
+
+    private class FacebookPicture
+    {
+        public FacebookPictureData? data { get; set; }
+    }
+
+    private class FacebookPictureData
+    {
+        public string url { get; set; } = string.Empty;
+        public int height { get; set; }
+        public int width { get; set; }
+        public bool is_silhouette { get; set; }
+    }
+
+    private class AppleUserInfo
+    {
+        public string sub { get; set; } = string.Empty;
+        public string email { get; set; } = string.Empty;
+        public string email_verified { get; set; } = string.Empty;
+        public string is_private_email { get; set; } = string.Empty;
     }
 }

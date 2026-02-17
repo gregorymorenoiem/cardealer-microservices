@@ -8,17 +8,26 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     public LoginCommandValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("This field is required.")
-            .EmailAddress().WithMessage("Invalid email format.")
+            .NotEmpty().WithMessage("El email es requerido")
+            .EmailAddress().WithMessage("Formato de email inválido")
             .Matches(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-                .WithMessage("Email must be in the format name@example.com.")
-            .NoXss() // ✅ NUEVO: Protección XSS
-            .NoSqlInjection(); // ✅ NUEVO: Protección SQL Injection
+                .WithMessage("El email debe tener el formato nombre@ejemplo.com")
+            .MaximumLength(254).WithMessage("El email no puede exceder 254 caracteres")
+            .NoXss()
+            .NoSqlInjection();
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("This field is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
-            .Matches(@"^(?=.*[A-Z])(?=.*\d).+$")
-                .WithMessage("Password must include at least one uppercase letter and one number.");
+            .NotEmpty().WithMessage("La contraseña es requerida")
+            .MinimumLength(8).WithMessage("La contraseña debe tener al menos 8 caracteres")
+            .MaximumLength(128).WithMessage("La contraseña no puede exceder 128 caracteres")
+            .NoXss() // ✅ AGREGADO: Protección XSS
+            .NoSqlInjection(); // ✅ AGREGADO: Protección SQL Injection
+
+        // CaptchaToken validation (only if provided)
+        RuleFor(x => x.CaptchaToken)
+            .MaximumLength(1000).WithMessage("Token de captcha inválido")
+            .NoXss()
+            .NoSqlInjection()
+            .When(x => !string.IsNullOrEmpty(x.CaptchaToken));
     }
 }

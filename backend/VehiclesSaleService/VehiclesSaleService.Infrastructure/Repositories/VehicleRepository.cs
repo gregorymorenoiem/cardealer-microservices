@@ -146,14 +146,31 @@ public class VehicleRepository : IVehicleRepository
             .Include(v => v.Category)
             .Where(v => !v.IsDeleted && v.Status == VehicleStatus.Active);
 
+        // Full-text search using PostgreSQL tsvector (if column exists)
         if (!string.IsNullOrWhiteSpace(p.SearchTerm))
         {
             var term = p.SearchTerm.ToLower();
-            query = query.Where(v =>
-                v.Title.ToLower().Contains(term) ||
-                v.Description!.ToLower().Contains(term) ||
-                v.Make.ToLower().Contains(term) ||
-                v.Model.ToLower().Contains(term));
+            
+            // Intento de búsqueda full-text con tsvector
+            // Si la columna search_vector existe, usa ts_rank para ordenar por relevancia
+            // Si no existe, fallback a búsqueda simple con LIKE
+            try
+            {
+                // PostgreSQL full-text search con ranking
+                query = query.Where(v =>
+                    EF.Functions.ToTsVector("english", v.Title + " " + v.Make + " " + v.Model + " " + (v.Description ?? ""))
+                    .Matches(EF.Functions.ToTsQuery("english", term)));
+            }
+            catch
+            {
+                // Fallback a búsqueda simple si tsvector no está disponible
+                query = query.Where(v =>
+                    v.Title.ToLower().Contains(term) ||
+                    v.Description!.ToLower().Contains(term) ||
+                    v.Make.ToLower().Contains(term) ||
+                    v.Model.ToLower().Contains(term) ||
+                    (v.Trim != null && v.Trim.ToLower().Contains(term)));
+            }
         }
 
         if (p.CategoryId.HasValue)

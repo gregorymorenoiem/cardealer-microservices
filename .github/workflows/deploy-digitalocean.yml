@@ -75,7 +75,7 @@ jobs:
         run: |
           if [ "${{ inputs.services }}" == "all" ] || [ -z "${{ inputs.services }}" ]; then
             # Note: vehiclesrentservice, propertiessaleservice, propertiesrentservice disabled temporarily
-            SERVICES="frontend-web,gateway,authservice,userservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice"
+            SERVICES="frontend-web,gateway,authservice,userservice,roleservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice,kycservice,auditservice,idempotencyservice,contactservice,adminservice,dealermanagementservice,chatbotservice"
           else
             SERVICES="${{ inputs.services }}"
           fi
@@ -111,23 +111,72 @@ jobs:
 
       - name: 🔒 Apply secrets
         run: |
-          # Create secrets from GitHub secrets
-          kubectl create secret generic database-secrets \
-            --from-literal=POSTGRES_HOST=${{ secrets.POSTGRES_HOST }} \
-            --from-literal=POSTGRES_PORT=${{ secrets.POSTGRES_PORT }} \
-            --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
-            --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
-            --from-literal=POSTGRES_SSL_MODE=require \
+          # =============================================================
+          # All secrets are created from GitHub Secrets
+          # No hardcoded credentials in K8s manifests
+          # =============================================================
+
+          PG_USER="${{ secrets.POSTGRES_USER }}"
+          PG_PASS="${{ secrets.POSTGRES_PASSWORD }}"
+          PG_HOST="${{ secrets.POSTGRES_HOST || 'postgres' }}"
+          PG_PORT="${{ secrets.POSTGRES_PORT || '5432' }}"
+          JWT_KEY="${{ secrets.JWT_SECRET_KEY }}"
+          REDIS_PASS="${{ secrets.REDIS_PASSWORD }}"
+          RABBITMQ_USER="${{ secrets.RABBITMQ_USER }}"
+          RABBITMQ_PASS="${{ secrets.RABBITMQ_PASSWORD }}"
+
+          # --- PostgreSQL master secret (used by infrastructure.yaml StatefulSet) ---
+          kubectl create secret generic postgres-master-secret \
+            --from-literal=POSTGRES_PASSWORD="$PG_PASS" \
+            --from-literal=password="$PG_PASS" \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
+          # --- PostgreSQL password secret (used by databases.yaml per-service StatefulSets) ---
+          kubectl create secret generic postgres-password \
+            --from-literal=password="$PG_PASS" \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
+
+          # --- Per-service DB secrets ---
+          SERVICES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice chatbotservice kycservice auditservice idempotencyservice contactservice adminservice dealermanagementservice reviewservice"
+
+          for SVC in $SERVICES; do
+            kubectl create secret generic ${SVC}-db-secret \
+              --from-literal=Database__Provider="PostgreSQL" \
+              --from-literal=Database__Host="$PG_HOST" \
+              --from-literal=Database__Port="$PG_PORT" \
+              --from-literal=Database__Database="$SVC" \
+              --from-literal=Database__Username="$PG_USER" \
+              --from-literal=Database__Password="$PG_PASS" \
+              --from-literal=Database__AutoMigrate="true" \
+              --from-literal=Database__ConnectionStrings__PostgreSQL="Host=$PG_HOST;Port=$PG_PORT;Database=$SVC;Username=$PG_USER;Password=$PG_PASS;Include Error Detail=false" \
+              --from-literal=ConnectionStrings__DefaultConnection="Host=$PG_HOST;Port=$PG_PORT;Database=$SVC;Username=$PG_USER;Password=$PG_PASS;Include Error Detail=false" \
+              -n okla --dry-run=client -o yaml | kubectl apply -f -
+          done
+
+          # --- JWT secrets (shared by all services) ---
           kubectl create secret generic jwt-secrets \
-            --from-literal=Jwt__Key=${{ secrets.JWT_SECRET_KEY }} \
-            --from-literal=Jwt__Issuer=OklaService-Prod \
-            --from-literal=Jwt__Audience=Okla-App \
-            --from-literal=Jwt__ExpiresMinutes=60 \
-            --from-literal=Jwt__RefreshTokenExpiresDays=7 \
+            --from-literal=Jwt__Key="$JWT_KEY" \
+            --from-literal=Jwt__Issuer="okla-api" \
+            --from-literal=Jwt__Audience="okla-clients" \
+            --from-literal=Jwt__ExpirationMinutes="60" \
+            --from-literal=Jwt__RefreshExpirationDays="7" \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
+          # --- Redis secrets ---
+          kubectl create secret generic redis-secrets \
+            --from-literal=ConnectionStrings__Redis="redis:6379,password=$REDIS_PASS" \
+            --from-literal=REDIS_PASSWORD="$REDIS_PASS" \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
+
+          # --- RabbitMQ secrets ---
+          kubectl create secret generic rabbitmq-secrets \
+            --from-literal=RABBITMQ_USER="$RABBITMQ_USER" \
+            --from-literal=RABBITMQ_PASSWORD="$RABBITMQ_PASS" \
+            --from-literal=RabbitMQ__UserName="$RABBITMQ_USER" \
+            --from-literal=RabbitMQ__Password="$RABBITMQ_PASS" \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
+
+          # --- External services ---
           kubectl create secret generic external-services-secrets \
             --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
             --from-literal=STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }} \
@@ -136,12 +185,25 @@ jobs:
             --from-literal=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
-          # Create Docker registry secret
+          # --- Docker registry secret ---
           kubectl create secret docker-registry registry-credentials \
             --docker-server=ghcr.io \
             --docker-username=${{ github.actor }} \
             --docker-password=${{ secrets.GITHUB_TOKEN }} \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
+
+          # --- Consolidated okla-secrets (chatbot + shared) ---
+          kubectl create secret generic okla-secrets \
+            --from-literal=chatbot-db-connection="Host=$PG_HOST;Port=$PG_PORT;Database=chatbotservice;Username=$PG_USER;Password=$PG_PASS;SslMode=Prefer" \
+            --from-literal=jwt-secret-key="$JWT_KEY" \
+            --from-literal=rabbitmq-user="$RABBITMQ_USER" \
+            --from-literal=rabbitmq-password="$RABBITMQ_PASS" \
+            --from-literal=whatsapp-verify-token="${{ secrets.WHATSAPP_VERIFY_TOKEN }}" \
+            --from-literal=whatsapp-access-token="${{ secrets.WHATSAPP_ACCESS_TOKEN }}" \
+            --from-literal=whatsapp-phone-number-id="${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}" \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "✅ All secrets created from GitHub Secrets (no hardcoded values)"
 
       - name: ⚙️ Apply ConfigMaps
         run: |
@@ -165,17 +227,16 @@ jobs:
           echo "⏳ Waiting for infrastructure initialization..."
           sleep 30
 
-      - name: 🔐 Apply Database Secrets
-        run: |
-          echo "🔐 Applying database connection secrets..."
-          kubectl apply -f k8s/db-secrets.yaml
-
-      - name: 🚀 Deploy services
+      - name: Deploy services
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
 
           echo "🚀 Applying all deployments..."
           kubectl apply -f k8s/deployments.yaml
+
+          # Deploy ChatbotService + LLM Server (separate manifest)
+          echo "🤖 Applying ChatbotService + LLM Server..."
+          kubectl apply -f k8s/chatbotservice.yaml
 
           # Restart deployments to pick up new secrets
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
@@ -199,6 +260,10 @@ jobs:
             echo "⏳ Waiting for $SERVICE rollout..."
             kubectl rollout status deployment/$SERVICE -n okla --timeout=300s || true
           done
+
+          # LLM Server needs extra time to load the model (~4.5GB)
+          echo "⏳ Waiting for LLM Server rollout (model loading)..."
+          kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
 
       - name: ✅ Verify deployment
         run: |

@@ -1,0 +1,143 @@
+# =============================================================================
+# MVP SELF-MANAGED - Services
+# =============================================================================
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-web
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: frontend-web
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: gateway
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: authservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: userservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: roleservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: roleservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehiclessaleservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: vehiclessaleservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediaservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: mediaservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billingservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: billingservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notificationservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: notificationservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: errorservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: errorservice

@@ -28,26 +28,26 @@ FROM build AS publish
 RUN dotnet publish "SchedulerService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
-# Install wget for healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
+# Install wget for healthcheck (Alpine uses apk)
+RUN apk add --no-cache wget
 
-# Create secrets directory and non-root user
-RUN mkdir -p /run/secrets && \
-    useradd -m -u 1000 schedulerservice && \
-    chown -R schedulerservice:schedulerservice /app /run/secrets
-USER schedulerservice
+# Create secrets directory and non-root user (Alpine uses addgroup/adduser)
+RUN addgroup -g 1000 appgroup && adduser -D -u 1000 -G appgroup appuser && \
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
 
 # Set environment
 ENV ASPNETCORE_ENVIRONMENT=Docker
+ENV ASPNETCORE_URLS=http://+:8080
 
-COPY --from=publish --chown=schedulerservice:schedulerservice /app/publish .
+USER appuser
+COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "SchedulerService.Api.dll"]

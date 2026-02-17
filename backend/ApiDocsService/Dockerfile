@@ -11,6 +11,9 @@ RUN dotnet build "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj" -
 # Change to build output directory
 WORKDIR /app/build
 
-EXPOSE 80
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Docker
+
+EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "ApiDocsService.Api.dll"]

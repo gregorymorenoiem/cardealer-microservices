@@ -134,32 +134,19 @@ public static class DatabaseSecretExtensions
                 break;
 
             case DatabaseProvider.SqlServer:
-                logger?.LogInformation("Configuring SQL Server");
-                options.UseSqlServer(connectionString, sqlServerOptions =>
-                {
-                    sqlServerOptions.EnableRetryOnFailure(
-                        maxRetryCount: maxRetryCount,
-                        maxRetryDelay: TimeSpan.FromSeconds(maxRetryDelay),
-                        errorNumbersToAdd: null);
-                    sqlServerOptions.CommandTimeout(commandTimeout);
-                    sqlServerOptions.MigrationsAssembly(GetMigrationsAssembly<TContext>());
-                });
-                break;
+                throw new NotSupportedException(
+                    "SQL Server provider is not configured in this build. " +
+                    "This project uses PostgreSQL exclusively.");
 
             case DatabaseProvider.Oracle:
-                logger?.LogInformation("Configuring Oracle Database");
-                options.UseOracle(connectionString, oracleOptions =>
-                {
-                    oracleOptions.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
-                    oracleOptions.CommandTimeout(commandTimeout);
-                    oracleOptions.MigrationsAssembly(GetMigrationsAssembly<TContext>());
-                });
-                break;
+                throw new NotSupportedException(
+                    "Oracle provider is not configured in this build. " +
+                    "This project uses PostgreSQL exclusively.");
 
             case DatabaseProvider.InMemory:
-                logger?.LogWarning("Configuring InMemory database. Only for testing.");
-                options.UseInMemoryDatabase(connectionString);
-                break;
+                throw new NotSupportedException(
+                    "InMemory provider is not configured in this build. " +
+                    "Add Microsoft.EntityFrameworkCore.InMemory package if needed for testing.");
 
             default:
                 throw new NotSupportedException(

@@ -27,6 +27,7 @@ public class Notification : IOptionalTenantEntity
     public NotificationProvider Provider { get; set; }
     public PriorityLevel Priority { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public DateTime? SentAt { get; set; }
     public int RetryCount { get; set; }
     public string? ErrorMessage { get; set; }
@@ -96,6 +97,27 @@ public class Notification : IOptionalTenantEntity
             Content = body,
             Provider = provider,
             Priority = priority,
+            Metadata = metadata ?? new Dictionary<string, object>(),
+            DealerId = dealerId
+        };
+    }
+
+    public static Notification CreateWhatsAppNotification(string to, string message,
+        NotificationProvider provider = NotificationProvider.TwilioWhatsApp,
+        PriorityLevel priority = PriorityLevel.Medium,
+        string? templateName = null,
+        Dictionary<string, object>? metadata = null,
+        Guid? dealerId = null)
+    {
+        return new Notification
+        {
+            Type = NotificationType.WhatsApp,
+            Recipient = to,
+            Subject = templateName ?? "WhatsApp Message",
+            Content = message,
+            Provider = provider,
+            Priority = priority,
+            TemplateName = templateName,
             Metadata = metadata ?? new Dictionary<string, object>(),
             DealerId = dealerId
         };

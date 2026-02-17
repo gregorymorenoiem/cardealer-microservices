@@ -1,0 +1,148 @@
+# ============================================================
+# ChatbotService — Docker Compose (Desarrollo Local)
+# ============================================================
+# Levanta: PostgreSQL + LLM Server (llama.cpp) + ChatbotService (.NET 8)
+#
+# Uso:
+#   cd backend/ChatbotService
+#   docker-compose up -d
+#
+# Pre-requisitos:
+#   - Colocar el modelo GGUF en: LlmServer/models/okla-llama3-8b-q4_k_m.gguf
+#   - Docker Desktop con al menos 10 GB de RAM asignados
+#
+# Seeding:
+#   La base de datos se crea y puebla automáticamente al iniciar.
+#   ChatbotService crea las tablas (EnsureCreated) y ejecuta el
+#   ChatbotDataSeeder con 2 dealers de prueba y 15 vehículos.
+#
+# Endpoints:
+#   - ChatbotService API: http://localhost:5060/api/chat/*
+#   - LLM Server:         http://localhost:8000/v1/chat/completions
+#   - LLM Health:         http://localhost:8000/health
+#   - PostgreSQL:         localhost:5433 (evitar conflicto con el 5432 principal)
+# ============================================================
+
+services:
+  # ── PostgreSQL para ChatbotService ──────────────────────
+  chatbot-db:
+    image: postgres:16-alpine
+    container_name: chatbot-db
+    environment:
+      POSTGRES_DB: chatbotservice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - chatbot-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chatbotservice"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - chatbot-net
+
+  # ── Redis para ChatbotService ───────────────────────────
+  chatbot-redis:
+    image: redis:7-alpine
+    container_name: chatbot-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - chatbot-net
+
+  # ── LLM Server (FastAPI + llama.cpp) ────────────────────
+  llm-server:
+    build:
+      context: ./LlmServer
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: llm-server
+    environment:
+      MODEL_PATH: /models/okla-llama3-8b-q4_k_m.gguf
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      N_CTX: "8192"
+      N_GPU_LAYERS: "0"
+      N_THREADS: "4"
+      MAX_TOKENS: "600"
+      N_BATCH: "512"
+      EMBEDDING_MODEL: "sentence-transformers/all-MiniLM-L6-v2"
+      EMBEDDING_DEVICE: "cpu"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./LlmServer/models:/models:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 10G
+        reservations:
+          memory: 6G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 120s
+      timeout: 15s
+      retries: 10
+      start_period: 120s
+    networks:
+      - chatbot-net
+
+  # ── ChatbotService (.NET 8) ─────────────────────────────
+  chatbotservice:
+    build:
+      context: ..
+      dockerfile: ChatbotService/Dockerfile
+    container_name: chatbotservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Host=chatbot-db;Port=5432;Database=chatbotservice;Username=postgres;Password=postgres"
+      LlmService__ServerUrl: "http://host.docker.internal:8000"
+      LlmService__ModelId: "okla-llama3-8b"
+      LlmService__Temperature: "0.3"
+      LlmService__MaxTokens: "600"
+      LlmService__RepetitionPenalty: "1.15"
+      LlmService__TimeoutSeconds: "60"
+      Jwt__Key: "SuperSecretKeyForDevelopmentOnlyDoNotUseInProduction12345"
+      Jwt__Issuer: "cardealer-auth"
+      Jwt__Audience: "cardealer-api"
+      Redis__ConnectionString: "chatbot-redis:6379"
+      # Embedding service (uses LLM server's /v1/embeddings endpoint)
+      Embedding__ServerUrl: "http://llm-server:8000"
+      Embedding__ModelName: "all-MiniLM-L6-v2"
+      Embedding__Dimensions: "384"
+      # WhatsApp (set real values in .env file)
+      WhatsApp__VerifyToken: "${WHATSAPP_VERIFY_TOKEN:-okla-whatsapp-verify-token-dev}"
+      WhatsApp__AccessToken: "${WHATSAPP_ACCESS_TOKEN:-}"
+      WhatsApp__PhoneNumberId: "${WHATSAPP_PHONE_NUMBER_ID:-}"
+      WhatsApp__ApiBaseUrl: "https://graph.facebook.com/v18.0"
+    ports:
+      - "5060:8080"
+    depends_on:
+      chatbot-db:
+        condition: service_healthy
+      chatbot-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/chat/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbot-net
+
+volumes:
+  chatbot-db-data:
+
+networks:
+  chatbot-net:
+    driver: bridge

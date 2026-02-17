@@ -1,0 +1,145 @@
+# ============================================================================
+# Default values for okla-chatbot Helm chart (R18)
+# ============================================================================
+
+# -- Global settings
+global:
+  namespace: okla
+  imageRegistry: ghcr.io/okla-rd
+
+# -- ChatbotService (.NET 8)
+chatbotservice:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/okla-rd/chatbotservice
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  config:
+    llmServerUrl: "http://llm-server:8000"
+    timeoutSeconds: 60
+    temperature: 0.3
+    topP: 0.9
+    maxTokens: 400
+    repetitionPenalty: 1.15
+    maxInteractionsPerSession: 10
+    sessionTimeoutMinutes: 30
+    cacheEnabled: true
+    cacheTtlMinutes: 30
+  env:
+    aspnetcoreEnvironment: Production
+    aspnetcoreUrls: "http://+:8080"
+  probes:
+    liveness:
+      path: /health
+      port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 30
+    readiness:
+      path: /health
+      port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 10
+
+# -- LLM Server (Python/llama.cpp)
+llmServer:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/okla-rd/llm-server
+    tag: latest
+    pullPolicy: IfNotPresent
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  resources:
+    requests:
+      cpu: "2000m"
+      memory: "6Gi"
+    limits:
+      cpu: "4000m"
+      memory: "8Gi"
+  config:
+    modelPath: "/models/okla-llama3-8b-q4_k_m.gguf"
+    host: "0.0.0.0"
+    port: 8000
+    nCtx: 2048
+    nGpuLayers: 0
+    nThreads: 4
+    maxTokens: 512
+    strictChecksum: false
+  probes:
+    liveness:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 120
+      periodSeconds: 60
+    readiness:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 60
+      periodSeconds: 15
+    startup:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 30
+  storage:
+    size: 10Gi
+    storageClassName: do-block-storage
+    accessMode: ReadOnlyMany
+
+# -- Canary deployment
+canary:
+  enabled: false
+  replicaCount: 0
+  image:
+    tag: canary
+
+# -- MLOps CronJobs
+mlops:
+  driftDetector:
+    enabled: true
+    schedule: "0 */6 * * *"
+    image: python:3.11-slim
+  retrainCollector:
+    enabled: true
+    schedule: "0 3 * * 0"
+    image: python:3.11-slim
+
+# -- Monitoring
+monitoring:
+  prometheusRules:
+    enabled: true
+  slackWebhook: ""
+  teamsWebhook: ""
+
+# -- Redis (external)
+redis:
+  connectionString: "redis:6379"
+
+# -- Database (external)
+database:
+  connectionStringSecret: okla-secrets
+  connectionStringKey: chatbot-db-connection
+
+# -- RabbitMQ (external)
+rabbitmq:
+  host: rabbitmq
+  usernameSecret: okla-secrets
+  usernameKey: rabbitmq-user
+  passwordSecret: okla-secrets
+  passwordKey: rabbitmq-password
+
+# -- JWT
+jwt:
+  secretName: okla-secrets
+  secretKey: jwt-secret-key

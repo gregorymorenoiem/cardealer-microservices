@@ -1,12 +1,14 @@
 using CRMService.Application.DTOs;
 using CRMService.Domain.Entities;
 using CRMService.Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRMService.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/crm/[controller]")]
+[Authorize]
 public class ActivitiesController : ControllerBase
 {
     private readonly IActivityRepository _activityRepository;

@@ -38,6 +38,7 @@ builder.Services.AddDbContext<ReportsDbContext>(options =>
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IReportScheduleRepository, ReportScheduleRepository>();
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IContentReportRepository, ContentReportRepository>();
 
 // Add Health Checks
 builder.Services.AddHealthChecks();
@@ -48,8 +49,12 @@ builder.Services.AddModuleAccessServices(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

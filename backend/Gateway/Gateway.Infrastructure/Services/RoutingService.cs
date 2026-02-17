@@ -6,24 +6,26 @@ using Newtonsoft.Json.Linq;
 
 namespace Gateway.Infrastructure.Services;
 
+/// <summary>
+/// Singleton-safe routing service that loads Ocelot configuration once at startup
+/// and caches it in memory. No per-request file I/O.
+/// </summary>
 public class RoutingService : IRoutingService
 {
-    private readonly IConfiguration _configuration;
     private readonly ILogger<RoutingService> _logger;
-    private JObject? _ocelotConfig;
+    private readonly JObject? _ocelotConfig;
 
     public RoutingService(IConfiguration configuration, ILogger<RoutingService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
-        LoadOcelotConfiguration();
+        _ocelotConfig = LoadOcelotConfiguration(configuration);
     }
 
-    private void LoadOcelotConfiguration()
+    private JObject? LoadOcelotConfiguration(IConfiguration configuration)
     {
         try
         {
-            var ocelotFile = _configuration["ASPNETCORE_ENVIRONMENT"] == "Development"
+            var ocelotFile = configuration["ASPNETCORE_ENVIRONMENT"] == "Development"
                 ? "ocelot.dev.json"
                 : "ocelot.prod.json";
 
@@ -32,16 +34,20 @@ public class RoutingService : IRoutingService
             if (File.Exists(ocelotPath))
             {
                 var json = File.ReadAllText(ocelotPath);
-                _ocelotConfig = JObject.Parse(json);
+                var config = JObject.Parse(json);
+                _logger.LogInformation("Ocelot configuration loaded and cached from {OcelotFile}", ocelotFile);
+                return config;
             }
             else
             {
                 _logger.LogWarning("Ocelot configuration file not found: {OcelotFile}", ocelotFile);
+                return null;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading Ocelot configuration");
+            return null;
         }
     }
 

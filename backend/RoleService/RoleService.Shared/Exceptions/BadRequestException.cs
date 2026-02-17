@@ -1,7 +1,11 @@
 namespace RoleService.Shared.Exceptions
 {
-    public class BadGatewayException : AppException
+    /// <summary>
+    /// Excepción para solicitudes mal formadas o inválidas (400)
+    /// </summary>
+    public class BadRequestException : AppException
     {
-        public BadGatewayException(string message) : base(message, 502) { }
+        public BadRequestException(string message, string? errorCode = null) 
+            : base(message, 400, errorCode) { }
     }
 }

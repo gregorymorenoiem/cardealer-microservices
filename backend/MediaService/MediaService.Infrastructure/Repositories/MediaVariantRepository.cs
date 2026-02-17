@@ -21,12 +21,14 @@ public class MediaVariantRepository : IMediaVariantRepository
     public async Task<MediaVariant?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         return await _context.MediaVariants
+            .AsNoTracking()
             .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<MediaVariant>> GetByMediaIdAsync(string mediaId, CancellationToken cancellationToken = default)
     {
         return await _context.MediaVariants
+            .AsNoTracking()
             .Where(v => v.MediaAssetId == mediaId)
             .OrderBy(v => v.Name)
             .ToListAsync(cancellationToken);
@@ -35,6 +37,7 @@ public class MediaVariantRepository : IMediaVariantRepository
     public async Task<MediaVariant?> GetByMediaIdAndNameAsync(string mediaId, string variantName, CancellationToken cancellationToken = default)
     {
         return await _context.MediaVariants
+            .AsNoTracking()
             .FirstOrDefaultAsync(v => v.MediaAssetId == mediaId && v.Name == variantName, cancellationToken);
     }
 
@@ -62,23 +65,23 @@ public class MediaVariantRepository : IMediaVariantRepository
 
     public async Task DeleteByMediaIdAsync(string mediaId, CancellationToken cancellationToken = default)
     {
-        var variants = await _context.MediaVariants
+        // Performance: ExecuteDeleteAsync avoids loading entities into memory
+        await _context.MediaVariants
             .Where(v => v.MediaAssetId == mediaId)
-            .ToListAsync(cancellationToken);
-
-        _context.MediaVariants.RemoveRange(variants);
-        await _context.SaveChangesAsync(cancellationToken);
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<bool> ExistsAsync(string mediaId, string variantName, CancellationToken cancellationToken = default)
     {
         return await _context.MediaVariants
+            .AsNoTracking()
             .AnyAsync(v => v.MediaAssetId == mediaId && v.Name == variantName, cancellationToken);
     }
 
     public async Task<int> CountByMediaIdAsync(string mediaId, CancellationToken cancellationToken = default)
     {
         return await _context.MediaVariants
+            .AsNoTracking()
             .CountAsync(v => v.MediaAssetId == mediaId, cancellationToken);
     }
 
@@ -86,7 +89,7 @@ public class MediaVariantRepository : IMediaVariantRepository
                                                                      int? minHeight = null, int? maxHeight = null,
                                                                      CancellationToken cancellationToken = default)
     {
-        var query = _context.MediaVariants.AsQueryable();
+        var query = _context.MediaVariants.AsNoTracking().AsQueryable();
 
         if (minWidth.HasValue)
             query = query.Where(v => v.Width >= minWidth.Value);
@@ -100,6 +103,8 @@ public class MediaVariantRepository : IMediaVariantRepository
         if (maxHeight.HasValue)
             query = query.Where(v => v.Height <= maxHeight.Value);
 
-        return await query.ToListAsync(cancellationToken);
+        return await query
+            .Take(500) // Safety limit
+            .ToListAsync(cancellationToken);
     }
 }

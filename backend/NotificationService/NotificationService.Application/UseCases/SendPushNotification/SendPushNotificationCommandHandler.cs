@@ -2,6 +2,7 @@ using MediatR;
 using NotificationService.Domain.Entities;
 using NotificationService.Domain.Interfaces.Repositories;
 using NotificationService.Domain.Interfaces.External;
+using NotificationService.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using ErrorService.Shared.Exceptions;
 using NotificationService.Application.DTOs;
@@ -14,17 +15,20 @@ public class SendPushNotificationCommandHandler
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationLogRepository _logRepository;
     private readonly IPushNotificationProvider _pushProvider;
+    private readonly IConfigurationServiceClient _configClient;
     private readonly ILogger<SendPushNotificationCommandHandler> _logger;
 
     public SendPushNotificationCommandHandler(
         INotificationRepository notificationRepository,
         INotificationLogRepository logRepository,
         IPushNotificationProvider pushProvider,
+        IConfigurationServiceClient configClient,
         ILogger<SendPushNotificationCommandHandler> logger)
     {
         _notificationRepository = notificationRepository;
         _logRepository = logRepository;
         _pushProvider = pushProvider;
+        _configClient = configClient;
         _logger = logger;
     }
 
@@ -33,6 +37,18 @@ public class SendPushNotificationCommandHandler
         CancellationToken cancellationToken)
     {
         var request = command.Request;
+
+        // ✅ Check if Push channel is enabled in admin configuration
+        var pushEnabled = await _configClient.IsEnabledAsync("push.enabled", cancellationToken);
+        if (!pushEnabled)
+        {
+            _logger.LogInformation("Push notifications are disabled in configuration. Skipping send to {DeviceToken}", request.DeviceToken);
+            return new SendPushNotificationResponse(
+                Guid.NewGuid(),
+                "Skipped",
+                "Push notifications are disabled in platform configuration"
+            );
+        }
 
         _logger.LogInformation("Creating push notification for device {DeviceToken}", request.DeviceToken);
 

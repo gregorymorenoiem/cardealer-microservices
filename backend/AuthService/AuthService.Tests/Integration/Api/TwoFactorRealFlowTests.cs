@@ -49,7 +49,7 @@ public class TwoFactorRealFlowTests : IClassFixture<CustomWebApplicationFactory>
         // Arrange
         var (token, userId) = await GetAuthTokenAndUserIdAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var request = new Enable2FARequest(userId, TwoFactorAuthType.Authenticator);
+        var request = new Enable2FARequest(TwoFactorAuthType.Authenticator);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/enable", request);
@@ -66,7 +66,7 @@ public class TwoFactorRealFlowTests : IClassFixture<CustomWebApplicationFactory>
         // Arrange
         var (token, userId) = await GetAuthTokenAndUserIdAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var request = new Enable2FARequest(userId, TwoFactorAuthType.SMS);
+        var request = new Enable2FARequest(TwoFactorAuthType.SMS);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/enable", request);
@@ -83,7 +83,7 @@ public class TwoFactorRealFlowTests : IClassFixture<CustomWebApplicationFactory>
         // Arrange
         var (token, userId) = await GetAuthTokenAndUserIdAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var request = new Enable2FARequest(userId, TwoFactorAuthType.Email);
+        var request = new Enable2FARequest(TwoFactorAuthType.Email);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/enable", request);

@@ -1,7 +1,11 @@
 namespace RoleService.Shared.Exceptions
 {
-    public class BadRequestException : AppException
+    /// <summary>
+    /// Excepción para errores de gateway (502)
+    /// </summary>
+    public class BadGatewayException : AppException
     {
-        public BadRequestException(string message) : base(message, 400) { }
+        public BadGatewayException(string message, string? errorCode = null) 
+            : base(message, 502, errorCode) { }
     }
 }

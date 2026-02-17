@@ -16,19 +16,18 @@ COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrast
 
 RUN dotnet restore "ErrorService/ErrorService.Api/ErrorService.Api.csproj"
 
-# Copy everything else and build
+# Copy everything else
 COPY . .
 WORKDIR "/src/ErrorService/ErrorService.Api"
-RUN dotnet build "ErrorService.Api.csproj" -c Release -o /app/build
 
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
 RUN dotnet publish "ErrorService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
+EXPOSE 8080
 
 # Create directories for secrets
 RUN mkdir -p /run/secrets
@@ -44,10 +43,10 @@ COPY --from=publish --chown=appuser:appuser /app/publish .
 
 # Environment variables
 ENV ASPNETCORE_ENVIRONMENT=Docker
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:8080
 
 # Health check using wget
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "ErrorService.Api.dll"]

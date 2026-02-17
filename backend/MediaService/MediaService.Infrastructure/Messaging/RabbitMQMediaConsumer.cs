@@ -33,7 +33,13 @@ public class RabbitMQMediaConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await InitializeConnectionAsync();
+        await InitializeConnectionWithRetryAsync(stoppingToken);
+        
+        if (_channel == null || !_channel.IsOpen)
+        {
+            _logger.LogWarning("RabbitMQ connection not available, consumer will not start");
+            return;
+        }
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.Received += async (model, ea) =>
@@ -51,10 +57,109 @@ public class RabbitMQMediaConsumer : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(1000, stoppingToken);
+            // Verificar si la conexión sigue activa
+            if (_connection == null || !_connection.IsOpen)
+            {
+                _logger.LogWarning("RabbitMQ connection lost, attempting to reconnect...");
+                await InitializeConnectionWithRetryAsync(stoppingToken);
+                
+                if (_channel != null && _channel.IsOpen)
+                {
+                    var newConsumer = new AsyncEventingBasicConsumer(_channel);
+                    newConsumer.Received += async (model, ea) =>
+                    {
+                        await ProcessMessageAsync(ea);
+                    };
+                    _channel.BasicConsume(
+                        queue: _settings.ProcessMediaQueue,
+                        autoAck: false,
+                        consumer: newConsumer);
+                    _logger.LogInformation("Reconnected to RabbitMQ successfully");
+                }
+            }
+            
+            await Task.Delay(5000, stoppingToken);
         }
     }
 
+    private async Task InitializeConnectionWithRetryAsync(CancellationToken stoppingToken)
+    {
+        int retryCount = 0;
+        const int maxRetryDelay = 60; // segundos máximo entre reintentos
+        const int maxRetries = 10; // máximo número de reintentos antes de continuar sin RabbitMQ
+        
+        while (!stoppingToken.IsCancellationRequested && retryCount < maxRetries)
+        {
+            try
+            {
+                var factory = new ConnectionFactory
+                {
+                    HostName = _settings.HostName,
+                    Port = _settings.Port,
+                    UserName = _settings.UserName,
+                    Password = _settings.Password,
+                    VirtualHost = _settings.VirtualHost,
+                    DispatchConsumersAsync = true,
+                    AutomaticRecoveryEnabled = true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
+                };
+
+                _connection = factory.CreateConnection();
+                _channel = _connection.CreateModel();
+
+                // Ensure exchanges and queues are declared (same as producer)
+                _channel.ExchangeDeclare(_settings.MediaCommandsExchange, ExchangeType.Direct, durable: true);
+
+                // Dead Letter Exchange for persistent DLQ (CRIT-01: replaces InMemoryDeadLetterQueue)
+                var dlxExchange = $"{_settings.MediaCommandsExchange}.dlx";
+                var dlqQueue = $"{_settings.ProcessMediaQueue}.dlq";
+                _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true);
+                _channel.QueueDeclare(dlqQueue, durable: true, exclusive: false, autoDelete: false);
+                _channel.QueueBind(dlqQueue, dlxExchange, _settings.ProcessMediaRoutingKey);
+
+                // Main queue with DLX arguments — rejected messages are routed to DLQ automatically
+                var queueArgs = new Dictionary<string, object>
+                {
+                    { "x-dead-letter-exchange", dlxExchange },
+                    { "x-dead-letter-routing-key", _settings.ProcessMediaRoutingKey }
+                };
+                _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false, arguments: queueArgs);
+                _channel.QueueBind(_settings.ProcessMediaQueue, _settings.MediaCommandsExchange, _settings.ProcessMediaRoutingKey);
+
+                // Configure quality of service
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+                _logger.LogInformation("Successfully connected to RabbitMQ on {Host}:{Port}", _settings.HostName, _settings.Port);
+                return; // Conexión exitosa, salir del loop
+            }
+            catch (Exception ex)
+            {
+                retryCount++;
+                var delaySeconds = Math.Min(maxRetryDelay, (int)Math.Pow(2, Math.Min(retryCount, 6)));
+                
+                _logger.LogWarning(ex, 
+                    "Failed to connect to RabbitMQ (attempt {RetryCount}/{MaxRetries}). Retrying in {Delay} seconds...", 
+                    retryCount, maxRetries, delaySeconds);
+                
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("RabbitMQ connection retry cancelled");
+                    return;
+                }
+            }
+        }
+        
+        if (retryCount >= maxRetries)
+        {
+            _logger.LogError("Failed to connect to RabbitMQ after {MaxRetries} attempts. Service will continue without RabbitMQ messaging.", maxRetries);
+        }
+    }
+
+    // Keep legacy method for backward compatibility
     private Task InitializeConnectionAsync()
     {
         try
@@ -66,7 +171,9 @@ public class RabbitMQMediaConsumer : BackgroundService
                 UserName = _settings.UserName,
                 Password = _settings.Password,
                 VirtualHost = _settings.VirtualHost,
-                DispatchConsumersAsync = true
+                DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
 
             _connection = factory.CreateConnection();
@@ -74,7 +181,21 @@ public class RabbitMQMediaConsumer : BackgroundService
 
             // Ensure exchanges and queues are declared (same as producer)
             _channel.ExchangeDeclare(_settings.MediaCommandsExchange, ExchangeType.Direct, durable: true);
-            _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false);
+
+            // Dead Letter Exchange for persistent DLQ
+            var dlxExchange = $"{_settings.MediaCommandsExchange}.dlx";
+            var dlqQueue = $"{_settings.ProcessMediaQueue}.dlq";
+            _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true);
+            _channel.QueueDeclare(dlqQueue, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueBind(dlqQueue, dlxExchange, _settings.ProcessMediaRoutingKey);
+
+            // Main queue with DLX arguments
+            var queueArgs = new Dictionary<string, object>
+            {
+                { "x-dead-letter-exchange", dlxExchange },
+                { "x-dead-letter-routing-key", _settings.ProcessMediaRoutingKey }
+            };
+            _channel.QueueDeclare(_settings.ProcessMediaQueue, durable: true, exclusive: false, autoDelete: false, arguments: queueArgs);
             _channel.QueueBind(_settings.ProcessMediaQueue, _settings.MediaCommandsExchange, _settings.ProcessMediaRoutingKey);
 
             // Configure quality of service

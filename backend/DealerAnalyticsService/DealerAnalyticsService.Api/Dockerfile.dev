@@ -1,0 +1,25 @@
+# Dockerfile.dev for DealerAnalyticsService
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+# Copiar proyectos compartidos
+COPY _Shared/CarDealer.Contracts/ /app/_Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared/ /app/_Shared/CarDealer.Shared/
+
+# Copiar proyectos del servicio
+COPY DealerAnalyticsService/DealerAnalyticsService.Domain/ /app/DealerAnalyticsService/DealerAnalyticsService.Domain/
+COPY DealerAnalyticsService/DealerAnalyticsService.Application/ /app/DealerAnalyticsService/DealerAnalyticsService.Application/
+COPY DealerAnalyticsService/DealerAnalyticsService.Infrastructure/ /app/DealerAnalyticsService/DealerAnalyticsService.Infrastructure/
+COPY DealerAnalyticsService/DealerAnalyticsService.Api/ /app/DealerAnalyticsService/DealerAnalyticsService.Api/
+
+WORKDIR /app/DealerAnalyticsService/DealerAnalyticsService.Api
+
+RUN dotnet restore
+
+EXPOSE 80
+
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:80
+
+ENTRYPOINT ["dotnet", "watch", "run", "--no-launch-profile"]

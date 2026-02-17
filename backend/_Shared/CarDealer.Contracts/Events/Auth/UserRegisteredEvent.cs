@@ -20,9 +20,24 @@ public class UserRegisteredEvent : EventBase
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Full name of the registered user.
+    /// Full name of the registered user (FirstName + LastName).
     /// </summary>
     public string FullName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// First name of the registered user.
+    /// </summary>
+    public string FirstName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Last name of the registered user.
+    /// </summary>
+    public string LastName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Phone number of the registered user (optional).
+    /// </summary>
+    public string? PhoneNumber { get; set; }
 
     /// <summary>
     /// Timestamp when the user registered.

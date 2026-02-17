@@ -8,10 +8,8 @@ using MediaService.Infrastructure.HealthChecks;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using Serilog.Enrichers.Span;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Logging.Extensions;
 using MediaService.Domain.Interfaces;
 using MediaService.Infrastructure.BackgroundServices;
 using MediaService.Infrastructure.Metrics;
@@ -21,26 +19,126 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using MediaService.Api.Middleware;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Messaging;
+using CarDealer.Shared.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
-// Configurar Serilog con TraceId/SpanId enrichment
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-    .CreateLogger();
+const string ServiceName = "MediaService";
+const string ServiceVersion = "1.0.0";
+
+// Bootstrap logger using shared library
+Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog();
+// ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+builder.UseStandardSerilog(ServiceName);
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+              .AllowCredentials();
+    });
+});
 
 // Add application and infrastructure services
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ============= RATE LIMITING =============
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 60;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 5;
+    });
+    // Strict limit for uploads
+    options.AddFixedWindowLimiter("uploads", opt =>
+    {
+        opt.PermitLimit = 20;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 2;
+    });
+    options.OnRejected = async (context, ct) =>
+    {
+        Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
+            context.HttpContext.Connection.RemoteIpAddress,
+            context.HttpContext.Request.Path);
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", ct);
+    };
+});
+
+// Register ConfigurationServiceClient for dynamic admin-panel config
+builder.Services.AddConfigurationServiceClient(builder.Configuration, "MediaService");
+
+// ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+try
+{
+    var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+        };
+    });
+
+    builder.Services.AddAuthorization();
+    Log.Information("JWT Authentication configured successfully for {ServiceName}", ServiceName);
+}
+catch (InvalidOperationException ex)
+{
+    Log.Fatal("JWT Authentication FAILED to configure for {ServiceName}: {Message}. Service will NOT start without proper JWT configuration.", ServiceName, ex.Message);
+    throw; // Fail fast — do NOT start without auth (NIST IA-5)
+}
+
+// ============= TRANSVERSAL SERVICES =============
+// Error Handling (→ ErrorService)
+builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+// Audit (→ AuditService via RabbitMQ)
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 // ========== SERVICE DISCOVERY ==========
 
@@ -60,13 +158,14 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
 // Dead Letter Queue and RabbitMQ - conditional registration
 var rabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled");
+
+// Shared RabbitMQ connection (1 connection per pod instead of N per class)
+builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
+
 if (rabbitMQEnabled)
 {
-    builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>(sp =>
-    {
-        var logger = sp.GetRequiredService<ILogger<InMemoryDeadLetterQueue>>();
-        return new InMemoryDeadLetterQueue(logger, maxRetries: 5);
-    });
+    // PostgreSQL-backed Dead Letter Queue (survives pod restarts during auto-scaling)
+    builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "MediaService");
     builder.Services.AddHostedService<DeadLetterQueueProcessor>();
 }
 
@@ -85,46 +184,8 @@ builder.Services.AddResiliencePipeline("media-circuit-breaker", pipelineBuilder 
     });
 });
 
-// OpenTelemetry
-var serviceName = "MediaService";
-var serviceVersion = "1.0.0";
-
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(serviceName, serviceVersion))
-    .WithTracing(tracing =>
-    {
-        tracing
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddSource(serviceName);
-
-        if (builder.Environment.IsDevelopment())
-        {
-            tracing.AddConsoleExporter();
-        }
-        else
-        {
-            tracing.AddOtlpExporter();
-            tracing.SetSampler(new TraceIdRatioBasedSampler(0.1)); // 10% sampling in production
-        }
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddMeter(serviceName);
-
-        if (builder.Environment.IsDevelopment())
-        {
-            metrics.AddConsoleExporter();
-        }
-        else
-        {
-            metrics.AddOtlpExporter();
-        }
-    });
+// ============= OBSERVABILITY (OpenTelemetry → shared library) =============
+builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
 
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -138,8 +199,8 @@ builder.Services.Configure<RabbitMQSettings>(options =>
     var rabbitMQConfig = builder.Configuration.GetSection("RabbitMQ");
     options.HostName = rabbitMQConfig["HostName"] ?? "localhost";
     options.Port = int.Parse(rabbitMQConfig["Port"] ?? "5672");
-    options.UserName = rabbitMQConfig["UserName"] ?? "guest";
-    options.Password = rabbitMQConfig["Password"] ?? "guest";
+    options.UserName = rabbitMQConfig["UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is required. Do NOT use default 'guest' credentials.");
+    options.Password = rabbitMQConfig["Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is required. Do NOT use default 'guest' credentials.");
     options.VirtualHost = rabbitMQConfig["VirtualHost"] ?? "/";
     options.MediaEventsExchange = rabbitMQConfig["MediaEventsExchange"] ?? "media.events";
     options.MediaCommandsExchange = rabbitMQConfig["MediaCommandsExchange"] ?? "media.commands";
@@ -160,28 +221,58 @@ if (rabbitMQEnabled)
     builder.Services.AddHostedService<RabbitMQMediaConsumer>();
 }
 
+// Audit Service Client for centralized audit logging
+builder.Services.AddHttpClient<MediaService.Application.Interfaces.IAuditServiceClient, MediaService.Infrastructure.External.AuditServiceClient>(client =>
+{
+    var auditServiceUrl = builder.Configuration["ServiceUrls:AuditService"] ?? "http://auditservice:8080";
+    client.BaseAddress = new Uri(auditServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
+// 1. Global error handling — ALWAYS FIRST to catch exceptions from all middleware
+app.UseGlobalErrorHandling();
+
+// 2. Security Headers (OWASP) — early in pipeline
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+// 3. Request Logging
+app.UseRequestLogging();
+
+// 4. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
+// 5. Swagger — development only
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// 6. CORS — before auth
+app.UseCors();
 
-// Use custom middleware
-app.UseMiddleware<ErrorHandlingMiddleware>();
+// 7. Rate Limiting
+app.UseRateLimiter();
 
+// 8. Authentication & Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Service Discovery Auto-Registration
+// 7. Audit middleware — after auth (has userId context)
+app.UseAuditMiddleware();
+
+// 8. Service Discovery Auto-Registration
 app.UseMiddleware<ServiceRegistrationMiddleware>();
 
+// 9. Endpoints
 app.MapControllers();
-
-// Map health checks
 app.MapHealthChecks("/health");
 
 app.Run();

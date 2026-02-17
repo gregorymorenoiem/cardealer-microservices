@@ -1,10 +1,15 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using CarDealer.Shared.Extensions;
 using CarDealer.Shared.Middleware;
 using AppointmentService.Domain.Interfaces;
 using AppointmentService.Infrastructure.Persistence;
 using AppointmentService.Infrastructure.Repositories;
+using FluentValidation;
+using CarDealer.Shared.Audit.Extensions;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,19 +42,55 @@ builder.Services.AddScoped<ITimeSlotRepository, TimeSlotRepository>();
 // Add Health Checks
 builder.Services.AddHealthChecks();
 
+// Register FluentValidation validators
+builder.Services.AddValidatorsFromAssembly(
+    typeof(AppointmentService.Application.Validators.SecurityValidators).Assembly);
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Key"] ?? builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
 // Module Access (for paid feature gating) - disabled in development
 // builder.Services.AddModuleAccessServices(builder.Configuration);
+
+// ============= AUDIT (→ AuditService via RabbitMQ) =============
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+// Audit middleware
+app.UseAuditMiddleware();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -59,12 +100,11 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Apply migrations on startup in development
-if (app.Environment.IsDevelopment())
+// Ensure database tables are created on startup
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
 }
 
 app.Run();

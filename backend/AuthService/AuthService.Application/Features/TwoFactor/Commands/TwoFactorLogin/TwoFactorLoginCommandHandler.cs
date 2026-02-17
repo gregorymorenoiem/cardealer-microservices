@@ -84,11 +84,15 @@ public class TwoFactorLoginCommandHandler : IRequestHandler<TwoFactorLoginComman
             }
         }
 
+        // NOTE: Recovery codes are NOT accepted here.
+        // Users must use POST /api/TwoFactor/login-with-recovery for recovery codes.
+        // This follows industry standards (Google, GitHub, Microsoft pattern).
+
         if (!isValid)
         {
             twoFactorAuth.IncrementFailedAttempts();
             await _userRepository.AddOrUpdateTwoFactorAuthAsync(twoFactorAuth);
-            throw new UnauthorizedException("Invalid two-factor authentication code.");
+            throw new UnauthorizedException("Invalid two-factor authentication code. If you've lost access to your authenticator, use a recovery code instead.");
         }
 
         // Generar tokens finales

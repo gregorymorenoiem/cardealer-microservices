@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace ContactService.Domain.Entities
 {
@@ -7,8 +8,36 @@ namespace ContactService.Domain.Entities
     {
         public Guid Id { get; set; }
         public Guid DealerId { get; set; } // Multi-tenant
+        
+        [Required]
         public Guid ContactRequestId { get; set; }
+        
+        [Required]
+        public Guid SenderId { get; set; }
+        
+        [Required]
+        [StringLength(2000)]
         public string Message { get; set; } = string.Empty;
+        
+        public bool IsFromBuyer { get; set; }
+        public bool IsRead { get; set; } = false;
+        
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation property
+        public ContactRequest? ContactRequest { get; set; }
+        
+        public ContactMessage()
+        {
+            Id = Guid.NewGuid();
+        }
+        
+        public ContactMessage(Guid contactRequestId, Guid senderId, string message, bool isFromBuyer) : this()
+        {
+            ContactRequestId = contactRequestId;
+            SenderId = senderId;
+            Message = message;
+            IsFromBuyer = isFromBuyer;
+        }
     }
 }

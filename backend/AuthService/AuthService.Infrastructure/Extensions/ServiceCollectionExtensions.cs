@@ -26,6 +26,7 @@ using Polly;
 using Polly.Extensions.Http;
 using AuthService.Application.Common.Interfaces;
 using AuthService.Infrastructure.Services;
+using AuthService.Infrastructure.Services.GeoLocation;
 
 namespace AuthService.Infrastructure.Extensions;
 
@@ -33,6 +34,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // MemoryCache - Required for IGeoLocationService
+        services.AddMemoryCache();
+
         // Secret Provider (reads from ENV vars and Docker secrets)
         services.AddSecretProvider();
 
@@ -58,7 +62,7 @@ public static class ServiceCollectionExtensions
             options.Password.RequireDigit = passwordPolicy?.RequireDigit ?? true;
             options.Password.RequireLowercase = passwordPolicy?.RequireLowercase ?? true;
             options.Password.RequireUppercase = passwordPolicy?.RequireUppercase ?? true;
-            options.Password.RequireNonAlphanumeric = passwordPolicy?.RequireNonAlphanumeric ?? false;
+            options.Password.RequireNonAlphanumeric = passwordPolicy?.RequireNonAlphanumeric ?? true;
 
             // Lockout settings from configuration
             var lockoutPolicy = configuration.GetSection("Security:LockoutPolicy").Get<LockoutPolicySettings>();
@@ -103,6 +107,19 @@ public static class ServiceCollectionExtensions
 
             options.Events = new JwtBearerEvents
             {
+                OnMessageReceived = context =>
+                {
+                    // Security (CWE-922): Support reading JWT from HttpOnly cookie
+                    if (!context.Request.Headers.ContainsKey("Authorization"))
+                    {
+                        var accessToken = context.Request.Cookies["okla_access_token"];
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
+                    }
+                    return Task.CompletedTask;
+                },
                 OnAuthenticationFailed = context =>
                 {
                     if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
@@ -128,6 +145,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
+        services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>(); // US-18.4
+        services.AddScoped<IUserSessionRepository, UserSessionRepository>(); // Sessions management
+        services.AddScoped<ILoginHistoryRepository, LoginHistoryRepository>(); // Login history for security page
 
         // Services
         services.AddSingleton<Microsoft.AspNetCore.Identity.IPasswordHasher<object>, Microsoft.AspNetCore.Identity.PasswordHasher<object>>();
@@ -146,11 +166,28 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITwoFactorService, TwoFactorService>();
         services.AddScoped<IQRCodeService, QRCodeService>();
 
-        // External Services
+        // US-18.3: CAPTCHA Service (Google reCAPTCHA v3)
+        services.AddHttpClient<ICaptchaService, CaptchaService>()
+            .AddPolicyHandler(GetRetryPolicy());
+
+        // US-18.4: Device Fingerprinting Service
+        services.AddScoped<IDeviceFingerprintService, DeviceFingerprintService>();
+
+        // US-18.5: Security Audit Service for SIEM integration
+        services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+
+        // GeoLocation Service (ip-api.com for session location tracking)
+        services.AddHttpClient<IGeoLocationService, IpApiGeoLocationService>()
+            .AddPolicyHandler(GetRetryPolicy());
+
+        // External Services - NotificationServiceClient
         services.AddHttpClient<NotificationServiceClient>()
             .AddPolicyHandler(GetRetryPolicy())
             .AddPolicyHandler(GetCircuitBreakerPolicy());
         services.Configure<NotificationServiceSettings>(configuration.GetSection("NotificationService"));
+        
+        // Register INotificationService interface (for SMS 2FA)
+        services.AddScoped<INotificationService>(sp => sp.GetRequiredService<NotificationServiceClient>());
 
         // External Authentication Services
         services.AddHttpClient<ExternalTokenValidator>()
@@ -159,8 +196,20 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalTokenValidator, ExternalTokenValidator>();
         services.AddScoped<IExternalAuthService, ExternalAuthService>();
 
-        // Configuration
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        // Configuration - JwtSettings needs secrets merged in
+        // Get base settings from config, then override with secrets
+        services.Configure<JwtSettings>(options =>
+        {
+            var baseSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+            var (key, issuer, audience) = AuthSecretsConfiguration.GetJwtSettings(configuration);
+            
+            options.Key = key;
+            options.Issuer = issuer;
+            options.Audience = audience;
+            options.ExpiresMinutes = baseSettings.ExpiresMinutes > 0 ? baseSettings.ExpiresMinutes : 60;
+            options.RefreshTokenExpiresDays = baseSettings.RefreshTokenExpiresDays > 0 ? baseSettings.RefreshTokenExpiresDays : 7;
+            options.ClockSkewMinutes = baseSettings.ClockSkewMinutes > 0 ? baseSettings.ClockSkewMinutes : 5;
+        });
         services.Configure<SecuritySettings>(configuration.GetSection("Security"));
         services.Configure<CacheSettings>(configuration.GetSection("Cache"));
         services.Configure<RateLimitSettings>(configuration.GetSection("Security:RateLimit"));

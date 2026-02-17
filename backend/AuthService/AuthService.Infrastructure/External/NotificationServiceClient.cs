@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using AuthService.Shared;
+using AuthService.Domain.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AuthService.Shared.Exceptions;
@@ -8,7 +9,7 @@ using ServiceDiscovery.Application.Interfaces;
 
 namespace AuthService.Infrastructure.External;
 
-public class NotificationServiceClient
+public class NotificationServiceClient : INotificationService
 {
     private readonly HttpClient _httpClient;
     private readonly NotificationServiceSettings _settings;
@@ -260,5 +261,52 @@ public class NotificationServiceClient
         }
     }
 
+    #region INotificationService Implementation
+    
+    /// <summary>
+    /// INotificationService.SendEmailAsync implementation - delegates to existing method
+    /// </summary>
+    async Task INotificationService.SendEmailAsync(string to, string subject, string body, bool isHtml)
+    {
+        var result = await SendEmailAsync(to, subject, body, isHtml);
+        if (!result)
+        {
+            throw new InvalidOperationException($"Failed to send email to {to}");
+        }
+    }
+
+    /// <summary>
+    /// INotificationService.SendSmsAsync implementation - delegates to existing method
+    /// </summary>
+    async Task INotificationService.SendSmsAsync(string to, string message)
+    {
+        var result = await SendSmsAsync(to, message);
+        if (!result)
+        {
+            throw new InvalidOperationException($"Failed to send SMS to {to}");
+        }
+    }
+
+    /// <summary>
+    /// INotificationService.SendPushAsync implementation
+    /// </summary>
+    async Task INotificationService.SendPushAsync(string deviceToken, string title, string body)
+    {
+        var result = await SendPushAsync(deviceToken, title, body);
+        if (!result)
+        {
+            throw new InvalidOperationException($"Failed to send push notification to {deviceToken}");
+        }
+    }
+
+    /// <summary>
+    /// INotificationService.IsHealthyAsync implementation
+    /// </summary>
+    Task<bool> INotificationService.IsHealthyAsync()
+    {
+        return IsHealthyAsync();
+    }
+    
+    #endregion
 
 }

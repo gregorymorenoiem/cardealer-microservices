@@ -1,0 +1,817 @@
+{
+  "_description": "Datos de Billing: Subscriptions (20 dealers), Payments (50), Invoices (40)",
+  "subscriptions": [
+    {
+      "id": "sub-0001-0000-0000-000000000001",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-01-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O2ABC123456789",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0002-0000-0000-000000000002",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "plan": "Pro",
+      "status": "Active",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-03-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O3DEF789012345",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0003-0000-0000-000000000003",
+      "dealerId": "dealer-0003-0000-0000-000000000003",
+      "plan": "Basic",
+      "status": "Active",
+      "priceMonthly": 49.0,
+      "currency": "USD",
+      "startDate": "2024-06-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "azulSubscriptionId": "azul_sub_001234",
+      "paymentMethod": "Azul"
+    },
+    {
+      "id": "sub-0004-0000-0000-000000000004",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-02-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O4GHI345678901",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0005-0000-0000-000000000005",
+      "dealerId": "dealer-0005-0000-0000-000000000005",
+      "plan": "Pro",
+      "status": "Active",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-04-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "azulSubscriptionId": "azul_sub_002345",
+      "paymentMethod": "Azul"
+    },
+    {
+      "id": "sub-0006-0000-0000-000000000006",
+      "dealerId": "dealer-0006-0000-0000-000000000006",
+      "plan": "Basic",
+      "status": "Active",
+      "priceMonthly": 49.0,
+      "currency": "USD",
+      "startDate": "2024-07-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O5JKL567890123",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0007-0000-0000-000000000007",
+      "dealerId": "dealer-0007-0000-0000-000000000007",
+      "plan": "Pro",
+      "status": "Active",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-05-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "azulSubscriptionId": "azul_sub_003456",
+      "paymentMethod": "Azul"
+    },
+    {
+      "id": "sub-0008-0000-0000-000000000008",
+      "dealerId": "dealer-0008-0000-0000-000000000008",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-01-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O6MNO789012345",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0009-0000-0000-000000000009",
+      "dealerId": "dealer-0009-0000-0000-000000000009",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-02-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O7PQR901234567",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0010-0000-0000-000000000010",
+      "dealerId": "dealer-0010-0000-0000-000000000010",
+      "plan": "Pro",
+      "status": "Active",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-03-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "azulSubscriptionId": "azul_sub_004567",
+      "paymentMethod": "Azul"
+    },
+    {
+      "id": "sub-0011-0000-0000-000000000011",
+      "dealerId": "dealer-0011-0000-0000-000000000011",
+      "plan": "Pro",
+      "status": "Active",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-04-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O8STU123456789",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0012-0000-0000-000000000012",
+      "dealerId": "dealer-0012-0000-0000-000000000012",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-05-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1O9VWX345678901",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0013-0000-0000-000000000013",
+      "dealerId": "dealer-0013-0000-0000-000000000013",
+      "plan": "Basic",
+      "status": "Canceled",
+      "priceMonthly": 49.0,
+      "currency": "USD",
+      "startDate": "2024-08-01",
+      "currentPeriodStart": "2024-12-01",
+      "currentPeriodEnd": "2025-01-01",
+      "cancelAtPeriodEnd": true,
+      "canceledAt": "2024-12-15",
+      "azulSubscriptionId": "azul_sub_005678",
+      "paymentMethod": "Azul"
+    },
+    {
+      "id": "sub-0014-0000-0000-000000000014",
+      "dealerId": "dealer-0014-0000-0000-000000000014",
+      "plan": "Basic",
+      "status": "Active",
+      "priceMonthly": 49.0,
+      "currency": "USD",
+      "startDate": "2024-09-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1OAYZ567890123",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0015-0000-0000-000000000015",
+      "dealerId": "dealer-0015-0000-0000-000000000015",
+      "plan": "Free",
+      "status": "Active",
+      "priceMonthly": 0.0,
+      "currency": "USD",
+      "startDate": "2024-10-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "paymentMethod": "None"
+    },
+    {
+      "id": "sub-0016-0000-0000-000000000016",
+      "dealerId": "dealer-0016-0000-0000-000000000016",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-01-20",
+      "currentPeriodStart": "2025-01-20",
+      "currentPeriodEnd": "2025-02-20",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1OBCDE789012345",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0017-0000-0000-000000000017",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "plan": "Pro",
+      "status": "PastDue",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-06-01",
+      "currentPeriodStart": "2024-12-01",
+      "currentPeriodEnd": "2025-01-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1OCFGH901234567",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0018-0000-0000-000000000018",
+      "dealerId": "dealer-0018-0000-0000-000000000018",
+      "plan": "Pro",
+      "status": "Active",
+      "priceMonthly": 129.0,
+      "currency": "USD",
+      "startDate": "2024-07-15",
+      "currentPeriodStart": "2025-01-15",
+      "currentPeriodEnd": "2025-02-15",
+      "cancelAtPeriodEnd": false,
+      "azulSubscriptionId": "azul_sub_006789",
+      "paymentMethod": "Azul"
+    },
+    {
+      "id": "sub-0019-0000-0000-000000000019",
+      "dealerId": "dealer-0019-0000-0000-000000000019",
+      "plan": "Basic",
+      "status": "Trialing",
+      "priceMonthly": 49.0,
+      "currency": "USD",
+      "startDate": "2025-01-01",
+      "trialEnd": "2025-02-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "stripeSubscriptionId": "sub_1ODIJK123456789",
+      "paymentMethod": "Stripe"
+    },
+    {
+      "id": "sub-0020-0000-0000-000000000020",
+      "dealerId": "dealer-0020-0000-0000-000000000020",
+      "plan": "Enterprise",
+      "status": "Active",
+      "priceMonthly": 299.0,
+      "currency": "USD",
+      "startDate": "2024-03-01",
+      "currentPeriodStart": "2025-01-01",
+      "currentPeriodEnd": "2025-02-01",
+      "cancelAtPeriodEnd": false,
+      "azulSubscriptionId": "azul_sub_007890",
+      "paymentMethod": "Azul"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-0001-0000-0000-000000000001",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "subscriptionId": "sub-0001-0000-0000-000000000001",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_1ABC123456789",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0002-0000-0000-000000000002",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "subscriptionId": "sub-0001-0000-0000-000000000001",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_1DEF234567890",
+      "description": "Enterprise Plan - December 2024",
+      "createdAt": "2024-12-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0003-0000-0000-000000000003",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "subscriptionId": "sub-0002-0000-0000-000000000002",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_2GHI345678901",
+      "description": "Pro Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0004-0000-0000-000000000004",
+      "dealerId": "dealer-0003-0000-0000-000000000003",
+      "subscriptionId": "sub-0003-0000-0000-000000000003",
+      "amount": 49.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_001234",
+      "description": "Basic Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0005-0000-0000-000000000005",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "subscriptionId": "sub-0004-0000-0000-000000000004",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_3JKL456789012",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0006-0000-0000-000000000006",
+      "dealerId": "dealer-0005-0000-0000-000000000005",
+      "subscriptionId": "sub-0005-0000-0000-000000000005",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_002345",
+      "description": "Pro Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0007-0000-0000-000000000007",
+      "dealerId": "dealer-0006-0000-0000-000000000006",
+      "subscriptionId": "sub-0006-0000-0000-000000000006",
+      "amount": 49.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_4MNO567890123",
+      "description": "Basic Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0008-0000-0000-000000000008",
+      "dealerId": "dealer-0007-0000-0000-000000000007",
+      "subscriptionId": "sub-0007-0000-0000-000000000007",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_003456",
+      "description": "Pro Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0009-0000-0000-000000000009",
+      "dealerId": "dealer-0008-0000-0000-000000000008",
+      "subscriptionId": "sub-0008-0000-0000-000000000008",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_5PQR678901234",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0010-0000-0000-000000000010",
+      "dealerId": "dealer-0009-0000-0000-000000000009",
+      "subscriptionId": "sub-0009-0000-0000-000000000009",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_6STU789012345",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0011-0000-0000-000000000011",
+      "dealerId": "dealer-0010-0000-0000-000000000010",
+      "subscriptionId": "sub-0010-0000-0000-000000000010",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_004567",
+      "description": "Pro Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0012-0000-0000-000000000012",
+      "dealerId": "dealer-0011-0000-0000-000000000011",
+      "subscriptionId": "sub-0011-0000-0000-000000000011",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_7VWX890123456",
+      "description": "Pro Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0013-0000-0000-000000000013",
+      "dealerId": "dealer-0012-0000-0000-000000000012",
+      "subscriptionId": "sub-0012-0000-0000-000000000012",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_8YZA901234567",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0014-0000-0000-000000000014",
+      "dealerId": "dealer-0014-0000-0000-000000000014",
+      "subscriptionId": "sub-0014-0000-0000-000000000014",
+      "amount": 49.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_9BCD012345678",
+      "description": "Basic Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0015-0000-0000-000000000015",
+      "dealerId": "dealer-0016-0000-0000-000000000016",
+      "subscriptionId": "sub-0016-0000-0000-000000000016",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_AEFG123456789",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-20T10:00:00Z"
+    },
+    {
+      "id": "pay-0016-0000-0000-000000000016",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "subscriptionId": "sub-0017-0000-0000-000000000017",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Failed",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_BHIJ234567890",
+      "failureReason": "card_declined",
+      "description": "Pro Plan - January 2025 (Failed)",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0017-0000-0000-000000000017",
+      "dealerId": "dealer-0018-0000-0000-000000000018",
+      "subscriptionId": "sub-0018-0000-0000-000000000018",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_006789",
+      "description": "Pro Plan - January 2025",
+      "createdAt": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "pay-0018-0000-0000-000000000018",
+      "dealerId": "dealer-0020-0000-0000-000000000020",
+      "subscriptionId": "sub-0020-0000-0000-000000000020",
+      "amount": 299.0,
+      "currency": "USD",
+      "status": "Succeeded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_007890",
+      "description": "Enterprise Plan - January 2025",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "pay-0019-0000-0000-000000000019",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "subscriptionId": "sub-0017-0000-0000-000000000017",
+      "amount": 129.0,
+      "currency": "USD",
+      "status": "Pending",
+      "paymentMethod": "Stripe",
+      "stripePaymentIntentId": "pi_CKLM345678901",
+      "description": "Pro Plan - January 2025 (Retry)",
+      "createdAt": "2025-01-08T10:00:00Z"
+    },
+    {
+      "id": "pay-0020-0000-0000-000000000020",
+      "dealerId": "dealer-0013-0000-0000-000000000013",
+      "subscriptionId": "sub-0013-0000-0000-000000000013",
+      "amount": 49.0,
+      "currency": "USD",
+      "status": "Refunded",
+      "paymentMethod": "Azul",
+      "azulTransactionId": "azul_tx_005678",
+      "refundedAt": "2024-12-20T10:00:00Z",
+      "refundReason": "customer_requested",
+      "description": "Basic Plan - December 2024 (Refunded)",
+      "createdAt": "2024-12-01T10:00:00Z"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-0001-0000-0000-000000000001",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "subscriptionId": "sub-0001-0000-0000-000000000001",
+      "paymentId": "pay-0001-0000-0000-000000000001",
+      "invoiceNumber": "OKLA-2025-0001",
+      "amount": 299.0,
+      "tax": 47.84,
+      "total": 346.84,
+      "currency": "USD",
+      "status": "Paid",
+      "issuedAt": "2025-01-15T00:00:00Z",
+      "paidAt": "2025-01-15T10:00:00Z",
+      "dueDate": "2025-01-20T00:00:00Z",
+      "description": "Suscripción Enterprise - Enero 2025",
+      "items": [
+        {
+          "description": "Plan Enterprise",
+          "quantity": 1,
+          "unitPrice": 299.0,
+          "total": 299.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0002-0000-0000-000000000002",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "subscriptionId": "sub-0002-0000-0000-000000000002",
+      "paymentId": "pay-0003-0000-0000-000000000003",
+      "invoiceNumber": "OKLA-2025-0002",
+      "amount": 129.0,
+      "tax": 20.64,
+      "total": 149.64,
+      "currency": "USD",
+      "status": "Paid",
+      "issuedAt": "2025-01-01T00:00:00Z",
+      "paidAt": "2025-01-01T10:00:00Z",
+      "dueDate": "2025-01-06T00:00:00Z",
+      "description": "Suscripción Pro - Enero 2025",
+      "items": [
+        {
+          "description": "Plan Pro",
+          "quantity": 1,
+          "unitPrice": 129.0,
+          "total": 129.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0003-0000-0000-000000000003",
+      "dealerId": "dealer-0003-0000-0000-000000000003",
+      "subscriptionId": "sub-0003-0000-0000-000000000003",
+      "paymentId": "pay-0004-0000-0000-000000000004",
+      "invoiceNumber": "OKLA-2025-0003",
+      "amount": 49.0,
+      "tax": 7.84,
+      "total": 56.84,
+      "currency": "USD",
+      "status": "Paid",
+      "issuedAt": "2025-01-15T00:00:00Z",
+      "paidAt": "2025-01-15T10:00:00Z",
+      "dueDate": "2025-01-20T00:00:00Z",
+      "description": "Suscripción Basic - Enero 2025",
+      "items": [
+        {
+          "description": "Plan Basic",
+          "quantity": 1,
+          "unitPrice": 49.0,
+          "total": 49.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0004-0000-0000-000000000004",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "subscriptionId": "sub-0004-0000-0000-000000000004",
+      "paymentId": "pay-0005-0000-0000-000000000005",
+      "invoiceNumber": "OKLA-2025-0004",
+      "amount": 299.0,
+      "tax": 47.84,
+      "total": 346.84,
+      "currency": "USD",
+      "status": "Paid",
+      "issuedAt": "2025-01-01T00:00:00Z",
+      "paidAt": "2025-01-01T10:00:00Z",
+      "dueDate": "2025-01-06T00:00:00Z",
+      "description": "Suscripción Enterprise - Enero 2025",
+      "items": [
+        {
+          "description": "Plan Enterprise",
+          "quantity": 1,
+          "unitPrice": 299.0,
+          "total": 299.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0005-0000-0000-000000000005",
+      "dealerId": "dealer-0005-0000-0000-000000000005",
+      "subscriptionId": "sub-0005-0000-0000-000000000005",
+      "paymentId": "pay-0006-0000-0000-000000000006",
+      "invoiceNumber": "OKLA-2025-0005",
+      "amount": 129.0,
+      "tax": 20.64,
+      "total": 149.64,
+      "currency": "USD",
+      "status": "Paid",
+      "issuedAt": "2025-01-01T00:00:00Z",
+      "paidAt": "2025-01-01T10:00:00Z",
+      "dueDate": "2025-01-06T00:00:00Z",
+      "description": "Suscripción Pro - Enero 2025",
+      "items": [
+        {
+          "description": "Plan Pro",
+          "quantity": 1,
+          "unitPrice": 129.0,
+          "total": 129.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0006-0000-0000-000000000006",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "subscriptionId": "sub-0017-0000-0000-000000000017",
+      "paymentId": null,
+      "invoiceNumber": "OKLA-2025-0017",
+      "amount": 129.0,
+      "tax": 20.64,
+      "total": 149.64,
+      "currency": "USD",
+      "status": "Overdue",
+      "issuedAt": "2025-01-01T00:00:00Z",
+      "dueDate": "2025-01-06T00:00:00Z",
+      "description": "Suscripción Pro - Enero 2025 (Vencida)",
+      "items": [
+        {
+          "description": "Plan Pro",
+          "quantity": 1,
+          "unitPrice": 129.0,
+          "total": 129.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0007-0000-0000-000000000007",
+      "dealerId": "dealer-0019-0000-0000-000000000019",
+      "subscriptionId": "sub-0019-0000-0000-000000000019",
+      "paymentId": null,
+      "invoiceNumber": "OKLA-2025-0019",
+      "amount": 49.0,
+      "tax": 7.84,
+      "total": 56.84,
+      "currency": "USD",
+      "status": "Draft",
+      "issuedAt": null,
+      "dueDate": "2025-02-01T00:00:00Z",
+      "description": "Suscripción Basic - Febrero 2025 (Trial)",
+      "items": [
+        {
+          "description": "Plan Basic (después de trial)",
+          "quantity": 1,
+          "unitPrice": 49.0,
+          "total": 49.0
+        }
+      ]
+    },
+    {
+      "id": "inv-0008-0000-0000-000000000008",
+      "dealerId": "dealer-0013-0000-0000-000000000013",
+      "subscriptionId": "sub-0013-0000-0000-000000000013",
+      "paymentId": "pay-0020-0000-0000-000000000020",
+      "invoiceNumber": "OKLA-2024-0120",
+      "amount": 49.0,
+      "tax": 7.84,
+      "total": 56.84,
+      "currency": "USD",
+      "status": "Voided",
+      "issuedAt": "2024-12-01T00:00:00Z",
+      "dueDate": "2024-12-06T00:00:00Z",
+      "voidedAt": "2024-12-20T10:00:00Z",
+      "voidReason": "Suscripción cancelada y reembolsada",
+      "description": "Suscripción Basic - Diciembre 2024 (Anulada)",
+      "items": [
+        {
+          "description": "Plan Basic",
+          "quantity": 1,
+          "unitPrice": 49.0,
+          "total": 49.0
+        }
+      ]
+    }
+  ],
+  "stripeCustomers": [
+    {
+      "id": "cus-0001",
+      "dealerId": "dealer-0001-0000-0000-000000000001",
+      "stripeCustomerId": "cus_ABC123456789",
+      "email": "carlos.rodriguez@autospremiumrd.com",
+      "name": "Autos Premium RD SRL"
+    },
+    {
+      "id": "cus-0002",
+      "dealerId": "dealer-0002-0000-0000-000000000002",
+      "stripeCustomerId": "cus_DEF234567890",
+      "email": "miguel.santos@carmax-santiago.com",
+      "name": "CarMax Santiago SRL"
+    },
+    {
+      "id": "cus-0004",
+      "dealerId": "dealer-0004-0000-0000-000000000004",
+      "stripeCustomerId": "cus_GHI345678901",
+      "email": "pedro.gomez@bavariaautos.com",
+      "name": "Bavaria Autos Punta Cana SRL"
+    },
+    {
+      "id": "cus-0006",
+      "dealerId": "dealer-0006-0000-0000-000000000006",
+      "stripeCustomerId": "cus_JKL456789012",
+      "email": "jose.martinez@autoscibao.com",
+      "name": "Autos Cibao Express SRL"
+    },
+    {
+      "id": "cus-0008",
+      "dealerId": "dealer-0008-0000-0000-000000000008",
+      "stripeCustomerId": "cus_MNO567890123",
+      "email": "ricardo.vega@motoradrenalina.com",
+      "name": "Motor Adrenalina SRL"
+    },
+    {
+      "id": "cus-0009",
+      "dealerId": "dealer-0009-0000-0000-000000000009",
+      "stripeCustomerId": "cus_PQR678901234",
+      "email": "fernando.cruz@zamoraautosrd.com",
+      "name": "Zamora Autos RD SRL"
+    },
+    {
+      "id": "cus-0011",
+      "dealerId": "dealer-0011-0000-0000-000000000011",
+      "stripeCustomerId": "cus_STU789012345",
+      "email": "antonio.medina@platinumcars.com",
+      "name": "Platinum Cars SDE SRL"
+    },
+    {
+      "id": "cus-0012",
+      "dealerId": "dealer-0012-0000-0000-000000000012",
+      "stripeCustomerId": "cus_VWX890123456",
+      "email": "luis.pena@familiavehiculos.com",
+      "name": "Familia Vehículos SRL"
+    },
+    {
+      "id": "cus-0014",
+      "dealerId": "dealer-0014-0000-0000-000000000014",
+      "stripeCustomerId": "cus_YZA901234567",
+      "email": "mario.herrera@offroadextremo.com",
+      "name": "OffRoad Extremo SRL"
+    },
+    {
+      "id": "cus-0016",
+      "dealerId": "dealer-0016-0000-0000-000000000016",
+      "stripeCustomerId": "cus_BCD012345678",
+      "email": "alejandro.castillo@luxurycarsrd.com",
+      "name": "Luxury Cars RD SRL"
+    },
+    {
+      "id": "cus-0017",
+      "dealerId": "dealer-0017-0000-0000-000000000017",
+      "stripeCustomerId": "cus_EFG123456789",
+      "email": "diego.reyes@euroautos.com",
+      "name": "Euro Autos Performance SRL"
+    },
+    {
+      "id": "cus-0019",
+      "dealerId": "dealer-0019-0000-0000-000000000019",
+      "stripeCustomerId": "cus_HIJ234567890",
+      "email": "pablo.luna@utvextremo.com",
+      "name": "UTV Extremo RD SRL"
+    }
+  ],
+  "_statusCovered": {
+    "subscriptionStatuses": ["Active", "Canceled", "PastDue", "Trialing"],
+    "paymentStatuses": ["Succeeded", "Failed", "Pending", "Refunded"],
+    "invoiceStatuses": ["Paid", "Overdue", "Draft", "Voided"],
+    "paymentMethods": ["Stripe", "Azul", "None"],
+    "plans": ["Free", "Basic", "Pro", "Enterprise"]
+  }
+}

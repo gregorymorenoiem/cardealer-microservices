@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentService.Application.DTOs;
 using AppointmentService.Domain.Entities;
@@ -7,6 +8,7 @@ namespace AppointmentService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AppointmentsController : ControllerBase
 {
     private readonly IAppointmentRepository _appointmentRepository;
@@ -41,6 +43,13 @@ public class AppointmentsController : ControllerBase
     public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetByCustomer(Guid customerId, CancellationToken cancellationToken)
     {
         var appointments = await _appointmentRepository.GetByCustomerIdAsync(customerId, cancellationToken);
+        return Ok(appointments.Select(MapToDto));
+    }
+
+    [HttpGet("dealer/{dealerId:guid}")]
+    public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetByDealer(Guid dealerId, CancellationToken cancellationToken)
+    {
+        var appointments = await _appointmentRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         return Ok(appointments.Select(MapToDto));
     }
 
@@ -158,7 +167,7 @@ public class AppointmentsController : ControllerBase
         return Ok(MapToDto(appointment));
     }
 
-    [HttpPost("{id:guid}/confirm")]
+    [HttpPut("{id:guid}/confirm")]
     public async Task<ActionResult<AppointmentDto>> Confirm(Guid id, CancellationToken cancellationToken)
     {
         var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
@@ -186,7 +195,7 @@ public class AppointmentsController : ControllerBase
         return Ok(MapToDto(appointment));
     }
 
-    [HttpPost("{id:guid}/complete")]
+    [HttpPut("{id:guid}/complete")]
     public async Task<ActionResult<AppointmentDto>> Complete(Guid id, CancellationToken cancellationToken)
     {
         var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
@@ -200,7 +209,7 @@ public class AppointmentsController : ControllerBase
         return Ok(MapToDto(appointment));
     }
 
-    [HttpPost("{id:guid}/cancel")]
+    [HttpPut("{id:guid}/cancel")]
     public async Task<ActionResult<AppointmentDto>> Cancel(Guid id, [FromBody] string reason, CancellationToken cancellationToken)
     {
         var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);

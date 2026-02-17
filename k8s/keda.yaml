@@ -1,0 +1,261 @@
+# =============================================================================
+# KEDA — Event-Driven Autoscaling para RabbitMQ Consumers
+# =============================================================================
+#
+# KEDA (Kubernetes Event-Driven Autoscaler) escala pods basado en
+# métricas externas como profundidad de cola de RabbitMQ.
+#
+# INSTALACIÓN DE KEDA:
+#   helm repo add kedacore https://kedacore.github.io/charts
+#   helm repo update
+#   helm install keda kedacore/keda --namespace keda --create-namespace
+#
+# CÓMO FUNCIONA:
+#   1. KEDA monitorea la cola de RabbitMQ
+#   2. Cuando hay mensajes en cola → escala pods para procesarlos
+#   3. Cuando la cola se vacía → escala a minReplicaCount (0 o 1)
+#
+# ⚠️ PREREQUISITO: KEDA debe estar instalado en el cluster
+# =============================================================================
+
+---
+# Conexión a RabbitMQ para KEDA
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: rabbitmq-trigger-auth
+  namespace: okla
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: rabbitmq-secret
+      key: connection-string
+      # Valor esperado: amqp://guest:guest@rabbitmq:5672/
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# NotificationService — Escala por cola de notificaciones pendientes
+# ═══════════════════════════════════════════════════════════════════════════
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: notificationservice-scaler
+  namespace: okla
+  labels:
+    app: notificationservice
+    scaler: keda
+spec:
+  scaleTargetRef:
+    name: notificationservice
+  pollingInterval: 15 # Verificar cada 15s
+  cooldownPeriod: 60 # Esperar 60s antes de scale-down
+  minReplicaCount: 1 # Mínimo 1 réplica siempre
+  maxReplicaCount: 6 # Máximo 6 réplicas
+  fallback:
+    failureThreshold: 3
+    replicas: 2 # Si KEDA falla, mantener 2 réplicas
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: notification-queue
+        mode: QueueLength
+        value: "10" # Escalar cuando hay >10 mensajes/pod
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "60"
+    - type: memory
+      metricType: Utilization
+      metadata:
+        value: "75"
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# ErrorService — Escala por cola de errores (DLQ processing)
+# ═══════════════════════════════════════════════════════════════════════════
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: errorservice-scaler
+  namespace: okla
+  labels:
+    app: errorservice
+    scaler: keda
+spec:
+  scaleTargetRef:
+    name: errorservice
+  pollingInterval: 30
+  cooldownPeriod: 120
+  minReplicaCount: 1
+  maxReplicaCount: 4
+  fallback:
+    failureThreshold: 3
+    replicas: 1
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: error-queue
+        mode: QueueLength
+        value: "20"
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: dead-letter-queue
+        mode: QueueLength
+        value: "5" # DLQ — más sensible
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# AuditService — Escala por cola de logs de auditoría
+# ═══════════════════════════════════════════════════════════════════════════
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: auditservice-scaler
+  namespace: okla
+  labels:
+    app: auditservice
+    scaler: keda
+spec:
+  scaleTargetRef:
+    name: auditservice
+  pollingInterval: 15
+  cooldownPeriod: 60
+  minReplicaCount: 1
+  maxReplicaCount: 4
+  fallback:
+    failureThreshold: 3
+    replicas: 1
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: audit-queue
+        mode: QueueLength
+        value: "25"
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# UserService — Escala por eventos de registro (UserRegisteredEvent)
+# ═══════════════════════════════════════════════════════════════════════════
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: userservice-scaler
+  namespace: okla
+  labels:
+    app: userservice
+    scaler: keda
+spec:
+  scaleTargetRef:
+    name: userservice
+  pollingInterval: 15
+  cooldownPeriod: 120
+  minReplicaCount: 1
+  maxReplicaCount: 4
+  fallback:
+    failureThreshold: 3
+    replicas: 1
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: user-events-queue
+        mode: QueueLength
+        value: "15"
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "60"
+    - type: memory
+      metricType: Utilization
+      metadata:
+        value: "75"
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# MediaService — Escala por cola de procesamiento de imágenes
+# ═══════════════════════════════════════════════════════════════════════════
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: mediaservice-scaler
+  namespace: okla
+  labels:
+    app: mediaservice
+    scaler: keda
+spec:
+  scaleTargetRef:
+    name: mediaservice
+  pollingInterval: 10 # Más frecuente — procesamiento pesado
+  cooldownPeriod: 120
+  minReplicaCount: 1
+  maxReplicaCount: 6
+  fallback:
+    failureThreshold: 3
+    replicas: 2
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: media-processing-queue
+        mode: QueueLength
+        value: "5" # Bajo threshold — media es costoso
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "60"
+    - type: memory
+      metricType: Utilization
+      metadata:
+        value: "70"
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# BillingService — Escala por eventos de facturación
+# ═══════════════════════════════════════════════════════════════════════════
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: billingservice-scaler
+  namespace: okla
+  labels:
+    app: billingservice
+    scaler: keda
+spec:
+  scaleTargetRef:
+    name: billingservice
+  pollingInterval: 10 # Pagos — monitoreo frecuente
+  cooldownPeriod: 300 # Largo cooldown — mantener capacidad
+  minReplicaCount: 2 # SIEMPRE al menos 2 para pagos
+  maxReplicaCount: 6
+  fallback:
+    failureThreshold: 3
+    replicas: 2 # Fallback seguro para pagos
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: billing-events-queue
+        mode: QueueLength
+        value: "5"
+      authenticationRef:
+        name: rabbitmq-trigger-auth
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "50"

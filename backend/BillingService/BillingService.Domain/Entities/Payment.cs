@@ -51,6 +51,13 @@ public class Payment : ITenantEntity
     public DateTime? ProcessedAt { get; private set; }
     public DateTime? RefundedAt { get; private set; }
 
+    // ✅ AUDIT FIX: Concurrency control
+    public string ConcurrencyStamp { get; private set; } = Guid.NewGuid().ToString();
+
+    // ✅ AUDIT FIX: Navigation properties for FK relationships
+    public Subscription? Subscription { get; private set; }
+    public Invoice? Invoice { get; private set; }
+
     private Payment() { }
 
     public Payment(
@@ -91,6 +98,7 @@ public class Payment : ITenantEntity
     {
         Status = PaymentStatus.Succeeded;
         ProcessedAt = DateTime.UtcNow;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
         if (!string.IsNullOrEmpty(receiptUrl))
             ReceiptUrl = receiptUrl;
     }
@@ -99,6 +107,7 @@ public class Payment : ITenantEntity
     {
         Status = PaymentStatus.Failed;
         FailureReason = reason;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
     }
 
     public void Refund(decimal amount, string reason)

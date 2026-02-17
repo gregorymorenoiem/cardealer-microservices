@@ -1,12 +1,13 @@
 ############################################
-# Etapa única de desarrollo: SDK + debugger (sin hot-reload)
+# Etapa única de desarrollo con hot-reload
 ############################################
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-# 1) Instala vsdbg para depuración remota
-RUN apt-get update \
-    && apt-get install -y unzip curl \
-    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
+# Instalar dotnet-watch y herramientas
+RUN dotnet tool install --global dotnet-watch \
+    && export PATH="$PATH:/root/.dotnet/tools" \
+    && apt-get update \
+    && apt-get install -y curl
 
 WORKDIR /app
 
@@ -14,8 +15,18 @@ WORKDIR /app
 COPY Gateway/Gateway.Api/Gateway.Api.csproj ./Gateway/Gateway.Api/
 COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj ./_Shared/CarDealer.Contracts/
 COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj ./_Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj ./_Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj ./_Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj ./_Shared/CarDealer.Shared.Observability/
+COPY _Shared/CarDealer.Shared.RateLimiting/CarDealer.Shared.RateLimiting.csproj ./_Shared/CarDealer.Shared.RateLimiting/
+COPY _Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj ./_Shared/CarDealer.Shared.Resilience/
+COPY _Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj ./_Shared/CarDealer.Shared.Audit/
 COPY ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
 COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+COPY Gateway/Gateway.Application/Gateway.Application.csproj ./Gateway/Gateway.Application/
+COPY Gateway/Gateway.Infrastructure/Gateway.Infrastructure.csproj ./Gateway/Gateway.Infrastructure/
+COPY Gateway/Gateway.Domain/Gateway.Domain.csproj ./Gateway/Gateway.Domain/
 
 RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 
@@ -24,19 +35,14 @@ COPY Gateway/ ./Gateway/
 COPY _Shared/ ./_Shared/
 COPY ServiceDiscovery/ ./ServiceDiscovery/
 
-# 4) Build the application
-RUN dotnet build "Gateway/Gateway.Api/Gateway.Api.csproj" -c Debug -o /app/build
-
-# 5) Variables de entorno para desarrollo
+# Variables de entorno para desarrollo
 ENV ASPNETCORE_ENVIRONMENT=Development \
     ASPNETCORE_URLS="http://+:80" \
+    DOTNET_USE_POLLING_FILE_WATCHER=false \
     NUGET_XMLDOC_MODE=none
 
-# 6) Exponer puertos HTTP y de debug
+# Exponer puerto HTTP
 EXPOSE 80
-EXPOSE 4022
 
-# 7) Arranca vsdbg en modo servidor y luego la app (sin hot-reload)
-ENTRYPOINT ["bash", "-lc", "\
-    /vsdbg/vsdbg --interpreter=vscode --server --port 4022 & \
-    dotnet run --project Gateway/Gateway.Api/Gateway.Api.csproj --no-build --urls http://0.0.0.0:80\n"]
+# Arrancar con dotnet run (sin --no-build para que compile dentro del contenedor)
+ENTRYPOINT ["dotnet", "run", "--project", "Gateway/Gateway.Api/Gateway.Api.csproj", "--urls", "http://0.0.0.0:80"]

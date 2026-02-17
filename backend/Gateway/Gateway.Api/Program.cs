@@ -9,10 +9,6 @@ using Ocelot.Middleware;
 using Ocelot.Provider.Polly;
 using MMLib.SwaggerForOcelot.DependencyInjection;
 using Serilog;
-using Serilog.Enrichers.Span;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
 using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
@@ -21,17 +17,28 @@ using Gateway.Domain.Interfaces;
 using Gateway.Infrastructure.Services;
 using Gateway.Application.UseCases;
 using CarDealer.Shared.Configuration;
-
-// Configurar Serilog con TraceId/SpanId enrichment
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-    .CreateLogger();
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.RateLimiting.Extensions;
+using CarDealer.Shared.RateLimiting.Models;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
+using CarDealer.Shared.Audit.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog();
+// ============================================================================
+// FASE 2: OBSERVABILITY - Logging centralizado con Serilog + Seq
+// ============================================================================
+builder.UseStandardSerilog("Gateway", options =>
+{
+    options.SeqEnabled = true;
+    options.SeqServerUrl = builder.Configuration["Logging:Seq:ServerUrl"] ?? "http://seq:5341";
+    options.FileEnabled = builder.Configuration.GetValue<bool>("Logging:File:Enabled", false);
+    options.FilePath = builder.Configuration["Logging:File:Path"] ?? "logs/gateway-.log";
+    options.RabbitMQEnabled = false; // Gateway uses direct Seq, not RabbitMQ for logs
+});
 
 // 1. Determinar entorno
 var isDevelopment = builder.Environment.IsDevelopment();
@@ -42,6 +49,7 @@ var configFile = isDevelopment ? "ocelot.dev.json" : "ocelot.prod.json";
 builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: true);
 
 // 3. Configuración esencial
+builder.Services.AddResponseCompression();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -58,46 +66,33 @@ builder.Services.AddScoped<GetServicesHealthUseCase>();
 builder.Services.AddScoped<RecordRequestMetricsUseCase>();
 builder.Services.AddScoped<RecordDownstreamCallMetricsUseCase>();
 
-// OpenTelemetry
-var serviceName = "Gateway";
-var serviceVersion = "1.0.0";
+// ============================================================================
+// FASE 2: OBSERVABILITY - OpenTelemetry Tracing + Metrics
+// ============================================================================
+builder.Services.AddStandardObservability("Gateway", options =>
+{
+    options.TracingEnabled = true;
+    options.MetricsEnabled = true;
+    options.OtlpEndpoint = builder.Configuration["Observability:Otlp:Endpoint"] ?? "http://jaeger:4317";
+    options.SamplingRatio = builder.Configuration.GetValue<double>("Observability:SamplingRatio", 0.1);
+    options.PrometheusEnabled = builder.Configuration.GetValue<bool>("Observability:Prometheus:Enabled", true);
+    options.ExcludedPaths = new[] { "/health", "/metrics", "/swagger" };
+});
 
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(serviceName, serviceVersion))
-    .WithTracing(tracing =>
-    {
-        tracing
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddSource(serviceName);
-
-        if (builder.Environment.IsDevelopment())
-        {
-            tracing.AddConsoleExporter();
-        }
-        else
-        {
-            tracing.AddOtlpExporter();
-            tracing.SetSampler(new TraceIdRatioBasedSampler(0.1)); // 10% sampling in production
-        }
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddMeter(serviceName);
-
-        if (builder.Environment.IsDevelopment())
-        {
-            metrics.AddConsoleExporter();
-        }
-        else
-        {
-            metrics.AddOtlpExporter();
-        }
-    });
+// ============================================================================
+// FASE 2: OBSERVABILITY - Error Handling centralizado
+// ============================================================================
+builder.Services.AddStandardErrorHandling(options =>
+{
+    options.ServiceName = "Gateway";
+    options.Environment = builder.Environment.EnvironmentName;
+    options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? builder.Configuration["RabbitMQ:HostName"] ?? "rabbitmq";
+    options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:UserName"] ?? builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured. Set the RabbitMQ__UserName environment variable.");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured. Set the RabbitMQ__Password environment variable.");
+    options.IncludeStackTrace = builder.Environment.IsDevelopment();
+});
 
 // 4. CORS configurado para múltiples frontends
 builder.Services.AddCors(options =>
@@ -120,15 +115,17 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // Producción
+            // Producción — URLs autorizadas de OKLA
             policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
                     "https://inelcasrl.com.do",
                     "https://www.inelcasrl.com.do",
                     "https://cardealer.app",
                     "https://www.cardealer.app"
                   )
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
+                  .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                  .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With", "X-CSRF-Token", "X-Correlation-Id")
                   .AllowCredentials()
                   .SetPreflightMaxAge(TimeSpan.FromHours(1));
         }
@@ -156,7 +153,28 @@ try
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.FromMinutes(5)
+            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+        };
+
+        // Security (CWE-922): Support reading JWT from HttpOnly cookie
+        // if no Authorization header is present (new default auth flow).
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                // If Authorization header is already present, use it (backward compatibility)
+                if (context.Request.Headers.ContainsKey("Authorization"))
+                    return Task.CompletedTask;
+
+                // Otherwise, read from HttpOnly cookie
+                var accessToken = context.Request.Cookies["okla_access_token"];
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -164,7 +182,8 @@ try
 }
 catch (InvalidOperationException ex)
 {
-    Log.Warning("JWT Authentication not configured: {Message}. Routes requiring auth will fail.", ex.Message);
+    Log.Fatal("JWT Authentication FAILED to configure: {Message}. Gateway will NOT start without proper JWT configuration.", ex.Message);
+    throw; // Fail fast — do NOT start Gateway without auth (NIST IA-5)
 }
 
 // 5. Configuración Ocelot con Polly
@@ -187,24 +206,95 @@ builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
 builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
 builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
+// 9. Configure Rate Limiting
+var rateLimitEnabled = builder.Configuration.GetValue<bool>("RateLimiting:Enabled", true);
+if (rateLimitEnabled)
+{
+    builder.Services.AddRateLimiting(options =>
+    {
+        options.Enabled = true;
+        options.RedisConnection = builder.Configuration["Redis:Connection"] ?? "localhost:6379";
+        options.DefaultLimit = builder.Configuration.GetValue<int>("RateLimiting:DefaultLimit", 100);
+        options.DefaultWindowSeconds = builder.Configuration.GetValue<int>("RateLimiting:DefaultWindowSeconds", 60);
+        options.KeyPrefix = "gateway:ratelimit";
+        options.ExcludedPaths = new List<string>
+        {
+            "/health",
+            "/swagger",
+            "/metrics",
+            "/.well-known"
+        };
+        
+        // Add default API policies
+        options.AddDefaultApiPolicies();
+        
+        Log.Information("Rate Limiting configured with Redis: {RedisConnection}", options.RedisConnection);
+    });
+}
+else
+{
+    Log.Warning("Rate Limiting is DISABLED. API is unprotected against abuse.");
+}
+
+// 10. Audit Publisher for security monitoring
+builder.Services.AddAuditPublisher(builder.Configuration);
+
 var app = builder.Build();
 
-// 7. Middleware pipeline
-// CORS debe ir primero antes de cualquier otro middleware
+// ============================================================================
+// MIDDLEWARE PIPELINE
+// ============================================================================
+
+// HTTPS Redirect — enforce HTTPS in production (OWASP)
+if (!isDevelopment)
+{
+    app.UseHttpsRedirection();
+}
+
+// Performance: Enable response compression early in pipeline (saves 60-80% bandwidth)
+app.UseResponseCompression();
+
+// FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
+app.UseGlobalErrorHandling();
+
+// Graceful Degradation — intercepta circuit breakers y timeouts para
+// devolver respuestas degradadas (503 con Retry-After) en lugar de errores 500
+app.UseGracefulDegradation();
+
+// FASE 2: Request Logging con enrichment de TraceId, UserId, CorrelationId
+app.UseRequestLogging();
+
+// Security Headers (OWASP) — before CORS and routing
+app.UseApiSecurityHeaders(isProduction: !isDevelopment);
+
+// CORS debe ir primero antes de cualquier otro middleware de routing
 app.UseCors("ReactPolicy");
 
-// 8. Health check middleware BEFORE Ocelot to intercept /health requests
+// Rate Limiting middleware (before all other processing)
+if (rateLimitEnabled)
+{
+    app.UseRateLimiting();
+    Log.Information("Rate Limiting middleware enabled");
+}
+
+// Health check middleware BEFORE Ocelot to intercept /health requests
 app.UseHealthCheckMiddleware();
 
-// 9. Use routing for other endpoints
+// Use routing for other endpoints
 app.UseRouting();
 
-// 9.1 Authentication and Authorization middleware
+// Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Solo usar Swagger si no estamos en Testing
-if (!app.Environment.IsEnvironment("Testing"))
+// CSRF Validation — after auth, before Ocelot routing (validates Double Submit Cookie for POST/PUT/DELETE)
+app.UseCsrfValidation();
+
+// Audit Middleware — logs all gateway requests for security monitoring
+app.UseAuditMiddleware();
+
+// Swagger only in Development — NEVER expose in production (OWASP API8)
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerForOcelotUI();

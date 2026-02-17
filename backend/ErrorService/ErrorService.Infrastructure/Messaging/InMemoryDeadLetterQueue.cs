@@ -5,11 +5,13 @@ namespace ErrorService.Infrastructure.Messaging;
 /// <summary>
 /// Implementación en memoria de Dead Letter Queue para eventos fallidos de RabbitMQ
 /// Thread-safe usando ConcurrentDictionary
+/// Performance: Added max-size cap to prevent unbounded memory growth
 /// </summary>
 public class InMemoryDeadLetterQueue : IDeadLetterQueue
 {
     private readonly ConcurrentDictionary<Guid, FailedEvent> _events = new();
     private readonly int _maxRetries;
+    private const int MaxQueueSize = 10_000; // Prevent unbounded memory growth
 
     public InMemoryDeadLetterQueue(int maxRetries = 5)
     {
@@ -18,6 +20,19 @@ public class InMemoryDeadLetterQueue : IDeadLetterQueue
 
     public void Enqueue(FailedEvent failedEvent)
     {
+        // Evict oldest permanently-failed events if at capacity
+        if (_events.Count >= MaxQueueSize)
+        {
+            var oldestFailed = _events.Values
+                .Where(e => e.RetryCount >= _maxRetries)
+                .OrderBy(e => e.FailedAt)
+                .Take(100)
+                .ToList();
+
+            foreach (var evt in oldestFailed)
+                _events.TryRemove(evt.Id, out _);
+        }
+
         _events.TryAdd(failedEvent.Id, failedEvent);
     }
 

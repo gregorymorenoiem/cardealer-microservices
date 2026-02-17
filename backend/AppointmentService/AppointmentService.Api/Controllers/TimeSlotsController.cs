@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentService.Application.DTOs;
 using AppointmentService.Domain.Entities;
@@ -7,6 +8,7 @@ namespace AppointmentService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TimeSlotsController : ControllerBase
 {
     private readonly ITimeSlotRepository _timeSlotRepository;

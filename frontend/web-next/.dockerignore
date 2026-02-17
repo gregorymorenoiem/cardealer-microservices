@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+.next
+out
+dist
+
+# Testing
+coverage
+.playwright
+playwright-report
+test-results
+
+# Storybook
+storybook-static
+
+# Development
+*.log
+.env*.local
+.turbo
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Config files not needed in Docker
+.husky
+.lintstagedrc.js
+commitlint.config.js
+playwright.config.ts
+vitest.config.ts
+.prettierrc
+.prettierignore
+eslint.config.mjs

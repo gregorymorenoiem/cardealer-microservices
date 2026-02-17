@@ -128,10 +128,14 @@ public class DealerConfiguration : IEntityTypeConfiguration<Dealer>
     }
 }
 
+// NOTE: SellerProfileConfiguration is defined in SellerProfileConfigurations.cs (more complete version with snake_case)
+// The following class is commented to avoid duplicate definition
+
+/*
 /// <summary>
-/// Configuración de Entity Framework para la entidad SellerProfile
+/// Configuración de Entity Framework para la entidad SellerProfile (DEPRECATED - use SellerProfileConfigurations.cs)
 /// </summary>
-public class SellerProfileConfiguration : IEntityTypeConfiguration<SellerProfile>
+public class SellerProfileConfiguration_DEPRECATED : IEntityTypeConfiguration<SellerProfile>
 {
     public void Configure(EntityTypeBuilder<SellerProfile> builder)
     {
@@ -219,6 +223,7 @@ public class SellerProfileConfiguration : IEntityTypeConfiguration<SellerProfile
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+*/
 
 /// <summary>
 /// Configuración de Entity Framework para la entidad IdentityDocument

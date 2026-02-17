@@ -38,5 +38,5 @@ public class EmailNotificationRequestedEvent : EventBase
     /// <summary>
     /// Additional data for template substitution or tracking
     /// </summary>
-    public Dictionary<string, string>? Data { get; set; }
+    public Dictionary<string, object>? Data { get; set; }
 }

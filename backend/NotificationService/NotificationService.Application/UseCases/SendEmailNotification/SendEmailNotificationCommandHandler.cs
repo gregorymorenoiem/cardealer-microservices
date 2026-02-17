@@ -3,6 +3,7 @@ using MediatR;
 using NotificationService.Domain.Entities;
 using NotificationService.Domain.Interfaces.Repositories;
 using NotificationService.Domain.Interfaces.External;
+using NotificationService.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using ErrorService.Shared.Exceptions;
 using NotificationService.Application.DTOs;
@@ -15,17 +16,20 @@ public class SendEmailNotificationCommandHandler
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationLogRepository _logRepository;
     private readonly IEmailProvider _emailProvider;
+    private readonly IConfigurationServiceClient _configClient;
     private readonly ILogger<SendEmailNotificationCommandHandler> _logger;
 
     public SendEmailNotificationCommandHandler(
         INotificationRepository notificationRepository,
         INotificationLogRepository logRepository,
         IEmailProvider emailProvider,
+        IConfigurationServiceClient configClient,
         ILogger<SendEmailNotificationCommandHandler> logger)
     {
         _notificationRepository = notificationRepository;
         _logRepository = logRepository;
         _emailProvider = emailProvider;
+        _configClient = configClient;
         _logger = logger;
     }
 
@@ -34,6 +38,18 @@ public class SendEmailNotificationCommandHandler
         CancellationToken cancellationToken)
     {
         var request = command.Request;
+
+        // ✅ Check if Email channel is enabled in admin configuration
+        var emailEnabled = await _configClient.IsEnabledAsync("email.enabled", cancellationToken);
+        if (!emailEnabled)
+        {
+            _logger.LogInformation("Email channel is disabled in configuration. Skipping send to {To}", request.To);
+            return new SendEmailNotificationResponse(
+                Guid.NewGuid(),
+                "Skipped",
+                "Email channel is disabled in platform configuration"
+            );
+        }
 
         _logger.LogInformation("Creating email notification for {To}", request.To);
 

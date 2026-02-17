@@ -1,83 +1,235 @@
 # =============================================================================
-# HORIZONTAL POD AUTOSCALER (HPA)
+# HORIZONTAL POD AUTOSCALER (HPA) — Arquitectura Auto-Escalable
 # =============================================================================
-# Auto-scaling basado en CPU/Memory para optimizar costos
+# Auto-scaling basado en CPU + Memory para TODOS los microservicios.
+#
+# TIERS DE ESCALADO:
+#   🔴 CRITICAL: minReplicas=2, maxReplicas=8, CPU 50%, Memory 70%
+#   🟠 IMPORTANT: minReplicas=1, maxReplicas=6, CPU 60%, Memory 75%
+#   🟡 STANDARD:  minReplicas=1, maxReplicas=4, CPU 70%, Memory 80%
+#   🔵 INTERNAL:  minReplicas=1, maxReplicas=3, CPU 75%
+#
+# SCALE-UP:  Agresivo — max 3 pods cada 30s (respuesta rápida a tráfico)
+# SCALE-DOWN: Conservador — max 1 pod cada 60s, stabilization 300s
+#
+# Para métricas custom (request rate, queue depth) ver keda.yaml
 # =============================================================================
 
 ---
-# Frontend - Scale based on CPU
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔴 TIER CRITICAL — Alta disponibilidad, escalado agresivo
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Frontend Web — Entry point, escala por CPU
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-web-hpa
   namespace: okla
+  labels:
+    tier: critical
+    app.kubernetes.io/part-of: okla
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: frontend-web
-  minReplicas: 1
-  maxReplicas: 5
+  minReplicas: 2
+  maxReplicas: 8
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
           averageUtilization: 70
   behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 30
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+      selectPolicy: Max
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
         - type: Pods
           value: 1
           periodSeconds: 60
-    scaleUp:
-      stabilizationWindowSeconds: 60
-      policies:
-        - type: Pods
-          value: 2
-          periodSeconds: 60
 
 ---
-# Gateway - Scale based on CPU
+# Gateway — Punto de entrada API, bottleneck principal
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: gateway-hpa
   namespace: okla
+  labels:
+    tier: critical
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: gateway
-  minReplicas: 1
-  maxReplicas: 4
+  minReplicas: 2
+  maxReplicas: 8
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
           averageUtilization: 70
   behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 30
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+      selectPolicy: Max
     scaleDown:
       stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
 
 ---
-# AuthService - Critical, scale more aggressively
+# AuthService — Autenticación, cada request pasa por aquí
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: authservice-hpa
   namespace: okla
+  labels:
+    tier: critical
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: authservice
   minReplicas: 2
-  maxReplicas: 6
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+---
+# VehiclesSaleService — Core business, búsquedas y catálogo
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vehiclessaleservice-hpa
+  namespace: okla
+  labels:
+    tier: critical
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: vehiclessaleservice
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+---
+# ⚠️ BillingService — Gestionado por KEDA (ver keda.yaml)
+# No definir HPA aquí para evitar conflicto de escaladores duales.
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🟠 TIER IMPORTANT — Escalado moderado
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ⚠️ UserService — Gestionado por KEDA (ver keda.yaml)
+# No definir HPA aquí para evitar conflicto de escaladores duales.
+
+---
+# RoleService — Autorización, requerido para todos los requests
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: roleservice-hpa
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: roleservice
+  minReplicas: 1
+  maxReplicas: 4
   metrics:
     - type: Resource
       resource:
@@ -90,20 +242,43 @@ spec:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: 75
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
 
 ---
-# VehiclesSaleService - Core business, scale on demand
+# ⚠️ MediaService — Gestionado por KEDA (ver keda.yaml)
+# No definir HPA aquí para evitar conflicto de escaladores duales.
+
+---
+# ⚠️ NotificationService — Gestionado por KEDA (ver keda.yaml)
+# No definir HPA aquí para evitar conflicto de escaladores duales.
+
+---
+# KYCService — Verificación de identidad
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: vehiclessaleservice-hpa
+  name: kycservice-hpa
   namespace: okla
+  labels:
+    tier: important
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: vehiclessaleservice
+    name: kycservice
   minReplicas: 1
   maxReplicas: 4
   metrics:
@@ -112,26 +287,226 @@ spec:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
-
----
-# MediaService - Memory intensive
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: mediaservice-hpa
-  namespace: okla
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: mediaservice
-  minReplicas: 1
-  maxReplicas: 3
-  metrics:
+          averageUtilization: 60
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
           averageUtilization: 75
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+---
+# ContactService — Contacto entre compradores y vendedores
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: contactservice-hpa
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: contactservice
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+---
+# AdminService — Panel admin
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: adminservice-hpa
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: adminservice
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔵 TIER INTERNAL — Servicios de soporte, escalado conservador
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ⚠️ ErrorService — Gestionado por KEDA (ver keda.yaml)
+# No definir HPA aquí para evitar conflicto de escaladores duales.
+
+---
+# ⚠️ AuditService — Gestionado por KEDA (ver keda.yaml)
+# No definir HPA aquí para evitar conflicto de escaladores duales.
+
+---
+# IdempotencyService — Control de duplicados
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: idempotencyservice-hpa
+  namespace: okla
+  labels:
+    tier: internal
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: idempotencyservice
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🤖 TIER AI/ML — Chatbot & LLM inference
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ChatbotService — .NET 8 API backend (lightweight, scales like standard)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: chatbotservice-hpa
+  namespace: okla
+  labels:
+    tier: ai-ml
+    app.kubernetes.io/part-of: okla-chatbot
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chatbotservice
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+
+---
+# LLM Server — CPU-intensive inference (conservative scaling, high memory)
+# ⚠️ Each replica loads full GGUF model (~4.7 GB RAM + inference overhead)
+# Scale conservatively: memory is the bottleneck, not CPU
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-server-hpa
+  namespace: okla
+  labels:
+    tier: ai-ml
+    app.kubernetes.io/part-of: okla-chatbot
+  annotations:
+    app.okla.com/note: "Conservative scaling — each pod loads 4.7GB model"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-server
+  minReplicas: 1
+  maxReplicas: 2 # Max 2 — each uses 6-8Gi RAM. Evaluate GPU before scaling >2.
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 300 # 5 min — model loading takes time
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300 # Max 1 new pod every 5 min
+    scaleDown:
+      stabilizationWindowSeconds: 600 # 10 min — avoid thrashing
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300

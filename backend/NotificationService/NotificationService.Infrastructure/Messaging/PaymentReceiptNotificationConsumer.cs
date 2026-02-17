@@ -121,8 +121,8 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
             {
                 HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
                 Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
-                UserName = _configuration["RabbitMQ:Username"] ?? "guest",
-                Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                UserName = _configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+                Password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
@@ -170,6 +170,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+        var adminAlertService = scope.ServiceProvider.GetService<IAdminAlertService>();
 
         try
         {
@@ -278,6 +279,32 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                 "Payment receipt email sent to {Email} for PaymentId: {PaymentId}",
                 eventData.UserEmail,
                 eventData.PaymentId);
+
+            // Send admin alert for payment received
+            if (adminAlertService != null)
+            {
+                try
+                {
+                    await adminAlertService.SendAlertAsync(
+                        alertType: "payment_received",
+                        title: $"💰 Pago Recibido - ${eventData.Amount:N2} {eventData.Currency}",
+                        message: $"Pago de {eventData.UserName} ({eventData.UserEmail}) por ${eventData.Amount:N2} {eventData.Currency}. Plan: {eventData.SubscriptionPlan ?? "N/A"}.",
+                        severity: "Info",
+                        metadata: new Dictionary<string, string>
+                        {
+                            ["PaymentId"] = eventData.PaymentId.ToString(),
+                            ["Amount"] = $"{eventData.Amount:N2}",
+                            ["Currency"] = eventData.Currency,
+                            ["UserEmail"] = eventData.UserEmail,
+                            ["Plan"] = eventData.SubscriptionPlan ?? "N/A"
+                        },
+                        cancellationToken);
+                }
+                catch (Exception alertEx)
+                {
+                    _logger.LogWarning(alertEx, "Failed to send admin alert for payment {PaymentId}", eventData.PaymentId);
+                }
+            }
         }
         catch (Exception ex)
         {

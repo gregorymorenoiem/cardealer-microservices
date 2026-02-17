@@ -13,19 +13,18 @@ COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDeal
 
 RUN dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
 
-# Copy everything else and build
+# Copy everything else
 COPY . .
 WORKDIR "/src/AuthService/AuthService.Api"
-RUN dotnet build "AuthService.Api.csproj" -c Release -o /app/build
 
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
 RUN dotnet publish "AuthService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
+EXPOSE 8080
 
 # Create directories for secrets
 RUN mkdir -p /run/secrets
@@ -41,10 +40,10 @@ COPY --from=publish --chown=appuser:appuser /app/publish .
 
 # Environment variables for secrets (can be overridden)
 ENV ASPNETCORE_ENVIRONMENT=Docker
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:8080
 
 # Health check using wget (lighter than curl on Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "AuthService.Api.dll"]

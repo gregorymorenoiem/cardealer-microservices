@@ -89,6 +89,26 @@ public class SellerProfile
     public bool CanSellHighValue { get; set; } = false; // >$50k requiere verificación
 
     // ========================================
+    // TIPO Y BADGES
+    // ========================================
+    public SellerType SellerType { get; set; } = SellerType.Seller;
+    public string? DisplayName { get; set; }
+    public string? CoverPhotoUrl { get; set; }
+    public bool IsPhoneVerified { get; set; } = false;
+    public bool IsIdentityVerified { get; set; } = false;
+    public DateTime? LastActiveAt { get; set; }
+
+    // Para Dealers
+    public Guid? DealerId { get; set; }
+    public string? BusinessName { get; set; }
+    public string? Website { get; set; }
+
+    // Métricas adicionales
+    public int ResponseRate { get; set; } = 100; // Porcentaje
+    public int ViewsThisMonth { get; set; } = 0;
+    public int LeadsThisMonth { get; set; } = 0;
+
+    // ========================================
     // AUDITORÍA
     // ========================================
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -99,6 +119,8 @@ public class SellerProfile
     // NAVEGACIÓN
     // ========================================
     public ICollection<IdentityDocument> IdentityDocuments { get; set; } = new List<IdentityDocument>();
+    public ICollection<SellerBadgeAssignment> Badges { get; set; } = new List<SellerBadgeAssignment>();
+    public ContactPreferences? ContactPreferences { get; set; }
 }
 
 /// <summary>

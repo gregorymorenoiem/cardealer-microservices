@@ -44,13 +44,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // MediatR - Register handlers from Application assembly
-        var applicationAssembly = AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "AuditService.Application");
-
-        if (applicationAssembly != null)
-        {
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(applicationAssembly));
-        }
+        // Use a known type from the Application assembly to ensure it's loaded
+        var applicationAssembly = typeof(AuditService.Application.Features.Audit.Commands.CreateAudit.CreateAuditCommand).Assembly;
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(applicationAssembly));
 
         // Background Services - RabbitMQ Event Consumer
         services.AddHostedService<RabbitMqEventConsumer>();

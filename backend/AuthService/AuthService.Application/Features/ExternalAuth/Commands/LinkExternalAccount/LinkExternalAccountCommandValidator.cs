@@ -1,26 +1,41 @@
+using AuthService.Domain.Enums;
 using FluentValidation;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.LinkExternalAccount;
 
+/// <summary>
+/// Validator for LinkExternalAccountCommand (AUTH-EXT-005)
+/// Validates that the provider is supported and the ID token is valid.
+/// </summary>
 public class LinkExternalAccountCommandValidator : AbstractValidator<LinkExternalAccountCommand>
 {
+    private static readonly string[] SupportedProviders = 
+        Enum.GetNames<ExternalAuthProvider>();
+
     public LinkExternalAccountCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required");
+            .NotEmpty().WithMessage("User ID is required")
+            .Must(BeValidGuid).WithMessage("User ID must be a valid GUID");
 
         RuleFor(x => x.Provider)
             .NotEmpty().WithMessage("Provider is required")
-            .Must(BeValidProvider).WithMessage("Provider must be either 'Google' or 'Microsoft'");
+            .Must(BeValidProvider)
+            .WithMessage($"Provider must be one of: {string.Join(", ", SupportedProviders)}");
 
         RuleFor(x => x.IdToken)
             .NotEmpty().WithMessage("ID token is required")
-            .MinimumLength(10).WithMessage("Invalid ID token");
+            .MinimumLength(50).WithMessage("ID token is too short to be valid")
+            .MaximumLength(10000).WithMessage("ID token is too long");
     }
 
-    private bool BeValidProvider(string provider)
+    private static bool BeValidGuid(string userId)
     {
-        return provider.Equals("Google", StringComparison.OrdinalIgnoreCase) ||
-               provider.Equals("Microsoft", StringComparison.OrdinalIgnoreCase);
+        return Guid.TryParse(userId, out _);
+    }
+
+    private static bool BeValidProvider(string provider)
+    {
+        return Enum.TryParse<ExternalAuthProvider>(provider, true, out _);
     }
 }

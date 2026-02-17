@@ -10,22 +10,27 @@ COPY ["NotificationService/NotificationService.Infrastructure/NotificationServic
 COPY ["NotificationService/NotificationService.Shared/NotificationService.Shared.csproj", "NotificationService/NotificationService.Shared/"]
 COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+COPY ["_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj", "_Shared/CarDealer.Shared.Logging/"]
+COPY ["_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj", "_Shared/CarDealer.Shared.ErrorHandling/"]
+COPY ["_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj", "_Shared/CarDealer.Shared.Audit/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
 
 RUN dotnet restore "NotificationService/NotificationService.Api/NotificationService.Api.csproj"
 
-# Copy everything else and build
+# Copy everything else
 COPY . .
 WORKDIR "/src/NotificationService/NotificationService.Api"
-RUN dotnet build "NotificationService.Api.csproj" -c Release -o /app/build
 
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
 RUN dotnet publish "NotificationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
+EXPOSE 8080
 
 # Create directories for secrets and templates
 RUN mkdir -p /run/secrets /app/Templates /app/secrets
@@ -41,10 +46,10 @@ COPY --from=publish --chown=appuser:appuser /app/publish .
 
 # Environment variables for secrets (can be overridden)
 ENV ASPNETCORE_ENVIRONMENT=Docker
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:8080
 
 # Health check using wget (lighter than curl on Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "NotificationService.Api.dll"]

@@ -30,27 +30,27 @@ FROM build AS publish
 RUN dotnet publish "AuditService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
 # Install wget for health checks
-RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache wget
 
 # Create secrets directory for Docker secrets
 RUN mkdir -p /run/secrets
 
 # Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app /run/secrets
+RUN adduser -D -u 1000 appuser && chown -R appuser:appuser /app /run/secrets
 USER appuser
 
 # Set environment for Docker
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "AuditService.Api.dll"]

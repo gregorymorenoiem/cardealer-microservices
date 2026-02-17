@@ -35,6 +35,15 @@ public class AppointmentRepository : IAppointmentRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<Appointment>> GetByDealerIdAsync(Guid dealerId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Appointments
+            .Where(a => a.DealerId == dealerId)
+            .OrderByDescending(a => a.ScheduledDate)
+            .ThenBy(a => a.StartTime)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Appointment>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         return await _context.Appointments

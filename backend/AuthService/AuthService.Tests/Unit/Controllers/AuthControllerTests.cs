@@ -24,7 +24,14 @@ namespace AuthService.Tests.Unit.Controllers
         public async Task Register_ValidRequest_ReturnsOk()
         {
             // Arrange
-            var request = new RegisterRequest("testuser", "test@example.com", "Password123!");
+            var request = new RegisterRequest(
+                UserName: null,
+                Email: "test@example.com",
+                Password: "Password123!",
+                FirstName: "Test",
+                LastName: "User",
+                AcceptTerms: true
+            );
             var expectedResponse = new RegisterResponse(
                 Guid.NewGuid().ToString(),
                 "testuser",

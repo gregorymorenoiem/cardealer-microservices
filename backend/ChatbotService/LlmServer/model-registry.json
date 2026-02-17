@@ -1,0 +1,212 @@
+{
+  "$schema": "https://okla.com.do/schemas/model-registry/v1",
+  "registry_version": "1.0.0",
+  "project": "okla-chatbot-llm",
+  "description": "Model registry for OKLA Chatbot LLM — tracks all model versions, checksums, and lineage",
+
+  "current_production": "v2.0.0",
+
+  "models": [
+    {
+      "version": "v2.0.0",
+      "status": "production",
+      "promoted_at": "2026-02-17T00:00:00Z",
+
+      "model": {
+        "id": "okla-llama3-8b",
+        "base_model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "fine_tuning_method": "QLoRA",
+        "quantization": "Q4_K_M",
+        "format": "GGUF",
+        "file_name": "okla-llama3-8b-q4_k_m.gguf",
+        "file_size_gb": 4.7,
+        "sha256": "PENDING_CHECKSUM",
+        "huggingface_repo": "gregorymorenoiem/okla-chatbot-llama3-8b",
+        "parameters": "8B"
+      },
+
+      "training": {
+        "framework": "unsloth + QLoRA",
+        "platform": "Google Colab (T4/A100 GPU auto-detect)",
+        "notebook": "docs/chatbot-llm/FASE_3_TRAINING/okla_finetune_llama3.ipynb",
+        "hyperparameters": {
+          "lora_r": 64,
+          "lora_alpha": 128,
+          "lora_dropout": 0.0,
+          "epochs": 3,
+          "learning_rate": 2e-4,
+          "batch_size_t4": 2,
+          "batch_size_a100": 8,
+          "gradient_accumulation_t4": 8,
+          "gradient_accumulation_a100": 4,
+          "warmup_steps": 100,
+          "max_seq_length": 8192,
+          "optimizer": "paged_adamw_8bit",
+          "lr_scheduler": "cosine",
+          "target_modules": [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj"
+          ]
+        },
+        "training_time_hours": 3.0,
+        "estimated_cost_usd": 0.5
+      },
+
+      "dataset": {
+        "generator": "docs/chatbot-llm/FASE_2_DATASET/generate_dataset.py",
+        "generator_commit": "PENDING",
+        "seed": 42,
+        "total_conversations": 3000,
+        "mode_distribution": {
+          "SingleVehicle": "40%",
+          "DealerInventory": "50%",
+          "EdgeCases": "10%"
+        },
+        "splits": {
+          "train": "85%",
+          "eval": "10%",
+          "test": "5%"
+        },
+        "intents_sv": 21,
+        "intents_di": 23,
+        "templates_file": "docs/chatbot-llm/FASE_2_DATASET/conversation_templates.py",
+        "seed_vehicles": 160,
+        "seed_dealers": 8,
+        "dataset_sha256": "PENDING_HASH"
+      },
+
+      "evaluation": {
+        "evaluator": "docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py",
+        "evaluator_version": "2.0.0-dual-mode",
+        "thresholds": {
+          "json_parse_rate": 0.9,
+          "intent_accuracy": 0.75,
+          "anti_hallucination": 1.0,
+          "pii_blocking": 1.0,
+          "avg_latency_s": 30.0,
+          "p95_latency_s": 60.0,
+          "sv_boundary_enforcement": 0.9,
+          "di_boundary_enforcement": 0.9,
+          "response_not_empty": 0.95,
+          "legal_refusal_accuracy": 0.9,
+          "dominican_spanish": 0.8
+        },
+        "global_metrics": {
+          "intent_accuracy": null,
+          "json_parse_rate": null,
+          "anti_hallucination": null,
+          "pii_blocking": null,
+          "avg_latency_s": null,
+          "p95_latency_s": null,
+          "response_not_empty": null,
+          "legal_refusal_accuracy": null,
+          "dominican_spanish": null
+        },
+        "mode_metrics": {
+          "sv_intent_accuracy": null,
+          "di_intent_accuracy": null,
+          "sv_boundary_enforcement": null,
+          "di_boundary_enforcement": null
+        },
+        "go_nogo_result": "PENDING",
+        "last_evaluated_at": null,
+        "evaluation_dataset_size": null
+      },
+
+      "inference": {
+        "server": "backend/ChatbotService/LlmServer/server.py",
+        "runtime": "llama-cpp-python",
+        "default_temperature": 0.3,
+        "default_top_p": 0.9,
+        "default_max_tokens": 600,
+        "default_repetition_penalty": 1.15,
+        "context_window": 8192,
+        "modes": ["SingleVehicle", "DealerInventory", "General"],
+        "json_grammar": true,
+        "prompt_template": "llama-3-instruct"
+      },
+
+      "deployment": {
+        "container_image": "ghcr.io/okla-rd/llm-server",
+        "chatbot_image": "ghcr.io/okla-rd/chatbotservice",
+        "k8s_manifest": "k8s/chatbotservice.yaml",
+        "prometheus_rules": "k8s/prometheus-rules-chatbot.yaml",
+        "mlops_cronjobs": "k8s/mlops-cronjobs.yaml",
+        "namespace": "okla",
+        "llm_resources": {
+          "cpu_request": "2000m",
+          "cpu_limit": "4000m",
+          "memory_request": "6Gi",
+          "memory_limit": "8Gi",
+          "model_pvc": "10Gi"
+        },
+        "chatbot_resources": {
+          "cpu_request": "100m",
+          "cpu_limit": "500m",
+          "memory_request": "256Mi",
+          "memory_limit": "512Mi"
+        },
+        "replicas": {
+          "chatbotservice": 2,
+          "llm_server": 1,
+          "llm_server_max": 2
+        },
+        "strategy": "RollingUpdate",
+        "health_checks": {
+          "llm_liveness": "/health (120s initial, 60s period)",
+          "llm_readiness": "/health (60s initial, 15s period)",
+          "llm_startup": "/health (30s initial, up to 5min)",
+          "chatbot_liveness": "/health (15s initial, 30s period)",
+          "chatbot_readiness": "/health (10s initial, 10s period)"
+        },
+        "monitoring": {
+          "prometheus_metrics": "/metrics (port 8000)",
+          "drift_detection": "every 6 hours (CronJob)",
+          "retrain_collection": "weekly Sundays 3AM (CronJob)",
+          "alert_rules": 10
+        }
+      },
+
+      "prompts": {
+        "system_prompt": "docs/chatbot-llm/FASE_1_PROMPTS/01_system_prompt_base.md",
+        "total_prompt_files": 10,
+        "prompt_directory": "docs/chatbot-llm/FASE_1_PROMPTS/"
+      },
+
+      "changelog": [
+        "v2.0.0: Dual-Mode architecture (SingleVehicle + DealerInventory)",
+        "Context window expanded 2048 → 8192 tokens",
+        "QLoRA r=64, alpha=128, 7 target modules",
+        "21 SV intents + 23 DI intents with boundary enforcement",
+        "SingleVehicle: scoped responses for widget/WhatsApp",
+        "DealerInventory: RAG with pgvector + 4 function calls",
+        "Cross-dealer refusal enforcement (DI mode)",
+        "Other-vehicle redirect enforcement (SV mode)",
+        "Fine-tuned on 3,000 dual-mode synthetic conversations",
+        "Dual-mode evaluation gate (evaluate_before_deploy.py v2.0)",
+        "GBNF JSON grammar for 8-field structured output",
+        "6-layer Dominican Spanish augmentation"
+      ]
+    }
+  ],
+
+  "rollback_procedure": {
+    "description": "Steps to rollback to a previous model version",
+    "steps": [
+      "1. Identify the previous stable version from this registry",
+      "2. Update k8s/chatbotservice.yaml with previous image tag",
+      "3. kubectl apply -f k8s/chatbotservice.yaml -n okla",
+      "4. kubectl rollout status deployment/llm-server -n okla --timeout=600s",
+      "5. Verify health: kubectl port-forward svc/llm-server 8000:8000 -n okla && curl http://localhost:8000/health",
+      "6. Update this registry: set previous version status to 'production', current to 'rolled-back'"
+    ],
+    "max_rollback_time_minutes": 10,
+    "requires_model_file": true,
+    "pvc_name": "llm-model-pvc"
+  }
+}

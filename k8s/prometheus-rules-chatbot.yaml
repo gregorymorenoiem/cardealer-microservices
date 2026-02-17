@@ -1,0 +1,201 @@
+# ============================================================================
+# Prometheus Alert Rules — ChatbotService + LLM Server
+# ============================================================================
+# Namespace: okla
+# Requires: Prometheus operator or kube-prometheus-stack
+#
+# Apply:
+#   kubectl apply -f k8s/prometheus-rules-chatbot.yaml -n okla
+# ============================================================================
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: chatbot-llm-alerts
+  namespace: okla
+  labels:
+    app: chatbot
+    role: alert-rules
+    prometheus: okla
+spec:
+  groups:
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🔴 CRITICAL — Immediate attention required
+    # ═══════════════════════════════════════════════════════════════════════
+    - name: chatbot.critical
+      rules:
+        # LLM Server is down
+        - alert: LlmServerDown
+          expr: up{job="llm-server"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM Server is DOWN"
+            description: "LLM inference server has been unreachable for >2 minutes. All chatbot responses will fail."
+            runbook_url: "https://docs.okla.com.do/runbooks/llm-server-down"
+
+        # LLM Model not loaded (server up but model failed)
+        - alert: LlmModelNotLoaded
+          expr: okla_llm_model_loaded == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM Model NOT loaded"
+            description: "LLM server is running but model is not loaded. Check GGUF file in PVC and model path."
+
+        # ChatbotService is down
+        - alert: ChatbotServiceDown
+          expr: up{job="chatbotservice"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: chatbotservice
+            team: backend
+          annotations:
+            summary: "ChatbotService is DOWN"
+            description: "ChatbotService .NET API has been unreachable for >2 minutes."
+
+        # LLM Out-of-Memory killed
+        - alert: LlmOOMKilled
+          expr: kube_pod_container_status_last_terminated_reason{container="llm-server", reason="OOMKilled"} > 0
+          for: 0m
+          labels:
+            severity: critical
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM Server OOM Killed"
+            description: "LLM server was killed due to out-of-memory. Current limit: 8Gi. Consider increasing or reducing N_CTX."
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🟠 WARNING — Performance degradation
+    # ═══════════════════════════════════════════════════════════════════════
+    - name: chatbot.warning
+      rules:
+        # P95 latency > 60 seconds
+        - alert: LlmHighLatencyP95
+          expr: histogram_quantile(0.95, rate(okla_llm_request_duration_seconds_bucket[5m])) > 60
+          for: 10m
+          labels:
+            severity: warning
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM P95 latency > 60s"
+            description: "P95 inference latency is {{ $value | humanizeDuration }}. Consider GPU migration or model optimization."
+
+        # P99 latency > 120 seconds
+        - alert: LlmHighLatencyP99
+          expr: histogram_quantile(0.99, rate(okla_llm_request_duration_seconds_bucket[5m])) > 120
+          for: 5m
+          labels:
+            severity: warning
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM P99 latency > 120s"
+            description: "P99 inference latency is {{ $value | humanizeDuration }}. Some users experiencing very slow responses."
+
+        # Error rate > 10%
+        - alert: LlmHighErrorRate
+          expr: |
+            (
+              rate(okla_llm_requests_total[5m]) - rate(okla_llm_requests_success_total[5m])
+            ) / rate(okla_llm_requests_total[5m]) > 0.10
+          for: 5m
+          labels:
+            severity: warning
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM error rate > 10%"
+            description: "{{ $value | humanizePercentage }} of LLM requests are failing."
+
+        # Memory usage > 85% of limit
+        - alert: LlmHighMemoryUsage
+          expr: |
+            container_memory_working_set_bytes{container="llm-server"}
+            / container_spec_memory_limit_bytes{container="llm-server"} > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM Server memory > 85%"
+            description: "Memory usage at {{ $value | humanizePercentage }}. Risk of OOM kill."
+
+        # Fallback rate > 15%
+        - alert: ChatbotHighFallbackRate
+          expr: |
+            rate(okla_llm_fallback_total[30m])
+            / rate(okla_llm_requests_total[30m]) > 0.15
+          for: 30m
+          labels:
+            severity: warning
+            service: chatbotservice
+            team: mlops
+          annotations:
+            summary: "Chatbot fallback rate > 15%"
+            description: "{{ $value | humanizePercentage }} of responses are fallbacks. Model may need retraining or prompt adjustment."
+
+        # Circuit breaker open
+        - alert: ChatbotCircuitBreakerOpen
+          expr: okla_chatbot_circuit_breaker_state == 1
+          for: 1m
+          labels:
+            severity: warning
+            service: chatbotservice
+            team: backend
+          annotations:
+            summary: "Chatbot circuit breaker OPEN"
+            description: "Circuit breaker to LLM server is open. Chatbot is returning cached/fallback responses only."
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🔵 INFO — Drift detection & capacity planning
+    # ═══════════════════════════════════════════════════════════════════════
+    - name: chatbot.info
+      rules:
+        # Request volume approaching capacity (>200 req/day on CPU)
+        - alert: LlmApproachingCapacity
+          expr: increase(okla_llm_requests_total[24h]) > 200
+          for: 0m
+          labels:
+            severity: info
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM approaching CPU capacity"
+            description: "{{ $value }} requests in last 24h. GPU migration recommended at >300 req/day (see GPU_ROI_ANALYSIS.md)."
+
+        # Average confidence dropping
+        - alert: LlmConfidenceDrift
+          expr: |
+            avg_over_time(okla_llm_avg_confidence[6h]) < 0.65
+          for: 6h
+          labels:
+            severity: info
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM average confidence < 0.65"
+            description: "Average confidence {{ $value }} over 6 hours. Model may be encountering new patterns — review fallback logs."
+
+        # Model uptime > 30 days (consider retrain)
+        - alert: LlmModelAge
+          expr: (time() - okla_llm_model_loaded_timestamp_seconds) > 2592000
+          for: 0m
+          labels:
+            severity: info
+            service: llm-server
+            team: mlops
+          annotations:
+            summary: "LLM model > 30 days old"
+            description: "Model has been running for {{ $value | humanizeDuration }}. Schedule retraining per FASE_5 guidelines."

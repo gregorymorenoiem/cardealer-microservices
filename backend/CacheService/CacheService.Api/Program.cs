@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using StackExchange.Redis;
 using CacheService.Application.Interfaces;
 using CacheService.Infrastructure;
@@ -5,6 +6,7 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using CacheService.Api.Middleware;
+using CarDealer.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +16,26 @@ builder.Services.AddControllers();
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
+    options.AddDefaultPolicy(policy =>
     {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -31,6 +48,12 @@ builder.Services.AddSwaggerGen(c =>
 
 // Add MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CacheService.Application.Commands.SetCacheCommand).Assembly));
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(CacheService.Application.Behaviors.ValidationBehavior<,>));
+
+// Register ConfigurationServiceClient for dynamic admin-panel config
+builder.Services.AddConfigurationServiceClient(builder.Configuration, "CacheService");
 
 // Service Discovery Configuration
 builder.Services.AddSingleton<IConsulClient>(sp =>
@@ -63,8 +86,12 @@ builder.Services.AddSingleton<IDistributedLockManager, RedisLockManager>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

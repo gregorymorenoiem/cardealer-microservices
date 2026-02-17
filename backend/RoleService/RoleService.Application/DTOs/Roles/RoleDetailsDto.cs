@@ -1,24 +1,33 @@
 namespace RoleService.Application.DTOs.Roles;
 
-public record RoleDetailsDto(
-    Guid Id,
-    string Name,
-    string Description,
-    int Priority,
-    bool IsActive,
-    bool IsSystemRole,
-    DateTime CreatedAt,
-    DateTime? UpdatedAt,
-    string CreatedBy,
-    string? UpdatedBy,
-    List<PermissionDto> Permissions
-);
+/// <summary>
+/// DTO detallado de un rol con todos sus permisos.
+/// </summary>
+public record RoleDetailsDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string? Description { get; init; }
+    public bool IsActive { get; init; }
+    public bool IsSystemRole { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
+    public string CreatedBy { get; init; } = string.Empty;
+    public string? UpdatedBy { get; init; }
+    public List<PermissionDto> Permissions { get; init; } = new();
+}
 
-public record PermissionDto(
-    Guid Id,
-    string Name,
-    string Description,
-    string Resource,
-    string Action,
-    string Module
-);
+/// <summary>
+/// DTO de un permiso para incluir en detalles de rol.
+/// </summary>
+public record PermissionDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string Resource { get; init; } = string.Empty;
+    public string Action { get; init; } = string.Empty;
+    public string Module { get; init; } = string.Empty;
+}

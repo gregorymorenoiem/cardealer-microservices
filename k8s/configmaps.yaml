@@ -1,5 +1,8 @@
 # =============================================================================
-# MVP SELF-MANAGED - ConfigMaps
+# CONFIGMAPS - Non-sensitive Configuration
+# =============================================================================
+# ⚠️ SECURITY: NO credentials here. All secrets go in secrets.yaml
+# RabbitMQ, Redis, DB credentials are in Kubernetes Secrets
 # =============================================================================
 
 ---
@@ -11,25 +14,30 @@ metadata:
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   TZ: "America/New_York"
-  # Redis
+
+  # Redis (host only — password in Secret)
   Cache__Provider: "Redis"
   Cache__Redis__Host: "redis"
   Cache__Redis__Port: "6379"
-  # RabbitMQ (algunos servicios usan HostName, otros Host)
+
+  # RabbitMQ (host/port only — credentials in rabbitmq-secrets)
   RabbitMQ__Host: "rabbitmq"
   RabbitMQ__HostName: "rabbitmq"
   RabbitMQ__Port: "5672"
-  RabbitMQ__Username: "guest"
-  RabbitMQ__UserName: "guest"
-  RabbitMQ__Password: "guest"
   RabbitMQ__VirtualHost: "/"
   RabbitMQ__ExchangeName: "cardealer.events"
+
   # Logging
   Serilog__MinimumLevel__Default: "Information"
   Serilog__MinimumLevel__Override__Microsoft: "Warning"
-  # OpenTelemetry (disabled for MVP)
-  OpenTelemetry__Enabled: "false"
-  # Consul (disabled for MVP)
+  Serilog__MinimumLevel__Override__System: "Warning"
+
+  # OpenTelemetry (enabled for observability)
+  OpenTelemetry__Enabled: "true"
+  OpenTelemetry__ServiceName: "okla"
+  OpenTelemetry__ExporterEndpoint: "http://otel-collector:4317"
+
+  # Consul (disabled — using K8s service discovery)
   Consul__Enabled: "false"
 
 ---
@@ -153,6 +161,89 @@ data:
           "DownstreamPathTemplate": "/api/errors",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/chat/message",
+          "UpstreamHttpMethod": ["POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/chat/message",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }],
+          "RateLimitOptions": {
+            "ClientWhitelist": [],
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "PeriodTimespan": 60,
+            "Limit": 30
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 600000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",
+          "UpstreamHttpMethod": ["GET", "POST"],
+          "DownstreamPathTemplate": "/api/chat/whatsapp/webhook",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 5,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/chat/handoff/{everything}",
+          "UpstreamHttpMethod": ["POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/chat/handoff/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/chat/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/chat/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }],
+          "RateLimitOptions": {
+            "ClientWhitelist": [],
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "PeriodTimespan": 60,
+            "Limit": 30
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/chat",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/chat",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }],
+          "RateLimitOptions": {
+            "ClientWhitelist": [],
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "PeriodTimespan": 60,
+            "Limit": 30
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/chatbot/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/chatbot/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/chatbot",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/chatbot",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }]
         }
       ],
       "SwaggerEndPoints": [
@@ -187,9 +278,21 @@ data:
         {
           "Key": "ErrorService",
           "Config": [{ "Name": "Error Service", "Version": "v1", "Url": "http://errorservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "ChatbotService",
+          "Config": [{ "Name": "Chatbot Service", "Version": "v1", "Url": "http://chatbotservice:8080/swagger/v1/swagger.json" }]
         }
       ],
       "GlobalConfiguration": {
-        "BaseUrl": "https://api.okla.com.do"
+        "BaseUrl": "https://okla.com.do",
+        "LoadBalancerOptions": {
+          "Type": "RoundRobin"
+        },
+        "QoSOptions": {
+          "ExceptionsAllowedBeforeBreaking": 3,
+          "DurationOfBreak": 10000,
+          "TimeoutValue": 15000
+        }
       }
     }

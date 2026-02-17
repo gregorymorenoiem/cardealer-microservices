@@ -18,27 +18,24 @@ COPY ["MediaService/MediaService.Shared/MediaService.Shared.csproj", "MediaServi
 
 RUN dotnet restore "MediaService/MediaService.Api/MediaService.Api.csproj"
 
-# Copy everything else and build
+# Copy everything else
 COPY . .
 WORKDIR "/src/MediaService/MediaService.Api"
-RUN dotnet build "MediaService.Api.csproj" -c Release -o /app/build
 
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
 RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
-# Install wget for health checks
-RUN apt-get update && apt-get install -y --no-install-recommends wget && \
-    rm -rf /var/lib/apt/lists/*
+# Install wget for health checks (Alpine uses apk)
+RUN apk add --no-cache wget
 
 # Create non-root user, uploads directory and secrets directory
-RUN useradd -m -u 1000 appuser && \
+RUN addgroup -g 1000 appgroup && adduser -D -u 1000 -G appgroup appuser && \
     mkdir -p /app/uploads && \
     mkdir -p /run/secrets && \
     chown -R appuser:appuser /app /run/secrets
@@ -46,10 +43,11 @@ USER appuser
 
 # Set Docker environment
 ENV ASPNETCORE_ENVIRONMENT=Docker
+ENV ASPNETCORE_URLS=http://+:8080
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "MediaService.Api.dll"]

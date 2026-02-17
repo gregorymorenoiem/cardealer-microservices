@@ -1,3 +1,5 @@
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Messaging;
 using UserService.Domain.Interfaces;
 using UserService.Infrastructure.Messaging;
 using UserService.Infrastructure.Persistence;
@@ -8,7 +10,6 @@ using UserService.Shared.Middleware;
 using UserService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
@@ -24,28 +25,50 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using UserService.Api.Middleware;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Secret Provider for externalized secrets
 builder.Services.AddSecretProvider();
 
-// Configurar Serilog con enriquecimiento de TraceId
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan() // Agregar TraceId, SpanId de OpenTelemetry
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
-    .CreateLogger();
-builder.Host.UseSerilog();
+// ============================================================================
+// FASE 2: OBSERVABILITY - Logging centralizado con Serilog + Seq
+// ============================================================================
+builder.UseStandardSerilog("UserService", options =>
+{
+    options.SeqEnabled = true;
+    options.SeqServerUrl = builder.Configuration["Logging:Seq:ServerUrl"] ?? "http://seq:5341";
+    options.FileEnabled = builder.Configuration.GetValue<bool>("Logging:File:Enabled", false);
+    options.FilePath = builder.Configuration["Logging:File:Path"] ?? "logs/userservice-.log";
+    options.RabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+    options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
+});
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 // Configurar Swagger con soporte JWT
 builder.Services.AddSwaggerGen(options =>
@@ -169,9 +192,14 @@ builder.Services.AddScoped<IUserRepository, UserService.Infrastructure.Persisten
 builder.Services.AddScoped<IUserRoleRepository, UserService.Infrastructure.Persistence.UserRoleRepository>();
 builder.Services.AddScoped<IRoleRepository, UserService.Infrastructure.Persistence.EfRoleRepository>();
 builder.Services.AddScoped<IDealerRepository, UserService.Infrastructure.Persistence.DealerRepository>();
-builder.Services.AddScoped<ISellerProfileRepository, UserService.Infrastructure.Persistence.SellerProfileRepository>();
+builder.Services.AddScoped<ISellerProfileRepository, UserService.Infrastructure.Repositories.SellerProfileRepository>();
 builder.Services.AddScoped<IIdentityDocumentRepository, UserService.Infrastructure.Persistence.IdentityDocumentRepository>();
-builder.Services.AddScoped<IDealerEmployeeRepository, UserService.Infrastructure.Persistence.DealerEmployeeRepository>();
+builder.Services.AddScoped<IDealerEmployeeRepository, UserService.Infrastructure.Persistence.Repositories.DealerEmployeeRepository>();
+builder.Services.AddScoped<IDealerOnboardingRepository, UserService.Infrastructure.Persistence.Repositories.DealerOnboardingRepository>();
+builder.Services.AddScoped<IDealerModuleRepository, UserService.Infrastructure.Persistence.Repositories.DealerModuleRepository>();
+builder.Services.AddScoped<IModuleRepository, UserService.Infrastructure.Persistence.Repositories.ModuleRepository>();
+builder.Services.AddScoped<IUserOnboardingRepository, UserService.Infrastructure.Repositories.UserOnboardingRepository>();
+builder.Services.AddScoped<IPrivacyRequestRepository, UserService.Infrastructure.Persistence.PrivacyRequestRepository>();
 builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
 
 // Application Services - External clients
@@ -226,21 +254,38 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IErrorServiceC
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// VehiclesSaleService Client - Para obtener listings del vendedor
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IVehiclesSaleServiceClient, UserService.Infrastructure.External.VehiclesSaleServiceClient>(client =>
+{
+    var vehiclesServiceUrl = builder.Configuration["ServiceUrls:VehiclesSaleService"] ?? "http://vehiclessaleservice:80";
+    client.BaseAddress = new Uri(vehiclesServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// ReviewService Client - Para obtener reviews del vendedor
+builder.Services.AddHttpClient<UserService.Application.Interfaces.IReviewServiceClient, UserService.Infrastructure.External.ReviewServiceClient>(client =>
+{
+    var reviewServiceUrl = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:80";
+    client.BaseAddress = new Uri(reviewServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<UserService.Application.Metrics.UserServiceMetrics>();
 
-// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-// TEMPORARY: Commented out for testing without RabbitMQ
-// builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-//     new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+// Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
+// Shared RabbitMQ connection (1 connection per pod instead of N per class)
+builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "UserService");
+builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue, UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue>();
+builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
 // NOTE: Using NoOpEventPublisher for development. Enable RabbitMQ in production.
 var useRabbitMq = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
 if (useRabbitMq)
 {
-    builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-        new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
     builder.Services.AddSingleton<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IEventPublisher>(sp =>
         sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
@@ -248,6 +293,9 @@ if (useRabbitMq)
 
     // Consumer for UserRegisteredEvent from AuthService - syncs users automatically
     builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserRegisteredEventConsumer>();
+
+    // Consumer for UserLoggedInEvent from AuthService - updates LastLoginAt
+    builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserLoggedInEventConsumer>();
 }
 else
 {
@@ -266,54 +314,33 @@ builder.Services.AddMediatR(cfg =>
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-// Configurar OpenTelemetry
-var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "UserService";
-var serviceVersion = builder.Configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0";
-var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
+// ============================================================================
+// FASE 2: OBSERVABILITY - OpenTelemetry Tracing + Metrics
+// ============================================================================
+builder.Services.AddStandardObservability("UserService", options =>
+{
+    options.TracingEnabled = true;
+    options.MetricsEnabled = true;
+    options.OtlpEndpoint = builder.Configuration["Observability:Otlp:Endpoint"] ?? "http://jaeger:4317";
+    options.SamplingRatio = builder.Configuration.GetValue<double>("Observability:SamplingRatio", builder.Environment.IsProduction() ? 0.1 : 1.0);
+    options.PrometheusEnabled = builder.Configuration.GetValue<bool>("Observability:Prometheus:Enabled", true);
+    options.ExcludedPaths = new[] { "/health", "/metrics", "/swagger" };
+});
 
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource
-        .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
-        .AddAttributes(new Dictionary<string, object>
-        {
-            ["deployment.environment"] = builder.Environment.EnvironmentName,
-            ["service.namespace"] = "cardealer"
-        }))
-    .WithTracing(tracing => tracing
-        .SetSampler(new ParentBasedSampler(
-            // Estrategia de muestreo basada en ratio
-            // En producción: captura 10% de traces normales, 100% de errores
-            new TraceIdRatioBasedSampler(
-                builder.Environment.IsProduction() ? 0.1 : 1.0))) // Dev: 100%, Prod: 10%
-        .AddAspNetCoreInstrumentation(options =>
-        {
-            options.RecordException = true;
-            options.Filter = context =>
-            {
-                // Filtrar health checks para reducir ruido
-                return !context.Request.Path.StartsWithSegments("/health");
-            };
-        })
-        .AddHttpClientInstrumentation(options =>
-        {
-            options.RecordException = true;
-        })
-        .AddSource("UserService.*")
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri(otlpEndpoint);
-        }))
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddMeter("UserService.*")
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri(otlpEndpoint);
-        }));
-
-// Configurar el manejo de errores
-builder.Services.AddErrorHandling("UserService");
+// ============================================================================
+// FASE 2: OBSERVABILITY - Error Handling centralizado
+// ============================================================================
+builder.Services.AddStandardErrorHandling(options =>
+{
+    options.ServiceName = "UserService";
+    options.Environment = builder.Environment.EnvironmentName;
+    options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+    options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
+    options.IncludeStackTrace = builder.Environment.IsDevelopment();
+});
 
 // Configurar Rate Limiting
 var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<RateLimitingConfiguration>()
@@ -330,11 +357,23 @@ builder.Services.Configure<UserServiceRabbitMQSettings>(builder.Configuration.Ge
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-app.UseSerilogRequestLogging();
+// ============================================================================
+// MIDDLEWARE PIPELINE
+// ============================================================================
+
+// FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
+app.UseGlobalErrorHandling();
+
+// FASE 2: Request Logging con enrichment de TraceId, UserId, CorrelationId
+app.UseRequestLogging();
+
+// Swagger en desarrollo
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -347,6 +386,9 @@ app.UseCustomRateLimiting(rateLimitingConfig);
 
 app.UseHttpsRedirection();
 
+// CORS middleware (before auth)
+app.UseCors();
+
 // Agregar autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
@@ -358,21 +400,15 @@ if (consulEnabled)
     app.UseMiddleware<ServiceRegistrationMiddleware>();
 }
 
-// Middleware para capturar respuestas
+// Middleware para capturar respuestas (ResponseCaptureMiddleware local)
 app.UseMiddleware<ResponseCaptureMiddleware>();
 
-// Middleware para manejo de errores
-app.UseErrorHandling();
+// NOTA: ErrorHandling local reemplazado por UseGlobalErrorHandling() de Fase 2
 
 app.MapControllers();
 
-// Health check endpoint - acceso anónimo
-app.MapGet("/health", [AllowAnonymous] () => Results.Ok(new
-{
-    service = "UserService",
-    status = "healthy",
-    timestamp = DateTime.UtcNow
-}));
+// Health check endpoints - acceso anónimo
+app.MapHealthChecks("/health");
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())

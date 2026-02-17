@@ -8,10 +8,15 @@ using ErrorService.Shared.Middleware;
 using ErrorService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
 using Serilog.Enrichers.Span;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Messaging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -45,6 +50,23 @@ builder.Host.UseSerilog();
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+              .AllowCredentials();
+    });
+});
 
 // Configurar Swagger con soporte JWT
 builder.Services.AddSwaggerGen(options =>
@@ -103,7 +125,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ClockSkew = TimeSpan.FromMinutes(5)
+        ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
     };
 
     // Logging para debugging
@@ -173,17 +195,32 @@ builder.Services.AddScoped<IErrorReporter, ErrorReporter>();
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<ErrorService.Application.Metrics.ErrorServiceMetrics>();
 
-// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-    new ErrorService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+// Dead Letter Queue para eventos fallidos (PostgreSQL-backed, survives pod restarts)
+builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "ErrorService");
 
-// Event Publisher for RabbitMQ (con DLQ integrado)
-builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-builder.Services.AddSingleton<IEventPublisher>(sp =>
-    sp.GetRequiredService<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+// Shared RabbitMQ connection (1 connection per pod instead of N per class)
+builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
-// Background Service para procesar DLQ
-builder.Services.AddHostedService<ErrorService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+// RabbitMQ Configuration - Conditional based on Enabled flag
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+
+if (rabbitMqEnabled)
+{
+    // RabbitMQ enabled - use real implementations with DLQ
+    Log.Information("🐰 RabbitMQ ENABLED - Using real messaging implementations");
+    builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+    builder.Services.AddSingleton<IEventPublisher>(sp =>
+        sp.GetRequiredService<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+    
+    // Background Service para procesar DLQ
+    builder.Services.AddHostedService<ErrorService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
+}
+else
+{
+    // RabbitMQ disabled - use NoOp implementation
+    Log.Information("🚫 RabbitMQ DISABLED - Using NoOp messaging implementation (events will be logged only)");
+    builder.Services.AddSingleton<IEventPublisher, ErrorService.Infrastructure.Messaging.NoOpEventPublisher>();
+}
 
 // Agregar MediatR
 builder.Services.AddMediatR(cfg =>
@@ -245,6 +282,9 @@ builder.Services.AddOpenTelemetry()
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("ErrorService");
 
+// Configurar Audit Publisher
+builder.Services.AddAuditPublisher(builder.Configuration);
+
 // Configurar Rate Limiting
 var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<RateLimitingConfiguration>()
     ?? new RateLimitingConfiguration();
@@ -254,54 +294,71 @@ builder.Services.AddCustomRateLimiting(rateLimitingConfig);
 builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
 builder.Services.Configure<ErrorServiceRabbitMQSettings>(builder.Configuration.GetSection("ErrorService"));
 
-// Registrar el consumidor RabbitMQ como hosted service
-builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+// Registrar el consumidor RabbitMQ como hosted service (solo si RabbitMQ está habilitado)
+if (rabbitMqEnabled)
+{
+    builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+    Log.Information("🐰 RabbitMQErrorConsumer registered as hosted service");
+}
+else
+{
+    Log.Information("🚫 RabbitMQErrorConsumer NOT registered - RabbitMQ is disabled");
+}
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-app.UseSerilogRequestLogging();
+// ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
+// 1. Global error handling — ALWAYS FIRST (shared library)
+app.UseGlobalErrorHandling();
 
+// 2. Request Logging (shared library)
+app.UseRequestLogging();
+
+// 3. Security Headers (OWASP) — early in pipeline
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+// 4. Rate Limiting bypass + enforcement
+app.UseMiddleware<RateLimitBypassMiddleware>();
+app.UseCustomRateLimiting(rateLimitingConfig);
+
+// 5. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
+// 6. Swagger — development only
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Middleware para bypass de Rate Limiting (debe estar antes del middleware de rate limiting)
-app.UseMiddleware<RateLimitBypassMiddleware>();
+// 7. CORS — before auth
+app.UseCors();
 
-// Middleware para Rate Limiting (debe estar antes de otros middlewares)
-app.UseCustomRateLimiting(rateLimitingConfig);
-
-app.UseHttpsRedirection();
-
-// Agregar autenticación y autorización
+// 8. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Service Discovery Auto-Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
+// 9. Audit middleware — after auth (has userId context)
+app.UseAuditMiddleware();
 
-// Middleware para capturar respuestas
+// 10. Response capture middleware
 app.UseMiddleware<ResponseCaptureMiddleware>();
 
-// Middleware para manejo de errores
-app.UseErrorHandling();
+// 11. Service Discovery Auto-Registration
+app.UseMiddleware<ServiceRegistrationMiddleware>();
 
+// 12. Endpoints
 app.MapControllers();
+app.MapHealthChecks("/health");
 
-// Health check endpoint - acceso anónimo
-app.MapGet("/health", [AllowAnonymous] () => Results.Ok(new
+// Apply migrations conditionally (disabled in production to avoid race conditions with HPA replicas)
+var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);
+if (autoMigrate)
 {
-    service = "ErrorService",
-    status = "healthy",
-    timestamp = DateTime.UtcNow
-}));
-
-// Apply migrations on startup
-using (var scope = app.Services.CreateScope())
-{
+    using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
     try
     {
@@ -313,6 +370,10 @@ using (var scope = app.Services.CreateScope())
     {
         Log.Error(ex, "An error occurred while applying database migrations.");
     }
+}
+else
+{
+    Log.Information("Database auto-migration disabled for ErrorService. Run migrations via CI/CD pipeline.");
 }
 
 Log.Information("ErrorService starting up...");

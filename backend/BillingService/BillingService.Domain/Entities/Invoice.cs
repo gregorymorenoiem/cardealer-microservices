@@ -43,6 +43,12 @@ public class Invoice : ITenantEntity
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+    // ✅ AUDIT FIX: Concurrency control
+    public string ConcurrencyStamp { get; private set; } = Guid.NewGuid().ToString();
+
+    // ✅ AUDIT FIX: Navigation property for FK relationship
+    public Subscription? Subscription { get; private set; }
+
     private Invoice() { }
 
     public Invoice(
@@ -121,6 +127,7 @@ public class Invoice : ITenantEntity
         }
 
         UpdatedAt = DateTime.UtcNow;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
     }
 
     public void MarkOverdue()

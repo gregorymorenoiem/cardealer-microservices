@@ -1,16 +1,29 @@
 # =============================================================================
-# POD DISRUPTION BUDGET (PDB)
+# POD DISRUPTION BUDGET (PDB) — Alta Disponibilidad
 # =============================================================================
-# Garantiza alta disponibilidad durante updates/maintenance
+# Garantiza que SIEMPRE haya pods disponibles durante:
+#   - Rolling updates (kubectl rollout restart)
+#   - Node drains (maintenance, cluster upgrades)
+#   - Spot instance reclaims (si se usan nodos spot)
+#
+# REGLAS:
+#   🔴 CRITICAL (minReplicas=2): minAvailable=1 (50% siempre up)
+#   🟠 IMPORTANT: minAvailable=1
+#   🔵 INTERNAL: maxUnavailable=1 (más flexible)
 # =============================================================================
 
 ---
-# Frontend - Always keep at least 1 pod running
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔴 CRITICAL — Siempre mantener al menos 1 pod (mínimo 2 réplicas)
+# ═══════════════════════════════════════════════════════════════════════════
+
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: frontend-web-pdb
   namespace: okla
+  labels:
+    tier: critical
 spec:
   minAvailable: 1
   selector:
@@ -18,12 +31,13 @@ spec:
       app: frontend-web
 
 ---
-# Gateway - Always keep at least 1 pod running
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: gateway-pdb
   namespace: okla
+  labels:
+    tier: critical
 spec:
   minAvailable: 1
   selector:
@@ -31,14 +45,191 @@ spec:
       app: gateway
 
 ---
-# AuthService - Critical, keep at least 1
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: authservice-pdb
   namespace: okla
+  labels:
+    tier: critical
 spec:
   minAvailable: 1
   selector:
     matchLabels:
       app: authservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: vehiclessaleservice-pdb
+  namespace: okla
+  labels:
+    tier: critical
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: vehiclessaleservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: billingservice-pdb
+  namespace: okla
+  labels:
+    tier: critical
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: billingservice
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🟠 IMPORTANT — Mantener al menos 1 pod disponible
+# ═══════════════════════════════════════════════════════════════════════════
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: userservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable en vez de minAvailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: userservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: roleservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: roleservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mediaservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: mediaservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: notificationservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: notificationservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kycservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: kycservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: contactservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: contactservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: adminservice-pdb
+  namespace: okla
+  labels:
+    tier: important
+spec:
+  maxUnavailable: 1 # maxUnavailable — permite node drains con 1 réplica
+  selector:
+    matchLabels:
+      app: adminservice
+
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔵 INTERNAL — Más flexible, permite 1 pod unavailable
+# ═══════════════════════════════════════════════════════════════════════════
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: errorservice-pdb
+  namespace: okla
+  labels:
+    tier: internal
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: errorservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: auditservice-pdb
+  namespace: okla
+  labels:
+    tier: internal
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: auditservice
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: idempotencyservice-pdb
+  namespace: okla
+  labels:
+    tier: internal
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: idempotencyservice

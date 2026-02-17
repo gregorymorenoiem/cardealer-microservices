@@ -22,8 +22,11 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task<IEnumerable<RefreshToken>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
+        // Use AsNoTracking for read-only query
+        var now = DateTime.UtcNow;
         return await _context.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.IsRevoked && !rt.IsExpired)
+            .AsNoTracking()
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
             .OrderByDescending(rt => rt.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -42,25 +45,23 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task RevokeAllForUserAsync(string userId, string reason, CancellationToken cancellationToken = default)
     {
-        var activeTokens = await _context.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.IsRevoked)
-            .ToListAsync(cancellationToken);
-
-        foreach (var token in activeTokens)
-        {
-            token.Revoke("system", reason);
-        }
-
-        await _context.SaveChangesAsync(cancellationToken);
+        // Performance: Use ExecuteUpdateAsync to bulk-update without loading entities into memory
+        var now = DateTime.UtcNow;
+        await _context.RefreshTokens
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(rt => rt.RevokedAt, now)
+                .SetProperty(rt => rt.RevokedByIp, "system")
+                .SetProperty(rt => rt.RevokedReason, reason),
+                cancellationToken);
     }
 
     public async Task CleanupExpiredTokensAsync(CancellationToken cancellationToken = default)
     {
-        var expiredTokens = await _context.RefreshTokens
-            .Where(rt => rt.IsExpired || rt.IsRevoked)
-            .ToListAsync(cancellationToken);
-
-        _context.RefreshTokens.RemoveRange(expiredTokens);
-        await _context.SaveChangesAsync(cancellationToken);
+        // Performance: Use ExecuteDeleteAsync to delete without loading entities into memory
+        var now = DateTime.UtcNow;
+        await _context.RefreshTokens
+            .Where(rt => rt.ExpiresAt <= now || rt.RevokedAt != null)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 }

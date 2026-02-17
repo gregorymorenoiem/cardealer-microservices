@@ -1,3 +1,5 @@
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Messaging;
 using AuditService.Infrastructure.Extensions;
 using AuditService.Infrastructure.Persistence;
 using AuditService.Infrastructure.Messaging;
@@ -96,12 +98,11 @@ builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
 
 // ========== ADVANCED FEATURES ==========
 
-// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-builder.Services.AddSingleton<IDeadLetterQueue>(sp =>
-{
-    var logger = sp.GetRequiredService<ILogger<InMemoryDeadLetterQueue>>();
-    return new InMemoryDeadLetterQueue(logger, maxRetries: 5);
-});
+// Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
+builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "AuditService");
+
+// Shared RabbitMQ connection (1 connection per pod instead of N per class)
+builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
 // Background Service para procesar DLQ
 builder.Services.AddHostedService<DeadLetterQueueProcessor>();
@@ -178,8 +179,12 @@ builder.Services.AddHealthChecksUI(setup =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {

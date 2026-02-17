@@ -13,13 +13,16 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Verify2
 {
     private readonly IUserRepository _userRepository;
     private readonly ITwoFactorService _twoFactorService;
+    private readonly IAuthNotificationService _notificationService;
 
     public Verify2FACommandHandler(
         IUserRepository userRepository,
-        ITwoFactorService twoFactorService)
+        ITwoFactorService twoFactorService,
+        IAuthNotificationService notificationService)
     {
         _userRepository = userRepository;
         _twoFactorService = twoFactorService;
+        _notificationService = notificationService;
     }
 
     public async Task<Verify2FAResponse> Handle(Verify2FACommand request, CancellationToken cancellationToken)
@@ -27,14 +30,17 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Verify2
         var user = await _userRepository.GetByIdAsync(request.UserId)
             ?? throw new NotFoundException("User not found.");
 
+        if (user.TwoFactorAuth == null)
+            throw new BadRequestException("Two-factor authentication is not set up for this user.");
+
         bool isValid;
 
-        // CORRECCIÓN: Usar PrimaryMethod en lugar de Type
+        // Verificar código según el tipo
         switch (request.Type)
         {
             case TwoFactorAuthType.Authenticator:
-                if (user.TwoFactorAuth?.Secret == null)
-                    throw new BadRequestException("Two-factor authentication is not set up for this user.");
+                if (string.IsNullOrEmpty(user.TwoFactorAuth.Secret))
+                    throw new BadRequestException("Two-factor authentication secret is not configured.");
 
                 isValid = _twoFactorService.VerifyAuthenticatorCode(user.TwoFactorAuth.Secret, request.Code);
                 break;
@@ -50,12 +56,30 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Verify2
 
         if (isValid)
         {
-            // Marcar como usado si es necesario
-            user.TwoFactorAuth?.MarkAsUsed();
+            // Si está en PendingVerification, confirmar el enable
+            if (user.TwoFactorAuth.Status == TwoFactorAuthStatus.PendingVerification)
+            {
+                user.TwoFactorAuth.ConfirmEnable();
+                
+                // Ahora sí enviar los códigos de recuperación por email
+                if (user.TwoFactorAuth.RecoveryCodes.Any())
+                {
+                    await _notificationService.SendTwoFactorBackupCodesAsync(
+                        user.Email!, 
+                        user.TwoFactorAuth.RecoveryCodes);
+                }
+            }
+            
+            // Marcar como usado
+            user.TwoFactorAuth.MarkAsUsed();
             await _userRepository.UpdateAsync(user, cancellationToken);
 
-            return new Verify2FAResponse(true, "Two-factor authentication verified successfully.");
+            return new Verify2FAResponse(true, "Two-factor authentication verified and enabled successfully.");
         }
+
+        // Incrementar intentos fallidos
+        user.TwoFactorAuth.IncrementFailedAttempts();
+        await _userRepository.UpdateAsync(user, cancellationToken);
 
         return new Verify2FAResponse(false, "Invalid verification code.");
     }

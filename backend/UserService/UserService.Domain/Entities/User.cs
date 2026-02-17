@@ -9,11 +9,29 @@ namespace UserService.Domain.Entities
     public enum AccountType
     {
         Guest,
-        Individual,
+        Buyer,
         Dealer,
         DealerEmployee,
         Admin,
-        PlatformEmployee
+        PlatformEmployee,
+        Seller
+    }
+
+    /// <summary>
+    /// Intención del usuario en la plataforma.
+    /// Define qué quiere hacer el usuario (comprar, vender, ambos).
+    /// Puede cambiar a lo largo del tiempo.
+    /// </summary>
+    public enum UserIntent
+    {
+        /// <summary>Solo navega (default al registrarse)</summary>
+        Browse,
+        /// <summary>Quiere comprar un vehículo (gratis)</summary>
+        Buy,
+        /// <summary>Quiere vender un vehículo ($29/listing)</summary>
+        Sell,
+        /// <summary>Quiere comprar y vender</summary>
+        BuyAndSell
     }
 
     /// <summary>
@@ -54,12 +72,29 @@ namespace UserService.Domain.Entities
         public string PhoneNumber { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public bool EmailConfirmed { get; set; } = false;
+        
+        // Profile fields for seller public profile
+        public string? ProfilePicture { get; set; }
+        public string? City { get; set; }
+        public string? Province { get; set; }
+        public string? BusinessName { get; set; }
+        public string? BusinessPhone { get; set; }
+        public string? BusinessAddress { get; set; }
+        public string? RNC { get; set; }
+        public string? PreferredContactMethod { get; set; } = "email"; // email, phone, both
+        public string? BusinessHours { get; set; } = "9:00 AM - 6:00 PM";
+        public string? AutoReplyMessage { get; set; }
+        public bool IsEmailVerified { get; set; } = false;
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
 
         // Account type system
-        public AccountType AccountType { get; set; } = AccountType.Individual;
+        public AccountType AccountType { get; set; } = AccountType.Buyer;
+
+        // User intent - what the user wants to do (buy, sell, both)
+        public UserIntent UserIntent { get; set; } = UserIntent.Browse;
 
         // Platform-level (if admin or platform employee)
         public PlatformRole? PlatformRole { get; set; }

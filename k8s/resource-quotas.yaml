@@ -1,0 +1,68 @@
+# =============================================================================
+# RESOURCE QUOTAS & LIMIT RANGES — Auto-Scaling Ready
+# =============================================================================
+# Ajustado para soportar auto-scaling agresivo.
+#
+# CÁLCULO:
+#   - 16 servicios × max 8 réplicas (critical) = ~80 pods max teórico
+#   - Infraestructura (postgres, redis, rabbitmq) = ~5 pods
+#   - Total máximo: ~85 pods (redondeado a 100)
+#
+# ⚠️ Ajustar según el Node Pool de Digital Ocean.
+#     3 nodos × 4 CPUs × 8GB = 12 CPUs, 24GB RAM disponibles
+# =============================================================================
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: okla-quota
+  namespace: okla
+spec:
+  hard:
+    # Pod limits — soporta auto-scaling
+    pods: "100"
+    # CPU limits — 12 CPUs disponibles en cluster
+    requests.cpu: "8"
+    limits.cpu: "16"
+    # Memory limits — 24GB disponibles en cluster
+    requests.memory: "16Gi"
+    limits.memory: "32Gi"
+    # Storage
+    persistentvolumeclaims: "30"
+    requests.storage: "200Gi"
+    # Services
+    services: "40"
+    services.loadbalancers: "3"
+    services.nodeports: "5"
+    # Secrets and ConfigMaps
+    secrets: "60"
+    configmaps: "40"
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: okla-limit-range
+  namespace: okla
+spec:
+  limits:
+    # Default limits for containers that don't specify them
+    - type: Container
+      default:
+        cpu: "200m"
+        memory: "256Mi"
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      min:
+        cpu: "10m"
+        memory: "32Mi"
+      max:
+        cpu: "2"
+        memory: "2Gi"
+    # Pod-level limits
+    - type: Pod
+      max:
+        cpu: "4"
+        memory: "4Gi"

@@ -135,9 +135,9 @@ public static class AuthSecretsConfiguration
             Port = int.Parse(secretProvider.GetSecret(SecretKeys.RabbitMqPort)
                 ?? configuration["RabbitMQ:Port"] ?? "5672"),
             Username = secretProvider.GetSecret(SecretKeys.RabbitMqUser)
-                ?? configuration["RabbitMQ:UserName"] ?? "guest",
+                ?? configuration["RabbitMQ:UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured"),
             Password = secretProvider.GetSecret(SecretKeys.RabbitMqPassword)
-                ?? configuration["RabbitMQ:Password"] ?? "guest",
+                ?? configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
             VirtualHost = secretProvider.GetSecret(SecretKeys.RabbitMqVirtualHost)
                 ?? configuration["RabbitMQ:VirtualHost"] ?? "/"
         };
@@ -176,17 +176,31 @@ public static class AuthSecretsConfiguration
 /// </summary>
 public class OAuthCredentials
 {
+    // Google OAuth
     public string? GoogleClientId { get; set; }
     public string? GoogleClientSecret { get; set; }
+    
+    // Microsoft OAuth (Azure AD)
     public string? MicrosoftClientId { get; set; }
     public string? MicrosoftClientSecret { get; set; }
     public string? MicrosoftTenantId { get; set; }
+    
+    // Facebook OAuth
     public string? FacebookClientId { get; set; }
     public string? FacebookClientSecret { get; set; }
     
+    // Apple Sign In
+    public string? AppleClientId { get; set; }       // Also known as Service ID
+    public string? AppleTeamId { get; set; }         // 10-character Team ID
+    public string? AppleKeyId { get; set; }          // Key ID from Apple Developer
+    public string? ApplePrivateKey { get; set; }     // P8 private key content
+    
+    // Validation helpers
     public bool HasGoogle => !string.IsNullOrEmpty(GoogleClientId) && !string.IsNullOrEmpty(GoogleClientSecret);
     public bool HasMicrosoft => !string.IsNullOrEmpty(MicrosoftClientId) && !string.IsNullOrEmpty(MicrosoftClientSecret);
     public bool HasFacebook => !string.IsNullOrEmpty(FacebookClientId) && !string.IsNullOrEmpty(FacebookClientSecret);
+    public bool HasApple => !string.IsNullOrEmpty(AppleClientId) && !string.IsNullOrEmpty(AppleTeamId) 
+                          && !string.IsNullOrEmpty(AppleKeyId) && !string.IsNullOrEmpty(ApplePrivateKey);
 }
 
 /// <summary>

@@ -15,6 +15,7 @@ public class ReportsDbContext : MultiTenantDbContext
     public DbSet<ReportSchedule> ReportSchedules => Set<ReportSchedule>();
     public DbSet<Dashboard> Dashboards => Set<Dashboard>();
     public DbSet<DashboardWidget> DashboardWidgets => Set<DashboardWidget>();
+    public DbSet<ContentReport> ContentReports => Set<ContentReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +69,22 @@ public class ReportsDbContext : MultiTenantDbContext
             entity.HasIndex(e => e.DashboardId);
             entity.Property(e => e.Title).HasMaxLength(200).IsRequired();
             entity.Property(e => e.WidgetType).HasMaxLength(50).IsRequired();
+        });
+
+        modelBuilder.Entity<ContentReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => new { e.TargetId, e.ReportedById });
+            entity.Property(e => e.TargetId).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.TargetTitle).HasMaxLength(500);
+            entity.Property(e => e.Reason).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.ReportedByEmail).HasMaxLength(254);
+            entity.Property(e => e.ResolvedById).HasMaxLength(200);
+            entity.Property(e => e.Resolution).HasMaxLength(2000);
         });
     }
 }

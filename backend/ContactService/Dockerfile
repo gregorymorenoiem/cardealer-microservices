@@ -17,37 +17,36 @@ COPY ["ContactService/ContactService.Infrastructure/ContactService.Infrastructur
 
 RUN dotnet restore "ContactService/ContactService.Api/ContactService.Api.csproj"
 
-# Copy everything else and build
+# Copy everything else
 COPY . .
 WORKDIR "/src/ContactService/ContactService.Api"
-RUN dotnet build "ContactService.Api.csproj" -c Release -o /app/build
 
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
 RUN dotnet publish "ContactService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
 # Install wget for healthcheck
-RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache wget
 
 # Create secrets directory for Docker secrets
 RUN mkdir -p /run/secrets
 
-# Set environment to Docker
+# Set environment
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
 # Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app /run/secrets
+RUN adduser -D -u 1000 appuser && chown -R appuser:appuser /app /run/secrets
 USER appuser
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "ContactService.Api.dll"]

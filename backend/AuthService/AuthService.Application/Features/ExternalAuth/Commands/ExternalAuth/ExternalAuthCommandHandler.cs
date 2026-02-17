@@ -67,7 +67,10 @@ public class ExternalAuthCommandHandler : IRequestHandler<ExternalAuthCommand, E
             accessToken,
             refreshTokenValue,
             expiresAt,
-            isNewUser
+            isNewUser,
+            user.FirstName,
+            user.LastName,
+            user.ProfilePictureUrl
         );
     }
 }

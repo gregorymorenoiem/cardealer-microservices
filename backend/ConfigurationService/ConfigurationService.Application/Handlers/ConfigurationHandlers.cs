@@ -60,3 +60,53 @@ public class DeleteConfigurationHandler : IRequestHandler<DeleteConfigurationCom
         return true;
     }
 }
+
+public class CreateFeatureFlagHandler : IRequestHandler<CreateFeatureFlagCommand, FeatureFlag>
+{
+    private readonly IFeatureFlagManager _manager;
+
+    public CreateFeatureFlagHandler(IFeatureFlagManager manager)
+    {
+        _manager = manager;
+    }
+
+    public async Task<FeatureFlag> Handle(CreateFeatureFlagCommand request, CancellationToken cancellationToken)
+    {
+        var flag = new FeatureFlag
+        {
+            Name = request.Name,
+            Key = request.Key,
+            IsEnabled = request.IsEnabled,
+            Description = request.Description,
+            Environment = request.Environment,
+            TenantId = request.TenantId,
+            RolloutPercentage = request.RolloutPercentage,
+            CreatedBy = request.CreatedBy
+        };
+
+        return await _manager.CreateFeatureFlagAsync(flag);
+    }
+}
+
+public class CreateSecretHandler : IRequestHandler<CreateSecretCommand, EncryptedSecret>
+{
+    private readonly ISecretManager _manager;
+
+    public CreateSecretHandler(ISecretManager manager)
+    {
+        _manager = manager;
+    }
+
+    public async Task<EncryptedSecret> Handle(CreateSecretCommand request, CancellationToken cancellationToken)
+    {
+        return await _manager.CreateSecretAsync(
+            request.Key,
+            request.PlainValue,
+            request.Environment,
+            request.CreatedBy,
+            request.Description,
+            request.TenantId,
+            request.ExpiresAt
+        );
+    }
+}

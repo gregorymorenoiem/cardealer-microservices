@@ -3,50 +3,133 @@ using AuthService.Domain.Entities;
 using RefreshTokenEntity = AuthService.Domain.Entities.RefreshToken;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
+using AuthService.Application.Services;
 using MediatR;
 using AuthService.Application.DTOs.Auth;
 using AuthService.Domain.Interfaces;
 using CarDealer.Contracts.Events.Auth;
 using AuthService.Application.Common.Interfaces;
+using AuthService.Domain.Enums;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+
+// Security settings are read dynamically from ConfigurationService
+// (admin panel → ConfigurationService → this handler via ISecurityConfigProvider)
 
 namespace AuthService.Application.Features.Auth.Commands.Login;
 
+/// <summary>
+/// US-18.3: Login handler with CAPTCHA verification after 2 failed attempts.
+/// AUTH-SEC-005: Revoked device detection and verification.
+/// </summary>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUserSessionRepository _sessionRepository;
     private readonly IEventPublisher _eventPublisher;
     private readonly IRequestContext _requestContext;
+    private readonly ITwoFactorService _twoFactorService;
+    private readonly ICaptchaService _captchaService;
+    private readonly IDistributedCache _cache;
+    private readonly IAuthNotificationService _notificationService;
+    private readonly IRevokedDeviceService _revokedDeviceService;
+    private readonly IGeoLocationService _geoLocationService;
+    private readonly ISecurityConfigProvider _securityConfig;
+    private readonly ILogger<LoginCommandHandler> _logger;
+
+    private const int CAPTCHA_REQUIRED_AFTER_ATTEMPTS = 2;
+    private const int SECURITY_ALERT_THRESHOLD = 3;
+    // MAX_FAILED_ATTEMPTS and LOCKOUT_MINUTES are now read from ConfigurationService
+    // via ISecurityConfigProvider (admin panel: Seguridad → Intentos de login máximos / Tiempo de bloqueo)
 
     public LoginCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
+        IUserSessionRepository sessionRepository,
         IEventPublisher eventPublisher,
-        IRequestContext requestContext)
+        IRequestContext requestContext,
+        ITwoFactorService twoFactorService,
+        ICaptchaService captchaService,
+        IDistributedCache cache,
+        IAuthNotificationService notificationService,
+        IRevokedDeviceService revokedDeviceService,
+        IGeoLocationService geoLocationService,
+        ISecurityConfigProvider securityConfig,
+        ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
+        _sessionRepository = sessionRepository;
         _eventPublisher = eventPublisher;
         _requestContext = requestContext;
+        _twoFactorService = twoFactorService;
+        _captchaService = captchaService;
+        _cache = cache;
+        _notificationService = notificationService;
+        _revokedDeviceService = revokedDeviceService;
+        _geoLocationService = geoLocationService;
+        _securityConfig = securityConfig;
+        _logger = logger;
     }
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken)
-                   ?? throw new UnauthorizedException("Invalid credentials.");
+        // US-18.3: Check if CAPTCHA is required based on failed attempts
+        var failedAttemptsKey = $"login_failed:{request.Email.ToLowerInvariant()}";
+        var failedAttemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        var failedAttempts = 0;
+        if (!string.IsNullOrEmpty(failedAttemptsStr))
+        {
+            int.TryParse(failedAttemptsStr, out failedAttempts);
+        }
+
+        if (_captchaService.IsCaptchaRequired(failedAttempts))
+        {
+            if (string.IsNullOrEmpty(request.CaptchaToken))
+            {
+                throw new BadRequestException("CAPTCHA verification required. Please complete the CAPTCHA challenge.");
+            }
+
+            var captchaValid = await _captchaService.VerifyAsync(
+                request.CaptchaToken, 
+                "login", 
+                _requestContext.IpAddress);
+
+            if (!captchaValid)
+            {
+                _logger.LogWarning("CAPTCHA verification failed for {Email}. Score: {Score}", 
+                    request.Email, _captchaService.LastScore);
+                throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+            }
+        }
+
+        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        
+        if (user == null)
+        {
+            await TrackFailedLoginAttemptAsync(request.Email, null, cancellationToken);
+            throw new UnauthorizedException("Invalid credentials.");
+        }
 
         // Verificar que PasswordHash no sea nulo
         if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
             throw new UnauthorizedException("Invalid credentials.");
+        }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
+        {
+            await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
             throw new UnauthorizedException("Invalid credentials.");
+        }
 
         if (!user.EmailConfirmed)
             throw new UnauthorizedException("Please verify your email before logging in.");
@@ -54,11 +137,65 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         if (user.IsLockedOut())
             throw new UnauthorizedException("Account is temporarily locked. Please try again later.");
 
+        // Clear failed attempts on successful password verification
+        await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
+
+        // AUTH-SEC-005: Check if this device was previously revoked
+        var revokedDeviceCheck = await _revokedDeviceService.CheckIfDeviceIsRevokedAsync(
+            user.Id,
+            _requestContext.IpAddress,
+            _requestContext.UserAgent,
+            cancellationToken);
+
+        if (revokedDeviceCheck.IsRevoked)
+        {
+            _logger.LogWarning(
+                "AUTH-SEC-005: Login attempt from revoked device. User: {UserId}, Fingerprint: {Fingerprint}",
+                user.Id, revokedDeviceCheck.DeviceFingerprint);
+
+            // Return a response indicating revoked device verification is required
+            // The frontend will need to handle this and call the revoked device verification flow
+            return new LoginResponse(
+                user.Id,
+                user.Email!,
+                string.Empty, // No access token
+                string.Empty, // No refresh token
+                DateTime.UtcNow.AddMinutes(10), // Short expiration
+                false, // requiresTwoFactor
+                null, // No temp token (reserved for 2FA)
+                null, // No 2FA type
+                true, // requiresRevokedDeviceVerification
+                revokedDeviceCheck.DeviceFingerprint // Device fingerprint for verification
+            );
+        }
+
         // Verificar si requiere 2FA
         if (user.IsTwoFactorEnabled)
         {
             // Generar token temporal para 2FA
             var tempToken = _jwtGenerator.GenerateTempToken(user.Id);
+            
+            // Determinar el tipo de 2FA y obtener el string para el frontend
+            string twoFactorTypeString = "authenticator"; // default
+            
+            if (user.TwoFactorAuth != null)
+            {
+                var twoFactorType = user.TwoFactorAuth.PrimaryMethod;
+                
+                // Map enum to string for frontend
+                twoFactorTypeString = twoFactorType switch
+                {
+                    TwoFactorAuthType.SMS => "sms",
+                    TwoFactorAuthType.Email => "email",
+                    _ => "authenticator"
+                };
+                
+                // Enviar código 2FA automáticamente para SMS y Email
+                if (twoFactorType == TwoFactorAuthType.SMS || twoFactorType == TwoFactorAuthType.Email)
+                {
+                    await _twoFactorService.SendTwoFactorCodeAsync(user.Id, twoFactorType);
+                }
+            }
 
             return new LoginResponse(
                 user.Id,
@@ -67,23 +204,122 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 string.Empty, // No refresh token yet
                 DateTime.UtcNow.AddMinutes(5), // Short expiration for 2FA
                 true, // requiresTwoFactor
-                tempToken
+                tempToken,
+                twoFactorTypeString // Include 2FA type for frontend
             );
         }
 
         // Flujo normal sin 2FA
-        var accessToken = _jwtGenerator.GenerateToken(user);
+        // Read expiration dynamically from ConfigurationService (admin panel: Seguridad)
+        var jwtExpiresMinutes = await _securityConfig.GetJwtExpiresMinutesAsync(cancellationToken);
+        var refreshTokenDays = await _securityConfig.GetRefreshTokenDaysAsync(cancellationToken);
+
+        var accessToken = _jwtGenerator.GenerateToken(user, jwtExpiresMinutes);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
-        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+
+        var expiresAt = DateTime.UtcNow.AddMinutes(jwtExpiresMinutes);
+        var sessionExpiresAt = DateTime.UtcNow.AddDays(refreshTokenDays);
 
         var refreshTokenEntity = new RefreshTokenEntity(
             user.Id,
             refreshTokenValue,
-            DateTime.UtcNow.AddDays(7),
+            sessionExpiresAt,
             _requestContext.IpAddress
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
+
+        // Parse device info once
+        var deviceInfo = ParseDeviceInfo(_requestContext.UserAgent);
+        var browser = ParseBrowser(_requestContext.UserAgent);
+        var operatingSystem = ParseOperatingSystem(_requestContext.UserAgent);
+
+        // Get geolocation from IP address
+        string? locationString = null;
+        string? country = null;
+        string? city = null;
+        try
+        {
+            var geoLocation = await _geoLocationService.GetLocationFromIpAsync(_requestContext.IpAddress);
+            if (geoLocation != null)
+            {
+                country = geoLocation.Country;
+                city = geoLocation.City;
+                locationString = !string.IsNullOrEmpty(city) && !string.IsNullOrEmpty(country)
+                    ? $"{city}, {country}"
+                    : country ?? city ?? "Unknown location";
+                _logger.LogDebug("Geolocation for IP {IpAddress}: {Location}", _requestContext.IpAddress, locationString);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get geolocation for IP {IpAddress}", _requestContext.IpAddress);
+        }
+
+        // Check if there's an existing active session for the same device/browser/IP
+        var existingSession = await _sessionRepository.GetActiveSessionByDeviceAsync(
+            user.Id,
+            deviceInfo,
+            browser,
+            _requestContext.IpAddress,
+            cancellationToken);
+
+        if (existingSession != null)
+        {
+            // Reuse existing session - update with new refresh token
+            existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt);
+            // Update location if we got one
+            if (!string.IsNullOrEmpty(locationString))
+            {
+                existingSession.UpdateLocation(locationString, country, city);
+            }
+            await _sessionRepository.UpdateAsync(existingSession, cancellationToken);
+            _logger.LogInformation("Renewed existing session {SessionId} for user {UserId}", existingSession.Id, user.Id);
+        }
+        else
+        {
+            // Create new session only if no matching session exists
+            var userSession = new UserSession(
+                userId: user.Id,
+                refreshTokenId: refreshTokenEntity.Id.ToString(),
+                deviceInfo: deviceInfo,
+                browser: browser,
+                operatingSystem: operatingSystem,
+                ipAddress: _requestContext.IpAddress,
+                expiresAt: sessionExpiresAt
+            );
+            
+            // Set location if available
+            if (!string.IsNullOrEmpty(locationString))
+            {
+                userSession.UpdateLocation(locationString, country, city);
+            }
+            
+            await _sessionRepository.AddAsync(userSession, cancellationToken);
+            _logger.LogInformation("Created new session {SessionId} for user {UserId} from {Location}", 
+                userSession.Id, user.Id, locationString ?? "Unknown location");
+
+            // Send new session notification email
+            try
+            {
+                var sessionNotification = new NewSessionNotificationDto(
+                    DeviceInfo: deviceInfo,
+                    Browser: browser,
+                    OperatingSystem: operatingSystem,
+                    IpAddress: _requestContext.IpAddress,
+                    LoginTime: DateTime.UtcNow,
+                    Location: locationString
+                );
+                await _notificationService.SendNewSessionNotificationAsync(user.Email!, sessionNotification);
+                _logger.LogInformation("New session notification sent to {Email}", user.Email);
+            }
+            catch (Exception ex)
+            {
+                // Don't fail login if notification fails
+                _logger.LogWarning(ex, "Failed to send new session notification to {Email}", user.Email);
+            }
+        }
+
         user.ResetAccessFailedCount();
         await _userRepository.UpdateAsync(user, cancellationToken);
 
@@ -106,5 +342,106 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             expiresAt,
             false // requiresTwoFactor
         );
+    }
+
+    /// <summary>
+    /// US-18.2/18.3: Track failed login attempts for CAPTCHA requirement and security alerts.
+    /// Sends security alerts after SECURITY_ALERT_THRESHOLD attempts.
+    /// Lockout duration is read from ConfigurationService (admin panel: Seguridad → Tiempo de bloqueo).
+    /// </summary>
+    private async Task TrackFailedLoginAttemptAsync(string email, string? userEmail, CancellationToken cancellationToken)
+    {
+        var lockoutMinutes = await _securityConfig.GetLockoutDurationMinutesAsync(cancellationToken);
+
+        var failedAttemptsKey = $"login_failed:{email.ToLowerInvariant()}";
+        var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        
+        int attempts = 1;
+        if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
+        {
+            attempts = existing + 1;
+        }
+
+        // Update failed attempts counter — cache TTL = lockout window from admin config
+        await _cache.SetStringAsync(failedAttemptsKey, attempts.ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(lockoutMinutes)
+        }, cancellationToken);
+
+        _logger.LogWarning("Failed login attempt {Attempts} for {Email} from IP {IP}", 
+            attempts, email, _requestContext.IpAddress);
+
+        // US-18.2: Send security alert after 3+ failed attempts
+        if (attempts >= SECURITY_ALERT_THRESHOLD && !string.IsNullOrEmpty(userEmail))
+        {
+            try
+            {
+                var alert = new SecurityAlertDto(
+                    AlertType: "FailedLoginAttempts",
+                    IpAddress: _requestContext.IpAddress,
+                    AttemptCount: attempts,
+                    Timestamp: DateTime.UtcNow,
+                    DeviceInfo: _requestContext.UserAgent
+                );
+                await _notificationService.SendSecurityAlertAsync(userEmail, alert);
+                _logger.LogInformation("Security alert sent to {Email} after {Attempts} failed login attempts", 
+                    userEmail, attempts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send security alert for {Email}", email);
+            }
+        }
+
+        // Log when CAPTCHA will be required
+        if (attempts == CAPTCHA_REQUIRED_AFTER_ATTEMPTS)
+        {
+            _logger.LogInformation("CAPTCHA will be required for next login attempt from {Email}", email);
+        }
+    }
+
+    /// <summary>
+    /// Parse device info from User-Agent string
+    /// </summary>
+    private static string ParseDeviceInfo(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
+        
+        if (userAgent.Contains("Mobile") || userAgent.Contains("Android") || userAgent.Contains("iPhone"))
+            return "Mobile";
+        if (userAgent.Contains("Tablet") || userAgent.Contains("iPad"))
+            return "Tablet";
+        return "Desktop";
+    }
+
+    /// <summary>
+    /// Parse browser name from User-Agent string
+    /// </summary>
+    private static string ParseBrowser(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        
+        if (userAgent.Contains("Edg/")) return "Microsoft Edge";
+        if (userAgent.Contains("Chrome/") && !userAgent.Contains("Chromium")) return "Chrome";
+        if (userAgent.Contains("Firefox/")) return "Firefox";
+        if (userAgent.Contains("Safari/") && !userAgent.Contains("Chrome")) return "Safari";
+        if (userAgent.Contains("Opera") || userAgent.Contains("OPR")) return "Opera";
+        return "Unknown Browser";
+    }
+
+    /// <summary>
+    /// Parse operating system from User-Agent string
+    /// </summary>
+    private static string ParseOperatingSystem(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        
+        if (userAgent.Contains("Windows NT 10")) return "Windows 10/11";
+        if (userAgent.Contains("Windows NT")) return "Windows";
+        if (userAgent.Contains("Mac OS X")) return "macOS";
+        if (userAgent.Contains("Linux") && !userAgent.Contains("Android")) return "Linux";
+        if (userAgent.Contains("Android")) return "Android";
+        if (userAgent.Contains("iPhone") || userAgent.Contains("iPad")) return "iOS";
+        return "Unknown OS";
     }
 }

@@ -1,0 +1,665 @@
+{
+  "_description": "Datos de RoleService: Roles (8), Permissions (40), RolePermissions (mappings)",
+  "roles": [
+    {
+      "id": "role-0001-0000-0000-000000000001",
+      "name": "SuperAdmin",
+      "displayName": "Super Administrador",
+      "description": "Acceso total al sistema, incluyendo configuración de roles y permisos",
+      "level": 1,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0002-0000-0000-000000000002",
+      "name": "Admin",
+      "displayName": "Administrador",
+      "description": "Administrador de la plataforma con acceso a gestión de usuarios, dealers y contenido",
+      "level": 2,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0003-0000-0000-000000000003",
+      "name": "Moderator",
+      "displayName": "Moderador",
+      "description": "Moderador de contenido, puede aprobar/rechazar vehículos y reviews",
+      "level": 3,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0004-0000-0000-000000000004",
+      "name": "Support",
+      "displayName": "Soporte",
+      "description": "Agente de soporte al cliente, puede ver información de usuarios y ayudar con problemas",
+      "level": 3,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0005-0000-0000-000000000005",
+      "name": "DealerOwner",
+      "displayName": "Dueño de Dealer",
+      "description": "Propietario de un dealer, acceso total a su dealer y empleados",
+      "level": 4,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0006-0000-0000-000000000006",
+      "name": "DealerEmployee",
+      "displayName": "Empleado de Dealer",
+      "description": "Empleado de un dealer, puede gestionar vehículos y responder consultas",
+      "level": 5,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0007-0000-0000-000000000007",
+      "name": "IndividualSeller",
+      "displayName": "Vendedor Individual",
+      "description": "Usuario individual que puede publicar vehículos para venta",
+      "level": 6,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "role-0008-0000-0000-000000000008",
+      "name": "Buyer",
+      "displayName": "Comprador",
+      "description": "Usuario básico que puede buscar y contactar vendedores",
+      "level": 7,
+      "isSystem": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "permissions": [
+    {
+      "id": "perm-001",
+      "name": "users.view",
+      "displayName": "Ver usuarios",
+      "category": "Users",
+      "description": "Puede ver la lista de usuarios"
+    },
+    {
+      "id": "perm-002",
+      "name": "users.create",
+      "displayName": "Crear usuarios",
+      "category": "Users",
+      "description": "Puede crear nuevos usuarios"
+    },
+    {
+      "id": "perm-003",
+      "name": "users.edit",
+      "displayName": "Editar usuarios",
+      "category": "Users",
+      "description": "Puede editar información de usuarios"
+    },
+    {
+      "id": "perm-004",
+      "name": "users.delete",
+      "displayName": "Eliminar usuarios",
+      "category": "Users",
+      "description": "Puede eliminar usuarios"
+    },
+    {
+      "id": "perm-005",
+      "name": "users.suspend",
+      "displayName": "Suspender usuarios",
+      "category": "Users",
+      "description": "Puede suspender cuentas de usuarios"
+    },
+    {
+      "id": "perm-006",
+      "name": "dealers.view",
+      "displayName": "Ver dealers",
+      "category": "Dealers",
+      "description": "Puede ver la lista de dealers"
+    },
+    {
+      "id": "perm-007",
+      "name": "dealers.create",
+      "displayName": "Crear dealers",
+      "category": "Dealers",
+      "description": "Puede crear nuevos dealers"
+    },
+    {
+      "id": "perm-008",
+      "name": "dealers.edit",
+      "displayName": "Editar dealers",
+      "category": "Dealers",
+      "description": "Puede editar información de dealers"
+    },
+    {
+      "id": "perm-009",
+      "name": "dealers.delete",
+      "displayName": "Eliminar dealers",
+      "category": "Dealers",
+      "description": "Puede eliminar dealers"
+    },
+    {
+      "id": "perm-010",
+      "name": "dealers.verify",
+      "displayName": "Verificar dealers",
+      "category": "Dealers",
+      "description": "Puede verificar documentos de dealers"
+    },
+    {
+      "id": "perm-011",
+      "name": "vehicles.view",
+      "displayName": "Ver vehículos",
+      "category": "Vehicles",
+      "description": "Puede ver vehículos"
+    },
+    {
+      "id": "perm-012",
+      "name": "vehicles.create",
+      "displayName": "Crear vehículos",
+      "category": "Vehicles",
+      "description": "Puede publicar vehículos"
+    },
+    {
+      "id": "perm-013",
+      "name": "vehicles.edit",
+      "displayName": "Editar vehículos",
+      "category": "Vehicles",
+      "description": "Puede editar vehículos"
+    },
+    {
+      "id": "perm-014",
+      "name": "vehicles.delete",
+      "displayName": "Eliminar vehículos",
+      "category": "Vehicles",
+      "description": "Puede eliminar vehículos"
+    },
+    {
+      "id": "perm-015",
+      "name": "vehicles.approve",
+      "displayName": "Aprobar vehículos",
+      "category": "Vehicles",
+      "description": "Puede aprobar vehículos pendientes"
+    },
+    {
+      "id": "perm-016",
+      "name": "vehicles.reject",
+      "displayName": "Rechazar vehículos",
+      "category": "Vehicles",
+      "description": "Puede rechazar vehículos"
+    },
+    {
+      "id": "perm-017",
+      "name": "reviews.view",
+      "displayName": "Ver reviews",
+      "category": "Reviews",
+      "description": "Puede ver reviews"
+    },
+    {
+      "id": "perm-018",
+      "name": "reviews.create",
+      "displayName": "Crear reviews",
+      "category": "Reviews",
+      "description": "Puede escribir reviews"
+    },
+    {
+      "id": "perm-019",
+      "name": "reviews.edit",
+      "displayName": "Editar reviews",
+      "category": "Reviews",
+      "description": "Puede editar reviews"
+    },
+    {
+      "id": "perm-020",
+      "name": "reviews.delete",
+      "displayName": "Eliminar reviews",
+      "category": "Reviews",
+      "description": "Puede eliminar reviews"
+    },
+    {
+      "id": "perm-021",
+      "name": "reviews.approve",
+      "displayName": "Aprobar reviews",
+      "category": "Reviews",
+      "description": "Puede aprobar reviews pendientes"
+    },
+    {
+      "id": "perm-022",
+      "name": "billing.view",
+      "displayName": "Ver facturación",
+      "category": "Billing",
+      "description": "Puede ver información de facturación"
+    },
+    {
+      "id": "perm-023",
+      "name": "billing.manage",
+      "displayName": "Gestionar facturación",
+      "category": "Billing",
+      "description": "Puede gestionar suscripciones y pagos"
+    },
+    {
+      "id": "perm-024",
+      "name": "billing.refund",
+      "displayName": "Procesar reembolsos",
+      "category": "Billing",
+      "description": "Puede procesar reembolsos"
+    },
+    {
+      "id": "perm-025",
+      "name": "contacts.view",
+      "displayName": "Ver contactos",
+      "category": "Contacts",
+      "description": "Puede ver solicitudes de contacto"
+    },
+    {
+      "id": "perm-026",
+      "name": "contacts.respond",
+      "displayName": "Responder contactos",
+      "category": "Contacts",
+      "description": "Puede responder solicitudes de contacto"
+    },
+    {
+      "id": "perm-027",
+      "name": "contacts.assign",
+      "displayName": "Asignar contactos",
+      "category": "Contacts",
+      "description": "Puede asignar solicitudes a otros agentes"
+    },
+    {
+      "id": "perm-028",
+      "name": "notifications.view",
+      "displayName": "Ver notificaciones",
+      "category": "Notifications",
+      "description": "Puede ver notificaciones del sistema"
+    },
+    {
+      "id": "perm-029",
+      "name": "notifications.send",
+      "displayName": "Enviar notificaciones",
+      "category": "Notifications",
+      "description": "Puede enviar notificaciones masivas"
+    },
+    {
+      "id": "perm-030",
+      "name": "reports.view",
+      "displayName": "Ver reportes",
+      "category": "Reports",
+      "description": "Puede ver reportes y estadísticas"
+    },
+    {
+      "id": "perm-031",
+      "name": "reports.export",
+      "displayName": "Exportar reportes",
+      "category": "Reports",
+      "description": "Puede exportar reportes"
+    },
+    {
+      "id": "perm-032",
+      "name": "settings.view",
+      "displayName": "Ver configuración",
+      "category": "Settings",
+      "description": "Puede ver configuración del sistema"
+    },
+    {
+      "id": "perm-033",
+      "name": "settings.edit",
+      "displayName": "Editar configuración",
+      "category": "Settings",
+      "description": "Puede editar configuración del sistema"
+    },
+    {
+      "id": "perm-034",
+      "name": "roles.view",
+      "displayName": "Ver roles",
+      "category": "Roles",
+      "description": "Puede ver roles y permisos"
+    },
+    {
+      "id": "perm-035",
+      "name": "roles.manage",
+      "displayName": "Gestionar roles",
+      "category": "Roles",
+      "description": "Puede crear y editar roles"
+    },
+    {
+      "id": "perm-036",
+      "name": "media.upload",
+      "displayName": "Subir archivos",
+      "category": "Media",
+      "description": "Puede subir imágenes y documentos"
+    },
+    {
+      "id": "perm-037",
+      "name": "media.delete",
+      "displayName": "Eliminar archivos",
+      "category": "Media",
+      "description": "Puede eliminar archivos"
+    },
+    {
+      "id": "perm-038",
+      "name": "fraud.view",
+      "displayName": "Ver reportes de fraude",
+      "category": "Fraud",
+      "description": "Puede ver reportes de fraude"
+    },
+    {
+      "id": "perm-039",
+      "name": "fraud.manage",
+      "displayName": "Gestionar fraude",
+      "category": "Fraud",
+      "description": "Puede tomar acciones sobre reportes de fraude"
+    },
+    {
+      "id": "perm-040",
+      "name": "favorites.manage",
+      "displayName": "Gestionar favoritos",
+      "category": "Favorites",
+      "description": "Puede agregar/remover vehículos de favoritos"
+    }
+  ],
+  "rolePermissions": [
+    {
+      "roleId": "role-0001-0000-0000-000000000001",
+      "permissionIds": [
+        "perm-001",
+        "perm-002",
+        "perm-003",
+        "perm-004",
+        "perm-005",
+        "perm-006",
+        "perm-007",
+        "perm-008",
+        "perm-009",
+        "perm-010",
+        "perm-011",
+        "perm-012",
+        "perm-013",
+        "perm-014",
+        "perm-015",
+        "perm-016",
+        "perm-017",
+        "perm-018",
+        "perm-019",
+        "perm-020",
+        "perm-021",
+        "perm-022",
+        "perm-023",
+        "perm-024",
+        "perm-025",
+        "perm-026",
+        "perm-027",
+        "perm-028",
+        "perm-029",
+        "perm-030",
+        "perm-031",
+        "perm-032",
+        "perm-033",
+        "perm-034",
+        "perm-035",
+        "perm-036",
+        "perm-037",
+        "perm-038",
+        "perm-039",
+        "perm-040"
+      ],
+      "_note": "SuperAdmin - ALL permissions"
+    },
+    {
+      "roleId": "role-0002-0000-0000-000000000002",
+      "permissionIds": [
+        "perm-001",
+        "perm-002",
+        "perm-003",
+        "perm-004",
+        "perm-005",
+        "perm-006",
+        "perm-007",
+        "perm-008",
+        "perm-009",
+        "perm-010",
+        "perm-011",
+        "perm-012",
+        "perm-013",
+        "perm-014",
+        "perm-015",
+        "perm-016",
+        "perm-017",
+        "perm-018",
+        "perm-019",
+        "perm-020",
+        "perm-021",
+        "perm-022",
+        "perm-023",
+        "perm-024",
+        "perm-025",
+        "perm-026",
+        "perm-027",
+        "perm-028",
+        "perm-029",
+        "perm-030",
+        "perm-031",
+        "perm-032",
+        "perm-034",
+        "perm-036",
+        "perm-037",
+        "perm-038",
+        "perm-039",
+        "perm-040"
+      ],
+      "_note": "Admin - All except settings.edit, roles.manage"
+    },
+    {
+      "roleId": "role-0003-0000-0000-000000000003",
+      "permissionIds": [
+        "perm-001",
+        "perm-006",
+        "perm-011",
+        "perm-013",
+        "perm-014",
+        "perm-015",
+        "perm-016",
+        "perm-017",
+        "perm-019",
+        "perm-020",
+        "perm-021",
+        "perm-025",
+        "perm-026",
+        "perm-030",
+        "perm-036",
+        "perm-037",
+        "perm-038",
+        "perm-039"
+      ],
+      "_note": "Moderator - Content moderation"
+    },
+    {
+      "roleId": "role-0004-0000-0000-000000000004",
+      "permissionIds": [
+        "perm-001",
+        "perm-006",
+        "perm-011",
+        "perm-017",
+        "perm-022",
+        "perm-025",
+        "perm-026",
+        "perm-027",
+        "perm-028",
+        "perm-030"
+      ],
+      "_note": "Support - Customer support"
+    },
+    {
+      "roleId": "role-0005-0000-0000-000000000005",
+      "permissionIds": [
+        "perm-011",
+        "perm-012",
+        "perm-013",
+        "perm-014",
+        "perm-017",
+        "perm-018",
+        "perm-022",
+        "perm-025",
+        "perm-026",
+        "perm-030",
+        "perm-031",
+        "perm-036",
+        "perm-037",
+        "perm-040"
+      ],
+      "_note": "DealerOwner - Full dealer access"
+    },
+    {
+      "roleId": "role-0006-0000-0000-000000000006",
+      "permissionIds": [
+        "perm-011",
+        "perm-012",
+        "perm-013",
+        "perm-017",
+        "perm-025",
+        "perm-026",
+        "perm-036",
+        "perm-040"
+      ],
+      "_note": "DealerEmployee - Basic dealer access"
+    },
+    {
+      "roleId": "role-0007-0000-0000-000000000007",
+      "permissionIds": [
+        "perm-011",
+        "perm-012",
+        "perm-013",
+        "perm-014",
+        "perm-017",
+        "perm-018",
+        "perm-025",
+        "perm-036",
+        "perm-040"
+      ],
+      "_note": "IndividualSeller - Can list vehicles"
+    },
+    {
+      "roleId": "role-0008-0000-0000-000000000008",
+      "permissionIds": [
+        "perm-011",
+        "perm-017",
+        "perm-018",
+        "perm-025",
+        "perm-040"
+      ],
+      "_note": "Buyer - Basic user"
+    }
+  ],
+  "userRoles": [
+    {
+      "userId": "user-0055-0000-0000-000000000055",
+      "roleId": "role-0001-0000-0000-000000000001",
+      "assignedAt": "2024-01-01T00:00:00Z",
+      "_note": "SuperAdmin user"
+    },
+    {
+      "userId": "user-0056-0000-0000-000000000056",
+      "roleId": "role-0002-0000-0000-000000000002",
+      "assignedAt": "2024-01-05T00:00:00Z",
+      "_note": "Admin user"
+    },
+    {
+      "userId": "user-0057-0000-0000-000000000057",
+      "roleId": "role-0002-0000-0000-000000000002",
+      "assignedAt": "2024-02-01T00:00:00Z",
+      "_note": "Admin user"
+    },
+    {
+      "userId": "user-0058-0000-0000-000000000058",
+      "roleId": "role-0003-0000-0000-000000000003",
+      "assignedAt": "2024-03-01T00:00:00Z",
+      "_note": "Moderator"
+    },
+    {
+      "userId": "user-0059-0000-0000-000000000059",
+      "roleId": "role-0004-0000-0000-000000000004",
+      "assignedAt": "2024-03-01T00:00:00Z",
+      "_note": "Support agent"
+    },
+    {
+      "userId": "user-0025-0000-0000-000000000025",
+      "roleId": "role-0005-0000-0000-000000000005",
+      "assignedAt": "2024-01-15T00:00:00Z",
+      "_note": "Dealer 1 owner"
+    },
+    {
+      "userId": "user-0026-0000-0000-000000000026",
+      "roleId": "role-0005-0000-0000-000000000005",
+      "assignedAt": "2024-03-01T00:00:00Z",
+      "_note": "Dealer 2 owner"
+    },
+    {
+      "userId": "user-0027-0000-0000-000000000027",
+      "roleId": "role-0005-0000-0000-000000000005",
+      "assignedAt": "2024-06-15T00:00:00Z",
+      "_note": "Dealer 3 owner"
+    },
+    {
+      "userId": "user-0045-0000-0000-000000000045",
+      "roleId": "role-0006-0000-0000-000000000006",
+      "assignedAt": "2024-02-01T00:00:00Z",
+      "_note": "Dealer 1 employee"
+    },
+    {
+      "userId": "user-0046-0000-0000-000000000046",
+      "roleId": "role-0006-0000-0000-000000000006",
+      "assignedAt": "2024-04-01T00:00:00Z",
+      "_note": "Dealer 2 employee"
+    },
+    {
+      "userId": "user-0001-0000-0000-000000000001",
+      "roleId": "role-0008-0000-0000-000000000008",
+      "assignedAt": "2024-06-01T00:00:00Z",
+      "_note": "Buyer"
+    },
+    {
+      "userId": "user-0002-0000-0000-000000000002",
+      "roleId": "role-0008-0000-0000-000000000008",
+      "assignedAt": "2024-07-15T00:00:00Z",
+      "_note": "Buyer"
+    },
+    {
+      "userId": "user-0003-0000-0000-000000000003",
+      "roleId": "role-0007-0000-0000-000000000007",
+      "assignedAt": "2024-05-20T00:00:00Z",
+      "_note": "Individual seller"
+    },
+    {
+      "userId": "user-0004-0000-0000-000000000004",
+      "roleId": "role-0007-0000-0000-000000000007",
+      "assignedAt": "2024-08-01T00:00:00Z",
+      "_note": "Individual seller"
+    }
+  ],
+  "_summary": {
+    "totalRoles": 8,
+    "totalPermissions": 40,
+    "permissionCategories": [
+      "Users",
+      "Dealers",
+      "Vehicles",
+      "Reviews",
+      "Billing",
+      "Contacts",
+      "Notifications",
+      "Reports",
+      "Settings",
+      "Roles",
+      "Media",
+      "Fraud",
+      "Favorites"
+    ],
+    "roleLevels": "1 (highest) to 7 (lowest)"
+  }
+}

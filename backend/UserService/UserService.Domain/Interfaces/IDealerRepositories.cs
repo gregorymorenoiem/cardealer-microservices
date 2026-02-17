@@ -19,18 +19,7 @@ namespace UserService.Domain.Interfaces
         Task<int> CountByTypeAsync(DealerType dealerType);
     }
 
-    public interface ISellerProfileRepository
-    {
-        Task<SellerProfile?> GetByIdAsync(Guid id);
-        Task<SellerProfile?> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<SellerProfile>> GetAllAsync(int page = 1, int pageSize = 10);
-        Task<IEnumerable<SellerProfile>> SearchAsync(string? searchTerm, string? city, string? state, bool? isVerified, int page = 1, int pageSize = 10);
-        Task<SellerProfile> AddAsync(SellerProfile profile);
-        Task UpdateAsync(SellerProfile profile);
-        Task DeleteAsync(Guid id);
-        Task<bool> ExistsAsync(Guid id);
-        Task<int> CountAsync();
-    }
+    // NOTE: ISellerProfileRepository is defined in ISellerProfileRepository.cs (more complete version)
 
     public interface IIdentityDocumentRepository
     {
@@ -45,6 +34,7 @@ namespace UserService.Domain.Interfaces
 
     public interface IDealerEmployeeRepository
     {
+        // Employee operations
         Task<DealerEmployee?> GetByIdAsync(Guid id);
         Task<IEnumerable<DealerEmployee>> GetByDealerIdAsync(Guid dealerId);
         Task<DealerEmployee?> GetByUserIdAndDealerIdAsync(Guid userId, Guid dealerId);
@@ -52,5 +42,13 @@ namespace UserService.Domain.Interfaces
         Task UpdateAsync(DealerEmployee employee);
         Task DeleteAsync(Guid id);
         Task<int> CountByDealerIdAsync(Guid dealerId);
+
+        // Invitation operations
+        Task<DealerEmployeeInvitation?> GetInvitationByIdAsync(Guid dealerId, Guid invitationId);
+        Task<DealerEmployeeInvitation?> GetInvitationByTokenAsync(string token);
+        Task<DealerEmployeeInvitation?> GetPendingInvitationByEmailAsync(Guid dealerId, string email);
+        Task<IEnumerable<DealerEmployeeInvitation>> GetPendingInvitationsAsync(Guid dealerId);
+        Task<DealerEmployeeInvitation> AddInvitationAsync(DealerEmployeeInvitation invitation);
+        Task UpdateInvitationAsync(DealerEmployeeInvitation invitation);
     }
 }

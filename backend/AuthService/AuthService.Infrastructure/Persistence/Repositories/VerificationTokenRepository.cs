@@ -17,18 +17,21 @@ public class VerificationTokenRepository : IVerificationTokenRepository
     public async Task<VerificationToken?> GetByTokenAsync(string token)
     {
         return await _context.VerificationTokens
+            .AsNoTracking()
             .FirstOrDefaultAsync(vt => vt.Token == token);
     }
 
     public async Task<VerificationToken?> GetByTokenAndTypeAsync(string token, VerificationTokenType type)
     {
         return await _context.VerificationTokens
+            .AsNoTracking()
             .FirstOrDefaultAsync(vt => vt.Token == token && vt.Type == type);
     }
 
     public async Task<IEnumerable<VerificationToken>> GetByEmailAsync(string email)
     {
         return await _context.VerificationTokens
+            .AsNoTracking()
             .Where(vt => vt.Email == email)
             .OrderByDescending(vt => vt.CreatedAt)
             .ToListAsync();
@@ -36,10 +39,13 @@ public class VerificationTokenRepository : IVerificationTokenRepository
 
     public async Task<VerificationToken?> GetValidByEmailAndTypeAsync(string email, VerificationTokenType type)
     {
+        // Performance: Replace IsValid() client-side evaluation with server-evaluatable expression
+        var now = DateTime.UtcNow;
         return await _context.VerificationTokens
+            .AsNoTracking()
             .Where(vt => vt.Email == email &&
                         vt.Type == type &&
-                        vt.IsValid() &&
+                        vt.ExpiresAt > now &&
                         !vt.IsUsed)
             .OrderByDescending(vt => vt.CreatedAt)
             .FirstOrDefaultAsync();
@@ -69,20 +75,22 @@ public class VerificationTokenRepository : IVerificationTokenRepository
 
     public async Task DeleteExpiredTokensAsync()
     {
-        var expiredTokens = await _context.VerificationTokens
-            .Where(vt => vt.IsExpired())
-            .ToListAsync();
-
-        _context.VerificationTokens.RemoveRange(expiredTokens);
-        await _context.SaveChangesAsync();
+        // Performance: Use ExecuteDeleteAsync instead of loading entities into memory
+        var now = DateTime.UtcNow;
+        await _context.VerificationTokens
+            .Where(vt => vt.ExpiresAt <= now)
+            .ExecuteDeleteAsync();
     }
 
     public async Task<bool> ExistsValidTokenAsync(string email, VerificationTokenType type)
     {
+        // Performance: Replace IsValid() client-side evaluation with server-evaluatable expression
+        var now = DateTime.UtcNow;
         return await _context.VerificationTokens
+            .AsNoTracking()
             .AnyAsync(vt => vt.Email == email &&
                            vt.Type == type &&
-                           vt.IsValid() &&
+                           vt.ExpiresAt > now &&
                            !vt.IsUsed);
     }
 }

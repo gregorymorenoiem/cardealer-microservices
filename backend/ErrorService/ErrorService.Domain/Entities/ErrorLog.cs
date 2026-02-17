@@ -16,5 +16,8 @@ namespace ErrorService.Domain.Entities
         public int? StatusCode { get; set; }
         public string? UserId { get; set; }
         public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+
+        // ✅ AUDIT FIX: Audit timestamp (when the log record was created in DB)
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

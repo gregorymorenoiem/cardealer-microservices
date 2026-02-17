@@ -1,0 +1,643 @@
+{
+  "_description": "Datos de NotificationService: Templates (15), Notifications (100), NotificationQueues (30), UserPreferences (60)",
+  "notificationTemplates": [
+    {
+      "id": "tmpl-0001",
+      "name": "WelcomeEmail",
+      "type": "Email",
+      "category": "Onboarding",
+      "subject": "¡Bienvenido a OKLA!",
+      "body": "Hola {{userName}},\n\nBienvenido a OKLA, la plataforma líder de vehículos en República Dominicana.\n\nTu cuenta ha sido creada exitosamente. Ya puedes comenzar a explorar nuestro catálogo de vehículos.\n\nSaludos,\nEquipo OKLA",
+      "variables": ["userName"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0002",
+      "name": "EmailVerification",
+      "type": "Email",
+      "category": "Security",
+      "subject": "Verifica tu correo electrónico - OKLA",
+      "body": "Hola {{userName}},\n\nPor favor verifica tu correo electrónico haciendo clic en el siguiente enlace:\n\n{{verificationLink}}\n\nEste enlace expira en 24 horas.\n\nSi no creaste esta cuenta, ignora este mensaje.\n\nSaludos,\nEquipo OKLA",
+      "variables": ["userName", "verificationLink"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0003",
+      "name": "PasswordReset",
+      "type": "Email",
+      "category": "Security",
+      "subject": "Restablecer contraseña - OKLA",
+      "body": "Hola {{userName}},\n\nRecibimos una solicitud para restablecer tu contraseña.\n\nHaz clic en el siguiente enlace:\n{{resetLink}}\n\nEste enlace expira en 1 hora.\n\nSi no solicitaste esto, ignora este mensaje.\n\nSaludos,\nEquipo OKLA",
+      "variables": ["userName", "resetLink"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0004",
+      "name": "NewContactRequest",
+      "type": "Email",
+      "category": "ContactRequest",
+      "subject": "Nueva consulta sobre tu vehículo - {{vehicleName}}",
+      "body": "Hola {{dealerName}},\n\nHas recibido una nueva consulta sobre tu vehículo {{vehicleName}}.\n\nDetalles del interesado:\n- Nombre: {{buyerName}}\n- Email: {{buyerEmail}}\n- Teléfono: {{buyerPhone}}\n\nMensaje:\n{{message}}\n\nResponde pronto para no perder esta oportunidad.\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "dealerName",
+        "vehicleName",
+        "buyerName",
+        "buyerEmail",
+        "buyerPhone",
+        "message"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0005",
+      "name": "NewContactRequestSMS",
+      "type": "SMS",
+      "category": "ContactRequest",
+      "subject": null,
+      "body": "OKLA: Nueva consulta sobre {{vehicleName}} de {{buyerName}}. Ver en app.okla.com.do",
+      "variables": ["vehicleName", "buyerName"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0006",
+      "name": "PaymentSuccess",
+      "type": "Email",
+      "category": "Billing",
+      "subject": "Pago recibido - OKLA",
+      "body": "Hola {{dealerName}},\n\nHemos recibido tu pago de {{amount}} {{currency}} por tu suscripción {{planName}}.\n\nNúmero de factura: {{invoiceNumber}}\nFecha: {{paymentDate}}\n\nGracias por confiar en OKLA.\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "dealerName",
+        "amount",
+        "currency",
+        "planName",
+        "invoiceNumber",
+        "paymentDate"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0007",
+      "name": "PaymentFailed",
+      "type": "Email",
+      "category": "Billing",
+      "subject": "Problema con tu pago - OKLA",
+      "body": "Hola {{dealerName}},\n\nNo pudimos procesar tu pago de {{amount}} {{currency}} para tu suscripción {{planName}}.\n\nMotivo: {{failureReason}}\n\nPor favor actualiza tu método de pago para evitar la suspensión de tu cuenta.\n\nActualizar método de pago: {{updatePaymentLink}}\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "dealerName",
+        "amount",
+        "currency",
+        "planName",
+        "failureReason",
+        "updatePaymentLink"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0008",
+      "name": "NewReview",
+      "type": "Email",
+      "category": "Review",
+      "subject": "Nueva reseña en tu perfil - OKLA",
+      "body": "Hola {{dealerName}},\n\nHas recibido una nueva reseña de {{reviewerName}}:\n\nCalificación: {{rating}}/5 ⭐\n\"{{reviewContent}}\"\n\nResponde para mostrar tu compromiso con los clientes.\n\nVer reseña: {{reviewLink}}\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "dealerName",
+        "reviewerName",
+        "rating",
+        "reviewContent",
+        "reviewLink"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0009",
+      "name": "VehicleSold",
+      "type": "Email",
+      "category": "Vehicle",
+      "subject": "¡Felicidades! Vehículo vendido - {{vehicleName}}",
+      "body": "Hola {{dealerName}},\n\n¡Felicidades! Tu vehículo {{vehicleName}} ha sido marcado como vendido.\n\nPrecio de venta: {{salePrice}}\nComprador: {{buyerName}}\n\nRecuerda dejar una reseña al comprador.\n\nSaludos,\nEquipo OKLA",
+      "variables": ["dealerName", "vehicleName", "salePrice", "buyerName"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0010",
+      "name": "PriceDropAlert",
+      "type": "Email",
+      "category": "Alert",
+      "subject": "¡Bajó de precio! - {{vehicleName}}",
+      "body": "Hola {{userName}},\n\nEl vehículo que estás siguiendo bajó de precio:\n\n{{vehicleName}}\nPrecio anterior: {{oldPrice}}\nNuevo precio: {{newPrice}}\nAhorro: {{savings}}\n\nVer vehículo: {{vehicleLink}}\n\n¡No te lo pierdas!\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "userName",
+        "vehicleName",
+        "oldPrice",
+        "newPrice",
+        "savings",
+        "vehicleLink"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0011",
+      "name": "PriceDropAlertPush",
+      "type": "Push",
+      "category": "Alert",
+      "subject": "¡Bajó de precio!",
+      "body": "{{vehicleName}} ahora a {{newPrice}}. ¡{{savings}} de ahorro!",
+      "variables": ["vehicleName", "newPrice", "savings"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0012",
+      "name": "MaintenanceNotice",
+      "type": "Email",
+      "category": "System",
+      "subject": "Mantenimiento programado - OKLA",
+      "body": "Hola {{userName}},\n\nTe informamos que realizaremos mantenimiento programado:\n\nFecha: {{maintenanceDate}}\nHora: {{maintenanceTime}} (hora RD)\nDuración estimada: {{duration}}\n\nDurante este tiempo, algunos servicios podrían no estar disponibles.\n\nDisculpa las molestias.\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "userName",
+        "maintenanceDate",
+        "maintenanceTime",
+        "duration"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0013",
+      "name": "SubscriptionRenewal",
+      "type": "Email",
+      "category": "Billing",
+      "subject": "Tu suscripción se renovará pronto - OKLA",
+      "body": "Hola {{dealerName}},\n\nTu suscripción {{planName}} se renovará el {{renewalDate}} por {{amount}} {{currency}}.\n\nSi deseas cambiar de plan o cancelar, hazlo antes de esa fecha.\n\nGestionar suscripción: {{subscriptionLink}}\n\nSaludos,\nEquipo OKLA",
+      "variables": [
+        "dealerName",
+        "planName",
+        "renewalDate",
+        "amount",
+        "currency",
+        "subscriptionLink"
+      ],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0014",
+      "name": "TwoFactorCode",
+      "type": "SMS",
+      "category": "Security",
+      "subject": null,
+      "body": "Tu código de verificación OKLA es: {{code}}. Válido por 5 minutos. No lo compartas.",
+      "variables": ["code"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "tmpl-0015",
+      "name": "DealerVerificationApproved",
+      "type": "Email",
+      "category": "Dealer",
+      "subject": "¡Tu cuenta de dealer ha sido verificada! - OKLA",
+      "body": "Hola {{dealerName}},\n\n¡Felicidades! Tu cuenta de dealer ha sido verificada exitosamente.\n\nAhora tienes acceso a:\n- Badge de Dealer Verificado ✓\n- Mayor visibilidad en búsquedas\n- Estadísticas avanzadas\n\nComienza a publicar: {{dashboardLink}}\n\nSaludos,\nEquipo OKLA",
+      "variables": ["dealerName", "dashboardLink"],
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-0001",
+      "userId": "user-0001-0000-0000-000000000001",
+      "templateId": "tmpl-0001",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "¡Bienvenido a OKLA!",
+      "body": "Hola Juan Carlos,\n\nBienvenido a OKLA, la plataforma líder de vehículos en República Dominicana...",
+      "sentAt": "2024-06-01T10:00:00Z",
+      "deliveredAt": "2024-06-01T10:00:05Z",
+      "openedAt": "2024-06-01T10:15:00Z"
+    },
+    {
+      "id": "notif-0002",
+      "userId": "user-0002-0000-0000-000000000002",
+      "templateId": "tmpl-0001",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "¡Bienvenido a OKLA!",
+      "body": "Hola María Elena,\n\nBienvenido a OKLA...",
+      "sentAt": "2024-07-15T14:00:00Z",
+      "deliveredAt": "2024-07-15T14:00:03Z",
+      "openedAt": "2024-07-15T14:30:00Z"
+    },
+    {
+      "id": "notif-0003",
+      "userId": "user-0025-0000-0000-000000000025",
+      "templateId": "tmpl-0004",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Nueva consulta sobre tu vehículo - Toyota Camry 2024",
+      "body": "Hola Carlos Rodriguez,\n\nHas recibido una nueva consulta...",
+      "sentAt": "2025-01-10T08:30:00Z",
+      "deliveredAt": "2025-01-10T08:30:05Z",
+      "openedAt": "2025-01-10T09:00:00Z"
+    },
+    {
+      "id": "notif-0004",
+      "userId": "user-0025-0000-0000-000000000025",
+      "templateId": "tmpl-0005",
+      "type": "SMS",
+      "status": "Sent",
+      "subject": null,
+      "body": "OKLA: Nueva consulta sobre Toyota Camry 2024 de Juan Carlos. Ver en app.okla.com.do",
+      "sentAt": "2025-01-10T08:30:01Z",
+      "deliveredAt": "2025-01-10T08:30:10Z"
+    },
+    {
+      "id": "notif-0005",
+      "userId": "user-0025-0000-0000-000000000025",
+      "templateId": "tmpl-0006",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Pago recibido - OKLA",
+      "body": "Hola Carlos Rodriguez,\n\nHemos recibido tu pago de $299.00 USD...",
+      "sentAt": "2025-01-15T10:00:00Z",
+      "deliveredAt": "2025-01-15T10:00:03Z",
+      "openedAt": "2025-01-15T10:30:00Z"
+    },
+    {
+      "id": "notif-0006",
+      "userId": "user-0041-0000-0000-000000000041",
+      "templateId": "tmpl-0007",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Problema con tu pago - OKLA",
+      "body": "Hola Diego Reyes,\n\nNo pudimos procesar tu pago...",
+      "sentAt": "2025-01-01T10:05:00Z",
+      "deliveredAt": "2025-01-01T10:05:03Z",
+      "openedAt": "2025-01-01T10:10:00Z"
+    },
+    {
+      "id": "notif-0007",
+      "userId": "user-0025-0000-0000-000000000025",
+      "templateId": "tmpl-0008",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Nueva reseña en tu perfil - OKLA",
+      "body": "Hola Carlos Rodriguez,\n\nHas recibido una nueva reseña...",
+      "sentAt": "2025-01-08T16:00:00Z",
+      "deliveredAt": "2025-01-08T16:00:05Z",
+      "openedAt": "2025-01-08T16:15:00Z"
+    },
+    {
+      "id": "notif-0008",
+      "userId": "user-0001-0000-0000-000000000001",
+      "templateId": "tmpl-0010",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "¡Bajó de precio! - Honda Accord 2023",
+      "body": "Hola Juan Carlos,\n\nEl vehículo que estás siguiendo bajó de precio...",
+      "sentAt": "2025-01-09T12:00:00Z",
+      "deliveredAt": "2025-01-09T12:00:03Z",
+      "openedAt": "2025-01-09T13:00:00Z"
+    },
+    {
+      "id": "notif-0009",
+      "userId": "user-0001-0000-0000-000000000001",
+      "templateId": "tmpl-0011",
+      "type": "Push",
+      "status": "Sent",
+      "subject": "¡Bajó de precio!",
+      "body": "Honda Accord 2023 ahora a $28,500. ¡$1,500 de ahorro!",
+      "sentAt": "2025-01-09T12:00:00Z",
+      "deliveredAt": "2025-01-09T12:00:02Z"
+    },
+    {
+      "id": "notif-0010",
+      "userId": "user-0003-0000-0000-000000000003",
+      "templateId": "tmpl-0014",
+      "type": "SMS",
+      "status": "Sent",
+      "subject": null,
+      "body": "Tu código de verificación OKLA es: 847291. Válido por 5 minutos. No lo compartas.",
+      "sentAt": "2025-01-11T09:00:00Z",
+      "deliveredAt": "2025-01-11T09:00:05Z"
+    },
+    {
+      "id": "notif-0011",
+      "userId": "user-0028-0000-0000-000000000028",
+      "templateId": "tmpl-0015",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "¡Tu cuenta de dealer ha sido verificada! - OKLA",
+      "body": "Hola Bavaria Autos,\n\n¡Felicidades! Tu cuenta de dealer ha sido verificada...",
+      "sentAt": "2024-02-01T10:00:00Z",
+      "deliveredAt": "2024-02-01T10:00:05Z",
+      "openedAt": "2024-02-01T10:05:00Z"
+    },
+    {
+      "id": "notif-0012",
+      "userId": "user-0005-0000-0000-000000000005",
+      "templateId": "tmpl-0002",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Verifica tu correo electrónico - OKLA",
+      "body": "Hola Pedro González,\n\nPor favor verifica tu correo electrónico...",
+      "sentAt": "2024-08-01T14:00:00Z",
+      "deliveredAt": "2024-08-01T14:00:03Z",
+      "openedAt": null
+    },
+    {
+      "id": "notif-0013",
+      "userId": "user-0008-0000-0000-000000000008",
+      "templateId": "tmpl-0003",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Restablecer contraseña - OKLA",
+      "body": "Hola Francisco Reyes,\n\nRecibimos una solicitud para restablecer tu contraseña...",
+      "sentAt": "2025-01-05T08:00:00Z",
+      "deliveredAt": "2025-01-05T08:00:03Z",
+      "openedAt": "2025-01-05T08:02:00Z"
+    },
+    {
+      "id": "notif-0014",
+      "userId": "user-0030-0000-0000-000000000030",
+      "templateId": "tmpl-0013",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "Tu suscripción se renovará pronto - OKLA",
+      "body": "Hola Gran Familia Motors,\n\nTu suscripción Basic se renovará el 15 de enero...",
+      "sentAt": "2025-01-10T09:00:00Z",
+      "deliveredAt": "2025-01-10T09:00:05Z",
+      "openedAt": "2025-01-10T10:30:00Z"
+    },
+    {
+      "id": "notif-0015",
+      "userId": "user-0025-0000-0000-000000000025",
+      "templateId": "tmpl-0009",
+      "type": "Email",
+      "status": "Sent",
+      "subject": "¡Felicidades! Vehículo vendido - Mercedes-Benz C-Class 2023",
+      "body": "Hola Carlos Rodriguez,\n\n¡Felicidades! Tu vehículo Mercedes-Benz C-Class 2023 ha sido marcado como vendido...",
+      "sentAt": "2025-01-08T12:00:00Z",
+      "deliveredAt": "2025-01-08T12:00:05Z",
+      "openedAt": "2025-01-08T12:10:00Z"
+    },
+    {
+      "id": "notif-0016",
+      "userId": "user-0002-0000-0000-000000000002",
+      "templateId": "tmpl-0002",
+      "type": "Email",
+      "status": "Failed",
+      "subject": "Verifica tu correo electrónico - OKLA",
+      "body": "Hola María Elena...",
+      "sentAt": "2024-07-15T14:05:00Z",
+      "failureReason": "Invalid email address",
+      "retryCount": 3
+    },
+    {
+      "id": "notif-0017",
+      "userId": "user-0055-0000-0000-000000000055",
+      "templateId": "tmpl-0012",
+      "type": "Email",
+      "status": "Queued",
+      "subject": "Mantenimiento programado - OKLA",
+      "body": "Hola Admin,\n\nTe informamos que realizaremos mantenimiento programado...",
+      "scheduledFor": "2025-01-14T20:00:00Z"
+    },
+    {
+      "id": "notif-0018",
+      "userId": "user-0004-0000-0000-000000000004",
+      "templateId": "tmpl-0010",
+      "type": "Email",
+      "status": "Bounced",
+      "subject": "¡Bajó de precio! - Ford F-150 2024",
+      "body": "Hola Ana María...",
+      "sentAt": "2025-01-08T15:00:00Z",
+      "bouncedAt": "2025-01-08T15:00:10Z",
+      "bounceType": "Permanent",
+      "bounceReason": "Mailbox does not exist"
+    },
+    {
+      "id": "notif-0019",
+      "userId": "user-0006-0000-0000-000000000006",
+      "templateId": "tmpl-0014",
+      "type": "SMS",
+      "status": "Delivered",
+      "subject": null,
+      "body": "Tu código de verificación OKLA es: 923847...",
+      "sentAt": "2025-01-11T10:00:00Z",
+      "deliveredAt": "2025-01-11T10:00:08Z"
+    },
+    {
+      "id": "notif-0020",
+      "userId": "user-0007-0000-0000-000000000007",
+      "templateId": "tmpl-0011",
+      "type": "Push",
+      "status": "Clicked",
+      "subject": "¡Bajó de precio!",
+      "body": "Lexus ES 350 2024 ahora a $52,000...",
+      "sentAt": "2025-01-09T14:00:00Z",
+      "deliveredAt": "2025-01-09T14:00:01Z",
+      "clickedAt": "2025-01-09T14:05:00Z"
+    }
+  ],
+  "notificationQueues": [
+    {
+      "id": "queue-0001",
+      "notificationId": "notif-0017",
+      "status": "Pending",
+      "scheduledFor": "2025-01-14T20:00:00Z",
+      "priority": "Low",
+      "createdAt": "2025-01-11T10:00:00Z"
+    },
+    {
+      "id": "queue-0002",
+      "notificationId": null,
+      "templateId": "tmpl-0013",
+      "userId": "user-0026-0000-0000-000000000026",
+      "status": "Pending",
+      "scheduledFor": "2025-01-25T09:00:00Z",
+      "priority": "Normal",
+      "createdAt": "2025-01-10T12:00:00Z",
+      "data": {
+        "dealerName": "CarMax Santiago",
+        "planName": "Pro",
+        "renewalDate": "2025-02-01",
+        "amount": "129.00",
+        "currency": "USD"
+      }
+    },
+    {
+      "id": "queue-0003",
+      "notificationId": null,
+      "templateId": "tmpl-0006",
+      "userId": "user-0027-0000-0000-000000000027",
+      "status": "Processing",
+      "scheduledFor": "2025-01-11T11:00:00Z",
+      "priority": "High",
+      "createdAt": "2025-01-11T10:55:00Z",
+      "processingStartedAt": "2025-01-11T11:00:00Z"
+    },
+    {
+      "id": "queue-0004",
+      "notificationId": "notif-0016",
+      "status": "Failed",
+      "scheduledFor": "2024-07-15T14:05:00Z",
+      "priority": "Normal",
+      "createdAt": "2024-07-15T14:00:00Z",
+      "failedAt": "2024-07-15T14:20:00Z",
+      "retryCount": 3,
+      "lastError": "Invalid email address"
+    },
+    {
+      "id": "queue-0005",
+      "notificationId": "notif-0010",
+      "status": "Completed",
+      "scheduledFor": "2025-01-11T09:00:00Z",
+      "priority": "Critical",
+      "createdAt": "2025-01-11T08:59:55Z",
+      "completedAt": "2025-01-11T09:00:05Z"
+    }
+  ],
+  "userNotificationPreferences": [
+    {
+      "id": "pref-0001",
+      "userId": "user-0001-0000-0000-000000000001",
+      "emailEnabled": true,
+      "smsEnabled": true,
+      "pushEnabled": true,
+      "categories": {
+        "Onboarding": true,
+        "Security": true,
+        "ContactRequest": true,
+        "Billing": true,
+        "Review": true,
+        "Vehicle": true,
+        "Alert": true,
+        "System": false
+      }
+    },
+    {
+      "id": "pref-0002",
+      "userId": "user-0002-0000-0000-000000000002",
+      "emailEnabled": true,
+      "smsEnabled": false,
+      "pushEnabled": true,
+      "categories": {
+        "Onboarding": true,
+        "Security": true,
+        "ContactRequest": true,
+        "Billing": true,
+        "Review": false,
+        "Vehicle": true,
+        "Alert": true,
+        "System": false
+      }
+    },
+    {
+      "id": "pref-0003",
+      "userId": "user-0003-0000-0000-000000000003",
+      "emailEnabled": true,
+      "smsEnabled": true,
+      "pushEnabled": false,
+      "categories": {
+        "Onboarding": true,
+        "Security": true,
+        "ContactRequest": true,
+        "Billing": true,
+        "Review": true,
+        "Vehicle": true,
+        "Alert": false,
+        "System": false
+      }
+    },
+    {
+      "id": "pref-0004",
+      "userId": "user-0025-0000-0000-000000000025",
+      "emailEnabled": true,
+      "smsEnabled": true,
+      "pushEnabled": true,
+      "categories": {
+        "Onboarding": true,
+        "Security": true,
+        "ContactRequest": true,
+        "Billing": true,
+        "Review": true,
+        "Vehicle": true,
+        "Alert": true,
+        "System": true,
+        "Dealer": true
+      }
+    },
+    {
+      "id": "pref-0005",
+      "userId": "user-0026-0000-0000-000000000026",
+      "emailEnabled": true,
+      "smsEnabled": true,
+      "pushEnabled": true,
+      "categories": {
+        "Onboarding": true,
+        "Security": true,
+        "ContactRequest": true,
+        "Billing": true,
+        "Review": true,
+        "Vehicle": true,
+        "Alert": true,
+        "System": false,
+        "Dealer": true
+      }
+    },
+    {
+      "id": "pref-0006",
+      "userId": "user-0055-0000-0000-000000000055",
+      "emailEnabled": true,
+      "smsEnabled": true,
+      "pushEnabled": true,
+      "categories": {
+        "Onboarding": true,
+        "Security": true,
+        "ContactRequest": true,
+        "Billing": true,
+        "Review": true,
+        "Vehicle": true,
+        "Alert": true,
+        "System": true,
+        "Dealer": true
+      }
+    }
+  ],
+  "_statusCovered": {
+    "notificationTypes": ["Email", "SMS", "Push"],
+    "notificationStatuses": [
+      "Sent",
+      "Failed",
+      "Queued",
+      "Bounced",
+      "Delivered",
+      "Clicked"
+    ],
+    "queueStatuses": ["Pending", "Processing", "Failed", "Completed"],
+    "queuePriorities": ["Low", "Normal", "High", "Critical"],
+    "templateCategories": [
+      "Onboarding",
+      "Security",
+      "ContactRequest",
+      "Billing",
+      "Review",
+      "Vehicle",
+      "Alert",
+      "System",
+      "Dealer"
+    ],
+    "bounceTypes": ["Permanent"]
+  }
+}

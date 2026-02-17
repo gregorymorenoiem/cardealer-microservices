@@ -35,8 +35,8 @@ COPY --from=publish /app/publish .
 
 # Production environment
 ENV ASPNETCORE_ENVIRONMENT=Production \
-    ASPNETCORE_URLS=http://+:80
+    ASPNETCORE_URLS=http://+:8080
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "AuthService.Api.dll"]

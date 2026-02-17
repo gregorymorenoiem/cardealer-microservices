@@ -1,72 +1,210 @@
-using Consul;
-using ServiceDiscovery.Application.Interfaces;
-using ServiceDiscovery.Infrastructure.Services;
-using ContactService.Api.Middleware;
+using ContactService.Domain.Interfaces;
+using ContactService.Infrastructure.Persistence;
+using ContactService.Infrastructure.Repositories;
+using ContactService.Application.Clients;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using CarDealer.Shared.MultiTenancy;
+using Serilog;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
+using System.Threading.RateLimiting;
 
-var builder = WebApplication.CreateBuilder(args);
+using CarDealer.Shared.Configuration;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+const string ServiceName = "ContactService";
+const string ServiceVersion = "1.0.0";
 
-// Add HttpClient for HealthChecker
-builder.Services.AddHttpClient();
+// Bootstrap logger
+Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
 
-// Configure Consul Client
-var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
-builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(config =>
+try
 {
-    config.Address = new Uri(consulAddress);
-}));
+    var builder = WebApplication.CreateBuilder(args);
 
-// Configure Service Discovery
-builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+    // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+    builder.UseStandardSerilog(ServiceName);
 
-var app = builder.Build();
+    // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
+    builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+    // ============= ERROR HANDLING (→ ErrorService) =============
+    builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+    // ============= AUDIT (→ AuditService via RabbitMQ) =============
+    builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // Add services to the container.
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+    builder.Services.AddHttpContextAccessor(); // Required for TenantContext
+
+// Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Multi-tenancy
+builder.Services.AddScoped<ITenantContext, TenantContext>();
+
+// Repositories
+builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
+builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
+
+// ============= HTTP CLIENTS WITH RESILIENCE (Retry + Circuit Breaker + Timeout) =============
+var gatewayUrl = builder.Configuration["Gateway:Url"] ?? "http://gateway:8080";
+
+builder.Services.AddResilientHttpClient<INotificationServiceClient, NotificationServiceClient>(
+    builder.Configuration,
+    clientName: "NotificationService",
+    configureClient: client =>
+    {
+        client.BaseAddress = new Uri(gatewayUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+
+// ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+        };
+    });
+
+// CORS — configurable origins from appsettings
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? (builder.Environment.IsDevelopment()
+        ? new[] { "http://localhost:3000", "http://localhost:5173" }
+        : new[] { "https://okla.com.do" });
+
+builder.Services.AddCors(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+              .AllowCredentials();
+    });
+});
+
+// ============= RATE LIMITING =============
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 60;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 5;
+    });
+    options.OnRejected = async (context, ct) =>
+    {
+        Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
+            context.HttpContext.Connection.RemoteIpAddress,
+            context.HttpContext.Request.Path);
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", ct);
+    };
+});
+
+// Health Checks
+builder.Services.AddHealthChecks();
+
+    var app = builder.Build();
+
+    // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
+    // 1. Global exception handling — ALWAYS FIRST
+    app.UseGlobalErrorHandling();
+
+    // 2. Security Headers (OWASP) — early in pipeline
+    app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+    // 3. Request Logging
+    app.UseRequestLogging();
+
+    // 4. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+    if (!app.Environment.IsProduction())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    // 5. Swagger — development only
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    // 6. CORS — before auth
+    app.UseCors();
+
+    // 7. Rate Limiting
+    app.UseRateLimiter();
+
+    // 8. Authentication & Authorization
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    // 7. Audit middleware — after auth (has userId context)
+    app.UseAuditMiddleware();
+
+    // 8. Endpoints
+    app.MapControllers();
+    app.MapHealthChecks("/health");
+
+    // Apply database migrations conditionally (disabled in production to avoid race conditions with HPA replicas)
+    var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);
+    if (autoMigrate)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        try
+        {
+            context.Database.Migrate();
+            Log.Information("Database migration completed for {ServiceName}", ServiceName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while migrating the database for {ServiceName}", ServiceName);
+        }
+    }
+    else
+    {
+        Log.Information("Database auto-migration disabled for {ServiceName}. Run migrations via CI/CD pipeline.", ServiceName);
+    }
+
+    Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-// Service Discovery Registration
-app.UseMiddleware<ServiceRegistrationMiddleware>();
-
-// Health endpoint
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "ContactService" }));
-
-var summaries = new[]
+catch (Exception ex)
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.CloseAndFlush();
 }
 
 // Make Program class accessible for integration tests

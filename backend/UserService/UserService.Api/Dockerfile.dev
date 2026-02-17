@@ -17,6 +17,9 @@ COPY UserService/UserService.Shared/*.csproj ./UserService/UserService.Shared/
 # Copy shared project files
 COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
 COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
+COPY _Shared/CarDealer.Shared.Logging/*.csproj ./_Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.ErrorHandling/*.csproj ./_Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/*.csproj ./_Shared/CarDealer.Shared.Observability/
 
 # Copy ServiceDiscovery project files
 COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
