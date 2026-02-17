@@ -90,16 +90,17 @@ namespace ErrorService.Infrastructure.Persistence
                 baseQuery = baseQuery.Where(e => e.OccurredAt <= to.Value);
             }
 
-            // Execute queries sequentially to avoid DbContext concurrency issues
-            var totalErrors = await baseQuery.CountAsync();
-
-            var errorsLast24Hours = await baseQuery
-                .Where(e => e.OccurredAt >= DateTime.UtcNow.AddHours(-24))
-                .CountAsync();
-
-            var errorsLast7Days = await baseQuery
-                .Where(e => e.OccurredAt >= DateTime.UtcNow.AddDays(-7))
-                .CountAsync();
+            // Performance: Consolidate 5 sequential queries into 2
+            var now = DateTime.UtcNow;
+            var stats = await baseQuery
+                .GroupBy(e => 1)
+                .Select(g => new
+                {
+                    TotalErrors = g.Count(),
+                    ErrorsLast24Hours = g.Count(e => e.OccurredAt >= now.AddHours(-24)),
+                    ErrorsLast7Days = g.Count(e => e.OccurredAt >= now.AddDays(-7))
+                })
+                .FirstOrDefaultAsync();
 
             var errorsByService = await baseQuery
                 .GroupBy(e => e.ServiceName)
@@ -114,9 +115,9 @@ namespace ErrorService.Infrastructure.Persistence
 
             return new ErrorStats
             {
-                TotalErrors = totalErrors,
-                ErrorsLast24Hours = errorsLast24Hours,
-                ErrorsLast7Days = errorsLast7Days,
+                TotalErrors = stats?.TotalErrors ?? 0,
+                ErrorsLast24Hours = stats?.ErrorsLast24Hours ?? 0,
+                ErrorsLast7Days = stats?.ErrorsLast7Days ?? 0,
                 ErrorsByService = errorsByService,
                 ErrorsByStatusCode = errorsByStatusCode
             };

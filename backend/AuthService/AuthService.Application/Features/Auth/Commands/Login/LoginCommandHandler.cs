@@ -13,6 +13,9 @@ using AuthService.Domain.Enums;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
+// Security settings are read dynamically from ConfigurationService
+// (admin panel → ConfigurationService → this handler via ISecurityConfigProvider)
+
 namespace AuthService.Application.Features.Auth.Commands.Login;
 
 /// <summary>
@@ -34,12 +37,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly IAuthNotificationService _notificationService;
     private readonly IRevokedDeviceService _revokedDeviceService;
     private readonly IGeoLocationService _geoLocationService;
+    private readonly ISecurityConfigProvider _securityConfig;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     private const int CAPTCHA_REQUIRED_AFTER_ATTEMPTS = 2;
     private const int SECURITY_ALERT_THRESHOLD = 3;
-    private const int MAX_FAILED_ATTEMPTS = 5;
-    private const int LOCKOUT_MINUTES = 30;
+    // MAX_FAILED_ATTEMPTS and LOCKOUT_MINUTES are now read from ConfigurationService
+    // via ISecurityConfigProvider (admin panel: Seguridad → Intentos de login máximos / Tiempo de bloqueo)
 
     public LoginCommandHandler(
         IUserRepository userRepository,
@@ -55,6 +59,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         IAuthNotificationService notificationService,
         IRevokedDeviceService revokedDeviceService,
         IGeoLocationService geoLocationService,
+        ISecurityConfigProvider securityConfig,
         ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
@@ -70,6 +75,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         _notificationService = notificationService;
         _revokedDeviceService = revokedDeviceService;
         _geoLocationService = geoLocationService;
+        _securityConfig = securityConfig;
         _logger = logger;
     }
 
@@ -204,10 +210,15 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         }
 
         // Flujo normal sin 2FA
-        var accessToken = _jwtGenerator.GenerateToken(user);
+        // Read expiration dynamically from ConfigurationService (admin panel: Seguridad)
+        var jwtExpiresMinutes = await _securityConfig.GetJwtExpiresMinutesAsync(cancellationToken);
+        var refreshTokenDays = await _securityConfig.GetRefreshTokenDaysAsync(cancellationToken);
+
+        var accessToken = _jwtGenerator.GenerateToken(user, jwtExpiresMinutes);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
-        var expiresAt = DateTime.UtcNow.AddMinutes(60);
-        var sessionExpiresAt = DateTime.UtcNow.AddDays(7);
+
+        var expiresAt = DateTime.UtcNow.AddMinutes(jwtExpiresMinutes);
+        var sessionExpiresAt = DateTime.UtcNow.AddDays(refreshTokenDays);
 
         var refreshTokenEntity = new RefreshTokenEntity(
             user.Id,
@@ -336,9 +347,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// <summary>
     /// US-18.2/18.3: Track failed login attempts for CAPTCHA requirement and security alerts.
     /// Sends security alerts after SECURITY_ALERT_THRESHOLD attempts.
+    /// Lockout duration is read from ConfigurationService (admin panel: Seguridad → Tiempo de bloqueo).
     /// </summary>
     private async Task TrackFailedLoginAttemptAsync(string email, string? userEmail, CancellationToken cancellationToken)
     {
+        var lockoutMinutes = await _securityConfig.GetLockoutDurationMinutesAsync(cancellationToken);
+
         var failedAttemptsKey = $"login_failed:{email.ToLowerInvariant()}";
         var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
         
@@ -348,10 +362,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             attempts = existing + 1;
         }
 
-        // Update failed attempts counter
+        // Update failed attempts counter — cache TTL = lockout window from admin config
         await _cache.SetStringAsync(failedAttemptsKey, attempts.ToString(), new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(LOCKOUT_MINUTES)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(lockoutMinutes)
         }, cancellationToken);
 
         _logger.LogWarning("Failed login attempt {Attempts} for {Email} from IP {IP}", 

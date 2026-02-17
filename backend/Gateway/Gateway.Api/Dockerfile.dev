@@ -18,8 +18,15 @@ COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj ./_Shared/CarDealer.Shared
 COPY _Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj ./_Shared/CarDealer.Shared.Logging/
 COPY _Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj ./_Shared/CarDealer.Shared.ErrorHandling/
 COPY _Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj ./_Shared/CarDealer.Shared.Observability/
+COPY _Shared/CarDealer.Shared.RateLimiting/CarDealer.Shared.RateLimiting.csproj ./_Shared/CarDealer.Shared.RateLimiting/
+COPY _Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj ./_Shared/CarDealer.Shared.Resilience/
+COPY _Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj ./_Shared/CarDealer.Shared.Audit/
 COPY ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
 COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+COPY Gateway/Gateway.Application/Gateway.Application.csproj ./Gateway/Gateway.Application/
+COPY Gateway/Gateway.Infrastructure/Gateway.Infrastructure.csproj ./Gateway/Gateway.Infrastructure/
+COPY Gateway/Gateway.Domain/Gateway.Domain.csproj ./Gateway/Gateway.Domain/
 
 RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 

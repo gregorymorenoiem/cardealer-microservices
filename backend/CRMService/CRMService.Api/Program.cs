@@ -7,8 +7,13 @@ using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.MultiTenancy;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
+using CarDealer.Shared.Audit.Extensions;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,36 +54,90 @@ builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
 
 // Configure MediatR
 builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(CRMService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssembly(typeof(CRMService.Application.DTOs.LeadDto).Assembly));
+
+// Register FluentValidation validators
+builder.Services.AddValidatorsFromAssembly(
+    typeof(CRMService.Application.Validators.SecurityValidators).Assembly);
 
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddDefaultPolicy(, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
 // Add Health Checks
 builder.Services.AddHealthChecks();
 
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Key"] ?? builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
 // Module Access (for paid feature gating) - disabled in development
 // builder.Services.AddModuleAccessServices(builder.Configuration);
+
+// ============= AUDIT (→ AuditService via RabbitMQ) =============
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
+app.UseCors();
 app.UseHttpsRedirection();
+
+// Audit middleware
+app.UseAuditMiddleware();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

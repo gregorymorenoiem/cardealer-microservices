@@ -5,7 +5,8 @@
 /**
  * Tipos de cuenta en la plataforma
  * - GUEST: Usuario no autenticado (búsqueda solo)
- * - INDIVIDUAL: Usuario registrado (favoritos, mensajes)
+ * - BUYER: Comprador registrado (favoritos, mensajes)
+ * - SELLER: Vendedor individual (publica vehículos)
  * - DEALER: Propietario de concesionario (acceso total)
  * - DEALER_EMPLOYEE: Empleado de concesionario (acceso limitado)
  * - ADMIN: Administrador de la plataforma (acceso total)
@@ -13,7 +14,8 @@
  */
 export enum AccountType {
   GUEST = 'guest',
-  INDIVIDUAL = 'individual',
+  BUYER = 'buyer',
+  SELLER = 'seller',
   DEALER = 'dealer',
   DEALER_EMPLOYEE = 'dealer_employee',
   ADMIN = 'admin',

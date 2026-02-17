@@ -1,0 +1,229 @@
+# ============================================================================
+# COMPOSE.SCALING.YAML - Docker Compose con Escalado y Resiliencia
+# ============================================================================
+#
+# Este archivo define la configuración de escalado para desarrollo local
+# y staging. Permite correr múltiples réplicas de microservicios.
+#
+# USO:
+#   # Escalar servicios individuales:
+#   docker compose -f compose.yaml -f compose.scaling.yaml up -d --scale authservice=3 --scale vehiclessaleservice=3
+#
+#   # Escalar todo a configuración de alta disponibilidad:
+#   docker compose -f compose.yaml -f compose.scaling.yaml up -d
+#
+#   # Ver estado de réplicas:
+#   docker compose -f compose.yaml -f compose.scaling.yaml ps
+#
+# ⚠️ IMPORTANTE:
+#   - Los servicios escalados NO deben usar 'container_name' (se elimina aquí)
+#   - Los puertos fijos del host se eliminan para evitar conflictos
+#   - El load balancing lo maneja Docker DNS round-robin + Nginx/Traefik
+#
+# ============================================================================
+
+services:
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔵 INFRAESTRUCTURA - SIN ESCALAR (Singleton)
+  # ──────────────────────────────────────────────────────────────────────
+
+  # Nginx Load Balancer — distribuye tráfico a réplicas de microservicios
+  nginx-lb:
+    image: nginx:1.25-alpine
+    container_name: nginx-lb
+    ports:
+      - "18443:80" # Gateway LB
+      - "15001:15001" # Auth LB
+      - "15010:15010" # Vehicles LB
+    volumes:
+      - ./infra/nginx/nginx-lb.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gateway
+    networks:
+      - okla-net
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔴 SERVICIOS CRÍTICOS — Escalables
+  # ──────────────────────────────────────────────────────────────────────
+
+  gateway:
+    # Eliminar container_name para permitir múltiples réplicas
+    container_name: ""
+    ports: [] # Manejado por nginx-lb
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+
+  authservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+  vehiclessaleservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+  mediaservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🟠 SERVICIOS IMPORTANTES — Escalables bajo demanda
+  # ──────────────────────────────────────────────────────────────────────
+
+  userservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 192M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  notificationservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 192M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+
+  contactservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  adminservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  errorservice:
+    container_name: ""
+    ports: []
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 256M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+networks:
+  okla-net:
+    driver: bridge

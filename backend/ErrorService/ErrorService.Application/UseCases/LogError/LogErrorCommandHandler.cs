@@ -1,4 +1,5 @@
 using ErrorService.Application.DTOs;
+using ErrorService.Application.Helpers;
 using ErrorService.Domain.Entities;
 using ErrorService.Domain.Interfaces;
 using ErrorService.Application.Metrics;
@@ -35,7 +36,7 @@ namespace ErrorService.Application.UseCases.LogError
                     ServiceName = command.Request.ServiceName,
                     ExceptionType = command.Request.ExceptionType,
                     Message = command.Request.Message,
-                    StackTrace = command.Request.StackTrace,
+                    StackTrace = StackTraceSanitizer.Sanitize(command.Request.StackTrace),
                     OccurredAt = command.Request.OccurredAt ?? System.DateTime.UtcNow,
                     Endpoint = command.Request.Endpoint,
                     HttpMethod = command.Request.HttpMethod,

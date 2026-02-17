@@ -76,10 +76,10 @@ public record CreateOrUpdateConfigurationCommand(
     Guid? Id,
     Guid? DealerId,
     string Name,
-    string DialogflowProjectId,
-    string DialogflowAgentId,
-    string DialogflowLanguageCode,
-    string? DialogflowCredentialsJson,
+    string LlmServerUrl,
+    string LlmModelId,
+    string LlmLanguageCode,
+    string? LlmSystemPrompt,
     int MaxInteractionsPerSession,
     int MaxInteractionsPerUserPerDay,
     int MaxInteractionsPerUserPerMonth,
@@ -107,23 +107,5 @@ public record CreateQuickResponseCommand(
     string Response,
     List<QuickReplyDto>? QuickReplies,
     int Priority,
-    bool BypassDialogflow
+    bool BypassLlm
 ) : IRequest<QuickResponseDto>;
-
-/// <summary>
-/// Comando para aprobar sugerencia de intención
-/// </summary>
-public record ApproveIntentSuggestionCommand(
-    Guid SuggestionId,
-    bool CreateInDialogflow = true
-) : IRequest<bool>;
-
-/// <summary>
-/// Comando para procesar pregunta sin respuesta
-/// </summary>
-public record ProcessUnansweredQuestionCommand(
-    Guid QuestionId,
-    Guid? AddToIntentId,
-    string? CreateNewIntentName,
-    string? SuggestedResponse
-) : IRequest<bool>;

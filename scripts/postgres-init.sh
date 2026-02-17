@@ -62,6 +62,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
     
     -- Integration Services
     SELECT 'CREATE DATABASE spyneintegrationservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'spyneintegrationservice')\gexec
+    
+    -- Staff Service
+    SELECT 'CREATE DATABASE staffservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'staffservice')\gexec
 EOSQL
 
 echo "All databases created successfully!"

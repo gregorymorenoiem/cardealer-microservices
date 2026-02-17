@@ -4,11 +4,13 @@ using ChatbotService.Domain.Entities;
 using ChatbotService.Domain.Enums;
 using ChatbotService.Domain.Interfaces;
 using ChatbotService.Application.DTOs;
+using ChatbotService.Application.Services;
 
 namespace ChatbotService.Application.Features.Sessions.Commands;
 
 /// <summary>
-/// Handler para iniciar una nueva sesión de chat
+/// Handler para iniciar una nueva sesión de chat.
+/// Soporta los modos SingleVehicle, DealerInventory y General.
 /// </summary>
 public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, StartSessionResponse>
 {
@@ -38,10 +40,14 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             throw new InvalidOperationException("No chatbot configuration found");
         }
 
+        // Determinar el modo de chat
+        var chatMode = ParseChatMode(request.ChatMode, request.VehicleId, request.DealerId);
+        
         // Crear nueva sesión
         var session = new ChatSession
         {
             Id = Guid.NewGuid(),
+            ChatbotConfigurationId = config.Id,
             SessionToken = Guid.NewGuid().ToString("N"),
             UserId = request.UserId,
             UserName = request.UserName,
@@ -51,6 +57,10 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             Channel = request.Channel ?? "web",
             ChannelUserId = request.ChannelUserId,
             Status = SessionStatus.Active,
+            ChatMode = chatMode,
+            VehicleId = request.VehicleId,
+            DealerId = request.DealerId ?? config.DealerId,
+            HandoffStatus = HandoffStatus.BotActive,
             MessageCount = 0,
             InteractionCount = 0,
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
@@ -64,23 +74,63 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         };
 
         await _sessionRepository.CreateAsync(session, ct);
-        _logger.LogInformation("Created new chat session {SessionId}", session.Id);
+        
+        _logger.LogInformation(
+            "Created chat session {SessionId} — Mode: {ChatMode}, Vehicle: {VehicleId}, Dealer: {DealerId}",
+            session.Id, chatMode, request.VehicleId, request.DealerId);
+
+        // Personalizar mensaje de bienvenida según el modo
+        var welcomeMessage = chatMode switch
+        {
+            ChatMode.SingleVehicle => config.WelcomeMessage ?? 
+                "¡Hola! 👋 Soy tu asistente virtual. ¿Qué te gustaría saber sobre este vehículo?",
+            ChatMode.DealerInventory => config.WelcomeMessage ?? 
+                "¡Hola! 👋 Soy tu asistente virtual. Tengo acceso a todo el inventario del dealer. " +
+                "¿Buscas algo en particular? Puedo buscar, comparar y recomendarte vehículos.",
+            _ => config.WelcomeMessage
+        };
 
         return new StartSessionResponse
         {
             SessionId = session.Id,
             SessionToken = session.SessionToken,
-            WelcomeMessage = config.WelcomeMessage,
+            WelcomeMessage = welcomeMessage,
             BotName = config.BotName,
             BotAvatarUrl = config.BotAvatarUrl,
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
-            RemainingInteractions = config.MaxInteractionsPerSession
+            RemainingInteractions = config.MaxInteractionsPerSession,
+            ChatMode = chatMode.ToString()
         };
+    }
+
+    private static ChatMode ParseChatMode(string? mode, Guid? vehicleId, Guid? dealerId)
+    {
+        if (!string.IsNullOrEmpty(mode))
+        {
+            return mode.ToLowerInvariant() switch
+            {
+                "single_vehicle" => ChatMode.SingleVehicle,
+                "singlevehicle" => ChatMode.SingleVehicle,
+                "dealer_inventory" => ChatMode.DealerInventory,
+                "dealerinventory" => ChatMode.DealerInventory,
+                "general" => ChatMode.General,
+                _ => ChatMode.General
+            };
+        }
+
+        // Auto-detect basado en los parámetros
+        if (vehicleId.HasValue) return ChatMode.SingleVehicle;
+        if (dealerId.HasValue) return ChatMode.DealerInventory;
+        return ChatMode.General;
     }
 }
 
 /// <summary>
-/// Handler para enviar un mensaje
+/// Handler para enviar un mensaje al LLM.
+/// REDISEÑADO: Usa Strategy Pattern para seleccionar el modo de contexto.
+/// - SingleVehicle: contexto fijo de 1 vehículo
+/// - DealerInventory: RAG con pgvector + function calling
+/// - General: FAQ y soporte general
 /// </summary>
 public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, ChatbotResponse>
 {
@@ -88,7 +138,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
     private readonly IChatMessageRepository _messageRepository;
     private readonly IChatbotConfigurationRepository _configRepository;
     private readonly IQuickResponseRepository _quickResponseRepository;
-    private readonly IDialogflowService _dialogflowService;
+    private readonly IChatModeStrategyFactory _strategyFactory;
+    private readonly ILlmService _llmService;
     private readonly ILogger<SendMessageCommandHandler> _logger;
 
     public SendMessageCommandHandler(
@@ -96,14 +147,16 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         IChatMessageRepository messageRepository,
         IChatbotConfigurationRepository configRepository,
         IQuickResponseRepository quickResponseRepository,
-        IDialogflowService dialogflowService,
+        IChatModeStrategyFactory strategyFactory,
+        ILlmService llmService,
         ILogger<SendMessageCommandHandler> logger)
     {
         _sessionRepository = sessionRepository;
         _messageRepository = messageRepository;
         _configRepository = configRepository;
         _quickResponseRepository = quickResponseRepository;
-        _dialogflowService = dialogflowService;
+        _strategyFactory = strategyFactory;
+        _llmService = llmService;
         _logger = logger;
     }
 
@@ -111,21 +164,45 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
     {
         var startTime = DateTime.UtcNow;
 
-        // Obtener sesión
-        var session = await _sessionRepository.GetByTokenAsync(request.SessionToken, ct);
-        if (session == null)
+        // ── 1. Cargar sesión y configuración ──────────────────────────
+        var session = await _sessionRepository.GetByTokenAsync(request.SessionToken, ct)
+            ?? throw new InvalidOperationException("Session not found");
+
+        var config = await _configRepository.GetByIdAsync(session.ChatbotConfigurationId, ct)
+            ?? await _configRepository.GetDefaultAsync(ct)
+            ?? throw new InvalidOperationException("No chatbot configuration found");
+
+        // ── 2. Verificar handoff: si un humano tiene control, no procesar con bot ──
+        if (!session.IsBotActive)
         {
-            throw new InvalidOperationException("Session not found");
+            // Guardar mensaje del usuario pero no responder con bot
+            var humanModeMsg = new ChatMessage
+            {
+                Id = Guid.NewGuid(),
+                SessionId = session.Id,
+                Type = Enum.TryParse<MessageType>(request.MessageType, out var mt2) ? mt2 : MessageType.UserText,
+                Content = request.Message,
+                IsFromBot = false,
+                ConsumedInteraction = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _messageRepository.CreateAsync(humanModeMsg, ct);
+            session.MessageCount++;
+            session.LastActivityAt = DateTime.UtcNow;
+            await _sessionRepository.UpdateAsync(session, ct);
+
+            return new ChatbotResponse
+            {
+                MessageId = humanModeMsg.Id,
+                Response = "",
+                IsFallback = false,
+                IsHumanMode = true,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
         }
 
-        // Obtener configuración
-        var config = await _configRepository.GetDefaultAsync(ct);
-        if (config == null)
-        {
-            throw new InvalidOperationException("No chatbot configuration found");
-        }
-
-        // Verificar límite de interacciones
+        // ── 3. Verificar límite de interacciones ──────────────────────
         if (session.InteractionLimitReached)
         {
             return new ChatbotResponse
@@ -138,9 +215,53 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             };
         }
 
-        // Intentar respuesta rápida primero
-        var quickResponse = await _quickResponseRepository.FindMatchingAsync(config.Id, request.Message, ct);
-        
+        // ── 4. SEGURIDAD: Prompt injection detection ──────────────────
+        var injectionResult = PromptInjectionDetector.Detect(request.Message);
+        if (injectionResult.ShouldBlock)
+        {
+            _logger.LogWarning("Prompt injection BLOCKED in session {SessionId}: {Patterns}",
+                session.Id, string.Join(", ", injectionResult.DetectedPatterns));
+
+            return new ChatbotResponse
+            {
+                MessageId = Guid.NewGuid(),
+                Response = "Lo siento, no puedo procesar ese mensaje. ¿En qué más puedo ayudarte con nuestros vehículos? 🚗",
+                IsFallback = true,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
+        }
+
+        var sanitizedMessage = injectionResult.ThreatLevel >= ThreatLevel.Medium
+            ? PromptInjectionDetector.Sanitize(request.Message)
+            : request.Message;
+
+        // ── 5. SEGURIDAD: PII detection ───────────────────────────────
+        var piiResult = PiiDetector.Sanitize(sanitizedMessage);
+        if (piiResult.DetectionInfo.RequiresAgentTransfer)
+        {
+            _logger.LogWarning("PII requiring agent transfer in session {SessionId}: {Types}",
+                session.Id, string.Join(", ", piiResult.DetectionInfo.DetectedTypes));
+
+            return new ChatbotResponse
+            {
+                MessageId = Guid.NewGuid(),
+                Response = "Por tu seguridad, no compartas datos de tarjetas de crédito por el chat. " +
+                    "Un agente humano puede ayudarte con pagos de forma segura. 🔒",
+                IsFallback = false,
+                IntentName = "pii_protection",
+                ConfidenceScore = 1.0m,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
+        }
+
+        var messageForLlm = piiResult.SanitizedMessage;
+
+        // ── 6. Quick Response match (bypass LLM, sin costo) ──────────
+        var quickResponse = await _quickResponseRepository.FindMatchingAsync(
+            config.Id, request.Message, ct);
+
         string botResponse;
         string? intentName = null;
         IntentCategory intentCategory = IntentCategory.Other;
@@ -150,28 +271,51 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
 
         if (quickResponse != null)
         {
-            // Usar respuesta rápida (no consume interacción)
             botResponse = quickResponse.Response;
             intentName = quickResponse.Name;
             confidenceScore = 1.0m;
-            _logger.LogInformation("Quick response matched: {QuickResponseName}", quickResponse.Name);
+            _logger.LogInformation("Quick response matched: {Name}", quickResponse.Name);
         }
         else
         {
-            // Llamar a Dialogflow
-            var dialogflowResult = await _dialogflowService.DetectIntentAsync(
+            // ── 7. STRATEGY PATTERN: Construir system prompt según el modo ──
+            var strategy = _strategyFactory.GetStrategy(session.ChatMode);
+            
+            var systemPrompt = await strategy.BuildSystemPromptAsync(
+                session, config, messageForLlm, ct);
+
+            _logger.LogInformation(
+                "Using {Mode} strategy for session {SessionId}, prompt length: {Length}",
+                session.ChatMode, session.Id, systemPrompt.Length);
+
+            // ── 8. Llamar al LLM ─────────────────────────────────────
+            var llmResult = await _llmService.GenerateResponseAsync(
                 session.SessionToken,
-                request.Message,
+                messageForLlm,
                 session.Language ?? "es",
+                systemPrompt,
                 ct);
 
-            botResponse = dialogflowResult.FulfillmentText ?? "Lo siento, no entendí tu mensaje.";
-            intentName = dialogflowResult.DetectedIntent;
-            confidenceScore = (decimal)dialogflowResult.ConfidenceScore;
-            isFallback = dialogflowResult.IsFallback;
+            // ── 9. Sanitizar respuesta del LLM (anti-PII echo-back) ──
+            botResponse = PiiDetector.SanitizeResponse(
+                llmResult.FulfillmentText ?? "Lo siento, no entendí tu mensaje.");
+            intentName = llmResult.DetectedIntent;
+            confidenceScore = (decimal)llmResult.ConfidenceScore;
+            isFallback = llmResult.IsFallback;
             consumedInteraction = true;
 
-            // Incrementar contador de interacciones
+            // ── 10. Grounding validation (anti-hallucination) ─────────
+            var groundingResult = await strategy.ValidateResponseGroundingAsync(
+                session, botResponse, ct);
+
+            if (!groundingResult.IsGrounded && groundingResult.SanitizedResponse != null)
+            {
+                _logger.LogWarning("Response not grounded in session {SessionId}: {Claims}",
+                    session.Id, string.Join(", ", groundingResult.UngroundedClaims));
+                botResponse = groundingResult.SanitizedResponse;
+            }
+
+            // ── 11. Incrementar contadores ────────────────────────────
             session.InteractionCount++;
             if (session.InteractionCount >= session.MaxInteractionsPerSession)
             {
@@ -179,7 +323,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             }
         }
 
-        // Crear mensaje de usuario
+        // ── 12. Persistir mensajes ────────────────────────────────────
         var userMessage = new ChatMessage
         {
             Id = Guid.NewGuid(),
@@ -192,7 +336,6 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             CreatedAt = DateTime.UtcNow
         };
 
-        // Crear respuesta del bot
         var botMessage = new ChatMessage
         {
             Id = Guid.NewGuid(),
@@ -200,7 +343,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             Type = MessageType.BotText,
             Content = request.Message,
             BotResponse = botResponse,
-            DialogflowIntentName = intentName,
+            IntentName = intentName,
             IntentCategory = intentCategory,
             ConfidenceScore = confidenceScore,
             IsFromBot = true,
@@ -213,7 +356,6 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         await _messageRepository.CreateAsync(userMessage, ct);
         await _messageRepository.CreateAsync(botMessage, ct);
 
-        // Actualizar sesión
         session.MessageCount += 2;
         session.LastActivityAt = DateTime.UtcNow;
         await _sessionRepository.UpdateAsync(session, ct);
@@ -226,6 +368,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             IntentCategory = intentCategory,
             ConfidenceScore = confidenceScore,
             IsFallback = isFallback,
+            ChatMode = session.ChatMode.ToString(),
             RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
         };
@@ -258,7 +401,7 @@ public class EndSessionCommandHandler : IRequestHandler<EndSessionCommand, bool>
         session.SessionDurationSeconds = (int)(DateTime.UtcNow - session.CreatedAt).TotalSeconds;
 
         await _sessionRepository.UpdateAsync(session, ct);
-        _logger.LogInformation("Session {SessionId} ended", session.Id);
+        _logger.LogInformation("Session {SessionId} ended (mode: {Mode})", session.Id, session.ChatMode);
 
         return true;
     }
@@ -288,15 +431,12 @@ public class TransferToAgentCommandHandler : IRequestHandler<TransferToAgentComm
         var session = await _sessionRepository.GetByTokenAsync(request.SessionToken, ct);
         if (session == null)
         {
-            return new TransferToAgentResult(
-                Success: false,
-                AgentName: null,
-                Message: "Session not found",
-                EstimatedWaitTimeMinutes: null
-            );
+            return new TransferToAgentResult(false, null, "Session not found", null);
         }
 
         session.Status = SessionStatus.TransferredToAgent;
+        session.HandoffStatus = HandoffStatus.PendingHuman;
+        session.HandoffReason = request.Reason;
         await _sessionRepository.UpdateAsync(session, ct);
 
         // Crear lead si hay datos de contacto
@@ -318,13 +458,129 @@ public class TransferToAgentCommandHandler : IRequestHandler<TransferToAgentComm
             await _leadRepository.CreateAsync(lead, ct);
         }
 
-        _logger.LogInformation("Session {SessionId} transferred to agent", session.Id);
+        _logger.LogInformation("Session {SessionId} transferred to agent (mode: {Mode})",
+            session.Id, session.ChatMode);
         
         return new TransferToAgentResult(
-            Success: true,
-            AgentName: null,
-            Message: "Your request has been transferred to a human agent. Please wait.",
-            EstimatedWaitTimeMinutes: 5
-        );
+            true, null,
+            "Your request has been transferred to a human agent. Please wait.",
+            5);
+    }
+}
+
+/// <summary>
+/// Handler para que un dealer tome control de una sesión (handoff bot→humano)
+/// </summary>
+public class TakeOverSessionCommandHandler : IRequestHandler<TakeOverSessionCommand, HandoffResult>
+{
+    private readonly IChatSessionRepository _sessionRepository;
+    private readonly IChatMessageRepository _messageRepository;
+    private readonly ILogger<TakeOverSessionCommandHandler> _logger;
+
+    public TakeOverSessionCommandHandler(
+        IChatSessionRepository sessionRepository,
+        IChatMessageRepository messageRepository,
+        ILogger<TakeOverSessionCommandHandler> logger)
+    {
+        _sessionRepository = sessionRepository;
+        _messageRepository = messageRepository;
+        _logger = logger;
+    }
+
+    public async Task<HandoffResult> Handle(TakeOverSessionCommand request, CancellationToken ct)
+    {
+        var session = await _sessionRepository.GetByTokenAsync(request.SessionToken, ct);
+        if (session == null)
+        {
+            return new HandoffResult(false, "Session not found", HandoffStatus.BotActive);
+        }
+
+        session.HandoffStatus = HandoffStatus.HumanActive;
+        session.HandoffAgentId = request.AgentId;
+        session.HandoffAgentName = request.AgentName;
+        session.HandoffAt = DateTime.UtcNow;
+        session.HandoffReason = request.Reason;
+        session.Status = SessionStatus.HumanTakeover;
+
+        await _sessionRepository.UpdateAsync(session, ct);
+
+        // Agregar mensaje de sistema informando al usuario
+        var systemMsg = new ChatMessage
+        {
+            Id = Guid.NewGuid(),
+            SessionId = session.Id,
+            Type = MessageType.SystemMessage,
+            Content = $"Un asesor ({request.AgentName}) se ha unido a la conversación.",
+            BotResponse = $"Un asesor ({request.AgentName}) se ha unido a la conversación. Ahora estás hablando con un humano. 👤",
+            IsFromBot = true,
+            ConsumedInteraction = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _messageRepository.CreateAsync(systemMsg, ct);
+
+        _logger.LogInformation(
+            "Handoff bot→human: Session {SessionId}, Agent: {AgentName} ({AgentId})",
+            session.Id, request.AgentName, request.AgentId);
+
+        return new HandoffResult(true,
+            $"Agente {request.AgentName} tomó control de la conversación",
+            HandoffStatus.HumanActive);
+    }
+}
+
+/// <summary>
+/// Handler para devolver control al bot (handoff humano→bot)
+/// </summary>
+public class ReturnToBotCommandHandler : IRequestHandler<ReturnToBotCommand, HandoffResult>
+{
+    private readonly IChatSessionRepository _sessionRepository;
+    private readonly IChatMessageRepository _messageRepository;
+    private readonly ILogger<ReturnToBotCommandHandler> _logger;
+
+    public ReturnToBotCommandHandler(
+        IChatSessionRepository sessionRepository,
+        IChatMessageRepository messageRepository,
+        ILogger<ReturnToBotCommandHandler> logger)
+    {
+        _sessionRepository = sessionRepository;
+        _messageRepository = messageRepository;
+        _logger = logger;
+    }
+
+    public async Task<HandoffResult> Handle(ReturnToBotCommand request, CancellationToken ct)
+    {
+        var session = await _sessionRepository.GetByTokenAsync(request.SessionToken, ct);
+        if (session == null)
+        {
+            return new HandoffResult(false, "Session not found", HandoffStatus.BotActive);
+        }
+
+        var previousAgent = session.HandoffAgentName;
+        session.HandoffStatus = HandoffStatus.ReturnedToBot;
+        session.HandoffAgentId = null;
+        session.HandoffAgentName = null;
+        session.Status = SessionStatus.Active;
+
+        await _sessionRepository.UpdateAsync(session, ct);
+
+        var systemMsg = new ChatMessage
+        {
+            Id = Guid.NewGuid(),
+            SessionId = session.Id,
+            Type = MessageType.SystemMessage,
+            Content = "El asesor ha finalizado. El asistente virtual retoma la conversación.",
+            BotResponse = "El asesor ha finalizado. Soy tu asistente virtual de nuevo. ¿En qué más puedo ayudarte? 🤖",
+            IsFromBot = true,
+            ConsumedInteraction = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _messageRepository.CreateAsync(systemMsg, ct);
+
+        _logger.LogInformation("Handoff human→bot: Session {SessionId}, previous agent: {Agent}",
+            session.Id, previousAgent);
+
+        return new HandoffResult(true,
+            "Control devuelto al bot",
+            HandoffStatus.ReturnedToBot);
     }
 }

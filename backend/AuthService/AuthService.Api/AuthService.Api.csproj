@@ -37,27 +37,27 @@
     <PackageReference Include="Serilog.Enrichers.Span" Version="3.1.0" />
     
     <!-- NUEVOS PAQUETES PARA HEALTH CHECKS -->
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../AuthService.Application/AuthService.Application.csproj" />
     <ProjectReference Include="../AuthService.Infrastructure/AuthService.Infrastructure.csproj" />
     <ProjectReference Include="../AuthService.Shared/AuthService.Shared.csproj" />
-    <ProjectReference Include="../..//_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
-    <ProjectReference Include="../..//_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
     <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
     <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
     <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
     <!-- FASE 2: Observability Libraries -->
-    <ProjectReference Include="../..//_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
-    <ProjectReference Include="../..//_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
-    <ProjectReference Include="../..//_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
-    <ProjectReference Include="../..//_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
   </ItemGroup>
 
 </Project>

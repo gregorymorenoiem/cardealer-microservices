@@ -12,12 +12,11 @@ public enum AccountType
     Guest = 0,
 
     /// <summary>
-    /// Usuario individual registrado.
-    /// Puede ser comprador (gratis) o vendedor ($29/listing).
-    /// - Comprador: Favoritos, alertas, comparación, contactar vendedores
-    /// - Vendedor: Publicar vehículos propios
+    /// Comprador registrado (gratis).
+    /// - Favoritos, alertas, comparación, contactar vendedores
+    /// - NO puede publicar vehículos
     /// </summary>
-    Individual = 1,
+    Buyer = 1,
 
     /// <summary>
     /// Propietario de concesionario (Dealer).
@@ -55,7 +54,14 @@ public enum AccountType
     /// - Operaciones de contenido
     /// - NO puede moderar ni aprobar contenido
     /// </summary>
-    PlatformEmployee = 5
+    PlatformEmployee = 5,
+
+    /// <summary>
+    /// Vendedor individual registrado ($29/listing).
+    /// - Puede publicar vehículos propios
+    /// - Acceso a panel de vendedor
+    /// </summary>
+    Seller = 6
 }
 
 /// <summary>
@@ -67,7 +73,7 @@ public static class AccountTypeExtensions
     /// Indica si el tipo de cuenta puede publicar vehículos.
     /// </summary>
     public static bool CanPublishListings(this AccountType accountType) =>
-        accountType == AccountType.Individual ||
+        accountType == AccountType.Seller ||
         accountType == AccountType.Dealer ||
         accountType == AccountType.DealerEmployee;
 
@@ -104,11 +110,12 @@ public static class AccountTypeExtensions
     public static string GetDisplayName(this AccountType accountType) => accountType switch
     {
         AccountType.Guest => "Invitado",
-        AccountType.Individual => "Individual",
+        AccountType.Buyer => "Comprador",
         AccountType.Dealer => "Dealer",
         AccountType.DealerEmployee => "Empleado de Dealer",
         AccountType.Admin => "Administrador",
         AccountType.PlatformEmployee => "Empleado de Plataforma",
+        AccountType.Seller => "Vendedor Individual",
         _ => "Desconocido"
     };
 
@@ -118,11 +125,12 @@ public static class AccountTypeExtensions
     public static string GetDescription(this AccountType accountType) => accountType switch
     {
         AccountType.Guest => "Usuario no registrado con acceso limitado a navegación",
-        AccountType.Individual => "Usuario registrado que compra o vende vehículos personales",
+        AccountType.Buyer => "Comprador registrado que busca y compra vehículos",
         AccountType.Dealer => "Propietario de concesionario con suscripción activa",
         AccountType.DealerEmployee => "Empleado de concesionario con permisos delegados",
         AccountType.Admin => "Administrador de la plataforma con rol específico",
         AccountType.PlatformEmployee => "Empleado operativo de la plataforma OKLA",
+        AccountType.Seller => "Vendedor individual que publica vehículos propios",
         _ => "Tipo de cuenta desconocido"
     };
 }

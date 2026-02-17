@@ -54,8 +54,24 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         // Hash password
         var passwordHash = _passwordHasher.Hash(request.Password);
 
-        // Create user
-        var user = new ApplicationUser(request.UserName, request.Email, passwordHash);
+        // Create user - Generate a valid username for Identity (no spaces allowed)
+        // UserName is used for Identity, DisplayName for UI purposes
+        var displayName = request.GetDisplayName();
+        var userName = !string.IsNullOrWhiteSpace(request.UserName) 
+            ? request.UserName.Trim().Replace(" ", "")
+            : request.Email.Split('@')[0]; // Use email prefix as username
+        
+        var user = new ApplicationUser(userName, request.Email, passwordHash);
+        
+        // Store FirstName, LastName on the entity
+        user.FirstName = request.FirstName?.Trim();
+        user.LastName = request.LastName?.Trim();
+        
+        if (!string.IsNullOrWhiteSpace(request.Phone))
+        {
+            user.PhoneNumber = request.Phone;
+        }
+        
         await _userRepository.AddAsync(user, cancellationToken);
 
         // Generate tokens
@@ -87,16 +103,31 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         // El email de bienvenida se enviará DESPUÉS de que el usuario verifique su email
         await _notificationService.SendEmailConfirmationAsync(user.Email!, verificationToken.Token);
 
-        // Publish UserRegisteredEvent (para analytics/logging, NO para enviar welcome email)
+        // Parse FirstName and LastName from request or UserName
+        var firstName = request.FirstName?.Trim() ?? string.Empty;
+        var lastName = request.LastName?.Trim() ?? string.Empty;
+        
+        // If FirstName/LastName not provided, try to parse from UserName
+        if (string.IsNullOrWhiteSpace(firstName) && !string.IsNullOrWhiteSpace(request.UserName))
+        {
+            var nameParts = request.UserName.Split(' ', 2);
+            firstName = nameParts.Length > 0 ? nameParts[0] : request.UserName;
+            lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+        }
+
+        // Publish UserRegisteredEvent with all user data for sync with UserService
         var userRegisteredEvent = new UserRegisteredEvent
         {
             UserId = Guid.Parse(user.Id),
             Email = user.Email!,
-            FullName = user.UserName!, // Using UserName as FullName for now
+            FullName = request.GetDisplayName(), // Uses FirstName LastName or UserName
+            FirstName = firstName,
+            LastName = lastName,
+            PhoneNumber = request.Phone,
             RegisteredAt = user.CreatedAt,
             Metadata = new Dictionary<string, string>
             {
-                { "AccountType", ((int)user.AccountType).ToString() } // ← CRÍTICO: Usar AccountType del usuario
+                { "AccountType", ((int)user.AccountType).ToString() }
             }
         };
         await _eventPublisher.PublishAsync(userRegisteredEvent, cancellationToken);

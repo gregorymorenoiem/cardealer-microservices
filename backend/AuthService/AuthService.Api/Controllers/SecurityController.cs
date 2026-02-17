@@ -56,10 +56,10 @@ public class SecurityController : ControllerBase
     [ProducesResponseType(typeof(SecuritySettingsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<SecuritySettingsDto>> GetSecuritySettings(
-        [FromHeader(Name = "X-User-Id")] string? headerUserId,
         CancellationToken cancellationToken)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? headerUserId;
+        // SECURITY FIX: Always use JWT claim — never trust client headers (IDOR prevention)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
         if (string.IsNullOrEmpty(userId))
         {
@@ -127,12 +127,28 @@ public class SecurityController : ControllerBase
             // Obtener fecha de último cambio de contraseña
             var lastPasswordChange = user.UpdatedAt?.ToString("o") ?? user.CreatedAt.ToString("o");
 
+            // Check if user has a password set (OAuth users may not have one)
+            var hasPassword = !string.IsNullOrEmpty(user.PasswordHash);
+
+            // Get linked OAuth providers
+            var linkedProviders = new List<LinkedProviderDto>();
+            if (user.ExternalAuthProvider.HasValue && !string.IsNullOrEmpty(user.ExternalUserId))
+            {
+                linkedProviders.Add(new LinkedProviderDto(
+                    Provider: user.ExternalAuthProvider.Value.ToString(),
+                    Email: user.Email ?? "",
+                    LinkedAt: user.CreatedAt
+                ));
+            }
+
             var settings = new SecuritySettingsDto(
                 TwoFactorEnabled: user.IsTwoFactorEnabled,
                 TwoFactorType: user.TwoFactorAuth?.PrimaryMethod.ToString(),
                 LastPasswordChange: lastPasswordChange,
                 ActiveSessions: sessionDtos,
-                RecentLogins: loginDtos
+                RecentLogins: loginDtos,
+                HasPassword: hasPassword,
+                LinkedProviders: linkedProviders.Count > 0 ? linkedProviders : null
             );
 
             return Ok(settings);
@@ -230,7 +246,7 @@ public class SecurityController : ControllerBase
             _logger.LogWarning(
                 "AUTH-SEC-001: Password change failed - invalid current password for user {UserId}",
                 userId);
-            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("The current password is incorrect."));
         }
         catch (Exception ex) when (ex.Message.Contains("different") ||
                                    ex.Message.Contains("same") ||
@@ -241,7 +257,7 @@ public class SecurityController : ControllerBase
             _logger.LogWarning(
                 "AUTH-SEC-001: Password change business rule violation for user {UserId}: {Message}",
                 userId, ex.Message);
-            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ChangePasswordResponse>.Fail("The new password does not meet the security requirements."));
         }
         catch (Exception ex)
         {
@@ -370,7 +386,7 @@ public class SecurityController : ControllerBase
         }
         catch (Exception ex) when (ex.Message.Contains("Too many", StringComparison.OrdinalIgnoreCase))
         {
-            return BadRequest(ApiResponse<RequestSessionRevocationResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<RequestSessionRevocationResponse>.Fail("Too many requests. Please try again later."));
         }
         catch (Exception ex)
         {
@@ -383,15 +399,15 @@ public class SecurityController : ControllerBase
     }
 
     /// <summary>
-    /// Revoke a specific session with verification code (remote logout)
+    /// Revoke a specific session (remote logout)
     /// Proceso: AUTH-SEC-003
     /// 
-    /// Terminates a specific session after verifying the email code.
+    /// Terminates a specific session. If code is provided, it verifies the email code first.
+    /// If no code is provided, it revokes directly (simplified flow for authenticated users).
     /// The device will be logged out on next request.
     /// </summary>
     /// <remarks>
     /// Security features:
-    /// - Requires verification code sent via email
     /// - Cannot revoke current session (must use logout)
     /// - Verifies session belongs to the authenticated user (prevents IDOR)
     /// - Returns 404 even for sessions of other users (prevents enumeration)
@@ -400,6 +416,7 @@ public class SecurityController : ControllerBase
     /// - Logs security audit trail
     /// </remarks>
     /// <param name="sessionId">The GUID of the session to revoke</param>
+    /// <param name="code">Optional verification code (if required by security policy)</param>
     [HttpDelete("sessions/{sessionId}")]
     [ProducesResponseType(typeof(ApiResponse<RevokeSessionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -407,8 +424,8 @@ public class SecurityController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<RevokeSessionResponse>>> RevokeSession(
         string sessionId,
-        [FromQuery] string code,
-        CancellationToken cancellationToken)
+        [FromQuery] string? code = null,
+        CancellationToken cancellationToken = default)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
@@ -419,15 +436,10 @@ public class SecurityController : ControllerBase
             return Unauthorized(ApiResponse<RevokeSessionResponse>.Fail("User not authenticated"));
         }
 
-        if (string.IsNullOrEmpty(code))
-        {
-            return BadRequest(ApiResponse<RevokeSessionResponse>.Fail(
-                "Verification code is required. Please request a code first."));
-        }
-
+        // Code is now optional - direct revocation is allowed for authenticated users
         _logger.LogInformation(
-            "AUTH-SEC-003: Session revocation request from user {UserId} for session {SessionId}",
-            userId, sessionId);
+            "AUTH-SEC-003: Session revocation request from user {UserId} for session {SessionId} (code provided: {HasCode})",
+            userId, sessionId, !string.IsNullOrEmpty(code));
 
         try
         {
@@ -463,7 +475,7 @@ public class SecurityController : ControllerBase
         }
         catch (Exception ex) when (ex.Message.Contains("Invalid", StringComparison.OrdinalIgnoreCase))
         {
-            return BadRequest(ApiResponse<RevokeSessionResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<RevokeSessionResponse>.Fail("Invalid verification code."));
         }
         catch (Exception ex)
         {

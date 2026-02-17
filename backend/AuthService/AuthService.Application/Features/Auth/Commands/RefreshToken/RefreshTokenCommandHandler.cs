@@ -5,6 +5,7 @@ using AuthService.Domain.Interfaces.Services;
 using MediatR;
 using AuthService.Application.DTOs.Auth;
 using AuthService.Application.Common.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace AuthService.Application.Features.Auth.Commands.RefreshToken;
 
@@ -14,17 +15,20 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     private readonly IUserRepository _userRepository;
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRequestContext _requestContext;
+    private readonly IConfiguration _configuration;
 
     public RefreshTokenCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IUserRepository userRepository,
         IJwtGenerator jwtGenerator,
-        IRequestContext requestContext)
+        IRequestContext requestContext,
+        IConfiguration configuration)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _userRepository = userRepository;
         _jwtGenerator = jwtGenerator;
         _requestContext = requestContext;
+        _configuration = configuration;
     }
 
     public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
@@ -47,21 +51,26 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (user.IsLockedOut())
             throw new UnauthorizedException("Account is locked.");
 
+        // Read expiration from configuration instead of hardcoding
+        var accessTokenMinutes = _configuration.GetValue<int>("Jwt:ExpirationMinutes", 60);
+        var refreshTokenDays = _configuration.GetValue<int>("Jwt:RefreshTokenExpirationDays", 7);
+
         // Generate new access token
         var newAccessToken = _jwtGenerator.GenerateToken(user);
-        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var expiresAt = DateTime.UtcNow.AddMinutes(accessTokenMinutes);
 
         // Rotate refresh token
         var newRefreshTokenValue = _jwtGenerator.GenerateRefreshToken();
 
-        // Revoke old token and save new one
-        storedToken.Revoke("rotated", "system", newRefreshTokenValue);
+        // FIX: Correct parameter order — Revoke(revokedByIp, reason, replacedByToken)
+        var clientIp = _requestContext.IpAddress ?? "unknown";
+        storedToken.Revoke(clientIp, "rotated", newRefreshTokenValue);
 
         // Usar nombre completo para evitar conflicto
         var newRefreshTokenEntity = new Domain.Entities.RefreshToken(
             user.Id,
             newRefreshTokenValue,
-            DateTime.UtcNow.AddDays(7),
+            DateTime.UtcNow.AddDays(refreshTokenDays),
             _requestContext.IpAddress
         );
 

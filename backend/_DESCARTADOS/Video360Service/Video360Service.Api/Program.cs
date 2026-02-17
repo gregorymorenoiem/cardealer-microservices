@@ -1,14 +1,36 @@
 using System.Text;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Serilog;
+using Video360Service.Application.DTOs;
+using Video360Service.Application.Features.Commands;
+using Video360Service.Application.Validators;
 using Video360Service.Infrastructure;
 using Video360Service.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentName()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Seq(builder.Configuration["Seq:ServerUrl"] ?? "http://localhost:5341")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -19,14 +41,14 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Video360 Service API",
         Version = "v1",
-        Description = "API para procesar videos 360 de vehículos y extraer imágenes para viewer interactivo",
+        Description = "Microservicio para procesamiento de video 360° de vehículos. Extrae 6 frames equidistantes para crear vistas interactivas.",
         Contact = new OpenApiContact
         {
             Name = "OKLA Team",
             Email = "dev@okla.com.do"
         }
     });
-
+    
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme",
@@ -35,7 +57,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-
+    
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -50,32 +72,26 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
-
-    // Include XML comments
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        c.IncludeXmlComments(xmlPath);
-    }
 });
 
 // JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "your-super-secret-key-here-min-32-chars!!";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "super-secret-key-for-development-only-32chars";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "okla";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "okla";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"] ?? "okla",
-            ValidAudience = jwtSettings["Audience"] ?? "okla-api",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -84,33 +100,73 @@ builder.Services.AddAuthorization();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-            ?? new[] { "http://localhost:3000", "http://localhost:5173", "https://okla.com.do" };
-        
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+    
+    options.AddPolicy("Production", policy =>
+    {
+        policy.WithOrigins(
+            "https://okla.com.do",
+            "https://www.okla.com.do",
+            "https://api.okla.com.do")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
-// Infrastructure services (DB, Repositories, S3, Processor)
-builder.Services.AddVideo360Infrastructure(builder.Configuration);
+// MediatR
+builder.Services.AddMediatR(cfg => 
+    cfg.RegisterServicesFromAssembly(typeof(Video360Service.Application.Features.Commands.CreateVideo360JobCommand).Assembly));
 
-// Health checks
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<CreateVideo360JobRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+
+// Infrastructure (DbContext, Repositories, Providers, Services)
+builder.Services.AddInfrastructure(builder.Configuration);
+
+// Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<Video360DbContext>("database")
-    .AddCheck("python-worker", () =>
-    {
-        // TODO: Check Python worker health
-        return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy();
-    });
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Video360Service is running"));
+
+// OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "video360-service",
+            serviceVersion: "1.0.0"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation())
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddPrometheusExporter());
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Migrate database
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<Video360DbContext>();
+    
+    try
+    {
+        db.Database.Migrate();
+        Log.Information("Database migrated successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Could not migrate database, it may already exist");
+    }
+}
+
+// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -119,31 +175,23 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Video360 Service API v1");
         c.RoutePrefix = "swagger";
     });
+    app.UseCors("AllowAll");
+}
+else
+{
+    app.UseCors("Production");
 }
 
-app.UseCors();
+app.UseSerilogRequestLogging();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.UseOpenTelemetryPrometheusScrapingEndpoint("/metrics");
 
-// Apply migrations on startup (in development)
-if (app.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<Video360DbContext>();
-    try
-    {
-        await db.Database.MigrateAsync();
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogWarning(ex, "Could not apply migrations. Database may not be available.");
-    }
-}
-
-app.Logger.LogInformation("Video360Service started on port {Port}", 
+Log.Information("Video360 Service starting on port {Port}", 
     builder.Configuration["ASPNETCORE_URLS"] ?? "8080");
 
 app.Run();

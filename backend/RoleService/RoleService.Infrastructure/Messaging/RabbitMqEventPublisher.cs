@@ -42,8 +42,8 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         {
             HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
             Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672"),
-            UserName = configuration["RabbitMQ:UserName"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest",
+            UserName = configuration["RabbitMQ:UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured"),
+            Password = configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
             VirtualHost = configuration["RabbitMQ:VirtualHost"] ?? "/",
             AutomaticRecoveryEnabled = true,
             NetworkRecoveryInterval = TimeSpan.FromSeconds(10)

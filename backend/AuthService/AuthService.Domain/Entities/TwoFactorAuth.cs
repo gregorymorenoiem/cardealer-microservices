@@ -43,6 +43,33 @@ public class TwoFactorAuth
         CreatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Setup 2FA with secret and recovery codes but keep in PendingVerification status.
+    /// User must verify with a code before 2FA is fully enabled.
+    /// </summary>
+    public void SetupPending(string secret, List<string> recoveryCodes)
+    {
+        Secret = secret ?? throw new ArgumentNullException(nameof(secret));
+        RecoveryCodes = recoveryCodes ?? throw new ArgumentNullException(nameof(recoveryCodes));
+        Status = TwoFactorAuthStatus.PendingVerification;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Complete 2FA setup after user verifies with a valid code.
+    /// Changes status from PendingVerification to Enabled.
+    /// </summary>
+    public void ConfirmEnable(List<TwoFactorAuthType>? enabledMethods = null)
+    {
+        if (Status != TwoFactorAuthStatus.PendingVerification)
+            throw new InvalidOperationException("2FA must be in PendingVerification status to confirm");
+
+        EnabledMethods = enabledMethods ?? new List<TwoFactorAuthType> { PrimaryMethod };
+        Status = TwoFactorAuthStatus.Enabled;
+        EnabledAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Enable(string secret, List<string> recoveryCodes, List<TwoFactorAuthType>? enabledMethods = null)
     {
         if (Status == TwoFactorAuthStatus.Enabled)

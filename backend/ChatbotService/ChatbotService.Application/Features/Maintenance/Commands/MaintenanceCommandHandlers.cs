@@ -17,7 +17,7 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
     private readonly IAutoLearningService _autoLearningService;
     private readonly IHealthMonitoringService _healthService;
     private readonly IReportingService _reportingService;
-    private readonly IDialogflowService _dialogflowService;
+    private readonly ILlmService _llmService;
     private readonly ILogger<RunMaintenanceTaskCommandHandler> _logger;
 
     public RunMaintenanceTaskCommandHandler(
@@ -26,7 +26,7 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
         IAutoLearningService autoLearningService,
         IHealthMonitoringService healthService,
         IReportingService reportingService,
-        IDialogflowService dialogflowService,
+        ILlmService llmService,
         ILogger<RunMaintenanceTaskCommandHandler> logger)
     {
         _taskRepository = taskRepository;
@@ -34,7 +34,7 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
         _autoLearningService = autoLearningService;
         _healthService = healthService;
         _reportingService = reportingService;
-        _dialogflowService = dialogflowService;
+        _llmService = llmService;
         _logger = logger;
     }
 
@@ -365,7 +365,7 @@ public class GenerateReportCommandHandler : IRequestHandler<GenerateReportComman
 
 ### Summary
 - **Total Interactions:** {report.TotalInteractions:N0}
-- **Dialogflow Calls:** {report.DialogflowInteractions:N0}
+- **LLM Calls:** {report.LlmInteractions:N0}
 - **Quick Response Hits:** {report.QuickResponseInteractions:N0}
 - **Total Cost:** ${report.TotalCost:F2}
 - **Savings:** ${report.CostSavingsFromQuickResponses:F2}

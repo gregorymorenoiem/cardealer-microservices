@@ -1,3 +1,5 @@
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Messaging;
 using RoleService.Domain.Interfaces;
 using RoleService.Infrastructure.Messaging;
 using RoleService.Infrastructure.Persistence;
@@ -47,6 +49,22 @@ builder.Host.UseSerilog();
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 // Configurar Swagger con soporte JWT
 builder.Services.AddSwaggerGen(options =>
@@ -126,6 +144,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Configurar políticas de autorización RBAC
+// NOTA: AuthService genera JWT con claim "account_type" (int) en vez de "role" (string).
+//   AccountType: Guest=0, Individual=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5
+//   Se verifican AMBOS formatos para compatibilidad con tokens de test y producción.
 builder.Services.AddAuthorization(options =>
 {
     // Política para acceso general al RoleService (lectura)
@@ -140,12 +161,15 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser();
         policy.RequireAssertion(context =>
         {
-            // SuperAdmin tiene acceso total
-            if (context.User.HasClaim("role", "SuperAdmin"))
+            // Admin AccountType (4) tiene acceso — incluye SuperAdmin y Admin
+            if (context.User.HasClaim("account_type", "4"))
                 return true;
-            
-            // Admin puede gestionar roles
-            if (context.User.HasClaim("role", "Admin"))
+
+            // Fallback: verificar claim "role" (tokens de test/legacy)
+            if (context.User.HasClaim("role", "SuperAdmin") ||
+                context.User.HasClaim("role", "Admin") ||
+                context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "SuperAdmin") ||
+                context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "Admin"))
                 return true;
             
             // Verificar claim específico de permiso
@@ -156,14 +180,19 @@ builder.Services.AddAuthorization(options =>
         });
     });
 
-    // Política para gestión de permisos (solo SuperAdmin)
+    // Política para gestión de permisos (solo SuperAdmin / Admin)
     options.AddPolicy("ManagePermissions", policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireAssertion(context =>
         {
-            // Solo SuperAdmin puede gestionar permisos
-            if (context.User.HasClaim("role", "SuperAdmin"))
+            // Admin AccountType (4) tiene acceso
+            if (context.User.HasClaim("account_type", "4"))
+                return true;
+
+            // Fallback: verificar claim "role" (tokens de test/legacy)
+            if (context.User.HasClaim("role", "SuperAdmin") ||
+                context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "SuperAdmin"))
                 return true;
             
             // Verificar claim específico de permiso
@@ -180,8 +209,16 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser();
         policy.RequireAssertion(context =>
         {
+            // Admin (4) o PlatformEmployee (5)
+            if (context.User.HasClaim("account_type", "4") ||
+                context.User.HasClaim("account_type", "5"))
+                return true;
+
+            // Fallback: verificar claim "role" (tokens de test/legacy)
             return context.User.HasClaim("role", "SuperAdmin") ||
                    context.User.HasClaim("role", "Admin") ||
+                   context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "SuperAdmin") ||
+                   context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "Admin") ||
                    context.User.HasClaim("permission", "admin:access");
         });
     });
@@ -255,24 +292,37 @@ builder.Services.AddHttpClient<RoleService.Application.Interfaces.IErrorServiceC
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// Error Reporter - envía errores al ErrorService
+var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"];
+if (!string.IsNullOrEmpty(errorServiceUrl))
+{
+    builder.Services.AddHttpClient<IErrorReporter, RoleService.Infrastructure.Services.HttpErrorReporter>(client =>
+    {
+        client.BaseAddress = new Uri(errorServiceUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+    });
+}
+else
+{
+    builder.Services.AddSingleton<IErrorReporter, RoleService.Infrastructure.Services.NoOpErrorReporter>();
+}
+
 // Other Services
 // builder.Services.AddScoped<IRoleReporter, RoleReporter>();
 
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<RoleService.Application.Metrics.RoleServiceMetrics>();
 
-// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-// Comentado temporalmente - RabbitMQ no está corriendo
-// builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-//     new RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+// Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
+// Shared RabbitMQ connection (1 connection per pod instead of N per class)
+builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "RoleService");
+builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
 // NOTE: Using NoOpEventPublisher for development. Enable RabbitMQ in production.
 var useRabbitMq = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
 if (useRabbitMq)
 {
-    builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-        new RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
     builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IEventPublisher>(sp =>
         sp.GetRequiredService<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>());
@@ -367,8 +417,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 app.UseSerilogRequestLogging();
 
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -380,6 +434,9 @@ app.UseMiddleware<RateLimitBypassMiddleware>();
 app.UseCustomRateLimiting(rateLimitingConfig);
 
 app.UseHttpsRedirection();
+
+// CORS middleware (before auth)
+app.UseCors();
 
 // Agregar autenticación y autorización
 app.UseAuthentication();
@@ -403,13 +460,8 @@ app.UseAuditMiddleware();
 
 app.MapControllers();
 
-// Health check endpoint - acceso anónimo
-app.MapGet("/health", [AllowAnonymous] () => Results.Ok(new
-{
-    service = "RoleService",
-    status = "healthy",
-    timestamp = DateTime.UtcNow
-}));
+// Health check endpoints - acceso anónimo
+app.MapHealthChecks("/health");
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())

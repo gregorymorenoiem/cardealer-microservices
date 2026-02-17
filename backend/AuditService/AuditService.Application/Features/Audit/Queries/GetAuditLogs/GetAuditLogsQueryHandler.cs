@@ -38,7 +38,11 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, ApiRe
                 page: request.Page,
                 pageSize: request.PageSize,
                 sortBy: request.SortBy,
-                sortDescending: request.SortDescending);
+                sortDescending: request.SortDescending,
+                searchText: request.SearchText,
+                serviceName: request.ServiceName,
+                severity: request.Severity,
+                success: request.Success);
 
             // Convert entities to DTOs
             var auditLogDtos = items.Select(AuditLogDto.FromEntity).ToList();

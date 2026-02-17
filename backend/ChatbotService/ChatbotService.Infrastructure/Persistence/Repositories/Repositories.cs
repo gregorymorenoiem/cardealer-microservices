@@ -21,6 +21,12 @@ public class ChatSessionRepository : IChatSessionRepository
     public async Task<ChatSession?> GetActiveByUserIdAsync(Guid userId, CancellationToken ct = default)
         => await _context.ChatSessions.FirstOrDefaultAsync(s => s.UserId == userId && s.Status == SessionStatus.Active, ct);
 
+    public async Task<ChatSession?> GetByChannelUserIdAsync(string channel, string channelUserId, CancellationToken ct = default)
+        => await _context.ChatSessions
+            .Where(s => s.Channel == channel && s.ChannelUserId == channelUserId)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefaultAsync(ct);
+
     public async Task<IEnumerable<ChatSession>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         => await _context.ChatSessions.Where(s => s.UserId == userId).OrderByDescending(s => s.CreatedAt).ToListAsync(ct);
 
@@ -82,13 +88,25 @@ public class ChatMessageRepository : IChatMessageRepository
         return await _context.ChatMessages.Where(m => m.SessionId == session.Id).OrderBy(m => m.CreatedAt).ToListAsync(ct);
     }
 
-    public async Task<int> GetDialogflowCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default)
+    public async Task<int> GetLlmCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default)
         => await _context.ChatMessages
             .Include(m => m.Session)
             .CountAsync(m => m.Session!.ChatbotConfigurationId == configurationId 
                 && m.CreatedAt >= from 
                 && m.CreatedAt < to 
                 && m.ConsumedInteraction, ct);
+
+    public async Task<IEnumerable<ChatMessage>> GetRecentBySessionTokenAsync(string sessionToken, int maxMessages, CancellationToken ct = default)
+    {
+        var session = await _context.ChatSessions.FirstOrDefaultAsync(s => s.SessionToken == sessionToken, ct);
+        if (session == null) return Enumerable.Empty<ChatMessage>();
+        return await _context.ChatMessages
+            .Where(m => m.SessionId == session.Id)
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(maxMessages)
+            .OrderBy(m => m.CreatedAt)
+            .ToListAsync(ct);
+    }
 }
 
 public class ChatLeadRepository : IChatLeadRepository

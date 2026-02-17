@@ -62,7 +62,7 @@ public static class ServiceCollectionExtensions
             options.Password.RequireDigit = passwordPolicy?.RequireDigit ?? true;
             options.Password.RequireLowercase = passwordPolicy?.RequireLowercase ?? true;
             options.Password.RequireUppercase = passwordPolicy?.RequireUppercase ?? true;
-            options.Password.RequireNonAlphanumeric = passwordPolicy?.RequireNonAlphanumeric ?? false;
+            options.Password.RequireNonAlphanumeric = passwordPolicy?.RequireNonAlphanumeric ?? true;
 
             // Lockout settings from configuration
             var lockoutPolicy = configuration.GetSection("Security:LockoutPolicy").Get<LockoutPolicySettings>();
@@ -107,6 +107,19 @@ public static class ServiceCollectionExtensions
 
             options.Events = new JwtBearerEvents
             {
+                OnMessageReceived = context =>
+                {
+                    // Security (CWE-922): Support reading JWT from HttpOnly cookie
+                    if (!context.Request.Headers.ContainsKey("Authorization"))
+                    {
+                        var accessToken = context.Request.Cookies["okla_access_token"];
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
+                    }
+                    return Task.CompletedTask;
+                },
                 OnAuthenticationFailed = context =>
                 {
                     if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))

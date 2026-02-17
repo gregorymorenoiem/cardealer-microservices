@@ -41,12 +41,14 @@ public class UserRepository : IUserRepository
     public async Task<ApplicationUser?> GetByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default)
     {
         return await _userManager.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
     public async Task<bool> ExistsAsync(string email, CancellationToken cancellationToken = default)
     {
         return await _userManager.Users
+            .AsNoTracking()
             .AnyAsync(u => u.Email == email, cancellationToken);
     }
 
@@ -132,6 +134,7 @@ public class UserRepository : IUserRepository
     public async Task<TwoFactorAuth?> GetTwoFactorAuthAsync(string userId)
     {
         return await _context.TwoFactorAuths
+            .AsNoTracking()
             .FirstOrDefaultAsync(tfa => tfa.UserId == userId);
     }
 
@@ -169,12 +172,18 @@ public class UserRepository : IUserRepository
     public async Task<ApplicationUser?> GetByExternalIdAsync(ExternalAuthProvider provider, string externalUserId)
     {
         return await _userManager.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.ExternalAuthProvider == provider && u.ExternalUserId == externalUserId);
     }
 
     public async Task<List<ApplicationUser>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _userManager.Users.ToListAsync(cancellationToken);
+        // Performance: Use AsNoTracking and limit results to prevent loading entire table
+        return await _userManager.Users
+            .AsNoTracking()
+            .OrderByDescending(u => u.CreatedAt)
+            .Take(1000) // Safety limit — use paginated queries for production
+            .ToListAsync(cancellationToken);
     }
 
     // Implementación de métodos de seguridad para IUserRepository

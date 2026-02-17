@@ -99,3 +99,70 @@ Se mantienen archivados para:
 - [Documentación descartada](../docs/_DESCARTADOS/README.md)
 - [Modelo de negocio correcto](../docs/process-matrix/02-USUARIOS-DEALERS/04-dealer-onboarding.md)
 - [Integración de cobros Azul](../docs/process-matrix/05-PAGOS-FACTURACION/03-azul-payment.md)
+
+---
+
+## 📁 FASE1_ELIMINADOS — Auditoría Febrero 2026 (17 servicios)
+
+Servicios eliminados por ser: infraestructura redundante con Kubernetes, scaffolds vacíos, prematuros, o duplicados.
+
+| Servicio | Razón de eliminación | Reemplazo |
+|----------|---------------------|-----------|
+| **ServiceDiscovery** | Redundante — K8s DNS provee service discovery nativo | K8s DNS / CoreDNS |
+| **HealthCheckService** | Redundante — K8s liveness/readiness probes | K8s probes nativos |
+| **PostgresDbService** | Redundante — PostgreSQL es infraestructura, no microservicio | StatefulSet |
+| **LoggingService** | Redundante — Seq ya maneja logs centralizados | Seq |
+| **TracingService** | Redundante — Jaeger ya maneja distributed tracing | Jaeger |
+| **BackupDRService** | Redundante — Digital Ocean managed backups | DO Managed Backups |
+| **FeatureToggleService** | Scaffold vacío — absorbible en ConfigurationService | ConfigurationService |
+| **FeatureStoreService** | Prematuro — requiere pipeline de ML que no existe | Futuro |
+| **DataPipelineService** | Prematuro — requiere infraestructura ETL | Futuro |
+| **UserBehaviorService** | Prematuro — requiere tracking de eventos maduro | EventTrackingService |
+| **SearchService** | Scaffold vacío — Elasticsearch no implementado | VehiclesSaleService |
+| **InvoicingService** | Duplicado — BillingService ya maneja facturación | BillingService |
+| **FinanceService** | No aplica — OKLA es marketplace de anuncios | N/A |
+| **BankReconciliationService** | No aplica — no hay pagos custodiales | N/A |
+| **ECommerceComplianceService** | Scaffold vacío — sin implementación | ComplianceService |
+| **AntiMoneyLaunderingService** | Prematuro — AML requiere bureaus de crédito | KYCService |
+| **DigitalSignatureService** | Prematuro — requiere autoridades certificadoras RD | Futuro |
+
+---
+
+## 📁 FASE4_COMPLIANCE_CONSOLIDADOS — Auditoría Febrero 2026 (7 servicios)
+
+Cluster de compliance/legal consolidado para reducir fragmentación excesiva (13→4 servicios).
+
+### Absorbidos en ComplianceService
+
+| Servicio | Funcionalidad | Ahora en |
+|----------|---------------|----------|
+| **ComplianceReportingService** | Reportes DGII, UAF, schedules | ComplianceService |
+| **ComplianceIntegrationService** | Integraciones externas de compliance | ComplianceService |
+| **RegulatoryAlertService** | Alertas regulatorias | ComplianceService |
+
+### Para fusionar en LegalService (pendiente crear)
+
+| Servicio | Funcionalidad | Ahora en |
+|----------|---------------|----------|
+| **LegalDocumentService** | Documentos legales | LegalService (pendiente) |
+| **ContractService** | Gestión de contratos | LegalService (pendiente) |
+| **ConsumerProtectionService** | Pro-Consumidor RD | LegalService (pendiente) |
+| **DisputeService** | Resolución de disputas | LegalService (pendiente) |
+
+---
+
+## 🔄 Controllers Reubicados (Fase 2 y 3)
+
+Controllers duplicados removidos de servicios activos (archivados en `{Servicio}/_REMOVED_CONTROLLERS/`):
+
+| Servicio Origen | Controller Removido | Owner correcto |
+|----------------|---------------------|----------------|
+| UserService | DealersController, DealerOnboarding(V2), DealerModules | DealerManagementService |
+| UserService | DealerEmployeesController | StaffService |
+| AdminService | PlatformEmployeesController | StaffService |
+| PaymentService | SubscriptionsController | BillingService |
+| DealerManagementService | SubscriptionsController | BillingService |
+| ChatbotService | LeadsController | CRMService |
+| ChatbotService | MaintenanceController | MaintenanceService |
+| IdempotencyService | OrdersController (misplaced) | N/A |
+| VehiclesSaleService | ImportController | InventoryManagementService |

@@ -1,349 +1,234 @@
-# Video 360 Service
+# Video360Service
 
-Microservicio para procesar videos 360 de vehículos y extraer N imágenes equidistantes para crear un visor 360° interactivo.
+Microservicio para procesamiento de video 360° de vehículos. Extrae 6 frames equidistantes de un video para crear una vista interactiva 360° en el frontend.
 
 ## 📋 Descripción
 
-Este servicio permite:
+Este servicio permite a los usuarios subir un video de un vehículo girando 360° y obtiene automáticamente 6 imágenes de alta calidad que representan los ángulos principales:
 
-- Subir un video 360° de un vehículo (grabado alrededor del carro)
-- Extraer automáticamente 6 (o N) frames equidistantes
-- Aplicar correcciones automáticas de exposición
-- Selección inteligente del mejor frame en cada posición
-- Generar miniaturas
-- Almacenar las imágenes en S3/MinIO
+| Frame | Ángulo | Etiqueta         |
+| ----- | ------ | ---------------- |
+| 0     | 0°     | Frente           |
+| 1     | 60°    | Frente-Derecha   |
+| 2     | 120°   | Atrás-Derecha    |
+| 3     | 180°   | Atrás            |
+| 4     | 240°   | Atrás-Izquierda  |
+| 5     | 300°   | Frente-Izquierda |
+
+## 🚀 Proveedores Soportados
+
+| Proveedor          | Costo Mensual | Costo por Vehículo | Calidad     | Prioridad     |
+| ------------------ | ------------- | ------------------ | ----------- | ------------- |
+| **FFmpeg-API.com** | $11/mes       | $0.011             | Excelente   | 100 (DEFAULT) |
+| **ApyHub**         | $9/mes        | $0.009             | Muy Buena   | 90            |
+| **Cloudinary**     | $12/mes       | $0.012             | Buena       | 70            |
+| **Imgix**          | $18/mes       | $0.018             | Excelente   | 80            |
+| **Shotstack**      | $50/mes       | $0.05              | Profesional | 50            |
+
+El sistema automáticamente selecciona el mejor proveedor disponible basado en prioridad, disponibilidad y límites diarios.
 
 ## 🏗️ Arquitectura
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Video 360 Service                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────┐        ┌─────────────────────────────────┐    │
-│  │  .NET 8 API     │───────▶│  Python Worker (OpenCV)         │    │
-│  │  (Controllers)  │        │  - Extrae frames                │    │
-│  │                 │◀───────│  - Corrige exposición           │    │
-│  │  Port: 8080     │        │  - Selección inteligente        │    │
-│  └────────┬────────┘        │                                 │    │
-│           │                 │  Port: 8000                     │    │
-│           │                 └─────────────────────────────────┘    │
-│           │                                                        │
-│           ▼                                                        │
-│  ┌─────────────────┐        ┌─────────────────────────────────┐    │
-│  │  PostgreSQL     │        │  S3 / MinIO                     │    │
-│  │  (Jobs, Frames) │        │  (Imágenes, Thumbnails)         │    │
-│  └─────────────────┘        └─────────────────────────────────┘    │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+Video360Service/
+├── Video360Service.Api/           # REST API Controllers
+├── Video360Service.Application/   # CQRS Commands, Queries, DTOs
+├── Video360Service.Domain/        # Entidades, Enums, Interfaces
+├── Video360Service.Infrastructure/# Repositories, Providers, Storage
+└── Video360Service.Tests/         # Unit Tests
 ```
 
-## 🚀 Quick Start
+### Clean Architecture
 
-### Desarrollo Local
-
-```bash
-# 1. Levantar todos los servicios con Docker Compose
-cd backend/Video360Service
-docker-compose up -d
-
-# 2. Verificar que están corriendo
-docker-compose ps
-
-# 3. Probar el health check
-curl http://localhost:5070/health
-curl http://localhost:8000/health
-```
-
-### Solo el Worker Python
-
-```bash
-cd backend/Video360Service/workers
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Correr el servidor API
-python api.py
-
-# O procesar un video directamente
-python video360_processor.py input.mp4 ./output '{"frame_count": 6}'
-```
+- **Domain**: Entidades de negocio puras (Video360Job, ExtractedFrame, ProviderConfiguration, UsageRecord)
+- **Application**: Casos de uso con MediatR (CQRS pattern)
+- **Infrastructure**: Implementaciones de providers, storage S3, y Entity Framework
+- **API**: Controllers REST con autenticación JWT
 
 ## 📡 API Endpoints
 
-### Upload Video
+### Video360 Jobs
 
 ```bash
-POST /api/video360/upload
+# Crear job desde URL de video
+POST /api/video360/jobs
+Authorization: Bearer {token}
+{
+  "vehicleId": "uuid",
+  "videoUrl": "https://...",
+  "frameCount": 6,
+  "imageFormat": "Jpeg",
+  "videoQuality": "High"
+}
+
+# Subir video directamente
+POST /api/video360/jobs/upload
+Authorization: Bearer {token}
 Content-Type: multipart/form-data
+file: [video.mp4]
 
-# Form Fields:
-- file: Video file (mp4, mov, avi, webm, mkv - max 500MB)
-- vehicleId: UUID del vehículo
-- frameCount: Número de frames (4-12, default 6)
-- outputWidth: Ancho de salida (default 1920)
-- outputHeight: Alto de salida (default 1080)
-- jpegQuality: Calidad JPEG 1-100 (default 90)
-- smartFrameSelection: true/false (default true)
-- autoCorrectExposure: true/false (default true)
-- generateThumbnails: true/false (default true)
+# Obtener job por ID
+GET /api/video360/jobs/{id}
+
+# Listar jobs
+GET /api/video360/jobs?vehicleId={uuid}&status=Completed&page=1&pageSize=20
+
+# Obtener vista 360° de un vehículo
+GET /api/video360/vehicles/{vehicleId}/view
+
+# Cancelar job
+POST /api/video360/jobs/{id}/cancel
+
+# Reintentar job fallido
+POST /api/video360/jobs/{id}/retry
+
+# Eliminar job
+DELETE /api/video360/jobs/{id}
 ```
 
-**Response:**
-
-```json
-{
-  "jobId": "550e8400-e29b-41d4-a716-446655440000",
-  "message": "Video recibido correctamente. Procesamiento en cola.",
-  "status": "Queued",
-  "queuePosition": 1,
-  "estimatedWaitSeconds": 60
-}
-```
-
-### Get Job Status
+### Proveedores
 
 ```bash
-GET /api/video360/jobs/{jobId}/status
-```
+# Listar proveedores disponibles
+GET /api/providers
 
-**Response:**
-
-```json
-{
-  "jobId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "Completed",
-  "statusName": "Completed",
-  "progress": 100,
-  "isComplete": true
-}
-```
-
-### Get Vehicle 360 Viewer
-
-```bash
-GET /api/video360/vehicles/{vehicleId}/viewer
-```
-
-**Response:**
-
-```json
-{
-  "vehicleId": "...",
-  "jobId": "...",
-  "totalFrames": 6,
-  "primaryImageUrl": "https://media.okla.com.do/vehicles/.../frame_01.jpg",
-  "frames": [
-    {
-      "index": 0,
-      "angle": 0,
-      "name": "Frente",
-      "imageUrl": "https://media.okla.com.do/.../frame_01_frente.jpg",
-      "thumbnailUrl": "https://media.okla.com.do/.../thumb_01.jpg"
-    },
-    {
-      "index": 1,
-      "angle": 60,
-      "name": "Frente-Derecha",
-      "imageUrl": "https://media.okla.com.do/.../frame_02_frente_derecha.jpg"
-    }
-    // ... 4 más
-  ]
-}
+# Estadísticas de uso (Admin)
+GET /api/providers/usage?startDate=2026-01-01&endDate=2026-01-31
 ```
 
 ## 🔧 Configuración
+
+### Variables de Entorno
+
+```bash
+# Database
+ConnectionStrings__DefaultConnection=Host=postgres;Database=video360service;Username=postgres;Password=xxx
+
+# JWT
+JWT_SECRET_KEY=your-32-char-secret-key
+
+# Providers
+FFMPEG_API_KEY=your-ffmpeg-api-key
+APYHUB_API_TOKEN=your-apyhub-token
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-key
+CLOUDINARY_API_SECRET=your-secret
+IMGIX_API_KEY=your-imgix-key
+IMGIX_SECURE_URL_TOKEN=your-secure-token
+IMGIX_SOURCE_DOMAIN=your-source.imgix.net
+SHOTSTACK_API_KEY=your-shotstack-key
+
+# S3 Storage
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+S3_BUCKET_NAME=okla-video360
+CDN_BASE_URL=https://cdn.okla.com.do
+```
 
 ### appsettings.json
 
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=postgres;Database=video360db;Username=postgres;Password=postgres"
+  "Providers": {
+    "FfmpegApi": {
+      "BaseUrl": "https://api.ffmpeg-api.com",
+      "IsEnabled": true,
+      "CostPerVideoUsd": 0.011
+    }
   },
-  "Video360Processor": {
-    "PythonServiceUrl": "http://video360-worker:8000",
-    "UseHttpService": true,
-    "TimeoutSeconds": 300
-  },
-  "S3Storage": {
-    "BucketName": "okla-media",
-    "Region": "us-east-1",
-    "CdnBaseUrl": "https://media.okla.com.do"
+  "Storage": {
+    "S3": {
+      "BucketName": "okla-video360",
+      "Region": "us-east-1"
+    }
   }
 }
 ```
 
-## 🖼️ Proceso de Extracción
+## 🐳 Docker
 
-El worker Python (OpenCV) realiza:
+```bash
+# Build
+docker build -t video360service:latest .
 
-1. **Análisis del video**: Obtiene duración, FPS, resolución
-2. **División equidistante**: Calcula N posiciones a 360°/N grados
-3. **Selección inteligente**: En cada posición, muestrea 5 frames y selecciona el de mayor nitidez
-4. **Corrección de exposición**: Aplica CLAHE para mejorar brillo/contraste
-5. **Redimensionado**: Ajusta a resolución de salida manteniendo aspecto
-6. **Generación de thumbnails**: Crea versiones pequeñas para preview
-
-### Vistas Estándar (6 frames)
-
-| #   | Vista          | Ángulo |
-| --- | -------------- | ------ |
-| 1   | Frente         | 0°     |
-| 2   | Frente-Derecha | 60°    |
-| 3   | Derecha        | 120°   |
-| 4   | Atrás-Derecha  | 180°   |
-| 5   | Atrás          | 240°   |
-| 6   | Izquierda      | 300°   |
-
-## 📊 Métricas de Calidad
-
-Cada frame extraído incluye un **Quality Score** (0-100) basado en:
-
-- **Nitidez** (50%): Varianza del Laplaciano
-- **Contraste** (30%): Desviación estándar del histograma
-- **Brillo** (20%): Proximidad a valor medio ideal (127)
+# Run
+docker run -p 8080:8080 \
+  -e ConnectionStrings__DefaultConnection="Host=postgres..." \
+  -e FFMPEG_API_KEY="your-key" \
+  video360service:latest
+```
 
 ## 🧪 Testing
 
 ```bash
-# Correr tests
-cd backend/Video360Service
+# Ejecutar todos los tests
+cd Video360Service.Tests
 dotnet test
 
 # Con coverage
-dotnet test /p:CollectCoverage=true
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov
 ```
 
-## 📁 Estructura del Proyecto
+### Tests Incluidos
+
+- `Video360JobTests` - Tests de la entidad principal
+- `ExtractedFrameTests` - Tests de frames extraídos
+- `ProviderConfigurationTests` - Tests de configuración de proveedores
+- `EnumsTests` - Tests de enumeraciones
+
+## 📊 Flujo de Procesamiento
 
 ```
-Video360Service/
-├── Video360Service.Domain/           # Entidades y contratos
-│   ├── Entities/
-│   │   ├── Video360Job.cs
-│   │   ├── ExtractedFrame.cs
-│   │   └── ProcessingOptions.cs
-│   ├── Enums/
-│   │   └── Video360JobStatus.cs
-│   └── Interfaces/
-│       ├── IVideo360JobRepository.cs
-│       ├── IVideo360Processor.cs
-│       └── IStorageService.cs
-├── Video360Service.Application/      # Lógica de negocio
-│   ├── DTOs/
-│   ├── Features/
-│   │   ├── Commands/
-│   │   ├── Queries/
-│   │   └── Handlers/
-│   └── Validators/
-├── Video360Service.Infrastructure/   # Implementaciones
-│   ├── Persistence/
-│   │   ├── Video360DbContext.cs
-│   │   └── Repositories/
-│   └── Services/
-│       ├── Video360Processor.cs
-│       └── S3StorageService.cs
-├── Video360Service.Api/              # Controllers REST
-│   ├── Controllers/
-│   ├── Program.cs
-│   └── appsettings.json
-├── Video360Service.Tests/            # Tests unitarios
-├── workers/                          # Python worker
-│   ├── video360_processor.py
-│   ├── api.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── Dockerfile                        # .NET API
-├── docker-compose.yml
-└── README.md
+1. Usuario sube video o proporciona URL
+   ↓
+2. Se crea Video360Job (status: Pending)
+   ↓
+3. Video se guarda en S3 (status: Uploading)
+   ↓
+4. Orchestrator selecciona mejor proveedor
+   ↓
+5. Proveedor extrae 6 frames (status: Processing)
+   ↓
+6. Frames se guardan en S3 (status: Saving)
+   ↓
+7. Job completado con URLs públicas (status: Completed)
+   ↓
+8. Frontend muestra vista 360° interactiva
 ```
 
-## 🔄 Flujo de Datos
+## 🔄 Fallback de Proveedores
 
-```
-1. Cliente sube video → POST /api/video360/upload
-                              │
-2. API guarda en temp  ◄──────┘
-                              │
-3. Crea Job en DB      ◄──────┘ (status: Queued)
-                              │
-4. Worker Python       ◄──────┘
-   - Descarga video
-   - Extrae frames
-   - Corrige exposición
-   - Genera thumbnails
-                              │
-5. Sube a S3           ◄──────┘
-                              │
-6. Actualiza DB        ◄──────┘ (status: Completed)
-                              │
-7. Cliente consulta    ─────────▶ GET /vehicles/{id}/viewer
-   y obtiene URLs
-```
+Si un proveedor falla, el sistema automáticamente:
 
-## 🚀 Deploy a Kubernetes
+1. Registra el error
+2. Incrementa retry count
+3. Intenta con el siguiente proveedor disponible (ordenado por prioridad)
+4. Continúa hasta agotar todos los proveedores o éxito
 
-```yaml
-# k8s/deployments.yaml (añadir)
+## 📈 Métricas
+
+- `/health` - Health check
+- `/metrics` - Prometheus metrics
+
+## 🔐 Seguridad
+
+- Autenticación JWT requerida para crear jobs
+- CORS configurado para dominios de producción
+- Rate limiting por tenant (configurable)
+- Límites diarios por proveedor
+
+## 📦 Dependencias
+
+- .NET 8.0
+- Entity Framework Core 8.0
+- MediatR 12.4
+- FluentValidation 11.3
+- AWS SDK S3
+- Serilog
+- OpenTelemetry
+
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: video360service
-  namespace: okla
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: video360service
-  template:
-    metadata:
-      labels:
-        app: video360service
-    spec:
-      containers:
-        - name: video360service
-          image: ghcr.io/gregorymorenoiem/cardealer-video360service:latest
-          ports:
-            - containerPort: 8080
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: okla-secrets
-                  key: video360-db-connection
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: video360-worker
-  namespace: okla
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: video360-worker
-  template:
-    metadata:
-      labels:
-        app: video360-worker
-    spec:
-      containers:
-        - name: video360-worker
-          image: ghcr.io/gregorymorenoiem/cardealer-video360-worker:latest
-          ports:
-            - containerPort: 8000
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "500m"
-            limits:
-              memory: "2Gi"
-              cpu: "2000m"
-```
 
-## 📝 Licencia
-
-Propiedad de OKLA - Uso interno
+**Autor:** OKLA Team  
+**Versión:** 1.0.0  
+**Puerto:** 8080

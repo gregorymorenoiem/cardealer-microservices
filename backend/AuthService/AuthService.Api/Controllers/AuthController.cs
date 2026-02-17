@@ -9,6 +9,9 @@ using AuthService.Application.Features.Auth.Commands.ResendVerification;
 using AuthService.Application.Features.Auth.Commands.RequestPasswordSetup;
 using AuthService.Application.Features.Auth.Commands.ValidatePasswordSetupToken;
 using AuthService.Application.Features.Auth.Commands.SetPasswordForOAuthUser;
+using AuthService.Application.Features.ExternalAuth.Commands.ExternalLogin;
+using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuthCallback;
+using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -27,13 +30,252 @@ namespace AuthService.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
-    public AuthController(IMediator mediator) => _mediator = mediator;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
+    private readonly IUserRepository _userRepository;
+    
+    public AuthController(
+        IMediator mediator, 
+        IConfiguration configuration, 
+        ILogger<AuthController> logger,
+        IUserRepository userRepository)
+    {
+        _mediator = mediator;
+        _configuration = configuration;
+        _logger = logger;
+        _userRepository = userRepository;
+    }
+
+    /// <summary>
+    /// Get current authenticated user profile
+    /// </summary>
+    /// <returns>User profile data</returns>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("GetCurrentUser called without valid user ID in claims");
+                return Unauthorized(ApiResponse.Fail("User not authenticated"));
+            }
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            
+            if (user == null)
+            {
+                _logger.LogWarning("User {UserId} not found in database", userId);
+                return NotFound(ApiResponse.Fail("User not found"));
+            }
+
+            var response = new UserResponse
+            {
+                Id = user.Id,
+                Email = user.Email ?? "",
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                AvatarUrl = user.ProfilePictureUrl,
+                Phone = user.PhoneNumber,
+                AccountType = user.AccountType.ToString().ToLowerInvariant(),
+                IsVerified = user.EmailConfirmed,
+                IsEmailVerified = user.EmailConfirmed,
+                IsPhoneVerified = user.PhoneNumberConfirmed,
+                CreatedAt = user.CreatedAt,
+                LastLoginAt = user.UpdatedAt
+            };
+
+            return Ok(ApiResponse<UserResponse>.Ok(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting current user");
+            return StatusCode(500, ApiResponse.Fail("Failed to get user information"));
+        }
+    }
+
+    /// <summary>
+    /// Set the dealer ID for the current authenticated user.
+    /// Called after dealer profile creation in DealerManagementService
+    /// so the JWT can include the dealerId claim on next token refresh.
+    /// </summary>
+    /// <summary>
+    /// Set the dealer ID for the current authenticated user.
+    /// SECURITY: Validates that the requesting user is the owner of the dealer profile.
+    /// Called after dealer profile creation in DealerManagementService.
+    /// </summary>
+    [HttpPost("set-dealer-id")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> SetDealerId([FromBody] SetDealerIdRequest request)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(ApiResponse.Fail("User not authenticated"));
+            }
+
+            if (string.IsNullOrWhiteSpace(request.DealerId) || !Guid.TryParse(request.DealerId, out _))
+            {
+                return BadRequest(ApiResponse.Fail("Invalid dealer ID format"));
+            }
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(ApiResponse.Fail("User not found"));
+            }
+
+            // SECURITY: Verify the user has a Dealer account type
+            if (user.AccountType != Domain.Enums.AccountType.Dealer)
+            {
+                _logger.LogWarning("User {UserId} attempted to set DealerId without Dealer account type (current: {AccountType})",
+                    userId, user.AccountType);
+                return StatusCode(403, ApiResponse.Fail("Only users with Dealer account type can set a dealer ID"));
+            }
+
+            // SECURITY: Prevent overwriting an existing DealerId (must be done by admin)
+            if (!string.IsNullOrEmpty(user.DealerId) && user.DealerId != request.DealerId)
+            {
+                _logger.LogWarning("User {UserId} attempted to change DealerId from {OldDealerId} to {NewDealerId}",
+                    userId, user.DealerId, request.DealerId);
+                return BadRequest(ApiResponse.Fail("Dealer ID is already set. Contact support to change it."));
+            }
+
+            user.DealerId = request.DealerId;
+            await _userRepository.UpdateAsync(user);
+            await _userRepository.SaveChangesAsync();
+
+            _logger.LogInformation("DealerId {DealerId} set for user {UserId}", request.DealerId, userId);
+
+            return Ok(ApiResponse<string>.Ok("Dealer ID updated successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting dealer ID for user");
+            return StatusCode(500, ApiResponse.Fail("Failed to update dealer ID"));
+        }
+    }
+
+    /// <summary>
+    /// Initiate OAuth login flow - redirects browser to provider's login page
+    /// </summary>
+    /// <param name="provider">OAuth provider: google, apple</param>
+    /// <returns>Redirect to OAuth provider</returns>
+    [HttpGet("oauth/{provider}")]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> OAuthLogin(string provider)
+    {
+        try
+        {
+            _logger.LogInformation("Initiating OAuth login flow for provider: {Provider}", provider);
+            
+            // Validate provider
+            var validProviders = new[] { "google", "apple" };
+            if (!validProviders.Contains(provider.ToLowerInvariant()))
+            {
+                return BadRequest(ApiResponse.Fail($"Invalid OAuth provider: {provider}. Supported: google, apple"));
+            }
+            
+            // Get the frontend callback URL from configuration
+            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
+            var redirectUri = $"{frontendUrl}/auth/callback/{provider}";
+            
+            _logger.LogDebug("Using redirect URI: {RedirectUri}", redirectUri);
+            
+            var command = new ExternalLoginCommand(provider, redirectUri);
+            var result = await _mediator.Send(command);
+            
+            _logger.LogInformation("OAuth authorization URL generated for provider {Provider}, redirecting...", provider);
+            
+            // Redirect the browser to the OAuth provider's authorization page
+            return Redirect(result.AuthorizationUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initiate OAuth login for provider {Provider}", provider);
+            return BadRequest(ApiResponse.Fail("Failed to initiate OAuth login. Please try again."));
+        }
+    }
+
+    /// <summary>
+    /// Handle OAuth callback - exchange authorization code for tokens
+    /// </summary>
+    /// <param name="provider">OAuth provider: google, apple</param>
+    /// <param name="request">Contains the authorization code from the OAuth provider</param>
+    /// <returns>JWT tokens for the authenticated user</returns>
+    [HttpPost("oauth/{provider}/callback")]
+    [ProducesResponseType(typeof(ApiResponse<AuthService.Application.DTOs.ExternalAuth.ExternalAuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> OAuthCallback(string provider, [FromBody] OAuthCallbackRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Processing OAuth callback for provider: {Provider}", provider);
+            
+            // Validate provider
+            var validProviders = new[] { "google", "apple" };
+            if (!validProviders.Contains(provider.ToLowerInvariant()))
+            {
+                return BadRequest(ApiResponse.Fail($"Invalid OAuth provider: {provider}. Supported: google, apple"));
+            }
+
+            if (string.IsNullOrEmpty(request.Code))
+            {
+                return BadRequest(ApiResponse.Fail("Authorization code is required"));
+            }
+
+            // ExternalAuthCallbackCommand(Provider, Code, IdToken, RedirectUri, State)
+            var command = new ExternalAuthCallbackCommand(provider, request.Code, null, request.RedirectUri, null);
+            var result = await _mediator.Send(command);
+            
+            _logger.LogInformation("OAuth callback successful for provider {Provider}, user {UserId}", 
+                provider, result.UserId);
+            
+            // Security (CWE-922): Set tokens as HttpOnly cookies for OAuth login
+            if (!string.IsNullOrEmpty(result.AccessToken))
+            {
+                SetAuthCookies(result.AccessToken, result.RefreshToken, result.ExpiresAt);
+            }
+
+            return Ok(ApiResponse<AuthService.Application.DTOs.ExternalAuth.ExternalAuthResponse>.Ok(result, new Dictionary<string, object>
+            {
+                ["isNewUser"] = result.IsNewUser,
+                ["provider"] = provider
+            }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OAuth callback failed for provider {Provider}", provider);
+            return BadRequest(ApiResponse.Fail("OAuth authentication failed. Please try again."));
+        }
+    }
 
     [HttpPost("register")]
     [Audit("AUTH_REGISTER", "Register", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        var command = new RegisterCommand(request.UserName, request.Email, request.Password);
+        var command = new RegisterCommand(
+            request.UserName,
+            request.Email,
+            request.Password,
+            request.FirstName,
+            request.LastName,
+            request.Phone,
+            request.AcceptTerms
+        );
         var result = await _mediator.Send(command);
         return Ok(ApiResponse<RegisterResponse>.Ok(result));
     }
@@ -42,8 +284,15 @@ public class AuthController : ControllerBase
     [Audit("AUTH_LOGIN", "Login", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var command = new LoginCommand(request.Email, request.Password);
+        var command = new LoginCommand(request.Email, request.Password, request.CaptchaToken);
         var result = await _mediator.Send(command);
+
+        // Security (CWE-922): Set tokens as HttpOnly cookies instead of exposing in response body
+        if (!string.IsNullOrEmpty(result.AccessToken) && !result.RequiresTwoFactor)
+        {
+            SetAuthCookies(result.AccessToken, result.RefreshToken, result.ExpiresAt);
+        }
+
         return Ok(ApiResponse<LoginResponse>.Ok(result));
     }
 
@@ -106,8 +355,19 @@ public class AuthController : ControllerBase
     [Audit("AUTH_REFRESH_TOKEN", "RefreshToken", ResourceType = "Token", Severity = AuditSeverity.Debug)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        var command = new RefreshTokenCommand(request.RefreshToken);
+        // Security: Accept refresh token from HttpOnly cookie if not provided in body
+        var refreshToken = request.RefreshToken;
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            refreshToken = Request.Cookies["okla_refresh_token"] ?? string.Empty;
+        }
+
+        var command = new RefreshTokenCommand(refreshToken);
         var result = await _mediator.Send(command);
+
+        // Security (CWE-922): Set new tokens as HttpOnly cookies
+        SetAuthCookies(result.AccessToken, result.RefreshToken, result.ExpiresAt);
+
         return Ok(ApiResponse<RefreshTokenResponse>.Ok(result));
     }
 
@@ -127,8 +387,19 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
     {
-        var command = new LogoutCommand(request.RefreshToken);
+        // Accept refresh token from HttpOnly cookie if not provided in body
+        var refreshToken = request.RefreshToken;
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            refreshToken = Request.Cookies["okla_refresh_token"] ?? string.Empty;
+        }
+
+        var command = new LogoutCommand(refreshToken);
         await _mediator.Send(command);
+
+        // Security: Clear HttpOnly auth cookies
+        ClearAuthCookies();
+
         return Ok(ApiResponse.Ok());
     }
 
@@ -184,7 +455,7 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Request password setup for OAuth users (AUTH-PWD-001)
+    /// Request password setup for OAuth users (AUTH-PW001)
     /// Sends an email with a secure link to set a password.
     /// </summary>
     [HttpPost("password/setup-request")]
@@ -299,6 +570,71 @@ public class AuthController : ControllerBase
         if (userAgent.Contains("iPhone") || userAgent.Contains("iPad")) return "iOS";
         return "Unknown OS";
     }
+
+    #region HttpOnly Cookie Helpers (CWE-922 mitigation)
+
+    /// <summary>
+    /// Sets access and refresh tokens as HttpOnly, Secure, SameSite=Strict cookies.
+    /// Tokens are NOT accessible via JavaScript (prevents XSS token theft).
+    /// </summary>
+    private void SetAuthCookies(string accessToken, string refreshToken, DateTime expiresAt)
+    {
+        var isProduction = !string.Equals(
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "Development", StringComparison.OrdinalIgnoreCase);
+
+        var accessCookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = SameSiteMode.Strict,
+            Path = "/",
+            Expires = expiresAt,
+            IsEssential = true
+        };
+
+        var refreshCookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/auth",  // Only sent to auth endpoints
+            Expires = DateTimeOffset.UtcNow.AddDays(7),
+            IsEssential = true
+        };
+
+        Response.Cookies.Append("okla_access_token", accessToken, accessCookieOptions);
+        Response.Cookies.Append("okla_refresh_token", refreshToken, refreshCookieOptions);
+    }
+
+    /// <summary>
+    /// Clears auth cookies on logout.
+    /// </summary>
+    private void ClearAuthCookies()
+    {
+        var isProduction = !string.Equals(
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "Development", StringComparison.OrdinalIgnoreCase);
+
+        var deleteOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = SameSiteMode.Strict,
+            Path = "/"
+        };
+
+        Response.Cookies.Delete("okla_access_token", deleteOptions);
+        Response.Cookies.Delete("okla_refresh_token", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/auth"
+        });
+    }
+
+    #endregion
 }
 
 // DTOs for revoked device endpoints

@@ -49,6 +49,13 @@ services:
   postgres_db:
     image: postgres:16
     container_name: postgres_db
+    command: >
+      postgres
+      -c max_connections=300
+      -c shared_buffers=256MB
+      -c effective_cache_size=512MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
     deploy:
       resources:
         limits:
@@ -72,10 +79,84 @@ services:
       timeout: 5s
       retries: 5
 
+  # PgBouncer - Connection Pooler (reduces connection overhead to PostgreSQL)
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.0
+    container_name: pgbouncer
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          memory: 64M
+    environment:
+      DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD:-password}@postgres_db:5432/postgres"
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: 20
+      MIN_POOL_SIZE: 5
+      MAX_CLIENT_CONN: 500
+      MAX_DB_CONNECTIONS: 50
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      SERVER_IDLE_TIMEOUT: 600
+      SERVER_LIFETIME: 3600
+      LOG_CONNECTIONS: 0
+      LOG_DISCONNECTIONS: 0
+      LOG_POOLER_ERRORS: 1
+      STATS_PERIOD: 60
+      AUTH_TYPE: plain
+    ports:
+      - "6432:5432"
+    networks:
+      - okla-net
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # pg-backup - Automated PostgreSQL backups (daily, 7-day retention)
+  pg-backup:
+    image: prodrigestivill/postgres-backup-local:16
+    container_name: pg-backup
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          memory: 128M
+    environment:
+      POSTGRES_HOST: postgres_db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+      POSTGRES_DB: "authservice,vehiclessaleservice,billingservice,mediaservice,notificationservice,errorservice,contactservice,userservice,roleservice,adminservice"
+      POSTGRES_EXTRA_OPTS: "--schema=public --blobs --format=custom --compress=6"
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 3
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - pg_backup_data:/backups
+    networks:
+      - okla-net
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
   # RabbitMQ - Message broker
   rabbitmq:
     image: rabbitmq:3.12-management
     container_name: rabbitmq
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -86,6 +167,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit consumer_timeout 1800000"
     ports:
       - "5672:5672" # AMQP
       - "15672:15672" # Management UI
@@ -103,6 +185,18 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    restart: unless-stopped
+    command:
+      [
+        "redis-server",
+        "--maxmemory",
+        "256mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+        "--save",
+        "60",
+        "1000",
+      ]
     deploy:
       resources:
         limits:
@@ -221,7 +315,6 @@ services:
     build:
       context: ./backend
       dockerfile: AuthService/AuthService.Api/Dockerfile.dev
-    container_name: authservice
     deploy:
       resources:
         limits:
@@ -233,7 +326,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=authservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=authservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -246,10 +339,12 @@ services:
       RabbitMQ__Enabled: "true"
       Redis__Host: "redis:6379"
       Consul__Host: "http://consul:8500"
+      ConfigurationService__BaseUrl: "http://host.docker.internal:15124"
       # OAuth Providers - Use environment variables or docker secrets
       # See compose.secrets.example.yaml for production setup
       Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-your-google-client-id}"
       Authentication__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET:-your-google-client-secret}"
+      FrontendUrl: "http://localhost:3000"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
       Observability__Otlp__Endpoint: "http://jaeger:4317"
@@ -291,7 +386,6 @@ services:
     build:
       context: ./backend
       dockerfile: VehiclesSaleService/VehiclesSaleService.Api/Dockerfile.dev
-    container_name: vehiclessaleservice
     deploy:
       resources:
         limits:
@@ -303,7 +397,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=vehiclessaleservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=vehiclessaleservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -320,6 +414,7 @@ services:
       Observability__SamplingRatio: "1.0"
       Observability__Prometheus__Enabled: "true"
       ErrorHandling__PublishToErrorService: "true"
+      Services__ConfigurationService: "http://host.docker.internal:15124"
     ports:
       - "15010:80"
     depends_on:
@@ -380,7 +475,6 @@ services:
     build:
       context: ./backend
       dockerfile: MediaService/MediaService.Api/Dockerfile.dev
-    container_name: mediaservice
     deploy:
       resources:
         limits:
@@ -392,7 +486,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=mediaservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=mediaservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -415,6 +509,7 @@ services:
       Storage__Local__BasePath: "/app/media-files"
       Storage__Local__BaseUrl: "http://localhost:15020/uploads"
       ServiceUrls__ErrorService: "http://errorservice:80"
+      Services__ConfigurationService: "http://host.docker.internal:15124"
     ports:
       - "15020:80"
     depends_on:
@@ -451,7 +546,6 @@ services:
     build:
       context: ./backend
       dockerfile: UserService/UserService.Api/Dockerfile.dev
-    container_name: userservice
     deploy:
       resources:
         limits:
@@ -463,7 +557,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=userservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=userservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -519,7 +613,6 @@ services:
     build:
       context: ./backend
       dockerfile: ContactService/ContactService.Api/Dockerfile.dev
-    container_name: contactservice
     deploy:
       resources:
         limits:
@@ -531,8 +624,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contactservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -569,7 +662,6 @@ services:
     build:
       context: ./backend
       dockerfile: NotificationService/NotificationService.Api/Dockerfile.dev
-    container_name: notificationservice
     deploy:
       resources:
         limits:
@@ -581,7 +673,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=notificationservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=notificationservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -620,7 +712,7 @@ services:
     build:
       context: ./backend
       dockerfile: AdminService/AdminService.Api/Dockerfile.dev
-    container_name: adminservice
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -632,7 +724,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=adminservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=adminservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -641,6 +733,7 @@ services:
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
       Consul__Host: "http://consul:8500"
+      ServiceUrls__DealerManagementService: "http://dealermanagementservice:80"
     ports:
       - "15007:80"
     depends_on:
@@ -666,6 +759,60 @@ services:
       timeout: 10s
       retries: 3
 
+  # StaffService - Puerto 15200 (Gestión de empleados/staff)
+  staffservice:
+    build:
+      context: ./backend
+      dockerfile: StaffService/Dockerfile
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=staffservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      ServiceUrls__AuthService: "http://authservice:80"
+      ServiceUrls__NotificationService: "http://notificationservice:80"
+      ServiceUrls__AuditService: "http://auditservice:80"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15200:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - okla-net
+    volumes:
+      - ./backend/StaffService:/app/StaffService
+      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
+      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # ──────────────────────────────────────────────────────────────────────
   # 🔐 SERVICIOS ADICIONALES PARA FRONTEND
   # ──────────────────────────────────────────────────────────────────────
@@ -676,7 +823,6 @@ services:
     build:
       context: ./backend
       dockerfile: ErrorService/Dockerfile
-    container_name: errorservice
     restart: on-failure:3
     deploy:
       resources:
@@ -689,7 +835,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=errorservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=errorservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -734,7 +880,6 @@ services:
     build:
       context: ./backend
       dockerfile: EventTrackingService/EventTrackingService.Api/Dockerfile.dev
-    container_name: eventtrackingservice
     restart: on-failure:3
     deploy:
       resources:
@@ -747,7 +892,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=eventtrackingservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=eventtrackingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -801,19 +946,18 @@ services:
     build:
       context: ./backend
       dockerfile: RoleService/RoleService.Api/Dockerfile.dev
-    container_name: roleservice
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 384M
+          cpus: "1.0"
+          memory: 1024M
         reservations:
-          memory: 256M
+          memory: 512M
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=roleservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=roleservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -849,7 +993,6 @@ services:
     build:
       context: ./backend
       dockerfile: BillingService/BillingService.Api/Dockerfile.dev
-    container_name: billingservice
     deploy:
       resources:
         limits:
@@ -861,14 +1004,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "billingservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -926,70 +1069,11 @@ services:
   # 🎬 SERVICIOS DE PROCESAMIENTO 360
   # ──────────────────────────────────────────────────────────────────────
 
-  # Video360Service - Puerto 15060 (Extracción de frames de videos 360)
-  video360service:
-    build:
-      context: ./backend
-      dockerfile: Video360Service/Video360Service.Api/Dockerfile.dev
-    container_name: video360service
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 2048M
-        reservations:
-          memory: 1024M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=video360service;Username=postgres;Password=password"
-      Database__AutoMigrate: "true"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
-      # Configuración de procesamiento
-      Processing__MaxConcurrentJobs: "3"
-      Processing__FrameCount: "6"
-      Processing__OutputWidth: "1920"
-      Processing__OutputHeight: "1080"
-      Processing__JpegQuality: "90"
-    ports:
-      - "15060:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - okla-net
-    volumes:
-      - ./backend/Video360Service:/app/Video360Service
-      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
-      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
-      - video360_temp:/app/temp
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
   # BackgroundRemovalService - Puerto 15061 (Remoción de fondos con IA)
   backgroundremovalservice:
     build:
       context: ./backend
       dockerfile: BackgroundRemovalService/BackgroundRemovalService.Api/Dockerfile.dev
-    container_name: backgroundremovalservice
     deploy:
       resources:
         limits:
@@ -1001,7 +1085,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=backgroundremovalservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=backgroundremovalservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -1043,7 +1127,6 @@ services:
     build:
       context: ./backend
       dockerfile: Vehicle360ProcessingService/Vehicle360ProcessingService.Api/Dockerfile.dev
-    container_name: vehicle360processingservice
     deploy:
       resources:
         limits:
@@ -1055,7 +1138,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=vehicle360processingservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=vehicle360processingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -1065,7 +1148,6 @@ services:
       Redis__Host: "redis:6379"
       # URLs de servicios downstream
       ServiceUrls__MediaService: "http://mediaservice:80"
-      ServiceUrls__Video360Service: "http://video360service:80"
       ServiceUrls__BackgroundRemovalService: "http://backgroundremovalservice:80"
       # Configuración de resiliencia (Polly)
       Resilience__RetryCount: "3"
@@ -1081,8 +1163,6 @@ services:
       redis:
         condition: service_healthy
       mediaservice:
-        condition: service_healthy
-      video360service:
         condition: service_healthy
       backgroundremovalservice:
         condition: service_healthy
@@ -1105,26 +1185,25 @@ services:
     build:
       context: ./backend
       dockerfile: DealerManagementService/DealerManagementService.Api/Dockerfile.dev
-    container_name: dealermanagementservice
     deploy:
       resources:
         limits:
           cpus: "0.5"
-          memory: 384M
+          memory: 768M
         reservations:
-          memory: 256M
+          memory: 384M
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "dealermanagementservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=dealermanagementservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1159,19 +1238,18 @@ services:
     build:
       context: ./backend
       dockerfile: DealerAnalyticsService/DealerAnalyticsService.Api/Dockerfile.dev
-    container_name: dealeranalyticsservice
     deploy:
       resources:
         limits:
           cpus: "0.5"
-          memory: 384M
+          memory: 768M
         reservations:
-          memory: 256M
+          memory: 384M
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealeranalyticsservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealeranalyticsservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -1207,7 +1285,6 @@ services:
     build:
       context: ./backend
       dockerfile: CRMService/CRMService.Api/Dockerfile.dev
-    container_name: crmservice
     deploy:
       resources:
         limits:
@@ -1219,7 +1296,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=crmservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=crmservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -1251,59 +1328,10 @@ services:
       retries: 3
 
   # SearchService - Puerto 15093 (Búsqueda)
-  searchservice:
-    build:
-      context: ./backend
-      dockerfile: SearchService/SearchService.Api/Dockerfile.dev
-    container_name: searchservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=searchservice;Username=postgres;Password=password"
-      Database__AutoMigrate: "true"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
-    ports:
-      - "15093:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    volumes:
-      - ./backend/SearchService:/app/SearchService
-      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
-      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # AlertService - Puerto 5067 (Alertas de Precios)
   alertservice:
     build:
       context: ./backend
       dockerfile: AlertService/AlertService.Api/Dockerfile.dev
-    container_name: alertservice
     deploy:
       resources:
         limits:
@@ -1315,14 +1343,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "alertservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=alertservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1357,7 +1385,6 @@ services:
     build:
       context: ./backend
       dockerfile: MaintenanceService/MaintenanceService.Api/Dockerfile.dev
-    container_name: maintenanceservice
     deploy:
       resources:
         limits:
@@ -1369,14 +1396,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "maintenanceservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=maintenanceservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1411,7 +1438,6 @@ services:
     build:
       context: ./backend
       dockerfile: ComparisonService/ComparisonService.Api/Dockerfile.dev
-    container_name: comparisonservice
     deploy:
       resources:
         limits:
@@ -1423,14 +1449,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "comparisonservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=comparisonservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1465,7 +1491,6 @@ services:
     build:
       context: ./backend
       dockerfile: ReviewService/ReviewService.Api/Dockerfile.dev
-    container_name: reviewservice
     deploy:
       resources:
         limits:
@@ -1478,14 +1503,14 @@ services:
       ASPNETCORE_URLS: http://+:80
       Kestrel__Endpoints__Http__Url: "http://+:80"
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "reviewservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reviewservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1516,119 +1541,10 @@ services:
       retries: 3
 
   # FinanceService - Puerto 15108 (Financiamiento)
-  financeservice:
-    build:
-      context: ./backend
-      dockerfile: FinanceService/FinanceService.Api/Dockerfile.dev
-    container_name: financeservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=financeservice;Username=postgres;Password=password"
-      Database__AutoMigrate: "true"
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "financeservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=financeservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
-    ports:
-      - "15108:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    volumes:
-      - ./backend/FinanceService:/app/FinanceService
-      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
-      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # FeatureToggleService - Puerto 15102 (Feature Flags)
-  featuretoggleservice:
-    build:
-      context: ./backend
-      dockerfile: FeatureToggleService/FeatureToggleService.Api/Dockerfile.dev
-    container_name: featuretoggleservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 384M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=featuretoggleservice;Username=postgres;Password=password"
-      Database__AutoMigrate: "true"
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "featuretoggleservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featuretoggleservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
-    ports:
-      - "15102:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    volumes:
-      - ./backend/FeatureToggleService:/app/FeatureToggleService
-      - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
-      - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ReportsService - Puerto 15110 (Reportes)
   reportsservice:
     build:
       context: ./backend
       dockerfile: ReportsService/ReportsService.Api/Dockerfile.dev
-    container_name: reportsservice
     deploy:
       resources:
         limits:
@@ -1640,14 +1556,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "reportsservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportsservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1682,7 +1598,6 @@ services:
     build:
       context: ./backend
       dockerfile: SchedulerService/SchedulerService.Api/Dockerfile.dev
-    container_name: schedulerservice
     deploy:
       resources:
         limits:
@@ -1694,14 +1609,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "schedulerservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=schedulerservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1736,7 +1651,6 @@ services:
     build:
       context: ./backend
       dockerfile: AuditService/AuditService.Api/Dockerfile.dev
-    container_name: auditservice
     deploy:
       resources:
         limits:
@@ -1748,14 +1662,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       Database__Provider: "PostgreSQL"
-      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
       DATABASE_NAME: "auditservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=auditservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1793,7 +1707,6 @@ services:
     build:
       context: ./backend
       dockerfile: CacheService/Dockerfile
-    container_name: cacheservice
     deploy:
       resources:
         limits:
@@ -1804,10 +1717,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
-      Redis__ConnectionString: "redis:6379"
+      ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
+      Services__ConfigurationService: "http://host.docker.internal:15124"
     ports:
       - "15120:80"
     depends_on:
@@ -1833,7 +1747,6 @@ services:
     build:
       context: ./backend
       dockerfile: AppointmentService/Dockerfile
-    container_name: appointmentservice
     deploy:
       resources:
         limits:
@@ -1849,7 +1762,7 @@ services:
       DATABASE_NAME: "appointmentservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=appointmentservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=appointmentservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1882,7 +1795,6 @@ services:
     build:
       context: ./backend
       dockerfile: InventoryManagementService/Dockerfile
-    container_name: inventorymanagementservice
     deploy:
       resources:
         limits:
@@ -1898,7 +1810,7 @@ services:
       DATABASE_NAME: "inventorymanagementservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=inventorymanagementservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=inventorymanagementservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1927,60 +1839,10 @@ services:
   # 🧾 INVOICING SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
-  invoicingservice:
-    build:
-      context: ./backend
-      dockerfile: InvoicingService/Dockerfile
-    container_name: invoicingservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "invoicingservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=invoicingservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15124:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 📢 MARKETING SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
   marketingservice:
     build:
       context: ./backend
       dockerfile: MarketingService/Dockerfile
-    container_name: marketingservice
     deploy:
       resources:
         limits:
@@ -1996,7 +1858,7 @@ services:
       DATABASE_NAME: "marketingservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=marketingservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=marketingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2029,7 +1891,6 @@ services:
     build:
       context: ./backend
       dockerfile: RecommendationService/Dockerfile
-    container_name: recommendationservice
     deploy:
       resources:
         limits:
@@ -2045,7 +1906,7 @@ services:
       DATABASE_NAME: "recommendationservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recommendationservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recommendationservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2073,47 +1934,10 @@ services:
   # 🏥 HEALTH CHECK SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
-  healthcheckservice:
-    build:
-      context: ./backend
-      dockerfile: HealthCheckService/Dockerfile
-    container_name: healthcheckservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-    ports:
-      - "15127:80"
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🚦 RATE LIMITING SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
   ratelimitingservice:
     build:
       context: ./backend
       dockerfile: RateLimitingService/Dockerfile
-    container_name: ratelimitingservice
     deploy:
       resources:
         limits:
@@ -2129,7 +1953,7 @@ services:
       DATABASE_NAME: "ratelimitingservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=ratelimitingservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=ratelimitingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Redis__ConnectionString: "redis:6379"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
@@ -2160,7 +1984,6 @@ services:
     build:
       context: ./backend
       dockerfile: VehicleIntelligenceService/Dockerfile
-    container_name: vehicleintelligenceservice
     deploy:
       resources:
         limits:
@@ -2176,7 +1999,7 @@ services:
       DATABASE_NAME: "vehicleintelligenceservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehicleintelligenceservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehicleintelligenceservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2205,189 +2028,10 @@ services:
   # 👤 USER BEHAVIOR SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
-  userbehaviorservice:
-    build:
-      context: ./backend
-      dockerfile: UserBehaviorService/Dockerfile
-    container_name: userbehaviorservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "userbehaviorservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=userbehaviorservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15130:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🔍 TRACING SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  tracingservice:
-    build:
-      context: ./backend
-      dockerfile: TracingService/Dockerfile
-    container_name: tracingservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-    ports:
-      - "15131:80"
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 📝 LOGGING SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  loggingservice:
-    build:
-      context: ./backend
-      dockerfile: LoggingService/Dockerfile
-    container_name: loggingservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "loggingservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=loggingservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-    ports:
-      - "15132:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 💾 BACKUP DR SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  backupdrservice:
-    build:
-      context: ./backend
-      dockerfile: BackupDRService/Dockerfile
-    container_name: backupdrservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: 256M
-        reservations:
-          memory: 128M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "backupdrservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=backupdrservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-    ports:
-      - "15133:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # ⚙️ CONFIGURATION SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
   configurationservice:
     build:
       context: ./backend
       dockerfile: ConfigurationService/Dockerfile
-    container_name: configurationservice
     deploy:
       resources:
         limits:
@@ -2403,7 +2047,7 @@ services:
       DATABASE_NAME: "configurationservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=configurationservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=configurationservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2432,7 +2076,6 @@ services:
     build:
       context: ./backend
       dockerfile: IntegrationService/Dockerfile
-    container_name: integrationservice
     deploy:
       resources:
         limits:
@@ -2448,7 +2091,7 @@ services:
       DATABASE_NAME: "integrationservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=integrationservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=integrationservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2477,7 +2120,6 @@ services:
     build:
       context: ./backend
       dockerfile: IdempotencyService/Dockerfile
-    container_name: idempotencyservice
     deploy:
       resources:
         limits:
@@ -2517,7 +2159,6 @@ services:
     build:
       context: ./backend
       dockerfile: MessageBusService/Dockerfile
-    container_name: messagebusservice
     deploy:
       resources:
         limits:
@@ -2533,7 +2174,7 @@ services:
       DATABASE_NAME: "messagebusservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=messagebusservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=messagebusservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
@@ -2559,239 +2200,12 @@ services:
       retries: 3
 
   # ──────────────────────────────────────────────────────────────────────
-  # 📁 FILE STORAGE SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  filestorageservice:
-    build:
-      context: ./backend
-      dockerfile: FileStorageService/Dockerfile
-    container_name: filestorageservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:5012
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "filestorageservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=filestorageservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-    ports:
-      - "15138:5012"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:5012/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🚐 VEHICLES RENT SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  # ⚠️ DISABLED - VehiclesRentService has 4 compilation errors (DriveType ambiguity, Transmission missing)
-  # vehiclesrentservice:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: VehiclesRentService/Dockerfile
-  #   container_name: vehiclesrentservice
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.5"
-  #         memory: 512M
-  #       reservations:
-  #         memory: 256M
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #     ASPNETCORE_URLS: http://+:80
-  #     DATABASE_HOST: "postgres_db"
-  #     DATABASE_PORT: "5432"
-  #     DATABASE_NAME: "vehiclesrentservice"
-  #     DATABASE_USER: "postgres"
-  #     DATABASE_PASSWORD: "password"
-  #     ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=vehiclesrentservice;Username=postgres;Password=password"
-  #     Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-  #     RabbitMQ__Host: "rabbitmq"
-  #     RabbitMQ__Port: "5672"
-  #   ports:
-  #     - "15139:80"
-  #   depends_on:
-  #     postgres_db:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - okla-net
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🏠 PROPERTIES SALE SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  # ⚠️ DISABLED - PropertiesSaleService has 14 compilation errors (Property entity mismatches)
-  # propertiessaleservice:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: PropertiesSaleService/Dockerfile
-  #   container_name: propertiessaleservice
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.5"
-  #         memory: 512M
-  #       reservations:
-  #         memory: 256M
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #     ASPNETCORE_URLS: http://+:80
-  #     DATABASE_HOST: "postgres_db"
-  #     DATABASE_PORT: "5432"
-  #     DATABASE_NAME: "propertiessaleservice"
-  #     DATABASE_USER: "postgres"
-  #     DATABASE_PASSWORD: "password"
-  #     ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=propertiessaleservice;Username=postgres;Password=password"
-  #     Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-  #     RabbitMQ__Host: "rabbitmq"
-  #     RabbitMQ__Port: "5672"
-  #   ports:
-  #     - "15140:80"
-  #   depends_on:
-  #     postgres_db:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - okla-net
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🏡 PROPERTIES RENT SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  # ⚠️ DISABLED - PropertiesRentService has 11 compilation errors (Property entity mismatches)
-  # propertiesrentservice:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: PropertiesRentService/Dockerfile
-  #   container_name: propertiesrentservice
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.5"
-  #         memory: 512M
-  #       reservations:
-  #         memory: 256M
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #     ASPNETCORE_URLS: http://+:80
-  #     DATABASE_HOST: "postgres_db"
-  #     DATABASE_PORT: "5432"
-  #     DATABASE_NAME: "propertiesrentservice"
-  #     DATABASE_USER: "postgres"
-  #     DATABASE_PASSWORD: "password"
-  #     ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=propertiesrentservice;Username=postgres;Password=password"
-  #     Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-  #     RabbitMQ__Host: "rabbitmq"
-  #     RabbitMQ__Port: "5672"
-  #   ports:
-  #     - "15141:80"
-  #   depends_on:
-  #     postgres_db:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - okla-net
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🏢 REAL ESTATE SERVICE
-  # ──────────────────────────────────────────────────────────────────────
-
-  realestateservice:
-    build:
-      context: ./backend
-      dockerfile: RealEstateService/RealEstateService.Api/Dockerfile.dev
-    container_name: realestateservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "realestateservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=realestateservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15142:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
   # 🤖 CHATBOT SERVICE (FIXED ✅)
   # ──────────────────────────────────────────────────────────────────────
   chatbotservice:
     build:
       context: ./backend
       dockerfile: ChatbotService/Dockerfile
-    container_name: chatbotservice
     deploy:
       resources:
         limits:
@@ -2807,7 +2221,7 @@ services:
       DATABASE_NAME: "chatbotservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=chatbotservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=chatbotservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2834,13 +2248,13 @@ services:
       retries: 3
 
   # ──────────────────────────────────────────────────────────────────────
-  # 💳 STRIPE PAYMENT SERVICE (FIXED ✅)
+  # 💳 PAYMENT SERVICE (Multi-Provider: Azul, CardNET, PixelPay, Fygaro, PayPal)
   # ──────────────────────────────────────────────────────────────────────
-  stripepaymentservice:
+
+  paymentservice:
     build:
       context: ./backend
-      dockerfile: StripePaymentService/Dockerfile
-    container_name: stripepaymentservice
+      dockerfile: PaymentService/Dockerfile
     deploy:
       resources:
         limits:
@@ -2853,20 +2267,34 @@ services:
       ASPNETCORE_URLS: http://+:80
       DATABASE_HOST: "postgres_db"
       DATABASE_PORT: "5432"
-      DATABASE_NAME: "stripepaymentservice"
+      DATABASE_NAME: "paymentservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=stripepaymentservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=paymentservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
-      Stripe__SecretKey: "${STRIPE_SECRET_KEY:-sk_test_placeholder}"
-      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}"
-      Redis__ConnectionString: "redis:6379"
+      # Azul Payment Gateway
+      PaymentGateway__Azul__MerchantId: "${AZUL_MERCHANT_ID:-placeholder}"
+      PaymentGateway__Azul__AuthKey: "${AZUL_AUTH_KEY:-placeholder}"
+      PaymentGateway__Azul__CyberSourceSecretKey: "${CYBERSOURCE_SECRET_KEY:-placeholder}"
+      PaymentGateway__Azul__BaseUrl: "https://pagos.azul.com.do"
+      PaymentGateway__Azul__CyberSourceUrl: "https://testsecureacceptance.cybersource.com"
+      # CardNET Payment Gateway
+      PaymentGateway__CardNET__TerminalId: "${CARDNET_TERMINAL_ID:-placeholder}"
+      PaymentGateway__CardNET__APIKey: "${CARDNET_API_KEY:-placeholder}"
+      # PixelPay Payment Gateway
+      PaymentGateway__PixelPay__AppId: "${PIXELPAY_APP_ID:-placeholder}"
+      PaymentGateway__PixelPay__SecretKey: "${PIXELPAY_SECRET_KEY:-placeholder}"
+      # PayPal Payment Gateway
+      PaymentGateway__PayPal__ClientId: "${PAYPAL_CLIENT_ID:-placeholder}"
+      PaymentGateway__PayPal__ClientSecret: "${PAYPAL_CLIENT_SECRET:-placeholder}"
+      # Redis Cache
+      Redis__ConnectionString: "redis:6379,abortConnect=false"
       Idempotency__DefaultTTLSeconds: "86400"
       Idempotency__ProcessingTimeoutSeconds: "120"
     ports:
-      - "15144:80"
+      - "15160:80"
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -2885,14 +2313,13 @@ services:
       retries: 3
 
   # ──────────────────────────────────────────────────────────────────────
-  # 💳 AZUL PAYMENT SERVICE
+  # 💳 AZUL PAYMENT SERVICE (Legacy - Being replaced by PaymentService)
   # ──────────────────────────────────────────────────────────────────────
 
   azulpaymentservice:
     build:
       context: ./backend
       dockerfile: AzulPaymentService/Dockerfile
-    container_name: azulpaymentservice
     deploy:
       resources:
         limits:
@@ -2908,7 +2335,7 @@ services:
       DATABASE_NAME: "azulpaymentservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=azulpaymentservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=azulpaymentservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -2944,7 +2371,6 @@ services:
     build:
       context: ./backend
       dockerfile: ApiDocsService/Dockerfile
-    container_name: apidocsservice
     deploy:
       resources:
         limits:
@@ -2981,7 +2407,6 @@ services:
     build:
       context: ./backend
       dockerfile: Gateway/Gateway.Api/Dockerfile.dev
-    container_name: gateway
     deploy:
       resources:
         limits:
@@ -3024,8 +2449,8 @@ services:
         condition: service_healthy
       contactservice:
         condition: service_healthy
-      notificationservice:
-        condition: service_healthy
+      # notificationservice:                # TEMP: disabled - ITeamsProvider DI error
+      #   condition: service_healthy
       adminservice:
         condition: service_healthy
       redis:
@@ -3063,7 +2488,6 @@ services:
     build:
       context: ./backend
       dockerfile: KYCService/KYCService.Api/Dockerfile.dev
-    container_name: kycservice
     deploy:
       resources:
         limits:
@@ -3079,13 +2503,20 @@ services:
       DATABASE_NAME: "kycdb"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycdb;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=kycdb;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
       Redis__Host: "redis:6379"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
+      Services__ConfigurationService: "http://host.docker.internal:15124"
+      # Amazon Rekognition - Usa credenciales de ~/.aws montado como volumen
+      FaceComparison__UseSimulation: "false"
+      FaceComparison__UseAmazonRekognition: "true"
+      AmazonRekognition__Region: "us-east-2"
+    volumes:
+      - ~/.aws:/root/.aws:ro
     ports:
       - "15180:80"
     depends_on:
@@ -3112,7 +2543,6 @@ services:
     build:
       context: ./backend
       dockerfile: ComplianceService/ComplianceService.Api/Dockerfile.dev
-    container_name: complianceservice
     deploy:
       resources:
         limits:
@@ -3128,7 +2558,7 @@ services:
       DATABASE_NAME: "complianceservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -3156,261 +2586,20 @@ services:
       timeout: 10s
       retries: 3
 
-  # EscrowService - Puerto 15152 (Pagos en Custodia)
-  escrowservice:
-    build:
-      context: ./backend
-      dockerfile: EscrowService/EscrowService.Api/Dockerfile.dev
-    container_name: escrowservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "escrowservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=escrowservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15152:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ContractService - Puerto 15153 (Gestión de Contratos)
-  contractservice:
-    build:
-      context: ./backend
-      dockerfile: ContractService/ContractService.Api/Dockerfile.dev
-    container_name: contractservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "contractservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=contractservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15153:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # LegalDocumentService - Puerto 15154 (Documentos Legales)
-  legaldocumentservice:
-    build:
-      context: ./backend
-      dockerfile: LegalDocumentService/LegalDocumentService.Api/Dockerfile.dev
-    container_name: legaldocumentservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "legaldocumentservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=legaldocumentservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15154:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # DisputeService - Puerto 15155 (Gestión de Disputas)
-  disputeservice:
-    build:
-      context: ./backend
-      dockerfile: DisputeService/DisputeService.Api/Dockerfile.dev
-    container_name: disputeservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "disputeservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=disputeservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15155:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # ────────────────────────────────────────────────────────────────────
+  # 📦 FASE 4 CONSOLIDADOS: ContractService, LegalDocumentService,
+  #    DisputeService → Absorbidos en LegalService (futuro)
+  # ────────────────────────────────────────────────────────────────────
 
   # ──────────────────────────────────────────────────────────────────────
   # 🧠 DATA & ML SERVICES
   # ──────────────────────────────────────────────────────────────────────
 
   # FeatureStoreService - Puerto 15156 (Feature Store para ML)
-  featurestoreservice:
-    build:
-      context: ./backend
-      dockerfile: FeatureStoreService/FeatureStoreService.Api/Dockerfile.dev
-    container_name: featurestoreservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "featurestoreservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=featurestoreservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15156:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # LeadScoringService - Puerto 15157 (Scoring de Leads con IA)
   leadscoringservice:
     build:
       context: ./backend
       dockerfile: LeadScoringService/LeadScoringService.Api/Dockerfile.dev
-    container_name: leadscoringservice
     deploy:
       resources:
         limits:
@@ -3426,7 +2615,7 @@ services:
       DATABASE_NAME: "leadscoringservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=leadscoringservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=leadscoringservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -3463,7 +2652,6 @@ services:
     build:
       context: ./backend
       dockerfile: SpyneIntegrationService/SpyneIntegrationService.Api/Dockerfile.dev
-    container_name: spyneintegrationservice
     deploy:
       resources:
         limits:
@@ -3479,7 +2667,7 @@ services:
       DATABASE_NAME: "spyneintegrationservice"
       DATABASE_USER: "postgres"
       DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=spyneintegrationservice;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=spyneintegrationservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -3507,162 +2695,16 @@ services:
       timeout: 10s
       retries: 3
 
-  # RegulatoryAlertService - Puerto 15159 (Alertas Regulatorias)
-  regulatoryalertservice:
-    build:
-      context: ./backend
-      dockerfile: RegulatoryAlertService/RegulatoryAlertService.Api/Dockerfile.dev
-    container_name: regulatoryalertservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "regulatoryalertservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=regulatoryalertservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15159:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ComplianceIntegrationService - Puerto 15160 (Integraciones de Compliance)
-  complianceintegrationservice:
-    build:
-      context: ./backend
-      dockerfile: ComplianceIntegrationService/ComplianceIntegrationService.Api/Dockerfile.dev
-    container_name: complianceintegrationservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "complianceintegrationservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=complianceintegrationservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15160:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # ────────────────────────────────────────────────────────────────────
+  # 📦 FASE 4 CONSOLIDADOS: RegulatoryAlertService, ComplianceIntegrationService
+  #    → Absorbidos en ComplianceService
+  # ────────────────────────────────────────────────────────────────────
 
   # ReportingService - Puerto 15161 (Reportes Generales)
-  reportingservice:
-    build:
-      context: ./backend
-      dockerfile: ReportingService/ReportingService.Api/Dockerfile.dev
-    container_name: reportingservice
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          memory: 256M
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:80
-      DATABASE_HOST: "postgres_db"
-      DATABASE_PORT: "5432"
-      DATABASE_NAME: "reportingservice"
-      DATABASE_USER: "postgres"
-      DATABASE_PASSWORD: "password"
-      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=reportingservice;Username=postgres;Password=password"
-      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
-      Jwt__Issuer: "AuthService-Dev"
-      Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      RabbitMQ__Host: "rabbitmq"
-      RabbitMQ__Port: "5672"
-    ports:
-      - "15161:80"
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - okla-net
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget -q -O /dev/null http://localhost:80/health || exit 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ──────────────────────────────────────────────────────────────────────
-  # 🌐 FRONTEND WEB (React + Vite)
-  # ──────────────────────────────────────────────────────────────────────
-
   frontend-web:
     build:
       context: ./frontend/web
       dockerfile: Dockerfile.dev
-    container_name: frontend-web
     deploy:
       resources:
         limits:
@@ -3704,6 +2746,60 @@ services:
       retries: 5
       start_period: 60s
 
+  # ──────────────────────────────────────────────────────────────────────
+  # 🌐 FRONTEND WEB-NEXT (Next.js 16 Rebuild)
+  # ──────────────────────────────────────────────────────────────────────
+
+  frontend-next:
+    build:
+      context: ./frontend/web-next
+      dockerfile: Dockerfile.dev # Development mode with hot reload
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2G
+        reservations:
+          memory: 1G
+    ports:
+      - "3000:3000" # Next.js dev server on port 3000
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend/web-next/src:/app/src:delegated
+      - ./frontend/web-next/public:/app/public:delegated
+      - ./frontend/web-next/next.config.ts:/app/next.config.ts:delegated
+      - ./frontend/web-next/tailwind.config.ts:/app/tailwind.config.ts:delegated
+      - ./frontend/web-next/tsconfig.json:/app/tsconfig.json:delegated
+      # Exclude node_modules and .next from host (use container's)
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      gateway:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - okla-net
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:18443
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3000
+      - INTERNAL_API_URL=http://gateway:80
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
 # ============================================================================
 # NETWORKS
 # ============================================================================
@@ -3719,7 +2815,6 @@ volumes:
   rabbitmq_data:
   redis_data:
   consul_data:
+  pg_backup_data:
   # FASE 2: Observability volumes
   seq_data:
-  # Video360 Processing
-  video360_temp:

@@ -49,7 +49,11 @@ public interface IAuditLogRepository
         int page = 1,
         int pageSize = 50,
         string? sortBy = null,
-        bool sortDescending = true);
+        bool sortDescending = true,
+        string? searchText = null,
+        string? serviceName = null,
+        string? severity = null,
+        bool? success = null);
 
     /// <summary>
     /// Adds a new audit log entry

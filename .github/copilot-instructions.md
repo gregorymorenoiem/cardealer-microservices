@@ -2,7 +2,7 @@
 
 Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (antes CarDealer).
 
-**Última actualización:** Enero 8, 2026
+**Última actualización:** Febrero 7, 2026
 
 ---
 
@@ -19,42 +19,63 @@ Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (
 | **Dealer** ⭐           | Dealer      | $49-$299/mes | Vender inventario completo   |
 | **Admin**               | Admin       | No (staff)   | Moderar plataforma           |
 
-> Ver estrategia completa: [docs/ESTRATEGIA_TIPOS_USUARIO_DEALERS.md](docs/ESTRATEGIA_TIPOS_USUARIO_DEALERS.md)
-
 ### 🌐 URLs de Producción
 
 | Recurso          | URL                            |
 | ---------------- | ------------------------------ |
 | **Frontend**     | https://okla.com.do            |
-| **API Gateway**  | https://api.okla.com.do        |
-| **Health Check** | https://api.okla.com.do/health |
+| **API (BFF)**    | https://okla.com.do/api/*      |
+| **Health Check** | https://okla.com.do/api/health |
+
+> ⚠️ **BFF Pattern:** El Gateway NO está expuesto al internet. Todo el tráfico API
+> fluye: `Browser → okla.com.do/api/* → Next.js (rewrite) → gateway:8080 (interno) → microservicios`.
+> El subdominio `api.okla.com.do` ya NO existe.
+
+### 🖥️ URLs de Desarrollo (Local)
+
+| Recurso         | URL                    |
+| --------------- | ---------------------- |
+| **Frontend**    | http://localhost:3000  |
+| **API Gateway** | http://localhost:18443 |
+
+> ⚠️ **IMPORTANTE - Desarrollo Local:** El frontend SIEMPRE corre en **http://localhost:3000**.
+>
+> - Si el puerto 3000 está ocupado, **detener el proceso** que lo usa antes de iniciar el servidor.
+> - NO usar otros puertos (3001, 3002, etc.) para pruebas del frontend.
+> - Comando para liberar puerto: `lsof -ti:3000 | xargs kill -9`
 
 ### Stack Tecnológico
 
-| Capa                   | Tecnología                          | Versión     |
-| ---------------------- | ----------------------------------- | ----------- |
-| **Backend**            | .NET 8.0 LTS                        | net8.0      |
-| **Frontend Web**       | React 19 + TypeScript + Vite        | ^19.0.0     |
-| **Frontend Mobile**    | Flutter + Dart                      | SDK >=3.4.0 |
-| **Base de Datos**      | PostgreSQL                          | 16+         |
-| **Cache**              | Redis                               | 7+          |
-| **Message Broker**     | RabbitMQ                            | 3.12+       |
-| **API Gateway**        | Ocelot                              | 22.0.1      |
-| **Container Registry** | GitHub Container Registry (ghcr.io) |
-| **Kubernetes**         | Digital Ocean DOKS                  | 1.28+       |
-| **CI/CD**              | GitHub Actions                      |
+| Capa                   | Tecnología                           | Versión     |
+| ---------------------- | ------------------------------------ | ----------- |
+| **Backend**            | .NET 8.0 LTS                         | net8.0      |
+| **Frontend Web**       | Next.js 14 + TypeScript + App Router | ^14.0.0     |
+| **Frontend Mobile**    | Flutter + Dart                       | SDK >=3.4.0 |
+| **Package Manager**    | pnpm (⚠️ NO usar npm ni yarn)        | 9+          |
+| **Base de Datos**      | PostgreSQL                           | 16+         |
+| **Cache**              | Redis                                | 7+          |
+| **Message Broker**     | RabbitMQ                             | 3.12+       |
+| **API Gateway**        | Ocelot                               | 22.0.1      |
+| **Container Registry** | GitHub Container Registry (ghcr.io)  |             |
+| **Kubernetes**         | Digital Ocean DOKS                   | 1.28+       |
+| **CI/CD**              | GitHub Actions                       |             |
+
+> ⚠️ **IMPORTANTE - Package Manager:** Este proyecto usa **pnpm** exclusivamente.
+>
+> - ✅ Usar: `pnpm install`, `pnpm add <package>`, `pnpm dev`
+> - ❌ NO usar: `npm install`, `yarn add`
 
 ---
 
-## 🚀 ESTADO DE PRODUCCIÓN (Enero 2026)
+## 🚀 ESTADO DE PRODUCCIÓN (Febrero 2026)
 
-### ✅ Servicios Desplegados en DOKS
+### ✅ Servicios Core Desplegados en DOKS
 
 El proyecto está **EN PRODUCCIÓN** en Digital Ocean Kubernetes (cluster: `okla-cluster`, namespace: `okla`).
 
 | Servicio                | Estado     | Puerto K8s | Descripción               |
 | ----------------------- | ---------- | ---------- | ------------------------- |
-| **frontend-web**        | ✅ Running | 8080       | React 19 SPA              |
+| **frontend-web**        | ✅ Running | 8080       | Next.js 14 SSR/SSG        |
 | **gateway**             | ✅ Running | 8080       | Ocelot API Gateway        |
 | **authservice**         | ✅ Running | 8080       | Autenticación JWT         |
 | **userservice**         | ✅ Running | 8080       | Gestión de usuarios       |
@@ -64,6 +85,9 @@ El proyecto está **EN PRODUCCIÓN** en Digital Ocean Kubernetes (cluster: `okla
 | **notificationservice** | ✅ Running | 8080       | Email/SMS/Push            |
 | **billingservice**      | ✅ Running | 8080       | Pagos (Stripe + Azul)     |
 | **errorservice**        | ✅ Running | 8080       | Centralización de errores |
+| **kycservice**          | ✅ Running | 8080       | Verificación de identidad |
+| **auditservice**        | ✅ Running | 8080       | Auditoría centralizada    |
+| **idempotencyservice**  | ✅ Running | 8080       | Control de idempotencia   |
 | **postgres**            | ✅ Running | 5432       | Base de datos principal   |
 | **redis**               | ✅ Running | 6379       | Cache distribuido         |
 | **rabbitmq**            | ✅ Running | 5672/15672 | Message broker            |
@@ -79,72 +103,118 @@ OKLA utiliza **dos pasarelas de pago** para maximizar conversiones:
 | **Azul (Banco Popular)** | Tarjetas dominicanas (DEFAULT)             | ~2.5%    | 24-48h   |
 | **Stripe**               | Tarjetas internacionales, Apple/Google Pay | ~3.5%    | 7 días   |
 
-> Ver implementación: [docs/MEJORAS_RECOMENDACIONES_MARKETPLACE.md](docs/MEJORAS_RECOMENDACIONES_MARKETPLACE.md#-pasarelas-de-pago-stripe--azul)
+---
 
-### 🔴 Servicios NO Desplegados (Solo en desarrollo local)
+## 📊 MICROSERVICIOS (86 Total)
 
-Estos servicios existen en el código pero NO están en producción:
+El proyecto cuenta con **86 microservicios** organizados por dominio:
 
-- VehiclesRentService
-- PropertiesSaleService
-- PropertiesRentService
-- AdminService
-- CRMService
-- ReportsService
-- SchedulerService
-- AuditService
-- Y otros servicios de infraestructura
+### 🔐 Autenticación & Seguridad
 
-### 🆕 Microservicios Planificados (Enero 2026)
+| Servicio            | Puerto | Descripción                                       |
+| ------------------- | ------ | ------------------------------------------------- |
+| AuthService         | 15101  | JWT, login, registro, OAuth                       |
+| RoleService         | 15102  | Roles y permisos RBAC                             |
+| KYCService          | 15180  | Verificación de identidad (Liveness + Documentos) |
+| IdempotencyService  | 15136  | Control de operaciones duplicadas                 |
+| RateLimitingService | 15134  | Rate limiting por usuario/IP                      |
 
-#### Servicios para Dealers (Prioridad Alta)
+### 👥 Usuarios & Dealers
 
-| Servicio                   | Puerto | Descripción                                 |
-| -------------------------- | ------ | ------------------------------------------- |
-| DealerManagementService    | 5039   | Gestión de perfiles y sucursales de dealers |
-| InventoryManagementService | 5040   | Import/export masivo, edición en batch      |
-| DealerAnalyticsService     | 5041   | Dashboard y métricas para dealers           |
-| PricingIntelligenceService | 5042   | IA para pricing óptimo                      |
-| TradeInService             | 5043   | Gestión de trade-ins                        |
-| WarrantyService            | 5044   | Garantías extendidas                        |
+| Servicio                | Puerto | Descripción                       |
+| ----------------------- | ------ | --------------------------------- |
+| UserService             | 15103  | Gestión de usuarios               |
+| DealerManagementService | 5039   | Perfiles y sucursales de dealers  |
+| DealerAnalyticsService  | 5041   | Métricas y dashboard para dealers |
+| ContactService          | 15106  | Gestión de contactos              |
+| ReviewService           | 5059   | Reviews y calificaciones          |
 
-#### Servicios de Data & ML (Críticos)
+### 🚗 Vehículos & Inventario
 
-| Servicio                    | Puerto | Descripción                                           |
-| --------------------------- | ------ | ----------------------------------------------------- |
-| EventTrackingService        | 5050   | Captura TODOS los eventos de usuario                  |
-| DataPipelineService         | 5051   | ETL, transformaciones, agregaciones                   |
-| UserBehaviorService         | 5052   | Perfiles de comportamiento, segmentos                 |
-| FeatureStoreService         | 5053   | Features centralizados para ML                        |
-| RecommendationService       | 5054   | "Vehículos para ti", similar vehicles                 |
-| LeadScoringService          | 5055   | Hot/Warm/Cold leads con IA                            |
-| VehicleIntelligenceService  | 5056   | Pricing IA, predicción de demanda                     |
-| MLTrainingService           | 5057   | Pipeline de entrenamiento de modelos                  |
-| **ListingAnalyticsService** | 5058   | **Estadísticas de publicaciones (vistas, contactos)** |
-| **ReviewService**           | 5059   | **Reviews estilo Amazon para dealers/vendedores**     |
-| **ChatbotService**          | 5060   | **Chatbot IA + Calificación de leads + WhatsApp**     |
+| Servicio                    | Puerto | Descripción                         |
+| --------------------------- | ------ | ----------------------------------- |
+| VehiclesSaleService         | 15104  | CRUD vehículos, catálogo, búsqueda  |
+| InventoryManagementService  | 5040   | Import/export masivo, batch editing |
+| VehicleIntelligenceService  | 5056   | Pricing IA, predicción de demanda   |
+| Vehicle360ProcessingService | -      | Procesamiento de imágenes 360°      |
+| SpyneIntegrationService     | -      | Integración con Spyne AI            |
+| BackgroundRemovalService    | -      | Remoción de fondos IA               |
 
-#### Servicios de UX & Operaciones (Nuevos)
+### 💰 Pagos & Facturación
 
-| Servicio                     | Puerto | Descripción                                 |
-| ---------------------------- | ------ | ------------------------------------------- |
-| **MaintenanceService**       | 5061   | **Modo mantenimiento programable**          |
-| **FraudDetectionService**    | 5062   | **Detección de fraude en listings**         |
-| **SupportService**           | 5063   | **Soporte al cliente + Help Center**        |
-| **TestDriveService**         | 5064   | **Agendamiento de test drives**             |
-| **FinancingService**         | 5065   | **Integración con bancos RD**               |
-| **ComparisonService**        | 5066   | **Comparador de vehículos (hasta 3)**       |
-| **AlertService**             | 5067   | **Alertas de precio y búsquedas guardadas** |
-| **PlatformAnalyticsService** | 5068   | **Dashboard ejecutivo para dueños**         |
+| Servicio                  | Puerto | Descripción            |
+| ------------------------- | ------ | ---------------------- |
+| BillingService            | 15107  | Lógica de facturación  |
+| PaymentService            | -      | Procesamiento de pagos |
+| StripePaymentService      | -      | Integración Stripe     |
+| InvoicingService          | -      | Generación de facturas |
+| BankReconciliationService | -      | Conciliación bancaria  |
 
-> Ver documentación completa:
->
-> - [docs/ESTRATEGIA_TIPOS_USUARIO_DEALERS.md](docs/ESTRATEGIA_TIPOS_USUARIO_DEALERS.md)
-> - [docs/DATA_ML_MICROSERVICES_STRATEGY.md](docs/DATA_ML_MICROSERVICES_STRATEGY.md)
-> - [docs/SERVICIOS_PRIORIZACION.md](docs/SERVICIOS_PRIORIZACION.md)
-> - [docs/CHATBOT_SERVICE_STRATEGY.md](docs/CHATBOT_SERVICE_STRATEGY.md)
-> - [docs/SPRINT_PLAN_MARKETPLACE.md](docs/SPRINT_PLAN_MARKETPLACE.md)
-> - [docs/MEJORAS_RECOMENDACIONES_MARKETPLACE.md](docs/MEJORAS_RECOMENDACIONES_MARKETPLACE.md)
+### 📧 Comunicación
+
+| Servicio            | Puerto | Descripción           |
+| ------------------- | ------ | --------------------- |
+| NotificationService | 15105  | Email, SMS, Push      |
+| ChatbotService      | 5060   | Chatbot IA + WhatsApp |
+| MessageBusService   | 15120  | Mensajería interna    |
+
+### 📈 Analytics & ML
+
+| Servicio              | Puerto | Descripción                    |
+| --------------------- | ------ | ------------------------------ |
+| EventTrackingService  | 5050   | Captura de eventos             |
+| DataPipelineService   | 5051   | ETL y transformaciones         |
+| UserBehaviorService   | 5052   | Perfiles de comportamiento     |
+| FeatureStoreService   | 5053   | Features centralizados para ML |
+| RecommendationService | 5054   | Recomendaciones personalizadas |
+| LeadScoringService    | 5055   | Calificación de leads          |
+| SearchService         | 15128  | Elasticsearch search           |
+
+### ⚖️ Compliance & Legal (RD)
+
+| Servicio                     | Puerto | Descripción                    |
+| ---------------------------- | ------ | ------------------------------ |
+| ComplianceService            | -      | Cumplimiento regulatorio       |
+| ComplianceReportingService   | -      | Reportes de compliance         |
+| ComplianceIntegrationService | -      | Integraciones externas         |
+| TaxComplianceService         | -      | Cumplimiento fiscal DGII       |
+| ConsumerProtectionService    | -      | Pro-Consumidor                 |
+| AntiMoneyLaunderingService   | -      | AML/CFT                        |
+| DataProtectionService        | -      | Protección de datos personales |
+| ECommerceComplianceService   | -      | Ley 126-02 e-commerce          |
+| RegulatoryAlertService       | -      | Alertas regulatorias           |
+| LegalDocumentService         | -      | Documentos legales             |
+| DigitalSignatureService      | -      | Firmas digitales               |
+| ContractService              | -      | Gestión de contratos           |
+| DisputeService               | -      | Resolución de disputas         |
+
+### 🔧 Infraestructura
+
+| Servicio             | Puerto | Descripción                 |
+| -------------------- | ------ | --------------------------- |
+| Gateway              | 18443  | Ocelot API Gateway          |
+| ErrorService         | 15108  | Errores centralizados + DLQ |
+| AuditService         | 15112  | Auditoría centralizada      |
+| LoggingService       | 15118  | Logs centralizados          |
+| TracingService       | 15130  | Distributed tracing         |
+| HealthCheckService   | 15132  | Health checks agregados     |
+| CacheService         | 15122  | Redis cache wrapper         |
+| ConfigurationService | 15124  | Configuración dinámica      |
+| FeatureToggleService | 15126  | Feature flags               |
+| SchedulerService     | 15116  | Jobs programados            |
+| BackupDRService      | 15138  | Backup y disaster recovery  |
+| ServiceDiscovery     | 15140  | Service discovery (Consul)  |
+
+### 📱 UX & Operaciones
+
+| Servicio           | Puerto | Descripción             |
+| ------------------ | ------ | ----------------------- |
+| MaintenanceService | 5061   | Modo mantenimiento      |
+| ComparisonService  | 5066   | Comparador de vehículos |
+| AlertService       | 5067   | Alertas de precio       |
+| AppointmentService | -      | Test drives             |
+| MarketingService   | -      | Campañas de marketing   |
+| CRMService         | -      | CRM para dealers        |
 
 ---
 
@@ -161,38 +231,54 @@ cardealer-microservices/
 │       └── pr-checks.yml           # Validación de PRs
 ├── backend/                        # Microservicios .NET 8
 │   ├── _Shared/                    # Librerías compartidas
-│   │   ├── CarDealer.Contracts/    # DTOs y Events
-│   │   └── CarDealer.Shared/       # Utilidades
+│   │   ├── CarDealer.Contracts/    # DTOs y Events compartidos
+│   │   └── CarDealer.Shared/       # Utilidades comunes
+│   ├── _Tests/                     # Tests unitarios e integración
 │   ├── Gateway/                    # Ocelot API Gateway
-│   │   └── Gateway.Api/
-│   │       ├── ocelot.dev.json     # Config desarrollo
-│   │       └── ocelot.prod.json    # Config producción (puerto 8080)
 │   ├── AuthService/                # Autenticación
 │   ├── UserService/                # Usuarios
+│   ├── KYCService/                 # Verificación de identidad
+│   ├── AuditService/               # Auditoría centralizada
+│   ├── IdempotencyService/         # Control de idempotencia
 │   ├── VehiclesSaleService/        # Vehículos (principal)
 │   ├── MediaService/               # Archivos/Imágenes
 │   ├── NotificationService/        # Notificaciones
-│   ├── BillingService/             # Pagos Stripe + Azul (Banco Popular)
+│   ├── BillingService/             # Pagos Stripe + Azul
 │   ├── ErrorService/               # Errores centralizados
-│   └── ... (35 servicios total)
+│   └── ... (86 servicios total)
 ├── frontend/
-│   ├── web/                        # React 19 + Vite
+│   ├── web-next/                   # Next.js 14 App Router
 │   │   ├── src/
+│   │   │   ├── app/               # App Router pages
+│   │   │   │   ├── (main)/        # Rutas principales
+│   │   │   │   │   ├── cuenta/    # Perfil, verificación
+│   │   │   │   │   ├── dealer/    # Portal dealers
+│   │   │   │   │   ├── vehiculos/ # Listados
+│   │   │   │   │   └── ...
+│   │   │   │   ├── (auth)/        # Login, registro
+│   │   │   │   └── api/           # API routes
+│   │   │   ├── components/        # Componentes React
+│   │   │   │   ├── kyc/           # Verificación KYC
+│   │   │   │   ├── ui/            # shadcn/ui
+│   │   │   │   └── ...
+│   │   │   ├── services/          # API clients
+│   │   │   ├── hooks/             # Custom hooks
+│   │   │   └── lib/               # Utilidades
 │   │   ├── Dockerfile
-│   │   └── nginx.conf
+│   │   └── package.json
 │   └── mobile/cardealer/           # Flutter app
 ├── k8s/                            # Kubernetes manifests
 │   ├── namespace.yaml
-│   ├── deployments.yaml            # Todos los deployments
-│   ├── services.yaml               # ClusterIP services
-│   ├── ingress.yaml                # Ingress rules + TLS
-│   ├── configmaps.yaml             # Configuraciones
-│   ├── secrets.yaml                # Secrets (encriptados)
-│   └── databases.yaml              # PostgreSQL StatefulSet
-├── docs/
-│   ├── tutorials/                  # 15 tutoriales de deployment
-│   └── analysis/                   # Documentación técnica
-├── compose.yaml                    # Docker Compose (desarrollo local)
+│   ├── deployments.yaml
+│   ├── services.yaml
+│   ├── ingress.yaml
+│   ├── configmaps.yaml
+│   └── secrets.yaml
+├── docs/                           # 77+ documentos
+│   ├── SPRINT_*.md                # Documentación de sprints
+│   ├── COMPLIANCE_*.md            # Documentación de compliance
+│   └── ...
+├── docker-compose.yml              # Docker Compose (desarrollo)
 └── cardealer.sln                   # Solución .NET
 ```
 
@@ -208,31 +294,257 @@ Cada microservicio sigue esta estructura:
 {ServiceName}/
 ├── {ServiceName}.Api/              # Capa de presentación
 │   ├── Controllers/                # REST Controllers
+│   ├── Middleware/                 # Custom middleware
 │   ├── Program.cs                  # Entry point
 │   ├── appsettings.json
-│   └── Dockerfile                  # Para producción
+│   └── Dockerfile
 ├── {ServiceName}.Application/      # Capa de aplicación
 │   ├── Features/                   # CQRS con MediatR
 │   │   ├── Commands/
 │   │   └── Queries/
 │   ├── DTOs/
-│   └── Validators/                 # FluentValidation
+│   ├── Validators/                 # FluentValidation
+│   └── Clients/                    # Clientes HTTP a otros servicios
 ├── {ServiceName}.Domain/           # Capa de dominio
 │   ├── Entities/
 │   ├── Interfaces/
+│   ├── Enums/
 │   └── Events/
 └── {ServiceName}.Infrastructure/   # Capa de infraestructura
     ├── Persistence/                # DbContext, Repositories
-    └── Services/
+    ├── Services/                   # Implementaciones externas
+    └── Configurations/             # Entity configurations
 ```
 
 ### Patrones Utilizados
 
 - **CQRS** con MediatR para Commands/Queries
 - **Repository Pattern** para acceso a datos
-- **Result Pattern** para manejo de errores
+- **Result Pattern** para manejo de errores (evitar excepciones)
 - **Domain Events** publicados via RabbitMQ
 - **JWT Bearer** para autenticación
+- **Centralized Clients** para comunicación inter-servicios:
+  - `AuditServiceClient` - Auditoría centralizada
+  - `IdempotencyServiceClient` - Control de idempotencia
+  - `NotificationServiceClient` - Notificaciones
+
+### Servicios Centralizados (Importantes)
+
+#### AuditService
+
+Todos los microservicios deben registrar acciones críticas:
+
+```csharp
+// En Application/Clients/AuditServiceClient.cs
+await _auditClient.LogActionAsync(new AuditLogRequest
+{
+    UserId = userId,
+    Action = "CREATE_PROFILE",
+    EntityType = "KYCProfile",
+    EntityId = profileId,
+    Details = JsonSerializer.Serialize(details),
+    IpAddress = ipAddress,
+    UserAgent = userAgent
+});
+```
+
+#### IdempotencyService
+
+Para operaciones que no deben duplicarse:
+
+```csharp
+// En Middleware/IdempotencyMiddleware.cs
+var isProcessed = await _idempotencyClient.CheckAndMarkAsync(idempotencyKey);
+if (isProcessed) return cached response;
+```
+
+---
+
+### 🔄 Sincronización AuthService ↔ UserService
+
+AuthService y UserService trabajan juntos pero tienen responsabilidades separadas:
+
+| Servicio        | Responsabilidad                                | Datos                              |
+| --------------- | ---------------------------------------------- | ---------------------------------- |
+| **AuthService** | Autenticación, tokens, 2FA, OAuth, sesiones    | `ApplicationUser`, `RefreshToken`  |
+| **UserService** | Perfiles de usuario, datos extendidos, avatars | `User` (FirstName, LastName, etc.) |
+
+#### Flujo de Registro
+
+```
+┌─────────────────┐                        ┌─────────────────┐
+│    Frontend     │   POST /api/auth/      │   AuthService   │
+│  registro/page  │ ────────────────────▶  │  RegisterCmd    │
+│                 │   register             │                 │
+└─────────────────┘                        └────────┬────────┘
+                                                    │
+                                                    │ UserRegisteredEvent
+                                                    │ {UserId, Email, FirstName,
+                                                    │  LastName, PhoneNumber}
+                                                    ▼
+                                           ┌─────────────────┐
+                                           │    RabbitMQ     │
+                                           │  Exchange:      │
+                                           │  cardealer.events
+                                           └────────┬────────┘
+                                                    │ routing: auth.user.registered
+                                                    ▼
+                                           ┌─────────────────┐
+                                           │   UserService   │
+                                           │  EventConsumer  │
+                                           │  → Creates User │
+                                           └─────────────────┘
+```
+
+#### RegisterCommand (Backend)
+
+```csharp
+// Acepta campos del frontend (firstName, lastName, phone)
+public record RegisterCommand(
+    string? UserName,
+    string Email,
+    string Password,
+    string? FirstName = null,
+    string? LastName = null,
+    string? Phone = null,
+    bool AcceptTerms = true
+) : IRequest<RegisterResponse>
+{
+    // Construye nombre a partir de FirstName/LastName o UserName
+    public string GetDisplayName() =>
+        !string.IsNullOrWhiteSpace(FirstName) && !string.IsNullOrWhiteSpace(LastName)
+            ? $"{FirstName.Trim()} {LastName.Trim()}"
+            : !string.IsNullOrWhiteSpace(UserName)
+                ? UserName
+                : Email.Split('@')[0];
+}
+```
+
+#### UserRegisteredEvent (Compartido)
+
+```csharp
+// En _Shared/CarDealer.Contracts/Events/Auth/UserRegisteredEvent.cs
+public class UserRegisteredEvent : EventBase
+{
+    public Guid UserId { get; set; }
+    public string Email { get; set; }
+    public string FullName { get; set; }      // FirstName + LastName
+    public string FirstName { get; set; }     // ← Campo separado
+    public string LastName { get; set; }      // ← Campo separado
+    public string? PhoneNumber { get; set; }  // ← Opcional
+    public DateTime RegisteredAt { get; set; }
+    public Dictionary<string, string>? Metadata { get; set; }
+}
+```
+
+#### GetOrCreateUserCommand (OAuth Sync)
+
+Para usuarios que se autentican vía OAuth (Google, Apple), UserService crea el perfil automáticamente:
+
+```csharp
+// En UserService.Application/UseCases/Users/GetOrCreateUser/
+var command = new GetOrCreateUserCommand(userId, email, firstName, lastName, avatarUrl);
+var result = await _mediator.Send(command);
+```
+
+**⚠️ IMPORTANTE:** Siempre que modifiques RegisterCommand o UserRegisteredEvent, asegúrate de:
+
+1. Actualizar el Consumer en UserService
+2. Verificar que los campos se propaguen correctamente
+3. Mantener backwards compatibility con eventos existentes
+
+---
+
+## 🖥️ FRONTEND (Next.js 14)
+
+### Estructura de App Router
+
+```
+src/app/
+├── (auth)/                    # Grupo de autenticación
+│   ├── login/page.tsx
+│   ├── registro/page.tsx
+│   ├── recuperar-contrasena/
+│   ├── verificar-email/
+│   └── layout.tsx
+├── (main)/                    # Grupo principal (con navbar)
+│   ├── cuenta/
+│   │   ├── verificacion/      # KYC verification flow
+│   │   ├── perfil/
+│   │   └── configuracion/
+│   ├── dealer/
+│   │   ├── landing/
+│   │   ├── pricing/
+│   │   ├── register/
+│   │   └── dashboard/
+│   ├── vehiculos/
+│   │   ├── [slug]/page.tsx    # Detalle vehículo
+│   │   └── page.tsx           # Listado
+│   ├── buscar/page.tsx
+│   ├── comparar/page.tsx
+│   ├── mis-vehiculos/         # Vehículos del usuario
+│   ├── publicar/              # Publicar vehículo
+│   ├── checkout/              # Proceso de pago
+│   ├── admin/                 # Panel admin
+│   └── layout.tsx
+├── (messaging)/               # Mensajería
+├── api/                       # API Routes
+│   └── [...]/route.ts
+└── layout.tsx                 # Root layout
+```
+
+### Componentes KYC (Verificación de Identidad)
+
+El sistema KYC incluye:
+
+```
+src/components/kyc/
+├── document-capture.tsx       # Captura de documentos (cédula)
+├── liveness-challenge.tsx     # Prueba de vida (blink, smile, turn)
+├── verification-gate.tsx      # Gate de verificación para rutas protegidas
+└── index.ts                   # Exports
+```
+
+**Flujo KYC:**
+
+1. Usuario inicia verificación en `/cuenta/verificacion`
+2. Captura documento de identidad (frente y reverso)
+3. Completa prueba de vida (parpadear, sonreír, girar cabeza)
+4. Backend valida documentos y liveness
+5. Admin aprueba/rechaza manualmente (si es necesario)
+
+### Services (API Clients)
+
+```typescript
+// src/services/kyc.ts
+export const kycService = {
+  createProfile: (data: CreateKYCProfileRequest) => api.post('/api/kyc/profiles', data),
+  uploadDocument: (profileId: string, file: File, type: string) => ...,
+  submitLiveness: (profileId: string, selfie: string, challengeResults: ChallengeResult[]) => ...,
+  getStatus: (userId: string) => api.get(`/api/kyc/profiles/user/${userId}`),
+};
+```
+
+### Variables de Entorno
+
+```env
+# .env.local (desarrollo)
+NEXT_PUBLIC_API_URL=http://localhost:18443
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# .env.production (BFF pattern — Gateway es interno)
+NEXT_PUBLIC_API_URL=
+INTERNAL_API_URL=http://gateway:8080
+NEXT_PUBLIC_APP_URL=https://okla.com.do
+```
+
+> ⚠️ **IMPORTANTE - BFF Pattern:**
+>
+> - `NEXT_PUBLIC_API_URL` está **vacío** en producción — el browser usa URLs relativas (`/api/*`).
+> - Next.js rewrites proxean `/api/*` → `gateway:8080/api/*` internamente.
+> - `INTERNAL_API_URL` es solo server-side (SSR, API routes, middleware) — NO es `NEXT_PUBLIC_`.
+> - Para código server-side, usar `getInternalApiUrl()` de `@/lib/api-url`.
+> - Para código client-side, usar `getClientApiUrl()` o `getApiBaseUrl()` de `@/lib/api-url`.
 
 ---
 
@@ -262,7 +574,7 @@ kubectl create configmap gateway-config --from-file=ocelot.json=backend/Gateway/
 kubectl rollout restart deployment/gateway -n okla
 
 # Port-forward para debugging
-kubectl port-forward svc/vehiclessaleservice 8080:8080 -n okla
+kubectl port-forward svc/kycservice 8080:8080 -n okla
 ```
 
 ### ⚠️ REGLA CRÍTICA: Puertos en Kubernetes
@@ -282,272 +594,10 @@ El archivo `ocelot.prod.json` DEBE tener:
 | Host            | Service           | TLS              |
 | --------------- | ----------------- | ---------------- |
 | okla.com.do     | frontend-web:8080 | ✅ Let's Encrypt |
-| api.okla.com.do | gateway:8080      | ✅ Let's Encrypt |
+| www.okla.com.do | frontend-web:8080 | ✅ Let's Encrypt |
 
----
-
-## 🔄 CI/CD (GitHub Actions)
-
-### Workflows Principales
-
-| Workflow    | Archivo                   | Trigger             | Función               |
-| ----------- | ------------------------- | ------------------- | --------------------- |
-| Smart CI/CD | `smart-cicd.yml`          | Push a main/develop | Build + Push imágenes |
-| Deploy DO   | `deploy-digitalocean.yml` | Manual o post-CI    | Deploy a DOKS         |
-| PR Checks   | `pr-checks.yml`           | PR abierto          | Validación            |
-
-### Servicios en CI/CD
-
-```yaml
-SERVICES: "frontend-web,gateway,authservice,userservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice,roleservice"
-```
-
-### Secrets de GitHub Requeridos
-
-| Secret                      | Descripción                     |
-| --------------------------- | ------------------------------- |
-| `DIGITALOCEAN_ACCESS_TOKEN` | Token API de DO                 |
-| `GHCR_TOKEN`                | Token para ghcr.io              |
-| `KUBE_CONFIG`               | Kubeconfig del cluster (base64) |
-
----
-
-## 🌿 ESTRATEGIA DE BRANCHING (GitFlow Adaptado)
-
-### Branches Principales
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     FLUJO DE BRANCHES OKLA                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  🏭 main (producción)                                                       │
-│  ════════════════════                                                       │
-│  │   Solo código probado y listo para producción                           │
-│  │   Cada push a main dispara deploy automático a DOKS                     │
-│  │   Tags de versión: v1.0.0, v1.1.0, etc.                                 │
-│  │                                                                         │
-│  │◄──── merge ──── 🧪 development                                          │
-│                     ════════════════                                        │
-│                     │   Integración y pruebas                              │
-│                     │   Aquí se prueban todos los features juntos          │
-│                     │   CI/CD ejecuta tests completos                      │
-│                     │                                                      │
-│                     │◄──── merge ──── 📦 sprint/X-nombre                   │
-│                                        ═══════════════════                 │
-│                                        │   Un branch por sprint            │
-│                                        │   Trabajo del equipo              │
-│                                        │                                   │
-│                                        │◄──── merge ──── feature/xxx       │
-│                                        │◄──── merge ──── fix/xxx           │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Tipos de Branches
-
-| Branch        | Propósito              | Crea desde    | Merge hacia            | Ejemplo                |
-| ------------- | ---------------------- | ------------- | ---------------------- | ---------------------- |
-| `main`        | Producción             | -             | -                      | `main`                 |
-| `development` | Integración/QA         | `main`        | `main`                 | `development`          |
-| `sprint/*`    | Trabajo de sprint      | `development` | `development`          | `sprint/4-pagos`       |
-| `feature/*`   | Nuevas funcionalidades | `sprint/*`    | `sprint/*`             | `feature/azul-gateway` |
-| `fix/*`       | Corrección de bugs     | `sprint/*`    | `sprint/*`             | `fix/login-error`      |
-| `hotfix/*`    | Fixes urgentes prod    | `main`        | `main` + `development` | `hotfix/critical-bug`  |
-
-### Flujo de Trabajo Completo
-
-```bash
-# ══════════════════════════════════════════════════════════════════════════════
-# INICIO DE SPRINT (Ej: Sprint 4 - Pagos)
-# ══════════════════════════════════════════════════════════════════════════════
-
-# 1. Crear branch del sprint desde development
-git checkout development
-git pull origin development
-git checkout -b sprint/4-pagos
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TRABAJO DIARIO - Feature o Fix
-# ══════════════════════════════════════════════════════════════════════════════
-
-# 2. Crear branch de feature desde el sprint
-git checkout sprint/4-pagos
-git checkout -b feature/azul-gateway
-
-# 3. Trabajar y commitear
-git add .
-git commit -m "feat(billing): integración inicial Azul API"
-git push origin feature/azul-gateway
-
-# 4. Crear PR: feature/azul-gateway → sprint/4-pagos
-#    - PR Checks se ejecutan automáticamente
-#    - Code review
-#    - Merge cuando aprobado
-
-# ══════════════════════════════════════════════════════════════════════════════
-# FIN DE SPRINT - Integración
-# ══════════════════════════════════════════════════════════════════════════════
-
-# 5. Merge sprint a development
-git checkout development
-git merge sprint/4-pagos
-git push origin development
-
-# 6. Pruebas en development
-#    - CI/CD ejecuta tests completos
-#    - Pruebas manuales en localhost
-#    - Validar que todo funciona antes de merge a main
-
-# ══════════════════════════════════════════════════════════════════════════════
-# RELEASE A PRODUCCIÓN
-# ══════════════════════════════════════════════════════════════════════════════
-
-# 7. Cuando development está estable, merge a main
-git checkout main
-git merge development
-git tag -a v1.4.0 -m "Release Sprint 4: Pagos Azul + Stripe"
-git push origin main --tags
-
-# 8. Deploy automático a producción (DOKS)
-#    - workflow smart-cicd.yml detecta push a main
-#    - build + push imágenes a ghcr.io
-#    - deploy-digitalocean.yml actualiza pods
-```
-
-### Convención de Nombres
-
-```bash
-# Sprints
-sprint/1-busqueda-fundamentos
-sprint/2-publicacion-formularios
-sprint/3-ui-ux-compradores
-sprint/4-pagos
-sprint/5-dashboard-vendedor
-
-# Features (dentro de un sprint)
-feature/stripe-checkout
-feature/azul-gateway
-feature/payment-selector
-feature/webhook-handlers
-
-# Fixes
-fix/login-token-expiry
-fix/image-upload-timeout
-fix/price-validation
-
-# Hotfixes (urgentes, directo a main)
-hotfix/security-patch
-hotfix/payment-crash
-```
-
-### Ambientes por Branch
-
-> ⚠️ **NOTA:** Actualmente solo existe un cluster (producción). El staging se implementará cuando haya más recursos.
-
-| Branch        | Ambiente           | Deploy                | Descripción                         |
-| ------------- | ------------------ | --------------------- | ----------------------------------- |
-| `main`        | **Producción**     | ✅ Auto-deploy a DOKS | okla.com.do                         |
-| `development` | **Pre-producción** | ❌ Solo CI/Tests      | Validación antes de merge a main    |
-| `sprint/*`    | Local              | ❌ No                 | Desarrollo local con docker-compose |
-| `feature/*`   | Local              | localhost             | ❌ No                               |
-
-### Comandos Útiles
-
-```bash
-# Ver todos los branches
-git branch -a
-
-# Ver branches remotos
-git branch -r
-
-# Actualizar desde development antes de crear feature
-git checkout development && git pull && git checkout -b feature/nueva
-
-# Sincronizar sprint con development (rebase)
-git checkout sprint/4-pagos
-git rebase development
-
-# Limpiar branches locales ya mergeados
-git branch --merged | grep -v "main\|development" | xargs git branch -d
-
-# Ver historial visual
-git log --oneline --graph --all
-
-# Crear tag de release
-git tag -a v1.4.0 -m "Sprint 4: Pagos"
-git push origin v1.4.0
-```
-
-### Protección de Branches (GitHub)
-
-Configurar en GitHub → Settings → Branches → Branch protection rules:
-
-**Para `main`:**
-
-- ✅ Require pull request before merging
-- ✅ Require approvals (1)
-- ✅ Require status checks to pass
-- ✅ Require branches to be up to date
-- ✅ Do not allow bypassing
-
-**Para `development`:**
-
-- ✅ Require pull request before merging
-- ✅ Require status checks to pass
-- ❌ Require approvals (opcional para velocidad)
-
----
-
-## 🎯 REGLAS PARA DESARROLLO
-
-### 1. Puertos en Kubernetes
-
-```csharp
-// ❌ NUNCA en producción/Kubernetes
-"Port": 80
-
-// ✅ SIEMPRE en producción/Kubernetes
-"Port": 8080
-```
-
-### 2. Rutas de Gateway
-
-Todas las rutas van a través del Gateway Ocelot:
-
-```
-Cliente → https://api.okla.com.do/api/{service}/{endpoint}
-        → Gateway (Ocelot)
-        → {service}:8080/api/{endpoint}
-```
-
-### 3. Imágenes Docker
-
-```bash
-# Registry: GitHub Container Registry
-ghcr.io/gregorymorenoiem/cardealer-{service}:latest
-
-# Ejemplos:
-ghcr.io/gregorymorenoiem/cardealer-web:latest
-ghcr.io/gregorymorenoiem/cardealer-gateway:latest
-ghcr.io/gregorymorenoiem/cardealer-vehiclessaleservice:latest
-```
-
-### 4. Variables de Entorno (Frontend)
-
-En desarrollo:
-
-```env
-VITE_API_URL=http://localhost:18443
-```
-
-En producción (K8s):
-
-```yaml
-env:
-  - name: RUNTIME_API_URL
-    value: "https://api.okla.com.do"
-```
+> **BFF Pattern:** `api.okla.com.do` ya NO tiene regla de Ingress.
+> El Gateway solo es accesible desde el pod `frontend-web` (red interna K8s).
 
 ---
 
@@ -564,221 +614,62 @@ env:
 - `POST /api/auth/refresh` - Refresh token
 - `GET /api/auth/me` - Usuario actual
 
+### KYC (`/api/kyc`)
+
+- `POST /api/kyc/profiles` - Crear perfil KYC
+- `GET /api/kyc/profiles/user/{userId}` - Obtener perfil por usuario
+- `POST /api/kyc/profiles/{id}/documents` - Subir documento
+- `POST /api/kyc/profiles/{id}/liveness` - Enviar prueba de vida
+- `POST /api/kyc/profiles/{id}/submit` - Enviar para revisión
+- `POST /api/kyc/profiles/{id}/approve` - Aprobar (admin)
+- `POST /api/kyc/profiles/{id}/reject` - Rechazar (admin)
+
 ### Vehicles (`/api/vehicles`)
 
 - `GET /api/vehicles` - Listar (paginado)
 - `GET /api/vehicles/{id}` - Detalle
+- `GET /api/vehicles/slug/{slug}` - Por slug
 - `POST /api/vehicles` - Crear (auth required)
 - `PUT /api/vehicles/{id}` - Actualizar
 - `DELETE /api/vehicles/{id}` - Eliminar
 
-### Homepage Sections (`/api/homepagesections`)
+### Dealers (`/api/dealers`)
 
-- `GET /api/homepagesections/homepage` - Secciones del homepage con vehículos
+- `GET /api/dealers` - Listar dealers
+- `GET /api/dealers/{id}` - Detalle dealer
+- `POST /api/dealers` - Registrar dealer
+- `PUT /api/dealers/{id}` - Actualizar
+- `GET /api/dealers/{id}/analytics` - Métricas
 
-### Catalog (`/api/catalog`)
+### Audit (`/api/audit`)
 
-- `GET /api/catalog/makes` - Marcas de vehículos
-- `GET /api/catalog/models/{makeId}` - Modelos por marca
-- `GET /api/catalog/years` - Años disponibles
+- `POST /api/audit/logs` - Registrar acción
+- `GET /api/audit/logs` - Listar logs (admin)
+- `GET /api/audit/logs/entity/{type}/{id}` - Logs por entidad
 
-### Users (`/api/users`)
+### Idempotency (`/api/idempotency`)
 
-- `GET /api/users/{id}` - Obtener usuario
-- `PUT /api/users/{id}` - Actualizar perfil
-
-### Media (`/api/media`)
-
-- `POST /api/media/upload` - Subir archivo a S3
-- `GET /api/media/{id}` - Obtener archivo
+- `POST /api/idempotency/check` - Verificar key
+- `POST /api/idempotency/mark` - Marcar como procesado
+- `DELETE /api/idempotency/{key}` - Limpiar key
 
 ---
 
-## 🏠 SISTEMA DE HOMEPAGE SECTIONS
+## 🔄 CI/CD (GitHub Actions)
 
-El homepage del frontend muestra secciones dinámicas de vehículos configuradas desde la base de datos.
+### Workflows Principales
 
-### Arquitectura del Sistema
+| Workflow    | Archivo                   | Trigger             | Función               |
+| ----------- | ------------------------- | ------------------- | --------------------- |
+| Smart CI/CD | `smart-cicd.yml`          | Push a main/develop | Build + Push imágenes |
+| Deploy DO   | `deploy-digitalocean.yml` | Manual o post-CI    | Deploy a DOKS         |
+| PR Checks   | `pr-checks.yml`           | PR abierto          | Validación            |
 
+### Servicios en CI/CD
+
+```yaml
+SERVICES: "frontend-web,gateway,authservice,userservice,roleservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice,kycservice,auditservice,idempotencyservice"
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              FRONTEND                                    │
-│  VehiclesOnlyHomePage.tsx                                               │
-│  ├── useHomepageSections() hook → GET /api/homepagesections/homepage    │
-│  ├── HeroCarousel (Carousel Principal)                                  │
-│  ├── FeaturedListingGrid (Destacados con maxItems={9})                  │
-│  └── FeaturedSection (Sedanes, SUVs, Camionetas, etc.)                  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         API GATEWAY (Ocelot)                            │
-│  /api/homepagesections/* → vehiclessaleservice:8080                     │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      VEHICLESSALESERVICE                                │
-│  HomepageSectionsController.cs                                          │
-│  ├── GET /homepage → Retorna todas las secciones activas               │
-│  ├── Usa MaxItems para limitar vehículos por sección                   │
-│  └── Solo incluye vehículos con Status = 'Active'                      │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         POSTGRESQL                                       │
-│  Base de datos: vehiclessaleservice                                     │
-│  ├── homepage_section_configs (configuración de secciones)             │
-│  ├── vehicle_homepage_sections (relación vehículo-sección)             │
-│  └── vehicles (datos de vehículos)                                     │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Tablas en Base de Datos
-
-#### `homepage_section_configs`
-
-Configuración de cada sección del homepage.
-
-| Columna        | Tipo    | Descripción                              |
-| -------------- | ------- | ---------------------------------------- |
-| `Id`           | UUID    | ID único de la sección                   |
-| `Name`         | VARCHAR | Nombre visible ("Sedanes", "SUVs", etc.) |
-| `Slug`         | VARCHAR | Identificador URL-friendly               |
-| `DisplayOrder` | INT     | Orden de aparición (1, 2, 3...)          |
-| `MaxItems`     | INT     | **Límite de vehículos a mostrar**        |
-| `IsActive`     | BOOL    | Si la sección está activa                |
-| `Subtitle`     | VARCHAR | Descripción corta                        |
-| `AccentColor`  | VARCHAR | Color del tema (blue, amber, etc.)       |
-| `ViewAllHref`  | VARCHAR | Link "Ver todo"                          |
-
-#### `vehicle_homepage_sections`
-
-Relación muchos-a-muchos entre vehículos y secciones.
-
-| Columna                   | Tipo      | Descripción                   |
-| ------------------------- | --------- | ----------------------------- |
-| `VehicleId`               | UUID      | FK a vehicles                 |
-| `HomepageSectionConfigId` | UUID      | FK a homepage_section_configs |
-| `SortOrder`               | INT       | Orden dentro de la sección    |
-| `IsPinned`                | BOOL      | Si está fijado al inicio      |
-| `StartDate`               | TIMESTAMP | Fecha inicio (opcional)       |
-| `EndDate`                 | TIMESTAMP | Fecha fin (opcional)          |
-
-### Configuración Actual de Secciones
-
-| #   | Sección              | MaxItems | Vehículos Asignados |
-| --- | -------------------- | -------- | ------------------- |
-| 1   | Carousel Principal   | 5        | 10                  |
-| 2   | Sedanes              | 10       | 10                  |
-| 3   | SUVs                 | 10       | 10                  |
-| 4   | Camionetas           | 10       | 10                  |
-| 5   | Deportivos           | 10       | 10                  |
-| 6   | Destacados           | 9        | 10                  |
-| 7   | Lujo                 | 10       | 10                  |
-| 8   | Vehículos Eléctricos | 10       | 15                  |
-| 9   | Eficiencia Total     | 10       | 10                  |
-| 10  | Muscle & Performance | 10       | 10                  |
-
-### Backend: HomepageSectionsController.cs
-
-```csharp
-// Ubicación: backend/VehiclesSaleService/VehiclesSaleService.Api/Controllers/
-// El límite de vehículos se aplica con .Take(s.MaxItems)
-
-[HttpGet("homepage")]
-public async Task<ActionResult<List<HomepageSectionDto>>> GetHomepage()
-{
-    var sections = await _context.HomepageSectionConfigs
-        .Where(s => s.IsActive)
-        .OrderBy(s => s.DisplayOrder)
-        .Select(s => new HomepageSectionDto
-        {
-            Name = s.Name,
-            Vehicles = s.VehicleSections
-                .Where(vs => vs.Vehicle.Status == "Active")
-                .OrderBy(vs => vs.SortOrder)
-                .Take(s.MaxItems)  // ← LÍMITE AQUÍ
-                .Select(vs => new VehicleDto { ... })
-                .ToList()
-        })
-        .ToListAsync();
-    return Ok(sections);
-}
-```
-
-### Frontend: VehiclesOnlyHomePage.tsx
-
-```typescript
-// Ubicación: frontend/web/src/pages/VehiclesOnlyHomePage.tsx
-
-// 1. Hook para obtener secciones del API
-const { sections, isLoading, error } = useHomepageSections();
-
-// 2. Extraer secciones por nombre
-const carousel = sections?.find(s => s.name === 'Carousel Principal');
-const sedanes = sections?.find(s => s.name === 'Sedanes');
-const destacados = sections?.find(s => s.name === 'Destacados');
-// ... etc
-
-// 3. Renderizar componentes
-<HeroCarousel vehicles={carousel?.vehicles} />
-<FeaturedListingGrid vehicles={destacados?.vehicles} maxItems={9} />
-<FeaturedSection
-  title={sedanes?.name}
-  listings={transformSectionVehicles(sedanes)}
-/>
-```
-
-### Componentes del Frontend
-
-| Componente             | Ubicación                        | Función                       |
-| ---------------------- | -------------------------------- | ----------------------------- |
-| `useHomepageSections`  | `hooks/useHomepageSections.ts`   | Hook para fetch del API       |
-| `VehiclesOnlyHomePage` | `pages/VehiclesOnlyHomePage.tsx` | Página principal              |
-| `HeroCarousel`         | `components/organisms/`          | Carrusel hero con auto-play   |
-| `FeaturedListingGrid`  | `components/molecules/`          | Grid de vehículos destacados  |
-| `FeaturedSection`      | Inline en VehiclesOnlyHomePage   | Sección horizontal scrollable |
-
-### Comandos para Modificar Secciones
-
-```bash
-# Ver configuración actual
-kubectl exec -it postgres-0 -n okla -- psql -U postgres -d vehiclessaleservice -c \
-  'SELECT "Name", "MaxItems", "DisplayOrder" FROM homepage_section_configs ORDER BY "DisplayOrder";'
-
-# Cambiar MaxItems de una sección
-kubectl exec -it postgres-0 -n okla -- psql -U postgres -d vehiclessaleservice -c \
-  "UPDATE homepage_section_configs SET \"MaxItems\" = 9 WHERE \"Name\" = 'Destacados';"
-
-# Ver vehículos por sección
-kubectl exec -it postgres-0 -n okla -- psql -U postgres -d vehiclessaleservice -c \
-  'SELECT hsc."Name", COUNT(vhs."VehicleId") as total
-   FROM homepage_section_configs hsc
-   LEFT JOIN vehicle_homepage_sections vhs ON hsc."Id" = vhs."HomepageSectionConfigId"
-   GROUP BY hsc."Name" ORDER BY hsc."DisplayOrder";'
-
-# Verificar respuesta del API
-curl -s "https://api.okla.com.do/api/homepagesections/homepage" | \
-  python3 -c "import json,sys; [print(f\"{s['name']}: {len(s['vehicles'])}\") for s in json.load(sys.stdin)]"
-```
-
-### Flujo de Datos Completo
-
-1. **Usuario accede a okla.com.do**
-2. **Frontend carga VehiclesOnlyHomePage**
-3. **useHomepageSections() hace fetch a /api/homepagesections/homepage**
-4. **Gateway (Ocelot) rutea a vehiclessaleservice:8080**
-5. **HomepageSectionsController consulta PostgreSQL:**
-   - Obtiene secciones activas ordenadas por DisplayOrder
-   - Para cada sección, obtiene vehículos con Status='Active'
-   - Aplica límite con `.Take(MaxItems)`
-6. **API retorna JSON con secciones y vehículos**
-7. **Frontend renderiza:**
-   - HeroCarousel con Carousel Principal
-   - FeaturedListingGrid con Destacados
-   - FeaturedSection para cada categoría
 
 ---
 
@@ -786,93 +677,26 @@ curl -s "https://api.okla.com.do/api/homepagesections/homepage" | \
 
 ### 404 en Gateway
 
-1. Verificar que la ruta existe en `ocelot.prod.json`
-2. Verificar que el ConfigMap está actualizado:
-   ```bash
-   kubectl get configmap gateway-config -n okla -o yaml | grep -A5 "rutaproblema"
-   ```
-3. Reiniciar Gateway después de actualizar ConfigMap:
-   ```bash
-   kubectl rollout restart deployment/gateway -n okla
-   ```
+1. Verificar que la ruta existe en `ocelot.prod.json` o `ocelot.Development.json`
+2. Verificar que el ConfigMap está actualizado
+3. Reiniciar Gateway después de actualizar ConfigMap
 
-### 503 Service Unavailable / Timeout
+### 503 Service Unavailable
 
 1. **Verificar puerto** - Debe ser 8080, no 80
-2. Verificar que el servicio destino está Running:
-   ```bash
-   kubectl get pods -n okla | grep servicename
-   ```
-3. Verificar conectividad interna:
-   ```bash
-   kubectl exec -it deployment/gateway -n okla -- wget -qO- http://vehiclessaleservice:8080/health
-   ```
-
-### Pod en CrashLoopBackOff
-
-```bash
-# Ver logs del pod (incluyendo restart anterior)
-kubectl logs -f pod/{pod-name} -n okla --previous
-
-# Ver eventos del pod
-kubectl describe pod {pod-name} -n okla
-```
+2. Verificar que el servicio destino está Running
+3. Verificar conectividad interna
 
 ### CORS Error
 
 1. Verificar configuración CORS en Gateway y servicios
 2. Verificar que el dominio está en la lista permitida
-3. Pre-flight OPTIONS debe retornar 204
 
----
+### KYC Camera Issues
 
-## 📚 DOCUMENTACIÓN ADICIONAL
-
-### Tutoriales (docs/tutorials/)
-
-15 tutoriales de deployment organizados por nivel:
-
-| Nivel            | Tutoriales | Contenido                                      |
-| ---------------- | ---------- | ---------------------------------------------- |
-| 1 - Principiante | 01-04      | kubectl, pods, configmaps, logs                |
-| 2 - Intermedio   | 05-08      | DNS/SSL, LoadBalancer, Registry, PostgreSQL    |
-| 3 - Avanzado     | 09-11      | Ocelot Gateway, troubleshooting, zero-downtime |
-| 4 - Experto      | 12-14      | GitHub Actions, CI/CD completo, monitoreo      |
-| 5 - Masterclass  | 15         | Deploy completo de 0 a producción              |
-
----
-
-## ⚡ COMANDOS RÁPIDOS DE REFERENCIA
-
-```bash
-# === KUBERNETES ===
-kubectl get pods -n okla                              # Ver pods
-kubectl logs -f deployment/gateway -n okla           # Logs en tiempo real
-kubectl rollout restart deployment -n okla           # Reiniciar todo
-kubectl describe pod {pod} -n okla                   # Debug de pod
-
-# === GATEWAY CONFIG ===
-# Actualizar configuración del Gateway:
-kubectl delete configmap gateway-config -n okla
-kubectl create configmap gateway-config \
-  --from-file=ocelot.json=backend/Gateway/Gateway.Api/ocelot.prod.json \
-  -n okla
-kubectl rollout restart deployment/gateway -n okla
-
-# === VERIFICAR API ===
-curl https://api.okla.com.do/health
-curl https://api.okla.com.do/api/vehicles
-
-# === DOCKER (desarrollo local) ===
-docker-compose up -d                                  # Levantar todo
-docker-compose logs -f gateway                        # Ver logs
-docker-compose down                                   # Bajar todo
-
-# === CI/CD ===
-gh run list --limit 5                                 # Ver últimos workflows
-gh run view {run-id}                                  # Ver detalles
-gh run watch {run-id}                                 # Watch en tiempo real
-```
+1. Verificar permisos de cámara en navegador
+2. Usar HTTPS (cámara requiere contexto seguro)
+3. Verificar que `react-webcam` está instalado
 
 ---
 
@@ -893,28 +717,39 @@ public class UserService(IUserRepository repo, ILogger<UserService> logger)
     public async Task<User?> GetAsync(Guid id) => await repo.GetByIdAsync(id);
 }
 
-// Async siempre con CancellationToken
+// Result Pattern para errores
 public async Task<Result<T>> HandleAsync(Command cmd, CancellationToken ct);
+
+// Siempre usar CancellationToken
+public async Task ProcessAsync(CancellationToken ct = default);
 ```
 
-### TypeScript / React
+### TypeScript / React (Next.js)
 
 ```typescript
-// Functional components
-export const UserCard = ({ user }: { user: User }) => {
-  return <div>{user.fullName}</div>;
-};
+// Server Components por defecto
+export default async function Page() {
+  const data = await fetchData();
+  return <div>{data}</div>;
+}
+
+// 'use client' solo cuando necesario
+'use client';
+export function InteractiveComponent() {
+  const [state, setState] = useState();
+  // ...
+}
 
 // Custom hooks con prefijo use
-export const useAuth = () => {
-  /* ... */
-};
+export const useAuth = () => { /* ... */ };
 
-// TanStack Query para data fetching
-const { data, isLoading } = useQuery({
-  queryKey: ["vehicles"],
-  queryFn: () => vehicleService.getAll(),
-});
+// API calls con error handling
+try {
+  const response = await kycService.createProfile(data);
+} catch (error: unknown) {
+  const err = error as { message?: string; status?: number };
+  // Handle error
+}
 ```
 
 ### Commits
@@ -924,7 +759,7 @@ const { data, isLoading } = useQuery({
 
 Tipos: feat, fix, docs, style, refactor, test, chore
 Ejemplos:
-  feat(vehicles): add search by price range
+  feat(kyc): add liveness challenge component
   fix(gateway): use correct port 8080 for production
   docs(readme): update deployment instructions
 ```
@@ -937,542 +772,468 @@ Ejemplos:
 - Refresh tokens para renovación automática
 - HTTPS obligatorio en producción (Let's Encrypt)
 - Secrets en Kubernetes Secrets (no en código)
-- CORS configurado para dominios específicos (okla.com.do)
+- CORS configurado para dominios específicos
 - Rate limiting en Gateway
+- KYC verification para operaciones sensibles
+- Audit logging de todas las acciones críticas
+- Idempotency keys para prevenir operaciones duplicadas
 
 ---
 
-## ✅ WORKFLOW DE DESARROLLO - REGLAS OBLIGATORIAS
+## 📚 DOCUMENTACIÓN
 
-### 🎯 Completar un Sprint CORRECTAMENTE
+La carpeta `docs/` contiene **77+ documentos** organizados por categoría:
 
-⚠️ **IMPORTANTE:** Un sprint NO está completo hasta que TODAS estas tareas estén 100% terminadas. Lo que parece "100%" es típicamente solo 90-95% hasta hacer estas validaciones finales.
+### Sprints Completados
 
-#### 1️⃣ Backend Development
+- `SPRINT_1_COMPLETE_REPORT.md` hasta `SPRINT_17_COMPLETED.md`
+- Documentación detallada de cada sprint
 
-- [ ] Crear microservicio(s) con Clean Architecture
-- [ ] Implementar todos los endpoints requeridos
-- [ ] Agregar validaciones con FluentValidation
-- [ ] Crear Entity Configurations (EF Core)
-- [ ] Agregar Health Checks
-- [ ] Documentar API con Swagger/XML comments
+### Compliance (RD)
 
-#### 🧪 TESTING COMPLETO (OBLIGATORIO)
+- `COMPLIANCE_MICROSERVICES_ARCHITECTURE.md`
+- `NORMATIVAS_RD_OKLA.md`
+- `PLAN_COMPLIANCE_AUDITABILIDAD_RD.md`
 
-- [ ] **Crear proyectos .Tests para CADA microservicio nuevo**
-- [ ] **Implementar mínimo 5-7 tests por servicio**
-- [ ] **Verificar que TODOS los tests compilan sin errores**
-- [ ] **Ejecutar todos los tests y confirmar que pasan**
-- [ ] **Configurar coverlet.collector para coverage**
-- [ ] **Resolver TODOS los problemas de compilación/runtime**
+### Arquitectura
 
-#### 2️⃣ Frontend Development (SI APLICA)
+- `MICROSERVICES_ANALYSIS_AND_IMPROVEMENTS.md`
+- `DATA_ML_MICROSERVICES_STRATEGY.md`
+- `GATEWAY_ENDPOINTS_AUDIT.md`
 
-- [ ] Crear componentes React/TypeScript
-- [ ] **INTEGRAR en la navegación (Navbar/Rutas)** ⚠️ CRÍTICO
-- [ ] Agregar en App.tsx con ProtectedRoute si requiere auth
-- [ ] Actualizar Navbar.tsx con links visibles
-- [ ] Envolver en MainLayout para banners site-wide
-- [ ] Verificar accesibilidad en Desktop, Tablet y Mobile
-- [ ] Asegurar que usuarios puedan ACCEDER a las funcionalidades
+### Integraciones
 
-#### 3️⃣ Integración de Rutas
+- `STRIPE_API_DOCUMENTATION.md`
+- `AZUL_SANDBOX_SETUP_GUIDE.md`
+- `SPYNE_INTEGRATION_COMPLETE.md`
+- `ZOHO_MAIL_SETUP_GUIDE.md`
+
+### KYC & Verificación
+
+- `KYC_CAMERA_ENHANCEMENT_COMPLETED.md`
+- `KYC_CAMERA_TESTING_RESULTS.md`
+
+---
+
+## 🛡️ SEGURIDAD - VULNERABILIDADES RESUELTAS
+
+Este proyecto implementa múltiples capas de seguridad para proteger contra vulnerabilidades comunes. **Es obligatorio aplicar estas protecciones en todo nuevo código.**
+
+### 1. SQL Injection Protection
+
+**Ubicación:** `{Service}.Application/Validators/SecurityValidators.cs`
+
+**Implementación:**
+
+```csharp
+// Validador FluentValidation
+public static IRuleBuilderOptions<T, string> NoSqlInjection<T>(this IRuleBuilder<T, string> ruleBuilder)
+{
+    return ruleBuilder.Must(input =>
+    {
+        if (string.IsNullOrWhiteSpace(input)) return true;
+        var upperInput = input.ToUpperInvariant();
+        return !SqlKeywords.Any(keyword => upperInput.Contains(keyword));
+    })
+    .WithMessage("Input contains potential SQL injection patterns.");
+}
+```
+
+**Patrones bloqueados (25+):**
+
+| Categoría      | Patrones                                         |
+| -------------- | ------------------------------------------------ |
+| DML            | `SELECT`, `INSERT`, `UPDATE`, `DELETE`           |
+| DDL            | `DROP`, `CREATE`, `ALTER`                        |
+| Procedimientos | `EXEC`, `EXECUTE`, `xp_`, `sp_`                  |
+| Combinaciones  | `UNION`, `DECLARE`, `CAST`, `CONVERT`            |
+| Comentarios    | `--`, `/*`, `*/`                                 |
+| Metadata       | `INFORMATION_SCHEMA`, `SYSOBJECTS`, `SYSCOLUMNS` |
+| Time-based     | `WAITFOR DELAY`, `BENCHMARK`, `SLEEP(`           |
+| Bypass         | `OR 1=1`, `OR '1'='1'`                           |
+
+**Uso obligatorio:**
+
+```csharp
+// En TODOS los validadores de commands/queries
+RuleFor(x => x.Email)
+    .NotEmpty()
+    .EmailAddress()
+    .NoSqlInjection(); // ✅ OBLIGATORIO
+```
+
+---
+
+### 2. XSS (Cross-Site Scripting) Protection
+
+**Backend - Validación con FluentValidation:**
+
+```csharp
+public static IRuleBuilderOptions<T, string> NoXss<T>(this IRuleBuilder<T, string> ruleBuilder)
+{
+    return ruleBuilder.Must(input =>
+    {
+        if (string.IsNullOrWhiteSpace(input)) return true;
+        var lowerInput = input.ToLowerInvariant();
+        return !XssPatterns.Any(pattern => lowerInput.Contains(pattern));
+    })
+    .WithMessage("Input contains potential XSS attack patterns.");
+}
+```
+
+**Patrones XSS bloqueados (25+):**
+
+| Categoría   | Patrones                                                                 |
+| ----------- | ------------------------------------------------------------------------ |
+| Scripts     | `<script`, `</script>`, `javascript:`, `vbscript:`                       |
+| Eventos     | `onerror=`, `onload=`, `onclick=`, `onmouseover=`, `onfocus=`, `onblur=` |
+| Iframes     | `<iframe`, `</iframe>`                                                   |
+| Objects     | `<object`, `<embed`, `<svg`                                              |
+| Ejecución   | `eval(`, `expression(`, `alert(`, `confirm(`, `prompt(`                  |
+| Data URLs   | `data:text/html`                                                         |
+| Animaciones | `onanimationstart=`, `onanimationend=`, `ontransitionend=`               |
+
+**Frontend - Sanitización de inputs (`/lib/security/sanitize.ts`):**
+
+```typescript
+// Escape HTML entities para prevenir XSS
+export function escapeHtml(str: string): string {
+  const HTML_ENTITIES = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#x27;",
+    "/": "&#x2F;",
+    "`": "&#x60;",
+    "=": "&#x3D;",
+  };
+  return str.replace(/[&<>"'`=/]/g, (char) => HTML_ENTITIES[char]);
+}
+
+// Strip all HTML tags
+export function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, "");
+}
+
+// Sanitize URLs - bloquea javascript:, data:, vbscript:
+export function sanitizeUrl(url: string): string {
+  const lower = url.trim().toLowerCase();
+  if (
+    lower.startsWith("javascript:") ||
+    lower.startsWith("data:") ||
+    lower.startsWith("vbscript:")
+  ) {
+    return "";
+  }
+  return url;
+}
+```
+
+---
+
+### 3. CSRF (Cross-Site Request Forgery) Protection
+
+**Ubicación Frontend:** `/lib/security/csrf.tsx`
+
+**Implementación - Double Submit Cookie Pattern:**
+
+```typescript
+// Hook React para obtener token CSRF
+export function useCsrfToken() {
+  const [token, setToken] = useState<string>('');
+
+  useEffect(() => {
+    setToken(getCsrfToken());
+  }, []);
+
+  return { token, headers: { 'X-CSRF-Token': token }, refresh };
+}
+
+// Fetch wrapper con CSRF automático
+export async function csrfFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  headers.set('X-CSRF-Token', getCsrfToken());
+
+  return fetch(url, {
+    ...options,
+    headers,
+    credentials: 'same-origin', // Include cookies
+  });
+}
+
+// Componente para formularios
+export function CsrfInput() {
+  const { token } = useCsrfToken();
+  return <input type="hidden" name="csrf" value={token} />;
+}
+
+// Validación timing-safe para prevenir timing attacks
+export function validateDoubleSubmit(headerToken: string, cookieToken: string): boolean {
+  if (headerToken.length !== cookieToken.length) return false;
+  let result = 0;
+  for (let i = 0; i < headerToken.length; i++) {
+    result |= headerToken.charCodeAt(i) ^ cookieToken.charCodeAt(i);
+  }
+  return result === 0;
+}
+```
+
+**Uso obligatorio en formularios:**
 
 ```tsx
-// ✅ SIEMPRE hacer esto cuando crees UI:
+// Opción 1: Componente
+<form action="/api/action">
+  <CsrfInput />
+  {/* ... otros campos */}
+</form>;
 
-// 1. Importar en App.tsx
-import { MiNuevoComponente } from "./pages/MiNuevoComponente";
+// Opción 2: Hook
+const { headers } = useCsrfToken();
+await fetch("/api/action", {
+  method: "POST",
+  headers,
+  body: JSON.stringify(data),
+});
 
-// 2. Agregar ruta
-<Route
-  path="/mi-ruta"
-  element={
-    <ProtectedRoute>
-      {" "}
-      {/* Si requiere auth */}
-      <MiNuevoComponente />
-    </ProtectedRoute>
-  }
-/>;
+// Opción 3: Wrapper
+await csrfFetch("/api/action", { method: "POST", body: JSON.stringify(data) });
+```
 
-// 3. Agregar link en Navbar.tsx
-const userNavLinks = [{ href: "/mi-ruta", label: "Mi Función", icon: FiIcon }];
+---
 
-// 4. Envolver componente en MainLayout
-export const MiNuevoComponente = () => {
-  return (
-    <MainLayout>
-      <div>...</div>
-    </MainLayout>
-  );
+### 4. JWT Authentication Security
+
+**Configuración Backend (`Program.cs`):**
+
+```csharp
+// Configuración JWT con secrets centralizados
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero // No tolerancia de tiempo
+        };
+    });
+```
+
+**Reglas de seguridad JWT:**
+
+| Regla          | Implementación                            |
+| -------------- | ----------------------------------------- |
+| Key mínimo     | 32 caracteres (256 bits) para HMAC-SHA256 |
+| Expiración     | 24 horas máximo                           |
+| Refresh tokens | Almacenados en HttpOnly cookies           |
+| ClockSkew      | 0 (sin tolerancia)                        |
+| Validate all   | Issuer, Audience, Lifetime, SigningKey    |
+
+---
+
+### 5. Input Sanitization (Frontend)
+
+**Funciones disponibles en `/lib/security/sanitize.ts`:**
+
+| Función                 | Uso                         | Ejemplo                                 |
+| ----------------------- | --------------------------- | --------------------------------------- |
+| `escapeHtml()`          | Renderizar texto de usuario | `{escapeHtml(userInput)}`               |
+| `stripHtml()`           | Limpiar tags HTML           | `stripHtml("<p>texto</p>")` → `"texto"` |
+| `sanitizeUrl()`         | URLs seguras                | Bloquea `javascript:`, `data:`          |
+| `sanitizeSearchQuery()` | Queries de búsqueda         | Limita a 200 chars, elimina `<>"'`      |
+| `sanitizeFilename()`    | Nombres de archivo          | Solo `a-zA-Z0-9._-`                     |
+| `sanitizeNumber()`      | Números con límites         | `{ min, max, allowFloat }`              |
+| `sanitizePhone()`       | Teléfonos RD                | Formato 10 dígitos                      |
+| `sanitizeEmail()`       | Emails                      | Lowercase, max 254 chars                |
+| `sanitizeRNC()`         | RNC dominicano              | 9 o 11 dígitos                          |
+| `sanitizePlate()`       | Placas RD                   | Max 7 chars, uppercase                  |
+| `sanitizeVIN()`         | Número VIN                  | 17 chars, excluye I,O,Q                 |
+| `sanitizePrice()`       | Precios                     | 0 - 100,000,000                         |
+| `sanitizeYear()`        | Años                        | 1900 - (año actual + 2)                 |
+| `sanitizeMileage()`     | Kilometraje                 | 0 - 2,000,000                           |
+| `sanitizeText()`        | Descripciones               | Strip HTML, max length                  |
+
+---
+
+### 6. Rate Limiting
+
+**Ubicación:** `/lib/security/rate-limit.ts`
+
+**Implementación:**
+
+```typescript
+// Configuración por endpoint
+const rateLimitConfig = {
+  "/api/auth/login": { max: 5, window: "15m" }, // 5 intentos cada 15 min
+  "/api/auth/register": { max: 3, window: "1h" }, // 3 registros por hora
+  "/api/contact": { max: 10, window: "1h" }, // 10 mensajes por hora
+  "/api/vehicles": { max: 100, window: "1m" }, // 100 requests por minuto
 };
 ```
 
-#### 🚀 CI/CD INTEGRATION (CRÍTICO)
+---
 
-- [ ] **Agregar servicios nuevos a smart-cicd.yml**
-- [ ] **Configurar detection rules (paths filter)**
-- [ ] **Crear jobs de CI/CD para cada servicio**
-- [ ] **Actualizar outputs y summaries**
-- [ ] **Verificar que el pipeline detecta cambios correctamente**
-- [ ] **Probar que tests se ejecutan automáticamente en CI/CD**
+### 7. Password Security
 
-#### 📝 COMMIT & DEPLOYMENT (FINAL)
+**Requisitos de contraseña (Login y Register):**
 
-- [ ] **git add . (todos los archivos)**
-- [ ] **git commit con mensaje descriptivo completo**
-- [ ] **git push origin development**
-- [ ] **Verificar que CI/CD se ejecuta correctamente**
-- [ ] **Confirmar que todos los tests pasan en GitHub Actions**
-- [ ] **Validar que coverage reports se generan**
+```csharp
+// En RegisterCommandValidator.cs y LoginCommandValidator.cs
+RuleFor(x => x.Password)
+    .NotEmpty()
+    .MinimumLength(8)
+    .MaximumLength(128)
+    .Matches("[A-Z]").WithMessage("Debe contener al menos una mayúscula")
+    .Matches("[a-z]").WithMessage("Debe contener al menos una minúscula")
+    .Matches("[0-9]").WithMessage("Debe contener al menos un número")
+    .Matches("[^a-zA-Z0-9]").WithMessage("Debe contener al menos un carácter especial")
+    .NoXss()           // ✅ OBLIGATORIO en Password
+    .NoSqlInjection(); // ✅ OBLIGATORIO en Password
+```
 
-#### 4️⃣ Docker & Testing
+**Frontend - Formulario de Registro (`registro/page.tsx`):**
 
-- [ ] **Compilar imagen Docker del servicio**
-  ```bash
-  docker build -t cardealer-miservicio:latest ./backend/MiServicio/MiServicio.Api
-  ```
-- [ ] **Probar localmente con docker-compose**
-  ```bash
-  docker-compose up miservicio postgres rabbitmq redis
-  ```
-- [ ] **Verificar Health Check**
-  ```bash
-  curl http://localhost:PORT/health
-  ```
-- [ ] **Probar todos los endpoints principales**
-  ```bash
-  # GET, POST, PUT, DELETE
-  curl -X POST http://localhost:PORT/api/endpoint \
-    -H "Content-Type: application/json" \
-    -d '{"field": "value"}'
-  ```
-- [ ] **Verificar logs sin errores**
-  ```bash
-  docker-compose logs -f miservicio
-  ```
+```typescript
+// Sanitizar inputs ANTES de enviar al backend
+const sanitizedFirstName = sanitizeText(formData.firstName.trim(), {
+  maxLength: 50,
+});
+const sanitizedLastName = sanitizeText(formData.lastName.trim(), {
+  maxLength: 50,
+});
+const sanitizedEmail = sanitizeEmail(formData.email);
+const sanitizedPhone = formData.phone
+  ? sanitizePhone(formData.phone)
+  : undefined;
 
-#### 5️⃣ Gateway Configuration
+// Enviar datos sanitizados
+await authService.register({
+  firstName: sanitizedFirstName,
+  lastName: sanitizedLastName,
+  email: sanitizedEmail,
+  phone: sanitizedPhone,
+  password: formData.password, // Password NO se sanitiza
+  acceptTerms: formData.acceptTerms,
+});
+```
 
-- [ ] Agregar rutas en `ocelot.prod.json`
-- [ ] Usar puerto **8080** (NO 80) en DownstreamHostAndPorts
-- [ ] Actualizar ConfigMap en Kubernetes si está desplegado
-- [ ] Probar enrutamiento: `curl https://api.okla.com.do/api/miservicio/endpoint`
+**⚠️ IMPORTANTE:** El password NO se sanitiza en frontend porque podría contener caracteres válidos que las funciones de sanitización eliminarían (como `<`, `>`, `&` que son válidos en contraseñas).
 
-#### 6️⃣ Kubernetes Deployment (si aplica)
+---
 
-- [ ] Crear/actualizar Deployment en k8s/deployments.yaml
-- [ ] Crear/actualizar Service en k8s/services.yaml
-- [ ] Agregar variables de entorno en ConfigMap/Secrets
-- [ ] Agregar servicio a smart-cicd.yml workflow
-- [ ] Deploy y verificar pods: `kubectl get pods -n okla`
+### 8. Servicios con Security Validators Implementados
 
-#### 7️⃣ Documentación
+| Servicio            | SecurityValidators.cs | Aplicado en                          |
+| ------------------- | --------------------- | ------------------------------------ |
+| AuthService         | ✅                    | Login, Register, ChangePassword, 2FA |
+| MediaService        | ✅                    | Upload, Metadata                     |
+| NotificationService | ✅                    | Send, Templates                      |
+| AuditService        | ✅                    | LogAction                            |
 
-- [ ] Actualizar README del servicio con endpoints
-- [ ] Documentar DTOs y modelos de datos
-- [ ] Agregar ejemplos de uso en docs/
-- [ ] **Actualizar SPRINT_PLAN con checkmarks ✅**
+---
 
-#### 8️⃣ Verificación Final
+### ⚠️ REGLAS DE SEGURIDAD OBLIGATORIAS
+
+**Al crear/modificar código:**
+
+1. ✅ **SIEMPRE** usar `.NoSqlInjection()` y `.NoXss()` en validators de strings
+2. ✅ **SIEMPRE** usar `csrfFetch()` o `CsrfInput` en formularios/requests POST/PUT/DELETE
+3. ✅ **SIEMPRE** sanitizar inputs de usuario antes de renderizar (`escapeHtml`, `sanitizeText`)
+4. ✅ **SIEMPRE** sanitizar URLs con `sanitizeUrl()` antes de usar en `href` o `src`
+5. ✅ **NUNCA** concatenar strings en queries SQL (usar parámetros)
+6. ✅ **NUNCA** renderizar HTML de usuario sin sanitizar
+7. ✅ **NUNCA** exponer stack traces en producción
+8. ✅ **NUNCA** almacenar secrets en código (usar Kubernetes Secrets o env vars)
+
+**Copiar SecurityValidators a nuevos servicios:**
 
 ```bash
-# Checklist de testing completo:
-
-# Backend funcionando
-✅ Health check responde 200 OK
-✅ GET endpoints devuelven datos correctos
-✅ POST/PUT crean/actualizan correctamente
-✅ DELETE elimina correctamente
-✅ Validaciones funcionan (400 Bad Request)
-✅ Auth funciona (401 Unauthorized si no token)
-
-# Frontend funcionando
-✅ Página se renderiza sin errores de consola
-✅ API calls funcionan (Network tab muestra 200)
-✅ Usuarios pueden navegar a la página
-✅ Botones/formularios funcionan
-✅ Responsive en mobile/tablet/desktop
-
-# Integración
-✅ Gateway rutea correctamente
-✅ CORS permite requests desde frontend
-✅ WebSocket funciona (si aplica)
-✅ RabbitMQ procesa eventos (si aplica)
+# Copiar desde AuthService como template
+cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs \
+   backend/NewService/NewService.Application/Validators/
 ```
 
 ---
 
-## 🚫 ERRORES COMUNES A EVITAR
+## ✅ REGLAS OBLIGATORIAS
 
-### ❌ NO HACER:
+### Al crear un nuevo microservicio:
 
-1. **Crear UI sin agregar a navegación** → Usuarios no pueden acceder
-2. **Omitir docker build/test** → Errores en producción
-3. **Puerto 80 en K8s** → Debe ser 8080
-4. **Olvidar ProtectedRoute** → Páginas privadas accesibles sin auth
-5. **No probar endpoints** → Bugs en producción
-6. **Saltarse Health Check** → K8s no puede monitorear el servicio
-7. **No actualizar Gateway** → 404 en API calls
-8. **Commits sin testing** → Breaking changes
-9. **❌ DECIR "100%" SIN TESTS** → Sprint incompleto
-10. **❌ NO ACTUALIZAR CI/CD** → Servicios no se despliegan automáticamente
-11. **❌ OLVIDAR COMMIT/PUSH** → Trabajo se pierde localmente
+1. ✅ Usar Clean Architecture (Domain, Application, Infrastructure, Api)
+2. ✅ Implementar Health Checks
+3. ✅ Agregar rutas al Gateway (ocelot.\*.json)
+4. ✅ Crear proyecto de tests
+5. ✅ Usar puerto 8080 en Kubernetes
+6. ✅ Integrar con AuditService para logging
+7. ✅ Implementar IdempotencyMiddleware si aplica
+8. ✅ **Copiar e implementar SecurityValidators.cs** (NoSqlInjection, NoXss)
+9. ✅ **Aplicar validadores de seguridad en TODOS los commands/queries**
 
-### ✅ HACER SIEMPRE:
+### Al crear UI nueva:
 
-1. **UI nueva = Ruta + Navbar link** → Accesibilidad garantizada
-2. **Backend nuevo = Docker build + test** → Calidad asegurada
-3. **Cambio en servicio = Actualizar Gateway** → Routing correcto
-4. **Feature completo = Testing end-to-end** → UX funcional
-5. **✅ MICROSERVICIO NUEVO = PROYECTO DE TESTS OBLIGATORIO**
-6. **✅ SPRINT TERMINADO = CI/CD ACTUALIZADO + COMMIT/PUSH**
-7. **✅ "100%" = TESTS PASANDO + PIPELINE FUNCIONANDO**
+1. ✅ Agregar ruta en App Router
+2. ✅ Usar 'use client' solo cuando necesario
+3. ✅ Implementar loading.tsx y error.tsx
+4. ✅ Verificar responsive design
+5. ✅ Probar accesibilidad
+6. ✅ **Usar csrfFetch() o CsrfInput para forms/requests mutables**
+7. ✅ **Sanitizar TODO input de usuario antes de renderizar**
+8. ✅ **Usar sanitizeUrl() para cualquier URL de usuario**
+
+### Al modificar servicios existentes:
+
+1. ✅ Actualizar tests
+2. ✅ Verificar compatibilidad con Gateway
+3. ✅ Documentar cambios en CHANGELOG
+4. ✅ Probar en docker-compose antes de deploy
+5. ✅ **Verificar que todos los inputs tienen validadores de seguridad**
 
 ---
 
-## 🔄 FLUJO COMPLETO: Backend → Frontend → Testing
+## 🔴 DESPUÉS DE CADA IMPLEMENTACIÓN
 
-```mermaid
-graph TD
-    A[Crear Backend Service] --> B[Implementar Endpoints]
-    B --> C[Docker Build & Test]
-    C --> D{Tests OK?}
-    D -->|NO| B
-    D -->|SÍ| E[Crear Frontend Components]
-    E --> F[Integrar en Navegación]
-    F --> G[Agregar Rutas en App.tsx]
-    G --> H[Actualizar Navbar.tsx]
-    H --> I[Probar Accesibilidad]
-    I --> J{Users can access?}
-    J -->|NO| F
-    J -->|SÍ| K[Actualizar Gateway]
-    K --> L[Deploy a Docker/K8s]
-    L --> M[Testing E2E]
-    M --> N{All tests pass?}
-    N -->|NO| L
-    N -->|SÍ| O[✅ Sprint Complete]
+**OBLIGATORIO:** Después de cualquier cambio de código, verificar la ventana de **PROBLEMS** en VS Code:
+
+```
+Ver → Problems (Ctrl+Shift+M / Cmd+Shift+M)
 ```
 
----
+### Pasos a seguir:
 
-## 📋 TEMPLATE: Checklist por Sprint
+1. ✅ **Revisar todos los ERRORS** (🔴) - Deben corregirse ANTES de continuar
+2. ✅ **Revisar todos los WARNINGS** (🟡) - Deben corregirse si es posible
+3. ✅ **Usar `get_errors` tool** para obtener la lista de errores programáticamente:
+   ```
+   get_errors({ filePaths: ["/ruta/al/archivo/modificado.cs"] })
+   ```
 
-Copiar esto al inicio de cada sprint:
+### Errores comunes a corregir:
 
-```markdown
-## Sprint X - [Nombre] - Checklist
+| Error    | Causa                                | Solución                             |
+| -------- | ------------------------------------ | ------------------------------------ |
+| `CS8618` | Property no nullable sin inicializar | Agregar `= string.Empty` o `= null!` |
+| `CS0246` | Tipo o namespace no encontrado       | Agregar `using` statement            |
+| `TS2304` | Cannot find name                     | Agregar import o declarar tipo       |
+| `TS2322` | Type mismatch                        | Verificar tipos y agregar casting    |
+| `ESLint` | Reglas de linting                    | Corregir según la regla indicada     |
 
-### Backend
+### ⚠️ NO TERMINAR una tarea si hay errores en PROBLEMS
 
-- [ ] Microservicio creado con Clean Architecture
-- [ ] Todos los endpoints implementados
-- [ ] FluentValidation agregado
-- [ ] Health Check funcional
-- [ ] Docker build exitoso
-- [ ] **TESTS CREADOS (OBLIGATORIO)**
+Antes de marcar una tarea como completada:
 
-### Testing (CRÍTICO - NO OPCIONAL)
-
-- [ ] **Proyecto .Tests creado**
-- [ ] **Mínimo 5-7 tests por servicio**
-- [ ] **Todos los tests compilan**
-- [ ] **Todos los tests pasan**
-- [ ] **Coverage configurado**
-- [ ] **Tests probados localmente**
-
-### Frontend (si aplica)
-
-- [ ] Componentes creados
-- [ ] Rutas agregadas en App.tsx
-- [ ] Links en Navbar (desktop + mobile)
-- [ ] MainLayout wrapper aplicado
-- [ ] Accesibilidad verificada
-- [ ] Responsive design OK
-
-### Integración
-
-- [ ] Gateway routes configuradas
-- [ ] Puerto 8080 verificado
-- [ ] CORS funcionando
-- [ ] API calls desde frontend OK
-- [ ] Auth/ProtectedRoute funciona
-
-### CI/CD (OBLIGATORIO)
-
-- [ ] **Servicios agregados a smart-cicd.yml**
-- [ ] **Detection rules configuradas**
-- [ ] **Jobs de CI/CD creados**
-- [ ] **Pipeline detecta cambios correctamente**
-- [ ] **Tests se ejecutan automáticamente**
-
-### Testing
-
-- [ ] Todos los endpoints probados
-- [ ] UI navegable por usuarios
-- [ ] Docker compose up sin errores
-- [ ] Logs limpios sin warnings
-- [ ] Health checks responden
-
-### Deployment
-
-- [ ] K8s manifests actualizados
-- [ ] CI/CD workflow funcional
-- [ ] Deploy exitoso a DOKS
-- [ ] Verificación en producción
-
-### Final (CRÍTICO)
-
-- [ ] **git add . && git commit**
-- [ ] **git push origin development**
-- [ ] **CI/CD ejecutándose correctamente**
-- [ ] **Todos los tests pasando en GitHub Actions**
-- [ ] **Coverage reports generándose**
-
-### Documentación
-
-- [ ] README actualizado
-- [ ] API endpoints documentados
-- [ ] Sprint plan marcado ✅
-```
+1. Ejecutar `get_errors` en todos los archivos modificados
+2. Corregir todos los errores reportados
+3. Verificar que el código compila sin errores
 
 ---
 
-## 🎓 LECCIONES APRENDIDAS
-
-### Sprint 1 - Marketplace Foundations
-
-**Fecha:** Enero 8, 2026
-
-**Problema identificado:**
-
-- Componentes UI creados (SearchPage, FavoritesPage, ComparisonPage, AlertsPage) pero NO integrados en navegación
-- Usuarios no podían acceder a las nuevas funcionalidades
-- Faltaba agregar rutas en App.tsx
-- Faltaban links en Navbar.tsx
-- Componentes no envueltos en MainLayout
-
-**Solución aplicada:**
-
-1. Agregar importaciones en App.tsx
-2. Crear rutas con ProtectedRoute donde correspondía
-3. Actualizar Navbar con `navLinks` y `userNavLinks`
-4. Envolver todos los componentes en MainLayout
-5. Probar accesibilidad en desktop/mobile
-
-**Regla nueva:**
-
-> **SIEMPRE que crees UI, INMEDIATAMENTE integrarlo en navegación antes de marcar como completo.**
-
-**Documentación:** [SPRINT_1_NAVIGATION_INTEGRATION.md](../docs/SPRINT_1_NAVIGATION_INTEGRATION.md)
-
----
-
-_Documento mantenido por el equipo de desarrollo - Enero 2026_
-
----
-
-## 🚨 LECCIÓN APRENDIDA: TAREAS POST-"100%"
-
-### ⚠️ PROBLEMA IDENTIFICADO EN SPRINT 1
-
-**Cuando dije "Sprint 1 100% completo" la primera vez, aún faltaban estas tareas CRÍTICAS:**
-
-#### 🧪 Testing Infrastructure (FALTABA COMPLETAMENTE)
-
-- [ ] ❌ MaintenanceService tenía **0 tests** (necesitaba 6)
-- [ ] ❌ ComparisonService tenía **0 tests** (necesitaba 6)
-- [ ] ❌ AlertService tenía **0 tests** (necesitaba 7)
-- [ ] ❌ Total: **19 tests** que NO EXISTÍAN
-
-#### 🔧 Compilación y Debug
-
-- [ ] ❌ Errores de constructor en entidades
-- [ ] ❌ Namespaces incorrectos
-- [ ] ❌ Referencias de proyectos faltantes
-- [ ] ❌ Múltiples iteraciones de debugging
-
-#### 🚀 CI/CD Pipeline
-
-- [ ] ❌ 3 servicios NO estaban en smart-cicd.yml
-- [ ] ❌ Detection rules faltantes
-- [ ] ❌ Jobs de CI/CD no configurados
-- [ ] ❌ Pipeline no detectaba cambios
-
-#### 📝 Deployment Final
-
-- [ ] ❌ Commit y push no realizados
-- [ ] ❌ Cambios solo existían localmente
-- [ ] ❌ No validado en CI/CD
-
-### 💡 NUEVA REGLA OBLIGATORIA
-
-**UN SPRINT NO ESTÁ 100% HASTA QUE:**
-
-1. ✅ **TODOS los tests existen y pasan**
-2. ✅ **CI/CD pipeline actualizado y funcionando**
-3. ✅ **Commit y push realizados**
-4. ✅ **GitHub Actions ejecutándose correctamente**
-5. ✅ **Coverage reports generándose**
-
-**Lo que parece "100%" es típicamente 90-95%. Las tareas finales son OBLIGATORIAS.**
-
----
-
-## 🎓 LECCIÓN APRENDIDA: Sprint 5 - Dealer Dashboard
-
-### 📅 Fecha: Enero 8, 2026
-
-**Sprint:** Sprint 5 - Dealer Dashboard  
-**Objetivo:** Implementar sistema completo de gestión de cuentas de Dealer
-
-### ✅ LO QUE SE HIZO CORRECTAMENTE
-
-#### Backend (23 archivos)
-
-- ✅ Clean Architecture completa (Domain, Application, Infrastructure, API)
-- ✅ 7 entidades con enums bien definidos
-- ✅ CQRS con MediatR (Commands/Queries)
-- ✅ 8 endpoints REST funcionando
-- ✅ Repository pattern implementado
-- ✅ Dockerfile para cada servicio
-
-#### Frontend (5 archivos)
-
-- ✅ 4 páginas completas creadas:
-  - DealerLandingPage.tsx (180 líneas)
-  - DealerPricingPage.tsx (230 líneas)
-  - DealerRegistrationPage.tsx (360 líneas)
-  - DealerDashboard.tsx (200 líneas)
-- ✅ dealerManagementService.ts (240 líneas)
-- ✅ **TODOS envueltos en MainLayout** ⭐
-- ✅ Responsive design
-- ✅ TypeScript con tipos completos
-
-#### Testing (10 tests)
-
-- ✅ Proyecto DealerManagementService.Tests creado
-- ✅ 10 tests unitarios implementados
-- ✅ 100% passing rate (0 errores)
-- ✅ FluentAssertions + xUnit configurados
-- ✅ Tests ejecutándose en <1 segundo
-
-#### Integración UI (COMPLETADO ✅)
-
-- ✅ **Rutas agregadas en App.tsx** (4 rutas)
-- ✅ **Link en Navbar:** "Para Dealers" visible para todos
-- ✅ **Flujo completo:** Landing → Pricing → Register → Dashboard
-- ✅ **ProtectedRoute** aplicado donde corresponde
-- ✅ **MainLayout** en todas las páginas (banners site-wide)
-
-### 🎯 CHECKLIST COMPLETO SEGUIDO
-
-```markdown
-✅ Backend con Clean Architecture
-✅ Endpoints REST funcionando
-✅ Frontend con componentes profesionales
-✅ Rutas agregadas en App.tsx
-✅ Links en Navbar.tsx (navLinks)
-✅ MainLayout wrapper en TODAS las páginas
-✅ ProtectedRoute para páginas privadas
-✅ Tests creados y ejecutándose
-✅ Compilación sin errores
-✅ Responsive design verificado
-✅ Commit y push realizados
-✅ Documentación completa actualizada
-```
-
-### 📊 Métricas del Sprint
-
-| Métrica                   | Valor  |
-| ------------------------- | ------ |
-| Archivos backend          | 23     |
-| Archivos frontend         | 5      |
-| Líneas de código          | ~4,350 |
-| Endpoints REST            | 8      |
-| Tests unitarios           | 10     |
-| Tests passing             | 100%   |
-| Tiempo de ejecución tests | 0.31s  |
-| Páginas UI                | 4      |
-| Rutas configuradas        | 4      |
-| Links en Navbar           | 1      |
-
-### 🔍 VERIFICACIÓN POST-COMPLETADO
-
-**Pregunta del usuario:** "¿Las interfaces están integradas al UI?"
-
-**Respuesta:** ✅ **SÍ, 100% INTEGRADAS**
-
-**Evidencia:**
-
-1. ✅ `grep_search` confirmó rutas en App.tsx (líneas 217-224)
-2. ✅ Verificación de MainLayout en todas las páginas
-3. ✅ Link "Para Dealers" agregado en Navbar (navLinks)
-4. ✅ Flujo de navegación completo funcional
-
-### 🎓 LECCIÓN CLAVE
-
-**Cuando se pregunta "¿están integradas las vistas?"**, verificar INMEDIATAMENTE:
-
-1. ✅ **Importaciones en App.tsx** - Las 4 páginas importadas
-2. ✅ **Rutas en App.tsx** - Las 4 rutas configuradas
-3. ✅ **Links en Navbar.tsx** - 1 link principal agregado
-4. ✅ **MainLayout wrapper** - Todas las páginas envueltas
-5. ✅ **ProtectedRoute** - Dashboard protegido
-6. ✅ **Navegación funcional** - Flujo completo probado
-
-### 🚀 REGLA ACTUALIZADA
-
-**Para considerar un Sprint de UI como "COMPLETO":**
-
-```markdown
-✅ Componentes creados
-✅ Rutas en App.tsx
-✅ Links en Navbar (principal o user menu)
-✅ MainLayout wrapper (para banners site-wide)
-✅ ProtectedRoute (si requiere auth)
-✅ Tests del backend
-✅ Responsive design
-✅ Commit + Push
-✅ Documentación actualizada
-✅ VERIFICACIÓN EXPLÍCITA de accesibilidad
-```
-
-### 📝 Documentación Creada
-
-- ✅ [SPRINT_5_DEALER_DASHBOARD_COMPLETED.md](../docs/SPRINT_5_DEALER_DASHBOARD_COMPLETED.md)
-  - Detalle completo de 23 archivos backend
-  - Detalle de 5 archivos frontend
-  - Sección de Testing con resultados
-  - Sección de Integración UI con mapa de navegación
-  - Flujo de usuario completo documentado
-
-### 💡 MEJORA PARA FUTUROS SPRINTS
-
-**Antes de decir "100%":**
-
-1. Ejecutar `grep_search` para verificar integraciones
-2. Probar manualmente el flujo de navegación
-3. Verificar que usuarios pueden ACCEDER a las funcionalidades
-4. Confirmar que todos los links son visibles y funcionan
-5. Documentar puntos de acceso para usuarios
-
-### ✅ CONCLUSIÓN
-
-**Sprint 5 = ÉXITO COMPLETO** 🎉
-
-- Backend: Clean Architecture + 8 endpoints
-- Frontend: 4 páginas + 1 servicio
-- Testing: 10 tests (100% passing)
-- UI Integration: 100% funcional
-- Navegación: Flujo completo accesible
-- Documentación: Completa y actualizada
-
-**El proceso fue seguido CORRECTAMENTE siguiendo las reglas de `copilot-instructions.md`.**
-
----
-
-_Última actualización: Enero 8, 2026_  
-_Sprint: 5 - Dealer Dashboard_  
-_Estado: ✅ COMPLETADO AL 100%_
+_Documento mantenido por el equipo de desarrollo - Febrero 2026_
+_86 Microservicios | Next.js 14 | .NET 8 | PostgreSQL | Kubernetes_

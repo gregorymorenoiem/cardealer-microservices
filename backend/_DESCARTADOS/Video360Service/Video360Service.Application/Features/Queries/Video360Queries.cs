@@ -1,60 +1,53 @@
 using MediatR;
 using Video360Service.Application.DTOs;
+using Video360Service.Domain.Enums;
 
 namespace Video360Service.Application.Features.Queries;
 
 /// <summary>
-/// Query para obtener un trabajo por ID
+/// Query para obtener un job por ID
 /// </summary>
-public record GetVideo360JobQuery : IRequest<Video360JobResponse?>
+public record GetVideo360JobByIdQuery : IRequest<Video360JobResponse?>
 {
     public Guid JobId { get; init; }
-    public bool IncludeFrames { get; init; } = true;
+    public Guid? UserId { get; init; }
+    public bool IncludeFrameBase64 { get; init; } = false;
 }
 
 /// <summary>
-/// Query para obtener el estado de un trabajo
+/// Query para listar jobs del usuario
 /// </summary>
-public record GetJobStatusQuery : IRequest<JobStatusResponse?>
+public record GetVideo360JobsQuery : IRequest<Video360JobListResponse>
 {
-    public Guid JobId { get; init; }
+    public Guid? UserId { get; init; }
+    public Guid? VehicleId { get; init; }
+    public ProcessingStatus? Status { get; init; }
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
 }
 
 /// <summary>
-/// Query para obtener trabajos de un vehículo
+/// Query para obtener la vista 360 de un vehículo
 /// </summary>
-public record GetJobsByVehicleQuery : IRequest<IEnumerable<Video360JobResponse>>
+public record GetVehicle360ViewQuery : IRequest<Vehicle360ViewResponse?>
 {
     public Guid VehicleId { get; init; }
 }
 
 /// <summary>
-/// Query para obtener trabajos de un usuario
+/// Query para obtener información de proveedores
 /// </summary>
-public record GetJobsByUserQuery : IRequest<IEnumerable<Video360JobResponse>>
+public record GetProvidersInfoQuery : IRequest<IEnumerable<ProviderInfoResponse>>
 {
-    public Guid UserId { get; init; }
-    public int? Limit { get; init; }
+    public bool OnlyAvailable { get; init; } = false;
 }
 
 /// <summary>
-/// Query para obtener los datos del viewer 360 de un vehículo
+/// Query para obtener estadísticas de uso
 /// </summary>
-public record GetVehicle360ViewerQuery : IRequest<Vehicle360ViewerResponse?>
+public record GetUsageStatsQuery : IRequest<UsageStatsResponse>
 {
-    public Guid VehicleId { get; init; }
-}
-
-/// <summary>
-/// Query para obtener estadísticas del servicio
-/// </summary>
-public record GetServiceStatsQuery : IRequest<ServiceStatsResponse>;
-
-public record ServiceStatsResponse
-{
-    public int PendingJobs { get; init; }
-    public int ProcessingJobs { get; init; }
-    public int CompletedToday { get; init; }
-    public int FailedToday { get; init; }
-    public double AverageProcessingTimeMs { get; init; }
+    public Guid? UserId { get; init; }
+    public string? TenantId { get; init; }
+    public string? BillingPeriod { get; init; }
 }

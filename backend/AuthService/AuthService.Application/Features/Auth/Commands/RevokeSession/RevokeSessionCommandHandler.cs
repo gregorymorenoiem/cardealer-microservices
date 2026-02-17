@@ -111,91 +111,102 @@ public class RevokeSessionCommandHandler : IRequestHandler<RevokeSessionCommand,
                 );
             }
 
-            // 3. Verificar código de verificación
-            var cacheKey = $"{REVOCATION_CODE_PREFIX}{request.UserId}:{request.SessionId}";
-            var cacheValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
-
-            if (string.IsNullOrEmpty(cacheValue))
+            // 3. Verificar código de verificación (OPCIONAL para usuarios autenticados)
+            // Si no se proporciona código, se permite la revocación directa
+            if (!string.IsNullOrEmpty(request.VerificationCode))
             {
-                _logger.LogWarning(
-                    "AUTH-SEC-003: No verification code found for user {UserId} session {SessionId}",
-                    request.UserId, request.SessionId);
-                return new RevokeSessionResponse(
-                    Success: false,
-                    Message: "Verification code expired or not requested. Please request a new code."
-                );
-            }
+                var cacheKey = $"{REVOCATION_CODE_PREFIX}{request.UserId}:{request.SessionId}";
+                var cacheValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
 
-            var codeData = JsonSerializer.Deserialize<RevocationCodeData>(cacheValue);
-            if (codeData == null)
-            {
-                throw new BadRequestException("Invalid verification data.");
-            }
-
-            // 4. Verificar expiración
-            if (DateTime.UtcNow > codeData.ExpiresAt)
-            {
-                await _cache.RemoveAsync(cacheKey, cancellationToken);
-                return new RevokeSessionResponse(
-                    Success: false,
-                    Message: "Verification code has expired. Please request a new code."
-                );
-            }
-
-            // 5. Verificar código
-            var providedCodeHash = HashCode(request.VerificationCode);
-            if (providedCodeHash != codeData.CodeHash)
-            {
-                codeData.RemainingAttempts--;
-                
-                if (codeData.RemainingAttempts <= 0)
+                if (string.IsNullOrEmpty(cacheValue))
                 {
-                    // Lockout
+                    _logger.LogWarning(
+                        "AUTH-SEC-003: No verification code found for user {UserId} session {SessionId}",
+                        request.UserId, request.SessionId);
+                    return new RevokeSessionResponse(
+                        Success: false,
+                        Message: "Verification code expired or not requested. Please request a new code."
+                    );
+                }
+
+                var codeData = JsonSerializer.Deserialize<RevocationCodeData>(cacheValue);
+                if (codeData == null)
+                {
+                    throw new BadRequestException("Invalid verification data.");
+                }
+
+                // 4. Verificar expiración
+                if (DateTime.UtcNow > codeData.ExpiresAt)
+                {
                     await _cache.RemoveAsync(cacheKey, cancellationToken);
-                    var lockoutUntil = DateTime.UtcNow.AddMinutes(LOCKOUT_MINUTES);
+                    return new RevokeSessionResponse(
+                        Success: false,
+                        Message: "Verification code has expired. Please request a new code."
+                    );
+                }
+
+                // 5. Verificar código
+                var providedCodeHash = HashCode(request.VerificationCode);
+                if (providedCodeHash != codeData.CodeHash)
+                {
+                    codeData.RemainingAttempts--;
+                    
+                    if (codeData.RemainingAttempts <= 0)
+                    {
+                        // Lockout
+                        await _cache.RemoveAsync(cacheKey, cancellationToken);
+                        var lockoutUntil = DateTime.UtcNow.AddMinutes(LOCKOUT_MINUTES);
+                        await _cache.SetStringAsync(
+                            lockoutKey,
+                            lockoutUntil.ToString("O"),
+                            new DistributedCacheEntryOptions
+                            {
+                                AbsoluteExpiration = lockoutUntil
+                            },
+                            cancellationToken);
+
+                        _logger.LogWarning(
+                            "AUTH-SEC-003: User {UserId} locked out for {Minutes} min after failed verification attempts",
+                            request.UserId, LOCKOUT_MINUTES);
+
+                        return new RevokeSessionResponse(
+                            Success: false,
+                            Message: $"Too many incorrect attempts. Locked for {LOCKOUT_MINUTES} minutes.",
+                            RemainingAttempts: 0
+                        );
+                    }
+
+                    // Actualizar intentos restantes
                     await _cache.SetStringAsync(
-                        lockoutKey,
-                        lockoutUntil.ToString("O"),
+                        cacheKey,
+                        JsonSerializer.Serialize(codeData),
                         new DistributedCacheEntryOptions
                         {
-                            AbsoluteExpiration = lockoutUntil
+                            AbsoluteExpiration = codeData.ExpiresAt.AddMinutes(1)
                         },
                         cancellationToken);
 
                     _logger.LogWarning(
-                        "AUTH-SEC-003: User {UserId} locked out for {Minutes} min after failed verification attempts",
-                        request.UserId, LOCKOUT_MINUTES);
+                        "AUTH-SEC-003: Invalid code for user {UserId}. Remaining attempts: {Attempts}",
+                        request.UserId, codeData.RemainingAttempts);
 
                     return new RevokeSessionResponse(
                         Success: false,
-                        Message: $"Too many incorrect attempts. Locked for {LOCKOUT_MINUTES} minutes.",
-                        RemainingAttempts: 0
+                        Message: "Invalid verification code.",
+                        RemainingAttempts: codeData.RemainingAttempts
                     );
                 }
 
-                // Actualizar intentos restantes
-                await _cache.SetStringAsync(
-                    cacheKey,
-                    JsonSerializer.Serialize(codeData),
-                    new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpiration = codeData.ExpiresAt.AddMinutes(1)
-                    },
-                    cancellationToken);
-
-                _logger.LogWarning(
-                    "AUTH-SEC-003: Invalid code for user {UserId}. Remaining attempts: {Attempts}",
-                    request.UserId, codeData.RemainingAttempts);
-
-                return new RevokeSessionResponse(
-                    Success: false,
-                    Message: "Invalid verification code.",
-                    RemainingAttempts: codeData.RemainingAttempts
-                );
+                // 6. Código válido - eliminar de cache
+                await _cache.RemoveAsync(cacheKey, cancellationToken);
             }
-
-            // 6. Código válido - eliminar de cache
-            await _cache.RemoveAsync(cacheKey, cancellationToken);
+            else
+            {
+                // Direct revocation without code (simplified flow for authenticated users)
+                _logger.LogInformation(
+                    "AUTH-SEC-003: Direct session revocation (no code) for user {UserId} session {SessionId}",
+                    request.UserId, request.SessionId);
+            }
 
             // 7. Obtener sesión
             var session = await _sessionRepository.GetByIdAsync(sessionGuid, cancellationToken);
@@ -231,9 +242,12 @@ public class RevokeSessionCommandHandler : IRequestHandler<RevokeSessionCommand,
             }
 
             // 10. Revocar la sesión
+            var revocationReason = string.IsNullOrEmpty(request.VerificationCode) 
+                ? "User revoked session directly" 
+                : "User revoked session with verification code";
             await _sessionRepository.RevokeSessionAsync(
                 sessionGuid,
-                "User revoked session with verification code",
+                revocationReason,
                 cancellationToken);
 
             // 11. Revocar el refresh token asociado

@@ -1,32 +1,57 @@
 namespace Video360Service.Domain.Entities;
 
 /// <summary>
-/// Representa un frame extraído del video 360
+/// Representa un frame extraído del video 360.
+/// Cada Video360Job genera 6 frames para la vista interactiva.
 /// </summary>
 public class ExtractedFrame
 {
-    public Guid Id { get; set; }
+    public ExtractedFrame()
+    {
+    }
+    
+    /// <summary>
+    /// Constructor con parámetros principales
+    /// </summary>
+    public ExtractedFrame(
+        Guid video360JobId,
+        int frameIndex,
+        int angleDegrees,
+        string? angleLabel,
+        string imageUrl,
+        long fileSizeBytes,
+        string contentType)
+    {
+        Video360JobId = video360JobId;
+        FrameIndex = frameIndex;
+        AngleDegrees = angleDegrees;
+        AngleLabel = angleLabel;
+        ImageUrl = imageUrl;
+        FileSizeBytes = fileSizeBytes;
+        ContentType = contentType;
+    }
+    
+    public Guid Id { get; set; } = Guid.NewGuid();
+    
+    /// <summary>
+    /// ID del job padre
+    /// </summary>
     public Guid Video360JobId { get; set; }
     
     /// <summary>
-    /// Número de secuencia (1-6 típicamente)
+    /// Referencia al job padre
     /// </summary>
-    public int SequenceNumber { get; set; }
+    public Video360Job? Video360Job { get; set; }
     
     /// <summary>
-    /// Ángulo aproximado de la vista (0, 60, 120, 180, 240, 300 grados)
+    /// Índice del frame (0-5 para 6 frames)
+    /// </summary>
+    public int FrameIndex { get; set; }
+    
+    /// <summary>
+    /// Ángulo en grados (0, 60, 120, 180, 240, 300)
     /// </summary>
     public int AngleDegrees { get; set; }
-    
-    /// <summary>
-    /// Nombre descriptivo de la vista
-    /// </summary>
-    public string ViewName { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Número del frame en el video original
-    /// </summary>
-    public int SourceFrameNumber { get; set; }
     
     /// <summary>
     /// Timestamp del frame en el video (segundos)
@@ -34,14 +59,24 @@ public class ExtractedFrame
     public double TimestampSeconds { get; set; }
     
     /// <summary>
-    /// URL de la imagen extraída (después de subir a S3/storage)
+    /// URL de la imagen resultante (almacenada en S3/storage)
     /// </summary>
-    public string? ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
     
     /// <summary>
-    /// URL de la miniatura
+    /// URL del thumbnail de la imagen
     /// </summary>
     public string? ThumbnailUrl { get; set; }
+    
+    /// <summary>
+    /// Tamaño del archivo en bytes
+    /// </summary>
+    public long FileSizeBytes { get; set; }
+    
+    /// <summary>
+    /// Content type (image/jpeg, image/png, etc.)
+    /// </summary>
+    public string ContentType { get; set; } = "image/jpeg";
     
     /// <summary>
     /// Ancho de la imagen en píxeles
@@ -54,66 +89,44 @@ public class ExtractedFrame
     public int Height { get; set; }
     
     /// <summary>
-    /// Tamaño del archivo en bytes
+    /// Fecha de creación
     /// </summary>
-    public long FileSizeBytes { get; set; }
-    
-    /// <summary>
-    /// Formato de la imagen (jpg, png, webp)
-    /// </summary>
-    public string Format { get; set; } = "jpg";
-    
-    /// <summary>
-    /// Puntuación de calidad del frame (0-100)
-    /// </summary>
-    public int? QualityScore { get; set; }
-    
-    /// <summary>
-    /// Indica si este frame es el principal/destacado
-    /// </summary>
-    public bool IsPrimary { get; set; }
-    
-    /// <summary>
-    /// Metadatos adicionales en JSON
-    /// </summary>
-    public string? MetadataJson { get; set; }
-    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    // Navegación
-    public Video360Job? Video360Job { get; set; }
+    /// <summary>
+    /// Hash del archivo para verificación
+    /// </summary>
+    public string? FileHash { get; set; }
     
     /// <summary>
-    /// Nombres estándar para cada posición de vista
+    /// Si la imagen ha sido optimizada
     /// </summary>
-    public static readonly Dictionary<int, (string Name, int Angle)> StandardViews = new()
+    public bool IsOptimized { get; set; } = false;
+    
+    /// <summary>
+    /// Descripción o etiqueta del ángulo (ej: "Frente", "Lado Izquierdo")
+    /// </summary>
+    public string? AngleLabel { get; set; }
+    
+    /// <summary>
+    /// Obtiene la etiqueta del ángulo basado en el índice
+    /// </summary>
+    public static string GetAngleLabelByIndex(int index) => index switch
     {
-        { 1, ("Frente", 0) },
-        { 2, ("Frente-Derecha", 60) },
-        { 3, ("Derecha", 120) },
-        { 4, ("Atrás-Derecha", 180) },
-        { 5, ("Atrás", 240) },
-        { 6, ("Izquierda", 300) }
+        0 => "Frente",
+        1 => "Frente-Derecha",
+        2 => "Trasera-Derecha",
+        3 => "Trasera",
+        4 => "Trasera-Izquierda",
+        5 => "Frente-Izquierda",
+        _ => $"Ángulo {index}"
     };
     
     /// <summary>
-    /// Crea un ExtractedFrame con valores estándar para una posición
+    /// Calcula el ángulo en grados basado en el índice (6 frames = 60° cada uno)
     /// </summary>
-    public static ExtractedFrame CreateForPosition(int position, Guid jobId)
+    public static int CalculateAngle(int frameIndex, int totalFrames = 6)
     {
-        if (!StandardViews.TryGetValue(position, out var view))
-        {
-            view = ($"Vista-{position}", (position - 1) * 60);
-        }
-        
-        return new ExtractedFrame
-        {
-            Id = Guid.NewGuid(),
-            Video360JobId = jobId,
-            SequenceNumber = position,
-            ViewName = view.Name,
-            AngleDegrees = view.Angle,
-            IsPrimary = position == 1 // El frente es el principal
-        };
+        return (360 / totalFrames) * frameIndex;
     }
 }

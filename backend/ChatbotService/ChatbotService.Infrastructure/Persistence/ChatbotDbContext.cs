@@ -22,7 +22,7 @@ public class ChatbotDbContext : DbContext
     // Maintenance entities
     public DbSet<MaintenanceTask> MaintenanceTasks => Set<MaintenanceTask>();
     public DbSet<MaintenanceTaskLog> MaintenanceTaskLogs => Set<MaintenanceTaskLog>();
-    public DbSet<DialogflowIntent> DialogflowIntents => Set<DialogflowIntent>();
+    public DbSet<ChatbotIntent> ChatbotIntents => Set<ChatbotIntent>();
     public DbSet<UnansweredQuestion> UnansweredQuestions => Set<UnansweredQuestion>();
     public DbSet<ChatbotVehicle> ChatbotVehicles => Set<ChatbotVehicle>();
     public DbSet<QuickResponse> QuickResponses => Set<QuickResponse>();
@@ -54,6 +54,26 @@ public class ChatbotDbContext : DbContext
             entity.Property(e => e.DeviceType).HasMaxLength(50);
             entity.Property(e => e.Language).HasMaxLength(10);
 
+            // Dual-mode chat fields
+            entity.Property(e => e.ChatMode)
+                .HasConversion<int>()
+                .HasDefaultValue(ChatbotService.Domain.Enums.ChatMode.General);
+            entity.Property(e => e.HandoffStatus)
+                .HasConversion<int>()
+                .HasDefaultValue(ChatbotService.Domain.Enums.HandoffStatus.BotActive);
+            entity.HasIndex(e => e.ChatMode);
+            entity.HasIndex(e => e.VehicleId);
+            entity.HasIndex(e => e.DealerId);
+            entity.HasIndex(e => e.HandoffStatus);
+
+            // Handoff agent fields
+            entity.Property(e => e.HandoffAgentName).HasMaxLength(200);
+            entity.Property(e => e.HandoffReason).HasMaxLength(500);
+
+            // Computed properties should be ignored by EF
+            entity.Ignore(e => e.IsBotActive);
+            entity.Ignore(e => e.IsWhatsApp);
+
             entity.HasMany(e => e.Messages)
                 .WithOne(e => e.Session)
                 .HasForeignKey(e => e.SessionId)
@@ -76,9 +96,9 @@ public class ChatbotDbContext : DbContext
             entity.Property(e => e.Content).IsRequired();
             entity.Property(e => e.MediaUrl).HasMaxLength(500);
             entity.Property(e => e.MediaType).HasMaxLength(50);
-            entity.Property(e => e.DialogflowIntentName).HasMaxLength(200);
-            entity.Property(e => e.DialogflowIntentId).HasMaxLength(100);
-            entity.Property(e => e.DialogflowParameters).HasColumnType("jsonb");
+            entity.Property(e => e.IntentName).HasMaxLength(200);
+            entity.Property(e => e.LlmIntentId).HasMaxLength(100);
+            entity.Property(e => e.IntentParameters).HasColumnType("jsonb");
             entity.Property(e => e.QuickReplies).HasColumnType("jsonb");
             entity.Property(e => e.ConfidenceScore).HasPrecision(5, 4);
             entity.Property(e => e.SentimentScore).HasPrecision(5, 4);
@@ -116,10 +136,10 @@ public class ChatbotDbContext : DbContext
             entity.HasIndex(e => e.DealerId);
 
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.DialogflowProjectId).HasMaxLength(100);
-            entity.Property(e => e.DialogflowAgentId).HasMaxLength(100);
-            entity.Property(e => e.DialogflowLanguageCode).HasMaxLength(10);
-            entity.Property(e => e.DialogflowCredentialsJson).HasColumnType("text"); // Encrypted
+            entity.Property(e => e.LlmProjectId).HasMaxLength(100);
+            entity.Property(e => e.LlmModelId).HasMaxLength(100);
+            entity.Property(e => e.LanguageCode).HasMaxLength(10);
+            entity.Property(e => e.SystemPromptText).HasColumnType("text");
             entity.Property(e => e.CostPerInteraction).HasPrecision(10, 6);
             entity.Property(e => e.LimitReachedMessage).HasMaxLength(500);
             entity.Property(e => e.BotName).HasMaxLength(100);
@@ -217,16 +237,16 @@ public class ChatbotDbContext : DbContext
             entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
         });
 
-        // DialogflowIntent
-        modelBuilder.Entity<DialogflowIntent>(entity =>
+        // ChatbotIntent
+        modelBuilder.Entity<ChatbotIntent>(entity =>
         {
-            entity.ToTable("dialogflow_intents");
+            entity.ToTable("chatbot_intents");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.ChatbotConfigurationId);
-            entity.HasIndex(e => e.DialogflowIntentId);
+            entity.HasIndex(e => e.IntentId);
             entity.HasIndex(e => e.Category);
 
-            entity.Property(e => e.DialogflowIntentId).HasMaxLength(100);
+            entity.Property(e => e.IntentId).HasMaxLength(100);
             entity.Property(e => e.DisplayName).HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.TrainingPhrasesJson).HasColumnType("jsonb");

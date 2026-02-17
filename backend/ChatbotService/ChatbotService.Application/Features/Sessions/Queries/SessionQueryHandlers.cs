@@ -67,7 +67,7 @@ public class GetSessionMessagesQueryHandler : IRequestHandler<GetSessionMessages
             Content = m.Content,
             Response = m.BotResponse,
             IsFromBot = m.IsFromBot,
-            IntentName = m.DialogflowIntentName,
+            IntentName = m.IntentName,
             IsFallback = m.IntentCategory == Domain.Enums.IntentCategory.Fallback,
             CreatedAt = m.CreatedAt
         }).ToList();
@@ -159,8 +159,8 @@ public class GetInteractionUsageQueryHandler : IRequestHandler<GetInteractionUsa
         var today = DateTime.UtcNow.Date;
         var monthStart = new DateTime(today.Year, today.Month, 1);
         
-        var todayMessages = await _messageRepository.GetDialogflowCallsCountAsync(request.ConfigurationId, today, today.AddDays(1), ct);
-        var monthMessages = await _messageRepository.GetDialogflowCallsCountAsync(request.ConfigurationId, monthStart, today.AddDays(1), ct);
+        var todayMessages = await _messageRepository.GetLlmCallsCountAsync(request.ConfigurationId, today, today.AddDays(1), ct);
+        var monthMessages = await _messageRepository.GetLlmCallsCountAsync(request.ConfigurationId, monthStart, today.AddDays(1), ct);
 
         const int freeInteractionsPerMonth = 180;
         const decimal costPerInteraction = 0.002m;
@@ -205,7 +205,7 @@ public class GetChatbotHealthQueryHandler : IRequestHandler<GetChatbotHealthQuer
             {
                 ConfigurationId = request.ConfigurationId,
                 OverallStatus = report.OverallStatus.ToString(),
-                DialogflowConnected = report.DialogflowStatus.IsConnected,
+                LlmConnected = report.LlmStatus.IsConnected,
                 DatabaseConnected = report.DatabaseStatus.IsConnected,
                 ActiveSessions = (int)report.DatabaseStatus.ActiveSessions,
                 TotalSessions = (int)report.DatabaseStatus.TotalSessions,
@@ -226,7 +226,7 @@ public class GetChatbotHealthQueryHandler : IRequestHandler<GetChatbotHealthQuer
             {
                 ConfigurationId = request.ConfigurationId,
                 OverallStatus = "Unknown",
-                DialogflowConnected = false,
+                LlmConnected = false,
                 DatabaseConnected = true,
                 Alerts = new List<HealthAlertDto>
                 {

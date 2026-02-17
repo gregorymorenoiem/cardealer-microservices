@@ -18,20 +18,18 @@ COPY ["Gateway/Gateway.Domain/Gateway.Domain.csproj", "Gateway/Gateway.Domain/"]
 
 RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 
-# Copy everything else and build
+# Copy everything else
 COPY . .
 WORKDIR "/src/Gateway/Gateway.Api"
-RUN dotnet build "Gateway.Api.csproj" -c Release -o /app/build
 
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
 RUN dotnet publish "Gateway.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
 # Install wget for health checks
 RUN apk add --no-cache wget
@@ -46,13 +44,13 @@ RUN addgroup -g 1000 appuser && \
 
 # Set environment for Docker
 ENV ASPNETCORE_ENVIRONMENT=Docker
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:8080
 
 USER appuser
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "Gateway.Api.dll"]

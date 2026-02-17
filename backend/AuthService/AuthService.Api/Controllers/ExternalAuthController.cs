@@ -1,3 +1,4 @@
+using AuthService.Api.Helpers;
 using AuthService.Application.DTOs.ExternalAuth;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuth;
 using AuthService.Application.Features.ExternalAuth.Commands.ExternalAuthCallback;
@@ -48,6 +49,12 @@ public class ExternalAuthController : ControllerBase
             _logger.LogInformation("External authentication successful for user {UserId} with provider {Provider}",
                 result.UserId, request.Provider);
 
+            // Security (CWE-922): Set tokens as HttpOnly cookies
+            if (!string.IsNullOrEmpty(result.AccessToken))
+            {
+                AuthCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken, result.ExpiresAt);
+            }
+
             return Ok(ApiResponse<ExternalAuthResponse>.Ok(result, new Dictionary<string, object>
             {
                 ["isNewUser"] = result.IsNewUser,
@@ -57,7 +64,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "External authentication failed for provider {Provider}", request.Provider);
-            return BadRequest(ApiResponse<ExternalAuthResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ExternalAuthResponse>.Fail("External authentication failed. Please try again."));
         }
     }
 
@@ -82,7 +89,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "External login initiation failed for provider {Provider}", request.Provider);
-            return BadRequest(ApiResponse<ExternalLoginResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ExternalLoginResponse>.Fail("Failed to initiate external login. Please try again."));
         }
     }
 
@@ -128,7 +135,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to link external account for user");
-            return BadRequest(ApiResponse<ExternalAuthResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ExternalAuthResponse>.Fail("Failed to link external account. Please try again."));
         }
     }
 
@@ -172,7 +179,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to unlink external account for user");
-            return BadRequest(ApiResponse<UnlinkExternalAccountResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<UnlinkExternalAccountResponse>.Fail("Failed to unlink external account. Please try again."));
         }
     }
 
@@ -201,7 +208,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get linked accounts for user");
-            return BadRequest(ApiResponse<List<LinkedAccountResponse>>.Fail(ex.Message));
+            return BadRequest(ApiResponse<List<LinkedAccountResponse>>.Fail("Failed to retrieve linked accounts."));
         }
     }
 
@@ -236,7 +243,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to validate unlink account");
-            return BadRequest(ApiResponse<ValidateUnlinkAccountResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ValidateUnlinkAccountResponse>.Fail("Failed to validate unlink request."));
         }
     }
 
@@ -274,7 +281,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to request unlink code");
-            return BadRequest(ApiResponse<RequestUnlinkCodeResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<RequestUnlinkCodeResponse>.Fail("Failed to send verification code. Please try again."));
         }
     }
 
@@ -320,7 +327,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to unlink active provider");
-            return BadRequest(ApiResponse<UnlinkActiveProviderResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<UnlinkActiveProviderResponse>.Fail("Failed to unlink provider. Please try again."));
         }
     }
 
@@ -347,6 +354,12 @@ public class ExternalAuthController : ControllerBase
             _logger.LogInformation("External auth callback processed successfully for user {UserId}",
                 result.UserId);
 
+            // Security (CWE-922): Set tokens as HttpOnly cookies
+            if (!string.IsNullOrEmpty(result.AccessToken))
+            {
+                AuthCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken, result.ExpiresAt);
+            }
+
             return Ok(ApiResponse<ExternalAuthResponse>.Ok(result, new Dictionary<string, object>
             {
                 ["isNewUser"] = result.IsNewUser,
@@ -356,7 +369,7 @@ public class ExternalAuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "External auth callback failed for provider {Provider}", request.Provider);
-            return BadRequest(ApiResponse<ExternalAuthResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<ExternalAuthResponse>.Fail("External authentication callback failed. Please try again."));
         }
     }
 }

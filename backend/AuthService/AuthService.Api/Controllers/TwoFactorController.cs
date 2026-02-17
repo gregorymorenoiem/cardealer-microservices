@@ -1,3 +1,4 @@
+using AuthService.Api.Helpers;
 using AuthService.Application.DTOs.TwoFactor;
 using AuthService.Application.Features.TwoFactor.Commands.Disable2FA;
 using AuthService.Application.Features.TwoFactor.Commands.Enable2FA;
@@ -54,7 +55,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error enabling 2FA for user");
-            return BadRequest(ApiResponse<Enable2FAResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<Enable2FAResponse>.Fail("Failed to enable two-factor authentication."));
         }
     }
 
@@ -88,7 +89,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying 2FA for user");
-            return BadRequest(ApiResponse<Verify2FAResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<Verify2FAResponse>.Fail("Failed to verify two-factor code."));
         }
     }
 
@@ -115,7 +116,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error disabling 2FA for user");
-            return BadRequest(ApiResponse<Verify2FAResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<Verify2FAResponse>.Fail("Failed to disable two-factor authentication."));
         }
     }
 
@@ -142,7 +143,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating recovery codes for user");
-            return BadRequest(ApiResponse<GenerateRecoveryCodesResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<GenerateRecoveryCodesResponse>.Fail("Failed to generate recovery codes."));
         }
     }
 
@@ -150,7 +151,6 @@ public class TwoFactorController : ControllerBase
     /// Verify a recovery code for two-factor authentication
     /// </summary>
     [HttpPost("verify-recovery-code")]
-    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<Verify2FAResponse>>> VerifyRecoveryCode([FromBody] VerifyRecoveryCodeRequest request)
     {
         try
@@ -177,7 +177,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying recovery code for user");
-            return BadRequest(ApiResponse<Verify2FAResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<Verify2FAResponse>.Fail("Failed to verify recovery code."));
         }
     }
 
@@ -194,12 +194,19 @@ public class TwoFactorController : ControllerBase
             var result = await _mediator.Send(command);
 
             _logger.LogInformation("2FA login completed successfully for user {UserId}", result.UserId);
+
+            // Security (CWE-922): Set tokens as HttpOnly cookies
+            if (!string.IsNullOrEmpty(result.AccessToken))
+            {
+                AuthCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken, result.ExpiresAt);
+            }
+
             return Ok(ApiResponse<TwoFactorLoginResponse>.Ok(result));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during 2FA login");
-            return BadRequest(ApiResponse<TwoFactorLoginResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<TwoFactorLoginResponse>.Fail("Two-factor authentication failed."));
         }
     }
 
@@ -232,13 +239,19 @@ public class TwoFactorController : ControllerBase
                 result.UserId, 
                 result.RemainingRecoveryCodes
             );
+
+            // Security (CWE-922): Set tokens as HttpOnly cookies
+            if (!string.IsNullOrEmpty(result.AccessToken))
+            {
+                AuthCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken, result.ExpiresAt);
+            }
             
             return Ok(ApiResponse<RecoveryCodeLoginResponse>.Ok(result));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during recovery code login");
-            return BadRequest(ApiResponse<RecoveryCodeLoginResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<RecoveryCodeLoginResponse>.Fail("Recovery code login failed."));
         }
     }
 
@@ -284,7 +297,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during full account recovery");
-            return BadRequest(ApiResponse<RecoveryAccountWithAllCodesResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<RecoveryAccountWithAllCodesResponse>.Fail("Account recovery failed. Please verify your recovery codes."));
         }
     }
 
@@ -320,7 +333,7 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending SMS 2FA code");
-            return BadRequest(ApiResponse<SendSms2FACodeResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<SendSms2FACodeResponse>.Fail("Failed to send SMS verification code."));
         }
     }
 
@@ -356,10 +369,10 @@ public class TwoFactorController : ControllerBase
             if (ex.Message.Contains("Too many failed attempts"))
             {
                 return StatusCode(StatusCodes.Status429TooManyRequests, 
-                    ApiResponse<VerifySms2FACodeResponse>.Fail(ex.Message));
+                    ApiResponse<VerifySms2FACodeResponse>.Fail("Too many failed attempts. Please try again later."));
             }
             
-            return BadRequest(ApiResponse<VerifySms2FACodeResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<VerifySms2FACodeResponse>.Fail("SMS verification failed."));
         }
     }
 }

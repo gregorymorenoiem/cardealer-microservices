@@ -99,9 +99,28 @@ jobs:
         working-directory: ${{ inputs.service-path }}
         run: dotnet restore
 
-      - name: 🔨 Build
+      - name: 🔨 Build (TreatWarningsAsErrors)
         working-directory: ${{ inputs.service-path }}
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: 🔍 Code Format Check
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet format --no-restore --verify-no-changes --severity warn || echo "⚠️ Format issues found (non-blocking)"
+        continue-on-error: true
+
+      - name: 🛡️ NuGet Vulnerability Audit
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet list package --vulnerable --include-transitive 2>&1 | tee /tmp/nuget-audit.txt
+        continue-on-error: true
+
+      - name: 🚨 Check for Critical Vulnerabilities
+        run: |
+          if grep -qi "Critical" /tmp/nuget-audit.txt 2>/dev/null; then
+            echo "::error::Critical NuGet vulnerabilities detected!"
+            cat /tmp/nuget-audit.txt
+            exit 1
+          fi
+          echo "✅ No critical NuGet vulnerabilities"
 
       - name: 🧪 Run tests
         if: inputs.run-tests

@@ -55,6 +55,12 @@ namespace ErrorService.Infrastructure.Persistence.Configurations
                 .HasColumnName("user_id")
                 .HasMaxLength(100);
 
+            // ✅ AUDIT FIX: CreatedAt for record tracking
+            builder.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
             // Configuración para el diccionario de metadatos (JSONB en PostgreSQL)
             builder.Property(e => e.Metadata)
                 .HasColumnName("metadata")

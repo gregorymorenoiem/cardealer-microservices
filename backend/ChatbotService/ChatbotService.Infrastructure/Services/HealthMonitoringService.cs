@@ -10,17 +10,17 @@ namespace ChatbotService.Infrastructure.Services;
 public class HealthMonitoringService : IHealthMonitoringService
 {
     private readonly ChatbotDbContext _context;
-    private readonly IDialogflowService _dialogflowService;
+    private readonly ILlmService _llmService;
     private readonly ILogger<HealthMonitoringService> _logger;
     private static readonly DateTime _startTime = DateTime.UtcNow;
 
     public HealthMonitoringService(
         ChatbotDbContext context,
-        IDialogflowService dialogflowService,
+        ILlmService llmService,
         ILogger<HealthMonitoringService> logger)
     {
         _context = context;
-        _dialogflowService = dialogflowService;
+        _llmService = llmService;
         _logger = logger;
     }
 
@@ -57,17 +57,22 @@ public class HealthMonitoringService : IHealthMonitoringService
                 report.Alerts.Add(new HealthAlert { AlertType = "Database", Severity = "Critical", Message = $"Database connection failed: {ex.Message}" });
             }
 
-            // Dialogflow health
-            var dfStatus = await _dialogflowService.GetHealthStatusAsync(ct);
-            report.DialogflowStatus = dfStatus;
+            // LLM Server health
+            var llmStatus = await _llmService.GetHealthStatusAsync(ct);
+            report.LlmStatus = llmStatus;
 
-            if (!dfStatus.IsConnected)
+            if (!llmStatus.IsConnected)
             {
-                report.Alerts.Add(new HealthAlert { AlertType = "Dialogflow", Severity = "Error", Message = "Dialogflow not connected" });
+                report.Alerts.Add(new HealthAlert { AlertType = "LLM", Severity = "Error", Message = "LLM server not connected" });
             }
-            else if (dfStatus.FailedCallsLast24h > 10)
+            else if (llmStatus.FailedCallsLast24h > 10)
             {
-                report.Alerts.Add(new HealthAlert { AlertType = "Dialogflow", Severity = "Warning", Message = $"{dfStatus.FailedCallsLast24h} failed Dialogflow calls in last 24h" });
+                report.Alerts.Add(new HealthAlert { AlertType = "LLM", Severity = "Warning", Message = $"{llmStatus.FailedCallsLast24h} failed LLM calls in last 24h" });
+            }
+
+            if (!llmStatus.ModelLoaded)
+            {
+                report.Alerts.Add(new HealthAlert { AlertType = "LLM", Severity = "Critical", Message = "LLM model not loaded" });
             }
 
             // System metrics
@@ -81,7 +86,7 @@ public class HealthMonitoringService : IHealthMonitoringService
             // Determine overall status
             if (!report.DatabaseStatus.IsConnected || report.Alerts.Any(a => a.Severity == "Critical"))
                 report.OverallStatus = ChatbotHealthStatus.Unhealthy;
-            else if (!report.DialogflowStatus.IsConnected || report.Alerts.Any(a => a.Severity == "Error"))
+            else if (!report.LlmStatus.IsConnected || report.Alerts.Any(a => a.Severity == "Error"))
                 report.OverallStatus = ChatbotHealthStatus.Degraded;
             else if (report.Alerts.Any(a => a.Severity == "Warning"))
                 report.OverallStatus = ChatbotHealthStatus.Degraded;
@@ -100,8 +105,8 @@ public class HealthMonitoringService : IHealthMonitoringService
         return report;
     }
 
-    public async Task<bool> CheckDialogflowHealthAsync(CancellationToken ct = default)
-        => await _dialogflowService.TestConnectivityAsync(ct);
+    public async Task<bool> CheckLlmHealthAsync(CancellationToken ct = default)
+        => await _llmService.TestConnectivityAsync(ct);
 
     public async Task<bool> CheckDatabaseHealthAsync(CancellationToken ct = default)
     {

@@ -156,8 +156,8 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
         {
             HostName = configuration["RabbitMQ:Host"] ?? "localhost",
             Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672"),
-            UserName = configuration["RabbitMQ:Username"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest",
+            UserName = configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+            Password = configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
             VirtualHost = configuration["RabbitMQ:VirtualHost"] ?? "/"
         };
 
@@ -265,8 +265,8 @@ public class UserRegisteredEventConsumer : BackgroundService
         {
             HostName = configuration["RabbitMQ:Host"] ?? "localhost",
             Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672"),
-            UserName = configuration["RabbitMQ:Username"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest"
+            UserName = configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+            Password = configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured")
         };
 
         _connection = factory.CreateConnection();

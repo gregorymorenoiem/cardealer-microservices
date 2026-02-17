@@ -19,12 +19,14 @@ public class TrustedDeviceRepository : ITrustedDeviceRepository
     public async Task<TrustedDevice?> GetByFingerprintAsync(string userId, string fingerprintHash, CancellationToken cancellationToken = default)
     {
         return await _context.TrustedDevices
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.UserId == userId && d.FingerprintHash == fingerprintHash, cancellationToken);
     }
 
     public async Task<IReadOnlyList<TrustedDevice>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await _context.TrustedDevices
+            .AsNoTracking()
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.LastUsedAt)
             .ToListAsync(cancellationToken);
@@ -33,6 +35,7 @@ public class TrustedDeviceRepository : ITrustedDeviceRepository
     public async Task<IReadOnlyList<TrustedDevice>> GetTrustedByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await _context.TrustedDevices
+            .AsNoTracking()
             .Where(d => d.UserId == userId && d.IsTrusted)
             .OrderByDescending(d => d.LastUsedAt)
             .ToListAsync(cancellationToken);
@@ -53,16 +56,15 @@ public class TrustedDeviceRepository : ITrustedDeviceRepository
 
     public async Task RevokeAllForUserAsync(string userId, string reason, CancellationToken cancellationToken = default)
     {
-        var devices = await _context.TrustedDevices
+        // Performance: Use ExecuteUpdateAsync to bulk-update without loading entities into memory
+        var now = DateTime.UtcNow;
+        await _context.TrustedDevices
             .Where(d => d.UserId == userId && d.IsTrusted)
-            .ToListAsync(cancellationToken);
-
-        foreach (var device in devices)
-        {
-            device.Revoke(reason);
-        }
-
-        await _context.SaveChangesAsync(cancellationToken);
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(d => d.IsTrusted, false)
+                .SetProperty(d => d.RevokedAt, now)
+                .SetProperty(d => d.RevokeReason, reason),
+                cancellationToken);
     }
 
     public async Task<TrustedDevice?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -72,17 +74,16 @@ public class TrustedDeviceRepository : ITrustedDeviceRepository
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var device = await GetByIdAsync(id, cancellationToken);
-        if (device != null)
-        {
-            _context.TrustedDevices.Remove(device);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
+        // Performance: Use ExecuteDeleteAsync to avoid loading entity first
+        await _context.TrustedDevices
+            .Where(d => d.Id == id)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<int> CountTrustedDevicesAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await _context.TrustedDevices
+            .AsNoTracking()
             .CountAsync(d => d.UserId == userId && d.IsTrusted, cancellationToken);
     }
 }

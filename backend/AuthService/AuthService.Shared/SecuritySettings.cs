@@ -35,8 +35,8 @@ public class PasswordPolicySettings
     /// <summary>Whether to require digits</summary>
     public bool RequireDigit { get; set; } = true;
 
-    /// <summary>Whether to require non-alphanumeric characters</summary>
-    public bool RequireNonAlphanumeric { get; set; } = false;
+    /// <summary>Whether to require non-alphanumeric characters (OWASP ASVS 2.1.1)</summary>
+    public bool RequireNonAlphanumeric { get; set; } = true;
 
     /// <summary>Maximum number of failed password attempts before lockout</summary>
     public int MaxFailedAttempts { get; set; } = 5;

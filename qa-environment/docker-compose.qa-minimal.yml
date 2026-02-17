@@ -1,0 +1,360 @@
+# =====================================================
+# OKLA - Docker Compose para Ambiente de QA (MINIMAL)
+# =====================================================
+# Versión minimalista con servicios esenciales únicamente
+# Para levantar: docker-compose -f docker-compose.qa-minimal.yml up -d
+# =====================================================
+
+services:
+  # ========================
+  # 🔵 INFRAESTRUCTURA BASE
+  # ========================
+
+  postgres:
+    image: postgres:16
+    container_name: okla-qa-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_qa_data:/var/lib/postgresql/data
+      - ./init-scripts/00-create-databases.sql:/docker-entrypoint-initdb.d/00-create-databases.sql
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: okla-qa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_qa_data:/data
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: okla-qa-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_qa_data:/var/lib/rabbitmq
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  consul:
+    image: hashicorp/consul:1.17
+    container_name: okla-qa-consul
+    ports:
+      - "8500:8500"
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    networks:
+      - okla-qa-network
+
+  seq:
+    image: datalust/seq:2024.1
+    container_name: okla-qa-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:80"
+    networks:
+      - okla-qa-network
+    volumes:
+      - seq_qa_data:/data
+
+  # ========================
+  # 🔴 MICROSERVICIOS CORE
+  # ========================
+
+  errorservice:
+    build:
+      context: ../backend
+      dockerfile: ErrorService/Dockerfile
+    container_name: okla-qa-errorservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres;Database=errorservice;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123}"
+      Database__AutoMigrate: "true"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  authservice:
+    build:
+      context: ../backend
+      dockerfile: AuthService/AuthService.Api/Dockerfile.dev
+    container_name: okla-qa-authservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres;Database=authservice;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123}"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "QA-SecretKey-MustBe32CharactersLong!"
+      Jwt__Issuer: "OKLA-QA"
+      Jwt__Audience: "OKLA-QA-Users"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "5085:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  vehiclessaleservice:
+    build:
+      context: ../backend
+      dockerfile: VehiclesSaleService/VehiclesSaleService.Api/Dockerfile.dev
+    container_name: okla-qa-vehiclessaleservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres;Database=vehiclessaleservice;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123}"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "QA-SecretKey-MustBe32CharactersLong!"
+      Jwt__Issuer: "OKLA-QA"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "5088:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  mediaservice:
+    build:
+      context: ../backend
+      dockerfile: MediaService/MediaService.Api/Dockerfile.dev
+    container_name: okla-qa-mediaservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres;Database=mediaservice;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123}"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "QA-SecretKey-MustBe32CharactersLong!"
+      Jwt__Issuer: "OKLA-QA"
+      Storage__Provider: "Local"
+      Storage__Local__BasePath: "/app/media-files"
+      Storage__Local__BaseUrl: "http://localhost:5089/uploads"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Enabled: "true"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5089:80"
+    volumes:
+      - media_qa_uploads:/app/media-files
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  userservice:
+    build:
+      context: ../backend
+      dockerfile: UserService/UserService.Api/Dockerfile.dev
+    container_name: okla-qa-userservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres;Database=userservice;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123}"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "QA-SecretKey-MustBe32CharactersLong!"
+      Jwt__Issuer: "OKLA-QA"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5087:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  roleservice:
+    build:
+      context: ../backend
+      dockerfile: RoleService/RoleService.Api/Dockerfile.dev
+    container_name: okla-qa-roleservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      Database__Provider: "PostgreSQL"
+      Database__ConnectionStrings__PostgreSQL: "Host=postgres;Database=roleservice;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123}"
+      Database__AutoMigrate: "true"
+      Jwt__Key: "QA-SecretKey-MustBe32CharactersLong!"
+      Jwt__Issuer: "OKLA-QA"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Redis__Host: "redis:6379"
+    ports:
+      - "5086:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  gateway:
+    build:
+      context: ../backend
+      dockerfile: Gateway/Gateway.Api/Dockerfile.dev
+    container_name: okla-qa-gateway
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+    ports:
+      - "18443:80"
+    depends_on:
+      - authservice
+      - vehiclessaleservice
+      - mediaservice
+      - userservice
+      - roleservice
+    networks:
+      - okla-qa-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:80/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ========================
+# VOLUMES
+# ========================
+volumes:
+  postgres_qa_data:
+  redis_qa_data:
+  rabbitmq_qa_data:
+  seq_qa_data:
+  media_qa_uploads:
+
+# ========================
+# NETWORK
+# ========================
+networks:
+  okla-qa-network:
+    driver: bridge

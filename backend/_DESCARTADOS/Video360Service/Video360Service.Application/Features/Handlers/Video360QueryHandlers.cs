@@ -1,224 +1,283 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Video360Service.Application.DTOs;
 using Video360Service.Application.Features.Queries;
+using Video360Service.Application.Interfaces;
 using Video360Service.Domain.Entities;
-using Video360Service.Domain.Enums;
 using Video360Service.Domain.Interfaces;
 
 namespace Video360Service.Application.Features.Handlers;
 
 /// <summary>
-/// Handler para obtener un trabajo por ID
+/// Handler para obtener un job por ID
 /// </summary>
-public class GetVideo360JobHandler : IRequestHandler<GetVideo360JobQuery, Video360JobResponse?>
+public class GetVideo360JobByIdQueryHandler : IRequestHandler<GetVideo360JobByIdQuery, Video360JobResponse?>
 {
     private readonly IVideo360JobRepository _jobRepository;
+    private readonly ILogger<GetVideo360JobByIdQueryHandler> _logger;
 
-    public GetVideo360JobHandler(IVideo360JobRepository jobRepository)
-    {
-        _jobRepository = jobRepository;
-    }
-
-    public async Task<Video360JobResponse?> Handle(GetVideo360JobQuery request, CancellationToken cancellationToken)
-    {
-        var job = request.IncludeFrames
-            ? await _jobRepository.GetByIdWithFramesAsync(request.JobId, cancellationToken)
-            : await _jobRepository.GetByIdAsync(request.JobId, cancellationToken);
-
-        if (job == null) return null;
-
-        var queuePosition = job.Status == Video360JobStatus.Queued
-            ? await _jobRepository.GetQueuePositionAsync(job.Id, cancellationToken)
-            : (int?)null;
-
-        return MapToResponse(job, queuePosition);
-    }
-
-    private static Video360JobResponse MapToResponse(Video360Job job, int? queuePosition = null)
-    {
-        return new Video360JobResponse
-        {
-            Id = job.Id,
-            VehicleId = job.VehicleId,
-            UserId = job.UserId,
-            VideoUrl = job.VideoUrl,
-            OriginalFileName = job.OriginalFileName,
-            FileSizeBytes = job.FileSizeBytes,
-            DurationSeconds = job.DurationSeconds,
-            FramesToExtract = job.FramesToExtract,
-            Status = job.Status,
-            Progress = job.Progress,
-            ErrorMessage = job.ErrorMessage,
-            QueuePosition = queuePosition,
-            ProcessingStartedAt = job.ProcessingStartedAt,
-            ProcessingCompletedAt = job.ProcessingCompletedAt,
-            ProcessingDurationMs = job.ProcessingDurationMs,
-            CreatedAt = job.CreatedAt,
-            Frames = job.ExtractedFrames.Select(f => new ExtractedFrameResponse
-            {
-                Id = f.Id,
-                SequenceNumber = f.SequenceNumber,
-                AngleDegrees = f.AngleDegrees,
-                ViewName = f.ViewName,
-                ImageUrl = f.ImageUrl,
-                ThumbnailUrl = f.ThumbnailUrl,
-                Width = f.Width,
-                Height = f.Height,
-                FileSizeBytes = f.FileSizeBytes,
-                Format = f.Format,
-                QualityScore = f.QualityScore,
-                IsPrimary = f.IsPrimary,
-                TimestampSeconds = f.TimestampSeconds
-            }).OrderBy(f => f.SequenceNumber).ToList()
-        };
-    }
-}
-
-/// <summary>
-/// Handler para obtener el estado de un trabajo
-/// </summary>
-public class GetJobStatusHandler : IRequestHandler<GetJobStatusQuery, JobStatusResponse?>
-{
-    private readonly IVideo360JobRepository _jobRepository;
-
-    public GetJobStatusHandler(IVideo360JobRepository jobRepository)
-    {
-        _jobRepository = jobRepository;
-    }
-
-    public async Task<JobStatusResponse?> Handle(GetJobStatusQuery request, CancellationToken cancellationToken)
-    {
-        var job = await _jobRepository.GetByIdAsync(request.JobId, cancellationToken);
-        if (job == null) return null;
-
-        var queuePosition = job.Status == Video360JobStatus.Queued
-            ? await _jobRepository.GetQueuePositionAsync(job.Id, cancellationToken)
-            : (int?)null;
-
-        return new JobStatusResponse
-        {
-            JobId = job.Id,
-            Status = job.Status,
-            Progress = job.Progress,
-            QueuePosition = queuePosition,
-            ErrorMessage = job.ErrorMessage
-        };
-    }
-}
-
-/// <summary>
-/// Handler para obtener trabajos de un vehículo
-/// </summary>
-public class GetJobsByVehicleHandler : IRequestHandler<GetJobsByVehicleQuery, IEnumerable<Video360JobResponse>>
-{
-    private readonly IVideo360JobRepository _jobRepository;
-
-    public GetJobsByVehicleHandler(IVideo360JobRepository jobRepository)
-    {
-        _jobRepository = jobRepository;
-    }
-
-    public async Task<IEnumerable<Video360JobResponse>> Handle(GetJobsByVehicleQuery request, CancellationToken cancellationToken)
-    {
-        var jobs = await _jobRepository.GetByVehicleIdAsync(request.VehicleId, cancellationToken);
-        return jobs.Select(MapToResponse);
-    }
-
-    private static Video360JobResponse MapToResponse(Video360Job job)
-    {
-        return new Video360JobResponse
-        {
-            Id = job.Id,
-            VehicleId = job.VehicleId,
-            UserId = job.UserId,
-            VideoUrl = job.VideoUrl,
-            OriginalFileName = job.OriginalFileName,
-            FileSizeBytes = job.FileSizeBytes,
-            DurationSeconds = job.DurationSeconds,
-            FramesToExtract = job.FramesToExtract,
-            Status = job.Status,
-            Progress = job.Progress,
-            ErrorMessage = job.ErrorMessage,
-            ProcessingStartedAt = job.ProcessingStartedAt,
-            ProcessingCompletedAt = job.ProcessingCompletedAt,
-            ProcessingDurationMs = job.ProcessingDurationMs,
-            CreatedAt = job.CreatedAt,
-            Frames = job.ExtractedFrames.Select(f => new ExtractedFrameResponse
-            {
-                Id = f.Id,
-                SequenceNumber = f.SequenceNumber,
-                AngleDegrees = f.AngleDegrees,
-                ViewName = f.ViewName,
-                ImageUrl = f.ImageUrl,
-                ThumbnailUrl = f.ThumbnailUrl,
-                Width = f.Width,
-                Height = f.Height,
-                FileSizeBytes = f.FileSizeBytes,
-                Format = f.Format,
-                QualityScore = f.QualityScore,
-                IsPrimary = f.IsPrimary,
-                TimestampSeconds = f.TimestampSeconds
-            }).OrderBy(f => f.SequenceNumber).ToList()
-        };
-    }
-}
-
-/// <summary>
-/// Handler para obtener los datos del viewer 360
-/// </summary>
-public class GetVehicle360ViewerHandler : IRequestHandler<GetVehicle360ViewerQuery, Vehicle360ViewerResponse?>
-{
-    private readonly IVideo360JobRepository _jobRepository;
-    private readonly ILogger<GetVehicle360ViewerHandler> _logger;
-
-    public GetVehicle360ViewerHandler(
+    public GetVideo360JobByIdQueryHandler(
         IVideo360JobRepository jobRepository,
-        ILogger<GetVehicle360ViewerHandler> logger)
+        ILogger<GetVideo360JobByIdQueryHandler> logger)
     {
         _jobRepository = jobRepository;
         _logger = logger;
     }
 
-    public async Task<Vehicle360ViewerResponse?> Handle(GetVehicle360ViewerQuery request, CancellationToken cancellationToken)
+    public async Task<Video360JobResponse?> Handle(GetVideo360JobByIdQuery query, CancellationToken cancellationToken)
     {
-        // Buscar el último trabajo completado para este vehículo
-        var jobs = await _jobRepository.GetByVehicleIdAsync(request.VehicleId, cancellationToken);
-        var completedJob = jobs
-            .Where(j => j.Status == Video360JobStatus.Completed)
-            .OrderByDescending(j => j.ProcessingCompletedAt)
-            .FirstOrDefault();
-
-        if (completedJob == null)
+        var job = await _jobRepository.GetByIdWithFramesAsync(query.JobId, cancellationToken);
+        
+        if (job == null)
         {
-            _logger.LogDebug("No se encontró trabajo 360 completado para vehículo {VehicleId}", request.VehicleId);
+            _logger.LogDebug("Job {JobId} not found", query.JobId);
             return null;
         }
-
-        // Cargar frames si no están cargados
-        if (!completedJob.ExtractedFrames.Any())
+        
+        // Verificar ownership si hay UserId
+        if (query.UserId.HasValue && job.UserId != query.UserId)
         {
-            completedJob = await _jobRepository.GetByIdWithFramesAsync(completedJob.Id, cancellationToken);
+            _logger.LogWarning("User {UserId} not authorized to view job {JobId}", query.UserId, query.JobId);
+            return null;
         }
-
-        var primaryFrame = completedJob!.ExtractedFrames.FirstOrDefault(f => f.IsPrimary);
-
-        return new Vehicle360ViewerResponse
+        
+        return MapToResponse(job);
+    }
+    
+    private static Video360JobResponse MapToResponse(Video360Job job)
+    {
+        return new Video360JobResponse
         {
-            VehicleId = request.VehicleId,
-            JobId = completedJob.Id,
-            PrimaryImageUrl = primaryFrame?.ImageUrl,
-            ProcessedAt = completedJob.ProcessingCompletedAt ?? completedJob.CreatedAt,
-            Frames = completedJob.ExtractedFrames
-                .OrderBy(f => f.SequenceNumber)
-                .Select(f => new ViewerFrameResponse
-                {
-                    Index = f.SequenceNumber - 1,
-                    Angle = f.AngleDegrees,
-                    Name = f.ViewName,
-                    ImageUrl = f.ImageUrl ?? string.Empty,
-                    ThumbnailUrl = f.ThumbnailUrl
-                }).ToList()
+            JobId = job.Id,
+            VehicleId = job.VehicleId,
+            Status = job.Status,
+            Provider = job.Provider,
+            SourceVideoUrl = job.SourceVideoUrl,
+            VideoDurationSeconds = job.VideoDurationSeconds,
+            VideoResolution = job.VideoResolution,
+            Frames = job.ExtractedFrames.Select(f => new ExtractedFrameResponse
+            {
+                FrameId = f.Id,
+                Index = f.FrameIndex,
+                AngleDegrees = f.AngleDegrees,
+                AngleLabel = f.AngleLabel ?? ExtractedFrame.GetAngleLabelByIndex(f.FrameIndex),
+                TimestampSeconds = f.TimestampSeconds,
+                ImageUrl = f.ImageUrl,
+                ThumbnailUrl = f.ThumbnailUrl,
+                FileSizeBytes = f.FileSizeBytes,
+                ContentType = f.ContentType,
+                Width = f.Width,
+                Height = f.Height
+            }).OrderBy(f => f.Index).ToList(),
+            ProcessingTimeMs = job.ProcessingTimeMs,
+            CostUsd = job.CostUsd,
+            ErrorMessage = job.ErrorMessage,
+            ErrorCode = job.ErrorCode,
+            CreatedAt = job.CreatedAt,
+            CompletedAt = job.CompletedAt,
+            Metadata = job.MetadataJson != null 
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(job.MetadataJson) 
+                : null
         };
+    }
+}
+
+/// <summary>
+/// Handler para listar jobs
+/// </summary>
+public class GetVideo360JobsQueryHandler : IRequestHandler<GetVideo360JobsQuery, Video360JobListResponse>
+{
+    private readonly IVideo360JobRepository _jobRepository;
+
+    public GetVideo360JobsQueryHandler(IVideo360JobRepository jobRepository)
+    {
+        _jobRepository = jobRepository;
+    }
+
+    public async Task<Video360JobListResponse> Handle(GetVideo360JobsQuery query, CancellationToken cancellationToken)
+    {
+        IEnumerable<Video360Job> jobs;
+        int totalCount;
+        
+        if (query.VehicleId.HasValue)
+        {
+            jobs = await _jobRepository.GetByVehicleIdAsync(query.VehicleId.Value, cancellationToken);
+            totalCount = jobs.Count();
+        }
+        else if (query.Status.HasValue)
+        {
+            jobs = await _jobRepository.GetByStatusAsync(query.Status.Value, query.PageSize, cancellationToken);
+            totalCount = await _jobRepository.GetCountByStatusAsync(query.Status.Value, cancellationToken);
+        }
+        else if (query.UserId.HasValue)
+        {
+            jobs = await _jobRepository.GetByUserIdAsync(query.UserId.Value, query.Page, query.PageSize, cancellationToken);
+            totalCount = await _jobRepository.GetTotalCountAsync(query.UserId, cancellationToken);
+        }
+        else
+        {
+            jobs = await _jobRepository.GetByUserIdAsync(Guid.Empty, query.Page, query.PageSize, cancellationToken);
+            totalCount = await _jobRepository.GetTotalCountAsync(null, cancellationToken);
+        }
+        
+        return new Video360JobListResponse
+        {
+            Items = jobs.Select(j => new Video360JobResponse
+            {
+                JobId = j.Id,
+                VehicleId = j.VehicleId,
+                Status = j.Status,
+                Provider = j.Provider,
+                SourceVideoUrl = j.SourceVideoUrl,
+                VideoDurationSeconds = j.VideoDurationSeconds,
+                VideoResolution = j.VideoResolution,
+                Frames = j.ExtractedFrames.Select(f => new ExtractedFrameResponse
+                {
+                    FrameId = f.Id,
+                    Index = f.FrameIndex,
+                    AngleDegrees = f.AngleDegrees,
+                    AngleLabel = f.AngleLabel ?? ExtractedFrame.GetAngleLabelByIndex(f.FrameIndex),
+                    TimestampSeconds = f.TimestampSeconds,
+                    ImageUrl = f.ImageUrl,
+                    ThumbnailUrl = f.ThumbnailUrl,
+                    FileSizeBytes = f.FileSizeBytes,
+                    ContentType = f.ContentType,
+                    Width = f.Width,
+                    Height = f.Height
+                }).OrderBy(f => f.Index).ToList(),
+                ProcessingTimeMs = j.ProcessingTimeMs,
+                CostUsd = j.CostUsd,
+                ErrorMessage = j.ErrorMessage,
+                ErrorCode = j.ErrorCode,
+                CreatedAt = j.CreatedAt,
+                CompletedAt = j.CompletedAt
+            }),
+            TotalCount = totalCount,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+}
+
+/// <summary>
+/// Handler para obtener vista 360 de un vehículo
+/// </summary>
+public class GetVehicle360ViewQueryHandler : IRequestHandler<GetVehicle360ViewQuery, Vehicle360ViewResponse?>
+{
+    private readonly IVideo360JobRepository _jobRepository;
+    private readonly ILogger<GetVehicle360ViewQueryHandler> _logger;
+
+    public GetVehicle360ViewQueryHandler(
+        IVideo360JobRepository jobRepository,
+        ILogger<GetVehicle360ViewQueryHandler> logger)
+    {
+        _jobRepository = jobRepository;
+        _logger = logger;
+    }
+
+    public async Task<Vehicle360ViewResponse?> Handle(GetVehicle360ViewQuery query, CancellationToken cancellationToken)
+    {
+        var jobs = await _jobRepository.GetByVehicleIdAsync(query.VehicleId, cancellationToken);
+        
+        // Obtener el job completado más reciente
+        var completedJob = jobs
+            .Where(j => j.Status == Domain.Enums.ProcessingStatus.Completed)
+            .OrderByDescending(j => j.CompletedAt)
+            .FirstOrDefault();
+        
+        if (completedJob == null)
+        {
+            _logger.LogDebug("No completed 360 view found for vehicle {VehicleId}", query.VehicleId);
+            
+            // Retornar el último job en proceso si existe
+            var latestJob = jobs.OrderByDescending(j => j.CreatedAt).FirstOrDefault();
+            if (latestJob != null)
+            {
+                return new Vehicle360ViewResponse
+                {
+                    VehicleId = query.VehicleId,
+                    JobId = latestJob.Id,
+                    Status = latestJob.Status,
+                    Frames = [],
+                    CreatedAt = latestJob.CreatedAt
+                };
+            }
+            
+            return null;
+        }
+        
+        return new Vehicle360ViewResponse
+        {
+            VehicleId = query.VehicleId,
+            JobId = completedJob.Id,
+            Status = completedJob.Status,
+            Frames = completedJob.ExtractedFrames
+                .OrderBy(f => f.FrameIndex)
+                .Select(f => new Frame360Data
+                {
+                    Index = f.FrameIndex,
+                    Angle = f.AngleDegrees,
+                    Label = f.AngleLabel ?? ExtractedFrame.GetAngleLabelByIndex(f.FrameIndex),
+                    Url = f.ImageUrl,
+                    Thumbnail = f.ThumbnailUrl
+                }).ToList(),
+            CreatedAt = completedJob.CreatedAt,
+            ExpiresAt = completedJob.ExpiresAt
+        };
+    }
+}
+
+/// <summary>
+/// Handler para obtener información de proveedores
+/// </summary>
+public class GetProvidersInfoQueryHandler : IRequestHandler<GetProvidersInfoQuery, IEnumerable<ProviderInfoResponse>>
+{
+    private readonly IVideo360ProviderFactory _providerFactory;
+    private readonly IProviderConfigurationRepository _configRepository;
+
+    public GetProvidersInfoQueryHandler(
+        IVideo360ProviderFactory providerFactory,
+        IProviderConfigurationRepository configRepository)
+    {
+        _providerFactory = providerFactory;
+        _configRepository = configRepository;
+    }
+
+    public async Task<IEnumerable<ProviderInfoResponse>> Handle(GetProvidersInfoQuery query, CancellationToken cancellationToken)
+    {
+        var providers = query.OnlyAvailable 
+            ? await _providerFactory.GetAvailableProvidersAsync(cancellationToken)
+            : _providerFactory.GetAllProviders();
+        
+        var configs = await _configRepository.GetAllAsync(cancellationToken);
+        var configDict = configs.ToDictionary(c => c.Provider);
+        
+        var result = new List<ProviderInfoResponse>();
+        
+        foreach (var provider in providers)
+        {
+            var isAvailable = await provider.IsAvailableAsync(cancellationToken);
+            var accountInfo = isAvailable ? await provider.GetAccountInfoAsync(cancellationToken) : null;
+            
+            configDict.TryGetValue(provider.ProviderType, out var config);
+            
+            result.Add(new ProviderInfoResponse
+            {
+                Provider = provider.ProviderType,
+                Name = provider.ProviderName,
+                IsEnabled = config?.IsEnabled ?? true,
+                IsAvailable = isAvailable,
+                CostPerVideoUsd = provider.CostPerVideoUsd,
+                RemainingCredits = accountInfo?.RemainingCredits,
+                DailyLimit = config?.DailyLimit ?? 0,
+                DailyUsageCount = config?.DailyUsageCount ?? 0,
+                SupportedFormats = config?.SupportedFormats.Split(',') ?? ["mp4", "webm", "mov"],
+                MaxVideoSizeMb = config?.MaxVideoSizeMb ?? 100,
+                MaxVideoDurationSeconds = config?.MaxVideoDurationSeconds ?? 120
+            });
+        }
+        
+        return result.OrderBy(p => p.CostPerVideoUsd);
     }
 }

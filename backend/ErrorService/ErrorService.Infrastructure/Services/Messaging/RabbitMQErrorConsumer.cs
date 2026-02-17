@@ -1,5 +1,6 @@
 ﻿using ErrorService.Domain.Entities;
 using ErrorService.Domain.Interfaces;
+using ErrorService.Application.Helpers;
 using ErrorService.Shared.ErrorMessages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,6 +31,7 @@ public class ErrorServiceRabbitMQSettings
 
 public class RabbitMQErrorConsumer : BackgroundService
 {
+    private const int MaxRetryCount = 5;
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly IServiceProvider _serviceProvider;
@@ -61,7 +63,9 @@ public class RabbitMQErrorConsumer : BackgroundService
                 UserName = rabbitMqSettings.Value.UserName,
                 Password = rabbitMqSettings.Value.Password,
                 VirtualHost = rabbitMqSettings.Value.VirtualHost,
-                DispatchConsumersAsync = true
+                DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
 
             _connection = factory.CreateConnection();
@@ -74,12 +78,25 @@ public class RabbitMQErrorConsumer : BackgroundService
                 durable: true,
                 autoDelete: false);
 
+            // Dead Letter Exchange for persistent DLQ (CRIT-01: replaces InMemoryDeadLetterQueue)
+            var dlxExchange = $"{_settings.ExchangeName}.dlx";
+            var dlqQueue = $"{_settings.QueueName}.dlq";
+            _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true, autoDelete: false);
+            _channel.QueueDeclare(dlqQueue, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueBind(dlqQueue, dlxExchange, _settings.RoutingKey);
+
+            // Main queue with DLX arguments — rejected messages routed to DLQ automatically
+            var queueArgs = new Dictionary<string, object>
+            {
+                { "x-dead-letter-exchange", dlxExchange },
+                { "x-dead-letter-routing-key", _settings.RoutingKey }
+            };
             _channel.QueueDeclare(
                 queue: _settings.QueueName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: null);
+                arguments: queueArgs);
 
             _channel.QueueBind(
                 queue: _settings.QueueName,
@@ -113,9 +130,17 @@ public class RabbitMQErrorConsumer : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing RabbitMQ message");
-                // Reject and requeue the message
-                _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                var retryCount = GetRetryCount(ea.BasicProperties);
+                if (retryCount >= MaxRetryCount)
+                {
+                    _logger.LogError(ex, "Max retries ({MaxRetries}) exceeded for message. Sending to DLQ", MaxRetryCount);
+                    _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
+                }
+                else
+                {
+                    _logger.LogWarning(ex, "Error processing message (attempt {Attempt}/{MaxRetries}). Requeueing", retryCount + 1, MaxRetryCount);
+                    _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                }
             }
         };
 
@@ -139,17 +164,31 @@ public class RabbitMQErrorConsumer : BackgroundService
                 return;
             }
 
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(errorEvent.ServiceName) || string.IsNullOrWhiteSpace(errorEvent.ErrorMessage))
+            {
+                _logger.LogWarning("Error event missing required fields (ServiceName or ErrorMessage). Discarding");
+                _channel.BasicAck(deliveryTag, multiple: false);
+                return;
+            }
+
+            if (!Guid.TryParse(errorEvent.Id, out var errorId))
+            {
+                _logger.LogWarning("Invalid GUID format for error event Id: {Id}. Generating new Id", errorEvent.Id);
+                errorId = Guid.NewGuid();
+            }
+
             using var scope = _serviceProvider.CreateScope();
             var errorLogRepository = scope.ServiceProvider.GetRequiredService<IErrorLogRepository>();
 
             // Convertir RabbitMQErrorEvent a ErrorLog entity
             var errorLog = new ErrorLog
             {
-                Id = Guid.Parse(errorEvent.Id),
+                Id = errorId,
                 ServiceName = errorEvent.ServiceName,
                 ExceptionType = errorEvent.ErrorCode,
                 Message = errorEvent.ErrorMessage,
-                StackTrace = errorEvent.StackTrace,
+                  StackTrace = StackTraceSanitizer.Sanitize(errorEvent.StackTrace),
                 OccurredAt = errorEvent.Timestamp,
                 Endpoint = errorEvent.Endpoint,
                 HttpMethod = errorEvent.HttpMethod,
@@ -178,6 +217,23 @@ public class RabbitMQErrorConsumer : BackgroundService
             // Reject and requeue for transient errors
             _channel.BasicNack(deliveryTag, multiple: false, requeue: true);
         }
+    }
+
+    private static int GetRetryCount(IBasicProperties? properties)
+    {
+        if (properties?.Headers == null) return 0;
+        if (!properties.Headers.TryGetValue("x-death", out var xDeath)) return 0;
+
+        if (xDeath is List<object> deathList && deathList.Count > 0)
+        {
+            if (deathList[0] is Dictionary<string, object> deathInfo &&
+                deathInfo.TryGetValue("count", out var count))
+            {
+                return Convert.ToInt32(count);
+            }
+        }
+
+        return 0;
     }
 
     public override void Dispose()

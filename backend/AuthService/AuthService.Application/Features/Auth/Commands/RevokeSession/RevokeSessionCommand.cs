@@ -3,11 +3,11 @@ using MediatR;
 namespace AuthService.Application.Features.Auth.Commands.RevokeSession;
 
 /// <summary>
-/// Command para revocar una sesión específica con verificación por código.
+/// Command para revocar una sesión específica.
 /// Proceso: AUTH-SEC-003
 /// 
 /// Seguridad:
-/// - Requiere código de verificación enviado por email
+/// - El código de verificación es opcional (para usuarios autenticados)
 /// - Verifica que la sesión pertenece al usuario
 /// - No permite revocar sesión actual (debe usarse logout)
 /// - Registra evento de auditoría
@@ -17,7 +17,7 @@ namespace AuthService.Application.Features.Auth.Commands.RevokeSession;
 public record RevokeSessionCommand(
     string UserId,
     string SessionId,
-    string VerificationCode,
+    string? VerificationCode = null,
     string? CurrentSessionId = null,
     string? IpAddress = null,
     string? UserAgent = null

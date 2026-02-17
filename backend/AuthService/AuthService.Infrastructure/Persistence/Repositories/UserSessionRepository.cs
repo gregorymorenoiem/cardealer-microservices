@@ -27,8 +27,10 @@ public class UserSessionRepository : IUserSessionRepository
 
     public async Task<IEnumerable<UserSession>> GetActiveSessionsByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
+        var now = DateTime.UtcNow;
         return await _context.UserSessions
-            .Where(s => s.UserId == userId && !s.IsRevoked && (!s.ExpiresAt.HasValue || s.ExpiresAt > DateTime.UtcNow))
+            .AsNoTracking()
+            .Where(s => s.UserId == userId && !s.IsRevoked && (!s.ExpiresAt.HasValue || s.ExpiresAt > now))
             .OrderByDescending(s => s.LastActiveAt)
             .ToListAsync(cancellationToken);
     }
@@ -36,6 +38,7 @@ public class UserSessionRepository : IUserSessionRepository
     public async Task<IEnumerable<UserSession>> GetAllSessionsByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await _context.UserSessions
+            .AsNoTracking()
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.LastActiveAt)
             .ToListAsync(cancellationToken);
@@ -43,8 +46,10 @@ public class UserSessionRepository : IUserSessionRepository
 
     public async Task<int> GetActiveSessionCountAsync(string userId, CancellationToken cancellationToken = default)
     {
+        var now = DateTime.UtcNow;
         return await _context.UserSessions
-            .CountAsync(s => s.UserId == userId && !s.IsRevoked && (!s.ExpiresAt.HasValue || s.ExpiresAt > DateTime.UtcNow), cancellationToken);
+            .AsNoTracking()
+            .CountAsync(s => s.UserId == userId && !s.IsRevoked && (!s.ExpiresAt.HasValue || s.ExpiresAt > now), cancellationToken);
     }
 
     public async Task AddAsync(UserSession session, CancellationToken cancellationToken = default)
@@ -71,24 +76,26 @@ public class UserSessionRepository : IUserSessionRepository
 
     public async Task RevokeAllUserSessionsAsync(string userId, Guid? exceptSessionId = null, string reason = "User requested", CancellationToken cancellationToken = default)
     {
-        var sessions = await _context.UserSessions
-            .Where(s => s.UserId == userId && !s.IsRevoked)
-            .ToListAsync(cancellationToken);
+        // Performance: Use ExecuteUpdateAsync to bulk-update without loading entities into memory
+        var now = DateTime.UtcNow;
+        var query = _context.UserSessions
+            .Where(s => s.UserId == userId && !s.IsRevoked);
 
-        foreach (var session in sessions)
-        {
-            if (exceptSessionId.HasValue && session.Id == exceptSessionId.Value)
-                continue;
+        if (exceptSessionId.HasValue)
+            query = query.Where(s => s.Id != exceptSessionId.Value);
 
-            session.Revoke(reason);
-        }
-
-        await _context.SaveChangesAsync(cancellationToken);
+        await query.ExecuteUpdateAsync(setters => setters
+            .SetProperty(s => s.IsRevoked, true)
+            .SetProperty(s => s.RevokedAt, now)
+            .SetProperty(s => s.RevokedReason, reason),
+            cancellationToken);
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.UserSessions.AnyAsync(s => s.Id == id, cancellationToken);
+        return await _context.UserSessions
+            .AsNoTracking()
+            .AnyAsync(s => s.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -99,13 +106,15 @@ public class UserSessionRepository : IUserSessionRepository
         string ipAddress,
         CancellationToken cancellationToken = default)
     {
+        var now = DateTime.UtcNow;
         return await _context.UserSessions
+            .AsNoTracking()
             .Where(s => s.UserId == userId 
                 && s.DeviceInfo == deviceInfo 
                 && s.Browser == browser 
                 && s.IpAddress == ipAddress 
                 && !s.IsRevoked 
-                && (!s.ExpiresAt.HasValue || s.ExpiresAt > DateTime.UtcNow))
+                && (!s.ExpiresAt.HasValue || s.ExpiresAt > now))
             .OrderByDescending(s => s.LastActiveAt)
             .FirstOrDefaultAsync(cancellationToken);
     }

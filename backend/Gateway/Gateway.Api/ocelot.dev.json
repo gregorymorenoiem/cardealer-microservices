@@ -5,14 +5,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }]
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }]
     },
     {
       "UpstreamPathTemplate": "/api/ai/process",
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/aiprocessing/process",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -25,7 +25,7 @@
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/aiprocessing/process/batch",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -38,7 +38,7 @@
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/aiprocessing/spin360/generate",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -51,7 +51,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -64,7 +64,7 @@
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}/cancel",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -77,7 +77,7 @@
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}/retry",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -90,7 +90,7 @@
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/aiprocessing/analyze",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -103,7 +103,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/backgrounds",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -116,7 +116,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/aiprocessing/stats/queue",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "RouteClaimsRequirement": { "role": "Admin" },
       "QoSOptions": {
@@ -130,7 +130,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 8080 }],
+      "DownstreamHostAndPorts": [{ "Host": "aiprocessingservice", "Port": 80 }],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -306,6 +306,7 @@
       "DownstreamPathTemplate": "/api/errors",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -318,6 +319,7 @@
       "DownstreamPathTemplate": "/api/errors/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -330,6 +332,7 @@
       "DownstreamPathTemplate": "/api/errors/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -342,6 +345,7 @@
       "DownstreamPathTemplate": "/api/errors/services",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -354,6 +358,7 @@
       "DownstreamPathTemplate": "/api/errors/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -366,7 +371,6 @@
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 80 }],
-      "DangerousAcceptAnyServerCertificateValidator": true,
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -387,6 +391,7 @@
       "DownstreamPathTemplate": "/api/TwoFactor/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -411,6 +416,7 @@
       "DownstreamPathTemplate": "/api/auth/security/sessions/{sessionId}/request-revoke",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -423,6 +429,7 @@
       "DownstreamPathTemplate": "/api/auth/security/sessions/{sessionId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -435,6 +442,7 @@
       "DownstreamPathTemplate": "/api/auth/security/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -447,6 +455,7 @@
       "DownstreamPathTemplate": "/api/auth/revoked-device/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -471,7 +480,6 @@
       "DownstreamPathTemplate": "/swagger/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 80 }],
-      "DangerousAcceptAnyServerCertificateValidator": true,
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -483,8 +491,7 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "gateway", "Port": 80 }],
-      "DangerousAcceptAnyServerCertificateValidator": true
+      "DownstreamHostAndPorts": [{ "Host": "gateway", "Port": 80 }]
     },
     {
       "DownstreamPathTemplate": "/api/notifications",
@@ -495,6 +502,7 @@
           "Port": 80
         }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "UpstreamPathTemplate": "/api/notifications",
       "UpstreamHttpMethod": ["GET", "POST"],
       "SwaggerKey": "notifications"
@@ -508,6 +516,7 @@
           "Port": 80
         }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "UpstreamPathTemplate": "/api/notifications/{everything}",
       "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH"],
       "SwaggerKey": "notifications"
@@ -521,6 +530,7 @@
           "Port": 80
         }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "UpstreamPathTemplate": "/api/templates/{everything}",
       "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
       "SwaggerKey": "notifications"
@@ -534,6 +544,7 @@
           "Port": 80
         }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "UpstreamPathTemplate": "/api/templates",
       "UpstreamHttpMethod": ["GET", "POST"],
       "SwaggerKey": "notifications"
@@ -564,6 +575,7 @@
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -576,6 +588,7 @@
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -588,6 +601,7 @@
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -600,6 +614,7 @@
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -678,6 +693,7 @@
       "DownstreamPathTemplate": "/api/catalog/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -687,10 +703,23 @@
 
     {
       "UpstreamPathTemplate": "/api/categories",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/categories",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -703,6 +732,7 @@
       "DownstreamPathTemplate": "/api/categories/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -712,7 +742,7 @@
 
     {
       "UpstreamPathTemplate": "/api/homepagesections",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/homepagesections",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
@@ -723,11 +753,37 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/homepagesections",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/homepagesections",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/homepagesections/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/homepagesections/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/homepagesections/{everything}",
+      "UpstreamHttpMethod": ["POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/homepagesections/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -748,6 +804,7 @@
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -760,6 +817,7 @@
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "mediaservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -782,6 +840,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "host.docker.internal", "Port": 5001 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -796,6 +855,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "host.docker.internal", "Port": 5001 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -808,8 +868,9 @@
       "DownstreamPathTemplate": "/api/dealer-billing/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "host.docker.internal", "Port": 5001 }
+        { "Host": "billingservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -831,6 +892,188 @@
         "TimeoutValue": 30000
       }
     },
+    {
+      "UpstreamPathTemplate": "/api/user-billing/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/user-billing/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ==================== PAYMENT METHODS (PaymentService) ====================
+    {
+      "UpstreamPathTemplate": "/api/payment-methods",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/payment-methods",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/default",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/payment-methods/default",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/{id}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/payment-methods/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/{id}/default",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/payment-methods/{id}/default",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    // Tokenization endpoints (PCI DSS compliant - provider-hosted card collection)
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/tokenize/init",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/payment-methods/tokenize/init",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/tokenize/complete",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/payment-methods/tokenize/complete",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/tokenize/status/{sessionId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/payment-methods/tokenize/status/{sessionId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payment-methods/gateways",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/payment-methods/gateways",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    // ==================== PAYMENTS (PaymentService) ====================
+    {
+      "UpstreamPathTemplate": "/api/payments/providers/available",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/payments/providers/available",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payments/providers",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/payments/providers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/payments/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/payments/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    // ==================== END PAYMENT METHODS ====================
 
     {
       "UpstreamPathTemplate": "/api/invitations/{token}",
@@ -1100,6 +1343,7 @@
       }
     },
 
+    // dealer-roles and dealer employees routes → UserService
     {
       "UpstreamPathTemplate": "/api/dealer-roles",
       "UpstreamHttpMethod": ["GET"],
@@ -1113,6 +1357,7 @@
       "DownstreamPathTemplate": "/api/dealers/{dealerId}/employees",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1125,6 +1370,7 @@
       "DownstreamPathTemplate": "/api/dealers/{dealerId}/employees/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1148,6 +1394,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealermanagementservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1185,6 +1432,36 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/documents",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/documents",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers/{dealerId}/documents/{documentId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "DELETE"],
+      "DownstreamPathTemplate": "/api/dealers/{dealerId}/documents/{documentId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealermanagementservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/dealers/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/dealers/{everything}",
@@ -1192,6 +1469,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealermanagementservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1206,6 +1484,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealermanagementservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1213,13 +1492,14 @@
       }
     },
 
+    // Subscription routes consolidated → BillingService (removed from DealerManagementService)
     {
       "UpstreamPathTemplate": "/api/subscriptions/plans",
       "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/subscriptions/plans",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "dealermanagementservice", "Port": 80 }
+        { "Host": "billingservice", "Port": 80 }
       ]
     },
     {
@@ -1228,8 +1508,9 @@
       "DownstreamPathTemplate": "/api/subscriptions/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "dealermanagementservice", "Port": 80 }
+        { "Host": "billingservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1253,6 +1534,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1267,6 +1549,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1281,6 +1564,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1295,6 +1579,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1309,6 +1594,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1323,6 +1609,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1351,6 +1638,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1365,6 +1653,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1379,6 +1668,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1393,11 +1683,211 @@
       "DownstreamHostAndPorts": [
         { "Host": "dealeranalyticsservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
       }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/{dealerId}/overview",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/{dealerId}/overview",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/{dealerId}/kpis",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/{dealerId}/kpis",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/{dealerId}/snapshot",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/{dealerId}/snapshot",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/{dealerId}/comparison",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/{dealerId}/comparison",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/{dealerId}/trends/{metricType}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/{dealerId}/trends/{metricType}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/{dealerId}/engagement",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/{dealerId}/engagement",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/stats",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/aging",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/aging",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/performance",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/performance",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/low-performers",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/inventory/{dealerId}/low-performers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/daily",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/daily",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/weekly",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/weekly",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/monthly",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/monthly",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/custom",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/custom",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/export/{format}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/dealer-analytics/reports/{dealerId}/export/{format}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "dealeranalyticsservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicles/import",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/vehicles/import",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 60000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicles/import/history/{dealerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/vehicles/import/history/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicles/import/template",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/vehicles/import/template",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
     },
 
     {
@@ -1413,6 +1903,7 @@
       "DownstreamPathTemplate": "/api/sellers/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1425,6 +1916,7 @@
       "DownstreamPathTemplate": "/api/sellers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1440,8 +1932,23 @@
       "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }]
     },
     {
+      "UpstreamPathTemplate": "/api/roles",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/roles",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/roles/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/roles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }],
@@ -1471,7 +1978,7 @@
     },
     {
       "UpstreamPathTemplate": "/api/permissions/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/permissions/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }],
@@ -1486,7 +1993,7 @@
     },
     {
       "UpstreamPathTemplate": "/api/role-permissions/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
       "DownstreamPathTemplate": "/api/role-permissions/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 80 }],
@@ -1507,6 +2014,60 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }]
     },
+
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/pending",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kycprofiles/pending",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "account_type": "4, 5"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/statistics",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kycprofiles/statistics",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "account_type": "4, 5"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/expiring",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kycprofiles/expiring",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "account_type": "4, 5"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/settings",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kycprofiles/settings",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "account_type": "4, 5"
+      }
+    },
+
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
@@ -1541,21 +2102,6 @@
       "UpstreamPathTemplate": "/api/kyc/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/kyc/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-    {
-      "UpstreamPathTemplate": "/api/kyc-profiles/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/kyc-profiles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
       "AuthenticationOptions": {
@@ -1621,8 +2167,83 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/admin/users",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/admin/users",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/users/stats",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/admin/users/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/users/{id}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "DELETE"],
+      "DownstreamPathTemplate": "/api/admin/users/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/users/{id}/status",
+      "UpstreamHttpMethod": ["OPTIONS", "PATCH"],
+      "DownstreamPathTemplate": "/api/admin/users/{id}/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/users/{id}/verify",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/admin/users/{id}/verify",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/admin/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH"],
       "DownstreamPathTemplate": "/api/admin/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }],
@@ -1641,14 +2262,14 @@
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "crmservice", "Port": 80 }]
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5062 }]
     },
     {
       "UpstreamPathTemplate": "/api/crm/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/crm/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "crmservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5062 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -1660,18 +2281,43 @@
     },
 
     {
-      "UpstreamPathTemplate": "/api/reports/health",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/health",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "reportsservice", "Port": 80 }]
-    },
-    {
-      "UpstreamPathTemplate": "/api/reports/{everything}",
+      "UpstreamPathTemplate": "/api/maintenance/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/reports/{everything}",
+      "DownstreamPathTemplate": "/api/maintenance/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "reportsservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ==================== CHECKOUT (BillingService) ====================
+    {
+      "UpstreamPathTemplate": "/api/checkout/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/billing/checkout/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "billingservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ==================== VEHICLE COMPARISONS (ComparisonService) ====================
+    {
+      "UpstreamPathTemplate": "/api/vehiclecomparisons",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/Comparisons",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "comparisonservice", "Port": 80 }],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -1682,11 +2328,14 @@
       }
     },
     {
-      "UpstreamPathTemplate": "/api/maintenance/{everything}",
+      "UpstreamPathTemplate": "/api/vehiclecomparisons/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/Maintenance/{everything}",
+      "DownstreamPathTemplate": "/api/Comparisons/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "maintenanceservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [{ "Host": "comparisonservice", "Port": 80 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1729,6 +2378,7 @@
       "DownstreamPathTemplate": "/api/PriceAlerts",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1741,6 +2391,7 @@
       "DownstreamPathTemplate": "/api/PriceAlerts/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1753,6 +2404,7 @@
       "DownstreamPathTemplate": "/api/SavedSearches",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1765,6 +2417,7 @@
       "DownstreamPathTemplate": "/api/SavedSearches/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1800,6 +2453,42 @@
     },
 
     {
+      "UpstreamPathTemplate": "/api/pricing/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/pricing/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehicleintelligenceservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/demand/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/demand/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehicleintelligenceservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
       "UpstreamPathTemplate": "/api/events/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
@@ -1814,6 +2503,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "eventtrackingservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1828,6 +2518,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "eventtrackingservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1842,6 +2533,7 @@
       "DownstreamHostAndPorts": [
         { "Host": "eventtrackingservice", "Port": 80 }
       ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1869,6 +2561,7 @@
       "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1881,6 +2574,7 @@
       "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}/statistics",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1893,6 +2587,7 @@
       "DownstreamPathTemplate": "/api/leads/{leadId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1905,6 +2600,7 @@
       "DownstreamPathTemplate": "/api/leads/{leadId}/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1917,6 +2613,7 @@
       "DownstreamPathTemplate": "/api/leads",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1929,6 +2626,7 @@
       "DownstreamPathTemplate": "/api/leads/actions",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1941,6 +2639,7 @@
       "DownstreamPathTemplate": "/api/leads/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1959,20 +2658,129 @@
     // NUEVAS RUTAS - SPRINT 6+
     // ========================
 
-    // ChatbotService Routes
+    // ChatbotService Routes (Public - no auth required for visitors)
+    // Frontend calls /api/chat/* → ChatController in ChatbotService
+    {
+      "UpstreamPathTemplate": "/api/chat/start",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/start",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/message",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/message",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 600000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/end",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/end",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/transfer",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/transfer",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/session",
+      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/session",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
+      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/sessions/active/count",
+      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/sessions/active/count",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/chat/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }]
+    },
+    // ChatbotService - Configuration routes (admin, requires auth)
     {
       "UpstreamPathTemplate": "/api/chatbot/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 80 }]
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }]
+    },
+
+    // ChatbotService - WhatsApp Webhook (NO AUTH - Meta verifies via token)
+    {
+      "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/chat/whatsapp/webhook",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 5,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ChatbotService - Handoff routes (Dealer/Admin auth required)
+    {
+      "UpstreamPathTemplate": "/api/chat/handoff/{everything}",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/handoff/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
     },
     {
       "UpstreamPathTemplate": "/api/chatbot/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/chatbot/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1994,6 +2802,7 @@
       "DownstreamPathTemplate": "/api/reviews/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "reviewservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -2015,6 +2824,7 @@
       "DownstreamPathTemplate": "/api/recommendations/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "recommendationservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -2036,27 +2846,7 @@
       "DownstreamPathTemplate": "/api/vehicle-intelligence/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehicleintelligenceservice", "Port": 80 }],
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-
-    // UserBehaviorService Routes
-    {
-      "UpstreamPathTemplate": "/api/userbehavior/health",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/health",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userbehaviorservice", "Port": 80 }]
-    },
-    {
-      "UpstreamPathTemplate": "/api/userbehavior/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/userbehavior/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userbehaviorservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -2078,27 +2868,7 @@
       "DownstreamPathTemplate": "/api/azul/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "azulpaymentservice", "Port": 80 }],
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-
-    // StripePaymentService Routes
-    {
-      "UpstreamPathTemplate": "/api/stripe-payment/health",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/health",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "stripepaymentservice", "Port": 80 }]
-    },
-    {
-      "UpstreamPathTemplate": "/api/stripe-payment/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/stripe-payment/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "stripepaymentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -2119,6 +2889,7 @@
       "DownstreamPathTemplate": "/api/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "spyneintegrationservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -2215,43 +2986,6 @@
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // 🎥 VIDEO360 SERVICE (Extracción de frames de videos 360)
-    // ═══════════════════════════════════════════════════════════════════════════
-    {
-      "UpstreamPathTemplate": "/api/video360/health",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/health",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }]
-    },
-    {
-      "UpstreamPathTemplate": "/api/video360/process",
-      "UpstreamHttpMethod": ["POST"],
-      "DownstreamPathTemplate": "/api/video360/process",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 120000
-      }
-    },
-    {
-      "UpstreamPathTemplate": "/api/video360/jobs/{jobId}/result",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/result",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // 🖼️ BACKGROUND REMOVAL SERVICE (Remoción de fondos con IA)
     // ═══════════════════════════════════════════════════════════════════════════
     {
@@ -2286,6 +3020,734 @@
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
       }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/my-inquiries",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/contactrequests/my-inquiries",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/received",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/contactrequests/received",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/contactrequests",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/contactrequests/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/{id}/reply",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/contactrequests/{id}/reply",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/{id}/mark-read",
+      "UpstreamHttpMethod": ["PUT", "POST"],
+      "DownstreamPathTemplate": "/api/contactrequests/{id}/mark-read",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/contactrequests/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactmessages/unread-count",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/contactmessages/unread-count",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactmessages/{id}/mark-read",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/contactmessages/{id}/mark-read",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactmessages/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/contactmessages/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "contactservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations/validate/{token}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/invitations/validate/{token}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations/accept",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/staff/invitations/accept",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations/pending/count",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/invitations/pending/count",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations/{id}/resend",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/staff/invitations/{id}/resend",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations/{id}/revoke",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/staff/invitations/{id}/revoke",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/invitations/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/invitations",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/staff/invitations",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/departments/tree",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/departments/tree",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/departments/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/staff/departments/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/departments",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/staff/departments",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/positions/department/{departmentId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/positions/department/{departmentId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/positions/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/staff/positions/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/positions",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/staff/positions",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/auth/{authUserId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/auth/{authUserId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/{id}/direct-reports",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/{id}/direct-reports",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/{id}/terminate",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/staff/{id}/terminate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/{id}/status",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/staff/{id}/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/summary",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff/summary",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/staff/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/staff",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15200 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/reports/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15110 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/reports/content",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/contentreports",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15110 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/reports/content/stats",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/contentreports/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15110 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/reports/content/{id}",
+      "UpstreamHttpMethod": ["GET", "DELETE"],
+      "DownstreamPathTemplate": "/api/contentreports/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15110 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/reports/content/{id}/status",
+      "UpstreamHttpMethod": ["PATCH"],
+      "DownstreamPathTemplate": "/api/contentreports/{id}/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15110 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/reports/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15110 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    // ==========================================
+    // ConfigurationService Routes (port 15124)
+    // ==========================================
+    {
+      "UpstreamPathTemplate": "/api/configurations/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/public/pricing",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/public/pricing",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/public/pricing/providers",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/public/pricing/providers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/configurations",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/configurations",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/configurations/bulk",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/configurations/bulk",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/configurations/category/{category}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/configurations/category/{category}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/configurations/{everything}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/configurations/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/featureflags",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/featureflags",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/featureflags/{everything}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/featureflags/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    // Secrets - GET returns masked values only (AllowAnonymous on backend)
+    {
+      "UpstreamPathTemplate": "/api/secrets",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/secrets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+    },
+    // Secrets - POST requires admin auth
+    {
+      "UpstreamPathTemplate": "/api/secrets",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/secrets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/secrets/bulk",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/secrets/bulk",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/secrets/{everything}",
+      "UpstreamHttpMethod": ["GET", "DELETE"],
+      "DownstreamPathTemplate": "/api/secrets/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15134 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/cache/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "cacheservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/cache/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/cache/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "cacheservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+    },
+
+    // ==========================================
+    // MaintenanceService Routes (port 5061)
+    // ==========================================
+    {
+      "UpstreamPathTemplate": "/api/maintenance/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/status",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/maintenance/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/upcoming",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/maintenance/upcoming",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/maintenance",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{id}/start",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/maintenance/{id}/start",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{id}/complete",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/maintenance/{id}/complete",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{id}/cancel",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/maintenance/{id}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{id}/schedule",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/maintenance/{id}/schedule",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{id}/notes",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/maintenance/{id}/notes",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/maintenance/{id}",
+      "UpstreamHttpMethod": ["GET", "DELETE"],
+      "DownstreamPathTemplate": "/api/maintenance/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5061 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/audit/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15112 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/audit",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15112 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/audit",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15112 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit/stats",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/audit/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15112 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit/user/{userId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/audit/user/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15112 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/audit/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 15112 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    // ── AppointmentService Routes ──
+    {
+      "UpstreamPathTemplate": "/api/appointments",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/appointments",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/appointments/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/dealer/{dealerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/dealer/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/customer/{customerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/customer/{customerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/date-range",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/date-range",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/status/{status}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/status/{status}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/type/{type}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/type/{type}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/assigned/{userId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/assigned/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/upcoming/{days}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/appointments/upcoming/{days}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}/confirm",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/appointments/{id}/confirm",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}/start",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/appointments/{id}/start",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}/complete",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/appointments/{id}/complete",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}/cancel",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/appointments/{id}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}/no-show",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/appointments/{id}/no-show",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/appointments/{id}/reschedule",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/appointments/{id}/reschedule",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/timeslots",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/timeslots",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/timeslots/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/timeslots/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/timeslots/dealer/{dealerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/timeslots/dealer/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/timeslots/available",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/timeslots/available",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/timeslots/{id}/activate",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/timeslots/{id}/activate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/timeslots/{id}/deactivate",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/timeslots/{id}/deactivate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "appointmentservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     }
   ],
   "SwaggerEndPoints": [
@@ -2321,7 +3783,11 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:8443",
-    "DangerousAcceptAnyServerCertificateValidator": true
+    "BaseUrl": "https://localhost:18443",
+    "QoSOptions": {
+      "ExceptionsAllowedBeforeBreaking": 3,
+      "DurationOfBreak": 10,
+      "TimeoutValue": 30000
+    }
   }
 }

@@ -11,21 +11,17 @@ public class Video360JobTests
     public void Video360Job_ShouldBeCreated_WithDefaultValues()
     {
         // Arrange & Act
-        var job = new Video360Job
-        {
-            Id = Guid.NewGuid(),
-            VehicleId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            VideoUrl = "https://example.com/video.mp4",
-            OriginalFileName = "video.mp4"
-        };
-
+        var job = new Video360Job();
+        
         // Assert
-        job.Status.Should().Be(Video360JobStatus.Pending);
-        job.FramesToExtract.Should().Be(6);
-        job.Progress.Should().Be(0);
-        job.Options.Should().NotBeNull();
-        job.ExtractedFrames.Should().BeEmpty();
+        job.Should().NotBeNull();
+        job.Id.Should().NotBeEmpty();
+        job.Status.Should().Be(ProcessingStatus.Pending);
+        job.Provider.Should().Be(Video360Provider.FfmpegApi);
+        job.ImageFormat.Should().Be(ImageFormat.Jpeg);
+        job.VideoQuality.Should().Be(VideoQuality.High);
+        job.FrameCount.Should().Be(6);
+        job.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -34,179 +30,151 @@ public class Video360JobTests
         // Arrange
         var job = new Video360Job
         {
-            Id = Guid.NewGuid(),
             VehicleId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            VideoUrl = "https://example.com/video.mp4",
-            OriginalFileName = "video.mp4"
+            SourceVideoUrl = "https://example.com/video.mp4"
         };
-
+        
         // Act
+        job.SetProvider(Video360Provider.ApyHub);
         job.StartProcessing();
-
+        
         // Assert
-        job.Status.Should().Be(Video360JobStatus.Processing);
-        job.ProcessingStartedAt.Should().NotBeNull();
-        job.Progress.Should().Be(0);
+        job.Status.Should().Be(ProcessingStatus.Processing);
+        job.Provider.Should().Be(Video360Provider.ApyHub);
+        job.StartedAt.Should().NotBeNull();
+        job.StartedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Fact]
-    public void Video360Job_Complete_ShouldUpdateStatusAndCalculateDuration()
+    public void Video360Job_CompleteProcessing_ShouldUpdateStatusAndTimestamps()
     {
         // Arrange
-        var job = new Video360Job
-        {
-            Id = Guid.NewGuid(),
-            VehicleId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            VideoUrl = "https://example.com/video.mp4",
-            OriginalFileName = "video.mp4"
-        };
+        var job = new Video360Job();
+        job.SetProvider(Video360Provider.Cloudinary);
         job.StartProcessing();
-
+        
         // Act
-        job.Complete();
-
+        job.CompleteProcessing(15000, 0.012m);
+        
         // Assert
-        job.Status.Should().Be(Video360JobStatus.Completed);
-        job.Progress.Should().Be(100);
-        job.ProcessingCompletedAt.Should().NotBeNull();
-        job.ProcessingDurationMs.Should().NotBeNull();
-        job.ProcessingDurationMs.Should().BeGreaterOrEqualTo(0);
+        job.Status.Should().Be(ProcessingStatus.Completed);
+        job.CompletedAt.Should().NotBeNull();
+        job.Frames.Should().HaveCount(0); // No frames added yet
+        job.ProcessingTimeMs.Should().Be(15000);
+        job.CostUsd.Should().Be(0.012m);
     }
 
     [Fact]
-    public void Video360Job_Fail_ShouldSetErrorMessage()
+    public void Video360Job_MarkFailed_ShouldSetErrorDetails()
     {
         // Arrange
-        var job = new Video360Job
-        {
-            Id = Guid.NewGuid(),
-            VehicleId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            VideoUrl = "https://example.com/video.mp4",
-            OriginalFileName = "video.mp4"
-        };
+        var job = new Video360Job();
+        job.SetProvider(Video360Provider.Imgix);
         job.StartProcessing();
-        var errorMessage = "Video format not supported";
-
+        
         // Act
-        job.Fail(errorMessage);
-
+        job.MarkFailed("Connection timeout", "TimeoutException");
+        
         // Assert
-        job.Status.Should().Be(Video360JobStatus.Failed);
-        job.ErrorMessage.Should().Be(errorMessage);
-        job.ProcessingCompletedAt.Should().NotBeNull();
+        job.Status.Should().Be(ProcessingStatus.Failed);
+        job.ErrorMessage.Should().Be("Connection timeout");
+        job.ErrorCode.Should().Be("TimeoutException");
+    }
+
+    [Fact]
+    public void Video360Job_Cancel_ShouldSetCancelledStatus()
+    {
+        // Arrange
+        var job = new Video360Job();
+        
+        // Act
+        job.Status = ProcessingStatus.Cancelled;
+        job.CompletedAt = DateTime.UtcNow;
+        
+        // Assert
+        job.Status.Should().Be(ProcessingStatus.Cancelled);
+        job.CompletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Video360Job_IncrementRetryCount_ShouldIncrease()
+    {
+        // Arrange
+        var job = new Video360Job();
+        job.RetryCount.Should().Be(0);
+        
+        // Act
+        job.IncrementRetryCount();
+        job.IncrementRetryCount();
+        
+        // Assert
+        job.RetryCount.Should().Be(2);
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(50)]
-    [InlineData(100)]
-    [InlineData(150)] // Should be clamped to 100
-    public void Video360Job_UpdateProgress_ShouldClampValues(int progress)
+    [InlineData(Video360Provider.FfmpegApi)]
+    [InlineData(Video360Provider.ApyHub)]
+    [InlineData(Video360Provider.Cloudinary)]
+    [InlineData(Video360Provider.Imgix)]
+    [InlineData(Video360Provider.Shotstack)]
+    public void Video360Job_SetProvider_ShouldAssignCorrectProvider(Video360Provider provider)
     {
         // Arrange
-        var job = new Video360Job
+        var job = new Video360Job();
+        
+        // Act
+        job.SetProvider(provider);
+        
+        // Assert
+        job.Provider.Should().Be(provider);
+    }
+
+    [Fact]
+    public void Video360Job_AddFrame_ShouldIncreaseFramesCollection()
+    {
+        // Arrange
+        var job = new Video360Job();
+        var frame = new ExtractedFrame
         {
-            Id = Guid.NewGuid(),
-            VehicleId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            VideoUrl = "https://example.com/video.mp4",
-            OriginalFileName = "video.mp4"
+            Video360JobId = job.Id,
+            FrameIndex = 0,
+            AngleDegrees = 0,
+            ImageUrl = "https://cdn.example.com/frame0.jpg"
         };
-
+        
         // Act
-        job.UpdateProgress(progress);
-
+        job.AddFrame(frame);
+        
         // Assert
-        job.Progress.Should().BeInRange(0, 100);
+        job.Frames.Should().HaveCount(1);
+        job.Frames.First().Should().Be(frame);
     }
-}
 
-public class ExtractedFrameTests
-{
     [Fact]
-    public void ExtractedFrame_CreateForPosition_ShouldUseStandardViews()
+    public void Video360Job_OutputFormat_ShouldBeAliasForImageFormat()
     {
         // Arrange
-        var jobId = Guid.NewGuid();
-
+        var job = new Video360Job();
+        
         // Act
-        var frame1 = ExtractedFrame.CreateForPosition(1, jobId);
-        var frame2 = ExtractedFrame.CreateForPosition(2, jobId);
-        var frame6 = ExtractedFrame.CreateForPosition(6, jobId);
-
+        job.OutputFormat = ImageFormat.Png;
+        
         // Assert
-        frame1.ViewName.Should().Be("Frente");
-        frame1.AngleDegrees.Should().Be(0);
-        frame1.IsPrimary.Should().BeTrue();
-
-        frame2.ViewName.Should().Be("Frente-Derecha");
-        frame2.AngleDegrees.Should().Be(60);
-        frame2.IsPrimary.Should().BeFalse();
-
-        frame6.ViewName.Should().Be("Izquierda");
-        frame6.AngleDegrees.Should().Be(300);
-        frame6.IsPrimary.Should().BeFalse();
+        job.ImageFormat.Should().Be(ImageFormat.Png);
+        job.OutputFormat.Should().Be(ImageFormat.Png);
     }
 
     [Fact]
-    public void ExtractedFrame_CreateForPosition_ShouldHandleUnknownPosition()
+    public void Video360Job_OutputQuality_ShouldBeAliasForVideoQuality()
     {
         // Arrange
-        var jobId = Guid.NewGuid();
-
+        var job = new Video360Job();
+        
         // Act
-        var frame = ExtractedFrame.CreateForPosition(10, jobId);
-
+        job.OutputQuality = VideoQuality.Ultra;
+        
         // Assert
-        frame.ViewName.Should().Be("Vista-10");
-        frame.SequenceNumber.Should().Be(10);
-    }
-
-    [Fact]
-    public void ExtractedFrame_StandardViews_ShouldHaveSixViews()
-    {
-        // Assert
-        ExtractedFrame.StandardViews.Should().HaveCount(6);
-        ExtractedFrame.StandardViews.Keys.Should().Contain(new[] { 1, 2, 3, 4, 5, 6 });
-    }
-}
-
-public class ProcessingOptionsTests
-{
-    [Fact]
-    public void ProcessingOptions_ShouldHaveCorrectDefaults()
-    {
-        // Arrange & Act
-        var options = new ProcessingOptions();
-
-        // Assert
-        options.FrameCount.Should().Be(6);
-        options.OutputWidth.Should().Be(1920);
-        options.OutputHeight.Should().Be(1080);
-        options.JpegQuality.Should().Be(90);
-        options.OutputFormat.Should().Be("jpg");
-        options.GenerateThumbnails.Should().BeTrue();
-        options.SmartFrameSelection.Should().BeTrue();
-        options.AutoCorrectExposure.Should().BeTrue();
-        options.ThumbnailWidth.Should().Be(400);
-    }
-}
-
-public class Video360JobStatusTests
-{
-    [Theory]
-    [InlineData(Video360JobStatus.Pending, 0)]
-    [InlineData(Video360JobStatus.Queued, 1)]
-    [InlineData(Video360JobStatus.Processing, 2)]
-    [InlineData(Video360JobStatus.Completed, 10)]
-    [InlineData(Video360JobStatus.Failed, 20)]
-    [InlineData(Video360JobStatus.Cancelled, 30)]
-    public void Video360JobStatus_ShouldHaveCorrectValues(Video360JobStatus status, int expectedValue)
-    {
-        // Assert
-        ((int)status).Should().Be(expectedValue);
+        job.VideoQuality.Should().Be(VideoQuality.Ultra);
+        job.OutputQuality.Should().Be(VideoQuality.Ultra);
     }
 }

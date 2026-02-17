@@ -93,7 +93,11 @@ public class AuditLogRepository : IAuditLogRepository
         int page = 1,
         int pageSize = 50,
         string? sortBy = null,
-        bool sortDescending = true)
+        bool sortDescending = true,
+        string? searchText = null,
+        string? serviceName = null,
+        string? severity = null,
+        bool? success = null)
     {
         var query = _context.AuditLogs.AsQueryable();
 
@@ -108,6 +112,31 @@ public class AuditLogRepository : IAuditLogRepository
             query = query.Where(x => x.CreatedAt >= fromDate.Value);
         if (toDate.HasValue)
             query = query.Where(x => x.CreatedAt <= toDate.Value);
+
+        // Search text filter — searches across action, resource, userId, serviceName, errorMessage
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            var term = searchText.Trim().ToLower();
+            query = query.Where(x =>
+                x.Action.ToLower().Contains(term) ||
+                x.Resource.ToLower().Contains(term) ||
+                x.UserId.ToLower().Contains(term) ||
+                x.ServiceName.ToLower().Contains(term) ||
+                (x.ErrorMessage != null && x.ErrorMessage.ToLower().Contains(term)) ||
+                (x.CorrelationId != null && x.CorrelationId.ToLower().Contains(term)));
+        }
+
+        // Service name filter
+        if (!string.IsNullOrEmpty(serviceName))
+            query = query.Where(x => x.ServiceName == serviceName);
+
+        // Severity filter
+        if (!string.IsNullOrEmpty(severity) && Enum.TryParse<AuditSeverity>(severity, true, out var severityEnum))
+            query = query.Where(x => x.Severity == severityEnum);
+
+        // Success filter
+        if (success.HasValue)
+            query = query.Where(x => x.Success == success.Value);
 
         // Get total count
         var totalCount = await query.CountAsync();

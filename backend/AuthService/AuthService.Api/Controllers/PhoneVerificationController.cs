@@ -58,7 +58,7 @@ public class PhoneVerificationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send phone verification code for user");
-            return BadRequest(ApiResponse<SendPhoneVerificationResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<SendPhoneVerificationResponse>.Fail("Failed to send verification code. Please try again."));
         }
     }
 
@@ -100,7 +100,7 @@ public class PhoneVerificationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to verify phone number for user");
-            return BadRequest(ApiResponse<VerifyPhoneNumberResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<VerifyPhoneNumberResponse>.Fail("Phone verification failed. Please try again."));
         }
     }
 
@@ -137,7 +137,7 @@ public class PhoneVerificationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to resend phone verification code for user");
-            return BadRequest(ApiResponse<SendPhoneVerificationResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<SendPhoneVerificationResponse>.Fail("Failed to resend verification code. Please try again."));
         }
     }
 
@@ -172,7 +172,7 @@ public class PhoneVerificationController : ControllerBase
         {
             _logger.LogError(ex, "Failed to get phone verification status for user");
             return Task.FromResult<ActionResult<ApiResponse<PhoneVerificationStatusResponse>>>(
-                BadRequest(ApiResponse<PhoneVerificationStatusResponse>.Fail(ex.Message)));
+                BadRequest(ApiResponse<PhoneVerificationStatusResponse>.Fail("Failed to get verification status.")));
         }
     }
 
@@ -214,7 +214,7 @@ public class PhoneVerificationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update phone number for user");
-            return BadRequest(ApiResponse<SendPhoneVerificationResponse>.Fail(ex.Message));
+            return BadRequest(ApiResponse<SendPhoneVerificationResponse>.Fail("Failed to update phone number. Please try again."));
         }
     }
 }

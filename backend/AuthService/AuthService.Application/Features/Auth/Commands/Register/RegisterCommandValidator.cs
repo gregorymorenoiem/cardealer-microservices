@@ -7,23 +7,63 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
     public RegisterCommandValidator()
     {
+        // UserName is now optional since we use FirstName/LastName
         RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("This field is required.")
-            .NoXss() // ✅ NUEVO: Protección XSS
-            .NoSqlInjection(); // ✅ NUEVO: Protección SQL Injection
+            .NoXss() // ✅ Protección XSS
+            .NoSqlInjection() // ✅ Protección SQL Injection
+            .When(x => !string.IsNullOrEmpty(x.UserName));
+
+        // FirstName - Required if UserName not provided
+        RuleFor(x => x.FirstName)
+            .NotEmpty()
+                .When(x => string.IsNullOrEmpty(x.UserName))
+                .WithMessage("El nombre es requerido")
+            .MaximumLength(50).WithMessage("El nombre no puede exceder 50 caracteres")
+            .NoXss()
+            .NoSqlInjection()
+            .When(x => !string.IsNullOrEmpty(x.FirstName));
+
+        // LastName - Required if UserName not provided
+        RuleFor(x => x.LastName)
+            .NotEmpty()
+                .When(x => string.IsNullOrEmpty(x.UserName))
+                .WithMessage("El apellido es requerido")
+            .MaximumLength(50).WithMessage("El apellido no puede exceder 50 caracteres")
+            .NoXss()
+            .NoSqlInjection()
+            .When(x => !string.IsNullOrEmpty(x.LastName));
 
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("This field is required.")
-            .EmailAddress().WithMessage("Invalid email format.")
+            .NotEmpty().WithMessage("El email es requerido")
+            .EmailAddress().WithMessage("Formato de email inválido")
             .Matches(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-                .WithMessage("Email must be in the format name@example.com.")
-            .NoXss() // ✅ NUEVO
-            .NoSqlInjection(); // ✅ NUEVO
+                .WithMessage("El email debe tener el formato nombre@ejemplo.com")
+            .MaximumLength(254).WithMessage("El email no puede exceder 254 caracteres")
+            .NoXss()
+            .NoSqlInjection();
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("This field is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
-            .Matches(@"^(?=.*[A-Z])(?=.*\d).+$")
-                .WithMessage("Password must include at least one uppercase letter and one number.");
+            .NotEmpty().WithMessage("La contraseña es requerida")
+            .MinimumLength(8).WithMessage("La contraseña debe tener al menos 8 caracteres")
+            .MaximumLength(128).WithMessage("La contraseña no puede exceder 128 caracteres")
+            .Matches(@"[A-Z]").WithMessage("La contraseña debe incluir al menos una mayúscula")
+            .Matches(@"[a-z]").WithMessage("La contraseña debe incluir al menos una minúscula")
+            .Matches(@"\d").WithMessage("La contraseña debe incluir al menos un número")
+            .Matches(@"[^a-zA-Z0-9]").WithMessage("La contraseña debe incluir al menos un carácter especial")
+            .NoXss() // ✅ AGREGADO: Protección XSS
+            .NoSqlInjection(); // ✅ AGREGADO: Protección SQL Injection
+
+        // Phone - Optional but validated if provided
+        RuleFor(x => x.Phone)
+            .Matches(@"^[+]?[\d\s\-()]{7,20}$")
+                .When(x => !string.IsNullOrEmpty(x.Phone))
+                .WithMessage("Formato de teléfono inválido")
+            .NoXss()
+            .NoSqlInjection()
+            .When(x => !string.IsNullOrEmpty(x.Phone));
+
+        // AcceptTerms - Must be true for registration
+        RuleFor(x => x.AcceptTerms)
+            .Equal(true).WithMessage("Debes aceptar los términos y condiciones");
     }
 }

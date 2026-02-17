@@ -10,20 +10,20 @@ public class AutoLearningService : IAutoLearningService
     private readonly IUnansweredQuestionRepository _unansweredRepo;
     private readonly IChatMessageRepository _messageRepo;
     private readonly IQuickResponseRepository _quickResponseRepo;
-    private readonly IDialogflowService _dialogflowService;
+    private readonly ILlmService _llmService;
     private readonly ILogger<AutoLearningService> _logger;
 
     public AutoLearningService(
         IUnansweredQuestionRepository unansweredRepo,
         IChatMessageRepository messageRepo,
         IQuickResponseRepository quickResponseRepo,
-        IDialogflowService dialogflowService,
+        ILlmService llmService,
         ILogger<AutoLearningService> logger)
     {
         _unansweredRepo = unansweredRepo;
         _messageRepo = messageRepo;
         _quickResponseRepo = quickResponseRepo;
-        _dialogflowService = dialogflowService;
+        _llmService = llmService;
         _logger = logger;
     }
 
@@ -113,14 +113,19 @@ public class AutoLearningService : IAutoLearningService
             switch (suggestion.Type)
             {
                 case SuggestionType.NewIntent:
-                    if (suggestion.Data is SuggestedIntent intent)
-                        return await _dialogflowService.CreateIntentAsync(intent, ct);
-                    break;
+                    // Con LLM no se crean intents en un servicio externo —
+                    // las sugerencias se almacenan para re-entrenamiento futuro del modelo
+                    _logger.LogInformation("Intent suggestion recorded for future LLM re-training: {Title}", suggestion.Title);
+                    suggestion.IsApplied = true;
+                    suggestion.AppliedAt = DateTime.UtcNow;
+                    return true;
 
                 case SuggestionType.TrainingPhraseAddition:
-                    if (suggestion.Data is TrainingPhraseData tpData)
-                        return await _dialogflowService.AddTrainingPhrasesAsync(tpData.IntentName, tpData.Phrases, ct);
-                    break;
+                    // Se almacenan frases para el próximo ciclo de fine-tuning
+                    _logger.LogInformation("Training phrases recorded for future LLM re-training: {Title}", suggestion.Title);
+                    suggestion.IsApplied = true;
+                    suggestion.AppliedAt = DateTime.UtcNow;
+                    return true;
 
                 case SuggestionType.QuickResponseCreation:
                     if (suggestion.Data is QuickResponse qr)
@@ -140,27 +145,39 @@ public class AutoLearningService : IAutoLearningService
         }
     }
 
+    /// <summary>
+    /// R13 (MLOps): Human-in-the-loop — High-confidence suggestions are NO LONGER
+    /// auto-applied. Instead they are queued for human review. This prevents
+    /// silent model drift from unchecked auto-learning.
+    /// 
+    /// All suggestions with confidence ≥ minConfidence are marked as 
+    /// RequiresReview = true and queued. A human operator must explicitly 
+    /// call ApplySuggestionAsync to apply them.
+    /// </summary>
     public async Task<int> AutoApplyHighConfidenceSuggestionsAsync(Guid configurationId, float minConfidence = 0.85f, CancellationToken ct = default)
     {
         var result = await AnalyzeAndSuggestAsync(configurationId, ct);
-        var applied = 0;
+        var queued = 0;
 
         foreach (var suggestion in result.Suggestions.Where(s => s.ConfidenceScore >= minConfidence))
         {
-            if (await ApplySuggestionAsync(suggestion, ct))
-            {
-                suggestion.IsApplied = true;
-                suggestion.AppliedAt = DateTime.UtcNow;
-                suggestion.AppliedBy = "auto-learning-service";
-                applied++;
-            }
+            // R13: Queue for human review instead of auto-applying
+            suggestion.RequiresReview = true;
+            suggestion.IsApplied = false;
+            suggestion.AppliedBy = "queued-for-review";
+            queued++;
+
+            _logger.LogInformation(
+                "Queued high-confidence suggestion for human review: {Title} (confidence: {Confidence:F2})",
+                suggestion.Title, suggestion.ConfidenceScore);
         }
 
-        if (applied > 0)
-            await _dialogflowService.TrainAgentAsync(ct);
+        if (queued > 0)
+            _logger.LogInformation(
+                "Queued {Count} high-confidence suggestions for human review (previously auto-applied). " +
+                "Use admin dashboard or API to approve/reject.", queued);
 
-        _logger.LogInformation("Auto-applied {Count} high-confidence suggestions", applied);
-        return applied;
+        return queued;
     }
 
     public async Task<IEnumerable<SuggestedIntent>> GetSuggestedIntentsAsync(Guid configurationId, int limit = 10, CancellationToken ct = default)

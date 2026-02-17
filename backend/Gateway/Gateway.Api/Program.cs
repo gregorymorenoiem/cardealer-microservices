@@ -17,11 +17,14 @@ using Gateway.Domain.Interfaces;
 using Gateway.Infrastructure.Services;
 using Gateway.Application.UseCases;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Middleware;
 using CarDealer.Shared.RateLimiting.Extensions;
 using CarDealer.Shared.RateLimiting.Models;
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
+using CarDealer.Shared.Audit.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +49,7 @@ var configFile = isDevelopment ? "ocelot.dev.json" : "ocelot.prod.json";
 builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: true);
 
 // 3. Configuración esencial
+builder.Services.AddResponseCompression();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -83,10 +87,10 @@ builder.Services.AddStandardErrorHandling(options =>
     options.ServiceName = "Gateway";
     options.Environment = builder.Environment.EnvironmentName;
     options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
-    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+    options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? builder.Configuration["RabbitMQ:HostName"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:UserName"] ?? builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured. Set the RabbitMQ__UserName environment variable.");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured. Set the RabbitMQ__Password environment variable.");
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
 });
 
@@ -111,15 +115,17 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            // Producción
+            // Producción — URLs autorizadas de OKLA
             policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
                     "https://inelcasrl.com.do",
                     "https://www.inelcasrl.com.do",
                     "https://cardealer.app",
                     "https://www.cardealer.app"
                   )
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
+                  .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                  .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With", "X-CSRF-Token", "X-Correlation-Id")
                   .AllowCredentials()
                   .SetPreflightMaxAge(TimeSpan.FromHours(1));
         }
@@ -147,7 +153,28 @@ try
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.FromMinutes(5)
+            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+        };
+
+        // Security (CWE-922): Support reading JWT from HttpOnly cookie
+        // if no Authorization header is present (new default auth flow).
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                // If Authorization header is already present, use it (backward compatibility)
+                if (context.Request.Headers.ContainsKey("Authorization"))
+                    return Task.CompletedTask;
+
+                // Otherwise, read from HttpOnly cookie
+                var accessToken = context.Request.Cookies["okla_access_token"];
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -155,7 +182,8 @@ try
 }
 catch (InvalidOperationException ex)
 {
-    Log.Warning("JWT Authentication not configured: {Message}. Routes requiring auth will fail.", ex.Message);
+    Log.Fatal("JWT Authentication FAILED to configure: {Message}. Gateway will NOT start without proper JWT configuration.", ex.Message);
+    throw; // Fail fast — do NOT start Gateway without auth (NIST IA-5)
 }
 
 // 5. Configuración Ocelot con Polly
@@ -208,17 +236,36 @@ else
     Log.Warning("Rate Limiting is DISABLED. API is unprotected against abuse.");
 }
 
+// 10. Audit Publisher for security monitoring
+builder.Services.AddAuditPublisher(builder.Configuration);
+
 var app = builder.Build();
 
 // ============================================================================
 // MIDDLEWARE PIPELINE
 // ============================================================================
 
+// HTTPS Redirect — enforce HTTPS in production (OWASP)
+if (!isDevelopment)
+{
+    app.UseHttpsRedirection();
+}
+
+// Performance: Enable response compression early in pipeline (saves 60-80% bandwidth)
+app.UseResponseCompression();
+
 // FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
 app.UseGlobalErrorHandling();
 
+// Graceful Degradation — intercepta circuit breakers y timeouts para
+// devolver respuestas degradadas (503 con Retry-After) en lugar de errores 500
+app.UseGracefulDegradation();
+
 // FASE 2: Request Logging con enrichment de TraceId, UserId, CorrelationId
 app.UseRequestLogging();
+
+// Security Headers (OWASP) — before CORS and routing
+app.UseApiSecurityHeaders(isProduction: !isDevelopment);
 
 // CORS debe ir primero antes de cualquier otro middleware de routing
 app.UseCors("ReactPolicy");
@@ -240,8 +287,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Solo usar Swagger si no estamos en Testing
-if (!app.Environment.IsEnvironment("Testing"))
+// CSRF Validation — after auth, before Ocelot routing (validates Double Submit Cookie for POST/PUT/DELETE)
+app.UseCsrfValidation();
+
+// Audit Middleware — logs all gateway requests for security monitoring
+app.UseAuditMiddleware();
+
+// Swagger only in Development — NEVER expose in production (OWASP API8)
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerForOcelotUI();

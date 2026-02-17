@@ -58,7 +58,15 @@ jobs:
       contactservice: ${{ steps.filter.outputs.contactservice }}
       # Sprint 14 microservices
       reviewservice: ${{ steps.filter.outputs.reviewservice }}
+      # Production-deployed services
+      kycservice: ${{ steps.filter.outputs.kycservice }}
+      auditservice: ${{ steps.filter.outputs.auditservice }}
+      idempotencyservice: ${{ steps.filter.outputs.idempotencyservice }}
+      adminservice: ${{ steps.filter.outputs.adminservice }}
       gateway: ${{ steps.filter.outputs.gateway }}
+      # Chatbot (MLOps pipeline)
+      chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
+      llm-server: ${{ steps.filter.outputs.llm-server }}
       # Shared libraries
       shared: ${{ steps.filter.outputs.shared }}
       # Frontend
@@ -131,6 +139,28 @@ jobs:
             reviewservice:
               - 'backend/ReviewService/**'
               - 'backend/_Shared/**'
+            # Production-deployed services
+            kycservice:
+              - 'backend/KYCService/**'
+              - 'backend/_Shared/**'
+            auditservice:
+              - 'backend/AuditService/**'
+              - 'backend/_Shared/**'
+            idempotencyservice:
+              - 'backend/IdempotencyService/**'
+              - 'backend/_Shared/**'
+            adminservice:
+              - 'backend/AdminService/**'
+              - 'backend/_Shared/**'
+            chatbotservice:
+              - 'backend/ChatbotService/ChatbotService.Api/**'
+              - 'backend/ChatbotService/ChatbotService.Application/**'
+              - 'backend/ChatbotService/ChatbotService.Domain/**'
+              - 'backend/ChatbotService/ChatbotService.Infrastructure/**'
+              - 'backend/ChatbotService/Dockerfile'
+              - 'backend/_Shared/**'
+            llm-server:
+              - 'backend/ChatbotService/LlmServer/**'
             gateway:
               - 'backend/Gateway/**'
             # Shared libraries (triggers rebuild of dependent services)
@@ -160,6 +190,12 @@ jobs:
           echo "| AlertService | ${{ steps.filter.outputs.alertservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ContactService | ${{ steps.filter.outputs.contactservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ReviewService | ${{ steps.filter.outputs.reviewservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| KYCService | ${{ steps.filter.outputs.kycservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AuditService | ${{ steps.filter.outputs.auditservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IdempotencyService | ${{ steps.filter.outputs.idempotencyservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdminService | ${{ steps.filter.outputs.adminservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ steps.filter.outputs.frontend-web }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Shared Libraries | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
@@ -348,6 +384,53 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
+  # ============================================
+  # PRODUCTION-DEPLOYED SERVICES
+  # ============================================
+  kycservice:
+    name: 🪪 KYCService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.kycservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: kycservice
+      service-path: backend/KYCService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  auditservice:
+    name: 📋 AuditService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.auditservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: auditservice
+      service-path: backend/AuditService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  idempotencyservice:
+    name: 🔑 IdempotencyService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.idempotencyservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: idempotencyservice
+      service-path: backend/IdempotencyService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  adminservice:
+    name: 🛡️ AdminService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.adminservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: adminservice
+      service-path: backend/AdminService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
   gateway:
     name: 🌐 Gateway
     needs: detect-changes
@@ -386,6 +469,11 @@ jobs:
       - notificationservice
       - vehiclessaleservice
       - mediaservice
+      - billingservice
+      - kycservice
+      - auditservice
+      - idempotencyservice
+      - adminservice
       - gateway
       - frontend-web
     if: |
@@ -450,6 +538,10 @@ jobs:
       - userservice
       - roleservice
       - errorservice
+      - kycservice
+      - auditservice
+      - idempotencyservice
+      - adminservice
       - gateway
       - frontend-web
     if: always()
@@ -467,5 +559,9 @@ jobs:
           echo "| UserService | ${{ needs.userservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| RoleService | ${{ needs.roleservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ErrorService | ${{ needs.errorservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| KYCService | ${{ needs.kycservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AuditService | ${{ needs.auditservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IdempotencyService | ${{ needs.idempotencyservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdminService | ${{ needs.adminservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

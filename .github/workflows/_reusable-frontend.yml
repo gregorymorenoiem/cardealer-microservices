@@ -71,20 +71,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: "npm"
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: 📦 Install dependencies
         working-directory: ${{ inputs.working-directory }}
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: 🔍 Lint
         working-directory: ${{ inputs.working-directory }}
-        run: npm run lint
+        run: pnpm lint
 
       - name: 📝 Type check
         working-directory: ${{ inputs.working-directory }}
-        run: npx tsc --noEmit
+        run: pnpm tsc --noEmit
 
   # ============================================
   # JOB 2: Unit Tests
@@ -102,16 +105,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: "npm"
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: 📦 Install dependencies
         working-directory: ${{ inputs.working-directory }}
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: 🧪 Run unit tests
         working-directory: ${{ inputs.working-directory }}
-        run: npm test -- --run --reporter=verbose --coverage
+        run: pnpm test -- --run --reporter=verbose --coverage
 
       - name: 📊 Upload coverage
         uses: actions/upload-artifact@v4
@@ -140,12 +146,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: "npm"
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: 📦 Install dependencies
         working-directory: ${{ inputs.working-directory }}
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: 🔨 Build
         working-directory: ${{ inputs.working-directory }}
@@ -153,7 +162,7 @@ jobs:
           VITE_API_URL: ${{ inputs.vite-api-url }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           VITE_GOOGLE_MAPS_KEY: ${{ secrets.VITE_GOOGLE_MAPS_KEY }}
-        run: npm run build
+        run: pnpm build
 
       - name: 📤 Upload build artifacts
         uses: actions/upload-artifact@v4

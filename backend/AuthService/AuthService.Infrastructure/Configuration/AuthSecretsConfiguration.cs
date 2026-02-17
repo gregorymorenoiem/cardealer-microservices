@@ -135,9 +135,9 @@ public static class AuthSecretsConfiguration
             Port = int.Parse(secretProvider.GetSecret(SecretKeys.RabbitMqPort)
                 ?? configuration["RabbitMQ:Port"] ?? "5672"),
             Username = secretProvider.GetSecret(SecretKeys.RabbitMqUser)
-                ?? configuration["RabbitMQ:UserName"] ?? "guest",
+                ?? configuration["RabbitMQ:UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured"),
             Password = secretProvider.GetSecret(SecretKeys.RabbitMqPassword)
-                ?? configuration["RabbitMQ:Password"] ?? "guest",
+                ?? configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
             VirtualHost = secretProvider.GetSecret(SecretKeys.RabbitMqVirtualHost)
                 ?? configuration["RabbitMQ:VirtualHost"] ?? "/"
         };

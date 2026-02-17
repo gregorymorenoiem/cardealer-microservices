@@ -35,8 +35,8 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
 
         var hostName = configuration["RabbitMQ:Host"] ?? "localhost";
         var port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672");
-        var userName = configuration["RabbitMQ:Username"] ?? "guest";
-        var password = configuration["RabbitMQ:Password"] ?? "guest";
+        var userName = configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured");
+        var password = configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
 
         _jsonOptions = new JsonSerializerOptions

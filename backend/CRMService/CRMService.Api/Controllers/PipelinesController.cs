@@ -1,12 +1,14 @@
 using CRMService.Application.DTOs;
 using CRMService.Domain.Entities;
 using CRMService.Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRMService.Api.Controllers;
 
 [ApiController]
 [Route("api/crm/[controller]")]
+[Authorize]
 public class PipelinesController : ControllerBase
 {
     private readonly IPipelineRepository _pipelineRepository;

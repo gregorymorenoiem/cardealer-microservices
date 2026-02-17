@@ -21,6 +21,10 @@ public record StartSessionRequest
     public string? DeviceType { get; init; }
     public string? Language { get; init; } = "es";
     public Guid? DealerId { get; init; }
+    
+    // Dual-mode support
+    public string? ChatMode { get; init; }
+    public Guid? VehicleId { get; init; }
 }
 
 /// <summary>
@@ -36,6 +40,7 @@ public record StartSessionResponse
     public List<QuickReplyDto>? InitialQuickReplies { get; init; }
     public int MaxInteractionsPerSession { get; init; }
     public int RemainingInteractions { get; init; }
+    public string? ChatMode { get; init; }
 }
 
 /// <summary>
@@ -95,6 +100,10 @@ public record ChatbotResponse
     public List<VehicleCardDto>? VehicleCards { get; init; }
     public bool IsFallback { get; init; }
     public int ResponseTimeMs { get; init; }
+    
+    // Modo de chat y handoff
+    public string? ChatMode { get; init; }
+    public bool IsHumanMode { get; init; }
     
     // Información de límites
     public int RemainingInteractions { get; init; }
@@ -250,11 +259,11 @@ public record CreateOrUpdateConfigurationRequest
     public Guid? DealerId { get; init; }
     public string Name { get; init; } = "Default Chatbot";
     
-    // Dialogflow
-    public string DialogflowProjectId { get; init; } = string.Empty;
-    public string DialogflowAgentId { get; init; } = string.Empty;
-    public string DialogflowLanguageCode { get; init; } = "es";
-    public string? DialogflowCredentialsJson { get; init; }
+    // LLM Server
+    public string LlmServerUrl { get; init; } = string.Empty;
+    public string LlmModelId { get; init; } = string.Empty;
+    public string LlmLanguageCode { get; init; } = "es";
+    public string? LlmSystemPrompt { get; init; }
     
     // Límites
     public int MaxInteractionsPerSession { get; init; } = 10;
@@ -404,7 +413,7 @@ public record QuickResponseDto
     public List<QuickReplyDto>? QuickReplies { get; init; }
     public int Priority { get; init; }
     public bool IsActive { get; init; }
-    public bool BypassDialogflow { get; init; }
+    public bool BypassLlm { get; init; }
     public int UsageCount { get; init; }
     public DateTime? LastUsedAt { get; init; }
 }
@@ -421,7 +430,7 @@ public record CreateQuickResponseRequest
     public string Response { get; init; } = string.Empty;
     public List<QuickReplyDto>? QuickReplies { get; init; }
     public int Priority { get; init; } = 100;
-    public bool BypassDialogflow { get; init; } = true;
+    public bool BypassLlm { get; init; } = true;
 }
 
 #endregion
@@ -465,7 +474,7 @@ public record ChatbotHealthDto
 {
     public Guid ConfigurationId { get; init; }
     public string OverallStatus { get; init; } = "Unknown";
-    public bool DialogflowConnected { get; init; }
+    public bool LlmConnected { get; init; }
     public bool DatabaseConnected { get; init; }
     public int ActiveSessions { get; init; }
     public int TotalSessions { get; init; }
@@ -545,6 +554,25 @@ public record TransferToAgentRequest
     public string? TransferReason { get; init; }
     public string? PreferredAgent { get; init; }
     public string? Summary { get; init; }
+}
+
+/// <summary>
+/// Request para que un dealer/agente tome control de la sesión (handoff bot→humano)
+/// </summary>
+public record TakeOverRequest
+{
+    public string SessionToken { get; init; } = string.Empty;
+    public string AgentId { get; init; } = string.Empty;
+    public string AgentName { get; init; } = string.Empty;
+    public string? Reason { get; init; }
+}
+
+/// <summary>
+/// Request para devolver control al bot (handoff humano→bot)
+/// </summary>
+public record ReturnToBotRequest
+{
+    public string SessionToken { get; init; } = string.Empty;
 }
 
 #endregion

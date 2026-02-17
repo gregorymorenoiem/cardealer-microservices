@@ -78,7 +78,7 @@ public class ReportingService : IReportingService
                 .Where(q => q.ChatbotConfigurationId == configurationId)
                 .SumAsync(q => q.UsageCount, ct);
             report.QuickResponseInteractions = quickResponseCount;
-            report.DialogflowInteractions = report.TotalInteractions - quickResponseCount;
+            report.LlmInteractions = report.TotalInteractions - quickResponseCount;
             report.CostSavingsFromQuickResponses = quickResponseCount * CostPerInteraction;
 
             // Calculate averages
@@ -107,8 +107,8 @@ public class ReportingService : IReportingService
                 .ToListAsync(ct);
 
             var categoryGroups = messages
-                .Where(m => !string.IsNullOrEmpty(m.DialogflowIntentName))
-                .GroupBy(m => GetCategoryFromIntent(m.DialogflowIntentName!))
+                .Where(m => !string.IsNullOrEmpty(m.IntentName))
+                .GroupBy(m => GetCategoryFromIntent(m.IntentName!))
                 .ToDictionary(g => g.Key, g => g.Count());
 
             report.InteractionsByCategory = categoryGroups;

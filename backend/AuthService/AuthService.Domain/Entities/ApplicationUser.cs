@@ -23,6 +23,11 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    // Soft Delete
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+
     // Propiedad computada para 2FA
     public bool IsTwoFactorEnabled => TwoFactorAuth != null && TwoFactorAuth.Status == TwoFactorAuthStatus.Enabled;
 
@@ -38,7 +43,10 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
     public string? DealerId { get; set; }
 
     // Account type for role-based access
-    public AccountType AccountType { get; set; } = AccountType.Individual;
+    public AccountType AccountType { get; set; } = AccountType.Buyer;
+
+    // User intent - what the user wants to do (buy, sell, both)
+    public UserIntent UserIntent { get; set; } = UserIntent.Browse;
 
     // Profile information
     public string? FirstName { get; set; }
@@ -114,14 +122,24 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         AddDomainEvent(new PasswordChangedEvent(Id));
     }
 
-    public void IncrementAccessFailedCount()
+    /// <summary>
+    /// Security: Configurable lockout parameters.
+    /// Read from SecuritySettings in production; defaults here are conservative.
+    /// </summary>
+    private const int DefaultMaxFailedAttempts = 5;
+    private const int DefaultLockoutMinutes = 30;
+
+    public void IncrementAccessFailedCount(int? maxAttempts = null, int? lockoutMinutes = null)
     {
         AccessFailedCount++;
 
-        if (AccessFailedCount >= 5)
+        var threshold = maxAttempts ?? DefaultMaxFailedAttempts;
+        var duration = lockoutMinutes ?? DefaultLockoutMinutes;
+
+        if (AccessFailedCount >= threshold)
         {
             LockoutEnabled = true;
-            LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+            LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(duration);
         }
         MarkAsUpdated();
     }
