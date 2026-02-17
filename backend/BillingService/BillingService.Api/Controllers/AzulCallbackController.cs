@@ -81,7 +81,9 @@ public class AzulCallbackController : ControllerBase
         // TODO: Enviar notificación al usuario
 
         // Redirigir al frontend con resultado
-        var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/success?orderId={query.OrderNumber}";
+        // Security: URL-encode external values to prevent XSS/header injection (CWE-79, CWE-113)
+        var encodedOrderNumber = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
+        var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/success?orderId={encodedOrderNumber}";
         return Redirect(frontendUrl);
     }
 
@@ -109,7 +111,10 @@ public class AzulCallbackController : ControllerBase
 
         // TODO: Notificar al usuario
 
-        var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/declined?orderId={query.OrderNumber}&reason={query.ResponseMessage}";
+        // Security: URL-encode external values to prevent XSS/header injection (CWE-79, CWE-113)
+        var encodedOrderNum = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
+        var encodedReason = Uri.EscapeDataString(query.ResponseMessage ?? string.Empty);
+        var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/declined?orderId={encodedOrderNum}&reason={encodedReason}";
         return Redirect(frontendUrl);
     }
 
@@ -143,7 +148,9 @@ public class AzulCallbackController : ControllerBase
 
         // TODO: Notificar al usuario
 
-        var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/cancelled?orderId={query.OrderNumber}";
+        // Security: URL-encode external values to prevent XSS/header injection (CWE-79)
+        var encodedCancelledOrderNumber = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
+        var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/cancelled?orderId={encodedCancelledOrderNumber}";
         return Redirect(frontendUrl);
     }
 

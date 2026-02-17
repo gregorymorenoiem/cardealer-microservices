@@ -24,6 +24,8 @@ public record KYCProfileDto
     public DateTime? DateOfBirth { get; init; }
     public string? PlaceOfBirth { get; init; }
     public string? Nationality { get; init; }
+    public string? Gender { get; init; }
+    public string? Occupation { get; init; }
     
     // Documentos
     public DocumentType PrimaryDocumentType { get; init; }
@@ -36,8 +38,10 @@ public record KYCProfileDto
     
     // Dirección
     public string? Address { get; init; }
+    public string? Sector { get; init; }
     public string? City { get; init; }
     public string? Province { get; init; }
+    public string? PostalCode { get; init; }
     public string? Country { get; init; }
     
     // PEP
@@ -59,6 +63,11 @@ public record KYCProfileDto
     public DateTime? ApprovedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public DateTime? NextReviewAt { get; init; }
+    
+    // Rechazo
+    public string? RejectionReason { get; init; }
+    public DateTime? RejectedAt { get; init; }
+    public Guid? RejectedBy { get; init; }
     
     // Documentos y verificaciones
     public List<KYCDocumentDto> Documents { get; init; } = new();
@@ -96,6 +105,7 @@ public record KYCDocumentDto
     public string TypeName => Type.ToString();
     public string DocumentName { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
+    public string? StorageKey { get; init; }
     public string FileUrl { get; init; } = string.Empty;
     public string FileType { get; init; } = string.Empty;
     public long FileSize { get; init; }

@@ -14,7 +14,7 @@ namespace KYCService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Compliance")]
+[Authorize(Policy = "AdminOrCompliance")]
 public class STRController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -36,6 +36,9 @@ public class STRController : ControllerBase
         [FromQuery] STRStatus? status = null,
         [FromQuery] bool? isOverdue = null)
     {
+        // SECURITY: Clamp pagination to prevent data exfiltration
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
         var query = new GetSTRsQuery
         {
             Page = page,

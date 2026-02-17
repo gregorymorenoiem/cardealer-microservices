@@ -30,22 +30,21 @@ FROM build AS publish
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
 
 # Install wget for health checks and create secrets directory
-RUN apt-get update && apt-get install -y --no-install-recommends wget \
-    && rm -rf /var/lib/apt/lists/* \
+RUN apk add --no-cache wget \
     && mkdir -p /run/secrets
 
 # Create non-root user for security
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+RUN addgroup -S appgroup && adduser -S -G appgroup appuser
 
 # Copy published files
 COPY --from=publish /app/publish .
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
 # Change ownership and switch to non-root user
@@ -53,11 +52,11 @@ RUN chown -R appuser:appgroup /app /run/secrets
 USER appuser
 
 # Expose port
-EXPOSE 80
+EXPOSE 8080
 
 # Health check using wget
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "BillingService.Api.dll"]

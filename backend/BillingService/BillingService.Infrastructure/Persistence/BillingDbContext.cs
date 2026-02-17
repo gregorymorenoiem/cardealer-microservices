@@ -35,6 +35,26 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.StripeSubscriptionId).HasMaxLength(100);
             entity.Property(e => e.StripePaymentMethodId).HasMaxLength(100);
             entity.Property(e => e.CancellationReason).HasMaxLength(500);
+
+            // ✅ AUDIT FIX: Concurrency token
+            entity.Property(e => e.ConcurrencyStamp)
+                .IsConcurrencyToken()
+                .HasMaxLength(36);
+
+            // ✅ AUDIT FIX: Soft delete filter
+            entity.HasQueryFilter(e => !e.IsDeleted);
+            entity.HasIndex(e => e.IsDeleted);
+
+            // ✅ AUDIT FIX: Navigation properties (one-to-many)
+            entity.HasMany(e => e.Payments)
+                .WithOne(p => p.Subscription)
+                .HasForeignKey(p => p.SubscriptionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(e => e.Invoices)
+                .WithOne(i => i.Subscription)
+                .HasForeignKey(i => i.SubscriptionId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Payment>(entity =>
@@ -55,6 +75,17 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.ReceiptUrl).HasMaxLength(500);
             entity.Property(e => e.FailureReason).HasMaxLength(500);
             entity.Property(e => e.RefundReason).HasMaxLength(500);
+
+            // ✅ AUDIT FIX: Concurrency token
+            entity.Property(e => e.ConcurrencyStamp)
+                .IsConcurrencyToken()
+                .HasMaxLength(36);
+
+            // ✅ AUDIT FIX: FK to Invoice
+            entity.HasOne(e => e.Invoice)
+                .WithMany()
+                .HasForeignKey(e => e.InvoiceId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Invoice>(entity =>
@@ -75,6 +106,11 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.StripeInvoiceId).HasMaxLength(100);
             entity.Property(e => e.PdfUrl).HasMaxLength(500);
             entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            // ✅ AUDIT FIX: Concurrency token
+            entity.Property(e => e.ConcurrencyStamp)
+                .IsConcurrencyToken()
+                .HasMaxLength(36);
         });
 
         modelBuilder.Entity<StripeCustomer>(entity =>
@@ -87,7 +123,7 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.Name).HasMaxLength(200);
             entity.Property(e => e.Phone).HasMaxLength(50);
-            entity.Property(e => e.Metadata).HasMaxLength(4000); // JSON
+            entity.Property(e => e.Metadata).HasMaxLength(4000);
             entity.Property(e => e.DefaultPaymentMethodId).HasMaxLength(100);
         });
 
@@ -134,5 +170,47 @@ public class BillingDbContext : DbContext
 
         // Apply AzulTransaction configuration
         modelBuilder.ApplyConfiguration(new Configurations.AzulTransactionConfiguration());
+    }
+
+    // ✅ AUDIT FIX: Auto-update timestamps and concurrency stamps
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var utcNow = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                // Update ConcurrencyStamp on any modified entity that has one
+                var concurrencyProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "ConcurrencyStamp");
+                if (concurrencyProp != null)
+                {
+                    concurrencyProp.CurrentValue = Guid.NewGuid().ToString();
+                }
+
+                // Update UpdatedAt on any modified entity that has one
+                var updatedAtProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "UpdatedAt");
+                if (updatedAtProp != null)
+                {
+                    updatedAtProp.CurrentValue = utcNow;
+                }
+            }
+            else if (entry.State == EntityState.Added)
+            {
+                var createdAtProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "CreatedAt");
+                if (createdAtProp != null && createdAtProp.CurrentValue is DateTime dt && dt == default)
+                {
+                    createdAtProp.CurrentValue = utcNow;
+                }
+
+                var concurrencyProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "ConcurrencyStamp");
+                if (concurrencyProp != null)
+                {
+                    concurrencyProp.CurrentValue = Guid.NewGuid().ToString();
+                }
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }

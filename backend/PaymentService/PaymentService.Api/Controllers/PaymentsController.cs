@@ -23,15 +23,18 @@ public class PaymentsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IPaymentGatewayRegistry _gatewayRegistry;
+    private readonly IGatewayAvailabilityService _availability;
     private readonly ILogger<PaymentsController> _logger;
 
     public PaymentsController(
         IMediator mediator, 
         IPaymentGatewayRegistry gatewayRegistry,
+        IGatewayAvailabilityService availability,
         ILogger<PaymentsController> logger)
     {
         _mediator = mediator;
         _gatewayRegistry = gatewayRegistry;
+        _availability = availability;
         _logger = logger;
     }
 
@@ -61,6 +64,37 @@ public class PaymentsController : ControllerBase
             }).ToList()
         };
         
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lista solo los proveedores habilitados para nuevos usuarios (checkout).
+    /// Respeta los toggles del admin panel (billing.{provider}_enabled).
+    /// Existing users with saved methods on disabled gateways can still be charged.
+    /// </summary>
+    [HttpGet("providers/available")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ProvidersListDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAvailableProviders(CancellationToken cancellationToken)
+    {
+        var enabledGateways = await _availability.GetEnabledGatewaysAsync(cancellationToken);
+        var providers = _gatewayRegistry.GetAll()
+            .Where(p => enabledGateways.Contains(p.Gateway))
+            .ToList();
+
+        var result = new ProvidersListDto
+        {
+            TotalProviders = providers.Count,
+            Providers = providers.Select(p => new ProviderInfoDto
+            {
+                Gateway = p.Gateway.ToString(),
+                Name = p.Name,
+                Type = p.Type.ToString(),
+                IsConfigured = p.ValidateConfiguration().Count == 0,
+                ConfigurationErrors = new List<string>() // Don't expose config errors publicly
+            }).ToList()
+        };
+
         return Ok(result);
     }
 

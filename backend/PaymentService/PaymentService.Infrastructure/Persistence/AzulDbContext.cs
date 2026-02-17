@@ -39,6 +39,11 @@ public class AzulDbContext : DbContext
     /// </summary>
     public DbSet<CurrencyConversion> CurrencyConversions { get; set; } = null!;
 
+    /// <summary>
+    /// Métodos de pago guardados (tarjetas tokenizadas)
+    /// </summary>
+    public DbSet<SavedPaymentMethod> SavedPaymentMethods { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -292,6 +297,72 @@ public class AzulDbContext : DbContext
             entity.HasIndex(e => e.ExchangeRateId);
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => e.Ncf);
+        });
+
+        // ==================== SAVED PAYMENT METHODS (Tarjetas Tokenizadas) ====================
+        modelBuilder.Entity<SavedPaymentMethod>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever();
+
+            entity.Property(e => e.UserId)
+                .IsRequired();
+
+            entity.Property(e => e.PaymentGateway)
+                .IsRequired();
+
+            entity.Property(e => e.Token)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(e => e.Type)
+                .IsRequired();
+
+            entity.Property(e => e.NickName)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.CardBrand)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.CardLast4)
+                .HasMaxLength(4);
+
+            entity.Property(e => e.CardHolderName)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.BankCountry)
+                .HasMaxLength(2);
+
+            entity.Property(e => e.BankName)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.AccountLast4)
+                .HasMaxLength(4);
+
+            entity.Property(e => e.AccountType)
+                .HasMaxLength(20);
+
+            entity.Property(e => e.AccountBankName)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.BillingAddressJson)
+                .HasColumnType("jsonb");
+
+            entity.Property(e => e.ExternalReference)
+                .HasMaxLength(255);
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Índices
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsDefault })
+                .HasFilter("\"IsDefault\" = true");
+            entity.HasIndex(e => new { e.Token, e.PaymentGateway }).IsUnique();
+            entity.HasIndex(e => e.IsActive);
         });
     }
 }

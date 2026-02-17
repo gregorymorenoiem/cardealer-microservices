@@ -3,6 +3,8 @@ using KYCService.Domain.Entities;
 using KYCService.Domain.Interfaces;
 using KYCService.Application.Queries;
 using KYCService.Application.DTOs;
+using KYCService.Application.Clients;
+using Microsoft.Extensions.Logging;
 
 namespace KYCService.Application.Handlers;
 
@@ -29,6 +31,12 @@ public class GetKYCProfileByIdHandler : IRequestHandler<GetKYCProfileByIdQuery, 
     {
         var profile = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (profile == null) return null;
+
+        // IDOR Protection: Non-admin users can only access their own profile
+        if (!request.IsAdmin && profile.UserId != request.RequestingUserId)
+        {
+            throw new UnauthorizedAccessException("You do not have permission to access this KYC profile.");
+        }
 
         var documents = await _documentRepository.GetByProfileIdAsync(request.Id, cancellationToken);
         var verifications = await _verificationRepository.GetByProfileIdAsync(request.Id, cancellationToken);
@@ -70,6 +78,9 @@ public class GetKYCProfileByIdHandler : IRequestHandler<GetKYCProfileByIdQuery, 
         ApprovedAt = p.ApprovedAt,
         ExpiresAt = p.ExpiresAt,
         NextReviewAt = p.NextReviewAt,
+        RejectionReason = p.RejectionReason,
+        RejectedAt = p.RejectedAt,
+        RejectedBy = p.RejectedBy,
         Documents = docs.Select(d => new KYCDocumentDto
         {
             Id = d.Id,
@@ -77,6 +88,7 @@ public class GetKYCProfileByIdHandler : IRequestHandler<GetKYCProfileByIdQuery, 
             Type = d.Type,
             DocumentName = d.DocumentName,
             FileName = d.FileName,
+            StorageKey = d.StorageKey,
             FileUrl = d.FileUrl,
             FileType = d.FileType,
             FileSize = d.FileSize,
@@ -129,10 +141,37 @@ public class GetKYCProfileByUserIdHandler : IRequestHandler<GetKYCProfileByUserI
         RiskLevel = p.RiskLevel,
         RiskScore = p.RiskScore,
         FullName = p.FullName,
+        MiddleName = p.MiddleName,
+        LastName = p.LastName,
+        DateOfBirth = p.DateOfBirth,
+        PlaceOfBirth = p.PlaceOfBirth,
+        Nationality = p.Nationality,
+        Gender = p.Gender,
+        PrimaryDocumentType = p.PrimaryDocumentType,
+        PrimaryDocumentNumber = p.PrimaryDocumentNumber,
+        PrimaryDocumentExpiry = p.PrimaryDocumentExpiry,
+        Email = p.Email,
+        Phone = p.Phone,
+        Address = p.Address,
+        Sector = p.Sector,
+        City = p.City,
+        Province = p.Province,
+        PostalCode = p.PostalCode,
+        Country = p.Country,
+        Occupation = p.Occupation,
         IsPEP = p.IsPEP,
+        PEPPosition = p.PEPPosition,
+        BusinessName = p.BusinessName,
+        RNC = p.RNC,
+        IdentityVerifiedAt = p.IdentityVerifiedAt,
+        AddressVerifiedAt = p.AddressVerifiedAt,
         CreatedAt = p.CreatedAt,
         ApprovedAt = p.ApprovedAt,
-        ExpiresAt = p.ExpiresAt
+        ExpiresAt = p.ExpiresAt,
+        NextReviewAt = p.NextReviewAt,
+        RejectionReason = p.RejectionReason,
+        RejectedAt = p.RejectedAt,
+        RejectedBy = p.RejectedBy
     };
 }
 
@@ -324,14 +363,26 @@ public class GetExpiringKYCProfilesHandler : IRequestHandler<GetExpiringKYCProfi
 public class GetKYCDocumentsHandler : IRequestHandler<GetKYCDocumentsQuery, List<KYCDocumentDto>>
 {
     private readonly IKYCDocumentRepository _repository;
+    private readonly IKYCProfileRepository _profileRepository;
 
-    public GetKYCDocumentsHandler(IKYCDocumentRepository repository)
+    public GetKYCDocumentsHandler(IKYCDocumentRepository repository, IKYCProfileRepository profileRepository)
     {
         _repository = repository;
+        _profileRepository = profileRepository;
     }
 
     public async Task<List<KYCDocumentDto>> Handle(GetKYCDocumentsQuery request, CancellationToken cancellationToken)
     {
+        // IDOR Protection: Verify the requesting user owns this profile
+        if (!request.IsAdmin)
+        {
+            var profile = await _profileRepository.GetByIdAsync(request.KYCProfileId, cancellationToken);
+            if (profile == null || profile.UserId != request.RequestingUserId)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to access documents for this KYC profile.");
+            }
+        }
+
         var documents = await _repository.GetByProfileIdAsync(request.KYCProfileId, cancellationToken);
 
         return documents.Select(d => new KYCDocumentDto
@@ -341,6 +392,7 @@ public class GetKYCDocumentsHandler : IRequestHandler<GetKYCDocumentsQuery, List
             Type = d.Type,
             DocumentName = d.DocumentName,
             FileName = d.FileName,
+            StorageKey = d.StorageKey,
             FileUrl = d.FileUrl,
             FileType = d.FileType,
             FileSize = d.FileSize,
@@ -349,6 +401,121 @@ public class GetKYCDocumentsHandler : IRequestHandler<GetKYCDocumentsQuery, List
             UploadedAt = d.UploadedAt,
             VerifiedAt = d.VerifiedAt
         }).ToList();
+    }
+}
+
+/// <summary>
+/// Handler para obtener URL fresca (pre-firmada) para un documento KYC
+/// </summary>
+public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, DocumentUrlDto>
+{
+    private readonly IKYCDocumentRepository _repository;
+    private readonly IKYCProfileRepository _profileRepository;
+    private readonly IMediaServiceClient _mediaServiceClient;
+    private readonly ILogger<GetKYCDocumentUrlHandler> _logger;
+
+    public GetKYCDocumentUrlHandler(
+        IKYCDocumentRepository repository,
+        IKYCProfileRepository profileRepository,
+        IMediaServiceClient mediaServiceClient,
+        ILogger<GetKYCDocumentUrlHandler> logger)
+    {
+        _repository = repository;
+        _profileRepository = profileRepository;
+        _mediaServiceClient = mediaServiceClient;
+        _logger = logger;
+    }
+
+    public async Task<DocumentUrlDto> Handle(GetKYCDocumentUrlQuery request, CancellationToken cancellationToken)
+    {
+        var document = await _repository.GetByIdAsync(request.DocumentId, cancellationToken)
+            ?? throw new InvalidOperationException($"Document with ID {request.DocumentId} not found");
+
+        // IDOR Protection: Verify the requesting user owns the profile that owns this document
+        if (!request.IsAdmin)
+        {
+            var profile = await _profileRepository.GetByIdAsync(document.KYCProfileId, cancellationToken);
+            if (profile == null || profile.UserId != request.RequestingUserId)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to access this document.");
+            }
+        }
+
+        // Si tiene StorageKey, obtener URL fresca del MediaService
+        if (!string.IsNullOrWhiteSpace(document.StorageKey))
+        {
+            var freshUrl = await _mediaServiceClient.GetFreshUrlAsync(document.StorageKey, cancellationToken);
+            
+            if (freshUrl != null)
+            {
+                return new DocumentUrlDto
+                {
+                    DocumentId = document.Id,
+                    Url = freshUrl.Url,
+                    ExpiresAt = freshUrl.ExpiresAt
+                };
+            }
+            
+            _logger.LogWarning("Failed to get fresh URL from MediaService for document {DocumentId}, falling back to stored URL", 
+                request.DocumentId);
+        }
+
+        // Fallback: Intentar extraer storageKey de la URL existente (para documentos legacy)
+        if (!string.IsNullOrWhiteSpace(document.FileUrl))
+        {
+            var extractedKey = ExtractStorageKeyFromUrl(document.FileUrl);
+            if (!string.IsNullOrWhiteSpace(extractedKey))
+            {
+                var freshUrl = await _mediaServiceClient.GetFreshUrlAsync(extractedKey, cancellationToken);
+                
+                if (freshUrl != null)
+                {
+                    return new DocumentUrlDto
+                    {
+                        DocumentId = document.Id,
+                        Url = freshUrl.Url,
+                        ExpiresAt = freshUrl.ExpiresAt
+                    };
+                }
+            }
+            
+            // Último recurso: retornar la URL almacenada (puede estar expirada)
+            _logger.LogWarning("Using stored URL for document {DocumentId} - may be expired", request.DocumentId);
+            return new DocumentUrlDto
+            {
+                DocumentId = document.Id,
+                Url = document.FileUrl,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(-1) // Indicar que puede estar expirada
+            };
+        }
+
+        throw new InvalidOperationException($"Document {request.DocumentId} has no valid URL or storage key");
+    }
+
+    /// <summary>
+    /// Extrae el storageKey de una URL de S3 pre-firmada
+    /// Ejemplo: https://bucket.s3.region.amazonaws.com/kyc-documents/2026/02/07/guid.jpg?X-Amz-...
+    /// Retorna: kyc-documents/2026/02/07/guid.jpg
+    /// </summary>
+    private static string? ExtractStorageKeyFromUrl(string url)
+    {
+        try
+        {
+            var uri = new Uri(url);
+            var path = uri.AbsolutePath.TrimStart('/');
+            
+            // El path ya es el storageKey
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+        }
+        catch
+        {
+            // Ignorar errores de parsing
+        }
+        
+        return null;
     }
 }
 

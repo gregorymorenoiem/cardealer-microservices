@@ -31,7 +31,12 @@ public class ChargeCommandHandler : IRequestHandler<ChargeCommand, ChargeRespons
     }
 
     /// <summary>
-    /// Procesa el cobro usando el proveedor seleccionado o el default
+    /// Procesa el cobro usando el proveedor seleccionado o el default.
+    /// 
+    /// BUSINESS RULE: Charges are ALWAYS processed regardless of the gateway's
+    /// enabled/disabled status. Disabled gateways only prevent NEW users from
+    /// selecting them. Existing users with saved payment methods continue to
+    /// be charged normally (recurring, subscriptions, etc.).
     /// </summary>
     public async Task<ChargeResponseDto> Handle(ChargeCommand request, CancellationToken cancellationToken)
     {

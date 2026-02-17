@@ -58,6 +58,17 @@ public class Subscription : ITenantEntity
     public DateTime? CancelledAt { get; private set; }
     public string? CancellationReason { get; private set; }
 
+    // ✅ AUDIT FIX: Concurrency control
+    public string ConcurrencyStamp { get; private set; } = Guid.NewGuid().ToString();
+
+    // ✅ AUDIT FIX: Soft delete
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+
+    // ✅ AUDIT FIX: Navigation properties for FK relationships
+    public ICollection<Payment> Payments { get; private set; } = new List<Payment>();
+    public ICollection<Invoice> Invoices { get; private set; } = new List<Invoice>();
+
     private Subscription() { }
 
     public Subscription(
@@ -114,18 +125,21 @@ public class Subscription : ITenantEntity
         Status = SubscriptionStatus.Active;
         CalculateNextBillingDate();
         UpdatedAt = DateTime.UtcNow;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
     }
 
     public void MarkPastDue()
     {
         Status = SubscriptionStatus.PastDue;
         UpdatedAt = DateTime.UtcNow;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
     }
 
     public void Suspend()
     {
         Status = SubscriptionStatus.Suspended;
         UpdatedAt = DateTime.UtcNow;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
     }
 
     public void Cancel(string reason)
@@ -135,6 +149,7 @@ public class Subscription : ITenantEntity
         CancelledAt = DateTime.UtcNow;
         EndDate = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
+        ConcurrencyStamp = Guid.NewGuid().ToString();
     }
 
     public void Upgrade(SubscriptionPlan newPlan, decimal newPrice, int newMaxUsers, int newMaxVehicles)

@@ -70,3 +70,41 @@ public class CancelVerificationCommand : IRequest<bool>
     public Guid UserId { get; set; }
     public string? Reason { get; set; }
 }
+
+/// <summary>
+/// Comando para verificar identidad usando profileId (flujo simplificado)
+/// </summary>
+public class VerifyIdentityByProfileCommand : IRequest<VerifyIdentityResponse>
+{
+    public Guid ProfileId { get; set; }
+    public Guid UserId { get; set; }
+    public byte[] SelfieImageData { get; set; } = Array.Empty<byte>();
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = "image/jpeg";
+    public LivenessDataDto? LivenessData { get; set; }
+}
+
+/// <summary>
+/// Respuesta de la verificación de identidad por perfil
+/// </summary>
+public class VerifyIdentityResponse
+{
+    public bool Success { get; set; }
+    public double MatchScore { get; set; }
+    public bool Passed { get; set; }
+    public string? Message { get; set; }
+    public VerificationDetails? Details { get; set; }
+}
+
+/// <summary>
+/// Detalles adicionales de la verificación
+/// </summary>
+public class VerificationDetails
+{
+    public bool DocumentVerified { get; set; }
+    public bool FaceMatched { get; set; }
+    public bool LivenessConfirmed { get; set; }
+    public double DocumentConfidence { get; set; }
+    public double FaceMatchConfidence { get; set; }
+    public double LivenessScore { get; set; }
+}

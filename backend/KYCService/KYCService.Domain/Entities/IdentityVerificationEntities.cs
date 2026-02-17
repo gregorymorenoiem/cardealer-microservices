@@ -334,6 +334,7 @@ public class DocumentConfig
     public bool RequireBothSides { get; set; } = true;
     public decimal OcrConfidenceThreshold { get; set; } = 0.8m;
     public int MaxFileSizeMB { get; set; } = 10;
+    public int ExpirationDays { get; set; } = 365;
     public List<string> AllowedFormats { get; set; } = new() { "jpg", "jpeg", "png", "heic" };
 }
 

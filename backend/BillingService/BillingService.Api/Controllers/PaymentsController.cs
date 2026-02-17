@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BillingService.Application.DTOs;
 using BillingService.Domain.Entities;
@@ -8,6 +9,7 @@ namespace BillingService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentRepository _paymentRepository;

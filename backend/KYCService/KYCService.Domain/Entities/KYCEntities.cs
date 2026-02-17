@@ -107,6 +107,7 @@ public class KYCProfile
     
     // Dirección
     public string? Address { get; set; }
+    public string? Sector { get; set; }
     public string? City { get; set; }
     public string? Province { get; set; }
     public string? PostalCode { get; set; }
@@ -170,7 +171,20 @@ public class KYCDocument
     public DocumentType Type { get; set; }
     public string DocumentName { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Clave de almacenamiento en S3 (permanente, no expira)
+    /// Formato: "kyc-documents/2026/02/07/{guid}.jpg"
+    /// Puede ser null para documentos legacy sin storage key
+    /// </summary>
+    public string? StorageKey { get; set; }
+    
+    /// <summary>
+    /// URL pre-firmada (legacy, puede estar expirada)
+    /// Para nuevos documentos, usar StorageKey para generar URLs frescas
+    /// </summary>
     public string FileUrl { get; set; } = string.Empty;
+    
     public string FileType { get; set; } = string.Empty;
     public long FileSize { get; set; }
     public string? FileHash { get; set; }

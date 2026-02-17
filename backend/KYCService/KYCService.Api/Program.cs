@@ -1,4 +1,6 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.OpenApi.Models;
 using FluentValidation;
 using KYCService.Infrastructure.Persistence;
@@ -6,9 +8,14 @@ using KYCService.Infrastructure.Repositories;
 using KYCService.Infrastructure;
 using KYCService.Domain.Interfaces;
 using KYCService.Application.Validators;
+using KYCService.Application.Services;
+using KYCService.Application.Clients;
+using KYCService.Api.Middleware;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using CarDealer.Shared.Configuration;
+using KYCService.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +60,9 @@ builder.Services.AddDbContext<KYCDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg => 
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(KYCService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssembly(typeof(KYCService.Application.Handlers.CreateKYCProfileHandler).Assembly));
 
 // FluentValidation
@@ -66,6 +76,46 @@ builder.Services.AddScoped<IKYCRiskAssessmentRepository, KYCRiskAssessmentReposi
 builder.Services.AddScoped<ISuspiciousTransactionReportRepository, SuspiciousTransactionReportRepository>();
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
 
+// Security Repositories (Rate Limiting, Saga) - local storage for performance
+builder.Services.AddScoped<IRateLimitRepository, RateLimitRepository>();
+builder.Services.AddScoped<IKYCSagaRepository, KYCSagaRepository>();
+
+// ==========================================================================
+// External Microservice Clients (AuditService, IdempotencyService)
+// ==========================================================================
+
+// AuditService Client - Centralized audit logging
+var auditServiceUrl = builder.Configuration["Services:AuditService:Url"] ?? "http://auditservice:8080";
+builder.Services.AddHttpClient<IAuditServiceClient, AuditServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(auditServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(5); // Short timeout to not block main operations
+    client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
+});
+
+// IdempotencyService Client - Centralized idempotency management
+var idempotencyServiceUrl = builder.Configuration["Services:IdempotencyService:Url"] ?? "http://idempotencyservice:8080";
+builder.Services.AddHttpClient<IIdempotencyServiceClient, IdempotencyServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(idempotencyServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(3); // Very short timeout - fallback if unavailable
+    client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
+});
+
+// MediaService Client - For generating fresh pre-signed URLs
+// Default URL for Docker: mediaservice:8080 (container-to-container, matches K8s)
+var mediaServiceUrl = builder.Configuration["Services:MediaService:BaseUrl"] ?? "http://mediaservice:8080";
+builder.Services.AddHttpClient<IMediaServiceClient, MediaServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(mediaServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
+});
+
+// Saga Orchestrator (uses local DB for saga state)
+builder.Services.AddScoped<IKYCSagaOrchestrator, KYCSagaOrchestrator>();
+builder.Services.AddHttpContextAccessor(); // Required for middleware
+
 // External Services (JCE, OCR, Face Comparison)
 if (builder.Environment.IsDevelopment())
 {
@@ -78,10 +128,34 @@ else
     builder.Services.AddKYCInfrastructureProduction(builder.Configuration);
 }
 
+// ==========================================================================
+// ConfigurationService Client (dynamic config from admin panel)
+// ==========================================================================
+builder.Services.AddConfigurationServiceClient(builder.Configuration, "KYCService");
+
+// Register KYCConfigurationService for dynamic config access from handlers
+builder.Services.AddScoped<IKYCConfigurationService, KYCConfigurationService>();
+
+// Register IdentityVerificationConfig from ConfigurationService (loaded dynamically)
+// This overrides the default values with admin-panel settings
+builder.Services.AddOptions<IdentityVerificationConfig>()
+    .Configure<IConfigurationServiceClient>((config, configClient) =>
+    {
+        // Load KYC config values from ConfigurationService (with defaults)
+        config.MaxAttempts = configClient.GetIntAsync("kyc.max_verification_attempts", 3).GetAwaiter().GetResult();
+        config.SessionTimeoutMinutes = configClient.GetIntAsync("kyc.verification_timeout_minutes", 30).GetAwaiter().GetResult();
+        
+        config.FaceMatch.MinimumScore = configClient.GetIntAsync("kyc.face_match_threshold", 80).GetAwaiter().GetResult();
+        config.FaceMatch.HighConfidenceScore = configClient.GetIntAsync("kyc.high_confidence_threshold", 95).GetAwaiter().GetResult();
+        
+        config.Liveness.Enabled = configClient.IsEnabledAsync("kyc.require_liveness_check", defaultValue: true).GetAwaiter().GetResult();
+        
+        config.Document.ExpirationDays = configClient.GetIntAsync("kyc.document_expiration_days", 365).GetAwaiter().GetResult();
+    });
+
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "default-development-key-change-in-production-min-32-chars";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "CarDealer";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "CarDealer";
+// JWT Authentication - Use MicroserviceSecretsConfiguration for secure key management
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -94,7 +168,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero // No tolerance for expired tokens
         };
     });
 
@@ -120,30 +195,74 @@ builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? "")
     .AddDbContextCheck<KYCDbContext>();
 
-// CORS
+// CORS - Restricted to known origins (defense-in-depth)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do", "https://www.okla.com.do", "https://api.okla.com.do" };
+        
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
+});
+
+// Error Service Client for centralized error logging
+builder.Services.AddHttpClient<KYCService.Domain.Interfaces.IErrorServiceClient, KYCService.Infrastructure.External.ErrorServiceClient>(client =>
+{
+    var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"] ?? "http://errorservice:8080";
+    client.BaseAddress = new Uri(errorServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 var app = builder.Build();
 
+// ============================================================================
+// SECURITY: Middleware pipeline (order matters!)
+// ============================================================================
+
+// 1. Global exception handler - must be first to catch all exceptions
+app.UseKYCExceptionHandler();
+
+// 2. Rate limiting - before authentication to block abusive requests early
+app.UseKYCRateLimit();
+
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+// SECURITY: Add security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    await next();
+});
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 3. Idempotency - after auth so we have user context
+app.UseIdempotency();
+
 app.MapControllers();
 app.MapHealthChecks("/health");
 
@@ -152,7 +271,15 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<KYCDbContext>();
-    dbContext.Database.EnsureCreated();
+    try
+    {
+        dbContext.Database.Migrate();
+    }
+    catch
+    {
+        // Fallback to EnsureCreated if no migrations exist yet
+        dbContext.Database.EnsureCreated();
+    }
 }
 
 app.Run();

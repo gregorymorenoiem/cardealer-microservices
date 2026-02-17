@@ -13,7 +13,7 @@ namespace KYCService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Compliance")]
+[Authorize(Policy = "AdminOrCompliance")]
 public class WatchlistController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -33,6 +33,11 @@ public class WatchlistController : ControllerBase
         [FromQuery] string searchTerm,
         [FromQuery] WatchlistType? listType = null)
     {
+        // SECURITY: Validate search term length and content
+        if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
+            return BadRequest("Search term must be at least 2 characters");
+        if (searchTerm.Length > 200)
+            return BadRequest("Search term cannot exceed 200 characters");
         var query = new SearchWatchlistQuery
         {
             SearchTerm = searchTerm,

@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using KYCService.Application.Commands;
 using KYCService.Application.Queries;
 using KYCService.Application.DTOs;
 using KYCService.Domain.Entities;
+using CarDealer.Shared.Configuration;
 
 namespace KYCService.Api.Controllers;
 
@@ -18,11 +20,39 @@ public class KYCProfilesController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<KYCProfilesController> _logger;
+    private readonly IConfigurationServiceClient _configClient;
 
-    public KYCProfilesController(IMediator mediator, ILogger<KYCProfilesController> logger)
+    public KYCProfilesController(
+        IMediator mediator,
+        ILogger<KYCProfilesController> logger,
+        IConfigurationServiceClient configClient)
     {
         _mediator = mediator;
         _logger = logger;
+        _configClient = configClient;
+    }
+
+    /// <summary>
+    /// Get effective KYC verification settings from ConfigurationService (admin panel).
+    /// Used by frontend to display current limits and toggles.
+    /// SECURITY: Admin/Compliance only - exposes internal thresholds.
+    /// </summary>
+    [HttpGet("settings")]
+    [Authorize(Policy = "AdminOrCompliance")]
+    public async Task<ActionResult> GetSettings()
+    {
+        var settings = new
+        {
+            MaxVerificationAttempts = await _configClient.GetIntAsync("kyc.max_verification_attempts", 3),
+            VerificationTimeoutMinutes = await _configClient.GetIntAsync("kyc.verification_timeout_minutes", 30),
+            DocumentExpirationDays = await _configClient.GetIntAsync("kyc.document_expiration_days", 365),
+            HighConfidenceThreshold = await _configClient.GetIntAsync("kyc.high_confidence_threshold", 95),
+            FaceMatchThreshold = await _configClient.GetIntAsync("kyc.face_match_threshold", 80),
+            RequireLivenessCheck = await _configClient.IsEnabledAsync("kyc.require_liveness_check", defaultValue: true),
+            AutoApproveHighConfidence = await _configClient.IsEnabledAsync("kyc.auto_approve_high_confidence", defaultValue: false),
+        };
+
+        return Ok(settings);
     }
 
     /// <summary>
@@ -37,6 +67,9 @@ public class KYCProfilesController : ControllerBase
         [FromQuery] RiskLevel? riskLevel = null,
         [FromQuery] bool? isPEP = null)
     {
+        // SECURITY: Clamp pagination to prevent data exfiltration
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
         var query = new GetKYCProfilesQuery
         {
             Page = page,
@@ -57,7 +90,9 @@ public class KYCProfilesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<KYCProfileDto>> GetById(Guid id)
     {
-        var result = await _mediator.Send(new GetKYCProfileByIdQuery(id));
+        var userId = GetUserIdFromClaims();
+        var isAdmin = IsAdminOrCompliance();
+        var result = await _mediator.Send(new GetKYCProfileByIdQuery(id, userId, isAdmin));
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -113,6 +148,19 @@ public class KYCProfilesController : ControllerBase
     }
 
     /// <summary>
+    /// Enviar perfil KYC para revisión
+    /// Cambia el estado de Pending/InProgress a UnderReview
+    /// </summary>
+    [HttpPost("{id:guid}/submit")]
+    [Authorize]
+    public async Task<ActionResult<KYCProfileDto>> Submit(Guid id)
+    {
+        var result = await _mediator.Send(new SubmitKYCForReviewCommand { Id = id });
+        _logger.LogInformation("KYC Profile {Id} submitted for review", id);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Aprobar perfil KYC
     /// </summary>
     [HttpPost("{id:guid}/approve")]
@@ -150,6 +198,9 @@ public class KYCProfilesController : ControllerBase
     public async Task<ActionResult<PaginatedResult<KYCProfileSummaryDto>>> GetPending(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        // SECURITY: Clamp pagination
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
         var result = await _mediator.Send(new GetPendingKYCProfilesQuery { Page = page, PageSize = pageSize });
         return Ok(result);
     }
@@ -164,6 +215,9 @@ public class KYCProfilesController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 20)
     {
+        // SECURITY: Clamp pagination
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
         var result = await _mediator.Send(new GetExpiringKYCProfilesQuery 
         { 
             DaysUntilExpiry = daysUntilExpiry, 
@@ -183,4 +237,23 @@ public class KYCProfilesController : ControllerBase
         var result = await _mediator.Send(new GetKYCStatisticsQuery());
         return Ok(result);
     }
+
+    #region Helper Methods
+
+    private Guid GetUserIdFromClaims()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value
+                       ?? User.FindFirst("userId")?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    }
+
+    private bool IsAdminOrCompliance()
+    {
+        var accountType = User.FindFirst("account_type")?.Value;
+        return accountType == "4" || accountType == "5"
+            || accountType == "admin" || accountType == "platform_employee";
+    }
+
+    #endregion
 }

@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
 using BillingService.Application.Services;
 using BillingService.Application.Configuration;
@@ -16,6 +17,9 @@ using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using FluentValidation;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -38,13 +42,18 @@ builder.UseStandardSerilog("BillingService", options =>
     options.RabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
 });
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Register FluentValidation validators
+builder.Services.AddValidatorsFromAssembly(
+    typeof(BillingService.Application.Validators.SecurityValidators).Assembly);
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "BillingService API", Version = "v1" });
@@ -73,8 +82,8 @@ builder.Services.AddStandardErrorHandling(options =>
     options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
 });
 
@@ -88,14 +97,32 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
-// JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "your-secret-key-min-32-characters-long-for-security";
+// JWT Authentication - Use same config as other services (Jwt:Key, Jwt:Issuer, Jwt:Audience)
+var jwtSecret = builder.Configuration["Jwt:Key"] ?? builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -105,9 +132,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "CarDealerAuth",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "CarDealerApi",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew
         };
     });
 
@@ -154,6 +182,21 @@ builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// ========================================
+// RATE LIMITING
+// ========================================
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("BillingPolicy", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = builder.Configuration.GetValue<int>("Security:RateLimit:RequestsPerMinute", 30);
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // Add Health Checks
 builder.Services.AddHealthChecks();
 
@@ -175,6 +218,25 @@ if (idempotencyEnabled)
     Log.Information("Idempotency enabled for BillingService - Payment protection active");
 }
 
+// ============================================================================
+// TRANSVERSAL SERVICES - Audit & Error clients
+// ============================================================================
+builder.Services.AddHttpClient<BillingService.Application.Interfaces.IAuditServiceClient, BillingService.Infrastructure.External.AuditServiceClient>(client =>
+{
+    var auditServiceUrl = builder.Configuration["ServiceUrls:AuditService"] ?? "http://auditservice:8080";
+    client.BaseAddress = new Uri(auditServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<BillingService.Application.Interfaces.IErrorServiceClient, BillingService.Infrastructure.External.ErrorServiceClient>(client =>
+{
+    var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"] ?? "http://errorservice:8080";
+    client.BaseAddress = new Uri(errorServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 var app = builder.Build();
 
 // ============================================================================
@@ -188,13 +250,18 @@ app.UseGlobalErrorHandling();
 app.UseRequestLogging();
 
 // Swagger en desarrollo
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseCors();
+app.UseRateLimiter();
 app.UseHttpsRedirection();
 
 // Idempotency middleware - before auth and controllers

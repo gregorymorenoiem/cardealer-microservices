@@ -103,6 +103,15 @@ public record RejectKYCProfileCommand : IRequest<KYCProfileDto>
 }
 
 /// <summary>
+/// Enviar perfil KYC para revisión
+/// Cambia el estado de Pending/InProgress a UnderReview
+/// </summary>
+public record SubmitKYCForReviewCommand : IRequest<KYCProfileDto>
+{
+    public Guid Id { get; init; }
+}
+
+/// <summary>
 /// Subir documento KYC
 /// </summary>
 public record UploadKYCDocumentCommand : IRequest<KYCDocumentDto>
@@ -111,6 +120,13 @@ public record UploadKYCDocumentCommand : IRequest<KYCDocumentDto>
     public DocumentType Type { get; init; }
     public string DocumentName { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
+    /// <summary>
+    /// Clave de almacenamiento en S3 (permanente, puede ser null para documentos legacy)
+    /// </summary>
+    public string? StorageKey { get; init; }
+    /// <summary>
+    /// URL pre-firmada (puede expirar, usar StorageKey para regenerar)
+    /// </summary>
     public string FileUrl { get; init; } = string.Empty;
     public string FileType { get; init; } = string.Empty;
     public long FileSize { get; init; }

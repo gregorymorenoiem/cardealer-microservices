@@ -59,7 +59,7 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Agrega configuración de desarrollo (simulación habilitada)
+    /// Agrega configuración de desarrollo (lee de appsettings, permite simulación o Rekognition)
     /// </summary>
     public static IServiceCollection AddKYCInfrastructureDevelopment(
         this IServiceCollection services,
@@ -85,12 +85,9 @@ public static class DependencyInjection
             options.UseSimulation = true;
         });
 
-        services.Configure<FaceComparisonConfig>(options =>
-        {
-            options.UseSimulation = true;
-            options.UseAmazonRekognition = false; // En dev usar simulación
-            options.UseAzureFaceApi = false;
-        });
+        // FaceComparison: Lee configuración de appsettings (permite activar Rekognition en Docker)
+        // No se hardcodea simulación - se respeta lo que diga appsettings.Development.json
+        // o las variables de entorno (FaceComparison__UseSimulation, etc.)
 
         return services.AddKYCInfrastructure(configuration);
     }

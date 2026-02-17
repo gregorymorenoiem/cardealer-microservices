@@ -15,6 +15,12 @@ public class KYCDbContext : DbContext
     public DbSet<KYCRiskAssessment> KYCRiskAssessments => Set<KYCRiskAssessment>();
     public DbSet<SuspiciousTransactionReport> SuspiciousTransactionReports => Set<SuspiciousTransactionReport>();
     public DbSet<WatchlistEntry> WatchlistEntries => Set<WatchlistEntry>();
+    
+    // Security entities
+    public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
+    public DbSet<KYCAuditLog> KYCAuditLogs => Set<KYCAuditLog>();
+    public DbSet<RateLimitEntry> RateLimitEntries => Set<RateLimitEntry>();
+    public DbSet<KYCSagaState> KYCSagaStates => Set<KYCSagaState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +62,7 @@ public class KYCDbContext : DbContext
             entity.Property(e => e.MobilePhone).HasColumnName("mobile_phone").HasMaxLength(30);
             
             entity.Property(e => e.Address).HasColumnName("address").HasMaxLength(500);
+            entity.Property(e => e.Sector).HasColumnName("sector").HasMaxLength(100);
             entity.Property(e => e.City).HasColumnName("city").HasMaxLength(100);
             entity.Property(e => e.Province).HasColumnName("province").HasMaxLength(100);
             entity.Property(e => e.PostalCode).HasColumnName("postal_code").HasMaxLength(20);
@@ -130,6 +137,7 @@ public class KYCDbContext : DbContext
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.DocumentName).HasColumnName("document_name").HasMaxLength(200);
             entity.Property(e => e.FileName).HasColumnName("file_name").HasMaxLength(300);
+            entity.Property(e => e.StorageKey).HasColumnName("storage_key").HasMaxLength(500).IsRequired(false);
             entity.Property(e => e.FileUrl).HasColumnName("file_url").HasMaxLength(1000);
             entity.Property(e => e.FileType).HasColumnName("file_type").HasMaxLength(50);
             entity.Property(e => e.FileSize).HasColumnName("file_size");
@@ -266,6 +274,103 @@ public class KYCDbContext : DbContext
             entity.HasIndex(e => e.FullName);
             entity.HasIndex(e => e.DocumentNumber);
             entity.HasIndex(e => e.IsActive);
+        });
+
+        // ============================================================================
+        // Security Entities Configuration
+        // ============================================================================
+
+        // IdempotencyKey
+        modelBuilder.Entity<IdempotencyKey>(entity =>
+        {
+            entity.ToTable("idempotency_keys");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Key).HasColumnName("key").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Method).HasColumnName("method").HasMaxLength(10);
+            entity.Property(e => e.Path).HasColumnName("path").HasMaxLength(500);
+            entity.Property(e => e.ResponseStatusCode).HasColumnName("response_status_code");
+            entity.Property(e => e.ResponseBody).HasColumnName("response_body");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+            entity.Property(e => e.IsProcessing).HasColumnName("is_processing");
+            
+            entity.HasIndex(e => new { e.Key, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.ExpiresAt);
+        });
+
+        // KYCAuditLog
+        modelBuilder.Entity<KYCAuditLog>(entity =>
+        {
+            entity.ToTable("kyc_audit_logs");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.ProfileId).HasColumnName("profile_id");
+            entity.Property(e => e.Action).HasColumnName("action");
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(2000);
+            entity.Property(e => e.IpAddress).HasColumnName("ip_address").HasMaxLength(50);
+            entity.Property(e => e.UserAgent).HasColumnName("user_agent").HasMaxLength(500);
+            entity.Property(e => e.Metadata).HasColumnName("metadata");
+            entity.Property(e => e.Success).HasColumnName("success");
+            entity.Property(e => e.ErrorMessage).HasColumnName("error_message").HasMaxLength(2000);
+            entity.Property(e => e.DurationMs).HasColumnName("duration_ms");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ProfileId);
+            entity.HasIndex(e => e.Action);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        // RateLimitEntry
+        modelBuilder.Entity<RateLimitEntry>(entity =>
+        {
+            entity.ToTable("rate_limit_entries");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Key).HasColumnName("key").HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Endpoint).HasColumnName("endpoint").HasMaxLength(500);
+            entity.Property(e => e.RequestCount).HasColumnName("request_count");
+            entity.Property(e => e.WindowStart).HasColumnName("window_start");
+            entity.Property(e => e.WindowEnd).HasColumnName("window_end");
+            
+            entity.HasIndex(e => new { e.Key, e.Endpoint });
+            entity.HasIndex(e => e.WindowEnd);
+        });
+
+        // KYCSagaState
+        modelBuilder.Entity<KYCSagaState>(entity =>
+        {
+            entity.ToTable("kyc_saga_states");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CorrelationId).HasColumnName("correlation_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.CurrentStep).HasColumnName("current_step");
+            entity.Property(e => e.TotalSteps).HasColumnName("total_steps");
+            entity.Property(e => e.CompletedStepsData).HasColumnName("completed_steps_data");
+            entity.Property(e => e.CreatedProfileId).HasColumnName("created_profile_id");
+            entity.Property(e => e.CreatedDocumentIds).HasColumnName("created_document_ids")
+                .HasConversion(
+                    v => string.Join(",", v),
+                    v => v.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList()
+                );
+            entity.Property(e => e.ErrorMessage).HasColumnName("error_message").HasMaxLength(2000);
+            entity.Property(e => e.FailedAtStep).HasColumnName("failed_at_step");
+            entity.Property(e => e.StartedAt).HasColumnName("started_at");
+            entity.Property(e => e.CompletedAt).HasColumnName("completed_at");
+            entity.Property(e => e.RolledBackAt).HasColumnName("rolled_back_at");
+            
+            entity.HasIndex(e => e.CorrelationId).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Status);
         });
     }
 }

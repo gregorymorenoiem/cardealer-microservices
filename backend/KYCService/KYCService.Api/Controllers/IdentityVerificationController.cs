@@ -112,18 +112,37 @@ public class IdentityVerificationController : ControllerBase
         if (!allowedTypes.Contains(image.ContentType.ToLower()))
             return BadRequest("Tipo de archivo no permitido. Use JPG, PNG o HEIC");
 
+        // SECURITY: Validate file magic bytes to prevent spoofed content types
+        using var headerStream = new MemoryStream();
+        await image.CopyToAsync(headerStream);
+        headerStream.Position = 0;
+        var header = new byte[8];
+        await headerStream.ReadAsync(header, 0, Math.Min(8, (int)headerStream.Length));
+        headerStream.Position = 0;
+
+        bool isValidMagicBytes = false;
+        // JPEG: FF D8 FF
+        if (header.Length >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+            isValidMagicBytes = true;
+        // PNG: 89 50 4E 47
+        else if (header.Length >= 4 && header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47)
+            isValidMagicBytes = true;
+        // HEIC: starts with ftyp after 4 bytes
+        else if (header.Length >= 8 && header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70)
+            isValidMagicBytes = true;
+
+        if (!isValidMagicBytes)
+            return BadRequest("El archivo no es una imagen válida");
+
         if (!Enum.TryParse<DocumentSide>(side, true, out var documentSide))
             return BadRequest("Lado de documento inválido. Use 'Front' o 'Back'");
-
-        using var memoryStream = new MemoryStream();
-        await image.CopyToAsync(memoryStream);
 
         var command = new ProcessDocumentCommand
         {
             SessionId = sessionId,
             UserId = userId,
             Side = documentSide,
-            ImageData = memoryStream.ToArray(),
+            ImageData = headerStream.ToArray(),
             FileName = image.FileName,
             ContentType = image.ContentType
         };
@@ -368,6 +387,79 @@ public class IdentityVerificationController : ControllerBase
 
         var result = await _mediator.Send(new CanStartVerificationQuery(userId));
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Verificar identidad usando perfil KYC existente (endpoint simplificado)
+    /// </summary>
+    /// <remarks>
+    /// Este endpoint permite verificar la identidad usando el profileId en lugar de sessionId.
+    /// Es útil cuando ya se ha creado un perfil KYC y se quiere procesar la verificación facial.
+    /// </remarks>
+    /// <param name="profileId">ID del perfil KYC</param>
+    /// <param name="selfie">Imagen de la selfie</param>
+    /// <param name="livenessData">Datos de liveness en JSON (opcional)</param>
+    /// <returns>Resultado de la verificación</returns>
+    [HttpPost("verify")]
+    [ProducesResponseType(typeof(VerifyIdentityResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<VerifyIdentityResponse>> Verify(
+        [FromForm] Guid profileId,
+        [FromForm] IFormFile selfie,
+        [FromForm] string? livenessData)
+    {
+        var userId = GetUserIdFromClaims();
+        if (userId == Guid.Empty)
+            return Unauthorized("Usuario no autenticado");
+
+        if (selfie == null || selfie.Length == 0)
+            return BadRequest(new { error = "ValidationError", message = "La selfie es requerida" });
+
+        if (selfie.Length > 10 * 1024 * 1024)
+            return BadRequest(new { error = "ValidationError", message = "La imagen excede el tamaño máximo de 10MB" });
+
+        LivenessDataDto? livenessDto = null;
+        if (!string.IsNullOrEmpty(livenessData))
+        {
+            try
+            {
+                livenessDto = System.Text.Json.JsonSerializer.Deserialize<LivenessDataDto>(
+                    livenessData, 
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to parse liveness data: {Error}", ex.Message);
+            }
+        }
+
+        using var memoryStream = new MemoryStream();
+        await selfie.CopyToAsync(memoryStream);
+
+        var command = new VerifyIdentityByProfileCommand
+        {
+            ProfileId = profileId,
+            UserId = userId,
+            SelfieImageData = memoryStream.ToArray(),
+            FileName = selfie.FileName,
+            ContentType = selfie.ContentType,
+            LivenessData = livenessDto
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = "VerificationError", message = ex.Message });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = "NotFound", message = "Perfil KYC no encontrado" });
+        }
     }
 
     #region Helper Methods

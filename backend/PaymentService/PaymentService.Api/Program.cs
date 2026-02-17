@@ -1,13 +1,21 @@
+using CarDealer.Shared.Middleware;
 using MediatR;
 using FluentValidation;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using CarDealer.Shared.Idempotency.Extensions;
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Configuration;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using PaymentService.Application.Validators;
+using PaymentService.Application.Services;
 using PaymentService.Domain.Interfaces;
 using PaymentService.Domain.Enums;
 using PaymentService.Infrastructure.Persistence;
@@ -15,6 +23,7 @@ using PaymentService.Infrastructure.Repositories;
 using PaymentService.Infrastructure.Services;
 using PaymentService.Infrastructure.Services.Settings;
 using PaymentService.Infrastructure.Services.Providers;
+using PaymentService.Api;
 
 const string ServiceName = "PaymentService";
 const string ServiceVersion = "2.0.0";
@@ -38,6 +47,9 @@ try
     // ============= AUDIT (→ AuditService via RabbitMQ) =============
     builder.Services.AddAuditPublisher(builder.Configuration);
 
+    // ============= CONFIGURATION SERVICE CLIENT =============
+    builder.Services.AddConfigurationServiceClient(builder.Configuration, ServiceName);
+
     // ============= SERVICES =============
     // Database
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -57,129 +69,140 @@ try
     builder.Services.Configure<FygaroSettings>(builder.Configuration.GetSection("PaymentGateway:Fygaro"));
     builder.Services.Configure<PayPalSettings>(builder.Configuration.GetSection("PaymentGateway:PayPal"));
 
+    // ==================== HTTP CLIENTS FOR PAYMENT PROVIDERS ====================
+    // Register typed HttpClients for each payment provider
+    builder.Services.AddHttpClient<AzulPaymentProvider>();
+    builder.Services.AddHttpClient<CardNETPaymentProvider>();
+    builder.Services.AddHttpClient<PixelPayPaymentProvider>();
+    builder.Services.AddHttpClient<FygaroPaymentProvider>();
+    builder.Services.AddHttpClient<PayPalPaymentProvider>();
+
     // ==================== PAYMENT GATEWAY INFRASTRUCTURE ====================
-    // Register core payment gateway services
-    builder.Services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
+    // Register core payment gateway services (Singleton to persist registered providers across requests)
+    builder.Services.AddSingleton<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
     builder.Services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 
-    // Register individual payment gateway providers
-    builder.Services.AddScoped<AzulPaymentProvider>();
-    builder.Services.AddScoped<CardNETPaymentProvider>();
-    builder.Services.AddScoped<PixelPayPaymentProvider>();
-    builder.Services.AddScoped<FygaroPaymentProvider>();
-    builder.Services.AddScoped<PayPalPaymentProvider>();
+    // Gateway availability reads billing.{provider}_enabled from ConfigurationService (admin panel)
+    builder.Services.AddScoped<IGatewayAvailabilityService, GatewayAvailabilityService>();
 
     // ==================== PAYMENT GATEWAY INITIALIZATION ====================
-    // Initialize and register providers with registry on application startup
-    var serviceProvider = builder.Services.BuildServiceProvider();
-    var registry = serviceProvider.GetRequiredService<IPaymentGatewayRegistry>();
-    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+    // Initialize and register providers with registry after app is built
+    builder.Services.AddHostedService<PaymentProviderRegistrationService>();
 
-    try
-    {
-        // Attempt to register each provider
-        var azulProvider = serviceProvider.GetRequiredService<AzulPaymentProvider>();
-        registry.Register(azulProvider);
-        logger.LogInformation("✅ AZUL payment provider registered successfully");
+    // ==================== LEGACY REPOSITORIES ====================
+    builder.Services.AddScoped<IAzulTransactionRepository, AzulTransactionRepository>();
+    builder.Services.AddScoped<IAzulSubscriptionRepository, AzulSubscriptionRepository>();
 
-        var cardnetProvider = serviceProvider.GetRequiredService<CardNETPaymentProvider>();
-        registry.Register(cardnetProvider);
-        logger.LogInformation("✅ CardNET payment provider registered successfully");
+    // ==================== SAVED PAYMENT METHODS ====================
+    builder.Services.AddScoped<ISavedPaymentMethodRepository, SavedPaymentMethodRepository>();
 
-        var pixelpayProvider = serviceProvider.GetRequiredService<PixelPayPaymentProvider>();
-        registry.Register(pixelpayProvider);
-        logger.LogInformation("✅ PixelPay payment provider registered successfully");
+    // ==================== TOKENIZATION SERVICE ====================
+    builder.Services.AddScoped<ITokenizationService, TokenizationService>();
 
-        var fygaroProvider = serviceProvider.GetRequiredService<FygaroPaymentProvider>();
-        registry.Register(fygaroProvider);
-        logger.LogInformation("✅ Fygaro payment provider registered successfully");
+    // ==================== EXCHANGE RATE (BCRD - DGII Compliance) ====================
+    // Configuración del Banco Central
+    builder.Services.Configure<BancoCentralSettings>(builder.Configuration.GetSection("BancoCentral"));
 
-        var paypalProvider = serviceProvider.GetRequiredService<PayPalPaymentProvider>();
-        registry.Register(paypalProvider);
-        logger.LogInformation("✅ PayPal payment provider registered successfully (International)");
+    // Repositorios de tasas de cambio
+    builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+    builder.Services.AddScoped<ICurrencyConversionRepository, CurrencyConversionRepository>();
 
-        // Log summary of registered providers
-        var registeredProviders = registry.GetAll();
-        logger.LogInformation("📊 Total providers registered: {ProviderCount}", registeredProviders.Count);
-        
-        foreach (var provider in registeredProviders)
-        {
-            var configErrors = provider.ValidateConfiguration();
-            var status = configErrors.Count == 0 ? "✅ CONFIGURED" : "⚠️  NOT CONFIGURED";
-            logger.LogInformation("   • {ProviderName}: {Status}", provider.Name, status);
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "❌ Error during payment provider registration");
-        throw;
-    }
+    // Cliente HTTP del Banco Central
+    builder.Services.AddHttpClient<BancoCentralApiClient>();
 
-// ==================== LEGACY REPOSITORIES ====================
+    // Servicio de tasas de cambio
+    builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
-builder.Services.AddScoped<IAzulTransactionRepository, AzulTransactionRepository>();
-builder.Services.AddScoped<IAzulSubscriptionRepository, AzulSubscriptionRepository>();
+    // Background job para actualización diaria de tasas (8:30 AM hora RD)
+    builder.Services.AddHostedService<ExchangeRateRefreshJob>();
 
-// ==================== EXCHANGE RATE (BCRD - DGII Compliance) ====================
-// Configuración del Banco Central
-builder.Services.Configure<BancoCentralSettings>(builder.Configuration.GetSection("BancoCentral"));
-
-// Repositorios de tasas de cambio
-builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
-builder.Services.AddScoped<ICurrencyConversionRepository, CurrencyConversionRepository>();
-
-// Cliente HTTP del Banco Central
-builder.Services.AddHttpClient<BancoCentralApiClient>();
-
-// Servicio de tasas de cambio
-builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
-
-// Background job para actualización diaria de tasas (8:30 AM hora RD)
-builder.Services.AddHostedService<ExchangeRateRefreshJob>();
-
-// Redis cache (opcional pero recomendado)
-var redisConnection = builder.Configuration["Redis:Connection"];
-if (!string.IsNullOrEmpty(redisConnection))
-{
+    // Redis cache (required for TokenizationService session management)
+    var redisConnection = builder.Configuration["Redis:Connection"] 
+        ?? builder.Configuration["Redis:ConnectionString"] 
+        ?? "redis:6379,abortConnect=false";
+    
     builder.Services.AddStackExchangeRedisCache(options =>
     {
         options.Configuration = redisConnection;
         options.InstanceName = "PaymentService:";
     });
-    Log.Information("Redis cache habilitado para tasas de cambio");
-}
+    Log.Information("Redis cache enabled for PaymentService: {Connection}", redisConnection);
 
-// Services
-builder.Services.AddScoped<AzulWebhookValidationService>();
-builder.Services.AddHttpClient<AzulHttpClient>();
+    // Services
+    builder.Services.AddScoped<AzulWebhookValidationService>();
+    builder.Services.AddHttpClient<AzulHttpClient>();
 
-// MediatR
-builder.Services.AddMediatR(config =>
-    config.RegisterServicesFromAssembly(typeof(Program).Assembly));
+    // MediatR
+    builder.Services.AddMediatR(config =>
 
-// FluentValidation
-builder.Services.AddValidatorsFromAssemblyContaining<ChargeRequestValidator>();
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(PaymentService.Application.Behaviors.ValidationBehavior<,>));
+        config.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
-// Controllers
-builder.Services.AddControllers();
+    // FluentValidation
+    builder.Services.AddValidatorsFromAssemblyContaining<ChargeRequestValidator>();
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowApiGateway", policyBuilder =>
+    // Controllers
+    builder.Services.AddControllers();
+
+    // CORS
+    builder.Services.AddCors(options =>
     {
-        policyBuilder
-            .WithOrigins("http://localhost:8080", "https://api.okla.com.do")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        options.AddPolicy("AllowApiGateway", policyBuilder =>
+        {
+            policyBuilder
+                .WithOrigins("http://localhost:8080", "http://localhost:3000", "https://api.okla.com.do", "https://okla.com.do")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
     });
-});
 
-// Swagger
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    // ============= JWT AUTHENTICATION =============
+    var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
+    var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Log.Warning("JWT Authentication failed: {Error}", context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Log.Debug("JWT Token validated for user: {User}", context.Principal?.Identity?.Name ?? "Unknown");
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+    builder.Services.AddAuthorization();
+
+    // Swagger
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
         Title = "Payment Service - Multi-Provider Gateway",
         Version = "v2.0.0",
@@ -216,6 +239,21 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// ========================================
+// RATE LIMITING
+// ========================================
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("PaymentPolicy", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = builder.Configuration.GetValue<int>("Security:RateLimit:RequestsPerMinute", 30);
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // Health Checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AzulDbContext>("Database");
@@ -224,18 +262,19 @@ builder.Services.AddHealthChecks()
 var idempotencyEnabled = builder.Configuration.GetValue<bool>("Idempotency:Enabled", true);
 if (idempotencyEnabled)
 {
+    var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
     builder.Services.AddIdempotency(options =>
     {
         options.Enabled = true;
-        options.RedisConnection = builder.Configuration["Redis:Connection"] ?? "localhost:6379";
+        options.RedisConnection = redisConnectionString;
         options.HeaderName = "X-Idempotency-Key";
         options.DefaultTtlSeconds = 86400;
-        options.RequireIdempotencyKey = true;
-        options.KeyPrefix = "azul:idempotency";
+        options.RequireIdempotencyKey = false; // Allow requests without idempotency key for GET methods
+        options.KeyPrefix = "payment:idempotency";
         options.ValidateRequestHash = true;
         options.ProcessingTimeoutSeconds = 120;
     });
-    Log.Information("Idempotency enabled for AzulPaymentService");
+    Log.Information("Idempotency enabled for PaymentService with Redis: {Connection}", redisConnectionString);
 }
 
 // ============= BUILD =============
@@ -248,8 +287,12 @@ if (idempotencyEnabled)
     // Audit middleware for automatic request auditing
     app.UseAuditMiddleware();
 
-    if (app.Environment.IsDevelopment())
-    {
+    // OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+if (app.Environment.IsDevelopment())
+{
+
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
@@ -259,6 +302,7 @@ if (idempotencyEnabled)
 
     app.UseHttpsRedirection();
     app.UseCors("AllowApiGateway");
+    app.UseRateLimiter();
 
     // Idempotency middleware
     if (idempotencyEnabled)

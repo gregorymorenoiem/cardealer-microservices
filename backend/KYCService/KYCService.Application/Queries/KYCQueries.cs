@@ -7,7 +7,8 @@ namespace KYCService.Application.Queries;
 /// <summary>
 /// Obtener perfil KYC por ID
 /// </summary>
-public record GetKYCProfileByIdQuery(Guid Id) : IRequest<KYCProfileDto?>;
+public record GetKYCProfileByIdQuery(Guid Id, Guid RequestingUserId, bool IsAdmin = false) : IRequest<KYCProfileDto?>;
+
 
 /// <summary>
 /// Obtener perfil KYC por ID de usuario
@@ -54,7 +55,23 @@ public record GetExpiringKYCProfilesQuery : IRequest<PaginatedResult<KYCProfileS
 /// <summary>
 /// Obtener documentos de un perfil KYC
 /// </summary>
-public record GetKYCDocumentsQuery(Guid KYCProfileId) : IRequest<List<KYCDocumentDto>>;
+public record GetKYCDocumentsQuery(Guid KYCProfileId, Guid RequestingUserId, bool IsAdmin = false) : IRequest<List<KYCDocumentDto>>;
+
+/// <summary>
+/// Obtener URL fresca (pre-firmada) para un documento KYC
+/// La URL retornada es válida por 1 hora
+/// </summary>
+public record GetKYCDocumentUrlQuery(Guid DocumentId, Guid RequestingUserId, bool IsAdmin = false) : IRequest<DocumentUrlDto>;
+
+/// <summary>
+/// DTO para respuesta de URL de documento
+/// </summary>
+public record DocumentUrlDto
+{
+    public Guid DocumentId { get; init; }
+    public string Url { get; init; } = string.Empty;
+    public DateTime ExpiresAt { get; init; }
+}
 
 /// <summary>
 /// Obtener verificaciones de un perfil KYC

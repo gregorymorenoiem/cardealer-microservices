@@ -3,6 +3,7 @@ using KYCService.Domain.Entities;
 using KYCService.Domain.Interfaces;
 using KYCService.Application.Commands;
 using KYCService.Application.DTOs;
+using KYCService.Application.Exceptions;
 
 namespace KYCService.Application.Handlers;
 
@@ -20,6 +21,114 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
 
     public async Task<KYCProfileDto> Handle(CreateKYCProfileCommand request, CancellationToken cancellationToken)
     {
+        // ============================================================================
+        // SECURITY: Check for existing profile to prevent duplicates
+        // ============================================================================
+        var existingProfile = await _repository.GetByUserIdAsync(request.UserId, cancellationToken);
+        if (existingProfile != null)
+        {
+            // If profile exists and is in certain states, don't allow creating another
+            var blockedStatuses = new[] { 
+                KYCStatus.Pending, 
+                KYCStatus.InProgress, 
+                KYCStatus.UnderReview, 
+                KYCStatus.Approved 
+            };
+            
+            if (blockedStatuses.Contains(existingProfile.Status))
+            {
+                throw new DuplicateProfileException(
+                    $"User {request.UserId} already has a KYC profile with status {existingProfile.Status}. " +
+                    $"Profile ID: {existingProfile.Id}");
+            }
+            
+            // ============================================================================
+            // RESUBMISSION: If previous profile was Rejected/Expired/Suspended,
+            // update the existing profile instead of creating a new one
+            // ============================================================================
+            var resubmittableStatuses = new[] { KYCStatus.Rejected, KYCStatus.Expired, KYCStatus.Suspended };
+            if (resubmittableStatuses.Contains(existingProfile.Status))
+            {
+                // Check duplicate document for different user
+                if (!string.IsNullOrEmpty(request.PrimaryDocumentNumber))
+                {
+                    var documentExists = await _repository.GetByDocumentNumberAsync(
+                        request.PrimaryDocumentNumber, cancellationToken);
+                    
+                    if (documentExists != null && documentExists.UserId != request.UserId)
+                    {
+                        throw new DuplicateDocumentException(
+                            $"Document number {MaskDocumentNumber(request.PrimaryDocumentNumber)} is already registered to another user.");
+                    }
+                }
+                
+                // Update existing profile for resubmission
+                existingProfile.Status = KYCStatus.Pending;
+                existingProfile.FullName = request.FullName;
+                existingProfile.MiddleName = request.MiddleName;
+                existingProfile.LastName = request.LastName;
+                existingProfile.DateOfBirth = ToUtc(request.DateOfBirth);
+                existingProfile.PlaceOfBirth = request.PlaceOfBirth;
+                existingProfile.Nationality = request.Nationality;
+                existingProfile.Gender = request.Gender;
+                existingProfile.PrimaryDocumentType = request.PrimaryDocumentType;
+                existingProfile.PrimaryDocumentNumber = request.PrimaryDocumentNumber;
+                existingProfile.PrimaryDocumentExpiry = ToUtc(request.PrimaryDocumentExpiry);
+                existingProfile.PrimaryDocumentCountry = request.PrimaryDocumentCountry;
+                existingProfile.Email = request.Email;
+                existingProfile.Phone = request.Phone;
+                existingProfile.MobilePhone = request.MobilePhone;
+                existingProfile.Address = request.Address;
+                existingProfile.City = request.City;
+                existingProfile.Province = request.Province;
+                existingProfile.PostalCode = request.PostalCode;
+                existingProfile.Country = request.Country ?? "DO";
+                existingProfile.Occupation = request.Occupation;
+                existingProfile.EmployerName = request.EmployerName;
+                existingProfile.SourceOfFunds = request.SourceOfFunds;
+                existingProfile.ExpectedTransactionVolume = request.ExpectedTransactionVolume;
+                existingProfile.EstimatedAnnualIncome = request.EstimatedAnnualIncome;
+                existingProfile.IsPEP = request.IsPEP;
+                existingProfile.PEPPosition = request.PEPPosition;
+                existingProfile.PEPRelationship = request.PEPRelationship;
+                existingProfile.BusinessName = request.BusinessName;
+                existingProfile.RNC = request.RNC;
+                existingProfile.BusinessType = request.BusinessType;
+                existingProfile.IncorporationDate = ToUtc(request.IncorporationDate);
+                existingProfile.LegalRepresentative = request.LegalRepresentative;
+                existingProfile.UpdatedAt = DateTime.UtcNow;
+                // Clear previous rejection data
+                existingProfile.RejectionReason = null;
+                existingProfile.RejectedAt = null;
+                existingProfile.RejectedBy = null;
+                // Reset risk assessment for new review
+                existingProfile.RiskLevel = request.IsPEP ? RiskLevel.High : RiskLevel.Low;
+                existingProfile.RiskScore = request.IsPEP ? 70 : 0;
+                if (request.IsPEP && !existingProfile.RiskFactors.Contains("PEP Status"))
+                {
+                    existingProfile.RiskFactors.Add("PEP Status");
+                }
+                
+                var updated = await _repository.UpdateAsync(existingProfile, cancellationToken);
+                return MapToDto(updated);
+            }
+        }
+
+        // ============================================================================
+        // SECURITY: Check for duplicate document number (different user, same cédula)
+        // ============================================================================
+        if (!string.IsNullOrEmpty(request.PrimaryDocumentNumber))
+        {
+            var documentExists = await _repository.GetByDocumentNumberAsync(
+                request.PrimaryDocumentNumber, cancellationToken);
+            
+            if (documentExists != null && documentExists.UserId != request.UserId)
+            {
+                throw new DuplicateDocumentException(
+                    $"Document number {MaskDocumentNumber(request.PrimaryDocumentNumber)} is already registered to another user.");
+            }
+        }
+
         var profile = new KYCProfile
         {
             Id = Guid.NewGuid(),
@@ -93,6 +202,16 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
         };
     }
 
+    /// <summary>
+    /// Masks a document number for secure logging (shows only last 4 characters)
+    /// </summary>
+    private static string MaskDocumentNumber(string documentNumber)
+    {
+        if (string.IsNullOrEmpty(documentNumber) || documentNumber.Length <= 4)
+            return "****";
+        return new string('*', documentNumber.Length - 4) + documentNumber[^4..];
+    }
+
     private static KYCProfileDto MapToDto(KYCProfile p) => new()
     {
         Id = p.Id,
@@ -159,6 +278,63 @@ public class UpdateKYCProfileHandler : IRequestHandler<UpdateKYCProfileCommand, 
         if (request.SourceOfFunds != null) profile.SourceOfFunds = request.SourceOfFunds;
         if (request.EstimatedAnnualIncome.HasValue) profile.EstimatedAnnualIncome = request.EstimatedAnnualIncome;
 
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        var updated = await _repository.UpdateAsync(profile, cancellationToken);
+        return MapToDto(updated);
+    }
+
+    private static KYCProfileDto MapToDto(KYCProfile p) => new()
+    {
+        Id = p.Id,
+        UserId = p.UserId,
+        EntityType = p.EntityType,
+        Status = p.Status,
+        RiskLevel = p.RiskLevel,
+        RiskScore = p.RiskScore,
+        RiskFactors = p.RiskFactors,
+        FullName = p.FullName,
+        Email = p.Email,
+        Phone = p.Phone,
+        Address = p.Address,
+        City = p.City,
+        Province = p.Province,
+        Country = p.Country,
+        IsPEP = p.IsPEP,
+        CreatedAt = p.CreatedAt,
+        ApprovedAt = p.ApprovedAt,
+        ExpiresAt = p.ExpiresAt,
+        NextReviewAt = p.NextReviewAt
+    };
+}
+
+/// <summary>
+/// Handler para enviar perfil KYC para revisión
+/// </summary>
+public class SubmitKYCForReviewHandler : IRequestHandler<SubmitKYCForReviewCommand, KYCProfileDto>
+{
+    private readonly IKYCProfileRepository _repository;
+
+    public SubmitKYCForReviewHandler(IKYCProfileRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<KYCProfileDto> Handle(SubmitKYCForReviewCommand request, CancellationToken cancellationToken)
+    {
+        var profile = await _repository.GetByIdAsync(request.Id, cancellationToken)
+            ?? throw new InvalidOperationException($"KYC Profile with ID {request.Id} not found");
+
+        // Solo permitir enviar a revisión si está en estado Pending o InProgress
+        var allowedStatuses = new[] { KYCStatus.Pending, KYCStatus.InProgress };
+        if (!allowedStatuses.Contains(profile.Status))
+        {
+            throw new InvalidOperationException(
+                $"Cannot submit profile for review. Current status is {profile.Status}. " +
+                $"Only profiles with status Pending or InProgress can be submitted.");
+        }
+
+        profile.Status = KYCStatus.UnderReview;
         profile.UpdatedAt = DateTime.UtcNow;
 
         var updated = await _repository.UpdateAsync(profile, cancellationToken);
@@ -303,6 +479,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             Type = request.Type,
             DocumentName = request.DocumentName,
             FileName = request.FileName,
+            StorageKey = request.StorageKey,
             FileUrl = request.FileUrl,
             FileType = request.FileType,
             FileSize = request.FileSize,
@@ -330,6 +507,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             Type = created.Type,
             DocumentName = created.DocumentName,
             FileName = created.FileName,
+            StorageKey = created.StorageKey,
             FileUrl = created.FileUrl,
             FileType = created.FileType,
             FileSize = created.FileSize,
@@ -374,6 +552,7 @@ public class VerifyKYCDocumentHandler : IRequestHandler<VerifyKYCDocumentCommand
             Type = updated.Type,
             DocumentName = updated.DocumentName,
             FileName = updated.FileName,
+            StorageKey = updated.StorageKey,
             FileUrl = updated.FileUrl,
             FileType = updated.FileType,
             FileSize = updated.FileSize,

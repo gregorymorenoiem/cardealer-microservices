@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using KYCService.Application.Commands;
 using KYCService.Application.Queries;
 using KYCService.Application.DTOs;
@@ -30,7 +31,9 @@ public class KYCDocumentsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<List<KYCDocumentDto>>> GetDocuments(Guid profileId)
     {
-        var result = await _mediator.Send(new GetKYCDocumentsQuery(profileId));
+        var userId = GetUserIdFromClaims();
+        var isAdmin = IsAdminOrCompliance();
+        var result = await _mediator.Send(new GetKYCDocumentsQuery(profileId, userId, isAdmin));
         return Ok(result);
     }
 
@@ -55,7 +58,7 @@ public class KYCDocumentsController : ControllerBase
     /// Verificar documento KYC
     /// </summary>
     [HttpPost("documents/{documentId:guid}/verify")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCDocumentDto>> VerifyDocument(
         Guid documentId, 
         [FromBody] VerifyKYCDocumentCommand command)
@@ -67,6 +70,40 @@ public class KYCDocumentsController : ControllerBase
         _logger.LogInformation("Document {DocumentId} verification: {Status}", 
             documentId, command.Approved ? "Approved" : "Rejected");
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Obtener URL fresca (pre-firmada) para un documento KYC
+    /// La URL retornada es válida por 1 hora
+    /// Si no se puede obtener una URL fresca, retorna la URL almacenada
+    /// </summary>
+    [HttpGet("documents/{documentId:guid}/url")]
+    [Authorize]
+    public async Task<ActionResult<DocumentUrlDto>> GetDocumentUrl(Guid documentId)
+    {
+        try
+        {
+            _logger.LogInformation("Getting document URL for document: {DocumentId}", documentId);
+            var userId = GetUserIdFromClaims();
+            var isAdmin = IsAdminOrCompliance();
+            var result = await _mediator.Send(new GetKYCDocumentUrlQuery(documentId, userId, isAdmin));
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("IDOR attempt: User tried to access document {DocumentId}: {Message}", documentId, ex.Message);
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Failed to get document URL for {DocumentId}: {Message}", documentId, ex.Message);
+            return NotFound(new { error = ex.Message, documentId = documentId.ToString() });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error getting document URL for {DocumentId}", documentId);
+            return StatusCode(500, new { error = "An unexpected error occurred", documentId = documentId.ToString() });
+        }
     }
 
     /// <summary>
@@ -84,7 +121,7 @@ public class KYCDocumentsController : ControllerBase
     /// Crear verificación KYC
     /// </summary>
     [HttpPost("profiles/{profileId:guid}/verifications")]
-    [Authorize(Roles = "Admin,Compliance,System")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCVerificationDto>> CreateVerification(
         Guid profileId,
         [FromBody] CreateKYCVerificationCommand command)
@@ -102,7 +139,7 @@ public class KYCDocumentsController : ControllerBase
     /// Obtener historial de evaluaciones de riesgo
     /// </summary>
     [HttpGet("profiles/{profileId:guid}/risk-assessments")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<List<KYCRiskAssessmentDto>>> GetRiskAssessments(Guid profileId)
     {
         var result = await _mediator.Send(new GetKYCRiskAssessmentsQuery(profileId));
@@ -113,7 +150,7 @@ public class KYCDocumentsController : ControllerBase
     /// Crear evaluación de riesgo KYC
     /// </summary>
     [HttpPost("profiles/{profileId:guid}/risk-assessments")]
-    [Authorize(Roles = "Admin,Compliance")]
+    [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCRiskAssessmentDto>> AssessRisk(
         Guid profileId,
         [FromBody] AssessKYCRiskCommand command)
@@ -126,4 +163,23 @@ public class KYCDocumentsController : ControllerBase
             profileId, result.PreviousLevel, result.NewLevel);
         return Ok(result);
     }
+
+    #region Helper Methods
+
+    private Guid GetUserIdFromClaims()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value
+                       ?? User.FindFirst("userId")?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    }
+
+    private bool IsAdminOrCompliance()
+    {
+        var accountType = User.FindFirst("account_type")?.Value;
+        return accountType == "4" || accountType == "5"
+            || accountType == "admin" || accountType == "platform_employee";
+    }
+
+    #endregion
 }

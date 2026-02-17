@@ -13,6 +13,7 @@ namespace BillingService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/dealer-billing")]
+[Authorize]
 public class DealerBillingController : ControllerBase
 {
     private readonly BillingApplicationService _billingService;
@@ -43,7 +44,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene todos los datos del dashboard de billing para un dealer
     /// </summary>
     [HttpGet("dashboard/{dealerId:guid}")]
-    [AllowAnonymous] // TODO: Add proper auth
     public async Task<ActionResult<DealerBillingDashboardResponse>> GetDashboard(
         Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -76,7 +76,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene la suscripción actual de un dealer
     /// </summary>
     [HttpGet("subscription")]
-    [AllowAnonymous]
     public async Task<ActionResult<DealerSubscriptionDto>> GetSubscription(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -108,7 +107,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene las facturas de un dealer
     /// </summary>
     [HttpGet("invoices")]
-    [AllowAnonymous]
     public async Task<ActionResult<List<DealerInvoiceDto>>> GetInvoices(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -121,7 +119,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene los pagos de un dealer
     /// </summary>
     [HttpGet("payments")]
-    [AllowAnonymous]
     public async Task<ActionResult<List<DealerPaymentDto>>> GetPayments(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -134,7 +131,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene métricas de uso para un dealer
     /// </summary>
     [HttpGet("usage")]
-    [AllowAnonymous]
     public async Task<ActionResult<UsageMetricsDto>> GetUsage(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -148,7 +144,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene estadísticas de billing para un dealer
     /// </summary>
     [HttpGet("stats")]
-    [AllowAnonymous]
     public async Task<ActionResult<BillingStatsDto>> GetStats(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -162,7 +157,7 @@ public class DealerBillingController : ControllerBase
     /// Obtiene todos los planes disponibles
     /// </summary>
     [HttpGet("plans")]
-    [AllowAnonymous]
+    [AllowAnonymous] // Plans are public for pricing page
     public async Task<ActionResult<List<PlanConfigDto>>> GetPlans(
         [FromHeader(Name = "X-Dealer-Id")] Guid? dealerId = null,
         CancellationToken cancellationToken = default)
@@ -175,7 +170,6 @@ public class DealerBillingController : ControllerBase
     /// Obtiene los métodos de pago de un dealer
     /// </summary>
     [HttpGet("payment-methods")]
-    [AllowAnonymous]
     public async Task<ActionResult<List<PaymentMethodDto>>> GetPaymentMethods(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
@@ -208,7 +202,6 @@ public class DealerBillingController : ControllerBase
     /// Add a new payment method (card or bank account)
     /// </summary>
     [HttpPost("payment-methods")]
-    [AllowAnonymous]
     public async Task<ActionResult<PaymentMethodDto>> AddPaymentMethod(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         [FromBody] AddPaymentMethodRequest request,
@@ -242,7 +235,6 @@ public class DealerBillingController : ControllerBase
     /// Set a payment method as default
     /// </summary>
     [HttpPut("payment-methods/{paymentMethodId}/default")]
-    [AllowAnonymous]
     public async Task<ActionResult> SetDefaultPaymentMethod(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         [FromRoute] string paymentMethodId,
@@ -262,7 +254,6 @@ public class DealerBillingController : ControllerBase
     /// Remove a payment method
     /// </summary>
     [HttpDelete("payment-methods/{paymentMethodId}")]
-    [AllowAnonymous]
     public async Task<ActionResult> RemovePaymentMethod(
         [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         [FromRoute] string paymentMethodId,
