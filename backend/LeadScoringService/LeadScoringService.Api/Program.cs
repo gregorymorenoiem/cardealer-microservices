@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using LeadScoringService.Application.Features.Leads.Commands;
 using LeadScoringService.Domain.Interfaces;
 using LeadScoringService.Infrastructure.Persistence;
@@ -38,11 +39,14 @@ builder.Services.AddScoped<ILeadScoringEngine, LeadScoringEngine>();
 
 // MediatR
 builder.Services.AddMediatR(cfg => {
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(LeadScoringService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssembly(typeof(CreateOrUpdateLeadCommand).Assembly);
 });
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "your-super-secret-key-min-32-chars-long-12345678";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LeadScoringService";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LeadScoringServiceUsers";
 
@@ -87,8 +91,12 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

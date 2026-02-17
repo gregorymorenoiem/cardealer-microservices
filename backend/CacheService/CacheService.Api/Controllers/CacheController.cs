@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using CacheService.Application.Commands;
 using CacheService.Application.Queries;
+using CarDealer.Shared.Configuration;
 
 namespace CacheService.Api.Controllers;
 
@@ -10,10 +11,28 @@ namespace CacheService.Api.Controllers;
 public class CacheController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IConfigurationServiceClient _configClient;
 
-    public CacheController(IMediator mediator)
+    public CacheController(IMediator mediator, IConfigurationServiceClient configClient)
     {
         _mediator = mediator;
+        _configClient = configClient;
+    }
+
+    /// <summary>
+    /// Get effective cache settings from ConfigurationService (admin panel).
+    /// </summary>
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetSettings()
+    {
+        var settings = new
+        {
+            DefaultExpirationMinutes = await _configClient.GetIntAsync("cache.default_expiration_minutes", 30),
+            UserCacheMinutes = await _configClient.GetIntAsync("cache.user_cache_minutes", 15),
+            EnableDistributedCache = await _configClient.IsEnabledAsync("cache.enable_distributed_cache", defaultValue: true),
+        };
+
+        return Ok(settings);
     }
 
     /// <summary>

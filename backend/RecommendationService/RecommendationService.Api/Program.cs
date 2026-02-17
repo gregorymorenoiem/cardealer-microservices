@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,9 +26,12 @@ builder.Services.AddScoped<IVehicleInteractionRepository, VehicleInteractionRepo
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GenerateRecommendationsCommand).Assembly));
 
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(RecommendationService.Application.Behaviors.ValidationBehavior<,>));
+
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"] ?? "your-super-secret-key-min-32-chars-recommendation";
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -111,8 +115,12 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Middleware
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

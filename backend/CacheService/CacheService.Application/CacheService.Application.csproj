@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../CacheService.Domain/CacheService.Domain.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

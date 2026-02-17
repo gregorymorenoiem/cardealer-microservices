@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
@@ -33,6 +34,9 @@ public partial class Program
 
         // Add MediatR
         builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ServiceDiscovery.Application.Behaviors.ValidationBehavior<,>));
             cfg.RegisterServicesFromAssembly(typeof(Application.Handlers.RegisterServiceHandler).Assembly));
 
         // Add CORS
@@ -40,17 +44,36 @@ public partial class Program
         {
             options.AddDefaultPolicy(policy =>
             {
-                policy.AllowAnyOrigin()
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
+                var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
             });
         });
 
         var app = builder.Build();
 
         // Configure the HTTP request pipeline
-        if (app.Environment.IsDevelopment())
-        {
+        // OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+if (app.Environment.IsDevelopment())
+{
+
             app.UseSwagger();
             app.UseSwaggerUI();
         }

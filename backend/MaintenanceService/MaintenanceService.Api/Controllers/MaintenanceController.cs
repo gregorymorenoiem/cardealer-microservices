@@ -7,6 +7,7 @@ namespace MaintenanceService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class MaintenanceController : ControllerBase
 {
     private readonly IMaintenanceRepository _repository;

@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MaintenanceService.Domain.Interfaces;
@@ -60,11 +61,26 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddDefaultPolicy(, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -94,13 +110,17 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

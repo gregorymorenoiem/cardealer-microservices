@@ -1,7 +1,9 @@
+using CarDealer.Shared.Middleware;
 using EventTrackingService.Application.Features.Events.Commands;
 using EventTrackingService.Application.Features.Events.Queries;
 using EventTrackingService.Domain.Interfaces;
 using EventTrackingService.Infrastructure.Persistence;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,11 +15,26 @@ var builder = WebApplication.CreateBuilder(args);
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddDefaultPolicy(, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -26,13 +43,23 @@ builder.Services.AddControllers();
 
 // MediatR (CQRS)
 builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(EventTrackingService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(IngestEventCommand).Assembly);
 });
 
-// Event Repository - Use InMemory for development
-// TODO: Add ClickHouse support when deployed to production
-builder.Services.AddSingleton<IEventRepository, InMemoryEventRepository>();
+// Event Repository - Use PostgreSQL for production-ready persistent storage
+// Supports auto-scaling: all replicas share the same database
+var eventDbConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["Database:ConnectionStrings:PostgreSQL"]
+    ?? "Host=localhost;Port=5432;Database=eventtrackingservice;Username=postgres;Password=password";
+
+builder.Services.AddSingleton<IEventRepository>(sp =>
+    new PostgreSqlEventRepository(
+        eventDbConnectionString,
+        sp.GetRequiredService<ILogger<PostgreSqlEventRepository>>()));
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -66,6 +93,10 @@ var app = builder.Build();
 // ============================================
 
 // Swagger en Development y Production (para debugging)
+
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -74,7 +105,7 @@ app.UseSwaggerUI(c =>
 });
 
 // CORS (debe ir antes de UseRouting)
-app.UseCors("AllowAll");
+app.UseCors();
 
 app.UseRouting();
 
@@ -94,6 +125,6 @@ if (string.IsNullOrEmpty(urls))
 }
 
 app.Logger.LogInformation("🚀 EventTrackingService starting");
-app.Logger.LogInformation("📊 Using {RepositoryType} event repository", "InMemory");
+app.Logger.LogInformation("📊 Using {RepositoryType} event repository", "PostgreSQL");
 
 app.Run();
