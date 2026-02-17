@@ -82,9 +82,10 @@ public static class SecurityValidators
     public static IRuleBuilderOptions<T, string> SafeMimeType<T>(
         this IRuleBuilder<T, string> ruleBuilder)
     {
+        // SECURITY: SVG removed — it can contain <script> tags (stored XSS vector)
         var allowedMimeTypes = new[]
         {
-            "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
+            "image/jpeg", "image/png", "image/gif", "image/webp",
             "video/mp4", "video/mpeg", "video/webm",
             "application/pdf", "application/zip"
         };

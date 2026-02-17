@@ -1,7 +1,7 @@
 using FluentValidation;
 using System.Text.RegularExpressions;
 
-namespace AuthService.Application.Validators;
+namespace UserService.Application.Validators;
 
 /// <summary>
 /// Custom validator to detect SQL Injection patterns in string inputs.
@@ -17,9 +17,6 @@ public static class SqlInjectionValidator
         "WAITFOR DELAY", "BENCHMARK", "SLEEP("
     };
 
-    /// <summary>
-    /// Validates that the input does not contain SQL injection patterns.
-    /// </summary>
     public static IRuleBuilderOptions<T, string> NoSqlInjection<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
@@ -48,9 +45,6 @@ public static class XssValidator
         "ontransitionend=", "<img", "src=", "alert(", "confirm(", "prompt("
     };
 
-    /// <summary>
-    /// Validates that the input does not contain XSS attack patterns.
-    /// </summary>
     public static IRuleBuilderOptions<T, string> NoXss<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
@@ -64,32 +58,29 @@ public static class XssValidator
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }
 
-    // Performance: Pre-compile regex patterns once at class load, not per-invocation
-    private static readonly Regex[] s_xssRegexPatterns = new[]
-    {
-        new Regex(@"<script[\s\S]*?>[\s\S]*?</script>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"javascript\s*:", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"on\w+\s*=", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"<iframe[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"<object[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"<embed[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"<img[\s\S]*?onerror\s*=", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"data:text/html", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"eval\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"expression\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled)
-    };
-
-    /// <summary>
-    /// Advanced XSS validation using pre-compiled regex patterns.
-    /// </summary>
     public static IRuleBuilderOptions<T, string> NoXssAdvanced<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
+        var xssRegexPatterns = new[]
+        {
+            @"<script[\s\S]*?>[\s\S]*?</script>",
+            @"javascript\s*:",
+            @"on\w+\s*=",
+            @"<iframe[\s\S]*?>",
+            @"<object[\s\S]*?>",
+            @"<embed[\s\S]*?>",
+            @"<img[\s\S]*?onerror\s*=",
+            @"data:text/html",
+            @"eval\s*\(",
+            @"expression\s*\("
+        };
+
         return ruleBuilder.Must(input =>
         {
             if (string.IsNullOrWhiteSpace(input))
                 return true;
 
-            return !s_xssRegexPatterns.Any(regex => regex.IsMatch(input));
+            return !xssRegexPatterns.Any(pattern =>
+                Regex.IsMatch(input, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
         })
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }
@@ -100,9 +91,6 @@ public static class XssValidator
 /// </summary>
 public static class SecurityValidator
 {
-    /// <summary>
-    /// Validates input against both SQL Injection and XSS patterns.
-    /// </summary>
     public static IRuleBuilderOptions<T, string> NoSecurityThreats<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder

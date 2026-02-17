@@ -5,6 +5,7 @@ namespace KYCService.Application.Validators;
 
 /// <summary>
 /// Validador para crear perfil KYC
+/// SECURITY: All string fields validated with NoSqlInjection + NoXss
 /// </summary>
 public class CreateKYCProfileValidator : AbstractValidator<CreateKYCProfileCommand>
 {
@@ -18,12 +19,16 @@ public class CreateKYCProfileValidator : AbstractValidator<CreateKYCProfileComma
             .NotEmpty()
             .WithMessage("Full name is required")
             .MaximumLength(200)
-            .WithMessage("Full name cannot exceed 200 characters");
+            .WithMessage("Full name cannot exceed 200 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.PrimaryDocumentNumber)
             .NotEmpty()
             .When(x => x.EntityType == Domain.Entities.EntityType.Individual)
-            .WithMessage("Document number is required for individuals");
+            .WithMessage("Document number is required for individuals")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.RNC)
             .NotEmpty()
@@ -31,17 +36,21 @@ public class CreateKYCProfileValidator : AbstractValidator<CreateKYCProfileComma
             .WithMessage("RNC is required for businesses")
             .Matches(@"^\d{9,11}$")
             .When(x => !string.IsNullOrEmpty(x.RNC))
-            .WithMessage("RNC must be 9-11 digits");
+            .WithMessage("RNC must be 9-11 digits")
+            .NoSqlInjection();
 
         RuleFor(x => x.Email)
             .EmailAddress()
             .When(x => !string.IsNullOrEmpty(x.Email))
-            .WithMessage("Invalid email format");
+            .WithMessage("Invalid email format")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Phone)
             .Matches(@"^[\d\s\+\-\(\)]+$")
             .When(x => !string.IsNullOrEmpty(x.Phone))
-            .WithMessage("Invalid phone format");
+            .WithMessage("Invalid phone format")
+            .NoSqlInjection();
 
         RuleFor(x => x.DateOfBirth)
             .LessThan(DateTime.Now.AddYears(-18))
@@ -51,12 +60,16 @@ public class CreateKYCProfileValidator : AbstractValidator<CreateKYCProfileComma
         RuleFor(x => x.BusinessName)
             .NotEmpty()
             .When(x => x.EntityType == Domain.Entities.EntityType.Business)
-            .WithMessage("Business name is required for businesses");
+            .WithMessage("Business name is required for businesses")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.PEPPosition)
             .NotEmpty()
             .When(x => x.IsPEP)
-            .WithMessage("PEP position is required when IsPEP is true");
+            .WithMessage("PEP position is required when IsPEP is true")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -74,12 +87,16 @@ public class UpdateKYCProfileValidator : AbstractValidator<UpdateKYCProfileComma
         RuleFor(x => x.FullName)
             .MaximumLength(200)
             .When(x => !string.IsNullOrEmpty(x.FullName))
-            .WithMessage("Full name cannot exceed 200 characters");
+            .WithMessage("Full name cannot exceed 200 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Email)
             .EmailAddress()
             .When(x => !string.IsNullOrEmpty(x.Email))
-            .WithMessage("Invalid email format");
+            .WithMessage("Invalid email format")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -123,7 +140,9 @@ public class RejectKYCProfileValidator : AbstractValidator<RejectKYCProfileComma
             .NotEmpty()
             .WithMessage("Rejection reason is required")
             .MaximumLength(1000)
-            .WithMessage("Rejection reason cannot exceed 1000 characters");
+            .WithMessage("Rejection reason cannot exceed 1000 characters")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -142,15 +161,25 @@ public class UploadKYCDocumentValidator : AbstractValidator<UploadKYCDocumentCom
             .NotEmpty()
             .WithMessage("Document name is required")
             .MaximumLength(200)
-            .WithMessage("Document name cannot exceed 200 characters");
+            .WithMessage("Document name cannot exceed 200 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.FileName)
             .NotEmpty()
-            .WithMessage("File name is required");
+            .WithMessage("File name is required")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.FileUrl)
             .NotEmpty()
-            .WithMessage("File URL is required");
+            .WithMessage("File URL is required")
+            .Must(url => !url.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Invalid URL scheme")
+            .Must(url => !url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Invalid URL scheme")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.FileSize)
             .GreaterThan(0)
@@ -182,7 +211,9 @@ public class VerifyKYCDocumentValidator : AbstractValidator<VerifyKYCDocumentCom
         RuleFor(x => x.RejectionReason)
             .NotEmpty()
             .When(x => !x.Approved)
-            .WithMessage("Rejection reason is required when document is rejected");
+            .WithMessage("Rejection reason is required when document is rejected")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -201,11 +232,15 @@ public class CreateKYCVerificationValidator : AbstractValidator<CreateKYCVerific
             .NotEmpty()
             .WithMessage("Verification type is required")
             .Must(x => new[] { "identity", "address", "income", "pep", "sanctions" }.Contains(x.ToLower()))
-            .WithMessage("Invalid verification type");
+            .WithMessage("Invalid verification type")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Provider)
             .NotEmpty()
-            .WithMessage("Provider is required");
+            .WithMessage("Provider is required")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.ConfidenceScore)
             .InclusiveBetween(0, 100)
@@ -214,7 +249,9 @@ public class CreateKYCVerificationValidator : AbstractValidator<CreateKYCVerific
         RuleFor(x => x.FailureReason)
             .NotEmpty()
             .When(x => !x.Passed)
-            .WithMessage("Failure reason is required when verification failed");
+            .WithMessage("Failure reason is required when verification failed")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -237,7 +274,9 @@ public class AssessKYCRiskValidator : AbstractValidator<AssessKYCRiskCommand>
             .NotEmpty()
             .WithMessage("Reason is required")
             .MaximumLength(1000)
-            .WithMessage("Reason cannot exceed 1000 characters");
+            .WithMessage("Reason cannot exceed 1000 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.AssessedBy)
             .NotEmpty()
@@ -264,7 +303,9 @@ public class CreateSTRValidator : AbstractValidator<CreateSuspiciousTransactionR
             .NotEmpty()
             .WithMessage("Suspicious activity type is required")
             .MaximumLength(200)
-            .WithMessage("Suspicious activity type cannot exceed 200 characters");
+            .WithMessage("Suspicious activity type cannot exceed 200 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Description)
             .NotEmpty()
@@ -272,7 +313,9 @@ public class CreateSTRValidator : AbstractValidator<CreateSuspiciousTransactionR
             .MinimumLength(50)
             .WithMessage("Description must be at least 50 characters")
             .MaximumLength(5000)
-            .WithMessage("Description cannot exceed 5000 characters");
+            .WithMessage("Description cannot exceed 5000 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.RedFlags)
             .NotEmpty()
@@ -332,7 +375,9 @@ public class SendSTRToUAFValidator : AbstractValidator<SendSTRToUAFCommand>
             .NotEmpty()
             .WithMessage("UAF report number is required")
             .MaximumLength(50)
-            .WithMessage("UAF report number cannot exceed 50 characters");
+            .WithMessage("UAF report number cannot exceed 50 characters")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -347,13 +392,17 @@ public class AddWatchlistEntryValidator : AbstractValidator<AddWatchlistEntryCom
             .NotEmpty()
             .WithMessage("Source is required")
             .MaximumLength(100)
-            .WithMessage("Source cannot exceed 100 characters");
+            .WithMessage("Source cannot exceed 100 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.FullName)
             .NotEmpty()
             .WithMessage("Full name is required")
             .MaximumLength(300)
-            .WithMessage("Full name cannot exceed 300 characters");
+            .WithMessage("Full name cannot exceed 300 characters")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -368,6 +417,10 @@ public class ScreenWatchlistValidator : AbstractValidator<ScreenWatchlistCommand
             .NotEmpty()
             .WithMessage("Full name is required for screening")
             .MinimumLength(2)
-            .WithMessage("Full name must be at least 2 characters");
+            .WithMessage("Full name must be at least 2 characters")
+            .MaximumLength(300)
+            .WithMessage("Full name cannot exceed 300 characters")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
