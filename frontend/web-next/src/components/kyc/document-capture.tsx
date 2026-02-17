@@ -14,6 +14,7 @@
 import * as React from 'react';
 import dynamic from 'next/dynamic';
 
+// @ts-expect-error react-webcam module types incompatible with next/dynamic in Next.js 16
 const Webcam = dynamic(() => import('react-webcam'), {
   ssr: false,
   loading: () => (
