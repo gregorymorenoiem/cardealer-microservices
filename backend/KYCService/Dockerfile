@@ -1,26 +1,50 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
-WORKDIR /app
-EXPOSE 8080
-
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["KYCService.Api/KYCService.Api.csproj", "KYCService.Api/"]
-COPY ["KYCService.Application/KYCService.Application.csproj", "KYCService.Application/"]
-COPY ["KYCService.Domain/KYCService.Domain.csproj", "KYCService.Domain/"]
-COPY ["KYCService.Infrastructure/KYCService.Infrastructure.csproj", "KYCService.Infrastructure/"]
-RUN dotnet restore "KYCService.Api/KYCService.Api.csproj"
-COPY . .
-WORKDIR "/src/KYCService.Api"
-RUN dotnet build "KYCService.Api.csproj" -c Release -o /app/build
 
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
+# Copy csproj files and restore
+COPY ["KYCService/KYCService.Api/KYCService.Api.csproj", "KYCService/KYCService.Api/"]
+COPY ["KYCService/KYCService.Application/KYCService.Application.csproj", "KYCService/KYCService.Application/"]
+COPY ["KYCService/KYCService.Domain/KYCService.Domain.csproj", "KYCService/KYCService.Domain/"]
+COPY ["KYCService/KYCService.Infrastructure/KYCService.Infrastructure.csproj", "KYCService/KYCService.Infrastructure/"]
+
+RUN dotnet restore "KYCService/KYCService.Api/KYCService.Api.csproj"
+
+# Copy everything else
+COPY . .
+WORKDIR "/src/KYCService/KYCService.Api"
+
+# Publish stage
 FROM build AS publish
 RUN dotnet publish "KYCService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
+EXPOSE 8080
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Create non-root user and secrets directory
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
+
+# Set environment for Docker
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
-RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
+
 USER appuser
-COPY --from=publish /app/publish .
+
+COPY --from=publish --chown=appuser:appuser /app/publish .
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
 ENTRYPOINT ["dotnet", "KYCService.Api.dll"]

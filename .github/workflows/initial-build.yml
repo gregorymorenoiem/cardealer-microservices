@@ -28,51 +28,77 @@ jobs:
     name: 🏗️ Build All Services
     runs-on: ubuntu-latest
     if: ${{ inputs.confirm == 'build-all' }}
-    
+
     strategy:
       fail-fast: false
       matrix:
         service:
           - name: frontend-web
-            context: ./frontend/web
-            dockerfile: ./frontend/web/Dockerfile
+            context: ./frontend/web-next
+            dockerfile: ./frontend/web-next/Dockerfile
           - name: gateway
             context: ./backend
-            dockerfile: ./backend/Gateway/Gateway.Api/Dockerfile
+            dockerfile: ./backend/Gateway/Dockerfile
           - name: authservice
             context: ./backend
-            dockerfile: ./backend/AuthService/AuthService.Api/Dockerfile
+            dockerfile: ./backend/AuthService/Dockerfile
           - name: userservice
             context: ./backend
-            dockerfile: ./backend/UserService/UserService.Api/Dockerfile
+            dockerfile: ./backend/UserService/Dockerfile
           - name: roleservice
             context: ./backend
-            dockerfile: ./backend/RoleService/RoleService.Api/Dockerfile
+            dockerfile: ./backend/RoleService/Dockerfile
           - name: errorservice
             context: ./backend
-            dockerfile: ./backend/ErrorService/ErrorService.Api/Dockerfile
+            dockerfile: ./backend/ErrorService/Dockerfile
           - name: vehiclessaleservice
             context: ./backend
-            dockerfile: ./backend/VehiclesSaleService/VehiclesSaleService.Api/Dockerfile
-          # TODO: Fix C# code errors before enabling these services
-          # - name: vehiclesrentservice
-          #   context: ./backend
-          #   dockerfile: ./backend/VehiclesRentService/VehiclesRentService.Api/Dockerfile
-          # - name: propertiessaleservice
-          #   context: ./backend
-          #   dockerfile: ./backend/PropertiesSaleService/PropertiesSaleService.Api/Dockerfile
-          # - name: propertiesrentservice
-          #   context: ./backend
-          #   dockerfile: ./backend/PropertiesRentService/PropertiesRentService.Api/Dockerfile
+            dockerfile: ./backend/VehiclesSaleService/Dockerfile
           - name: mediaservice
             context: ./backend
-            dockerfile: ./backend/MediaService/MediaService.Api/Dockerfile
+            dockerfile: ./backend/MediaService/Dockerfile
           - name: notificationservice
             context: ./backend
-            dockerfile: ./backend/NotificationService/NotificationService.Api/Dockerfile
+            dockerfile: ./backend/NotificationService/Dockerfile
           - name: billingservice
             context: ./backend
-            dockerfile: ./backend/BillingService/BillingService.Api/Dockerfile
+            dockerfile: ./backend/BillingService/Dockerfile
+          - name: kycservice
+            context: ./backend
+            dockerfile: ./backend/KYCService/Dockerfile
+          - name: auditservice
+            context: ./backend
+            dockerfile: ./backend/AuditService/Dockerfile
+          - name: idempotencyservice
+            context: ./backend
+            dockerfile: ./backend/IdempotencyService/Dockerfile
+          - name: adminservice
+            context: ./backend
+            dockerfile: ./backend/AdminService/Dockerfile
+          - name: contactservice
+            context: ./backend
+            dockerfile: ./backend/ContactService/Dockerfile
+          - name: dealermanagementservice
+            context: ./backend
+            dockerfile: ./backend/DealerManagementService/Dockerfile
+          - name: chatbotservice
+            context: ./backend
+            dockerfile: ./backend/ChatbotService/Dockerfile
+          - name: maintenanceservice
+            context: ./backend
+            dockerfile: ./backend/MaintenanceService/Dockerfile
+          - name: comparisonservice
+            context: ./backend
+            dockerfile: ./backend/ComparisonService/Dockerfile
+          - name: alertservice
+            context: ./backend
+            dockerfile: ./backend/AlertService/Dockerfile
+          - name: reviewservice
+            context: ./backend
+            dockerfile: ./backend/ReviewService/Dockerfile
+          - name: crmservice
+            context: ./backend
+            dockerfile: ./backend/CRMService/Dockerfile
 
     steps:
       - name: 📥 Checkout

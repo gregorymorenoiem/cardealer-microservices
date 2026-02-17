@@ -183,22 +183,11 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME || github.actor }}
           password: ${{ secrets.REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
 
-      - name: 🔧 Determine API folder name
-        id: api-folder
-        run: |
-          if [ -n "${{ inputs.api-folder-name }}" ]; then
-            echo "name=${{ inputs.api-folder-name }}" >> $GITHUB_OUTPUT
-          else
-            # Extract PascalCase service name from path (e.g., backend/AuthService -> AuthService)
-            SERVICE_PASCAL=$(basename "${{ inputs.service-path }}")
-            echo "name=${SERVICE_PASCAL}.Api" >> $GITHUB_OUTPUT
-          fi
-
       - name: 🏗️ Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          file: ${{ inputs.service-path }}/${{ steps.api-folder.outputs.name }}/Dockerfile
+          file: ${{ inputs.service-path }}/Dockerfile
           push: ${{ inputs.run-docker-push }}
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}

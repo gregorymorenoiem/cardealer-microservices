@@ -27,20 +27,28 @@ FROM build AS publish
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 3: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
+EXPOSE 8080
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
 
 # Security: run as non-root
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Docker
+
 USER appuser
 
 # Copy published app
-COPY --from=publish /app/publish .
+COPY --from=publish --chown=appuser:appuser /app/publish .
 
-# Environment
-ENV ASPNETCORE_ENVIRONMENT=Production \
-    ASPNETCORE_URLS=http://+:80
-
-EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "VehiclesSaleService.Api.dll"]

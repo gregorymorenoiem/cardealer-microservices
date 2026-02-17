@@ -64,6 +64,8 @@ jobs:
       idempotencyservice: ${{ steps.filter.outputs.idempotencyservice }}
       adminservice: ${{ steps.filter.outputs.adminservice }}
       gateway: ${{ steps.filter.outputs.gateway }}
+      # Dealer Management
+      dealermanagementservice: ${{ steps.filter.outputs.dealermanagementservice }}
       # Chatbot (MLOps pipeline)
       chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
       llm-server: ${{ steps.filter.outputs.llm-server }}
@@ -152,6 +154,9 @@ jobs:
             adminservice:
               - 'backend/AdminService/**'
               - 'backend/_Shared/**'
+            dealermanagementservice:
+              - 'backend/DealerManagementService/**'
+              - 'backend/_Shared/**'
             chatbotservice:
               - 'backend/ChatbotService/ChatbotService.Api/**'
               - 'backend/ChatbotService/ChatbotService.Application/**'
@@ -168,7 +173,7 @@ jobs:
               - 'backend/_Shared/**'
             # Frontend
             frontend-web:
-              - 'frontend/web/**'
+              - 'frontend/web-next/**'
             # Infrastructure
             infrastructure:
               - 'k8s/**'
@@ -194,6 +199,7 @@ jobs:
           echo "| AuditService | ${{ steps.filter.outputs.auditservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| IdempotencyService | ${{ steps.filter.outputs.idempotencyservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdminService | ${{ steps.filter.outputs.adminservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DealerManagementService | ${{ steps.filter.outputs.dealermanagementservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
@@ -431,6 +437,17 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
+  dealermanagementservice:
+    name: 🏢 DealerManagementService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.dealermanagementservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: dealermanagementservice
+      service-path: backend/DealerManagementService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
   gateway:
     name: 🌐 Gateway
     needs: detect-changes
@@ -467,7 +484,6 @@ jobs:
     uses: ./.github/workflows/_reusable-frontend.yml
     with:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
-      vite-api-url: "https://api.okla.com.do"
     secrets: inherit
 
   # ============================================
@@ -488,6 +504,7 @@ jobs:
       - auditservice
       - idempotencyservice
       - adminservice
+      - dealermanagementservice
       - chatbotservice
       - gateway
       - frontend-web
@@ -563,6 +580,7 @@ jobs:
       - auditservice
       - idempotencyservice
       - adminservice
+      - dealermanagementservice
       - chatbotservice
       - gateway
       - frontend-web
@@ -585,6 +603,7 @@ jobs:
           echo "| AuditService | ${{ needs.auditservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| IdempotencyService | ${{ needs.idempotencyservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdminService | ${{ needs.adminservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DealerManagementService | ${{ needs.dealermanagementservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
