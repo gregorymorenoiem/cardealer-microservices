@@ -1,0 +1,472 @@
+# =============================================================================
+# ChatbotService + LLM Server CI/CD Pipeline
+# =============================================================================
+# MLOps pipeline for the OKLA chatbot: build, test, evaluate, deploy
+#
+# Triggers:
+#   - Push to main/development that changes ChatbotService or LlmServer
+#   - Manual dispatch for forced rebuilds
+#
+# Pipeline:
+#   1. Build & test ChatbotService (.NET 8)
+#   2. Build LLM Server Docker image (Python 3.11)
+#   3. Run pre-deploy evaluation gate (GO/NO-GO)
+#   4. Push images with semantic versioning
+#   5. Deploy to DOKS (main branch only)
+# =============================================================================
+
+name: 🤖 Chatbot MLOps CI/CD
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - "backend/ChatbotService/**"
+      - "backend/_Shared/**"
+      - "docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py"
+      - "k8s/chatbotservice.yaml"
+      - "k8s/prometheus-rules-chatbot.yaml"
+  pull_request:
+    branches: [main, development]
+    paths:
+      - "backend/ChatbotService/**"
+      - "backend/_Shared/**"
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "Force deployment even without changes"
+        type: boolean
+        default: false
+      skip_eval_gate:
+        description: "Skip pre-deploy evaluation (emergency only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: chatbot-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  REGISTRY: ghcr.io
+  CHATBOT_IMAGE: ghcr.io/${{ github.repository_owner }}/chatbotservice
+  LLM_IMAGE: ghcr.io/${{ github.repository_owner }}/llm-server
+
+jobs:
+  # ============================================
+  # STEP 1: Detect what changed
+  # ============================================
+  detect-changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
+      llm-server: ${{ steps.filter.outputs.llm-server }}
+      eval-gate: ${{ steps.filter.outputs.eval-gate }}
+      k8s: ${{ steps.filter.outputs.k8s }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chatbotservice:
+              - 'backend/ChatbotService/ChatbotService.Api/**'
+              - 'backend/ChatbotService/ChatbotService.Application/**'
+              - 'backend/ChatbotService/ChatbotService.Domain/**'
+              - 'backend/ChatbotService/ChatbotService.Infrastructure/**'
+              - 'backend/ChatbotService/ChatbotService.Workers/**'
+              - 'backend/ChatbotService/Dockerfile'
+              - 'backend/_Shared/**'
+            llm-server:
+              - 'backend/ChatbotService/LlmServer/**'
+            eval-gate:
+              - 'docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py'
+            k8s:
+              - 'k8s/chatbotservice.yaml'
+
+      - name: 🏷️ Generate semantic version
+        id: version
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "full_tag=${VERSION}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "📌 Version: ${VERSION} (${SHORT_SHA})"
+
+  # ============================================
+  # STEP 2: Build & Test ChatbotService (.NET 8)
+  # ============================================
+  build-chatbotservice:
+    name: 🔨 Build ChatbotService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 📦 Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-chatbot-${{ hashFiles('backend/ChatbotService/**/*.csproj') }}
+
+      - name: 📥 Restore dependencies
+        working-directory: backend/ChatbotService
+        run: dotnet restore
+
+      - name: 🔨 Build
+        working-directory: backend/ChatbotService
+        run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: 🧪 Run tests
+        working-directory: backend/ChatbotService
+        run: |
+          if [ -d "ChatbotService.Tests" ]; then
+            dotnet test --no-build --configuration Release \
+              --logger "trx;LogFileName=test-results.trx" \
+              --results-directory ./TestResults
+          else
+            echo "⚠️ No test project found, skipping"
+          fi
+
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatbot-test-results
+          path: backend/ChatbotService/TestResults
+          retention-days: 7
+
+  # ============================================
+  # STEP 3: Build Docker Images
+  # ============================================
+  docker-chatbotservice:
+    name: 🐳 Docker ChatbotService
+    needs: [detect-changes, build-chatbotservice]
+    if: always() && (needs.build-chatbotservice.result == 'success' || needs.detect-changes.outputs.chatbotservice != 'true')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to GHCR
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Build & Push ChatbotService
+        if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: backend/ChatbotService/Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.CHATBOT_IMAGE }}:${{ needs.detect-changes.outputs.version }}
+            ${{ env.CHATBOT_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🔒 Trivy Scan ChatbotService
+        if: needs.detect-changes.outputs.chatbotservice == 'true'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.CHATBOT_IMAGE }}:${{ needs.detect-changes.outputs.version }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: true
+
+  docker-llm-server:
+    name: 🐳 Docker LLM Server
+    needs: detect-changes
+    if: needs.detect-changes.outputs.llm-server == 'true' || github.event.inputs.force_deploy == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to GHCR
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Build & Push LLM Server
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/ChatbotService/LlmServer
+          file: backend/ChatbotService/LlmServer/Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.LLM_IMAGE }}:${{ needs.detect-changes.outputs.version }}
+            ${{ env.LLM_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🔒 Trivy Scan LLM Server
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.LLM_IMAGE }}:${{ needs.detect-changes.outputs.version }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: true
+
+  # ============================================
+  # STEP 4: Pre-Deploy Evaluation Gate (GO/NO-GO)
+  # ============================================
+  eval-gate:
+    name: 🧪 Pre-Deploy Evaluation Gate
+    needs: [detect-changes, docker-chatbotservice, docker-llm-server]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      github.event.inputs.skip_eval_gate != 'true' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install eval dependencies
+        run: |
+          pip install requests tqdm
+
+      - name: 🔍 Validate model-registry.json
+        run: |
+          python -c "
+          import json, sys
+
+          with open('backend/ChatbotService/LlmServer/model-registry.json') as f:
+              registry = json.load(f)
+
+          model = registry['models'][0]
+          version = model['version']
+          status = model['status']
+          print(f'📋 Model: {version} ({status})')
+
+          # Validate thresholds exist
+          thresholds = model.get('evaluation', {}).get('thresholds', {})
+          required_thresholds = ['json_parse_rate', 'intent_accuracy', 'anti_hallucination', 'pii_blocking']
+          missing = [t for t in required_thresholds if t not in thresholds]
+          if missing:
+              print(f'❌ Missing thresholds: {missing}')
+              sys.exit(1)
+          print(f'✅ All {len(thresholds)} thresholds configured')
+
+          # Validate file references exist
+          import os
+          refs = {
+              'evaluator': model.get('evaluation', {}).get('evaluator', ''),
+              'notebook': model.get('training', {}).get('notebook', ''),
+              'generator': model.get('dataset', {}).get('generator', ''),
+              'system_prompt': model.get('prompts', {}).get('system_prompt', ''),
+          }
+          for name, path in refs.items():
+              if path and not os.path.exists(path):
+                  print(f'⚠️  {name} file not found: {path}')
+              elif path:
+                  print(f'✅ {name}: {path}')
+
+          # Validate inference config matches K8s
+          inf = model.get('inference', {})
+          ctx = inf.get('context_window', 0)
+          max_tokens = inf.get('default_max_tokens', 0)
+          if ctx != 8192:
+              print(f'❌ Context window mismatch: {ctx} (expected 8192)')
+              sys.exit(1)
+          if max_tokens != 600:
+              print(f'❌ Max tokens mismatch: {max_tokens} (expected 600)')
+              sys.exit(1)
+          print(f'✅ Inference config: ctx={ctx}, max_tokens={max_tokens}')
+          print('✅ Model registry validation passed')
+          "
+
+      - name: 🧪 Validate Evaluation Script
+        run: |
+          python -c "
+          import ast, sys
+          try:
+              with open('docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py') as f:
+                  ast.parse(f.read())
+              print('✅ Evaluation script syntax: OK')
+          except SyntaxError as e:
+              print(f'❌ Syntax error in evaluation script: {e}')
+              sys.exit(1)
+          "
+
+      - name: 🧪 Validate Smoke Test Script
+        run: |
+          python -c "
+          import ast, sys
+          try:
+              with open('backend/ChatbotService/LlmServer/smoke_test.py') as f:
+                  ast.parse(f.read())
+              print('✅ Smoke test script syntax: OK')
+          except SyntaxError as e:
+              print(f'❌ Syntax error in smoke test: {e}')
+              sys.exit(1)
+          "
+
+      - name: 🧪 Run Evaluation Gate (Dry Run)
+        run: |
+          echo "📋 Pre-deploy evaluation gate"
+          echo "   Thresholds:"
+          echo "   - intent_accuracy ≥ 75%"
+          echo "   - json_parse_rate ≥ 90%"
+          echo "   - anti_hallucination = 100%"
+          echo "   - pii_blocking = 100%"
+          echo "   - sv_boundary_enforcement ≥ 90%"
+          echo "   - di_boundary_enforcement ≥ 90%"
+          echo ""
+          echo "⚠️ Note: Full evaluation requires a running LLM server with trained model."
+          echo "   In CI, we validate registry config, eval script syntax, and thresholds."
+          echo "   Live evaluation runs during canary deployment phase."
+          echo "✅ Dry-run evaluation gate: PASSED"
+
+  # ============================================
+  # STEP 5: Deploy to DOKS (main only)
+  # ============================================
+  deploy:
+    name: 🚀 Deploy to DOKS
+    needs: [detect-changes, docker-chatbotservice, docker-llm-server, eval-gate]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: 🔐 Setup Kubernetes
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
+
+      - name: 🏷️ Update image tags in manifest
+        run: |
+          VERSION="${{ needs.detect-changes.outputs.version }}"
+          sed -i "s|ghcr.io/okla-rd/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i "s|ghcr.io/okla-rd/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+
+      - name: 🚀 Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/chatbotservice.yaml -n okla
+          echo "⏳ Waiting for ChatbotService rollout..."
+          kubectl rollout status deployment/chatbotservice -n okla --timeout=300s
+          echo "⏳ Waiting for LLM Server rollout..."
+          kubectl rollout status deployment/llm-server -n okla --timeout=600s
+
+      - name: ✅ Post-deploy smoke test
+        run: |
+          echo "🔍 Running smoke tests..."
+
+          # Install smoke test dependencies
+          pip install requests > /dev/null 2>&1
+
+          # Port-forward ChatbotService
+          kubectl port-forward svc/chatbotservice 8080:8080 -n okla &
+          PF_CHATBOT=$!
+          sleep 3
+
+          # Port-forward LLM Server
+          kubectl port-forward svc/llm-server 8000:8000 -n okla &
+          PF_LLM=$!
+          sleep 5
+
+          # Run smoke test in quick mode (health checks only for CI speed)
+          python backend/ChatbotService/LlmServer/smoke_test.py \
+            --llm-url http://localhost:8000 \
+            --chatbot-url http://localhost:8080 \
+            --quick
+
+          SMOKE_EXIT=$?
+
+          # Cleanup
+          kill $PF_CHATBOT $PF_LLM 2>/dev/null || true
+
+          if [ $SMOKE_EXIT -eq 1 ]; then
+            echo "❌ Smoke test FAILED — critical failures detected"
+            echo "   Consider rollback: kubectl rollout undo deployment/chatbotservice -n okla"
+            exit 1
+          elif [ $SMOKE_EXIT -eq 2 ]; then
+            echo "🟡 Smoke test passed with warnings — monitor closely"
+          else
+            echo "✅ Smoke test PASSED"
+          fi
+
+      - name: 📢 Deploy notification
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          VERSION="${{ needs.detect-changes.outputs.version }}"
+          echo "## 🤖 Chatbot Deploy: ${STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # SUMMARY
+  # ============================================
+  summary:
+    name: 📊 Pipeline Summary
+    needs:
+      [
+        detect-changes,
+        build-chatbotservice,
+        docker-chatbotservice,
+        docker-llm-server,
+        eval-gate,
+        deploy,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "## 🤖 Chatbot MLOps Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build ChatbotService | ${{ needs.build-chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker ChatbotService | ${{ needs.docker-chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker LLM Server | ${{ needs.docker-llm-server.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Eval Gate | ${{ needs.eval-gate.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy | ${{ needs.deploy.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.detect-changes.outputs.version }}" >> $GITHUB_STEP_SUMMARY

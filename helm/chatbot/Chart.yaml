@@ -1,0 +1,29 @@
+# ============================================================================
+# Helm Chart — OKLA ChatbotService + LLM Server
+# ============================================================================
+# R18 (MLOps): Helm chart scaffold for parameterized K8s deployments.
+#
+# Install:
+#   helm install chatbot ./helm/chatbot -n okla --create-namespace
+#
+# Upgrade:
+#   helm upgrade chatbot ./helm/chatbot -n okla -f values-production.yaml
+#
+# Dry run:
+#   helm install chatbot ./helm/chatbot -n okla --dry-run --debug
+# ============================================================================
+
+apiVersion: v2
+name: okla-chatbot
+description: OKLA ChatbotService + LLM Server Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - chatbot
+  - llm
+  - ai
+  - okla
+maintainers:
+  - name: OKLA Team
+    url: https://okla.com.do

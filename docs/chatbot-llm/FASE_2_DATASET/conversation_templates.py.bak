@@ -1,0 +1,4892 @@
+"""
+Templates de conversaciones por IntentCategory para OKLA Chatbot LLM.
+Cada template define:
+  - user_templates: variantes de mensajes del usuario (informal, semi-formal, formal, whatsapp)
+  - assistant_template: función que genera la respuesta JSON del asistente
+  - multi_turn_chains: secuencias de intents para conversaciones multi-turno
+
+REEMPLAZA COMPLETAMENTE a Google Dialogflow ES.
+Las respuestas del asistente son JSON estructurado, NO texto plano.
+"""
+
+import random
+import json
+from typing import Any
+
+
+# ============================================================
+# RESPONSE VARIATION HELPERS
+# ============================================================
+
+def _rand_conf(low: float, high: float) -> float:
+    """Random confidence value in [low, high], rounded to 2 decimals."""
+    return round(random.uniform(low, high), 2)
+
+
+def _pick(lst: list):
+    """Pick a random item from a list."""
+    return random.choice(lst)
+
+
+# ============================================================
+# DOMINICAN SPANISH VARIATIONS
+# ============================================================
+
+GREETINGS_INFORMAL = [
+    "klk", "que lo que", "dime a ver", "hey", "buenas",
+    "ey dimelo", "wena", "alo", "oye", "ey",
+]
+GREETINGS_SEMIFORMAL = [
+    "Buenos días", "Buenas tardes", "Buenas noches", "Hola",
+    "Hola, buenas", "Buen día", "Saludos",
+]
+GREETINGS_FORMAL = [
+    "Muy buenos días", "Cordial saludo", "Buenas tardes, quisiera información",
+]
+
+FAREWELLS = [
+    "gracias, bye", "tato, gracias", "ok perfecto gracias", "hasta luego",
+    "chao", "dale gracias", "listo, bendiciones", "ok ta bien gracias",
+    "muchas gracias por la info", "perfecto, luego te escribo",
+    "nos vemos", "hasta mañana", "bueno, gracias", "me retiro, gracias",
+    "todo bien, hasta luego", "adiós y gracias", "fue un placer, chao",
+    "bendiciones, bye", "ok me voy, gracias", "ya yo me voy",
+]
+
+# Body type synonyms in Dominican Spanish
+BODY_TYPE_SLANG = {
+    "yipeta": ["SUV", "Crossover"],
+    "guagua": ["Van", "Minivan"],
+    "camioneta": ["Pickup"],
+    "carro": ["Sedán", "Hatchback", "SUV"],
+    "motor": ["Motocicleta"],
+    "pasola": ["Scooter"],
+    "jeepeta": ["SUV"],
+}
+
+PRICE_EXPRESSIONS = {
+    "pela'o": {"max": 1200000},
+    "barato": {"max": 1500000},
+    "económico": {"max": 1500000},
+    "no muy caro": {"max": 2000000},
+    "precio medio": {"min": 1500000, "max": 3000000},
+    "algo bueno": {"min": 2000000, "max": 4000000},
+    "premium": {"min": 4000000},
+    "de lujo": {"min": 5000000},
+}
+
+AFFIRMATIVES = ["sí", "si", "claro", "dale", "tato", "ok", "perfecto", "va", "está bien", "seguro"]
+NEGATIVES = ["no", "nel", "nah", "no gracias", "ahora no", "después", "luego"]
+
+
+# ============================================================
+# INTENT: Greeting (1)
+# ============================================================
+
+GREETING_USER_TEMPLATES = [
+    # Informal Dominican
+    "klk",
+    "que lo que",
+    "dime a ver",
+    "hey necesito ayuda",
+    "ey buenas",
+    "hola hola",
+    "dimelo ahi",
+    "wena",
+    "alo?",
+    "epa",
+    "oye",
+    "ey klk",
+    "dime",
+    "buenas buenas",
+    "wepa",
+    "hey hey",
+    "que hay de nuevo",
+    "klk mi pana",
+    "ey loco necesito ayuda",
+    "dimelo que necesito un carro",
+    # Semi-formal
+    "Hola, buenas tardes",
+    "Buenos días, necesito información",
+    "Hola, estoy buscando un vehículo",
+    "Buenas, me pueden ayudar?",
+    "Saludos, quisiera saber sobre sus vehículos",
+    "Hola, tienen vehículos disponibles?",
+    "Buenas tardes, me interesa comprar un carro",
+    "Hola buenas, ando buscando un vehículo",
+    "Buenos dias",
+    "Buenas noches, están disponibles?",
+    "Hola, una consulta",
+    "Buenas, quiero información por favor",
+    "Hola! Estoy interesado en sus vehículos",
+    # Formal
+    "Muy buenos días, quisiera información sobre vehículos disponibles",
+    "Cordial saludo, estoy interesado en adquirir un vehículo",
+    "Buenas tardes, quisiera conocer su inventario de vehículos",
+    "Estimados, me gustaría información sobre sus vehículos en venta",
+    # WhatsApp / con errores
+    "hla q hay",
+    "ola tngo una prgnta",
+    "holaa",
+    "olaa buenas",
+    "hla buenas tardes",
+    "ola kiero informacion",
+    "bnas tardes",
+    "bnos dias",
+    "hola bnas",
+    "ola q tal",
+    "holaaa",
+    "wenas",
+    # Solo emoji
+    "👋",
+    "🚗",
+    "hola 👋",
+]
+
+def greeting_response(dealer: dict, **kwargs) -> dict:
+    bot_name = dealer.get("botName", "OKLA AI")
+    response = _pick([
+        (
+            f"¡Hola! 👋 Soy {bot_name}, tu asistente virtual de {dealer['name']}. "
+            f"Estoy aquí para ayudarte a encontrar el vehículo perfecto. "
+            f"¿Qué tipo de vehículo estás buscando?"
+        ),
+        (
+            f"¡Bienvenido a {dealer['name']}! 🚗 Soy {bot_name}, tu asistente de ventas. "
+            f"Tenemos una gran variedad de vehículos disponibles. "
+            f"¿En qué puedo ayudarte hoy?"
+        ),
+        (
+            f"Hola, bienvenido a {dealer['name']}. Soy {bot_name}, tu asistente virtual. "
+            f"Puedo ayudarte a buscar vehículos, conocer precios, opciones de financiamiento y más. "
+            f"¿Qué necesitas?"
+        ),
+        (
+            f"¡Qué tal! 😊 Soy {bot_name} de {dealer['name']}. "
+            f"Estoy listo para ayudarte con todo lo relacionado a vehículos: "
+            f"búsqueda, precios, financiamiento, test drives y más. ¿Cómo te ayudo?"
+        ),
+        (
+            f"Hola, gracias por escribirnos a {dealer['name']}. "
+            f"Soy {bot_name} y puedo asistirte con nuestra oferta de vehículos. "
+            f"¿Estás buscando algo en particular?"
+        ),
+    ])
+    return {
+        "response": response,
+        "intent": "Greeting",
+        "confidence": _rand_conf(0.95, 0.99),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🚗 Ver SUVs", "💰 Vehículos económicos", "🔍 Buscar por marca", "📞 Contactar asesor"],
+            ["🔍 Ver catálogo", "💰 Precios y ofertas", "📍 Ubicación", "❓ Ayuda"],
+            ["🚗 Buscar vehículo", "💰 Financiamiento", "📅 Agendar visita", "📞 Hablar con asesor"],
+            ["Ver inventario", "Buscar por precio", "Financiamiento", "Contactar ventas"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehicleSearch (10)
+# ============================================================
+
+VEHICLE_SEARCH_USER_TEMPLATES = [
+    # Informal - price
+    "tienen algo pela'o?",
+    "qué yipeta hay por ahí que no sea muy cara?",
+    "quiero una yipeta que no pase de 2 millones",
+    "tienen carros baratos?",
+    "algo económico pa empezar",
+    "dame algo por ahí por un millón",
+    "qué hay de carros como por 1.5 millones?",
+    "busco algo barato pero que se vea chivo",
+    "que hay por ahi de 3 palos pa bajo",
+    "dame algo jevi que no cueste mucho",
+    "hay algo nuevo x menos de 2M?",
+    "kiero algo baratito",
+    "q tienen por un millon?",
+    # Informal - type
+    "tienen yipetas?",
+    "quiero una camioneta",
+    "busco un carro familiar",
+    "necesito una guagua grande",
+    "tienen pickups?",
+    "algo deportivo hay?",
+    "tienen jeepetas?",
+    "quiero una yipeta grande",
+    "hay sedanes?",
+    "busco algo chiquito pa la ciudad",
+    "algo pa trabajo, una pickup",
+    "tienen algo todoterreno?",
+    "busco una doble cabina",
+    "hay algun carro hibrido?",
+    "tienen carros eléctricos?",
+    # Semi-formal - specific
+    "Estoy buscando un SUV automático",
+    "Busco un sedán 2024 que sea económico",
+    "¿Tienen Toyota RAV4 disponible?",
+    "Me interesa un Hyundai Tucson",
+    "Busco un vehículo familiar con 7 asientos",
+    "¿Qué SUVs tienen en menos de 3 millones?",
+    "Necesito un carro para la ciudad, algo compacto",
+    "Busco algo con buen rendimiento de gasolina",
+    "¿Tienen vehículos diesel?",
+    "Quiero ver las pickups disponibles",
+    "Necesito algo automático y económico",
+    "Busco un carro del 2023 o 2024",
+    "Quiero algo con poco millaje",
+    "Tienen algo de Honda o Toyota?",
+    "Busco un carro blanco, SUV de preferencia",
+    "Necesito un vehículo con buen espacio de carga",
+    "Tienen algo en oferta?",
+    "Cuáles son los vehículos más nuevos que tienen?",
+    "Me interesa algo con tracción 4x4",
+    "Quiero algo seguro para mi familia",
+    # Semi-formal - budget specific
+    "Tengo un presupuesto de 2.5 millones, qué me recomiendan?",
+    "Busco algo entre 1.5 y 2.5 millones",
+    "¿Qué vehículos tienen por debajo de millón y medio?",
+    "Ando buscando algo de unos 30 mil dólares",
+    "Mi presupuesto es de 3 millones máximo",
+    "Quiero gastar entre 2 y 3 millones",
+    "No quiero gastar más de 4 millones",
+    # Formal
+    "Quisiera ver el catálogo de SUVs disponibles en su concesionario",
+    "¿Podrían mostrarme los vehículos que tienen en el rango de 3 a 5 millones?",
+    "Me gustaría conocer qué vehículos tienen disponibles para compra inmediata",
+    # WhatsApp style / con errores
+    "q yipetas tienen",
+    "hay algo x ahi como x 2 palos",
+    "tngo 1.5M q m pueden ofrecer",
+    "kiero un caro bueno",
+    "q carros tinen?",
+    "tienen behiculos?",
+    "busco un behiculo",
+    "q tienen d Toyota",
+    "muestrame los carros",
+    "tienen algo bonito x ahi",
+    "quiero ber los carros",
+]
+
+def vehicle_search_response(dealer: dict, vehicles: list, **kwargs) -> dict:
+    """Generate a vehicle search response with matching vehicles."""
+    query = kwargs.get("query", "")
+    matched = vehicles[:3]  # Simplified; real generator will filter
+
+    vehicle_text = ""
+    for i, v in enumerate(matched, 1):
+        vehicle_text += (
+            f"\n{i}. **{v['make']} {v['model']} {v['year']} {v.get('trim', '')}**\n"
+            f"   💰 RD${v['price']:,.0f} | 📍 {v['mileage']:,} km | ⛽ {v['fuelType']} | "
+            f"🔄 {v['transmission']}\n"
+        )
+
+    opening = _pick([
+        f"¡Excelente! De nuestro inventario actual, tengo estas opciones:",
+        f"Mira lo que encontré en nuestro inventario para ti:",
+        f"Aquí te muestro las opciones disponibles en inventario:",
+        f"Según nuestro inventario, tenemos estos vehículos:",
+        f"De lo que tenemos disponible, encontré estas opciones:",
+        f"Revisando nuestro inventario, te puedo ofrecer:",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría saber más de alguno en particular?",
+        "¿Cuál te llama más la atención?",
+        "¿Quieres que te dé más detalles de alguno?",
+        "¿Alguno te interesa? Puedo darte más información.",
+    ])
+
+    first_make = matched[0]['make'] if matched else "Ver"
+    first_model = matched[0]['model'] if matched else "todo"
+
+    return {
+        "response": f"{opening}\n{vehicle_text}\n{closing}",
+        "intent": "VehicleSearch",
+        "confidence": _rand_conf(0.88, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "bodyType": kwargs.get("bodyType"),
+            "maxPrice": kwargs.get("maxPrice"),
+            "minPrice": kwargs.get("minPrice"),
+            "fuelType": kwargs.get("fuelType"),
+            "transmission": kwargs.get("transmission"),
+            "make": kwargs.get("make"),
+            "currency": "DOP"
+        },
+        "leadSignals": {
+            "mentionedBudget": kwargs.get("maxPrice") is not None or kwargs.get("minPrice") is not None,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            [f"📋 Más info {first_make} {first_model}", "💰 Ver financiamiento", "🚗 Agendar test drive"],
+            [f"📋 Detalles {first_make}", "💰 Precios", "📞 Contactar asesor"],
+            ["Ver más opciones", "Filtrar por precio", "Hablar con asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehicleDetails (11)
+# ============================================================
+
+VEHICLE_DETAILS_USER_TEMPLATES = [
+    # Direct references
+    "Dime más de la {make} {model}",
+    "Qué más me puedes decir de la {make} {model}?",
+    "Cuéntame sobre la {make} {model} {year}",
+    "Quiero saber más de esa {make}",
+    "Dame los detalles de la {make} {model}",
+    "Qué tiene la {make} {model}?",
+    "La {make} {model} tiene cámara de reversa?",
+    "Esa {make} viene full?",
+    "Qué accesorios tiene la {make} {model}?",
+    "Qué incluye la {make} {model}?",
+    "Háblame de la {make} {model}",
+    "Cómo es la {make} {model}?",
+    "Dame toda la información de la {make} {model}",
+    "La {make} {model} qué trae?",
+    "Info completa de la {make} {model} por favor",
+    "Especificaciones de la {make} {model}",
+    "Dame el detalle completo de la {make}",
+    # Context references (from prior search)
+    "La segunda opción, dame más info",
+    "Me interesa la primera, cuéntame más",
+    "La opción 2 por favor",
+    "Me gusta la primera opción",
+    "Dime más de la tercera",
+    "La del medio, cuéntame más",
+    "Esa que mencionaste, dame más detalles",
+    "La última opción me interesa",
+    # WhatsApp / typos
+    "dime mas d la {make}",
+    "q trae la {make} {model}?",
+    "cuentame d esa {make}",
+    "informacion de la {make} {model}",
+    "hablame d la {make}",
+    "dame info de esa",
+    "cmo es esa {make}?",
+    "esa viene full equipo?",
+]
+
+def vehicle_details_response(dealer: dict, vehicle: dict, **kwargs) -> dict:
+    sale_tag = ""
+    if vehicle.get("isOnSale") and vehicle.get("originalPrice"):
+        sale_tag = f" ~~RD${vehicle['originalPrice']:,.0f}~~ 🏷️ ¡EN OFERTA!"
+
+    opening = _pick([
+        f"📋 **{vehicle['make']} {vehicle['model']} {vehicle['year']} {vehicle.get('trim', '')}**",
+        f"Aquí tienes la info de la **{vehicle['make']} {vehicle['model']} {vehicle['year']} {vehicle.get('trim', '')}**",
+        f"Te comparto los detalles de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**",
+        f"**{vehicle['make']} {vehicle['model']} {vehicle['year']} {vehicle.get('trim', '')}** — Aquí están los detalles",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría agendar un test drive o conocer las opciones de financiamiento?",
+        "¿Quieres probarlo en persona o conocer el financiamiento?",
+        "¿Te interesa agendar una visita para verlo?",
+        "¿Alguna pregunta adicional sobre este vehículo?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"💰 **Precio:** RD${vehicle['price']:,.0f}{sale_tag}\n"
+            f"📍 **Kilometraje:** {vehicle['mileage']:,} km\n"
+            f"⛽ **Combustible:** {vehicle['fuelType']}\n"
+            f"🔄 **Transmisión:** {vehicle['transmission']}\n"
+            f"🎨 **Color exterior:** {vehicle.get('exteriorColor', 'N/A')}\n"
+            f"🪑 **Color interior:** {vehicle.get('interiorColor', 'N/A')}\n"
+            f"🔧 **Motor:** {vehicle.get('engineSize', 'N/A')}\n\n"
+            f"📝 {vehicle.get('description', '')}\n\n"
+            f"{closing}"
+        ),
+        "intent": "VehicleDetails",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"],
+            "make": vehicle["make"],
+            "model": vehicle["model"],
+            "year": vehicle["year"]
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🚗 Agendar test drive", "💰 Ver financiamiento", "📸 Ver fotos", "🔄 Comparar"],
+            ["💰 Cuánto cuesta?", "🚗 Probar en persona", "📞 Contactar asesor"],
+            ["Ver precio", "Agendar visita", "Comparar con otro", "Hablar con asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehiclePrice (14)
+# ============================================================
+
+VEHICLE_PRICE_USER_TEMPLATES = [
+    # Direct price questions
+    "Cuánto cuesta la {make} {model}?",
+    "Qué precio tiene la {make} {model}?",
+    "A cómo sale la {make} {model}?",
+    "En cuánto está la {make}?",
+    "Cuánto sale esa?",
+    "Cuál es el precio?",
+    "Precio final de la {make} {model}?",
+    "Cuál es el valor de la {make} {model}?",
+    "A cuánto la venden?",
+    "Cuánto piden por la {make}?",
+    "Cuánto cuesta esa?",
+    "Precio de la {make} {model} {year}?",
+    "La {make} {model} en cuánto la tienen?",
+    # Negotiation / discounts
+    "Están dando descuento?",
+    "Se puede negociar el precio?",
+    "Hay alguna promoción?",
+    "A cuánto la dejan?",
+    "Hacen rebaja?",
+    "Cuál es lo menos que la dan?",
+    "Me la pueden dejar en menos?",
+    "Si la pago de contado, cuánto me rebajan?",
+    "Tienen algún descuento especial?",
+    "Se puede regatear?",
+    "Cuál es el mejor precio que me pueden dar?",
+    "Me dan un descuentito?",
+    # WhatsApp / typos
+    "cuanto cuesta?",
+    "cuanto sale la {make}?",
+    "a como la dan?",
+    "presio?",
+    "cuanto?",
+    "precio?",
+    "q presio tiene?",
+    "a cuanto?",
+    "cuanto vale esa {make}?",
+]
+
+def vehicle_price_response(dealer: dict, vehicle: dict, **kwargs) -> dict:
+    price_text = f"RD${vehicle['price']:,.0f}"
+    if vehicle.get("isOnSale") and vehicle.get("originalPrice"):
+        savings = vehicle["originalPrice"] - vehicle["price"]
+        price_text += f"\n\n🏷️ **¡Precio especial!** Antes: RD${vehicle['originalPrice']:,.0f} — Te ahorras RD${savings:,.0f}"
+
+    opening = _pick([
+        f"💰 El precio de la **{vehicle['make']} {vehicle['model']} {vehicle['year']} {vehicle.get('trim', '')}** es **{price_text}**.",
+        f"La **{vehicle['make']} {vehicle['model']} {vehicle['year']}** tiene un precio de **{price_text}**.",
+        f"El valor de la **{vehicle['make']} {vehicle['model']} {vehicle['year']} {vehicle.get('trim', '')}** es de **{price_text}**.",
+        f"**{vehicle['make']} {vehicle['model']} {vehicle['year']}**: **{price_text}**.",
+    ])
+
+    closing = _pick([
+        "Este precio está sujeto a disponibilidad. "
+        "También ofrecemos planes de financiamiento con nuestros bancos aliados. "
+        "¿Te gustaría conocer las opciones de financiamiento?",
+        "Recuerda que tenemos opciones de financiamiento disponibles. "
+        "¿Quieres que te cuente más?",
+        "Precio sujeto a disponibilidad. "
+        "¿Te gustaría agendar una visita para verlo en persona?",
+        "Podemos ofrecerte financiamiento con excelentes condiciones. "
+        "¿Te interesa conocer las cuotas mensuales?",
+    ])
+
+    return {
+        "response": f"{opening}\n\n{closing}",
+        "intent": "VehiclePrice",
+        "confidence": _rand_conf(0.92, 0.98),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"],
+            "price": vehicle["price"],
+            "currency": "DOP",
+            "isOnSale": vehicle.get("isOnSale", False)
+        },
+        "leadSignals": {
+            "mentionedBudget": True,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["💰 Ver financiamiento", "🚗 Agendar test drive", "🔄 Ver otras opciones"],
+            ["🧮 Calcular cuota", "📞 Contactar asesor", "🚗 Test drive"],
+            ["Ver financiamiento", "Agendar visita", "Ver otros vehículos"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: FinancingInfo (20)
+# ============================================================
+
+FINANCING_INFO_USER_TEMPLATES = [
+    # Semi-formal
+    "Tienen financiamiento?",
+    "Se puede financiar?",
+    "Cómo funciona el financiamiento?",
+    "Con qué bancos trabajan?",
+    "Cuánto hay que dar de inicial?",
+    "Financian a 60 meses?",
+    "Cuáles son los requisitos para financiar?",
+    "Puedo financiar la {make} {model}?",
+    "Quiero saber del financiamiento",
+    "Hacen préstamo?",
+    "Qué planes de pago tienen?",
+    "Cuánto sale la cuota mensual?",
+    "Aceptan el vehículo como parte de pago?",
+    "Necesito financiar, qué opciones hay?",
+    # Dominican informal
+    "Oye y eso se puede financiar o es de contado na más?",
+    "Klk, y el financiamiento cómo es?",
+    "Dimelo, cuánto hay que dar de pronto?",
+    "Y se puede sacar a plazos?",
+    "Mano, cuánto me sale mensual si financio?",
+    "Pa financiar qué papeles hay que llevar?",
+    "Y sin inicial se puede financiar?",
+    "Cuánto me queda la cuota de la {make}?",
+    "Trabajan con Banreservas?",
+    "Hacen financiamiento con el Popular?",
+    "Y se puede financiar a 72 meses?",
+    "Y si no tengo récord crediticio?",
+    "Y la inicial se puede pagar con tarjeta?",
+    # Formal / specific
+    "Me gustaría conocer las opciones de financiamiento disponibles",
+    "Quisiera información sobre los planes de financiamiento para la {make} {model}",
+    "Cuál es la tasa de interés actual para financiamiento?",
+    "Ofrecen financiamiento directo o solo a través de bancos?",
+    "Necesito financiar sin prima, es posible?",
+    # WhatsApp / typos
+    "financiamiento?",
+    "como es lo del financiamientoo?",
+    "finanaciamiento tienen?",
+    "cuanto es la cuota?",
+    "q requisitos piden pa finanziar?",
+    "tienen financiameinto?",
+    "se financia?",
+]
+
+def financing_info_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    partners = ", ".join(dealer.get("financingPartners", ["nuestros bancos aliados"]))
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" para la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+
+    opening = _pick([
+        f"💰 **Opciones de Financiamiento{vehicle_text}**",
+        f"Te cuento sobre nuestras opciones de financiamiento{vehicle_text}",
+        f"**Información de Financiamiento{vehicle_text}**",
+        f"Aquí tienes los detalles del financiamiento{vehicle_text}",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría que un asesor te contacte para evaluar tu caso?",
+        "¿Quieres que un asesor te ayude a calcular tu cuota?",
+        "¿Necesitas más detalles? Un asesor puede darte información personalizada.",
+        "¿Te interesa que calculemos la cuota para un vehículo específico?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"Trabajamos con {partners} para ofrecerte las mejores condiciones:\n\n"
+            f"📌 **Inicial:** Desde el 20% del valor del vehículo\n"
+            f"📌 **Plazo:** 24 a 72 meses\n"
+            f"📌 **Tasa:** Desde 8.5% anual (sujeto a aprobación)\n\n"
+            f"**Requisitos básicos:**\n"
+            f"• Cédula de identidad vigente\n"
+            f"• Comprobante de ingresos (últimos 3 meses)\n"
+            f"• Récord crediticio favorable\n"
+            f"• Carta de trabajo o estados financieros\n\n"
+            f"⚠️ *Las tasas y condiciones exactas dependen del banco y tu perfil crediticio. "
+            f"Un asesor puede darte los detalles específicos.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "FinancingInfo",
+        "confidence": _rand_conf(0.90, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "financingPartners": dealer.get("financingPartners", [])
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": True,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📞 Contactar asesor", "🧮 Calcular cuota", "📋 Ver requisitos completos"],
+            ["📞 Hablar con asesor", "🚗 Ver vehículos", "💰 Compra al contado"],
+            ["Contactar asesor", "Calcular cuota mensual", "Ver vehículos disponibles"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: TestDriveSchedule (30)
+# ============================================================
+
+TEST_DRIVE_USER_TEMPLATES = [
+    # Semi-formal
+    "Quiero hacer un test drive",
+    "Puedo probar la {make} {model}?",
+    "Cómo agendo un test drive?",
+    "Me gustaría probar el carro antes de comprar",
+    "Se puede ir a ver el carro?",
+    "Quiero verlo en persona",
+    "Puedo pasar a verlo?",
+    "Quiero agendar una prueba de manejo",
+    "Cuándo puedo ir a probar la {make}?",
+    "Tienen disponibilidad para test drive mañana?",
+    "Me lo dejan probar?",
+    "Quiero manejarlo a ver qué tal",
+    # Dominican informal
+    "Oye y puedo ir a probarlo?",
+    "Dimelo, cuándo puedo ir a ver ese carro?",
+    "Mano, quiero ver esa {make} en persona",
+    "Puedo pasarme mañana a ver el carro?",
+    "Déjame ir a manejar eso a ver qué tal",
+    "Lo puedo probar este sábado?",
+    "Puedo ir hoy mismo a verlo?",
+    "Quiero ir a ver la {make} {model} en persona antes de decidir",
+    "Cuándo me puedo pasar por ahí?",
+    # Formal
+    "Quisiera agendar una cita para ver el vehículo",
+    "Me gustaría coordinar una visita al concesionario",
+    "Podrían reservarme un espacio para probar la {make}?",
+    # WhatsApp / typos
+    "test drive?",
+    "puedo ir a berlo?",
+    "quiero probar el caro",
+    "kiero ir a ver eso",
+    "cuando puedo ir?",
+    "se puede agendar para mañana?",
+    "puedo probarlo manana?",
+    "quiero manejarlo",
+    "quiero ber la {make} {model}",
+]
+
+def test_drive_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+
+    opening = _pick([
+        f"🚗 **¡Perfecto! Agendemos tu test drive{vehicle_text}**",
+        f"¡Excelente idea! Nada como probar el vehículo{vehicle_text} en persona.",
+        f"Con gusto te agendamos una prueba de manejo{vehicle_text}.",
+        f"¡Claro que sí! Puedes venir a probar el vehículo{vehicle_text}.",
+    ])
+
+    closing = _pick([
+        "¿Me compartes tu nombre para empezar?",
+        "¿Cuándo te gustaría venir?",
+        "¿Me das tu nombre y teléfono para confirmar la cita?",
+        "¿Qué día te queda mejor?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"📍 **Ubicación:** {dealer['location']}\n"
+            f"🕐 **Horarios disponibles:** Lunes a Viernes 8AM-6PM, Sábados 9AM-2PM\n\n"
+            f"Para agendar tu cita necesito:\n"
+            f"1️⃣ Tu **nombre completo**\n"
+            f"2️⃣ Tu **número de teléfono** o **WhatsApp**\n"
+            f"3️⃣ **Fecha y hora** preferida\n\n"
+            f"{closing}"
+        ),
+        "intent": "TestDriveSchedule",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "appointmentType": "test_drive",
+            "step": "request_name"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": True,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "SCHEDULE_APPOINTMENT",
+        "quickReplies": _pick([
+            ["📅 Mañana en la mañana", "📅 Este sábado", "📞 Prefiero llamar"],
+            ["📅 Hoy mismo", "📅 Mañana", "📅 Esta semana"],
+            ["Mañana", "Este fin de semana", "Llamar para coordinar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehicleComparison (12)
+# ============================================================
+
+VEHICLE_COMPARISON_USER_TEMPLATES = [
+    # Semi-formal
+    "Cuál es mejor, la {make1} {model1} o la {make2} {model2}?",
+    "Compara la {make1} {model1} con la {make2} {model2}",
+    "Qué diferencia hay entre la {make1} y la {make2}?",
+    "Entre la {make1} {model1} y la {make2} {model2}, cuál me recomiendas?",
+    "La {make1} es mejor que la {make2}?",
+    "Quiero comparar dos opciones",
+    "Ayúdame a decidir entre estas dos",
+    "Cuál gasta menos gasolina, la {make1} o la {make2}?",
+    # Dominican informal
+    "Dimelo, cuál es mejor la {make1} o la {make2}?",
+    "Mano, y entre esas dos cuál tú me recomiendas?",
+    "Y la {make1} y la {make2} cuál gasta menos?",
+    "Oye y cuál tiene más espacio, la {make1} o la {make2}?",
+    "Cuál sale más barata de mantener?",
+    "La {make1} dura más que la {make2}?",
+    "Cuál tiene mejor reventa, la {make1} o la {make2}?",
+    "Estoy entre la {make1} {model1} y la {make2} {model2}, ayúdame",
+    # Formal
+    "Me gustaría hacer una comparativa entre la {make1} {model1} y la {make2} {model2}",
+    "Podrían darme una comparación detallada entre ambos vehículos?",
+    "Quisiera conocer las diferencias principales entre la {make1} y la {make2}",
+    # WhatsApp / typos
+    "cual es mejor {make1} o {make2}?",
+    "comparame la {make1} con la {make2}",
+    "q diferensia hay entre esas 2?",
+    "cual me combiene mas?",
+    "entre esas cual es la mejor opcion?",
+]
+
+def vehicle_comparison_response(dealer: dict, vehicles: list, **kwargs) -> dict:
+    v1, v2 = vehicles[0], vehicles[1]
+
+    opening = _pick([
+        f"📊 **Comparativa: {v1['make']} {v1['model']} vs {v2['make']} {v2['model']}**",
+        f"Aquí tienes la comparación entre la **{v1['make']} {v1['model']}** y la **{v2['make']} {v2['model']}**",
+        f"**{v1['make']} {v1['model']} vs {v2['make']} {v2['model']}** — Comparativa completa",
+    ])
+
+    closing = _pick([
+        "Ambos son excelentes opciones. ¿Te gustaría conocer más detalles de alguno?",
+        "¿Cuál te convence más? Puedo darte más info.",
+        "¿Te gustaría probar alguno de los dos?",
+        "Cada uno tiene sus ventajas. ¿Quieres agendar un test drive?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"| Característica | {v1['make']} {v1['model']} | {v2['make']} {v2['model']} |\n"
+            f"|---|---|---|\n"
+            f"| **Año** | {v1['year']} | {v2['year']} |\n"
+            f"| **Precio** | RD${v1['price']:,.0f} | RD${v2['price']:,.0f} |\n"
+            f"| **Motor** | {v1.get('engineSize', 'N/A')} | {v2.get('engineSize', 'N/A')} |\n"
+            f"| **Transmisión** | {v1['transmission']} | {v2['transmission']} |\n"
+            f"| **Combustible** | {v1['fuelType']} | {v2['fuelType']} |\n"
+            f"| **Kilometraje** | {v1['mileage']:,} km | {v2['mileage']:,} km |\n\n"
+            f"{closing}"
+        ),
+        "intent": "VehicleComparison",
+        "confidence": _rand_conf(0.90, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "vehicle1Id": v1["id"],
+            "vehicle2Id": v2["id"],
+            "comparisonType": "full"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            [f"🚗 Test drive {v1['make']}", f"🚗 Test drive {v2['make']}", "💰 Comparar financiamiento"],
+            [f"📋 Detalles {v1['make']}", f"📋 Detalles {v2['make']}", "📞 Hablar con asesor"],
+            [f"Más info {v1['make']}", f"Más info {v2['make']}", "Ver otras opciones"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: DealerHours (41)
+# ============================================================
+
+DEALER_HOURS_USER_TEMPLATES = [
+    # Semi-formal
+    "Cuál es el horario?",
+    "A qué hora abren?",
+    "A qué hora cierran?",
+    "Están abiertos los sábados?",
+    "Abren los domingos?",
+    "Cuál es el horario de atención?",
+    "Hasta qué hora están?",
+    "Puedo ir hoy?",
+    "Están abiertos ahora?",
+    "A qué hora puedo pasar?",
+    # Dominican informal
+    "Oye a qué hora abren ustedes?",
+    "Dimelo, están abiertos todavía?",
+    "Klk, a qué hora cierran hoy?",
+    "Mano, y los sábados abren?",
+    "Y en la tardecita están abiertos?",
+    "Abren en la mañana temprano?",
+    # Holidays / special days
+    "Abren en Semana Santa?",
+    "Están abiertos en Navidad?",
+    "Abren los días feriados?",
+    "Trabajan el 27 de febrero?",
+    "Y los días de fiesta abren?",
+    # Formal
+    "Me gustaría saber cuál es el horario de atención al público",
+    "Quisiera confirmar si están abiertos los fines de semana",
+    "Podrían indicarme su horario de operación?",
+    # WhatsApp / typos
+    "horario?",
+    "a q hora abren?",
+    "estan abiertos?",
+    "q horario tienen?",
+    "hasta q hora?",
+    "abren hoy?",
+]
+
+def dealer_hours_response(dealer: dict, **kwargs) -> dict:
+    hours = dealer.get("businessHours", {})
+    schedule_text = ""
+    for day, times in hours.items():
+        day_es = {
+            "monday": "Lunes", "tuesday": "Martes", "wednesday": "Miércoles",
+            "thursday": "Jueves", "friday": "Viernes", "saturday": "Sábado", "sunday": "Domingo"
+        }.get(day, day)
+        if times:
+            schedule_text += f"• **{day_es}:** {times['open']} - {times['close']}\n"
+        else:
+            schedule_text += f"• **{day_es}:** Cerrado\n"
+
+    opening = _pick([
+        f"🕐 **Horario de {dealer['name']}**",
+        f"Aquí te comparto nuestro horario de atención",
+        f"El horario de {dealer['name']} es el siguiente",
+        f"**Horario de atención — {dealer['name']}**",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría agendar una visita?",
+        "¿Quieres que te agendemos una cita?",
+        "¿Planeas visitarnos pronto?",
+        "¿Necesitas algo más?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n{schedule_text}\n"
+            f"📍 {dealer['location']}\n"
+            f"📞 {dealer['phone']}\n\n"
+            f"{closing}"
+        ),
+        "intent": "DealerHours",
+        "confidence": _rand_conf(0.93, 0.99),
+        "isFallback": False,
+        "parameters": {
+            "businessHours": hours
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📅 Agendar visita", "📍 Ver ubicación", "📞 Llamar"],
+            ["🚗 Ver vehículos", "📅 Agendar cita", "📞 Contactar"],
+            ["Agendar visita", "Ver ubicación", "Llamar ahora"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: DealerLocation (40)
+# ============================================================
+
+DEALER_LOCATION_USER_TEMPLATES = [
+    # Semi-formal
+    "Dónde están ubicados?",
+    "Cuál es la dirección?",
+    "Cómo llego?",
+    "Dónde queda el dealer?",
+    "Tienen alguna sucursal?",
+    "En qué zona están?",
+    "Dónde puedo ir a ver los carros?",
+    "Me pueden pasar la dirección?",
+    # Dominican informal
+    "Oye dónde es que quedan ustedes?",
+    "Dimelo, por dónde queda eso?",
+    "Mano, y ustedes están por el Malecón o por dónde?",
+    "Klk, dónde queda el local?",
+    "Y eso queda pa’ la zona colonial o pa’ Naco?",
+    "Cómo llego desde la 27?",
+    "Es fácil llegar en guagua?",
+    "Tienen parking?",
+    "Hay parqueo disponible?",
+    # Reference / landmark questions
+    "Queda cerca de Agora Mall?",
+    "Están por la Churchill?",
+    "Eso queda por la autopista Duarte?",
+    "Tienen sucursal en Santiago?",
+    "Solo tienen en Santo Domingo?",
+    # Formal
+    "Me gustaría saber la dirección exacta del concesionario",
+    "Podrían indicarme cómo llegar a su local?",
+    # WhatsApp / typos
+    "donde quedan?",
+    "ubicacion?",
+    "direccion?",
+    "donde estan?",
+]
+
+def dealer_location_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"📍 **{dealer['name']}**",
+        f"Aquí te comparto nuestra ubicación",
+        f"**Ubicación de {dealer['name']}**",
+        f"Nos encuentras en la siguiente dirección",
+    ])
+
+    closing = _pick([
+        "¡Te esperamos! ¿Quieres que agendemos tu visita?",
+        "¿Te gustaría agendar una visita?",
+        "¿Necesitas indicaciones para llegar?",
+        "¿Quieres que te enviemos la ubicación por WhatsApp?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"🏢 **Dirección:** {dealer['location']}\n"
+            f"📞 **Teléfono:** {dealer['phone']}\n"
+            f"📱 **WhatsApp:** {dealer.get('whatsapp', dealer['phone'])}\n"
+            f"📧 **Email:** {dealer['email']}\n\n"
+            f"{closing}"
+        ),
+        "intent": "DealerLocation",
+        "confidence": _rand_conf(0.93, 0.99),
+        "isFallback": False,
+        "parameters": {
+            "address": dealer["location"],
+            "phone": dealer["phone"]
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📅 Agendar visita", "🗺️ Ver en mapa", "📞 Llamar ahora"],
+            ["🚗 Ver vehículos", "🕐 Ver horario", "📞 Contactar"],
+            ["Agendar visita", "Ver en mapa", "Llamar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: ContactRequest (60) / QuoteRequest (61) / CallbackRequest (62)
+# ============================================================
+
+CONTACT_REQUEST_USER_TEMPLATES = [
+    # Semi-formal
+    "Quiero que me llamen",
+    "Me pueden contactar?",
+    "Necesito hablar con un asesor",
+    "Prefiero hablar con una persona",
+    "Me pueden llamar?",
+    "Quiero hablar con ventas",
+    "Pasenme con alguien de ventas",
+    "Necesito más información personalizada",
+    "Mi número es {phone}",
+    "Me llamo {name} y quiero que me contacten",
+    "Pueden llamarme al {phone}?",
+    "Mi WhatsApp es {phone}",
+    # Combined name + phone
+    "Mi nombre es {name}, mi número es {phone}",
+    "Soy {name}, pueden llamarme al {phone}",
+    "Me llamo {name}, {phone}",
+    "Me llamo {name} y mi teléfono es {phone}",
+    "{name}, {phone}, quiero que me contacten",
+    "Soy {name}, WhatsApp {phone}",
+    "Mi nombre es {name}, mi WhatsApp es {phone}, quiero más info",
+    "{name}, número {phone}, me interesa el vehículo",
+    # Dominican informal
+    "Oye, pásame con alguien de ventas",
+    "Dimelo, quiero hablar con un vendedor",
+    "Quiero q me contacte alguien ya",
+    "Mano, necesito hablar con una persona real",
+    "No quiero hablar con un bot, pásame con alguien",
+    "Ya me canse del bot, pasame con un humano",
+    "Déjame hablar con un asesor de verdad",
+    "Lístame con alguien para llamarme",
+    # Formal
+    "Me gustaría que un ejecutivo de ventas me contacte",
+    "Quisiera recibir asesoría personalizada por teléfono",
+    "Podrían contactarme para discutir opciones de compra?",
+    # WhatsApp / typos
+    "quiero q me yamen",
+    "pasame con alguien",
+    "quiero ablar con alguien",
+    "llamame porfavor",
+    "nesecito un asesor",
+    "mi cell es {phone}",
+    "{name} {phone} llamame",
+    "mi cel {phone}, soy {name}",
+]
+
+def contact_request_response(dealer: dict, **kwargs) -> dict:
+    name = kwargs.get("name")
+    phone = kwargs.get("phone")
+
+    if name and phone:
+        response_text = _pick([
+            (
+                f"✅ **¡Perfecto, {name}!** Un asesor de {dealer['name']} te contactará "
+                f"al **{phone}** lo antes posible.\n\n"
+                f"Generalmente respondemos en menos de 30 minutos durante horario laboral. "
+                f"¿Hay algo más en lo que pueda ayudarte mientras tanto?"
+            ),
+            (
+                f"Listo, {name}. Ya registré tu solicitud. "
+                f"Un asesor de {dealer['name']} te llamará al **{phone}** pronto.\n\n"
+                f"¿Necesitas algo más?"
+            ),
+            (
+                f"¡Gracias, {name}! Tu solicitud ha sido registrada. "
+                f"Te contactaremos al **{phone}** a la brevedad.\n\n"
+                f"Mientras tanto, ¿te gustaría explorar más opciones?"
+            ),
+        ])
+        action = "TRANSFER_TO_AGENT"
+    elif name:
+        response_text = _pick([
+            (
+                f"¡Gracias {name}! Para que un asesor te contacte, necesito tu número de teléfono o WhatsApp. "
+                f"¿Me lo compartes?"
+            ),
+            (
+                f"Perfecto, {name}. ¿Cuál es tu número de teléfono o WhatsApp para que te contactemos?"
+            ),
+        ])
+        action = None
+    else:
+        response_text = _pick([
+            (
+                f"¡Con gusto! Para conectarte con un asesor de {dealer['name']}, "
+                f"necesito tu nombre y un número de teléfono o WhatsApp. ¿Me los compartes?"
+            ),
+            (
+                f"Claro, con gusto te conecto con un asesor. "
+                f"¿Me compartes tu nombre y número de teléfono?"
+            ),
+            (
+                f"Para transferirte con un asesor de {dealer['name']}, "
+                f"necesito algunos datos. ¿Cuál es tu nombre y número de contacto?"
+            ),
+        ])
+        action = None
+
+    return {
+        "response": response_text,
+        "intent": "ContactRequest",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "name": name,
+            "phone": phone,
+            "contactMethod": "phone" if phone else None
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": phone is not None
+        },
+        "suggestedAction": action,
+        "quickReplies": _pick([
+            ["📞 Llamar ahora", "💬 WhatsApp", "📧 Email"],
+            ["📞 Contactar", "💬 Enviar WhatsApp", "🚗 Ver vehículos"],
+            ["Llamar", "WhatsApp", "Email"],
+        ]) if not phone else []
+    }
+
+
+# ============================================================
+# INTENT: Complaint (70)
+# ============================================================
+
+COMPLAINT_USER_TEMPLATES = [
+    # Original
+    "No estoy contento con el servicio",
+    "Tengo una queja",
+    "El servicio fue pésimo",
+    "Nadie me ha contactado y ya llevo días esperando",
+    "Me prometieron algo y no cumplieron",
+    "Quiero hablar con un supervisor",
+    "Esto es inaceptable",
+    "Voy a ir a Pro-Consumidor",
+    "Quiero poner una queja formal",
+    "Me siento engañado",
+    # Dominican informal - mild
+    "Oye, nadie me ha llamado y dijeron que me iban a llamar",
+    "Dimelo, llevo esperando como 3 días y nada",
+    "Mano, el servicio aquí es lento",
+    "No me han respondido el WhatsApp y ya van 2 días",
+    "Escribo y nadie me contesta, qué pasa?",
+    # Dominican informal - strong
+    "Esto es un relajo, nadie me atiende",
+    "El servicio de ustedes no sirve pa na",
+    "Llevan 3 días diciendo que me van a llamar y nada",
+    "Me vendieron un carro con problemas",
+    "El carro que compré salió malo",
+    # Formal / legal
+    "Deseo presentar una reclamación formal",
+    "Voy a reportar esto a ProConsumidor",
+    "Necesito que resuelvan esta situación inmediatamente",
+    "Quisiera hablar con el gerente general",
+    "Voy a poner esto en las redes sociales",
+    # WhatsApp / typos
+    "tengo una keja",
+    "el serbicio es pesimo",
+    "nadie me a contestado",
+    "quiero ablar con un supervisor",
+    "esto es inaseptable",
+]
+
+def complaint_response(dealer: dict, **kwargs) -> dict:
+    response = _pick([
+        (
+            f"Lamento mucho escuchar eso. En {dealer['name']} valoramos mucho tu experiencia "
+            f"y queremos resolver esta situación lo antes posible.\n\n"
+            f"Voy a transferirte con un supervisor que podrá atenderte personalmente. "
+            f"¿Podrías compartirme brevemente qué sucedió para que pueda darle contexto?\n\n"
+            f"⚠️ *Conforme a la Ley 358-05 de Protección al Consumidor, tienes derecho a presentar "
+            f"una reclamación formal. Nuestro equipo está comprometido a darte una respuesta satisfactoria.*"
+        ),
+        (
+            f"Entiendo tu frustración y la tomo muy en serio. "
+            f"En {dealer['name']} nos importa tu satisfacción.\n\n"
+            f"Voy a escalar tu caso a un supervisor para darte una solución rápida. "
+            f"¿Me puedes contar qué pasó?"
+        ),
+        (
+            f"Lamento mucho esta situación. Tu queja es importante para nosotros "
+            f"y queremos resolverla.\n\n"
+            f"Un supervisor de {dealer['name']} se comunicará contigo para atender tu caso personalmente. "
+            f"¿Me compartes tu nombre y teléfono para que te contacten?"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "Complaint",
+        "confidence": _rand_conf(0.88, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "sentiment": "negative",
+            "urgency": "high"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "TRANSFER_TO_AGENT",
+        "quickReplies": _pick([
+            ["📞 Hablar con supervisor", "📧 Enviar queja por email"],
+            ["📞 Llamar a gerencia", "📧 Queja formal", "💬 WhatsApp"],
+            ["Hablar con supervisor", "Enviar queja", "Llamar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: Farewell (2)
+# ============================================================
+
+FAREWELL_USER_TEMPLATES = FAREWELLS + [
+    "ya no necesito nada más",
+    "eso es todo",
+    "listo, no más preguntas",
+    "gracias por la ayuda",
+    "muy amable, hasta luego",
+    "ok voy a pensarlo",
+    "déjame pensarlo y te escribo luego",
+    # Dominican informal
+    "tato, me voy",
+    "ya ta’, gracias",
+    "listo loco, gracias",
+    "voy pa la calle, luego hablamos",
+    "dale pues, bendiciones",
+    "eso e to, gracias manin",
+    "ta claro, luego te digo",
+    "voy a ver y te digo despues",
+    "ok ok gracias por todo",
+    # Formal
+    "Muchas gracias por la información, muy amables",
+    "Agradezco la atención, hasta pronto",
+    "Excelente servicio, estaré en contacto",
+    "Gracias por su tiempo, lo voy a considerar",
+    # WhatsApp / typos
+    "grasiass",
+    "byeee",
+    "chaooo",
+    "grcias x la info",
+    "grasias",
+    "ok bye",
+    "100pre, gracias!",
+    # Short / minimal
+    "bye",
+    "chao",
+    "adios",
+    "ok",
+    "listo",
+    "perfecto",
+    "👍",
+    "🙏",
+]
+
+def farewell_response(dealer: dict, **kwargs) -> dict:
+    bot_name = dealer.get("botName", "OKLA AI")
+    response = _pick([
+        (
+            f"¡Fue un placer ayudarte! 😊 Si necesitas algo más, aquí estoy disponible 24/7.\n\n"
+            f"Recuerda que en {dealer['name']} tenemos los mejores vehículos y planes de financiamiento. "
+            f"¡Te esperamos! 🚗\n\n"
+            f"— {bot_name}"
+        ),
+        (
+            f"¡Gracias por escribirnos! 🙏 Espero haberte sido de ayuda.\n\n"
+            f"Cuando quieras volver a consultar, aquí estaremos. "
+            f"¡Éxito! \n\n"
+            f"— {bot_name}"
+        ),
+        (
+            f"Ha sido un gusto atenderte. Si necesitas más información, "
+            f"no dudes en escribirnos de nuevo.\n\n"
+            f"{dealer['name']} — Siempre a tu servicio.\n\n"
+            f"— {bot_name}"
+        ),
+        (
+            f"Gracias por contactar a {dealer['name']}. "
+            f"Fue un placer asistirte.\n\n"
+            f"Recuerda que puedes escribirnos en cualquier momento. "
+            f"¡Hasta pronto!\n\n"
+            f"— {bot_name}"
+        ),
+        (
+            f"¡Perfecto! Si cambias de opinión o tienes más preguntas, "
+            f"aquí estaremos para ti. 😊\n\n"
+            f"¡Que tengas un excelente día!\n\n"
+            f"— {bot_name}"
+        ),
+    ])
+    return {
+        "response": response,
+        "intent": "Farewell",
+        "confidence": _rand_conf(0.93, 0.99),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": []
+    }
+
+
+# ============================================================
+# INTENT: Fallback (4)
+# ============================================================
+
+FALLBACK_USER_TEMPLATES = [
+    # Gibberish
+    "asdfghjkl",
+    "?????",
+    ".",
+    "😂😂😂",
+    "jajajaja",
+    "🤖",
+    "asdhasdh",
+    "dksjflkds",
+    "test test",
+    "...",
+    "????",
+    "!!!!!",
+    "xdxdxd",
+    "lol",
+    # Off-topic questions
+    "no entiendo",
+    "qué tipo de cambio tienen?",
+    "venden casas?",
+    "cuánto cuesta un vuelo a Miami?",
+    "hola soy un robot",
+    "me puedes hacer la tarea?",
+    "cuál es la capital de Francia?",
+    "venden comida?",
+    "tienen ropa?",
+    "cuánto cuesta un iPhone?",
+    "dónde queda el aeropuerto?",
+    "cuál es el resultado del partido?",
+    "me puedes hacer un chiste?",
+    "que hora es?",
+    "tienen motos también? digo, bicicletas",
+    # Random / accidental
+    "q",
+    "a",
+    "hola hola hola hola",
+    "dale dale dale",
+    "no no no",
+    "si no o tal vez",
+]
+
+def fallback_response(dealer: dict, **kwargs) -> dict:
+    response = _pick([
+        (
+            f"Disculpa, no estoy seguro de entender tu consulta. 🤔\n\n"
+            f"Soy el asistente virtual de {dealer['name']} y puedo ayudarte con:\n"
+            f"• 🔍 Buscar vehículos por tipo, precio o marca\n"
+            f"• 📋 Información de un vehículo específico\n"
+            f"• 💰 Opciones de financiamiento\n"
+            f"• 🚗 Agendar test drive o visita\n"
+            f"• 📍 Ubicación y horarios\n\n"
+            f"¿En qué puedo ayudarte?"
+        ),
+        (
+            f"No logré entender tu mensaje. "
+            f"Soy un asistente especializado en vehículos de {dealer['name']}.\n\n"
+            f"Puedo ayudarte a buscar carros, ver precios, financiamiento y más. "
+            f"¿Qué te gustaría saber?"
+        ),
+        (
+            f"Hmm, no estoy seguro de cómo responder a eso. "
+            f"Mi especialidad son los vehículos.\n\n"
+            f"¿Puedo ayudarte a buscar un carro, ver precios o agendar una visita?"
+        ),
+        (
+            f"Disculpa, eso está fuera de mi área. Soy el bot de ventas de {dealer['name']}.\n\n"
+            f"Puedo asistirte con: vehículos disponibles, precios, financiamiento, "
+            f"test drives y más. ¿En qué te ayudo?"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "Fallback",
+        "confidence": _rand_conf(0.15, 0.50),
+        "isFallback": True,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🔍 Buscar vehículo", "💰 Financiamiento", "📞 Hablar con asesor"],
+            ["🚗 Ver inventario", "💰 Precios", "📍 Ubicación"],
+            ["Buscar vehículo", "Ver precios", "Hablar con asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: Help (3)
+# ============================================================
+
+HELP_USER_TEMPLATES = [
+    # Semi-formal
+    "Ayuda",
+    "Qué puedes hacer?",
+    "En qué me puedes ayudar?",
+    "Cómo funciona esto?",
+    "Qué opciones tengo?",
+    "Para qué sirves?",
+    "Cómo uso el chat?",
+    "Menú",
+    "Opciones",
+    # Dominican informal
+    "Oye, y qué tú puedes hacer?",
+    "Dimelo, en qué me ayudas?",
+    "Y esto pa qué sirve?",
+    "No sé cómo funciona esto",
+    "Qué cosas puedo preguntar?",
+    "Klk, qué servicios ofrecen?",
+    "Mano, esto cómo funciona?",
+    "Y esto es un bot o qué?",
+    "Eres un robot?",
+    "Eres una persona o una máquina?",
+    # Formal
+    "Me gustaría saber qué servicios ofrecen",
+    "Podría indicarme las opciones disponibles?",
+    "Quisiera conocer qué tipo de asistencia pueden brindarme",
+    # WhatsApp / typos
+    "ayudaa",
+    "q puedes aser?",
+    "como funciona?",
+    "q opciones hay?",
+    "menu",
+    "help",
+]
+
+def help_response(dealer: dict, **kwargs) -> dict:
+    bot_name = dealer.get("botName", "OKLA AI")
+    response = _pick([
+        (
+            f"¡Hola! Soy {bot_name}, tu asistente virtual de {dealer['name']}. "
+            f"Puedo ayudarte con:\n\n"
+            f"🔍 **Buscar vehículos** — Por tipo, precio, marca o características\n"
+            f"📋 **Detalles** — Especificaciones, fotos y precios\n"
+            f"📊 **Comparar** — Comparativa entre 2 o 3 vehículos\n"
+            f"💰 **Financiamiento** — Planes, requisitos y simulación de cuotas\n"
+            f"🚗 **Test Drive** — Agendar prueba de manejo\n"
+            f"📍 **Ubicación** — Dirección y horarios\n"
+            f"📞 **Contacto** — Conectar con un asesor humano\n\n"
+            f"¿Qué te gustaría hacer?"
+        ),
+        (
+            f"Soy {bot_name} de {dealer['name']}. Esto es lo que puedo hacer por ti:\n\n"
+            f"• Buscar vehículos por marca, precio o tipo\n"
+            f"• Darte detalles y especificaciones\n"
+            f"• Comparar vehículos\n"
+            f"• Informarte sobre financiamiento\n"
+            f"• Agendar test drives\n"
+            f"• Compartirte ubicación y horarios\n"
+            f"• Conectarte con un asesor\n\n"
+            f"¿Por dónde quieres empezar?"
+        ),
+        (
+            f"¡Hola! 👋 Soy {bot_name}. Puedo asistirte con todo lo relacionado a la compra de vehículos "
+            f"en {dealer['name']}: búsqueda, precios, financiamiento, visitas y más.\n\n"
+            f"Solo escríbeme tu pregunta y con gusto te ayudo. ¿Qué necesitas?"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "Help",
+        "confidence": _rand_conf(0.94, 0.99),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🔍 Buscar vehículo", "💰 Financiamiento", "📍 Ubicación", "📞 Asesor"],
+            ["🚗 Ver inventario", "💰 Precios", "📅 Agendar visita"],
+            ["Buscar vehículo", "Financiamiento", "Ubicación", "Contactar asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: TradeIn (23)
+# ============================================================
+
+TRADE_IN_USER_TEMPLATES = [
+    # Semi-formal
+    "Aceptan carro en trade-in?",
+    "Puedo dar mi carro como parte de pago?",
+    "Tengo un {make_old} {year_old} que quiero dar a cambio",
+    "Si doy mi carro actual cuánto me dan?",
+    "Quiero cambiar mi carro por uno nuevo",
+    "Aceptan vehículo como parte de pago?",
+    "Cuánto me dan por mi {make_old} {year_old}?",
+    "Quiero entregar mi carro viejo",
+    "Hacen trade-in?",
+    # Dominican informal
+    "Oye, y si doy mi carrito viejo cuánto me descuentan?",
+    "Dimelo, aceptan carro a cambio?",
+    "Mano, tengo un {make_old} {year_old} que quiero soltar",
+    "Puedo meter mi carro como parte de pago?",
+    "Si les doy mi {make_old} cuánto me rebajan?",
+    "Tengo uno viejo que quiero darles, aceptan?",
+    "Y si llevo mi carro ustedes lo reciben?",
+    "Cuánto vale mi {make_old} {year_old} pa trade in?",
+    "Quiero comprar uno nuevo y dar el mío",
+    # Formal
+    "Me gustaría saber si aceptan mi vehículo actual como parte del pago",
+    "Quisiera evaluar la opción de entregar mi vehículo actual",
+    "Podrían tasar mi vehículo para un posible trade-in?",
+    # WhatsApp / typos
+    "aceptan trade in?",
+    "trade-in?",
+    "puedo dar mi caro viejo?",
+    "cuanto me dan x mi {make_old}?",
+    "aseptan vehiculo como parte de pago?",
+    "tradein?",
+    "cambio mi carro por otro",
+]
+
+def trade_in_response(dealer: dict, **kwargs) -> dict:
+    accepts = dealer.get("tradeInAccepted", True)
+    if accepts:
+        opening = _pick([
+            f"🔄 **¡Sí! Aceptamos tu vehículo como parte de pago.**",
+            f"¡Claro que sí! En {dealer['name']} aceptamos trade-in.",
+            f"**Sí, hacemos trade-in.** Podemos evaluar tu vehículo actual.",
+        ])
+
+        closing = _pick([
+            "¿Me compartes los datos de tu vehículo?",
+            "¿Qué vehículo tienes actualmente?",
+            "¿Me dices marca, modelo, año y condición de tu carro?",
+        ])
+
+        return {
+            "response": (
+                f"{opening}\n\n"
+                f"En {dealer['name']} evaluamos tu vehículo actual y descontamos "
+                f"su valor del precio del nuevo.\n\n"
+                f"Para darte una estimación, necesito saber:\n"
+                f"1️⃣ **Marca y modelo** de tu vehículo actual\n"
+                f"2️⃣ **Año**\n"
+                f"3️⃣ **Kilometraje aproximado**\n"
+                f"4️⃣ **Condición general** (excelente, buena, regular)\n\n"
+                f"⚠️ *La valoración final se realiza presencialmente con una inspección del vehículo.*\n\n"
+                f"{closing}"
+            ),
+            "intent": "TradeIn",
+            "confidence": _rand_conf(0.90, 0.97),
+            "isFallback": False,
+            "parameters": {"tradeInAccepted": True},
+            "leadSignals": {
+                "mentionedBudget": False,
+                "requestedTestDrive": False,
+                "askedFinancing": False,
+                "providedContactInfo": False
+            },
+            "suggestedAction": None,
+            "quickReplies": _pick([
+                ["📋 Dar datos de mi carro", "📞 Hablar con asesor"],
+                ["📋 Evaluar mi vehículo", "💰 Ver financiamiento"],
+                ["Dar datos de mi carro", "Hablar con asesor"],
+            ])
+        }
+    else:
+        return {
+            "response": _pick([
+                (
+                    f"Actualmente {dealer['name']} no ofrece el servicio de trade-in directamente, "
+                    f"pero podemos orientarte sobre opciones para vender tu vehículo actual.\n\n"
+                    f"¿Te gustaría explorar otras opciones de financiamiento?"
+                ),
+                (
+                    f"Por el momento no manejamos trade-in en {dealer['name']}, "
+                    f"pero tenemos excelentes opciones de financiamiento que podrían ayudarte.\n\n"
+                    f"¿Quieres conocerlas?"
+                ),
+            ]),
+            "intent": "TradeIn",
+            "confidence": _rand_conf(0.85, 0.93),
+            "isFallback": False,
+            "parameters": {"tradeInAccepted": False},
+            "leadSignals": {
+                "mentionedBudget": False,
+                "requestedTestDrive": False,
+                "askedFinancing": False,
+                "providedContactInfo": False
+            },
+            "suggestedAction": None,
+            "quickReplies": _pick([
+                ["💰 Ver financiamiento", "📞 Hablar con asesor"],
+                ["Ver financiamiento", "Contactar asesor"],
+            ])
+        }
+
+
+# ============================================================
+# INTENT: WarrantyInfo (51)
+# ============================================================
+
+WARRANTY_USER_TEMPLATES = [
+    # Semi-formal
+    "Tiene garantía?",
+    "Cuánto tiempo de garantía?",
+    "Qué cubre la garantía?",
+    "Si se daña algo la garantía lo cubre?",
+    "Tienen garantía extendida?",
+    "La garantía incluye motor y transmisión?",
+    "Cuál es la política de garantía?",
+    # Dominican informal
+    "Oye, y ese carro viene con garantía?",
+    "Dimelo, si se daña ustedes responden?",
+    "Mano, y la garantía cuánto dura?",
+    "Y si se me daña el motor?",
+    "Y si tiene algún problema despues de comprarlo?",
+    "La garantía cubre todo o solo algunas cosas?",
+    "Si le pasa algo al carro en 6 meses qué pasa?",
+    "Ustedes dan garantía de que el carro está bien?",
+    "Y la garantía es gratis o hay que pagarla aparte?",
+    # Formal
+    "Me gustaría conocer los términos de la garantía del vehículo",
+    "Quisiera información sobre la cobertura de garantía",
+    "Ofrecen garantía mecánica en vehículos usados?",
+    # WhatsApp / typos
+    "garantia?",
+    "tiene garantia ese carro?",
+    "q cubre la garantia?",
+    "cuanto dura la garantia?",
+    "garntia tienen?",
+    "garantia estendida?",
+]
+
+def warranty_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    opening = _pick([
+        f"🛡️ **Información de Garantía**",
+        f"Aquí te cuento sobre nuestras garantías",
+        f"**Garantías en {dealer['name']}**",
+        f"Te explico cómo funcionan las garantías",
+    ])
+
+    closing = _pick([
+        "¿Quieres saber la garantía de un vehículo en particular?",
+        "¿Te gustaría conocer la garantía de algún modelo específico?",
+        "¿Necesitas más detalles sobre la cobertura?",
+        "¿Alguna otra pregunta sobre garantías?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"En {dealer['name']} todos nuestros vehículos incluyen:\n\n"
+            f"✅ **Garantía de fábrica** — Vigente según el fabricante (varía por marca)\n"
+            f"✅ **Garantía mecánica** — Motor y transmisión\n"
+            f"✅ **Inspección pre-entrega** — Revisión de 150 puntos\n\n"
+            f"**Garantías típicas por marca:**\n"
+            f"• Toyota/Honda: 3 años o 36,000 km\n"
+            f"• Hyundai/Kia: 5 años o 60,000 km + 10 años powertrain\n"
+            f"• Otros: Consultar según modelo\n\n"
+            f"⚠️ *Las condiciones exactas de garantía dependen del modelo y su historial. "
+            f"Un asesor puede darte los detalles específicos del vehículo que te interesa.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "WarrantyInfo",
+        "confidence": _rand_conf(0.89, 0.97),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📋 Garantía de un modelo", "📞 Hablar con asesor"],
+            ["🚗 Ver vehículos", "📞 Contactar asesor"],
+            ["Ver garantía de un modelo", "Hablar con asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: CashPurchase (63) — Compra al contado / Declinar financiamiento
+# ============================================================
+
+CASH_PURCHASE_USER_TEMPLATES = [
+    # Semi-formal
+    "Lo voy a comprar sin financiamiento",
+    "No necesito financiamiento, pago al contado",
+    "Voy a pagar cash",
+    "Lo compro de contado",
+    "No quiero financiamiento",
+    "Prefiero pagar al contado",
+    "Sin financiamiento, cuánto es el precio final?",
+    "No me interesa el financiamiento",
+    "Pago completo, sin préstamo",
+    "Lo voy a comprar al contado, cuáles son los pasos?",
+    "No necesito banco, pago directo",
+    "Quiero comprarlo cash, qué descuento me dan?",
+    "Sin financiar, me lo llevo así",
+    "Pago de una, no necesito cuotas",
+    "Voy a pagar todo de una vez",
+    "No quiero préstamo, pago el total",
+    "Prefiero no financiar, cuánto queda al contado?",
+    "Mi nombre es {name}, {phone}. Y el vehiculo lo voy a comprar sin financiamiento",
+    "Soy {name}, {phone}, lo compro al contado",
+    "{name}, {phone}, no necesito financiamiento, pago cash",
+    # Dominican informal
+    "Nah, lo pago de una",
+    "Yo pago cash, sin banco",
+    "Dimelo, cuánto queda si pago al chin chin?",
+    "Mano, eso lo pago de contado, descuento?",
+    "No quiero cuotas, pago to de una",
+    "Lo pago completo, sin financiamiento ni nada",
+    "Tengo la plata, cuánto es de una vez?",
+    "Si pago cash me rebajan algo?",
+    # Formal
+    "Me gustaría realizar la compra al contado, cuál es el procedimiento?",
+    "Quisiera saber si hay algún beneficio por pago de contado",
+    "Estoy interesado en adquirir el vehículo sin financiamiento",
+    # WhatsApp / typos
+    "pago cash",
+    "lo compro de contadoo",
+    "no kiero financiamiento",
+    "cuanto es al contado?",
+    "lo pago al cash, cuanto?",
+    "sin finanaciamiento cuanto queda?",
+    "Soy {name}, {phone}, pago de contado sin financiar",
+]
+
+def cash_purchase_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    name = kwargs.get("name")
+    phone = kwargs.get("phone")
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+
+    if name and phone:
+        response_text = _pick([
+            (
+                f"✅ **¡Excelente decisión, {name}!** La compra al contado{vehicle_text} es una gran opción.\n\n"
+                f"📋 **Pasos para compra al contado:**\n"
+                f"1️⃣ Verificación del vehículo en persona\n"
+                f"2️⃣ Acuerdo de precio final\n"
+                f"3️⃣ Documentación (cédula, comprobante de fondos)\n"
+                f"4️⃣ Pago y transferencia de propiedad\n\n"
+                f"Un asesor te contactará al **{phone}** para coordinar tu visita.\n\n"
+                f"💡 *Pregunta por descuentos especiales por pago al contado.*"
+            ),
+            (
+                f"Perfecto, {name}. Pago al contado{vehicle_text} registrado.\n\n"
+                f"Te contactaremos al **{phone}** para coordinar los siguientes pasos:\n"
+                f"• Inspección presencial\n"
+                f"• Documentación\n"
+                f"• Pago y entrega\n\n"
+                f"Generalmente hay descuentos especiales por compra al contado."
+            ),
+        ])
+        action = "TRANSFER_TO_AGENT"
+    else:
+        response_text = _pick([
+            (
+                f"¡Perfecto! La compra al contado{vehicle_text} es excelente.\n\n"
+                f"📋 **Para compra al contado necesitas:**\n"
+                f"• Cédula de identidad vigente\n"
+                f"• Comprobante de fondos\n"
+                f"• Visita presencial para inspección\n\n"
+                f"💡 *Muchos de nuestros vehículos tienen descuentos especiales por pago de contado.*\n\n"
+                f"¿Me compartes tu nombre y teléfono para coordinar tu visita?"
+            ),
+            (
+                f"Excelente elección. La compra al contado{vehicle_text} suele tener beneficios adicionales.\n\n"
+                f"Para avanzar, necesitaré tu nombre y número de contacto. "
+                f"¿Me los compartes?"
+            ),
+        ])
+        action = None
+
+    return {
+        "response": response_text,
+        "intent": "CashPurchase",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "purchaseType": "cash",
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "name": name,
+            "phone": phone
+        },
+        "leadSignals": {
+            "mentionedBudget": True,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": phone is not None
+        },
+        "suggestedAction": action,
+        "quickReplies": _pick([
+            ["📞 Contactar asesor", "📋 Requisitos completos", "🚗 Agendar visita"],
+            ["📞 Llamar", "💬 WhatsApp", "🚗 Ver vehículos"],
+            ["Contactar asesor", "Ver requisitos", "Agendar visita"],
+        ]) if not phone else []
+    }
+
+
+# ============================================================
+# INTENT: VehicleSpecsQuestion (15) — Preguntas técnicas específicas
+# ============================================================
+
+VEHICLE_SPECS_USER_TEMPLATES = [
+    # Semi-formal
+    "Cuántas puertas tiene la {make} {model}?",
+    "Cuántos asientos tiene la {make} {model}?",
+    "La {make} {model} tiene bluetooth?",
+    "La {make} {model} tiene cámara de reversa?",
+    "Es tracción delantera o 4x4?",
+    "Tiene techo panorámico la {make}?",
+    "La {make} {model} es automática o manual?",
+    "Cuántas puertas tiene ese vehículo?",
+    "Tiene Apple CarPlay?",
+    "La {make} tiene tracción 4x4?",
+    "Cuántos pasajeros caben?",
+    "Tiene sunroof?",
+    "Esa tiene cámara 360?",
+    "Es AWD o FWD?",
+    "Tiene sensores de estacionamiento?",
+    "Qué tipo de tracción tiene?",
+    "Y cuántas puertas tiene ese vehículo?",
+    "Tiene asientos en piel?",
+    "La {make} {model} tiene Android Auto?",
+    "Es diesel o gasolina la {make}?",
+    # Dominican informal
+    "Oye, y esa tiene bluetooth?",
+    "Dimelo, es de 5 puertas o 3?",
+    "Mano, eso es automático verdad?",
+    "Y la {make} esa es 4x4 o traccion normal?",
+    "Cuantos pasajeros le caben a esa?",
+    "Tiene aire acondicionado?",
+    "La {make} esa tiene pantalla grande?",
+    "Esa viene full extras o hay que comprar aparte?",
+    "Tiene vidrios eléctricos?",
+    "Y el baúl es grande?",
+    # Formal
+    "Me gustaría conocer las especificaciones técnicas de la {make} {model}",
+    "Podría detallarme el equipamiento de fábrica?",
+    "Quisiera saber qué características de seguridad incluye",
+    # WhatsApp / typos
+    "cuantas puertas tiene?",
+    "tiene camara d reversa?",
+    "es automatica o manual?",
+    "tiene bluetooth?",
+    "cuantos asientos?",
+    "tiene 4x4?",
+    "q especificaciones tiene la {make}?",
+]
+
+def vehicle_specs_response(dealer: dict, vehicle: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"📋 **Especificaciones de la {vehicle['make']} {vehicle['model']} {vehicle['year']} {vehicle.get('trim', '')}**",
+        f"Aquí están las especificaciones de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**",
+        f"**{vehicle['make']} {vehicle['model']} {vehicle['year']}** — Especificaciones técnicas",
+        f"Te comparto las características de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría agendar un test drive o conocer el precio?",
+        "¿Quieres ver el precio o agendar una visita?",
+        "¿Alguna otra pregunta sobre este vehículo?",
+        "¿Te gustaría verlo en persona?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"⛽ **Combustible:** {vehicle['fuelType']}\n"
+            f"🔄 **Transmisión:** {vehicle['transmission']}\n"
+            f"🔧 **Motor:** {vehicle.get('engineSize', 'N/A')}\n"
+            f"📏 **Kilometraje:** {vehicle['mileage']:,}km\n"
+            f"🎨 **Color:** {vehicle.get('exteriorColor', 'N/A')}\n\n"
+            f"Para información adicional sobre puertas, asientos, tracción y equipamiento, "
+            f"puedo conectarte con un asesor que te confirme todos los detalles.\n\n"
+            f"{closing}"
+        ),
+        "intent": "VehicleSpecsQuestion",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"],
+            "make": vehicle["make"],
+            "model": vehicle["model"],
+            "fuelType": vehicle["fuelType"],
+            "transmission": vehicle["transmission"]
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🚗 Agendar test drive", "💰 Ver precio", "🔄 Comparar con otro"],
+            ["💰 Cuánto cuesta?", "🚗 Probar en persona", "📞 Contactar asesor"],
+            ["Ver precio", "Agendar visita", "Comparar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: NegotiatePrice (80) — Negociación de precio / descuento
+# ============================================================
+
+NEGOTIATE_PRICE_USER_TEMPLATES = [
+    # Semi-formal
+    "Me pueden hacer un descuento?",
+    "Cuál es el mejor precio que me pueden dar?",
+    "Se puede negociar el precio?",
+    "Hay algún descuento disponible?",
+    "Si pago hoy me hacen rebaja?",
+    "Cuánto es lo menos que me la dejan?",
+    "Hay alguna promoción vigente?",
+    "Tienen precio especial para compra rápida?",
+    "Me pueden mejorar el precio?",
+    "Ese es el precio final o se puede negociar?",
+    "Si compro dos vehículos me dan descuento?",
+    "Hay precio de oportunidad?",
+    "Me pueden igualar el precio de otro dealer?",
+    # Dominican informal
+    "Oye, me la dejan más barata?",
+    "Mano, cuánto es lo menos?",
+    "Dimelo, y si te pago cash me rebajas algo?",
+    "Eso no baja de ahí?",
+    "Y no me pueden dar un descuentito?",
+    "Ta muy caro eso, rebájenme algo",
+    "Si me la llevan hoy cuánto me quitan?",
+    "Qué e lo meno que me la dejan, de verdad?",
+    "Mano, eso ta caro pa lo que es",
+    "En otro lado me la dan más barata",
+    "Otro dealer me la tiene en menos",
+    # Formal
+    "Me gustaría saber si hay margen de negociación en el precio",
+    "Podrían considerar un ajuste en el precio?",
+    "Quisiera explorar si hay algún descuento corporativo disponible",
+    # WhatsApp / typos
+    "descuento?",
+    "no baja de ahi?",
+    "mejor presio?",
+    "me hacen rebaja?",
+    "lo menos?",
+    "hay descuento si pago hoy?",
+    "cuanto baja?",
+]
+
+def negotiate_price_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+
+    opening = _pick([
+        f"Entiendo tu interés en obtener el mejor precio{vehicle_text}.",
+        f"¡Buena pregunta! Siempre buscamos darte el mejor valor{vehicle_text}.",
+        f"Aprecio que preguntes por el mejor precio{vehicle_text}.",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría que un asesor te contacte para revisar opciones?",
+        "¿Quieres que un asesor evalúe tu caso personalmente?",
+        "¿Te interesa agendar una visita para negociar directamente?",
+    ])
+
+    return {
+        "response": _pick([
+            (
+                f"{opening}\n\n"
+                f"En {dealer['name']} nuestros precios son competitivos, pero hay formas de obtener "
+                f"un mejor acuerdo:\n\n"
+                f"💰 **Pago al contado** — Descuentos especiales\n"
+                f"🔄 **Trade-in** — Tu vehículo actual como parte de pago\n"
+                f"📅 **Promociones vigentes** — Consulta ofertas del mes\n"
+                f"🤝 **Negociación directa** — Un asesor puede revisar opciones contigo\n\n"
+                f"⚠️ *Los descuentos específicos dependen del modelo y disponibilidad. "
+                f"Un asesor puede darte la mejor oferta personalizada.*\n\n"
+                f"{closing}"
+            ),
+            (
+                f"{opening}\n\n"
+                f"Los precios publicados ya son bastante competitivos, pero siempre hay espacio "
+                f"para conversar, especialmente si pagas al contado o haces trade-in.\n\n"
+                f"Lo mejor es que hables directamente con un asesor para que te dé el mejor precio. "
+                f"{closing}"
+            ),
+        ]),
+        "intent": "NegotiatePrice",
+        "confidence": _rand_conf(0.88, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "negotiationType": "discount_request"
+        },
+        "leadSignals": {
+            "mentionedBudget": True,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📞 Hablar con asesor", "💰 Pago al contado", "🔄 Trade-in"],
+            ["📞 Negociar con asesor", "🚗 Ver otras opciones", "💰 Financiamiento"],
+            ["Contactar asesor", "Pago al contado", "Ver ofertas"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehicleAvailability (81) — Consultar disponibilidad
+# ============================================================
+
+VEHICLE_AVAILABILITY_USER_TEMPLATES = [
+    # Semi-formal
+    "Esa {make} {model} todavía está disponible?",
+    "Ese carro ya se vendió?",
+    "Aún tienen la {make} {model}?",
+    "La {make} {model} está disponible?",
+    "Ese vehículo sigue disponible?",
+    "Todavía tienen esa en stock?",
+    "Ya la vendieron?",
+    "Sigue disponible la {make}?",
+    "Eso está en inventario todavía?",
+    "Hay unidades disponibles de la {make} {model}?",
+    "Me pueden confirmar si la {make} todavía está?",
+    "No se habrá vendido ya esa {make}?",
+    # Dominican informal
+    "Oye, eso todavía lo tienen o ya se fue?",
+    "Dimelo, esa {make} ta disponible todavía?",
+    "Mano, ya vendieron esa?",
+    "Ese carro todavía ta ahi o ya se lo llevaron?",
+    "Klk, aun tienen esa {make}?",
+    "No se la habrán llevado ya?",
+    "Ta disponible eso todavía?",
+    # Formal
+    "Me gustaría confirmar la disponibilidad de la {make} {model} {year}",
+    "Podrían verificar si aún tienen ese vehículo en inventario?",
+    # WhatsApp / typos
+    "todavia la tienen?",
+    "ya se vendio?",
+    "disponible?",
+    "aun esta?",
+    "sigue disponble la {make}?",
+    "la tienen todabia?",
+    "eso ta disponble?",
+]
+
+def vehicle_availability_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    if vehicle:
+        opening = _pick([
+            f"✅ ¡Sí! La **{vehicle['make']} {vehicle['model']} {vehicle['year']}** sigue disponible.",
+            f"¡Buenas noticias! La **{vehicle['make']} {vehicle['model']} {vehicle['year']}** todavía está en nuestro inventario.",
+            f"Confirmado, la **{vehicle['make']} {vehicle['model']} {vehicle['year']}** está disponible.",
+        ])
+    else:
+        opening = _pick([
+            "Para verificar la disponibilidad, necesito saber qué vehículo te interesa.",
+            "¿Me dices cuál vehículo quieres que verifique?",
+        ])
+
+    closing = _pick([
+        "Te recomiendo no esperar mucho, nuestros vehículos se mueven rápido. ¿Te interesa agendar una visita?",
+        "¿Te gustaría verlo en persona antes de que se venda?",
+        "¿Quieres que te reserve una cita para verlo?",
+        "¿Te agendo una visita?",
+    ])
+
+    return {
+        "response": f"{opening}\n\n{closing}" if vehicle else opening,
+        "intent": "VehicleAvailability",
+        "confidence": _rand_conf(0.90, 0.97),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "isAvailable": True
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📅 Agendar visita", "💰 Ver precio", "📞 Contactar asesor"],
+            ["🚗 Test drive", "💰 Financiamiento", "📞 Reservar"],
+            ["Agendar visita", "Ver precio", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: InsuranceInfo (82) — Consulta sobre seguros
+# ============================================================
+
+INSURANCE_INFO_USER_TEMPLATES = [
+    # Semi-formal
+    "Ofrecen seguro con la compra?",
+    "Cuánto sale el seguro?",
+    "Incluye seguro el vehículo?",
+    "Trabajan con alguna aseguradora?",
+    "Necesito seguro obligatorio?",
+    "Qué tipo de seguro necesito?",
+    "Tienen convenio con seguros?",
+    "El seguro viene incluido o es aparte?",
+    "Me pueden ayudar con el seguro del vehículo?",
+    "Cuánto cuesta asegurar la {make} {model}?",
+    "Qué seguro me recomiendan?",
+    "El seguro cubre todo riesgo?",
+    # Dominican informal
+    "Oye, y el seguro cómo es?",
+    "Dimelo, el seguro viene incluido o hay que pagarlo aparte?",
+    "Mano, cuánto sale asegurar eso?",
+    "Y eso hay que ponerle seguro obligao?",
+    "Y ustedes ayudan con lo del seguro?",
+    "El seguro sale caro pa esa {make}?",
+    "Trabajan con Mapfre o con cuál?",
+    # Formal
+    "Me gustaría información sobre opciones de seguro vehicular",
+    "Podrían orientarme sobre el seguro obligatorio para vehículos?",
+    "Quisiera saber qué pólizas de seguro ofrecen",
+    # WhatsApp / typos
+    "seguro?",
+    "tiene seguro?",
+    "cuanto sale el seguro?",
+    "nesesito seguro?",
+    "q seguro nesecito?",
+]
+
+def insurance_info_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" para la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+
+    opening = _pick([
+        f"🛡️ **Información de Seguros{vehicle_text}**",
+        f"Te cuento sobre las opciones de seguro{vehicle_text}",
+        f"Aquí tienes la información sobre seguros{vehicle_text}",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría que un asesor te cotice el seguro junto con el vehículo?",
+        "¿Quieres que incluyamos la cotización del seguro en tu presupuesto?",
+        "¿Necesitas más información sobre coberturas?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"En República Dominicana, el seguro de vehículos es obligatorio. "
+            f"Trabajamos con las principales aseguradoras del país:\n\n"
+            f"🏢 **Aseguradoras aliadas:** Mapfre BHD, Seguros Universal, La Colonial, SURA\n\n"
+            f"📋 **Tipos de cobertura:**\n"
+            f"• **Responsabilidad civil** (obligatorio) — Desde RD$3,000/mes\n"
+            f"• **Cobertura amplia** — Todo riesgo, robo, incendio\n"
+            f"• **Full cobertura** — Incluye daños a terceros + propios\n\n"
+            f"💡 *El costo del seguro depende del valor del vehículo, año y tu historial. "
+            f"Podemos incluirlo en el financiamiento si lo deseas.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "InsuranceInfo",
+        "confidence": _rand_conf(0.89, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "insuranceType": "general_inquiry"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📞 Cotizar seguro", "💰 Incluir en financiamiento", "🚗 Ver vehículos"],
+            ["📋 Más info seguros", "📞 Hablar con asesor", "💰 Financiamiento"],
+            ["Cotizar seguro", "Incluir en financiamiento", "Hablar con asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: DocumentsRequired (83) — Documentos necesarios para compra
+# ============================================================
+
+DOCUMENTS_REQUIRED_USER_TEMPLATES = [
+    # Semi-formal
+    "Qué documentos necesito para comprar?",
+    "Qué papeles tengo que llevar?",
+    "Qué requisitos piden para la compra?",
+    "Necesito la cédula nada más?",
+    "Qué documentación necesito?",
+    "Qué piden para poder comprar un carro?",
+    "Hay que llevar algún documento especial?",
+    "Puedo comprar con pasaporte?",
+    "Qué se necesita para hacer la compra?",
+    "Necesito récord crediticio?",
+    "Piden récord policial?",
+    "Extranjeros pueden comprar?",
+    "Necesito residencia para comprar?",
+    # Dominican informal
+    "Oye, qué papeles hay que llevar?",
+    "Dimelo, con la cédula basta?",
+    "Mano, qué documentos piden ustedes?",
+    "Y pa comprar qué hay que llevar?",
+    "Klk, qué requisitos hay?",
+    "Solo con la cédula o piden más cosas?",
+    "Y si no tengo carta de trabajo?",
+    "Necesito llevar la licencia?",
+    # Formal
+    "Me gustaría conocer la documentación requerida para la compra",
+    "Podrían indicarme los requisitos documentales para adquirir un vehículo?",
+    "Quisiera saber qué documentos debo presentar",
+    # WhatsApp / typos
+    "q papeles nesesito?",
+    "documentos?",
+    "requisitos?",
+    "q hay q llevar?",
+    "q piden pa comprar?",
+    "q documentos piden?",
+]
+
+def documents_required_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"📋 **Documentos para comprar en {dealer['name']}**",
+        f"Aquí tienes los documentos necesarios para la compra",
+        f"Te comparto los requisitos documentales",
+        f"**Requisitos para comprar un vehículo**",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría agendar una visita? Con los documentos listos el proceso es rápido.",
+        "¿Necesitas más información sobre algún requisito?",
+        "¿Quieres que un asesor te ayude con el proceso?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"**📌 Para compra al contado:**\n"
+            f"• Cédula de identidad vigente (o pasaporte + residencia)\n"
+            f"• Comprobante de fondos o estado de cuenta\n"
+            f"• Licencia de conducir (para test drive)\n\n"
+            f"**📌 Para financiamiento (adicional):**\n"
+            f"• Carta de trabajo con antigüedad y salario\n"
+            f"• Estados de cuenta bancarios (últimos 3 meses)\n"
+            f"• Récord crediticio favorable\n"
+            f"• Comprobante de domicilio\n"
+            f"• Referencias personales y comerciales\n\n"
+            f"**📌 Para extranjeros:**\n"
+            f"• Pasaporte vigente\n"
+            f"• Residencia dominicana (si aplica)\n"
+            f"• Comprobante de ingresos en RD\n\n"
+            f"⚠️ *Los requisitos pueden variar según el banco y tipo de financiamiento.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "DocumentsRequired",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📅 Agendar visita", "💰 Financiamiento", "📞 Hablar con asesor"],
+            ["🚗 Ver vehículos", "💰 Compra al contado", "📞 Contactar"],
+            ["Agendar visita", "Ver requisitos financiamiento", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: DeliveryInfo (84) — Entrega / envío del vehículo
+# ============================================================
+
+DELIVERY_INFO_USER_TEMPLATES = [
+    # Semi-formal
+    "Hacen envío a otras ciudades?",
+    "Me lo pueden llevar a mi casa?",
+    "Hacen delivery del vehículo?",
+    "Entregan en Santiago?",
+    "Cuánto cuesta el envío?",
+    "Pueden llevar el carro a otra provincia?",
+    "Cómo es la entrega del vehículo?",
+    "Cuánto tarda la entrega?",
+    "Entregan en todo el país?",
+    "El vehículo me lo llevan o lo recojo yo?",
+    "Tienen servicio de transporte del vehículo?",
+    # Dominican informal
+    "Oye, y si vivo en Santiago me lo llevan?",
+    "Dimelo, hacen delivery pa la Romana?",
+    "Mano, me lo pueden mandar pa Punta Cana?",
+    "Y si no puedo ir, me lo llevan?",
+    "Cuánto sale que me lo manden pa Santiago?",
+    "Llevan pa provincia?",
+    "Pueden mandarmelo a Higüey?",
+    # Formal
+    "Me gustaría saber si ofrecen servicio de entrega a domicilio",
+    "Podrían informarme sobre opciones de envío interprovincial?",
+    # WhatsApp / typos
+    "hacen delivery?",
+    "envio?",
+    "me lo yevan?",
+    "entregan en santiago?",
+    "cuanto sale el envio?",
+    "delivery a la romana?",
+]
+
+def delivery_info_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"🚚 **Opciones de Entrega — {dealer['name']}**",
+        f"Te cuento sobre nuestro servicio de entrega",
+        f"Aquí tienes la información de entrega",
+    ])
+
+    closing = _pick([
+        "¿En qué zona necesitas la entrega?",
+        "¿Dónde te encuentras? Así te damos el costo exacto.",
+        "¿Te gustaría coordinar la entrega con un asesor?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"📍 **Retiro en dealer:** Puedes recoger tu vehículo directamente en "
+            f"{dealer['location']} sin costo adicional.\n\n"
+            f"🚚 **Entrega a domicilio:**\n"
+            f"• **Santo Domingo / Zona Metropolitana:** RD$3,000 - RD$5,000\n"
+            f"• **Santiago / Cibao:** RD$8,000 - RD$12,000\n"
+            f"• **Este (Punta Cana, La Romana):** RD$10,000 - RD$15,000\n"
+            f"• **Otras provincias:** Consultar\n\n"
+            f"⏰ **Tiempo de entrega:** 1-3 días hábiles después de completar la compra.\n\n"
+            f"💡 *La entrega incluye revisión final del vehículo y entrega de documentos.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "DeliveryInfo",
+        "confidence": _rand_conf(0.90, 0.96),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📞 Coordinar entrega", "📅 Agendar visita", "🚗 Ver vehículos"],
+            ["📞 Contactar asesor", "📍 Ver ubicación", "💰 Financiamiento"],
+            ["Coordinar entrega", "Visitar dealer", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehicleHistory (85) — Historial / reporte del vehículo
+# ============================================================
+
+VEHICLE_HISTORY_USER_TEMPLATES = [
+    # Semi-formal
+    "Tiene reporte de accidente?",
+    "El carro ha tenido algún choque?",
+    "Cuántos dueños ha tenido?",
+    "Tiene historial de mantenimiento?",
+    "Puedo ver el Carfax o reporte?",
+    "El vehículo tiene algún daño reportado?",
+    "Ha estado en algún accidente?",
+    "Tiene reporte de daños?",
+    "El título está limpio?",
+    "Es salvage o clean title?",
+    "El carro viene de Estados Unidos?",
+    "Es importado o de agencia local?",
+    "Tiene algún recall pendiente?",
+    # Dominican informal
+    "Oye, y ese carro ha chocado?",
+    "Dimelo, eso no será de choque verdad?",
+    "Mano, cuántos dueños ha tenido eso?",
+    "Y eso no tiene ningún problema verdad?",
+    "Ese carro viene de gringo o es local?",
+    "No será un carro de salvamento?",
+    "Ta limpio ese carro?",
+    "El título ta limpio?",
+    "Y eso no tiene ningún golpe escondido?",
+    # Formal
+    "Me gustaría conocer el historial completo del vehículo",
+    "Podrían proporcionarme un reporte de condición del vehículo?",
+    "Quisiera verificar si el vehículo tiene un título limpio",
+    # WhatsApp / typos
+    "tiene reporte?",
+    "a chocado?",
+    "cuantos dueños?",
+    "ta limpio?",
+    "es de choke?",
+    "historial?",
+    "titulo limpio?",
+]
+
+def vehicle_history_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+
+    opening = _pick([
+        f"📄 **Historial del Vehículo{vehicle_text}**",
+        f"Aquí te comparto la información sobre el historial{vehicle_text}",
+        f"Te cuento sobre el estado e historial{vehicle_text}",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría verlo en persona para una inspección completa?",
+        "¿Quieres que un asesor te muestre el reporte completo?",
+        "¿Te agendo una visita para que lo revises personalmente?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"En {dealer['name']} todos nuestros vehículos pasan por:\n\n"
+            f"✅ **Inspección de 150 puntos** — Mecánica, eléctrica, carrocería\n"
+            f"✅ **Verificación de título** — Título limpio garantizado\n"
+            f"✅ **Reporte de historial** — Sin accidentes graves reportados\n"
+            f"✅ **Verificación DGII** — Impuestos al día\n"
+            f"✅ **Verificación DIGESETT** — Sin multas pendientes\n\n"
+            f"📋 *Podemos proporcionarte el reporte completo de cualquier vehículo "
+            f"de nuestro inventario. Para vehículos importados, incluimos el reporte "
+            f"de origen (Carfax/AutoCheck cuando disponible).*\n\n"
+            f"{closing}"
+        ),
+        "intent": "VehicleHistory",
+        "confidence": _rand_conf(0.89, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "historyType": "general_inquiry"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📄 Ver reporte completo", "📅 Agendar inspección", "📞 Hablar con asesor"],
+            ["📄 Reporte del vehículo", "🚗 Agendar visita", "💰 Ver precio"],
+            ["Ver reporte", "Agendar inspección", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: PaymentMethods (86) — Métodos de pago aceptados
+# ============================================================
+
+PAYMENT_METHODS_USER_TEMPLATES = [
+    # Semi-formal
+    "Qué métodos de pago aceptan?",
+    "Aceptan tarjeta de crédito?",
+    "Puedo pagar con transferencia?",
+    "Aceptan cheque?",
+    "Se puede pagar con dólares?",
+    "Aceptan Visa o Mastercard?",
+    "Puedo pagar por AZUL?",
+    "Aceptan pago móvil?",
+    "Puedo usar mi tarjeta de débito?",
+    "Tienen punto de venta?",
+    "Aceptan Bitcoin o crypto?",
+    "Puedo hacer un depósito bancario?",
+    "Aceptan cheque certificado?",
+    # Dominican informal
+    "Oye, aceptan tarjeta o es solo cash?",
+    "Dimelo, puedo pagar con la Visa?",
+    "Mano, aceptan transferencia?",
+    "Puedo pagar con la app del banco?",
+    "Y si pago en dólares me lo aceptan?",
+    "Aceptan tPago?",
+    "Puedo pagar por el Popular online?",
+    "Aceptan Banreservas online?",
+    # Formal
+    "Me gustaría saber qué formas de pago aceptan",
+    "Podrían indicarme los métodos de pago disponibles?",
+    # WhatsApp / typos
+    "aceptan tarjeta?",
+    "metodos de pago?",
+    "puedo pagar con transferensia?",
+    "aseptan cheque?",
+    "formas d pago?",
+    "aceptan dolares?",
+]
+
+def payment_methods_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"💳 **Métodos de Pago — {dealer['name']}**",
+        f"Aceptamos varias formas de pago",
+        f"Aquí te cuento los métodos de pago disponibles",
+    ])
+
+    closing = _pick([
+        "¿Cuál método de pago prefieres?",
+        "¿Te gustaría coordinar el pago con un asesor?",
+        "¿Alguna pregunta sobre los métodos de pago?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"✅ **Efectivo** — Pesos dominicanos (RD$) o dólares (USD)\n"
+            f"✅ **Transferencia bancaria** — Cualquier banco local\n"
+            f"✅ **Tarjeta de crédito** — Visa, Mastercard, AMEX\n"
+            f"✅ **Tarjeta de débito** — Con punto de venta\n"
+            f"✅ **Cheque certificado** — De banco local\n"
+            f"✅ **Financiamiento** — A través de nuestros bancos aliados\n\n"
+            f"⚠️ *Para compras con tarjeta de crédito, pueden aplicar cargos adicionales "
+            f"según el banco emisor. Transferencias y efectivo no tienen recargo.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "PaymentMethods",
+        "confidence": _rand_conf(0.91, 0.97),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": True,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["💰 Pago al contado", "💳 Financiamiento", "📞 Contactar asesor"],
+            ["💰 Cash", "💳 Tarjeta", "🏦 Transferencia"],
+            ["Pago al contado", "Financiamiento", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: ReturnPolicy (87) — Política de devolución
+# ============================================================
+
+RETURN_POLICY_USER_TEMPLATES = [
+    # Semi-formal
+    "Si no me gusta lo puedo devolver?",
+    "Tienen política de devolución?",
+    "Se puede devolver el carro?",
+    "Qué pasa si me arrepiento después de comprar?",
+    "Hay garantía de satisfacción?",
+    "Cuántos días tengo para devolver el vehículo?",
+    "Si le encuentro un defecto puedo devolverlo?",
+    "Tienen período de prueba?",
+    "Y si compro y no me gusta?",
+    "Puedo cambiar el vehículo después de comprar?",
+    # Dominican informal
+    "Oye, y si no me gusta después lo devuelvo?",
+    "Dimelo, puedo devolver el carro si no me convence?",
+    "Y si me arrepiento qué hago?",
+    "Si lo compro y no me gusta qué pasa?",
+    "Mano, y si sale con algún problema lo cambio?",
+    "Y si después quiero otro?",
+    # Formal
+    "Me gustaría conocer su política de devolución y garantía de satisfacción",
+    "Podrían informarme sobre los términos de cambio o devolución?",
+    # WhatsApp / typos
+    "puedo devolverlo?",
+    "devolucion?",
+    "si no me gusta q pasa?",
+    "se puede devolver?",
+    "politica de devolucion?",
+    "me arrepiento y q?",
+]
+
+def return_policy_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"📋 **Política de Devolución — {dealer['name']}**",
+        f"Te explico nuestra política de devolución y cambio",
+        f"Aquí tienes la información sobre devoluciones",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría conocer más detalles? Un asesor puede explicarte todo.",
+        "¿Tienes alguna otra pregunta sobre nuestras políticas?",
+        "¿Quieres que un asesor te explique los términos en detalle?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"En {dealer['name']} tu satisfacción es nuestra prioridad:\n\n"
+            f"✅ **Inspección pre-compra** — Revisamos el vehículo contigo antes de la venta\n"
+            f"✅ **Período de garantía** — Cobertura mecánica post-venta\n"
+            f"✅ **Cambio por defectos** — Si se detecta un defecto oculto, lo resolvemos\n\n"
+            f"⚠️ **Importante:**\n"
+            f"• La venta de vehículos generalmente es final una vez completada la transacción.\n"
+            f"• Conforme a la **Ley 358-05** (Pro-Consumidor), tienes derechos como comprador.\n"
+            f"• Cualquier defecto no declarado al momento de la venta está cubierto.\n"
+            f"• Recomendamos siempre una inspección presencial y test drive antes de comprar.\n\n"
+            f"{closing}"
+        ),
+        "intent": "ReturnPolicy",
+        "confidence": _rand_conf(0.89, 0.95),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["📞 Hablar con asesor", "🛡️ Ver garantía", "🚗 Test drive"],
+            ["📞 Contactar", "🛡️ Garantía", "🚗 Ver vehículos"],
+            ["Hablar con asesor", "Ver garantía", "Agendar visita"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: VehicleHistory (88) — Costo de mantenimiento
+# ============================================================
+
+MAINTENANCE_COST_USER_TEMPLATES = [
+    # Semi-formal
+    "Cuánto cuesta el mantenimiento?",
+    "Sale caro mantener la {make} {model}?",
+    "Cada cuánto es el service?",
+    "Cuánto sale el cambio de aceite?",
+    "Los repuestos son caros?",
+    "Es fácil conseguir repuestos?",
+    "Cada cuánto hay que hacerle mantenimiento?",
+    "Cuánto gasta de gasolina?",
+    "Es económica en combustible?",
+    "Rinde bien la gasolina?",
+    "Sale cara la mantención de la {make}?",
+    "Cuánto se gasta mensual en mantenimiento?",
+    # Dominican informal
+    "Oye, y esa sale cara de mantener?",
+    "Dimelo, la {make} gasta mucha gasolina?",
+    "Mano, los repuestos de esa se consiguen fácil?",
+    "Y eso cuánto gasta de gas?",
+    "Sale caro darle servicio a eso?",
+    "Los repuestos son genéricos o originales?",
+    "Cuánto rinde un tanque lleno?",
+    "Hay talleres que trabajen esa marca aquí?",
+    # Formal
+    "Me gustaría conocer los costos estimados de mantenimiento",
+    "Podrían indicarme el consumo de combustible y costos de servicio?",
+    # WhatsApp / typos
+    "cuanto gasta de gasolina?",
+    "sale caro mantener?",
+    "repuestos?",
+    "mantenimiento caro?",
+    "cuanto gasta?",
+    "los repuestos se consiguen?",
+]
+
+def maintenance_cost_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    vehicle_text = ""
+    fuel_info = ""
+    if vehicle:
+        vehicle_text = f" de la **{vehicle['make']} {vehicle['model']} {vehicle['year']}**"
+        fuel_type = vehicle.get("fuelType", "Gasolina")
+        fuel_info = f"\n⛽ **Combustible:** {fuel_type}"
+
+    opening = _pick([
+        f"🔧 **Costos de Mantenimiento{vehicle_text}**",
+        f"Te cuento sobre el mantenimiento{vehicle_text}",
+        f"Aquí tienes información sobre costos de mantenimiento{vehicle_text}",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría más detalles sobre un modelo específico?",
+        "¿Quieres que un asesor te dé un estimado más preciso?",
+        "¿Necesitas información sobre algún servicio en particular?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"📋 **Mantenimiento preventivo estimado:**{fuel_info}\n"
+            f"• **Cambio de aceite:** RD$2,500 - RD$5,000 (cada 5,000-10,000 km)\n"
+            f"• **Servicio general:** RD$5,000 - RD$15,000 (cada 10,000 km)\n"
+            f"• **Frenos:** RD$4,000 - RD$12,000 (cada 30,000-50,000 km)\n"
+            f"• **Neumáticos:** RD$15,000 - RD$40,000 (cada 40,000-60,000 km)\n\n"
+            f"💡 **Tips:**\n"
+            f"• Las marcas japonesas (Toyota, Honda, Nissan) suelen tener repuestos más económicos en RD\n"
+            f"• Las marcas coreanas (Hyundai, Kia) tienen buena disponibilidad de repuestos\n"
+            f"• Los vehículos diésel consumen menos pero el mantenimiento es algo más costoso\n\n"
+            f"⚠️ *Los costos son estimados y varían según el taller y la marca. "
+            f"Un asesor puede darte un estimado más preciso.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "MaintenanceCost",
+        "confidence": _rand_conf(0.88, 0.95),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🚗 Ver vehículos económicos", "💰 Financiamiento", "📞 Asesor"],
+            ["🚗 Buscar vehículo", "💰 Ver precios", "📞 Contactar"],
+            ["Ver vehículos", "Precios", "Hablar con asesor"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: OutOfScope (89) — Preguntas fuera del tema automotriz
+# ============================================================
+
+OUT_OF_SCOPE_USER_TEMPLATES = [
+    # Real estate
+    "Venden casas también?",
+    "Tienen apartamentos en venta?",
+    "Me pueden vender un terreno?",
+    "Hacen préstamos hipotecarios?",
+    # Electronics / other products
+    "Venden iPhones?",
+    "Tienen computadoras?",
+    "Venden televisores?",
+    "Tienen electrodomésticos?",
+    # Services unrelated
+    "Me puedes hacer una reservación de restaurante?",
+    "Necesito un plomero",
+    "Saben de algún electricista?",
+    "Me pueden hacer un trámite de visa?",
+    # Personal questions
+    "Quieres ser mi novia?",
+    "Me puedes prestar dinero?",
+    "Cuál es el resultado del béisbol?",
+    "Quién va a ganar las elecciones?",
+    "Me puedes ayudar con mi tarea de matemáticas?",
+    "Cuéntame un chiste",
+    # Dominican specific off-topic
+    "A cómo ta el dólar hoy?",
+    "Hay apagón hoy?",
+    "Dónde queda la JCE más cerca?",
+    "Cuándo es el próximo feriado?",
+    "Me pueden hacer una marbete?",
+    # Travel / flights
+    "Cuánto cuesta un vuelo a Miami?",
+    "Venden pasajes de avión?",
+    "Tienen paquetes de viaje?",
+]
+
+def out_of_scope_response(dealer: dict, **kwargs) -> dict:
+    response = _pick([
+        (
+            f"Aprecio tu consulta, pero eso está fuera de mi área. 😊\n\n"
+            f"Soy el asistente especializado en vehículos de {dealer['name']}. "
+            f"Puedo ayudarte con:\n\n"
+            f"🚗 Buscar vehículos\n"
+            f"💰 Precios y financiamiento\n"
+            f"📅 Agendar test drives\n"
+            f"📍 Ubicación y horarios\n\n"
+            f"¿Te gustaría explorar nuestro inventario?"
+        ),
+        (
+            f"¡Ja! Eso no es lo mío, pero en lo que sí soy experto es en vehículos. 🚗\n\n"
+            f"Soy el bot de ventas de {dealer['name']} y puedo ayudarte a encontrar "
+            f"el carro perfecto para ti.\n\n"
+            f"¿Buscas algo en particular?"
+        ),
+        (
+            f"Hmm, para eso necesitarías otro tipo de ayuda. "
+            f"Yo me especializo en vehículos aquí en {dealer['name']}.\n\n"
+            f"¿En qué puedo ayudarte con carros?"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "OutOfScope",
+        "confidence": _rand_conf(0.55, 0.80),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🚗 Ver vehículos", "💰 Precios", "📞 Contactar asesor"],
+            ["🔍 Buscar carro", "💰 Financiamiento", "📍 Ubicación"],
+            ["Ver inventario", "Buscar vehículo", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: LanguageBarrier (90) — Mensajes en otros idiomas
+# ============================================================
+
+LANGUAGE_BARRIER_USER_TEMPLATES = [
+    # English
+    "Do you have cars for sale?",
+    "What cars do you have available?",
+    "I'm looking for an SUV",
+    "How much is that car?",
+    "Can I schedule a test drive?",
+    "Do you offer financing?",
+    "What's the price?",
+    "I want to buy a car",
+    "Do you speak English?",
+    "Can you help me in English?",
+    "Is this available?",
+    "How can I contact you?",
+    # French
+    "Je cherche une voiture",
+    "Vous avez des voitures à vendre?",
+    "Combien ça coûte?",
+    "Parlez-vous français?",
+    # Portuguese
+    "Vocês vendem carros?",
+    "Quanto custa esse carro?",
+    "Preciso de um carro",
+    # Haitian Creole (important for DR)
+    "Mwen bezwen yon machin",
+    "Konbyen machin sa a koute?",
+    "Eske ou gen machin pou vann?",
+    "Mwen vle achte yon machin",
+]
+
+def language_barrier_response(dealer: dict, **kwargs) -> dict:
+    response = _pick([
+        (
+            f"Hello! 👋 I see you're writing in another language.\n\n"
+            f"I'm the virtual assistant of {dealer['name']} and I primarily speak **Spanish**. "
+            f"However, I can try to help you.\n\n"
+            f"---\n\n"
+            f"¡Hola! Veo que escribes en otro idioma. Soy el asistente de {dealer['name']} "
+            f"y hablo principalmente **español**.\n\n"
+            f"Si necesitas atención en inglés u otro idioma, puedo conectarte con un asesor "
+            f"que pueda asistirte.\n\n"
+            f"Would you like me to connect you with an advisor who speaks English? / "
+            f"¿Te conecto con un asesor?"
+        ),
+        (
+            f"Hi! I mainly speak Spanish, but I can help you. 🌐\n\n"
+            f"For better assistance, I can connect you with a bilingual advisor at {dealer['name']}.\n\n"
+            f"---\n\n"
+            f"¡Hola! Hablo principalmente español. ¿Te conecto con un asesor bilingüe?"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "LanguageBarrier",
+        "confidence": _rand_conf(0.75, 0.90),
+        "isFallback": False,
+        "parameters": {
+            "detectedLanguage": "non-spanish"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "TRANSFER_TO_AGENT",
+        "quickReplies": _pick([
+            ["📞 Talk to advisor", "🚗 Ver vehículos", "📞 Hablar con asesor"],
+            ["Yes, connect me", "🚗 Show vehicles", "📞 Contact advisor"],
+            ["Conectar con asesor", "Ver vehículos", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: ColorAvailability (91) — Disponibilidad de colores
+# ============================================================
+
+COLOR_AVAILABILITY_USER_TEMPLATES = [
+    # Semi-formal
+    "En qué colores viene la {make} {model}?",
+    "Tienen la {make} en negro?",
+    "Viene en blanco la {make} {model}?",
+    "Qué colores tienen disponibles?",
+    "Hay en color rojo?",
+    "Tienen alguno en gris o plata?",
+    "Lo quiero azul, tienen?",
+    "Qué opciones de color tienen?",
+    "Viene en color perla?",
+    "Tienen interior en piel negra?",
+    "Puedo elegir el color?",
+    # Dominican informal
+    "Oye, y esa viene en negra?",
+    "Dimelo, tienen en blanco?",
+    "Mano, hay en color champagne?",
+    "Y en rojo la tienen?",
+    "Hay alguna en azul?",
+    "Lo quiero blanquito, hay?",
+    "Y los interiores son en piel o tela?",
+    # Formal
+    "Me gustaría saber qué opciones de color exterior e interior tienen disponibles",
+    "Podrían indicarme los colores disponibles para la {make} {model}?",
+    # WhatsApp / typos
+    "colores?",
+    "hay en negro?",
+    "viene en blanco?",
+    "q colores tienen?",
+    "hay rojo?",
+    "color?",
+]
+
+def color_availability_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    if vehicle:
+        opening = _pick([
+            f"🎨 **Colores de la {vehicle['make']} {vehicle['model']} {vehicle['year']}**",
+            f"Aquí están los colores disponibles para la **{vehicle['make']} {vehicle['model']}**",
+            f"Te cuento sobre los colores de la **{vehicle['make']} {vehicle['model']}**",
+        ])
+
+        color_info = (
+            f"La unidad que tenemos en inventario viene en:\n\n"
+            f"🎨 **Exterior:** {vehicle.get('exteriorColor', 'Consultar')}\n"
+            f"🪑 **Interior:** {vehicle.get('interiorColor', 'Consultar')}\n\n"
+        )
+    else:
+        opening = _pick([
+            "🎨 **Colores Disponibles**",
+            "Te cuento sobre nuestras opciones de color",
+        ])
+        color_info = (
+            "Contamos con vehículos en diversos colores:\n\n"
+            "🎨 **Colores populares:** Blanco, Negro, Gris, Plata, Azul, Rojo\n\n"
+        )
+
+    closing = _pick([
+        "¿Buscas un color en particular? Puedo filtrar el inventario.",
+        "¿Qué color prefieres? Te busco opciones.",
+        "¿Te gustaría ver los vehículos disponibles en un color específico?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"{color_info}"
+            f"💡 *La disponibilidad de colores depende del inventario actual. "
+            f"Si no tenemos el color que buscas, podemos buscar opciones para ti.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "ColorAvailability",
+        "confidence": _rand_conf(0.88, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "vehicleId": vehicle["id"] if vehicle else None,
+            "exteriorColor": vehicle.get("exteriorColor") if vehicle else None,
+            "interiorColor": vehicle.get("interiorColor") if vehicle else None
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🔍 Buscar por color", "📋 Ver detalles", "📞 Contactar asesor"],
+            ["🔍 Filtrar inventario", "🚗 Ver vehículos", "📞 Asesor"],
+            ["Buscar por color", "Ver inventario", "Contactar"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: UrgentPurchase (92) — Compra urgente / inmediata
+# ============================================================
+
+URGENT_PURCHASE_USER_TEMPLATES = [
+    # Semi-formal
+    "Necesito un carro para hoy",
+    "Tienen algo que me pueda llevar hoy mismo?",
+    "Cuál es el proceso más rápido para comprar?",
+    "Necesito un vehículo urgente",
+    "Cuánto tarda el proceso de compra?",
+    "Puedo salir hoy con el carro?",
+    "Tienen vehículos listos para entrega inmediata?",
+    "Necesito comprar lo más rápido posible",
+    "Cuánto se demora todo el papeleo?",
+    "Se puede comprar hoy y llevárselo hoy?",
+    "Qué tienen para entrega inmediata?",
+    # Dominican informal
+    "Oye necesito un carro ya ya",
+    "Mano, es urgente, necesito un carro hoy",
+    "Dimelo, qué tienen que me pueda llevar ahorita?",
+    "Klk, necesito uno pa hoy",
+    "Puedo llegar hoy y salir con el carro?",
+    "No tengo tiempo, necesito algo rápido",
+    "Cuál me puedo llevar hoy mismo?",
+    "Hay algo listo pa entregar?",
+    # Formal
+    "Me urge adquirir un vehículo, cuál es el proceso más ágil?",
+    "Necesito un vehículo disponible para entrega inmediata",
+    # WhatsApp / typos
+    "necesito un carro ya!",
+    "algo pa hoy?",
+    "urgente!!",
+    "entrega inmediata?",
+    "hoy mismo puedo?",
+    "lo nesesito ya",
+]
+
+def urgent_purchase_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"⚡ **Entendido, vamos a agilizar esto.**",
+        f"¡Perfecto! Podemos hacer el proceso rápido.",
+        f"Entiendo la urgencia. En {dealer['name']} podemos ser muy ágiles.",
+    ])
+
+    closing = _pick([
+        "¿Te gustaría ver qué vehículos tenemos listos para entrega hoy?",
+        "¿Cuál es tu presupuesto? Así te muestro opciones con entrega inmediata.",
+        "¿Quieres que un asesor te atienda ahora mismo?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"📋 **Proceso de compra rápida en {dealer['name']}:**\n\n"
+            f"⏱️ **Pago al contado:** El proceso puede completarse en **2-4 horas**\n"
+            f"1️⃣ Selección del vehículo\n"
+            f"2️⃣ Verificación de documentos (cédula + comprobante de fondos)\n"
+            f"3️⃣ Pago y firma\n"
+            f"4️⃣ ¡Te vas con tu vehículo!\n\n"
+            f"⏱️ **Con financiamiento:** De **24-48 horas** (sujeto a aprobación bancaria)\n\n"
+            f"💡 *Tip: Si traes tus documentos listos, el proceso es mucho más rápido.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "UrgentPurchase",
+        "confidence": _rand_conf(0.89, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "urgency": "high",
+            "deliveryType": "immediate"
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "TRANSFER_TO_AGENT",
+        "quickReplies": _pick([
+            ["🚗 Ver disponibles hoy", "📞 Llamar ahora", "📋 Documentos necesarios"],
+            ["🚗 Entrega inmediata", "📞 Hablar con asesor", "💰 Precios"],
+            ["Ver disponibles", "Llamar ahora", "Ver requisitos"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: NewVsUsed (93) — Nuevo vs Usado
+# ============================================================
+
+NEW_VS_USED_USER_TEMPLATES = [
+    # Semi-formal
+    "Son nuevos o usados los carros?",
+    "Tienen vehículos nuevos?",
+    "Solo venden usados?",
+    "Tienen carros 0 kilómetros?",
+    "Son de agencia o de segunda mano?",
+    "Estos carros son nuevos?",
+    "Venden nuevos y usados?",
+    "Cuál es la diferencia entre los nuevos y usados?",
+    "Qué ventajas tiene comprar usado vs nuevo?",
+    "Los usados están certificados?",
+    "Tienen programa de usados certificados?",
+    # Dominican informal
+    "Oye, esos carros son nuevos o usados?",
+    "Mano, tienen 0km?",
+    "Son de uso o son nuevecitos?",
+    "Tienen carros de paquete?",
+    "Esos son de segunda mano?",
+    "Son nuevos de agencia?",
+    "Klk, tienen cero kilómetro?",
+    "Los usados tán buenos o son maltratados?",
+    # Formal
+    "Me gustaría saber si comercializan vehículos nuevos o solo usados",
+    "Podrían indicarme si tienen vehículos con cero kilómetros?",
+    # WhatsApp / typos
+    "son nuevos?",
+    "usados o nuevos?",
+    "tienen 0km?",
+    "carros nuevos?",
+    "solo usados?",
+    "tienen de paquete?",
+]
+
+def new_vs_used_response(dealer: dict, **kwargs) -> dict:
+    opening = _pick([
+        f"🚗 **Inventario de {dealer['name']}**",
+        f"Te cuento sobre nuestro inventario",
+        f"Aquí tienes la información sobre nuestros vehículos",
+    ])
+
+    closing = _pick([
+        "¿Prefieres ver vehículos nuevos, usados, o ambos?",
+        "¿Qué te interesa más: nuevo o usado?",
+        "¿Te muestro opciones disponibles?",
+    ])
+
+    return {
+        "response": (
+            f"{opening}\n\n"
+            f"En {dealer['name']} manejamos:\n\n"
+            f"✨ **Vehículos nuevos (0 km):**\n"
+            f"• Directo de agencia con garantía de fábrica completa\n"
+            f"• Últimos modelos disponibles\n"
+            f"• Personalización de equipamiento\n\n"
+            f"✅ **Vehículos usados certificados:**\n"
+            f"• Inspección de 150+ puntos\n"
+            f"• Historial verificado\n"
+            f"• Garantía mecánica incluida\n"
+            f"• Precios más accesibles\n\n"
+            f"💡 *Ambas opciones cuentan con financiamiento disponible.*\n\n"
+            f"{closing}"
+        ),
+        "intent": "NewVsUsed",
+        "confidence": _rand_conf(0.90, 0.97),
+        "isFallback": False,
+        "parameters": {},
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["✨ Ver nuevos", "✅ Ver usados", "🔍 Ver todo"],
+            ["🚗 Nuevos 0km", "🚗 Usados certificados", "💰 Precios"],
+            ["Ver nuevos", "Ver usados", "Ver todo el inventario"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: UserObjection (95) — Rechazo, objeción de precio,
+# desinterés, "no me interesa", "muy caro", "lo voy a pensar"
+# El modelo debe respetar la decisión, no presionar, y ofrecer
+# alternativas o mantener la puerta abierta.
+# ============================================================
+
+USER_OBJECTION_USER_TEMPLATES = [
+    # --- Price objections ---
+    "Está muy caro",
+    "Eso es demasiado caro",
+    "Fuera de mi presupuesto",
+    "No me alcanza para eso",
+    "Busco algo más barato",
+    "Ese precio no me conviene",
+    "Es mucho dinero",
+    "No tengo tanto",
+    "En otro lado lo vi más barato",
+    "No vale eso",
+    "Muy costoso para lo que es",
+    # --- General disinterest ---
+    "No me interesa",
+    "No, gracias",
+    "No quiero",
+    "No estoy interesado",
+    "No es lo que busco",
+    "No me convence",
+    "No me gusta ese carro",
+    "No es mi estilo",
+    "Busco otra cosa",
+    "No gracias, estoy bien",
+    "Paso",
+    "Mejor no",
+    # --- Hesitation / deferral ---
+    "Déjame pensarlo",
+    "Lo voy a pensar",
+    "Voy a consultarlo con mi esposa",
+    "Necesito pensarlo",
+    "No estoy seguro todavía",
+    "Todavía no me decido",
+    "Ahora no, quizás después",
+    "Otro día",
+    "Lo pienso y te aviso",
+    "No por ahora",
+    "Ahorita no puedo",
+    "Déjame ver otras opciones primero",
+    # --- Change of mind ---
+    "Cambié de opinión",
+    "Ya no quiero",
+    "Me arrepentí",
+    "Mejor no, ya vi otro que me gusta más",
+    "Encontré algo mejor en otro lado",
+    "Ya compré en otro dealer",
+    # --- Cancel / stop ---
+    "Quiero cancelar",
+    "Cancela eso",
+    "Ya no quiero seguir",
+    "Suficiente, no necesito más info",
+    "Ya vi suficiente",
+    "No me manden más mensajes",
+    "No me llamen",
+    # --- Dominican informal ---
+    "Na, ta muy caro eso",
+    "Nel, no me interesa",
+    "Paso, ta bien",
+    "Ta' caro bro",
+    "Nah, eso no va conmigo",
+    "Dejalo ahi, no me convence",
+    "Mano eso e mucho",
+    "Voy a ver en otro lao",
+    "No me conviene eso manin",
+    "Ta bien pero no por ahora",
+    "Dimelo despues, ahora no puedo",
+    # --- WhatsApp / typos ---
+    "no gracia",
+    "no kiero",
+    "no me intersa",
+    "dejame pensalo",
+    "ta caro",
+    "no x ahora",
+    "lo pienso",
+    "nah paso",
+]
+
+def user_objection_response(dealer: dict, vehicle: dict = None, **kwargs) -> dict:
+    """Handle user rejections and objections WITHOUT pressure.
+    Respect the decision, offer alternatives, keep the door open."""
+
+    vehicle_text = ""
+    if vehicle:
+        vehicle_text = f" sobre la {vehicle['make']} {vehicle['model']} {vehicle['year']}"
+
+    response = _pick([
+        # --- Price objection responses ---
+        (
+            f"Entiendo perfectamente, el presupuesto es importante. 💡\n\n"
+            f"En {dealer['name']} tenemos opciones para diferentes presupuestos. "
+            f"¿Te gustaría que te muestre vehículos en un rango de precio más accesible?\n\n"
+            f"También tenemos opciones de **financiamiento** que pueden hacer más cómoda la inversión."
+        ),
+        (
+            f"Lo entiendo, quiero que encuentres algo que se ajuste bien a lo que buscas. 🤝\n\n"
+            f"Tenemos otras opciones que podrían interesarte a diferentes precios. "
+            f"¿Me dices tu rango de presupuesto y te busco alternativas?"
+        ),
+        (
+            f"Comprendo{vehicle_text}. No hay ningún problema.\n\n"
+            f"Puedo mostrarte otras opciones más económicas o explorar "
+            f"planes de financiamiento que hagan más accesible la compra. "
+            f"¿Qué prefieres?"
+        ),
+        # --- General disinterest responses ---
+        (
+            f"¡Entendido! Respeto tu decisión. 🙏\n\n"
+            f"Si en algún momento cambias de opinión o buscas otro tipo de vehículo, "
+            f"estamos aquí para ayudarte en {dealer['name']}.\n\n"
+            f"¿Hay algún otro tipo de carro que te llame la atención?"
+        ),
+        (
+            f"Perfecto, sin problema. Cada persona tiene gustos diferentes "
+            f"y quiero que encuentres exactamente lo que necesitas. 👍\n\n"
+            f"¿Te gustaría ver otros modelos o marcas diferentes?"
+        ),
+        (
+            f"Tranquilo, entiendo. No hay presión aquí. 😊\n\n"
+            f"Si buscas algo diferente, con gusto te ayudo. "
+            f"Tenemos vehículos de varias marcas, tamaños y precios.\n\n"
+            f"¿O prefieres que te conecte con un asesor para una búsqueda más personalizada?"
+        ),
+        # --- Hesitation / deferral responses ---
+        (
+            f"¡Claro, tómate tu tiempo! Es una decisión importante. 🤔\n\n"
+            f"Cuando estés listo, aquí estaremos en {dealer['name']}. "
+            f"Si quieres, puedo guardar la información para que la revises luego.\n\n"
+            f"¿Te gustaría que un asesor te contacte cuando estés listo?"
+        ),
+        (
+            f"Perfecto, es normal querer pensarlo bien. Sin apuros. 👍\n\n"
+            f"Te recomiendo que lo consultes tranquilamente. "
+            f"Si tienes preguntas después, escríbeme cuando quieras.\n\n"
+            f"¿Quieres que te envíe un resumen de lo que vimos para que lo revises con calma?"
+        ),
+        (
+            f"Entiendo, tómate el tiempo que necesites. 🙏\n\n"
+            f"Solo ten en cuenta que la disponibilidad puede cambiar. "
+            f"Si quieres, puedo avisarte si hay algún cambio de precio o promoción.\n\n"
+            f"¿Te gustaría recibir notificaciones sobre ofertas?"
+        ),
+        # --- Change of mind / cancel responses ---
+        (
+            f"¡Sin problema! Respeto tu decisión completamente. 🤝\n\n"
+            f"Si alguna vez necesitas ayuda con vehículos en el futuro, "
+            f"no dudes en escribirnos. Siempre es un gusto atenderte.\n\n"
+            f"¡Te deseo mucho éxito con tu búsqueda!"
+        ),
+        (
+            f"Entendido. Si encontraste algo que te gusta más, "
+            f"me alegra que hayas encontrado lo que buscas. 😊\n\n"
+            f"Las puertas de {dealer['name']} siempre están abiertas. "
+            f"¡Mucho éxito!"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "UserObjection",
+        "confidence": _rand_conf(0.88, 0.96),
+        "isFallback": False,
+        "parameters": {
+            "sentiment": "negative",
+            "objectionType": _pick(["price", "disinterest", "hesitation", "cancellation"])
+        },
+        "leadSignals": {
+            "mentionedBudget": True,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": None,
+        "quickReplies": _pick([
+            ["🔍 Ver más opciones", "💰 Opciones económicas", "📞 Hablar con asesor"],
+            ["🚗 Otros vehículos", "💳 Financiamiento", "👋 Hasta luego"],
+            ["Ver opciones más baratas", "Hablar con asesor", "Salir"],
+            ["🔍 Buscar otro", "📞 Contactar asesor", "Adiós"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: FrustratedUser (96) — Usuario enojado, frustrado,
+# con lenguaje fuerte. Diferente de Complaint (queja formal).
+# El modelo debe de-escalar, empatizar, y ofrecer transferir
+# a un humano o agendar una cita para resolverlo.
+# ============================================================
+
+FRUSTRATED_USER_USER_TEMPLATES = [
+    # --- Frustration with service ---
+    "Esto es una falta de respeto",
+    "Nadie me resuelve nada aquí",
+    "Ustedes no sirven para nada",
+    "Ya estoy harto de esperar",
+    "Llevo días esperando y nadie me contesta",
+    "Qué clase de servicio es este?",
+    "Esto es lo peor que he visto",
+    "No puedo creer lo malo que es el servicio",
+    "Me tienen de un lado pa otro y nada",
+    "Ya me cansé de esto",
+    "Son unos irresponsables",
+    "No vuelvo más nunca aquí",
+    "Voy a ponerlos en las redes sociales",
+    "Los voy a reportar en Pro-Consumidor",
+    "Voy a poner una denuncia",
+    # --- Frustration with bot ---
+    "Este bot no entiende nada",
+    "No me estás entendiendo",
+    "No es eso lo que te pregunté",
+    "Respóndeme lo que te pregunté",
+    "Siempre me dices lo mismo",
+    "Ya me cansé del bot",
+    "Eres inútil",
+    "Este chatbot no sirve",
+    "Necesito a alguien que me entienda",
+    "Llevo rato aquí y no me has ayudado en nada",
+    "No me estás ayudando",
+    "No entiendes lo que te digo",
+    # --- Anger with product/price ---
+    "Esos precios son un robo",
+    "Eso es un abuso de precio",
+    "Están cobrando de más",
+    "Esos carros no valen lo que dicen",
+    "Me están estafando",
+    "Eso es una estafa",
+    "Me engañaron con el carro",
+    "El carro que me vendieron salió malo y nadie responde",
+    # --- Dominican informal strong ---
+    "Diablo, nadie contesta aqui",
+    "Coño pero es que nadie resuelve",
+    "Esto e un relajo, de verdad",
+    "Maldita sea, nadie me ayuda",
+    "Que falta e respeto, de verdad",
+    "Esto no se hace, son unos sinvergüenzas",
+    "Klk con ustedes q nadie responde",
+    "Increible lo malo q son",
+    "Toy cansao de esto ya",
+    # --- WhatsApp / typos ---
+    "NADIE ME CONTESTA!!!",
+    "QUE CLASE DE SERVICIO ES ESTE??",
+    "RESPONDAN!!!",
+    "esto es una porqueria",
+    "q berguenza de serbisio",
+    "malicimo el serbicio",
+    "ya no aguanto mas",
+]
+
+def frustrated_user_response(dealer: dict, **kwargs) -> dict:
+    """De-escalate frustrated/angry users with empathy, offer human transfer
+    and/or appointment to resolve the issue in person."""
+
+    response = _pick([
+        # --- Empathy + Transfer ---
+        (
+            f"Lamento mucho tu experiencia y entiendo tu frustración. 🙏\n\n"
+            f"Tu situación es importante para nosotros y mereces una respuesta adecuada. "
+            f"Voy a transferirte **inmediatamente** con un supervisor que puede ayudarte.\n\n"
+            f"También puedes agendar una cita presencial si prefieres resolverlo en persona.\n\n"
+            f"¿Qué prefieres: hablar ahora con un supervisor o agendar una visita?"
+        ),
+        (
+            f"Comprendo perfectamente tu molestia y te pido disculpas. "
+            f"En {dealer['name']} no queremos que tengas esta experiencia. 😔\n\n"
+            f"Quiero ayudarte a resolver esto. Tengo dos opciones:\n\n"
+            f"1️⃣ **Transferirte con un supervisor** que atienda tu caso ahora\n"
+            f"2️⃣ **Agendar una cita** para que te atiendan presencialmente\n\n"
+            f"¿Cuál prefieres?"
+        ),
+        (
+            f"Tienes toda la razón en estar molesto y te pido sinceras disculpas. 🙏\n\n"
+            f"Esto no refleja el servicio que queremos dar en {dealer['name']}. "
+            f"Voy a escalar tu caso de inmediato.\n\n"
+            f"Un supervisor te contactará para resolver tu situación. "
+            f"¿Me compartes tu nombre y teléfono para que te llamen directamente?"
+        ),
+        # --- Bot frustration → Transfer ---
+        (
+            f"Tienes razón, disculpa si no he podido ayudarte como mereces. 😔\n\n"
+            f"Soy un asistente virtual y a veces no logro entender lo que necesitas. "
+            f"Déjame conectarte con una **persona real** que pueda ayudarte mejor.\n\n"
+            f"¿Te conecto con un asesor ahora o prefieres que te llamen?"
+        ),
+        (
+            f"Lamento no haber podido resolver tu consulta. Entiendo la frustración. 🙏\n\n"
+            f"Como asistente virtual tengo limitaciones. "
+            f"Un asesor humano de {dealer['name']} podrá atenderte mucho mejor.\n\n"
+            f"¿Quieres que te transfiera ahora mismo o prefieres agendar una cita?"
+        ),
+        # --- Price/product anger → Empathy + Options ---
+        (
+            f"Lamento que sientas eso. Tu opinión es muy importante para nosotros. 🤝\n\n"
+            f"Si crees que hay un problema con un producto o servicio, "
+            f"tenemos un proceso formal para atender tu caso:\n\n"
+            f"📞 **Hablar con un supervisor** para resolver directamente\n"
+            f"📅 **Agendar una cita** en nuestras oficinas\n"
+            f"📧 **Enviar una queja formal** por escrito\n\n"
+            f"La **Ley 358-05 (Pro-Consumidor)** protege tus derechos como consumidor. "
+            f"Queremos resolver esto contigo."
+        ),
+        (
+            f"Entiendo tu frustración y la tomo muy en serio. 😔\n\n"
+            f"En {dealer['name']} queremos que cada cliente tenga una experiencia positiva. "
+            f"Si algo no ha sido así, quiero resolverlo.\n\n"
+            f"¿Me permites conectarte con un supervisor? También puedes agendar "
+            f"una cita presencial para revisar tu caso directamente."
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "FrustratedUser",
+        "confidence": _rand_conf(0.90, 0.98),
+        "isFallback": False,
+        "parameters": {
+            "sentiment": "very_negative",
+            "urgency": "high",
+            "escalationRequired": True
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "TRANSFER_TO_AGENT",
+        "quickReplies": _pick([
+            ["📞 Hablar con supervisor", "📅 Agendar cita", "📧 Queja formal"],
+            ["👤 Persona real ahora", "📅 Agendar visita", "📞 Que me llamen"],
+            ["Hablar con humano", "Agendar cita", "Enviar queja"],
+            ["📞 Supervisor", "📅 Cita presencial", "📧 Queja escrita"],
+        ])
+    }
+
+
+# ============================================================
+# INTENT: RequestHumanAgent (97) — El usuario pide explícitamente
+# hablar con una persona real / no quiere el bot.
+# A diferencia de ContactRequest, aquí el usuario NO está pidiendo
+# info sino que EXIGE ser atendido por un humano.
+# ============================================================
+
+REQUEST_HUMAN_AGENT_USER_TEMPLATES = [
+    # --- Direct request ---
+    "Quiero hablar con una persona",
+    "Pásame con un humano",
+    "Quiero hablar con alguien de verdad",
+    "Conéctame con un asesor real",
+    "Necesito hablar con una persona, no con un bot",
+    "No quiero hablar con un robot",
+    "Pásame con un vendedor de verdad",
+    "Quiero atención humana",
+    "Puedo hablar con alguien?",
+    "Hay alguien real ahí?",
+    "Quiero que me atienda una persona",
+    "Prefiero hablar con alguien real",
+    "Necesito un humano",
+    "Pásame a un agente",
+    "Quiero hablar con el encargado",
+    "Me pueden pasar con un ejecutivo?",
+    "Quiero hablar con un supervisor",
+    "Necesito que me atienda alguien que pueda decidir",
+    "Conectame con el gerente",
+    "Quiero hablar con ventas directamente",
+    # --- Bot rejection ---
+    "No quiero hablar con un bot",
+    "Este bot no me ayuda, pásame con alguien",
+    "Prefiero una persona de verdad",
+    "Los bots no entienden, necesito una persona",
+    "No confío en un robot para esto",
+    "Necesito explicar mi caso a alguien real",
+    "Esto es muy complicado para un bot",
+    "Mi caso es especial, necesito un humano",
+    "No me gusta hablar con chatbots",
+    # --- Dominican informal ---
+    "Oye, pásame con alguien de verdad",
+    "Dimelo, hay alguien real ahi?",
+    "Mano, no quiero hablar con el bot",
+    "Ya me cansé del bot, pásame con alguien",
+    "Klk, pasame con un vendedor real",
+    "Bro necesito una persona, no una maquina",
+    "Loco pásame con alguien que pueda ayudarme de verdad",
+    "Ey, hay algún humano por ahí?",
+    # --- WhatsApp / typos ---
+    "pasame con alguien porfavor",
+    "quiero ablar con una persona",
+    "necesito un humano ya",
+    "PASAME CON ALGUIEN",
+    "hay alguien ahi???",
+    "pasame con un agente real",
+    "no kiero el bot",
+    "persona real porfabor",
+    # --- With scheduling preference ---
+    "Quiero que me llame una persona",
+    "Prefiero que un asesor me llame",
+    "Quiero agendar una cita con un vendedor",
+    "Me pueden programar una llamada con un asesor?",
+    "Quiero ir personalmente a hablar con alguien",
+    "Puedo ir mañana a hablar con un vendedor?",
+    "Quiero que me atiendan en persona",
+    "Prefiero ir al dealer a hablar con alguien",
+]
+
+def request_human_agent_response(dealer: dict, **kwargs) -> dict:
+    """Handle explicit requests to speak with a human agent.
+    Always set TRANSFER_TO_AGENT and offer appointment scheduling."""
+
+    hours = dealer.get("businessHours", {})
+    weekday = hours.get("monday", {})
+    saturday = hours.get("saturday", {})
+    weekday_str = f"{weekday.get('open', '8:00')}-{weekday.get('close', '18:00')}" if weekday else "8:00-18:00"
+    saturday_str = f"{saturday.get('open', '9:00')}-{saturday.get('close', '14:00')}" if saturday else "9:00-14:00"
+
+    response = _pick([
+        (
+            f"¡Por supuesto! Entiendo que prefieras hablar con una persona. 🤝\n\n"
+            f"Te voy a conectar con un asesor de {dealer['name']} ahora mismo. "
+            f"Nuestro equipo está disponible:\n\n"
+            f"📞 Teléfono: **{dealer['phone']}**\n"
+            f"🕐 L-V: {weekday_str} | Sáb: {saturday_str}\n\n"
+            f"¿Prefieres que te llamen o quieres agendar una visita presencial?"
+        ),
+        (
+            f"Claro, sin problema. Voy a transferirte con un asesor real. 👤\n\n"
+            f"Un miembro de nuestro equipo en {dealer['name']} te atenderá personalmente.\n\n"
+            f"Puedes contactarnos directamente al **{dealer['phone']}** "
+            f"o si prefieres, puedo agendar una cita para que te atiendan "
+            f"en nuestra sede en **{dealer['location']}**.\n\n"
+            f"¿Qué te conviene más?"
+        ),
+        (
+            f"Entendido, te conecto con una persona de nuestro equipo. ✅\n\n"
+            f"Para agilizar tu atención, ¿me compartes tu nombre y número de teléfono? "
+            f"Un asesor de {dealer['name']} te contactará lo antes posible.\n\n"
+            f"También puedes:\n"
+            f"📞 Llamarnos al **{dealer['phone']}**\n"
+            f"📅 Agendar una cita presencial\n"
+            f"💬 Escribirnos por WhatsApp"
+        ),
+        (
+            f"¡Listo! Respeto totalmente tu preferencia. 🙏\n\n"
+            f"Voy a hacer que un asesor de {dealer['name']} te contacte. "
+            f"Mientras tanto, si es urgente puedes llamar al **{dealer['phone']}** "
+            f"en horario de L-V: {weekday_str}.\n\n"
+            f"¿Quieres que agende una cita o prefieres que te llamen?"
+        ),
+        (
+            f"Por supuesto, a veces es mejor hablar con alguien directamente. 😊\n\n"
+            f"Tengo estas opciones para ti:\n\n"
+            f"1️⃣ **Te transfiero ahora** con un asesor disponible\n"
+            f"2️⃣ **Te agendo una cita** en {dealer['location']}\n"
+            f"3️⃣ **Te programo una llamada** para el horario que prefieras\n\n"
+            f"¿Cuál te conviene?"
+        ),
+    ])
+
+    return {
+        "response": response,
+        "intent": "RequestHumanAgent",
+        "confidence": _rand_conf(0.93, 0.99),
+        "isFallback": False,
+        "parameters": {
+            "transferRequested": True,
+            "preferredChannel": _pick(["phone", "in_person", "whatsapp"])
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "TRANSFER_TO_AGENT",
+        "quickReplies": _pick([
+            ["📞 Que me llamen", "📅 Agendar cita", "💬 WhatsApp"],
+            ["📞 Llamar ahora", "📅 Visitar dealer", "💬 WhatsApp asesor"],
+            ["Que me llamen", "Agendar cita", "Ir al dealer"],
+            ["📞 Llamada", "📅 Cita presencial", "💬 Chat con asesor"],
+        ])
+    }
+
+
+
+# ============================================================
+# INTENT: VehicleNotInInventory (95) — El usuario pregunta por
+# un vehículo, marca, modelo o especificación que NO está en el
+# inventario proporcionado en el system prompt. El modelo DEBE
+# reconocer que no lo tiene y sugerir alternativas del inventario.
+# ============================================================
+
+# Brands/models that DON'T exist in seed_vehicles.json:
+# Tesla, Lamborghini, Ferrari, Porsche, Volvo, Land Rover, Range Rover,
+# Jaguar, Maserati, Alfa Romeo, Peugeot, Renault, Citroën, Fiat,
+# BYD, Chery, Great Wall, JAC, Geely, Dongfeng, BAIC, Haval
+# Also: specific models that don't exist (e.g., "Toyota Supra")
+
+VEHICLE_NOT_IN_INVENTORY_USER_TEMPLATES = [
+    # --- Luxury brands not in inventory ---
+    "Tienen algún Tesla disponible?",
+    "Quiero ver los Tesla Model 3",
+    "Tienen algún Porsche?",
+    "Busco un Porsche Cayenne",
+    "Tienen Lamborghini?",
+    "Quiero un Ferrari",
+    "Tienen Range Rover?",
+    "Busco un Land Rover Defender",
+    "Me interesan los Volvo",
+    "Tienen Jaguar?",
+    "Busco un Maserati",
+    "Tienen algún Alfa Romeo?",
+    "Quiero ver los Cadillac que tienen",
+    "Tienen Lincoln?",
+    "Busco un Infiniti",
+    "Tienen Genesis?",
+    "Quiero un Bentley",
+    "Tienen Rolls Royce?",
+    # --- Chinese brands ---
+    "Tienen BYD?",
+    "Busco un BYD Dolphin",
+    "Tienen carros Chery?",
+    "Me interesan los Great Wall",
+    "Tienen JAC?",
+    "Busco un Geely",
+    "Tienen Haval?",
+    "Busco un BAIC",
+    "Tienen Dongfeng?",
+    "Quiero ver los MG que tienen",
+    # --- European brands ---
+    "Tienen Peugeot?",
+    "Busco un Renault",
+    "Tienen Citroën?",
+    "Quiero un Fiat 500",
+    "Tienen SEAT?",
+    "Busco un Skoda",
+    # --- Models that don't exist in inventory ---
+    "Tienen Toyota Supra?",
+    "Busco un Honda Type R",
+    "Tienen el Civic Type R?",
+    "Quiero una Nissan GTR",
+    "Tienen Ford Mustang?",
+    "Busco el Ford Raptor",
+    "Tienen el Hyundai Ioniq 5?",
+    "Quiero el Kia EV6",
+    "Busco un Toyota Land Cruiser",
+    "Tienen la Mazda MX-5?",
+    # --- Specific types not in inventory ---
+    "Tienen vehículos eléctricos?",
+    "Busco un carro eléctrico",
+    "Quiero un híbrido plug-in",
+    "Tienen carros convertibles?",
+    "Busco una van de pasajeros",
+    "Tienen camiones de carga?",
+    "Busco un minibus",
+    "Tienen motos?",
+    "Quiero un carro deportivo de carreras",
+    "Busco un carro de lujo importado",
+    # --- Dominican informal / WhatsApp ---
+    "hey tienen tesla?",
+    "bro y un porsche no tienen?",
+    "tienen algun carro electrico?",
+    "y Ferrari no hay?",
+    "oye quiero un Range Rover",
+    "tienen lamborgini? 🤑",  # common misspelling
+    "quiero un BYD de esos chinos q son baratos",
+    "y rolls royce no venden? 😅",
+    "busco un volvo o un jaguar",
+    "tinen Peugeot?",
+    "no tienen tesla model Y?",
+    "y un mustang no hay? 🐎",
+    "quisiera un carro que sea totalmente electrico",
+    "hay algún carro autonomo?",
+    "tienen el cybertruck d tesla?",
+    # --- Asking about specs not in inventory data ---
+    "Cuántos caballos de fuerza tiene la {make} {model}?",
+    "Cuál es el torque de la {make} {model}?",
+    "Cuánto consume la {make} {model} por galón?",
+    "Qué velocidad máxima alcanza la {make} {model}?",
+    "De cuánto es la aceleración 0-100 de la {make} {model}?",
+    "Cuánto pesa la {make} {model}?",
+    "Qué tipo de suspensión tiene la {make} {model}?",
+    "Tiene airbags laterales la {make} {model}?",
+    "Qué calificación de seguridad tiene la {make} {model}?",
+    "Cuántos litros tiene el maletero de la {make} {model}?",
+    "De cuánto es el tanque de gasolina?",
+    "El motor es turbo o aspirado?",
+]
+
+
+def vehicle_not_in_inventory_response(dealer: dict, **kwargs) -> dict:
+    """Respond when user asks about a vehicle/brand NOT in inventory."""
+    dealer_name = dealer["name"]
+    dealer_phone = dealer.get("phone", "809-555-0000")
+
+    # Variant 1-5: Brand/model not in inventory
+    # Variant 6-8: Spec not available in data
+    variant = random.randint(1, 8)
+
+    if variant == 1:
+        response = (
+            f"Actualmente no tenemos esa marca/modelo en nuestro inventario. 😊\n\n"
+            f"Sin embargo, en {dealer_name} tenemos excelentes opciones de marcas como "
+            f"Toyota, Honda, Hyundai, Kia, y más. ¿Te gustaría que te muestre lo que tenemos disponible?"
+        )
+    elif variant == 2:
+        response = (
+            f"Lamentablemente no contamos con ese vehículo en nuestro inventario actual. 🙁\n\n"
+            f"Pero tenemos alternativas que podrían interesarte. ¿Qué es lo que más te importa: "
+            f"precio, consumo de combustible, espacio, o potencia? Así te muestro lo más parecido de lo que sí tenemos."
+        )
+    elif variant == 3:
+        response = (
+            f"Ese modelo no está disponible en nuestro inventario actualmente.\n\n"
+            f"Si deseas, puedo:\n"
+            f"1️⃣ Mostrarte opciones similares de nuestro inventario\n"
+            f"2️⃣ Contactar a un asesor para buscar ese modelo específico\n"
+            f"3️⃣ Notificarte si llega a nuestro inventario\n\n"
+            f"¿Qué prefieres?"
+        )
+    elif variant == 4:
+        response = (
+            f"No tenemos ese vehículo en inventario por el momento. 📋\n\n"
+            f"Te puedo mostrar lo que sí tenemos disponible. ¿Qué tipo de vehículo buscas: "
+            f"SUV, sedán, pickup, o crossover? Te muestro las mejores opciones."
+        )
+    elif variant == 5:
+        response = (
+            f"Esa marca/modelo no forma parte de nuestro inventario actual en {dealer_name}.\n\n"
+            f"Nuestro catálogo incluye vehículos de marcas reconocidas con excelente relación "
+            f"calidad-precio. ¿Te gustaría explorar nuestras opciones disponibles? 🚗"
+        )
+    elif variant == 6:
+        response = (
+            f"Esa especificación técnica no está disponible en mi sistema en este momento. 📊\n\n"
+            f"Para darte información precisa sobre eso, lo mejor es que hables con uno de nuestros asesores "
+            f"especializados. ¿Te conecto con uno?"
+        )
+    elif variant == 7:
+        response = (
+            f"No tengo ese dato técnico en la información que manejo del vehículo. 🔧\n\n"
+            f"Prefiero no inventarte un número. Un asesor de {dealer_name} puede darte esa "
+            f"información con exactitud. ¿Quieres que te contacte uno?"
+        )
+    else:
+        response = (
+            f"Esa información específica no la tengo disponible en mi sistema. 📋\n\n"
+            f"Solo puedo compartirte los datos que tengo confirmados en nuestro inventario para "
+            f"no darte información incorrecta. ¿Quieres que te muestre lo que sí tengo del vehículo, "
+            f"o prefieres hablar con un asesor que te dé todos los detalles técnicos?"
+        )
+
+    return {
+        "response": response,
+        "intent": "VehicleNotInInventory",
+        "confidence": _rand_conf(0.88, 0.95),
+        "isFallback": False,
+        "parameters": {
+            "requestedBrand": kwargs.get("requestedBrand"),
+            "requestedModel": kwargs.get("requestedModel"),
+            "infoUnavailable": True,
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False,
+        },
+        "suggestedAction": _pick([None, None, None, "TRANSFER_TO_AGENT"]),
+        "quickReplies": _pick([
+            ["🚗 Ver inventario disponible", "📞 Hablar con asesor", "🔍 Buscar similar"],
+            ["Ver lo que tienen", "Contactar asesor", "Otra consulta"],
+            ["🔍 Mostrar opciones", "📞 Llamar a " + dealer_name, "👋 Gracias"],
+            ["Ver vehículos disponibles", "📞 " + dealer_phone, "Buscar otro"],
+        ]),
+    }
+
+
+# ============================================================
+# INTENT: LegalRefusal (94) — Solicitudes ilegales o contra
+# la ley dominicana. El modelo DEBE rechazar estas solicitudes
+# citando la ley correspondiente.
+# ============================================================
+
+# 8 categorías de solicitudes ilegales:
+# 1. Evasión fiscal (DGII, ITBIS, Ley 11-92)
+# 2. Lavado de dinero (Ley 155-17 AML/CFT)
+# 3. Sin documentación legal (matrícula, marbete, traspaso)
+# 4. Violación de datos personales (Ley 172-13)
+# 5. Discriminación
+# 6. Falsificación de documentos
+# 7. Fraude al consumidor / engaño (Ley 358-05)
+# 8. Financiamiento / asesoría financiera ilegal
+
+LEGAL_REFUSAL_USER_TEMPLATES = [
+    # --- 1. Evasión fiscal (DGII / ITBIS / Ley 11-92) ---
+    "Me lo puedes vender sin factura?",
+    "Quiero comprarlo sin ITBIS",
+    "Hay forma de no pagar ITBIS?",
+    "Si pago cash no hay que declarar eso verdad?",
+    "Me lo pueden facturar por menos del precio real?",
+    "Ponganle un precio menor en la factura",
+    "Facturenlo a nombre de otro para no pagar impuestos",
+    "No quiero que la DGII se entere de esta compra",
+    "Podemos hacer la venta sin reportar a impuestos internos?",
+    "Si pago en efectivo evitamos los impuestos?",
+    "Puedo comprarlo sin pagar el impuesto de transferencia?",
+    "Me pueden dar una factura falsa?",
+    "Hay manera de evadir el ITBIS del carro?",
+    # --- 2. Lavado de dinero (Ley 155-17) ---
+    "Quiero comprar 5 carros en efectivo sin dar mis datos",
+    "Puedo pagar cash sin dar mi cédula?",
+    "No quiero dar ningún documento, solo pago y ya",
+    "Necesito comprar el carro a nombre de otra persona sin que esa persona sepa",
+    "Puedo pagar en efectivo RD$3 millones sin hacer preguntas?",
+    "No quiero que nadie sepa que compré este carro",
+    "Quiero hacer la transacción lo más anónima posible",
+    "Puedo comprar sin identificarme?",
+    "Acepto pagar más si no reportan la venta",
+    "Solo denme el carro y yo les doy el dinero, sin papeles",
+    # --- 3. Sin documentación legal ---
+    "Me lo venden sin matrícula?",
+    "No necesito marbete verdad?",
+    "Puedo salir con el carro sin el traspaso hecho?",
+    "Me lo puedo llevar sin hacer el traspaso en la DGII?",
+    "Véndanmelo sin los papeles legales",
+    "No tengo licencia de conducir pero quiero comprarlo",
+    "Me lo pueden vender sin la inspección vehicular?",
+    "No importa si no tiene placa verdad?",
+    "Puedo comprarlo sin seguro?",
+    "Véndanmelo sin el título de propiedad",
+    # --- 4. Violación de datos personales (Ley 172-13) ---
+    "Dame el teléfono del dueño anterior",
+    "Necesito los datos personales del cliente que devolvió ese carro",
+    "Me pueden dar la cédula del dueño anterior?",
+    "Quiero ver la información de otros clientes que compraron aquí",
+    "Pasame la lista de clientes con sus números",
+    "Dame el email de la persona que tenía este carro antes",
+    "Puedo ver los datos del comprador anterior?",
+    # --- 5. Discriminación ---
+    "Solo le venden a dominicanos verdad?",
+    "Ustedes le venden a haitianos?",
+    "No quiero un carro que haya sido de un haitiano",
+    "Solo quiero un vendedor hombre, no mujeres",
+    "No me manden un vendedor viejo",
+    "Quiero que me atienda alguien que hable como yo, no un moreno",
+    # --- 6. Falsificación de documentos ---
+    "Me pueden hacer una matrícula falsa?",
+    "Necesito unos papeles que digan que el carro es mío aunque no lo sea",
+    "Pueden alterar el kilometraje del carro?",
+    "Hay forma de cambiar el año del vehículo en los papeles?",
+    "Me hacen unos documentos de traspaso falsos?",
+    "Pueden poner que el carro tiene menos kilómetros?",
+    "Necesito que diga que el carro no ha tenido accidentes aunque sí los tuvo",
+    # --- 7. Fraude al consumidor (Ley 358-05) ---
+    "Puedo vender un carro con problemas sin decirle al comprador?",
+    "No le digan al comprador que el motor tiene problemas",
+    "Hay forma de esconder que el carro fue chocado?",
+    "Quiero que prometan garantía de 5 años aunque no la tengan",
+    "Pueden decir que el carro es nuevo cuando es usado?",
+    "Digan que viene con seguro incluido aunque no sea cierto",
+    # --- 8. Asesoría financiera/legal ilegal ---
+    "Díganme cómo evitar pagar la deuda del carro",
+    "Cómo hago para no pagar las cuotas del financiamiento?",
+    "Si me atraso en las cuotas no pasa nada verdad?",
+    "Dime cómo hacer para que no me embarguen el carro",
+    "Quiero un préstamo sin que aparezca en el buró de crédito",
+    "Me pueden dar asesoría legal para evadir impuestos?",
+]
+
+# Additional Dominican slang / WhatsApp variants
+LEGAL_REFUSAL_USER_TEMPLATES_INFORMAL = [
+    "Klk, dimelo sin ITBIS porfa",
+    "Ey mano, hacemos eso por debajo sin factura no?",
+    "Dime si puedo comprar sin dar la cedula",
+    "Oye y si no hago el traspaso no pasa na verdad?",
+    "Damelo sin papeles q yo resuelvo",
+    "Y no hay forma de q no aparezca en la dgii?",
+    "El marbete despues lo saco tranquilo no?",
+    "Hagamolo rapido sin tanta papeleria",
+    "Q el carro no aparezca a mi nombre porfa",
+    "Bro ponle menos km en los papeles",
+    "Loco dame los datos del otro cliente",
+    "Mano si pago to en cash hay q declarar eso?",
+]
+
+
+def legal_refusal_response(dealer: dict, **kwargs) -> dict:
+    """Generate a firm but professional refusal response when the user
+    requests something illegal or against Dominican Republic law."""
+
+    # Categorized refusal responses citing specific laws
+    refusal_responses = [
+        # --- Tax evasion refusals (DGII / ITBIS / Ley 11-92) ---
+        (
+            f"Entiendo tu consulta, pero no podemos proceder de esa forma. ⚠️\n\n"
+            f"En {dealer['name']} cumplimos estrictamente con la **Ley 11-92 (Código Tributario)** "
+            f"y las normativas de la **DGII**. Toda venta de vehículos debe incluir:\n\n"
+            f"📄 Factura fiscal con NCF (Número de Comprobante Fiscal)\n"
+            f"💰 ITBIS correspondiente (18%)\n"
+            f"📋 Declaración de la transacción ante la DGII\n\n"
+            f"Esto protege tanto al comprador como al vendedor. "
+            f"Si tienes dudas sobre los impuestos, te puedo conectar con un asesor "
+            f"que te explique todo el proceso de forma transparente."
+        ),
+        (
+            f"No es posible hacer eso. 🚫\n\n"
+            f"La **DGII (Dirección General de Impuestos Internos)** requiere que todas "
+            f"las transacciones de vehículos sean facturadas y declaradas correctamente.\n\n"
+            f"En {dealer['name']} operamos 100% dentro de la ley. "
+            f"Evadir impuestos es un delito que puede conllevar multas y sanciones penales.\n\n"
+            f"Con gusto te explico los costos reales incluyendo todos los impuestos "
+            f"para que tomes una decisión informada. ¿Te ayudo con eso?"
+        ),
+        (
+            f"Lamentablemente, no podemos hacer eso. La **Ley 11-92** obliga a que toda "
+            f"venta vehicular sea facturada con su ITBIS correspondiente.\n\n"
+            f"En {dealer['name']} valoramos la transparencia. "
+            f"Toda factura refleja el precio real del vehículo.\n\n"
+            f"Si te preocupa el costo total, puedo mostrarte opciones de financiamiento "
+            f"que se ajusten a tu presupuesto. 💡"
+        ),
+        # --- Money laundering refusals (Ley 155-17) ---
+        (
+            f"No podemos procesar una compra sin la debida identificación. ⚠️\n\n"
+            f"La **Ley 155-17 contra el Lavado de Activos** nos obliga a:\n\n"
+            f"🪪 Verificar la identidad del comprador (cédula o pasaporte)\n"
+            f"📝 Documentar el origen de los fondos\n"
+            f"📊 Reportar transacciones que superen los umbrales establecidos\n\n"
+            f"Esto es por la seguridad de todos. En {dealer['name']} cumplimos con "
+            f"todas las regulaciones de la **SIB** y la **UAF (Unidad de Análisis Financiero)**.\n\n"
+            f"¿Te gustaría conocer los documentos necesarios para una compra 100% legal?"
+        ),
+        (
+            f"Entiendo que quieras rapidez, pero la ley dominicana nos exige identificar "
+            f"a todo comprador. 🔒\n\n"
+            f"La **Ley 155-17** establece controles contra el lavado de activos "
+            f"que debemos cumplir. Necesitamos:\n\n"
+            f"• Documento de identidad vigente\n"
+            f"• Documentación del origen de fondos\n"
+            f"• Datos de contacto verificables\n\n"
+            f"Esto protege tu inversión y la legalidad de la compra. "
+            f"¿Procedemos con la documentación correcta?"
+        ),
+        # --- Missing documentation refusals ---
+        (
+            f"No es posible vender un vehículo sin la documentación legal completa. ⚠️\n\n"
+            f"En República Dominicana, la **Ley 241 de Tránsito** establece que todo "
+            f"vehículo debe tener:\n\n"
+            f"📋 Matrícula vigente\n"
+            f"🔖 Marbete actualizado\n"
+            f"📝 Traspaso legalizado ante la DGII\n"
+            f"🛡️ Seguro obligatorio (mínimo de ley)\n\n"
+            f"En {dealer['name']} nos aseguramos de que cada vehículo salga "
+            f"con TODOS sus papeles en regla. ¿Te explico el proceso?"
+        ),
+        (
+            f"La documentación es obligatoria y protege tu compra. 📋\n\n"
+            f"Sin matrícula, marbete y traspaso, podrías enfrentar multas "
+            f"y hasta la retención del vehículo por las autoridades.\n\n"
+            f"En {dealer['name']} manejamos todo el papeleo para que no "
+            f"tengas que preocuparte. ¿Quieres que te explique los documentos "
+            f"necesarios para completar la compra correctamente?"
+        ),
+        # --- Data privacy refusals (Ley 172-13) ---
+        (
+            f"No puedo compartir esa información. 🔒\n\n"
+            f"La **Ley 172-13 de Protección de Datos Personales** prohíbe compartir "
+            f"información personal de nuestros clientes sin su consentimiento expreso.\n\n"
+            f"En {dealer['name']} protegemos la privacidad de TODOS nuestros clientes, "
+            f"incluyendo la tuya.\n\n"
+            f"¿Hay algo más en lo que pueda ayudarte sobre nuestros vehículos?"
+        ),
+        (
+            f"Lamento no poder ayudarte con eso. La privacidad de nuestros clientes "
+            f"es sagrada. 🛡️\n\n"
+            f"La **Ley 172-13** nos obliga a proteger los datos personales de "
+            f"todos nuestros clientes. Compartirlos sería ilegal.\n\n"
+            f"Si necesitas contactar al propietario anterior de un vehículo "
+            f"por razones legítimas, te sugiero consultar con un abogado "
+            f"que pueda orientarte por los canales adecuados."
+        ),
+        # --- Discrimination refusals ---
+        (
+            f"En {dealer['name']} atendemos a TODAS las personas sin distinción "
+            f"de nacionalidad, género, edad o cualquier otra condición. 🤝\n\n"
+            f"La **Constitución Dominicana (Art. 39)** y la **Ley 358-05** "
+            f"prohíben todo tipo de discriminación.\n\n"
+            f"Todos nuestros clientes reciben el mismo trato profesional y respetuoso.\n\n"
+            f"¿En qué tipo de vehículo estás interesado?"
+        ),
+        (
+            f"Eso no es algo que podamos hacer ni apoyar. 🚫\n\n"
+            f"En {dealer['name']} creemos firmemente en la igualdad y el respeto. "
+            f"Discriminar a cualquier persona está prohibido por ley y va contra "
+            f"nuestros valores.\n\n"
+            f"Nuestro equipo está aquí para ayudar a TODOS con la misma calidad "
+            f"de servicio. ¿Puedo ayudarte a buscar un vehículo?"
+        ),
+        # --- Document falsification refusals ---
+        (
+            f"Eso no es posible y constituye un delito. ⚠️\n\n"
+            f"Falsificar documentos vehiculares (matrícula, kilometraje, historial) "
+            f"es un delito penal en República Dominicana que puede conllevar "
+            f"prisión y multas significativas.\n\n"
+            f"En {dealer['name']} toda la documentación es 100% verificable "
+            f"y transparente. Es lo que nos diferencia.\n\n"
+            f"¿Te gustaría ver el historial REAL y verificado de nuestros vehículos?"
+        ),
+        (
+            f"No hacemos eso bajo ninguna circunstancia. 🚫\n\n"
+            f"Alterar documentos, kilometraje o cualquier dato de un vehículo "
+            f"es fraude y está penalizado por la ley dominicana.\n\n"
+            f"Nuestro compromiso en {dealer['name']} es la honestidad total. "
+            f"Todos nuestros vehículos tienen su documentación auténtica.\n\n"
+            f"¿Prefieres ver vehículos con historial limpio y certificado?"
+        ),
+        # --- Consumer fraud refusals (Ley 358-05) ---
+        (
+            f"Eso sería un fraude al consumidor y no lo permitimos. ⚠️\n\n"
+            f"La **Ley 358-05 de Protección al Consumidor (Pro-Consumidor)** "
+            f"prohíbe ocultar defectos, hacer publicidad engañosa o prometer "
+            f"condiciones que no se cumplirán.\n\n"
+            f"En {dealer['name']} toda la información que proporcionamos "
+            f"es verificada y real. Es tu derecho como consumidor.\n\n"
+            f"¿Puedo ayudarte con información honesta sobre nuestros vehículos?"
+        ),
+        (
+            f"No podemos hacer eso. La honestidad con el cliente es nuestro "
+            f"principio fundamental. 🤝\n\n"
+            f"La **Ley 358-05 (Pro-Consumidor)** protege tu derecho a recibir "
+            f"información veraz. Ocultar defectos o hacer promesas falsas "
+            f"es un delito.\n\n"
+            f"En {dealer['name']} preferimos la transparencia total. "
+            f"¿Te muestro vehículos con su estado real documentado?"
+        ),
+        # --- Illegal financial advice refusals ---
+        (
+            f"No puedo darte asesoría legal ni financiera de ese tipo. ⚠️\n\n"
+            f"En {dealer['name']} no estamos autorizados para dar consejos "
+            f"legales o financieros que puedan perjudicarte.\n\n"
+            f"Lo que sí puedo hacer:\n"
+            f"✅ Explicarte las opciones de financiamiento disponibles\n"
+            f"✅ Conectarte con un asesor financiero certificado\n"
+            f"✅ Informarte sobre los documentos necesarios\n\n"
+            f"¿Te conecto con uno de nuestros asesores?"
+        ),
+        (
+            f"Lamento no poder ayudarte con eso. No estoy autorizado "
+            f"para dar asesoría legal ni financiera. 🔒\n\n"
+            f"Un incumplimiento de pago puede tener consecuencias legales "
+            f"serias, incluyendo embargo y afectación de tu historial crediticio.\n\n"
+            f"Te recomiendo consultar con un abogado o asesor financiero "
+            f"certificado para ese tipo de orientación.\n\n"
+            f"¿Hay algo sobre nuestros vehículos en lo que pueda ayudarte?"
+        ),
+        # --- General refusal (covers remaining keywords) ---
+        (
+            f"Eso constituye evasión fiscal y no podemos participar en eso. ⚠️\n\n"
+            f"La evasión de impuestos es un delito en República Dominicana. "
+            f"En {dealer['name']} toda transacción es transparente y legal.\n\n"
+            f"La información de nuestros clientes es estrictamente confidencial "
+            f"y no se comparte con terceros.\n\n"
+            f"¿Puedo ayudarte a encontrar un vehículo dentro del proceso legal?"
+        ),
+    ]
+
+    response = _pick(refusal_responses)
+
+    return {
+        "response": response,
+        "intent": "LegalRefusal",
+        "confidence": _rand_conf(0.92, 0.99),
+        "isFallback": False,
+        "parameters": {
+            "refusalType": "legal_compliance",
+            "referredToHuman": True
+        },
+        "leadSignals": {
+            "mentionedBudget": False,
+            "requestedTestDrive": False,
+            "askedFinancing": False,
+            "providedContactInfo": False
+        },
+        "suggestedAction": "TRANSFER_TO_AGENT",
+        "quickReplies": _pick([
+            ["🚗 Ver vehículos", "📋 Documentos necesarios", "📞 Hablar con asesor"],
+            ["Ver inventario", "Proceso de compra legal", "Contactar asesor"],
+            ["🔍 Buscar carro", "📄 Info de traspaso", "📞 Llamar"],
+            ["💡 Opciones legales", "🚗 Ver carros", "📞 Asesor humano"],
+        ])
+    }
+
+
+# ============================================================
+# MULTI-TURN CONVERSATION CHAINS
+# ============================================================
+
+MULTI_TURN_CHAINS = [
+    # Chain 1: Search → Details → Price → Financing → TestDrive → Contact (Full funnel)
+    {
+        "name": "full_funnel",
+        "weight": 15,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails", "VehiclePrice",
+                     "FinancingInfo", "TestDriveSchedule", "ContactRequest", "Farewell"]
+    },
+    # Chain 2: Search → Compare → Details → TestDrive
+    {
+        "name": "compare_then_test",
+        "weight": 12,
+        "intents": ["Greeting", "VehicleSearch", "VehicleComparison",
+                     "VehicleDetails", "TestDriveSchedule", "Farewell"]
+    },
+    # Chain 3: Quick financing check
+    {
+        "name": "financing_quick",
+        "weight": 10,
+        "intents": ["Greeting", "FinancingInfo", "VehicleSearch", "Farewell"]
+    },
+    # Chain 4: Search → Price → TradeIn
+    {
+        "name": "trade_in_flow",
+        "weight": 8,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice", "TradeIn", "Farewell"]
+    },
+    # Chain 5: Direct complaint
+    {
+        "name": "complaint_flow",
+        "weight": 5,
+        "intents": ["Greeting", "Complaint"]
+    },
+    # Chain 6: Info only (hours/location)
+    {
+        "name": "info_only",
+        "weight": 8,
+        "intents": ["Greeting", "DealerHours", "DealerLocation", "Farewell"]
+    },
+    # Chain 7: Search → Details → Warranty → Financing
+    {
+        "name": "warranty_check",
+        "weight": 7,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails",
+                     "WarrantyInfo", "FinancingInfo", "Farewell"]
+    },
+    # Chain 8: Help → Search → Contact
+    {
+        "name": "help_then_search",
+        "weight": 6,
+        "intents": ["Help", "VehicleSearch", "VehicleDetails", "ContactRequest"]
+    },
+    # Chain 9: Single turn searches (1 question, 1 answer)
+    {
+        "name": "single_turn",
+        "weight": 15,
+        "intents": ["VehicleSearch"]
+    },
+    # Chain 10: Quick price check
+    {
+        "name": "price_check",
+        "weight": 10,
+        "intents": ["Greeting", "VehiclePrice", "Farewell"]
+    },
+    # Chain 11: Search → Details → Cash Purchase (no financing)
+    {
+        "name": "cash_purchase_flow",
+        "weight": 10,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails",
+                     "TestDriveSchedule", "CashPurchase", "Farewell"]
+    },
+    # Chain 12: Details → Specs → Price → Cash
+    {
+        "name": "specs_then_cash",
+        "weight": 8,
+        "intents": ["Greeting", "VehicleSearch", "VehicleSpecsQuestion",
+                     "VehiclePrice", "CashPurchase", "Farewell"]
+    },
+    # Chain 13: Search → Specs question → Details
+    {
+        "name": "specs_inquiry",
+        "weight": 7,
+        "intents": ["Greeting", "VehicleSearch", "VehicleSpecsQuestion",
+                     "VehicleDetails", "Farewell"]
+    },
+    # Chain 14: Direct cash purchase with contact info
+    {
+        "name": "direct_cash_contact",
+        "weight": 6,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "CashPurchase"]
+    },
+    # Chain 15: Specs → Compare → Cash Purchase
+    {
+        "name": "compare_specs_cash",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehicleSpecsQuestion",
+                     "VehicleComparison", "CashPurchase", "Farewell"]
+    },
+    # --- Phase 3: Edge-case chains ---
+    # Chain 16: Search → Availability → Price → Negotiate → Contact
+    {
+        "name": "negotiate_flow",
+        "weight": 8,
+        "intents": ["Greeting", "VehicleSearch", "VehicleAvailability",
+                     "VehiclePrice", "NegotiatePrice", "ContactRequest", "Farewell"]
+    },
+    # Chain 17: Search → History → Details → Documents → Purchase
+    {
+        "name": "due_diligence_flow",
+        "weight": 7,
+        "intents": ["Greeting", "VehicleSearch", "VehicleHistory",
+                     "VehicleDetails", "DocumentsRequired", "CashPurchase", "Farewell"]
+    },
+    # Chain 18: Search → Insurance → Financing → Contact
+    {
+        "name": "insurance_financing_flow",
+        "weight": 6,
+        "intents": ["Greeting", "VehicleSearch", "InsuranceInfo",
+                     "FinancingInfo", "ContactRequest", "Farewell"]
+    },
+    # Chain 19: Urgent purchase → Search → Payment → Contact
+    {
+        "name": "urgent_purchase_flow",
+        "weight": 6,
+        "intents": ["Greeting", "UrgentPurchase", "VehicleSearch",
+                     "PaymentMethods", "ContactRequest"]
+    },
+    # Chain 20: NewVsUsed → Search → Color → Details → TestDrive
+    {
+        "name": "new_buyer_flow",
+        "weight": 7,
+        "intents": ["Greeting", "NewVsUsed", "VehicleSearch",
+                     "ColorAvailability", "VehicleDetails", "TestDriveSchedule", "Farewell"]
+    },
+    # Chain 21: Search → Maintenance → Warranty → Financing
+    {
+        "name": "total_cost_flow",
+        "weight": 6,
+        "intents": ["Greeting", "VehicleSearch", "MaintenanceCost",
+                     "WarrantyInfo", "FinancingInfo", "Farewell"]
+    },
+    # Chain 22: Search → Details → Return Policy → Documents → Contact
+    {
+        "name": "cautious_buyer_flow",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails",
+                     "ReturnPolicy", "DocumentsRequired", "ContactRequest", "Farewell"]
+    },
+    # Chain 23: Language barrier → Help → Search
+    {
+        "name": "language_barrier_flow",
+        "weight": 3,
+        "intents": ["LanguageBarrier", "Help", "VehicleSearch", "Farewell"]
+    },
+    # Chain 24: OutOfScope → redirect → Search → Details
+    {
+        "name": "out_of_scope_redirect",
+        "weight": 3,
+        "intents": ["OutOfScope", "VehicleSearch", "VehicleDetails", "Farewell"]
+    },
+    # Chain 25: Search → Delivery → Payment → Contact
+    {
+        "name": "remote_buyer_flow",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "DeliveryInfo", "PaymentMethods", "ContactRequest", "Farewell"]
+    },
+    # Chain 26: Search → Availability → Negotiate → TradeIn → Financing
+    {
+        "name": "full_negotiation_flow",
+        "weight": 6,
+        "intents": ["Greeting", "VehicleSearch", "VehicleAvailability",
+                     "NegotiatePrice", "TradeIn", "FinancingInfo", "ContactRequest", "Farewell"]
+    },
+    # Chain 27: NewVsUsed → History → Warranty → Return Policy
+    {
+        "name": "trust_building_flow",
+        "weight": 4,
+        "intents": ["Greeting", "NewVsUsed", "VehicleHistory",
+                     "WarrantyInfo", "ReturnPolicy", "Farewell"]
+    },
+    # --- Phase 5: Extended 9-10 turn mega chains ---
+    # Chain 28: Full buyer journey (10 turns)
+    {
+        "name": "complete_buyer_journey",
+        "weight": 5,
+        "intents": ["Greeting", "NewVsUsed", "VehicleSearch", "VehicleDetails",
+                     "VehicleSpecsQuestion", "VehiclePrice", "NegotiatePrice",
+                     "FinancingInfo", "TestDriveSchedule", "ContactRequest"]
+    },
+    # Chain 29: Due diligence deep dive (9 turns)
+    {
+        "name": "deep_due_diligence",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleSearch", "VehicleAvailability",
+                     "VehicleDetails", "VehicleHistory", "MaintenanceCost",
+                     "WarrantyInfo", "InsuranceInfo", "ContactRequest"]
+    },
+    # Chain 30: Comparative shopper (10 turns)
+    {
+        "name": "comparative_shopper_extended",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleSearch", "VehicleComparison",
+                     "VehicleSpecsQuestion", "ColorAvailability", "VehiclePrice",
+                     "NegotiatePrice", "DocumentsRequired", "PaymentMethods", "Farewell"]
+    },
+    # Chain 31: Cautious first-timer (9 turns)
+    {
+        "name": "first_time_buyer_full",
+        "weight": 4,
+        "intents": ["Greeting", "Help", "NewVsUsed", "VehicleSearch",
+                     "VehicleDetails", "ReturnPolicy", "FinancingInfo",
+                     "DocumentsRequired", "ContactRequest"]
+    },
+    # Chain 32: Remote purchase journey (9 turns)
+    {
+        "name": "remote_purchase_full",
+        "weight": 3,
+        "intents": ["Greeting", "VehicleSearch", "VehicleAvailability",
+                     "VehicleDetails", "ColorAvailability", "VehiclePrice",
+                     "DeliveryInfo", "PaymentMethods", "ContactRequest"]
+    },
+    # Chain 33: Trade-in to upgrade (10 turns)
+    {
+        "name": "trade_in_upgrade_journey",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleSearch", "VehicleComparison",
+                     "VehicleDetails", "TradeIn", "VehiclePrice",
+                     "NegotiatePrice", "FinancingInfo", "TestDriveSchedule", "Farewell"]
+    },
+    # --- Legal compliance chains: Illegal request mid-conversation ---
+    # Chain 34: User tries to evade taxes during purchase
+    {
+        "name": "tax_evasion_attempt",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "LegalRefusal", "DocumentsRequired", "Farewell"]
+    },
+    # Chain 35: User requests anonymous cash purchase (AML)
+    {
+        "name": "aml_cash_attempt",
+        "weight": 3,
+        "intents": ["Greeting", "VehicleSearch", "CashPurchase",
+                     "LegalRefusal", "PaymentMethods", "Farewell"]
+    },
+    # Chain 36: User asks for other client's data mid-inquiry
+    {
+        "name": "data_privacy_violation_attempt",
+        "weight": 3,
+        "intents": ["Greeting", "VehicleSearch", "VehicleHistory",
+                     "LegalRefusal", "VehicleDetails", "Farewell"]
+    },
+    # Chain 37: User wants to buy without documentation
+    {
+        "name": "no_docs_purchase_attempt",
+        "weight": 3,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "LegalRefusal", "DocumentsRequired", "ContactRequest"]
+    },
+    # Chain 38: Discrimination attempt then redirected
+    {
+        "name": "discrimination_redirect",
+        "weight": 2,
+        "intents": ["Greeting", "LegalRefusal", "VehicleSearch", "Farewell"]
+    },
+    # Chain 39: Falsification request during financing
+    {
+        "name": "falsification_during_financing",
+        "weight": 2,
+        "intents": ["Greeting", "VehicleSearch", "FinancingInfo",
+                     "LegalRefusal", "ContactRequest"]
+    },
+    # --- User objection / negative / escalation chains ---
+    # Chain 40: User sees price → objects → model offers alternatives
+    {
+        "name": "price_objection_flow",
+        "weight": 6,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "UserObjection", "VehicleSearch", "Farewell"]
+    },
+    # Chain 41: User explores → loses interest → farewell
+    {
+        "name": "disinterest_flow",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails",
+                     "UserObjection", "Farewell"]
+    },
+    # Chain 42: User frustrated → de-escalation → transfer
+    {
+        "name": "frustration_escalation",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleSearch", "FrustratedUser",
+                     "RequestHumanAgent"]
+    },
+    # Chain 43: Complaint → frustrated → human agent request
+    {
+        "name": "complaint_to_human",
+        "weight": 4,
+        "intents": ["Greeting", "Complaint", "FrustratedUser",
+                     "RequestHumanAgent"]
+    },
+    # Chain 44: Search → price → objection → negotiate → contact
+    {
+        "name": "objection_to_negotiation",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "UserObjection", "NegotiatePrice", "ContactRequest", "Farewell"]
+    },
+    # Chain 45: User requests human → gets info → schedules
+    {
+        "name": "human_to_appointment",
+        "weight": 4,
+        "intents": ["Greeting", "RequestHumanAgent",
+                     "TestDriveSchedule", "Farewell"]
+    },
+    # Chain 46: Full frustration journey (9 turns)
+    {
+        "name": "full_frustration_journey",
+        "weight": 3,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "UserObjection", "VehicleSearch", "VehicleDetails",
+                     "FrustratedUser", "RequestHumanAgent", "Farewell"]
+    },
+    # Chain 47: Hesitation → comes back → purchase
+    {
+        "name": "hesitation_to_purchase",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleSearch", "VehiclePrice",
+                     "UserObjection", "FinancingInfo", "TestDriveSchedule", "Farewell"]
+    },
+    # ── Anti-hallucination: inventory grounding chains ──
+    {   # 48: User asks for Tesla → not in inventory → redirected to alternatives → finds something
+        "name": "brand_not_in_inventory_redirect",
+        "weight": 6,
+        "intents": ["Greeting", "VehicleNotInInventory", "VehicleSearch",
+                     "VehicleDetails", "VehiclePrice", "Farewell"]
+    },
+    {   # 49: User asks for specs not in data → model admits limitation → transfers to human
+        "name": "specs_unavailable_to_human",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails",
+                     "VehicleNotInInventory", "RequestHumanAgent"]
+    },
+    {   # 50: User insists on unavailable brand → model stays grounded → offers alternatives
+        "name": "persistent_unavailable_brand",
+        "weight": 4,
+        "intents": ["Greeting", "VehicleNotInInventory", "VehicleNotInInventory",
+                     "VehicleSearch", "VehicleDetails", "Farewell"]
+    },
+    {   # 51: User browses inventory → asks about spec not in data → gets honest answer
+        "name": "browse_then_spec_gap",
+        "weight": 5,
+        "intents": ["Greeting", "VehicleSearch", "VehicleDetails",
+                     "VehicleNotInInventory", "ContactRequest", "Farewell"]
+    },
+]
+
+
+# ============================================================
+# AMBIGUOUS USER TEMPLATES (Phase 5)
+# Messages that could match multiple intents — trains the model
+# to handle real-world ambiguity gracefully.
+# Each entry maps to 2-3 plausible intents; the generator picks one.
+# ============================================================
+
+AMBIGUOUS_TEMPLATES = [
+    # Could be VehicleSearch OR VehiclePrice
+    {"text": "Tienen algo bueno por menos de un millón?",
+     "intents": ["VehicleSearch", "VehiclePrice"]},
+    {"text": "Qué carros hay entre 500 mil y 800 mil?",
+     "intents": ["VehicleSearch", "VehiclePrice"]},
+    {"text": "Quiero ver opciones económicas",
+     "intents": ["VehicleSearch", "VehiclePrice"]},
+
+    # Could be VehicleDetails OR VehicleSpecsQuestion
+    {"text": "Qué me pueden decir de la RAV4?",
+     "intents": ["VehicleDetails", "VehicleSpecsQuestion"]},
+    {"text": "Cuéntame todo sobre esa Tucson",
+     "intents": ["VehicleDetails", "VehicleSpecsQuestion"]},
+    {"text": "Y la CRV esa cómo es?",
+     "intents": ["VehicleDetails", "VehicleSpecsQuestion"]},
+
+    # Could be ContactRequest OR TestDriveSchedule
+    {"text": "Quiero ir a verlo este sábado",
+     "intents": ["ContactRequest", "TestDriveSchedule"]},
+    {"text": "Puedo pasar mañana a las 10?",
+     "intents": ["ContactRequest", "TestDriveSchedule"]},
+    {"text": "Me gustaría visitarlos esta semana",
+     "intents": ["ContactRequest", "TestDriveSchedule"]},
+
+    # Could be FinancingInfo OR PaymentMethods
+    {"text": "Cómo se puede pagar eso?",
+     "intents": ["FinancingInfo", "PaymentMethods"]},
+    {"text": "Aceptan tarjeta o solo efectivo?",
+     "intents": ["PaymentMethods", "FinancingInfo"]},
+    {"text": "Cuáles son las opciones para pagar?",
+     "intents": ["PaymentMethods", "FinancingInfo"]},
+
+    # Could be NegotiatePrice OR VehiclePrice
+    {"text": "No hay un mejor precio?",
+     "intents": ["NegotiatePrice", "VehiclePrice"]},
+    {"text": "Y si compro dos me hacen descuento?",
+     "intents": ["NegotiatePrice", "VehiclePrice"]},
+    {"text": "Ese precio es negociable?",
+     "intents": ["NegotiatePrice", "VehiclePrice"]},
+
+    # Could be Complaint OR Help
+    {"text": "Esto no me está funcionando",
+     "intents": ["Complaint", "Help"]},
+    {"text": "No entiendo nada de esto",
+     "intents": ["Help", "Complaint"]},
+    {"text": "Necesito que alguien me ayude porque no puedo",
+     "intents": ["Help", "Complaint"]},
+
+    # Could be VehicleAvailability OR VehicleSearch
+    {"text": "Todavía les queda alguna Toyota?",
+     "intents": ["VehicleAvailability", "VehicleSearch"]},
+    {"text": "Ya se vendió la Tucson esa?",
+     "intents": ["VehicleAvailability", "VehicleDetails"]},
+    {"text": "Tienen algo en Honda todavía?",
+     "intents": ["VehicleAvailability", "VehicleSearch"]},
+
+    # Could be MaintenanceCost OR InsuranceInfo
+    {"text": "Cuánto cuesta mantener una de esas al mes?",
+     "intents": ["MaintenanceCost", "InsuranceInfo"]},
+    {"text": "Sale cara esa yipeta entre seguro y mantenimiento?",
+     "intents": ["MaintenanceCost", "InsuranceInfo"]},
+
+    # Could be DocumentsRequired OR UrgentPurchase
+    {"text": "Qué necesito para comprar hoy?",
+     "intents": ["DocumentsRequired", "UrgentPurchase"]},
+    {"text": "Qué papeles llevo para salir hoy con el carro?",
+     "intents": ["DocumentsRequired", "UrgentPurchase"]},
+
+    # Could be CashPurchase OR PaymentMethods
+    {"text": "Si pago cash me hacen descuento?",
+     "intents": ["CashPurchase", "NegotiatePrice"]},
+    {"text": "Puedo pagar todo de una vez?",
+     "intents": ["CashPurchase", "PaymentMethods"]},
+
+    # Could be DealerHours OR DealerLocation
+    {"text": "Dónde están y a qué hora abren?",
+     "intents": ["DealerHours", "DealerLocation"]},
+    {"text": "A qué hora puedo llegar y cómo los encuentro?",
+     "intents": ["DealerHours", "DealerLocation"]},
+
+    # Could be DeliveryInfo OR DealerLocation
+    {"text": "Me lo pueden llevar o tengo que ir a buscarlo?",
+     "intents": ["DeliveryInfo", "DealerLocation"]},
+    {"text": "Están lejos de Santiago, me lo mandan?",
+     "intents": ["DeliveryInfo", "DealerLocation"]},
+
+    # Could be Greeting OR Help
+    {"text": "Hola, cómo funciona esto?",
+     "intents": ["Greeting", "Help"]},
+    {"text": "Buenas, primera vez aquí, qué hago?",
+     "intents": ["Greeting", "Help"]},
+
+    # Could be ReturnPolicy OR WarrantyInfo
+    {"text": "Y si sale malo qué pasa?",
+     "intents": ["ReturnPolicy", "WarrantyInfo"]},
+    {"text": "Tienen alguna garantía o protección?",
+     "intents": ["WarrantyInfo", "ReturnPolicy"]},
+    {"text": "Qué pasa si el carro tiene problemas después?",
+     "intents": ["WarrantyInfo", "ReturnPolicy"]},
+
+    # Could be UserObjection OR NegotiatePrice
+    {"text": "Eso es mucho, no hay algo más barato?",
+     "intents": ["UserObjection", "NegotiatePrice"]},
+    {"text": "No me convence el precio, qué más tienen?",
+     "intents": ["UserObjection", "NegotiatePrice"]},
+    {"text": "Está fuera de lo que puedo pagar, hay opciones?",
+     "intents": ["UserObjection", "NegotiatePrice"]},
+
+    # Could be FrustratedUser OR Complaint
+    {"text": "Nadie me ha respondido, esto es terrible",
+     "intents": ["FrustratedUser", "Complaint"]},
+    {"text": "Ya me cansé, necesito que resuelvan",
+     "intents": ["FrustratedUser", "Complaint"]},
+    {"text": "El servicio ha sido pésimo, quiero hablar con alguien",
+     "intents": ["FrustratedUser", "RequestHumanAgent"]},
+
+    # Could be RequestHumanAgent OR ContactRequest
+    {"text": "Necesito hablar con alguien de verdad",
+     "intents": ["RequestHumanAgent", "ContactRequest"]},
+    {"text": "Hay alguien que pueda ayudarme mejor?",
+     "intents": ["RequestHumanAgent", "Help"]},
+    {"text": "Prefiero que me llame un vendedor",
+     "intents": ["RequestHumanAgent", "ContactRequest"]},
+
+    # Could be UserObjection OR Farewell
+    {"text": "No gracias, otro día será",
+     "intents": ["UserObjection", "Farewell"]},
+    {"text": "Lo voy a pensar, gracias",
+     "intents": ["UserObjection", "Farewell"]},
+
+    # Could be VehicleNotInInventory OR VehicleSearch
+    {"text": "Tienen Tesla o algo eléctrico?",
+     "intents": ["VehicleNotInInventory", "VehicleSearch"]},
+    {"text": "Busco un Porsche o algo deportivo",
+     "intents": ["VehicleNotInInventory", "VehicleSearch"]},
+    {"text": "Tienen algo parecido a un Range Rover?",
+     "intents": ["VehicleNotInInventory", "VehicleSearch"]},
+
+    # Could be VehicleNotInInventory OR VehicleSpecsQuestion
+    {"text": "Cuántos HP tiene ese carro?",
+     "intents": ["VehicleNotInInventory", "VehicleSpecsQuestion"]},
+    {"text": "Cuánto consume por galón?",
+     "intents": ["VehicleNotInInventory", "VehicleSpecsQuestion"]},
+]
+
+INTENT_REGISTRY = {
+    "Greeting": {
+        "user_templates": GREETING_USER_TEMPLATES,
+        "response_fn": greeting_response,
+        "requires_vehicle": False,
+    },
+    "Farewell": {
+        "user_templates": FAREWELL_USER_TEMPLATES,
+        "response_fn": farewell_response,
+        "requires_vehicle": False,
+    },
+    "Help": {
+        "user_templates": HELP_USER_TEMPLATES,
+        "response_fn": help_response,
+        "requires_vehicle": False,
+    },
+    "Fallback": {
+        "user_templates": FALLBACK_USER_TEMPLATES,
+        "response_fn": fallback_response,
+        "requires_vehicle": False,
+    },
+    "VehicleSearch": {
+        "user_templates": VEHICLE_SEARCH_USER_TEMPLATES,
+        "response_fn": vehicle_search_response,
+        "requires_vehicle": True,
+    },
+    "VehicleDetails": {
+        "user_templates": VEHICLE_DETAILS_USER_TEMPLATES,
+        "response_fn": vehicle_details_response,
+        "requires_vehicle": True,
+    },
+    "VehiclePrice": {
+        "user_templates": VEHICLE_PRICE_USER_TEMPLATES,
+        "response_fn": vehicle_price_response,
+        "requires_vehicle": True,
+    },
+    "VehicleComparison": {
+        "user_templates": VEHICLE_COMPARISON_USER_TEMPLATES,
+        "response_fn": vehicle_comparison_response,
+        "requires_vehicle": True,
+    },
+    "FinancingInfo": {
+        "user_templates": FINANCING_INFO_USER_TEMPLATES,
+        "response_fn": financing_info_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "TestDriveSchedule": {
+        "user_templates": TEST_DRIVE_USER_TEMPLATES,
+        "response_fn": test_drive_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "DealerHours": {
+        "user_templates": DEALER_HOURS_USER_TEMPLATES,
+        "response_fn": dealer_hours_response,
+        "requires_vehicle": False,
+    },
+    "DealerLocation": {
+        "user_templates": DEALER_LOCATION_USER_TEMPLATES,
+        "response_fn": dealer_location_response,
+        "requires_vehicle": False,
+    },
+    "ContactRequest": {
+        "user_templates": CONTACT_REQUEST_USER_TEMPLATES,
+        "response_fn": contact_request_response,
+        "requires_vehicle": False,
+    },
+    "Complaint": {
+        "user_templates": COMPLAINT_USER_TEMPLATES,
+        "response_fn": complaint_response,
+        "requires_vehicle": False,
+    },
+    "TradeIn": {
+        "user_templates": TRADE_IN_USER_TEMPLATES,
+        "response_fn": trade_in_response,
+        "requires_vehicle": False,
+    },
+    "WarrantyInfo": {
+        "user_templates": WARRANTY_USER_TEMPLATES,
+        "response_fn": warranty_response,
+        "requires_vehicle": False,
+    },
+    "CashPurchase": {
+        "user_templates": CASH_PURCHASE_USER_TEMPLATES,
+        "response_fn": cash_purchase_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "VehicleSpecsQuestion": {
+        "user_templates": VEHICLE_SPECS_USER_TEMPLATES,
+        "response_fn": vehicle_specs_response,
+        "requires_vehicle": True,
+    },
+    # --- Phase 3: Edge-case intents ---
+    "NegotiatePrice": {
+        "user_templates": NEGOTIATE_PRICE_USER_TEMPLATES,
+        "response_fn": negotiate_price_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "VehicleAvailability": {
+        "user_templates": VEHICLE_AVAILABILITY_USER_TEMPLATES,
+        "response_fn": vehicle_availability_response,
+        "requires_vehicle": True,
+    },
+    "InsuranceInfo": {
+        "user_templates": INSURANCE_INFO_USER_TEMPLATES,
+        "response_fn": insurance_info_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "DocumentsRequired": {
+        "user_templates": DOCUMENTS_REQUIRED_USER_TEMPLATES,
+        "response_fn": documents_required_response,
+        "requires_vehicle": False,
+    },
+    "DeliveryInfo": {
+        "user_templates": DELIVERY_INFO_USER_TEMPLATES,
+        "response_fn": delivery_info_response,
+        "requires_vehicle": False,
+    },
+    "VehicleHistory": {
+        "user_templates": VEHICLE_HISTORY_USER_TEMPLATES,
+        "response_fn": vehicle_history_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "PaymentMethods": {
+        "user_templates": PAYMENT_METHODS_USER_TEMPLATES,
+        "response_fn": payment_methods_response,
+        "requires_vehicle": False,
+    },
+    "ReturnPolicy": {
+        "user_templates": RETURN_POLICY_USER_TEMPLATES,
+        "response_fn": return_policy_response,
+        "requires_vehicle": False,
+    },
+    "MaintenanceCost": {
+        "user_templates": MAINTENANCE_COST_USER_TEMPLATES,
+        "response_fn": maintenance_cost_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "OutOfScope": {
+        "user_templates": OUT_OF_SCOPE_USER_TEMPLATES,
+        "response_fn": out_of_scope_response,
+        "requires_vehicle": False,
+    },
+    "LanguageBarrier": {
+        "user_templates": LANGUAGE_BARRIER_USER_TEMPLATES,
+        "response_fn": language_barrier_response,
+        "requires_vehicle": False,
+    },
+    "ColorAvailability": {
+        "user_templates": COLOR_AVAILABILITY_USER_TEMPLATES,
+        "response_fn": color_availability_response,
+        "requires_vehicle": False,  # Optional
+    },
+    "UrgentPurchase": {
+        "user_templates": URGENT_PURCHASE_USER_TEMPLATES,
+        "response_fn": urgent_purchase_response,
+        "requires_vehicle": False,
+    },
+    "NewVsUsed": {
+        "user_templates": NEW_VS_USED_USER_TEMPLATES,
+        "response_fn": new_vs_used_response,
+        "requires_vehicle": False,
+    },
+    # --- Inventory grounding: vehicle/spec not found ---
+    "VehicleNotInInventory": {
+        "user_templates": VEHICLE_NOT_IN_INVENTORY_USER_TEMPLATES,
+        "response_fn": vehicle_not_in_inventory_response,
+        "requires_vehicle": False,
+    },
+    # --- Legal compliance: Refusal of illegal requests ---
+    "LegalRefusal": {
+        "user_templates": LEGAL_REFUSAL_USER_TEMPLATES + LEGAL_REFUSAL_USER_TEMPLATES_INFORMAL,
+        "response_fn": legal_refusal_response,
+        "requires_vehicle": False,
+    },
+    # --- Negative response / conflict handling ---
+    "UserObjection": {
+        "user_templates": USER_OBJECTION_USER_TEMPLATES,
+        "response_fn": user_objection_response,
+        "requires_vehicle": False,
+    },
+    "FrustratedUser": {
+        "user_templates": FRUSTRATED_USER_USER_TEMPLATES,
+        "response_fn": frustrated_user_response,
+        "requires_vehicle": False,
+    },
+    "RequestHumanAgent": {
+        "user_templates": REQUEST_HUMAN_AGENT_USER_TEMPLATES,
+        "response_fn": request_human_agent_response,
+        "requires_vehicle": False,
+    },
+}

@@ -1,0 +1,108 @@
+{{- /* R18 (MLOps): LLM Server Deployment Template */ -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-server
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: llm-server
+    version: v1
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    app.okla.com/component: "llm-inference"
+    app.okla.com/managed-by: "helm"
+    app.okla.com/model: "okla-llama3-8b-q4_k_m"
+spec:
+  replicas: {{ .Values.llmServer.replicaCount }}
+  strategy:
+    {{- toYaml .Values.llmServer.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      app: llm-server
+  template:
+    metadata:
+      labels:
+        app: llm-server
+        version: v1
+    spec:
+      containers:
+        - name: llm-server
+          image: "{{ .Values.llmServer.image.repository }}:{{ .Values.llmServer.image.tag }}"
+          imagePullPolicy: {{ .Values.llmServer.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.llmServer.config.port }}
+              protocol: TCP
+          env:
+            - name: MODEL_PATH
+              value: {{ .Values.llmServer.config.modelPath | quote }}
+            - name: HOST
+              value: {{ .Values.llmServer.config.host | quote }}
+            - name: PORT
+              value: {{ .Values.llmServer.config.port | quote }}
+            - name: N_CTX
+              value: {{ .Values.llmServer.config.nCtx | quote }}
+            - name: N_GPU_LAYERS
+              value: {{ .Values.llmServer.config.nGpuLayers | quote }}
+            - name: N_THREADS
+              value: {{ .Values.llmServer.config.nThreads | quote }}
+            - name: MAX_TOKENS
+              value: {{ .Values.llmServer.config.maxTokens | quote }}
+            - name: STRICT_CHECKSUM
+              value: {{ .Values.llmServer.config.strictChecksum | quote }}
+          resources:
+            {{- toYaml .Values.llmServer.resources | nindent 12 }}
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.llmServer.probes.liveness.path }}
+              port: {{ .Values.llmServer.probes.liveness.port }}
+            initialDelaySeconds: {{ .Values.llmServer.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.llmServer.probes.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.llmServer.probes.readiness.path }}
+              port: {{ .Values.llmServer.probes.readiness.port }}
+            initialDelaySeconds: {{ .Values.llmServer.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.llmServer.probes.readiness.periodSeconds }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.llmServer.probes.startup.path }}
+              port: {{ .Values.llmServer.probes.startup.port }}
+            initialDelaySeconds: {{ .Values.llmServer.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.llmServer.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.llmServer.probes.startup.failureThreshold }}
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: llm-model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-server
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: llm-server
+spec:
+  selector:
+    app: llm-server
+  ports:
+    - port: {{ .Values.llmServer.config.port }}
+      targetPort: {{ .Values.llmServer.config.port }}
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llm-model-pvc
+  namespace: {{ .Values.global.namespace }}
+spec:
+  accessModes:
+    - {{ .Values.llmServer.storage.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.llmServer.storage.size }}
+  storageClassName: {{ .Values.llmServer.storage.storageClassName }}

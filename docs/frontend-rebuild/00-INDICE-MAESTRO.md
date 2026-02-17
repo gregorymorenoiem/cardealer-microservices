@@ -238,7 +238,8 @@ docs/frontend-rebuild/
 │       ├── 04-vehicle-media.md               # Galería, 360°, Video
 │       ├── 05-video-tour.md                  # Video tour interactivo
 │       └── 06-event-tracking-sdk.md          # SDK de analytics
-│9 archivos)
+│
+├── 05-API-INTEGRATION/              # 🔌 Integración con APIs (9 archivos)
 │   ├── 01-cliente-http.md           # ✅ Cliente Axios base
 │   ├── 02-autenticacion.md          # ✅ Auth endpoints (8)
 │   ├── 03-formularios.md            # ✅ Patrones de formularios
@@ -247,17 +248,17 @@ docs/frontend-rebuild/
 │   ├── 08-rate-limits-pagination.md # 🆕 Rate limits y paginación
 │   ├── 31-state-management.md       # 🆕 Zustand stores (auth, favorites, etc.)
 │   ├── 32-realtime-websockets.md    # 🆕 WebSocket para chat y notificaciones
-│   └── 33-mock-data-examples.md     # 🆕✅ Mock data y ejemplos de respuestas API.)
-│   └── 32-realtime-websockets.md    # 🆕 WebSocket5 archivos)
-│   ├── 01-estrategia-testing.md     # Estrategia de testing
+│   └── 33-mock-data-examples.md     # 🆕✅ Mock data y ejemplos de respuestas API
+│
+├── 06-TESTING/                      # 🧪 Testing (6 archivos)
+│   ├── 01-estrategia-testing.md     # Estrategia de testing (Vitest + RTL)
 │   ├── 02-coverage-ci.md            # Coverage y CI/CD
 │   ├── 03-e2e-fixtures.md           # 🆕 Factories y fixtures para E2E
 │   ├── 04-ci-cd-integration.md      # 🆕 GitHub Actions, Playwright CI
-│   └── 05-implementation-checklists.md # 🆕✅ Checklists por tipo de componente
-│   ├── 03-e2e-fixtures.md           # 🆕 Factories y fixtures para E2E
-│   └── 04-ci-cd-integration.md      # 🆕 GitHub Actions, Playwright CI
+│   ├── 05-implementation-checklists.md # 🆕✅ Checklists por tipo de componente
+│   └── 06-test-suite-implementation.md # 🆕✅ Plan detallado de tests (Feb 2026)
 │
-└── 07-BACKEND-SUPPORT/              # 🔧 Soporte Backend (1 archivo)
+└── 07-BACKEND-SUPPORT/              # 🔧 Soporte Backend (12 archivos)
     └── 01-supportservice.md         # SupportService nuevo
 ```
 
@@ -280,7 +281,7 @@ docs/frontend-rebuild/
 | └─ 08-DGII-COMPLIANCE     | 8            | ✅ Completo             |
 | └─ 09-COMPONENTES-COMUNES | 6            | ✅ Completo             |
 | **05-API-INTEGRATION**    | 33           | ✅ Completo (+1 nuevo)  |
-| **06-TESTING**            | 5            | ✅ Completo (+3 nuevos) |
+| **06-TESTING**            | 6            | ✅ Completo (+4 nuevos) |
 | **07-BACKEND-SUPPORT**    | 12           | ✅ Completo             |
 | **TOTAL**                 | **179**      | ✅ 100%                 |
 

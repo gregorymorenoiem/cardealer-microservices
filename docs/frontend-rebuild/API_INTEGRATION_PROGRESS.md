@@ -870,4 +870,66 @@ pnpm add @radix-ui/react-alert-dialog
 - Todas las páginas conectadas a APIs reales
 - Servicios y hooks completos
 
+---
+
+## 🧪 TESTING - ✅ IMPLEMENTADO
+
+> **Documento de referencia:** [06-TESTING/06-test-suite-implementation.md](06-TESTING/06-test-suite-implementation.md)
+
+### Estado de Tests
+
+| Tipo              | Actual | Objetivo | Estado         |
+| ----------------- | ------ | -------- | -------------- |
+| Tests Unitarios   | 79     | 50+      | ✅ Completado  |
+| Tests Integración | 77     | 20+      | ✅ Completado  |
+| Tests E2E         | 35     | 10+      | ✅ Completado  |
+| Coverage          | ~25%   | > 80%    | 🟡 En progreso |
+
+### Tests Implementados
+
+#### Vitest (Unitarios + Integración) - 156 tests
+
+| Archivo                             | Tests | Estado |
+| ----------------------------------- | ----- | ------ |
+| auth.api.test.ts                    | 11    | ✅     |
+| vehicles.api.test.ts                | 28    | ✅     |
+| favorites.api.test.ts               | 33    | ✅     |
+| auth-flow.integration.test.tsx      | 26    | ✅     |
+| homepage.integration.test.tsx       | 14    | ✅     |
+| search.integration.test.tsx         | 23    | ✅     |
+| vehicle-detail.integration.test.tsx | 21    | ✅     |
+
+#### Playwright E2E - 35 tests
+
+| Archivo                | Tests | Estado |
+| ---------------------- | ----- | ------ |
+| auth.spec.ts           | 10    | ✅     |
+| search.spec.ts         | 10    | ✅     |
+| vehicle-detail.spec.ts | 8     | ✅     |
+| homepage.spec.ts       | 10    | ✅     |
+| favorites.spec.ts      | 5     | ✅     |
+
+### Infraestructura Creada
+
+- ✅ `src/test/setup.ts` - Configuración global Vitest
+- ✅ `src/test/mocks/server.ts` - MSW server
+- ✅ `src/test/mocks/handlers.ts` - API handlers (~480 líneas)
+- ✅ `src/test/test-utils.tsx` - Custom render con providers
+- ✅ `e2e/` - 5 archivos de tests E2E con Playwright
+
+### Comandos
+
+```bash
+# Ejecutar tests unitarios/integración
+pnpm test
+
+# Ejecutar tests E2E
+pnpm test:e2e
+
+# Ver tests E2E en UI
+pnpm test:e2e:ui
+```
+
+---
+
 _Última actualización: Febrero 2, 2026_
