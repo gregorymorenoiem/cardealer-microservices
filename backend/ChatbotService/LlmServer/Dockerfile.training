@@ -1,0 +1,79 @@
+# ============================================================================
+# Training Docker Image — OKLA Chatbot Fine-Tuning
+# ============================================================================
+# R20 (MLOps): Reproducible training environment.
+#
+# This Dockerfile creates an environment identical to the Google Colab
+# notebook used for fine-tuning, ensuring full reproducibility.
+#
+# Build:
+#   docker build -t okla-llm-trainer:latest -f Dockerfile.training .
+#
+# Run (with GPU):
+#   docker run --gpus all -v /data/models:/output \
+#     -v /data/datasets:/datasets \
+#     okla-llm-trainer:latest \
+#     --dataset /datasets/train.jsonl \
+#     --output /output/okla-llama3-8b-q4_k_m.gguf
+#
+# Run (without GPU — for testing pipeline only):
+#   docker run -v /data:/data okla-llm-trainer:latest --dry-run
+# ============================================================================
+
+FROM nvidia/cuda:12.1-devel-ubuntu22.04
+
+LABEL maintainer="OKLA Team"
+LABEL description="OKLA Chatbot LLM Fine-Tuning Environment"
+LABEL version="1.0.0"
+LABEL org.opencontainers.image.source="https://github.com/okla-rd/cardealer-microservices"
+
+# Prevent interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-venv \
+    python3-pip \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+WORKDIR /training
+
+# Install Python training dependencies (pinned versions for reproducibility)
+COPY requirements-training.txt .
+RUN pip install --no-cache-dir -r requirements-training.txt
+
+# Copy training scripts
+COPY train.py .
+COPY evaluate_before_deploy.py .
+
+# Create output directories
+RUN mkdir -p /output /datasets /checkpoints
+
+# Environment variables matching Colab training configuration
+ENV BASE_MODEL="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit"
+ENV LORA_R=16
+ENV LORA_ALPHA=32
+ENV LORA_DROPOUT=0.0
+ENV LEARNING_RATE=2e-4
+ENV NUM_EPOCHS=3
+ENV BATCH_SIZE=2
+ENV GRADIENT_ACCUMULATION=4
+ENV WARMUP_STEPS=5
+ENV WEIGHT_DECAY=0.01
+ENV MAX_SEQ_LENGTH=2048
+ENV SEED=42
+ENV QUANTIZATION_METHOD="q4_k_m"
+
+ENTRYPOINT ["python", "train.py"]
+CMD ["--help"]
