@@ -97,14 +97,14 @@ export async function getUnreadCount(): Promise<number> {
  * Mark a notification as read
  */
 export async function markAsRead(notificationId: string): Promise<void> {
-  await apiClient.post(`/api/notifications/${notificationId}/read`);
+  await apiClient.patch(`/api/notifications/${notificationId}/read`);
 }
 
 /**
  * Mark all notifications as read
  */
 export async function markAllAsRead(): Promise<void> {
-  await apiClient.post('/api/notifications/read-all');
+  await apiClient.patch('/api/notifications/read-all');
 }
 
 /**
@@ -115,10 +115,10 @@ export async function deleteNotification(notificationId: string): Promise<void> 
 }
 
 /**
- * Delete all notifications
+ * Delete all read notifications
  */
 export async function deleteAllNotifications(): Promise<void> {
-  await apiClient.delete('/api/notifications');
+  await apiClient.delete('/api/notifications/read');
 }
 
 /**

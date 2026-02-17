@@ -28,13 +28,13 @@ export default function RecoverPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary to-teal-700 p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2 text-white">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
-              <Car className="h-7 w-7 text-emerald-600" />
+              <Car className="h-7 w-7 text-primary" />
             </div>
             <span className="text-3xl font-bold">OKLA</span>
           </Link>
@@ -44,14 +44,14 @@ export default function RecoverPasswordPage() {
           {isSubmitted ? (
             <>
               <CardHeader className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                  <CheckCircle className="h-8 w-8 text-emerald-600" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <CheckCircle className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-2xl">Revisa tu correo</CardTitle>
                 <CardDescription>Enviamos un enlace de recuperación a {email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-center text-sm text-gray-600">
+                <p className="text-muted-foreground text-center text-sm">
                   El enlace expira en 24 horas. Si no encuentras el correo, revisa tu carpeta de
                   spam.
                 </p>
@@ -79,7 +79,7 @@ export default function RecoverPasswordPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Correo electrónico</label>
                     <div className="relative">
-                      <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Mail className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                       <Input
                         type="email"
                         placeholder="tu@email.com"
@@ -93,7 +93,7 @@ export default function RecoverPasswordPage() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    className="w-full bg-primary hover:bg-primary/90"
                     disabled={isLoading}
                   >
                     {isLoading ? (

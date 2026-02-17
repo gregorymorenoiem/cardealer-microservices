@@ -22,15 +22,15 @@ export function SectionHeader({
   };
 
   const titleSizes = {
-    sm: 'text-xl font-bold leading-tight tracking-tight text-slate-900 md:text-2xl',
-    md: 'text-2xl font-bold leading-tight tracking-tight text-slate-900 md:text-3xl',
-    lg: 'text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl',
+    sm: 'text-xl font-bold leading-tight tracking-tight text-foreground md:text-2xl',
+    md: 'text-2xl font-bold leading-tight tracking-tight text-foreground md:text-3xl',
+    lg: 'text-3xl font-bold leading-tight tracking-tight text-foreground md:text-4xl',
   };
 
   const subtitleSizes = {
-    sm: 'text-sm leading-relaxed text-slate-600',
-    md: 'text-base leading-relaxed text-slate-600',
-    lg: 'text-lg leading-relaxed text-slate-600',
+    sm: 'text-sm leading-relaxed text-muted-foreground',
+    md: 'text-base leading-relaxed text-muted-foreground',
+    lg: 'text-lg leading-relaxed text-muted-foreground',
   };
 
   return (

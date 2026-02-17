@@ -52,7 +52,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
           <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Nuevo</Badge>
         )}
         {vehicle.condition === 'used' && (
-          <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100">Usado</Badge>
+          <Badge className="bg-muted text-foreground hover:bg-muted">Usado</Badge>
         )}
         {vehicle.condition === 'certified' && (
           <Badge className="gap-1 bg-purple-100 text-purple-700 hover:bg-purple-100">
@@ -66,31 +66,31 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
       </div>
 
       {/* Title */}
-      <h1 className="text-2xl font-bold text-gray-900 lg:text-3xl">{title}</h1>
+      <h1 className="text-foreground text-2xl font-bold lg:text-3xl">{title}</h1>
 
       {/* Trim */}
-      {vehicle.trim && <p className="mt-1 text-lg text-gray-600">{vehicle.trim}</p>}
+      {vehicle.trim && <p className="text-muted-foreground mt-1 text-lg">{vehicle.trim}</p>}
 
       {/* Quick specs */}
-      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+      <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-4 text-sm">
         <div className="flex items-center gap-1.5">
-          <Calendar className="h-4 w-4 text-gray-400" />
+          <Calendar className="text-muted-foreground h-4 w-4" />
           <span>{vehicle.year}</span>
         </div>
         {vehicle.mileage !== undefined && (
           <div className="flex items-center gap-1.5">
-            <Gauge className="h-4 w-4 text-gray-400" />
+            <Gauge className="text-muted-foreground h-4 w-4" />
             <span>{formatNumber(vehicle.mileage)} km</span>
           </div>
         )}
         <div className="flex items-center gap-1.5">
-          <MapPin className="h-4 w-4 text-gray-400" />
+          <MapPin className="text-muted-foreground h-4 w-4" />
           <span>{vehicle.location.city}</span>
         </div>
       </div>
 
       {/* Price Section */}
-      <div className="mt-6 border-t pt-6" data-testid="vehicle-price">
+      <div className="border-border mt-6 border-t pt-6" data-testid="vehicle-price">
         {/* Deal Rating */}
         {vehicle.dealRating && (
           <div className="mb-3">
@@ -100,18 +100,18 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
         {/* Price */}
         <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-bold text-gray-900 lg:text-4xl">
+          <span className="text-foreground text-3xl font-bold lg:text-4xl">
             {formatCurrency(vehicle.price)}
           </span>
           {vehicle.originalPrice && vehicle.originalPrice > vehicle.price && (
-            <span className="text-lg text-gray-400 line-through">
+            <span className="text-muted-foreground text-lg line-through">
               {formatCurrency(vehicle.originalPrice)}
             </span>
           )}
         </div>
 
         {/* Monthly Payment Estimate */}
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="text-muted-foreground mt-2 text-sm">
           Estimado:{' '}
           <span className="font-medium">{formatCurrency(Math.round(vehicle.price / 60))}/mes</span>
           <span className="ml-1 text-xs">(60 meses)</span>
@@ -139,7 +139,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
       </div>
 
       {/* Published Date */}
-      <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+      <div className="text-muted-foreground mt-4 flex items-center justify-center gap-1.5 text-xs">
         <Clock className="h-3 w-3" />
         <span>Publicado el {new Date(vehicle.createdAt).toLocaleDateString('es-DO')}</span>
       </div>

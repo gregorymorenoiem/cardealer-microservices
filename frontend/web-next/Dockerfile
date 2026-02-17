@@ -32,6 +32,14 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Production: Frontend only talks to Gateway
+ARG NEXT_PUBLIC_API_URL=https://api.okla.com.do
+ARG NEXT_PUBLIC_SITE_URL=https://okla.com.do
+
+# Set as ENV so Next.js can read them during build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
 # Build the application
 RUN pnpm build
 

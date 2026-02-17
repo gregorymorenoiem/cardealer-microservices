@@ -4,7 +4,14 @@ import { cn } from '@/lib/utils';
 // Skeleton component for loading states
 const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('animate-pulse rounded-md bg-gray-200', className)} {...props} />
+    <div
+      ref={ref}
+      role="status"
+      aria-busy="true"
+      aria-label="Cargando"
+      className={cn('bg-muted animate-pulse rounded-md', className)}
+      {...props}
+    />
   )
 );
 Skeleton.displayName = 'Skeleton';
@@ -37,7 +44,7 @@ const SkeletonText = ({ lines = 1, className }: { lines?: number; className?: st
 // Card Skeleton
 const SkeletonCard = ({ className }: { className?: string }) => {
   return (
-    <div className={cn('rounded-xl border border-gray-200 bg-white p-4', className)}>
+    <div className={cn('border-border bg-card rounded-xl border p-4', className)}>
       <Skeleton className="mb-4 aspect-video w-full rounded-lg" />
       <div className="space-y-3">
         <Skeleton className="h-5 w-3/4" />
@@ -58,7 +65,7 @@ const SkeletonCard = ({ className }: { className?: string }) => {
 // Vehicle Card Skeleton
 const SkeletonVehicleCard = ({ className }: { className?: string }) => {
   return (
-    <div className={cn('overflow-hidden rounded-xl border border-gray-200 bg-white', className)}>
+    <div className={cn('border-border bg-card overflow-hidden rounded-xl border', className)}>
       {/* Image placeholder */}
       <Skeleton className="aspect-[4/3] w-full" />
 
@@ -78,7 +85,7 @@ const SkeletonVehicleCard = ({ className }: { className?: string }) => {
         </div>
 
         {/* Price and CTA */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-2">
+        <div className="border-border flex items-center justify-between border-t pt-2">
           <div className="space-y-1">
             <Skeleton className="h-6 w-28" />
             <Skeleton className="h-4 w-20" />
@@ -101,16 +108,16 @@ const SkeletonTable = ({
   className?: string;
 }) => {
   return (
-    <div className={cn('overflow-hidden rounded-lg border border-gray-200', className)}>
+    <div className={cn('border-border overflow-hidden rounded-lg border', className)}>
       {/* Header */}
-      <div className="flex gap-4 border-b border-gray-200 bg-gray-50 p-4">
+      <div className="border-border bg-muted flex gap-4 border-b p-4">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className="h-4 flex-1" />
         ))}
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="flex gap-4 border-b border-gray-100 p-4 last:border-0">
+        <div key={rowIndex} className="border-border/50 flex gap-4 border-b p-4 last:border-0">
           {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton key={colIndex} className="h-4 flex-1" />
           ))}

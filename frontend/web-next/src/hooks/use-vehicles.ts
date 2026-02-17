@@ -19,9 +19,20 @@ import {
   getColors,
   getProvinces,
   getFeatures,
+  decodeVinSmart,
+  checkVinExists,
+  decodeVinBatch,
   type CreateVehicleRequest,
   type UpdateVehicleRequest,
+  type SmartVinDecodeResult,
+  type VinExistsResponse,
+  type BatchVinDecodeResponse,
 } from '@/services/vehicles';
+import {
+  getPriceSuggestion,
+  type PriceSuggestionRequest,
+  type PriceSuggestion,
+} from '@/services/vehicle-intelligence';
 import type { VehicleSearchParams } from '@/types';
 
 // =============================================================================
@@ -297,5 +308,63 @@ export function useFeatures() {
     queryKey: catalogKeys.features(),
     queryFn: getFeatures,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
+  });
+}
+
+// =============================================================================
+// VIN DECODE HOOKS
+// =============================================================================
+
+export const vinKeys = {
+  all: ['vin'] as const,
+  decode: (vin: string) => [...vinKeys.all, 'decode', vin] as const,
+  exists: (vin: string) => [...vinKeys.all, 'exists', vin] as const,
+  priceSuggestion: (specs: PriceSuggestionRequest) => [...vinKeys.all, 'price', specs] as const,
+};
+
+/**
+ * Smart VIN decode with catalog matching and duplicate check
+ */
+export function useDecodeVin(vin: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: vinKeys.decode(vin),
+    queryFn: () => decodeVinSmart(vin),
+    enabled: options?.enabled !== false && vin.length === 17,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+}
+
+/**
+ * Check if VIN exists (fast, for real-time validation)
+ */
+export function useCheckVinExists(vin: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: vinKeys.exists(vin),
+    queryFn: () => checkVinExists(vin),
+    enabled: options?.enabled !== false && vin.length === 17,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+/**
+ * Batch VIN decode (mutation for dealers)
+ */
+export function useDecodeVinBatch() {
+  return useMutation({
+    mutationFn: (vins: string[]) => decodeVinBatch(vins),
+  });
+}
+
+/**
+ * Get price suggestion for a vehicle
+ */
+export function useEstimatePrice(specs: PriceSuggestionRequest, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: vinKeys.priceSuggestion(specs),
+    queryFn: () => getPriceSuggestion(specs),
+    enabled: options?.enabled !== false && !!specs.make && !!specs.model && !!specs.year,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
   });
 }

@@ -110,12 +110,12 @@ export function VehicleSearchResults({
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Results count */}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           {isLoading ? (
             <Skeleton className="h-5 w-32" />
           ) : (
             <>
-              <span className="font-medium text-gray-900">{total.toLocaleString()}</span> vehículos
+              <span className="font-medium text-foreground">{total.toLocaleString()}</span> vehículos
               encontrados
             </>
           )}
@@ -166,7 +166,7 @@ export function VehicleSearchResults({
                   onClick={() =>
                     onFilterChange({ sortBy: option.value as VehicleSearchFilters['sortBy'] })
                   }
-                  className={cn(filters.sortBy === option.value && 'bg-gray-100')}
+                  className={cn(filters.sortBy === option.value && 'bg-muted')}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -282,11 +282,11 @@ function EmptyState({
 }) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
         <span className="text-4xl">🔍</span>
       </div>
-      <h3 className="mt-4 text-lg font-medium text-gray-900">No se encontraron vehículos</h3>
-      <p className="mt-2 max-w-sm text-gray-600">
+      <h3 className="mt-4 text-lg font-medium text-foreground">No se encontraron vehículos</h3>
+      <p className="mt-2 max-w-sm text-muted-foreground">
         {hasFilters
           ? 'Intenta ajustar los filtros para encontrar más resultados.'
           : 'No hay vehículos disponibles en este momento.'}
@@ -355,7 +355,7 @@ function Pagination({
       {pages.map((pageItem, idx) => {
         if (typeof pageItem === 'string') {
           return (
-            <span key={pageItem} className="px-2 text-gray-400">
+            <span key={pageItem} className="px-2 text-muted-foreground">
               ...
             </span>
           );

@@ -56,7 +56,7 @@ export interface Vehicle {
 
   // Seller
   sellerId: string;
-  sellerType: 'individual' | 'dealer';
+  sellerType: 'seller' | 'dealer';
 
   // Location
   location: VehicleLocation;
@@ -158,7 +158,15 @@ export interface User {
   phone?: string;
 
   // Account
-  accountType: 'individual' | 'dealer' | 'admin';
+  accountType:
+    | 'buyer'
+    | 'seller'
+    | 'dealer'
+    | 'dealer_employee'
+    | 'admin'
+    | 'platform_employee'
+    | 'guest';
+  userIntent?: 'browse' | 'buy' | 'sell' | 'buy_and_sell';
   isVerified: boolean;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
@@ -209,6 +217,9 @@ export interface Dealer {
   phone: string;
   mobilePhone?: string;
   website?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  whatsAppNumber?: string;
 
   // Address
   address: string;

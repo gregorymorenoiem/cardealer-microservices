@@ -90,6 +90,8 @@ export function useRecentLeads(count: number = 10) {
   return useQuery({
     queryKey: crmKeys.leadsRecent(count),
     queryFn: () => getRecentLeads(count),
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

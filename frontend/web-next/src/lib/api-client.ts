@@ -4,33 +4,47 @@
 // Cliente Axios centralizado con interceptores y manejo de errores
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { getCsrfToken } from '@/lib/security/csrf';
+import { getApiBaseUrl } from '@/lib/api-url';
 
-// Environment configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+// Environment configuration — BFF pattern:
+// Client-side (prod): empty baseURL = same-origin requests → Next.js rewrites → Gateway
+// Server-side (prod): INTERNAL_API_URL = http://gateway:8080 (direct internal call)
+// Development: http://localhost:18443 (direct to Gateway)
+const API_URL = getApiBaseUrl();
 const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10);
 
-// Token storage keys
+// Token storage keys (kept for backward cleanup only)
 const ACCESS_TOKEN_KEY = 'okla_access_token';
 const REFRESH_TOKEN_KEY = 'okla_refresh_token';
 
 // Create axios instance
+// Security (CWE-922): withCredentials=true sends HttpOnly cookies automatically
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
   timeout: API_TIMEOUT,
+  withCredentials: true, // Always send HttpOnly cookies with requests
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
 });
 
-// Request interceptor - Add auth token
+// Request interceptor - Add CSRF protection
+// NOTE: Auth tokens are now HttpOnly cookies — sent automatically by browser
 apiClient.interceptors.request.use(
   config => {
-    // Only access localStorage on client side
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Backward compatibility: if localStorage token exists (migration period), still send it
+      const legacyToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+      if (legacyToken && config.headers) {
+        config.headers.Authorization = `Bearer ${legacyToken}`;
+      }
+
+      // Add CSRF token for mutation requests (POST, PUT, PATCH, DELETE)
+      const method = config.method?.toUpperCase();
+      if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && config.headers) {
+        config.headers['X-CSRF-Token'] = getCsrfToken();
       }
     }
     return config;
@@ -44,40 +58,60 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+      _silentAuth?: boolean;
+    };
 
     // Handle 401 Unauthorized - Try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip the refresh/logout cascade for requests marked with _silentAuth
+    if (error.response?.status === 401 && originalRequest._silentAuth) {
+      return Promise.reject(error);
+    }
+
+    // Don't attempt token refresh for auth endpoints (login, register, etc.)
+    // These return 401 for invalid credentials, not expired tokens
+    const requestUrl = originalRequest.url || '';
+    const isAuthEndpoint =
+      requestUrl.includes('/api/auth/login') ||
+      requestUrl.includes('/api/auth/register') ||
+      requestUrl.includes('/api/auth/forgot-password') ||
+      requestUrl.includes('/api/auth/reset-password') ||
+      requestUrl.includes('/api/auth/verify-email');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken =
-          typeof window !== 'undefined' ? localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+        // Security (CWE-922): Refresh token is sent automatically via HttpOnly cookie.
+        // The backend reads it from cookie, no need to send in body.
+        const response = await axios.post(
+          `${API_URL}/api/auth/refresh-token`,
+          {}, // Empty body — refresh token comes from HttpOnly cookie
+          { withCredentials: true }
+        );
 
-        if (refreshToken) {
-          const response = await axios.post(`${API_URL}/api/auth/refresh`, {
-            refreshToken,
-          });
+        const { accessToken } = response.data?.data || response.data || {};
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-            localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
-          }
-
-          // Retry the original request with new token
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          }
-          return apiClient(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed - Clear tokens and redirect to login
+        // Legacy cleanup: if there was a localStorage token, remove it
         if (typeof window !== 'undefined') {
           localStorage.removeItem(ACCESS_TOKEN_KEY);
           localStorage.removeItem(REFRESH_TOKEN_KEY);
-          window.location.href = '/login';
+        }
+
+        // Retry the original request — new tokens are in HttpOnly cookies
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed - Clear any legacy tokens
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(ACCESS_TOKEN_KEY);
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          // Clear legacy cookies set by JS
+          document.cookie = 'auth-token=; path=/; max-age=0';
+          document.cookie = 'refresh-token=; path=/; max-age=0';
+
+          // Dispatch custom event for auth context to handle
+          window.dispatchEvent(new CustomEvent('auth:logout'));
         }
         return Promise.reject(refreshError);
       }
@@ -98,11 +132,20 @@ interface ApiErrorResponse {
 
 function transformError(error: AxiosError): ApiErrorResponse {
   if (error.response?.data) {
-    const data = error.response.data as Partial<ApiErrorResponse>;
+    // Backend may return error details in different fields depending on the middleware
+    // .NET ProblemDetails uses "detail", custom ApiResponse uses "message"
+    const data = error.response.data as Record<string, unknown>;
+    const message =
+      (data.message as string) ||
+      (data.detail as string) ||
+      (data.title as string) ||
+      getDefaultErrorMessage(error.response.status);
+    const code =
+      (data.code as string) || (data.errorCode as string) || `HTTP_${error.response.status}`;
     return {
-      code: data.code || `HTTP_${error.response.status}`,
-      message: data.message || getDefaultErrorMessage(error.response.status),
-      errors: data.errors,
+      code,
+      message,
+      errors: data.errors as ApiErrorResponse['errors'],
     };
   }
 
@@ -144,15 +187,27 @@ function getDefaultErrorMessage(status: number): string {
 }
 
 // Auth helpers
+// Security (CWE-922): Tokens are now HttpOnly cookies set by the backend.
+// These helpers are kept for backward compatibility during migration,
+// but NO LONGER store tokens in localStorage or JS-accessible cookies.
 export const authTokens = {
-  setTokens: (accessToken: string, refreshToken: string) => {
+  /**
+   * @deprecated Tokens are now set as HttpOnly cookies by the backend.
+   * This method only cleans up legacy localStorage tokens.
+   */
+  setTokens: (_accessToken: string, _refreshToken: string) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      // Clean up any legacy localStorage tokens (migration)
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      // Legacy JS cookies cleanup
+      document.cookie = 'auth-token=; path=/; max-age=0';
+      document.cookie = 'refresh-token=; path=/; max-age=0';
     }
   },
 
   getAccessToken: (): string | null => {
+    // Legacy fallback only — in normal operation, cookies are sent automatically
     if (typeof window !== 'undefined') {
       return localStorage.getItem(ACCESS_TOKEN_KEY);
     }
@@ -160,6 +215,7 @@ export const authTokens = {
   },
 
   getRefreshToken: (): string | null => {
+    // Legacy fallback only
     if (typeof window !== 'undefined') {
       return localStorage.getItem(REFRESH_TOKEN_KEY);
     }
@@ -168,13 +224,25 @@ export const authTokens = {
 
   clearTokens: () => {
     if (typeof window !== 'undefined') {
+      // Clear any legacy localStorage tokens
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
+      // Clear legacy JS cookies
+      document.cookie = 'auth-token=; path=/; max-age=0';
+      document.cookie = 'refresh-token=; path=/; max-age=0';
+      // Note: HttpOnly cookies (okla_access_token, okla_refresh_token)
+      // are cleared server-side by the logout endpoint.
     }
   },
 
   isAuthenticated: (): boolean => {
-    return !!authTokens.getAccessToken();
+    // With HttpOnly cookies, we can't check the token directly.
+    // The auth state is managed by the auth context via /api/auth/me.
+    // Legacy fallback for migration period:
+    if (typeof window !== 'undefined') {
+      return !!localStorage.getItem(ACCESS_TOKEN_KEY);
+    }
+    return false;
   },
 };
 

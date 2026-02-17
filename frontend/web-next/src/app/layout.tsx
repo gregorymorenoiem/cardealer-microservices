@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import { Navbar, Footer } from '@/components/layout';
 import { Providers } from './providers';
 import { Toaster } from 'sonner';
+import { GoogleAnalytics } from '@/components/analytics/google-analytics';
+import { SiteJsonLd } from '@/lib/seo';
+import { PWAComponents } from '@/components/pwa/pwa-wrapper';
 import './globals.css';
 
 const inter = Inter({
@@ -87,7 +89,12 @@ export const metadata: Metadata = {
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'OKLA',
+  },
 };
 
 export const viewport: Viewport = {
@@ -97,30 +104,59 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+// Script to apply theme before hydration (prevents flash of wrong theme)
+// Default is 'light' - users must explicitly choose dark mode
+const themeScript = `
+  (function() {
+    try {
+      const stored = localStorage.getItem('okla-theme');
+      // Default to 'light' instead of 'system' - OKLA's brand is light theme
+      const theme = stored || 'light';
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {}
+  })()
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-DO" className={inter.variable}>
-      <body className="min-h-screen bg-white antialiased">
+    <html
+      lang="es-DO"
+      className={inter.variable}
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <meta httpEquiv="Permissions-Policy" content="camera=*, microphone=*" />
+        <SiteJsonLd />
+        <GoogleAnalytics />
+      </head>
+      <body
+        className="bg-background text-foreground min-h-screen antialiased"
+        suppressHydrationWarning
+      >
         <Providers>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: 'white',
-                border: '1px solid #E5E7EB',
-                borderRadius: '0.75rem',
-              },
-            }}
-          />
+          <PWAComponents>
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                classNames: {
+                  toast: 'bg-card text-card-foreground border-border',
+                },
+              }}
+            />
+          </PWAComponents>
         </Providers>
       </body>
     </html>

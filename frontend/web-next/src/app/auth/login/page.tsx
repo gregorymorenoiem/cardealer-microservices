@@ -1,45 +1,127 @@
 /**
  * Login Page
  *
- * User authentication page
+ * User authentication page with full backend integration
+ * Security: CSRF protection, input sanitization, error handling
  */
 
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Car } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Car, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { login, loginWithProvider } from '@/services/auth';
+import { sanitizeEmail } from '@/lib/security/sanitize';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Estados para flujos especiales del backend
+  const [requiresCaptcha, setRequiresCaptcha] = useState(false);
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [requiresDeviceVerification, setRequiresDeviceVerification] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1500);
+
+    try {
+      // Sanitizar email antes de enviar
+      const sanitizedEmail = sanitizeEmail(email);
+
+      if (!sanitizedEmail) {
+        setError('Por favor ingresa un email válido');
+        setIsLoading(false);
+        return;
+      }
+
+      await login({
+        email: sanitizedEmail,
+        password,
+        rememberMe: true,
+      });
+
+      // Refrescar el usuario en el contexto de autenticación
+      await refreshUser();
+
+      // Redirigir al dashboard o página principal
+      router.push('/');
+    } catch (err: unknown) {
+      const error = err as {
+        message?: string;
+        code?: string;
+        response?: {
+          data?: {
+            message?: string;
+            requiresCaptcha?: boolean;
+            requiresTwoFactor?: boolean;
+            requiresRevokedDeviceVerification?: boolean;
+          };
+        };
+      };
+
+      // Manejar respuestas especiales del backend
+      const responseData = error.response?.data;
+
+      if (responseData?.requiresCaptcha) {
+        setRequiresCaptcha(true);
+        setError('Por favor completa la verificación CAPTCHA');
+      } else if (responseData?.requiresTwoFactor) {
+        setRequiresTwoFactor(true);
+        // Redirigir a página de 2FA
+        router.push('/auth/verificar-2fa');
+      } else if (responseData?.requiresRevokedDeviceVerification) {
+        setRequiresDeviceVerification(true);
+        setError('Este dispositivo fue revocado. Por favor verifica tu identidad.');
+      } else {
+        // Error genérico
+        setError(
+          responseData?.message ||
+            error.message ||
+            'Credenciales inválidas. Por favor verifica tu email y contraseña.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
+    try {
+      setError(null);
+      await loginWithProvider(provider);
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || `Error al iniciar sesión con ${provider}`);
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary to-teal-700 p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2 text-white">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
-              <Car className="h-7 w-7 text-emerald-600" />
+              <Car className="h-7 w-7 text-primary" />
             </div>
             <span className="text-3xl font-bold">OKLA</span>
           </Link>
-          <p className="mt-2 text-emerald-100">El marketplace de vehículos #1 en RD</p>
+          <p className="mt-2 text-primary-foreground">El marketplace de vehículos #1 en RD</p>
         </div>
 
         <Card className="shadow-2xl">
@@ -48,11 +130,19 @@ export default function LoginPage() {
             <CardDescription>Ingresa tus credenciales para continuar</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Correo electrónico</label>
                 <div className="relative">
-                  <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Mail className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     type="email"
                     placeholder="tu@email.com"
@@ -60,6 +150,8 @@ export default function LoginPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -67,12 +159,12 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <label className="text-sm font-medium">Contraseña</label>
-                  <Link href="/auth/recuperar" className="text-sm text-emerald-600 hover:underline">
+                  <Link href="/auth/recuperar" className="text-sm text-primary hover:underline">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Lock className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
@@ -80,20 +172,32 @@ export default function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
+              {/* TODO: Agregar componente CAPTCHA cuando requiresCaptcha === true */}
+              {requiresCaptcha && (
+                <Alert className="mb-4">
+                  <AlertDescription>
+                    Se requiere verificación CAPTCHA. (Implementación pendiente)
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-primary hover:bg-primary/90"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -109,13 +213,18 @@ export default function LoginPage() {
 
             <div className="relative my-6">
               <Separator />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-gray-500">
+              <span className="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs">
                 O continúa con
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => handleOAuthLogin('google')}
+                disabled={isLoading}
+              >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
@@ -136,24 +245,29 @@ export default function LoginPage() {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => handleOAuthLogin('apple')}
+                disabled={isLoading}
+              >
                 <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
                 </svg>
-                Facebook
+                Apple
               </Button>
             </div>
 
-            <p className="mt-6 text-center text-sm text-gray-600">
+            <p className="text-muted-foreground mt-6 text-center text-sm">
               ¿No tienes una cuenta?{' '}
-              <Link href="/auth/registro" className="font-medium text-emerald-600 hover:underline">
+              <Link href="/auth/registro" className="font-medium text-primary hover:underline">
                 Regístrate gratis
               </Link>
             </p>
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-sm text-emerald-100">
+        <p className="mt-6 text-center text-sm text-primary-foreground">
           Al continuar, aceptas nuestros{' '}
           <Link href="/terminos" className="underline">
             Términos de Servicio

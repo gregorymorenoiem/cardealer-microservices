@@ -1,4 +1,30 @@
 import '@testing-library/jest-dom';
+import { vi, beforeAll, afterEach, afterAll } from 'vitest';
+import { server } from './mocks/server';
+import * as React from 'react';
+
+// =============================================================================
+// MSW SETUP
+// =============================================================================
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' });
+});
+
+// Reset handlers after each test
+afterEach(() => {
+  server.resetHandlers();
+});
+
+// Close server after all tests
+afterAll(() => {
+  server.close();
+});
+
+// =============================================================================
+// NEXT.JS MOCKS
+// =============================================================================
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -16,9 +42,17 @@ vi.mock('next/navigation', () => ({
 
 // Mock Next.js Image
 vi.mock('next/image', () => ({
-  default: ({ src, alt, ...props }: { src: string; alt: string; [key: string]: unknown }) => {
+  default: function MockImage({
+    src,
+    alt,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    [key: string]: unknown;
+  }) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} {...props} />;
+    return React.createElement('img', { src, alt, ...props });
   },
 }));
 

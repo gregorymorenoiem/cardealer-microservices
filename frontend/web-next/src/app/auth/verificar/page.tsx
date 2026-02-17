@@ -56,13 +56,13 @@ export default function VerifyEmailPage() {
   const isCodeComplete = code.every(c => c !== '');
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary to-teal-700 p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2 text-white">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
-              <Car className="h-7 w-7 text-emerald-600" />
+              <Car className="h-7 w-7 text-primary" />
             </div>
             <span className="text-3xl font-bold">OKLA</span>
           </Link>
@@ -70,8 +70,8 @@ export default function VerifyEmailPage() {
 
         <Card className="shadow-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-              <Mail className="h-8 w-8 text-emerald-600" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Mail className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="text-2xl">Verifica tu correo</CardTitle>
             <CardDescription>
@@ -98,7 +98,7 @@ export default function VerifyEmailPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-primary hover:bg-primary/90"
                 disabled={isLoading || !isCodeComplete}
               >
                 {isLoading ? (
@@ -112,13 +112,13 @@ export default function VerifyEmailPage() {
               </Button>
 
               <div className="text-center">
-                <p className="mb-2 text-sm text-gray-600">¿No recibiste el código?</p>
+                <p className="mb-2 text-sm text-muted-foreground">¿No recibiste el código?</p>
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handleResend}
                   disabled={isResending}
-                  className="text-emerald-600"
+                  className="text-primary"
                 >
                   {isResending ? (
                     <>
@@ -137,7 +137,7 @@ export default function VerifyEmailPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-sm text-emerald-100">
+        <p className="mt-6 text-center text-sm text-primary-foreground">
           Revisa tu carpeta de spam si no encuentras el correo
         </p>
       </div>

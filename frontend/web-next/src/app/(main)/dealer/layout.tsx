@@ -1,0 +1,393 @@
+/**
+ * Dealer Layout
+ *
+ * Layout for dealer portal with sidebar navigation.
+ * Protected by AuthGuard - requires dealer or admin account type.
+ *
+ * Security:
+ * - Middleware handles server-side route protection (first layer)
+ * - AuthGuard provides client-side defense-in-depth (second layer)
+ * - Only dealer and admin account types can access
+ */
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Car,
+  Users,
+  BarChart3,
+  Calendar,
+  MessageSquare,
+  MapPin,
+  FileText,
+  CreditCard,
+  Settings,
+  LogOut,
+  Building,
+  TrendingUp,
+  Bell,
+  HelpCircle,
+  Menu,
+  X,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { AuthGuard } from '@/components/auth/auth-guard';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+
+// =============================================================================
+// NAVIGATION LINKS
+// =============================================================================
+
+const mainLinks = [
+  { href: '/dealer', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dealer/inventario', label: 'Inventario', icon: Car },
+  { href: '/dealer/leads', label: 'Leads', icon: Users },
+  { href: '/dealer/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/dealer/citas', label: 'Citas', icon: Calendar },
+  { href: '/dealer/mensajes', label: 'Mensajes', icon: MessageSquare },
+];
+
+const managementLinks = [
+  { href: '/dealer/empleados', label: 'Empleados', icon: Users },
+  { href: '/dealer/ubicaciones', label: 'Ubicaciones', icon: MapPin },
+  { href: '/dealer/pricing', label: 'Pricing IA', icon: TrendingUp },
+  { href: '/dealer/reportes', label: 'Reportes', icon: FileText },
+];
+
+const settingsLinks = [
+  { href: '/dealer/perfil', label: 'Perfil Dealer', icon: Building },
+  { href: '/dealer/documentos', label: 'Documentos', icon: FileText },
+  { href: '/dealer/facturacion', label: 'Facturación', icon: CreditCard },
+  { href: '/dealer/suscripcion', label: 'Suscripción', icon: CreditCard },
+  { href: '/dealer/configuracion', label: 'Configuración', icon: Settings },
+];
+
+// =============================================================================
+// MAIN LAYOUT (with AuthGuard wrapper)
+// =============================================================================
+
+export default function DealerLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthGuard accountTypes={['dealer', 'dealer_employee', 'admin']} forbiddenRedirect="/403">
+      <DealerLayoutContent>{children}</DealerLayoutContent>
+    </AuthGuard>
+  );
+}
+
+// =============================================================================
+// LAYOUT CONTENT
+// =============================================================================
+
+function DealerLayoutContent({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
+
+  const isActivePath = (href: string) => {
+    if (href === '/dealer') return pathname === '/dealer';
+    return pathname.startsWith(href);
+  };
+
+  // Mobile bottom nav items (most important sections)
+  const mobileNavItems = [
+    { href: '/dealer', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dealer/inventario', label: 'Inventario', icon: Car },
+    { href: '/dealer/leads', label: 'Leads', icon: Users },
+    { href: '/dealer/analytics', label: 'Analytics', icon: BarChart3 },
+  ];
+
+  return (
+    <div className="bg-muted min-h-screen pb-16 lg:pb-0">
+      {/* Header */}
+      <header className="bg-card border-border sticky top-0 z-40 border-b">
+        <div className="flex h-16 items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4">
+            {/* Mobile hamburger menu */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted lg:hidden"
+              aria-label="Abrir menú de navegación"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <Link href="/dealer" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                <span className="text-lg font-bold text-primary-foreground">O</span>
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-foreground text-xl font-bold">OKLA</span>
+                <span className="text-muted-foreground ml-2 text-sm">Dealer Portal</span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dealer/mensajes"
+              className="text-muted-foreground hover:text-foreground relative flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted"
+              aria-label="Mensajes"
+            >
+              <MessageSquare className="h-5 w-5" />
+            </Link>
+            <Link
+              href="/dealer/notificaciones"
+              className="text-muted-foreground hover:text-foreground relative flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted"
+              aria-label="Notificaciones"
+            >
+              <Bell className="h-5 w-5" />
+            </Link>
+            <Link
+              href="/ayuda"
+              className="text-muted-foreground hover:text-foreground hidden h-11 w-11 items-center justify-center rounded-lg hover:bg-muted sm:flex"
+              aria-label="Ayuda"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Link>
+            <div className="flex items-center gap-2 border-l pl-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Building className="h-4 w-4 text-primary" />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-medium">{user?.firstName || 'Dealer'}</p>
+                <p className="text-muted-foreground text-xs">{user?.email}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Desktop Sidebar */}
+        <aside className="bg-card sticky top-16 hidden h-[calc(100vh-4rem)] w-64 flex-col border-r lg:flex">
+          <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Navegación del portal dealer">
+            {mainLinks.map(link => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                    isActivePath(link.href)
+                      ? 'bg-primary/10 font-medium text-primary'
+                      : 'text-foreground hover:bg-primary/5 hover:text-primary'
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            <div className="border-border mt-4 border-t pt-4">
+              <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
+                Gestión
+              </p>
+              {managementLinks.map(link => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                      isActivePath(link.href)
+                        ? 'bg-primary/10 font-medium text-primary'
+                        : 'text-foreground hover:bg-primary/5 hover:text-primary'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="border-border mt-4 border-t pt-4">
+              <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
+                Configuración
+              </p>
+              {settingsLinks.map(link => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                      isActivePath(link.href)
+                        ? 'bg-primary/10 font-medium text-primary'
+                        : 'text-foreground hover:bg-primary/5 hover:text-primary'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+
+          <div className="border-border border-t p-4">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar Sesión
+            </button>
+          </div>
+        </aside>
+
+        {/* Mobile Sidebar Sheet */}
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SheetHeader className="border-b p-4">
+              <SheetTitle className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                  <span className="text-lg font-bold text-primary-foreground">O</span>
+                </div>
+                OKLA Dealer
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Menú de navegación móvil">
+              {mainLinks.map(link => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
+                      isActivePath(link.href)
+                        ? 'bg-primary/10 font-medium text-primary'
+                        : 'text-foreground hover:bg-primary/5'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              <div className="border-border mt-4 border-t pt-4">
+                <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
+                  Gestión
+                </p>
+                {managementLinks.map(link => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
+                        isActivePath(link.href)
+                          ? 'bg-primary/10 font-medium text-primary'
+                          : 'text-foreground hover:bg-primary/5'
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="border-border mt-4 border-t pt-4">
+                <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
+                  Configuración
+                </p>
+                {settingsLinks.map(link => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
+                        isActivePath(link.href)
+                          ? 'bg-primary/10 font-medium text-primary'
+                          : 'text-foreground hover:bg-primary/5'
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="border-border mt-4 border-t pt-4">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav
+        className="bg-card border-border fixed bottom-0 left-0 right-0 z-40 border-t lg:hidden"
+        aria-label="Navegación rápida"
+      >
+        <div className="flex justify-around">
+          {mobileNavItems.map(item => {
+            const Icon = item.icon;
+            const active = isActivePath(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-xs transition-colors',
+                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                )}
+                aria-current={active ? 'page' : undefined}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            aria-label="Más opciones"
+          >
+            <Menu className="h-5 w-5" />
+            <span>Más</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+    </div>
+  );
+}

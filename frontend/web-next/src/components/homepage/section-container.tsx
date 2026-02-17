@@ -17,9 +17,9 @@ export function SectionContainer({
   className,
 }: SectionContainerProps) {
   const bgClasses = {
-    white: 'bg-white',
-    gray: 'bg-slate-50',
-    gradient: 'bg-gradient-to-b from-white to-slate-50',
+    white: 'bg-background',
+    gray: 'bg-muted',
+    gradient: 'bg-gradient-to-b from-background to-muted',
   };
 
   return (

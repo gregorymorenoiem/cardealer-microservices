@@ -1,0 +1,220 @@
+/**
+ * Vehicle Detail Page
+ *
+ * Shows complete details of a single vehicle including:
+ * - Image gallery with lightbox
+ * - Vehicle specs and features
+ * - Seller information and contact
+ * - Similar vehicles
+ *
+ * Route: /vehiculos/[slug]
+ *
+ * Uses ISR (Incremental Static Regeneration) for performance:
+ * - Pages are statically generated at build time
+ * - Revalidated every 5 minutes
+ * - On-demand revalidation when vehicle is updated
+ */
+
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { VehicleDetailClient } from './vehicle-detail-client';
+import { vehicleService } from '@/services/vehicles';
+import { formatCurrency } from '@/lib/utils';
+import { JsonLd, generateVehicleJsonLd, generateBreadcrumbJsonLd, VehicleSEO } from '@/lib/seo';
+
+// ISR Configuration: Revalidate every 5 minutes (300 seconds)
+export const revalidate = 300;
+
+// Dynamic params configuration
+export const dynamicParams = true;
+
+interface VehiclePageProps {
+  params: Promise<{ slug: string }>;
+}
+
+// Generate metadata for SEO
+export async function generateMetadata({ params }: VehiclePageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  try {
+    const vehicle = await vehicleService.getBySlug(slug);
+
+    const title = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} | OKLA`;
+    const description = `Compra ${vehicle.year} ${vehicle.make} ${vehicle.model} en ${vehicle.location.city}. ${formatCurrency(vehicle.price)}. ${vehicle.mileage?.toLocaleString() || 0} km. ${vehicle.condition === 'new' ? 'Nuevo' : 'Usado'}.`;
+    const imageUrl = vehicle.images?.[0]?.url;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        images: imageUrl ? [imageUrl] : [],
+        type: 'website',
+        siteName: 'OKLA',
+        locale: 'es_DO',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: imageUrl ? [imageUrl] : [],
+      },
+      other: {
+        'og:price:amount': vehicle.price.toString(),
+        'og:price:currency': vehicle.currency,
+      },
+    };
+  } catch {
+    return {
+      title: 'Vehículo no encontrado | OKLA',
+      description: 'El vehículo que buscas no está disponible.',
+    };
+  }
+}
+
+// Server component for initial data fetching
+export default async function VehiclePage({ params }: VehiclePageProps) {
+  const { slug } = await params;
+
+  let vehicle;
+  try {
+    vehicle = await vehicleService.getBySlug(slug);
+  } catch (error) {
+    console.error('Error fetching vehicle:', error);
+    notFound();
+  }
+
+  if (!vehicle) {
+    notFound();
+  }
+
+  // Track view (fire and forget)
+  vehicleService.trackView(vehicle.id).catch(() => {
+    // Silently fail - view tracking is non-critical
+  });
+
+  // Prepare SEO data for JSON-LD
+  // Cast to unknown first then to Record for flexible property access
+  const vehicleData = vehicle as unknown as Record<string, unknown>;
+  const sellerData = vehicleData.seller as { name?: string; type?: string } | undefined;
+  const locationData = vehicle.location;
+
+  const vehicleSEO: VehicleSEO = {
+    id: vehicle.id,
+    slug: slug,
+    title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    price: vehicle.price,
+    currency: vehicle.currency || 'DOP',
+    mileage: vehicle.mileage,
+    fuelType: vehicle.fuelType,
+    transmission: vehicle.transmission,
+    color: vehicle.exteriorColor,
+    condition: vehicle.condition as 'new' | 'used',
+    description: vehicle.description,
+    images: vehicle.images?.map(img => img.url) || [],
+    sellerName: sellerData?.name,
+    sellerType: (sellerData?.type || vehicle.sellerType) as 'dealer' | 'seller' | undefined,
+    location: {
+      city: locationData?.city || '',
+      province: locationData?.province || '',
+      country: 'DO',
+    },
+    availability: 'InStock',
+  };
+
+  // Breadcrumb data
+  const breadcrumbs = [
+    { name: 'Inicio', url: '/' },
+    { name: 'Vehículos', url: '/vehiculos' },
+    { name: vehicle.make, url: `/vehiculos?make=${vehicle.make.toLowerCase()}` },
+    { name: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, url: `/vehiculos/${slug}` },
+  ];
+
+  return (
+    <>
+      {/* Structured Data */}
+      <JsonLd data={generateVehicleJsonLd(vehicleSEO)} />
+      <JsonLd data={generateBreadcrumbJsonLd(breadcrumbs)} />
+
+      <Suspense fallback={<VehicleDetailSkeleton />}>
+        <VehicleDetailClient vehicle={vehicle} />
+      </Suspense>
+    </>
+  );
+}
+
+// Loading skeleton
+function VehicleDetailSkeleton() {
+  return (
+    <div className="bg-muted/50 min-h-screen animate-pulse">
+      {/* Breadcrumb skeleton */}
+      <div className="border-border bg-card border-b">
+        <div className="container py-3">
+          <div className="bg-muted h-4 w-64 rounded"></div>
+        </div>
+      </div>
+
+      {/* Main content skeleton */}
+      <div className="container py-6 lg:py-8">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Left column */}
+          <div className="space-y-6 lg:col-span-2">
+            {/* Gallery skeleton */}
+            <div className="bg-card rounded-xl p-4">
+              <div className="bg-muted aspect-[16/10] rounded-lg"></div>
+              <div className="mt-3 flex gap-2">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="bg-muted h-12 w-16 flex-shrink-0 rounded-lg"></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tabs skeleton */}
+            <div className="bg-card rounded-xl p-6">
+              <div className="border-border flex gap-4 border-b pb-3">
+                <div className="bg-muted h-6 w-24 rounded"></div>
+                <div className="bg-muted h-6 w-32 rounded"></div>
+                <div className="bg-muted h-6 w-28 rounded"></div>
+              </div>
+              <div className="mt-4 space-y-3">
+                <div className="bg-muted h-4 w-full rounded"></div>
+                <div className="bg-muted h-4 w-3/4 rounded"></div>
+                <div className="bg-muted h-4 w-5/6 rounded"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div className="hidden space-y-6 lg:block">
+            {/* Header skeleton */}
+            <div className="bg-card rounded-xl p-6">
+              <div className="bg-muted mb-2 h-8 w-48 rounded"></div>
+              <div className="bg-muted mb-4 h-6 w-32 rounded"></div>
+              <div className="bg-muted mt-6 h-10 w-full rounded"></div>
+            </div>
+
+            {/* Seller skeleton */}
+            <div className="bg-card rounded-xl p-6">
+              <div className="flex gap-4">
+                <div className="bg-muted h-14 w-14 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="bg-muted mb-2 h-5 w-32 rounded"></div>
+                  <div className="bg-muted h-4 w-24 rounded"></div>
+                </div>
+              </div>
+              <div className="mt-6 space-y-3">
+                <div className="bg-muted h-10 w-full rounded"></div>
+                <div className="bg-muted h-10 w-full rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

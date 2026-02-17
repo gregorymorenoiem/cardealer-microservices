@@ -27,20 +27,20 @@ export default function GlobalError({
 
             <h1 className="mb-2 text-2xl font-bold text-white">Error crítico</h1>
 
-            <p className="mb-6 text-gray-400">
+            <p className="mb-6 text-muted-foreground">
               Ha ocurrido un error grave en la aplicación. Por favor, intenta recargar la página.
             </p>
 
             {error.digest && (
-              <p className="mb-6 font-mono text-xs text-gray-500">Error ID: {error.digest}</p>
+              <p className="mb-6 font-mono text-xs text-muted-foreground">Error ID: {error.digest}</p>
             )}
 
-            <Button onClick={reset} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={reset} className="bg-primary hover:bg-primary/90">
               <RefreshCw className="mr-2 h-4 w-4" />
               Reiniciar aplicación
             </Button>
 
-            <p className="mt-8 text-sm text-gray-500">
+            <p className="mt-8 text-sm text-muted-foreground">
               Si el problema persiste, por favor contacta a soporte.
             </p>
           </div>

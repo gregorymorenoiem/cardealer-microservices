@@ -12,7 +12,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, PlayCircle, PauseCircle, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { Vehicle } from '@/services/homepage-sections';
@@ -121,7 +120,7 @@ export default function HeroCarousel({
         );
       case 'featured':
         return (
-          <Badge className="border-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+          <Badge className="border-0 bg-gradient-to-r from-primary to-teal-600 text-white">
             Destacado
           </Badge>
         );
@@ -147,87 +146,80 @@ export default function HeroCarousel({
     >
       {/* Slides */}
       <div className="relative h-full">
-        <AnimatePresence mode="wait">
-          {slides.map(
-            (vehicle, index) =>
-              index === currentIndex && (
-                <motion.div
-                  key={vehicle.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.7 }}
-                  className="absolute inset-0"
-                >
-                  {/* Background Image with Overlay */}
-                  <div className="absolute inset-0">
-                    <Image
-                      src={vehicle.images[0] || '/placeholder-car.jpg'}
-                      alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                      fill
-                      className="object-cover"
-                      priority={index === 0}
-                    />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-                  </div>
+        {slides.map((vehicle, index) => (
+          <div
+            key={vehicle.id}
+            className={cn(
+              'absolute inset-0 transition-opacity duration-700',
+              index === currentIndex ? 'z-10 opacity-100' : 'z-0 opacity-0'
+            )}
+          >
+            {/* Background Image with Overlay */}
+            <div className="absolute inset-0">
+              <Image
+                src={vehicle.images[0] || '/placeholder-car.jpg'}
+                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority={index === 0}
+              />
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+            </div>
 
-                  {/* Content */}
-                  <div className="relative mx-auto h-full max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-full max-w-2xl flex-col justify-center">
-                      {/* Badge */}
-                      {renderBadge() && <div className="mb-2 sm:mb-4">{renderBadge()}</div>}
+            {/* Content */}
+            <div className="relative mx-auto h-full max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="flex h-full max-w-2xl flex-col justify-center">
+                {/* Badge */}
+                {renderBadge() && <div className="mb-2 sm:mb-4">{renderBadge()}</div>}
 
-                      {/* Title */}
-                      <h1 className="mb-2 text-3xl leading-[1.1] font-bold tracking-tight text-white sm:mb-4 sm:text-4xl md:text-5xl lg:text-7xl">
-                        {vehicle.year} {vehicle.make}
-                        <br />
-                        <span className="text-primary">{vehicle.model}</span>
-                      </h1>
+                {/* Title */}
+                <h1 className="mb-2 text-3xl leading-[1.1] font-bold tracking-tight text-white sm:mb-4 sm:text-4xl md:text-5xl lg:text-7xl">
+                  {vehicle.year} {vehicle.make}
+                  <br />
+                  <span className="text-primary">{vehicle.model}</span>
+                </h1>
 
-                      {/* Price */}
-                      <p className="mb-3 text-2xl font-bold tracking-tight text-white sm:mb-6 sm:text-3xl md:text-4xl">
-                        {formatCurrency(vehicle.price)}
-                      </p>
+                {/* Price */}
+                <p className="mb-3 text-2xl font-bold tracking-tight text-white sm:mb-6 sm:text-3xl md:text-4xl">
+                  {formatCurrency(vehicle.price)}
+                </p>
 
-                      {/* Quick Details */}
-                      <div className="mb-4 flex flex-wrap gap-2 text-white/90 sm:mb-8 sm:gap-4">
-                        <span className="flex items-center gap-1 text-sm sm:gap-2 sm:text-lg">
-                          <span className="font-semibold">{formatMileage(vehicle.mileage)}</span>
-                        </span>
-                        <span className="hidden text-white/50 sm:inline">•</span>
-                        <span className="text-sm font-medium sm:text-lg">
-                          {vehicle.transmission}
-                        </span>
-                        <span className="hidden text-white/50 sm:inline">•</span>
-                        <span className="text-sm font-medium sm:text-lg">{vehicle.fuelType}</span>
-                      </div>
+                {/* Quick Details */}
+                <div className="mb-4 flex flex-wrap gap-2 text-white/90 sm:mb-8 sm:gap-4">
+                  <span className="flex items-center gap-1 text-sm sm:gap-2 sm:text-lg">
+                    <span className="font-semibold">{formatMileage(vehicle.mileage)}</span>
+                  </span>
+                  <span className="hidden text-white/50 sm:inline">•</span>
+                  <span className="text-sm font-medium sm:text-lg">{vehicle.transmission}</span>
+                  <span className="hidden text-white/50 sm:inline">•</span>
+                  <span className="text-sm font-medium sm:text-lg">{vehicle.fuelType}</span>
+                </div>
 
-                      {/* CTA Buttons */}
-                      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                        <Link
-                          href={generateVehicleUrl(vehicle)}
-                          className="bg-primary hover:bg-primary/90 active:bg-primary/80 touch-manipulation rounded-lg px-6 py-3 text-center text-base font-semibold tracking-wide text-white transition-colors duration-200 sm:px-8 sm:py-4 sm:text-lg"
-                        >
-                          Ver Detalles
-                        </Link>
-                        <button className="touch-manipulation rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold tracking-wide text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 active:bg-white/30 sm:px-8 sm:py-4 sm:text-lg">
-                          Contactar Vendedor
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )
-          )}
-        </AnimatePresence>
+                {/* CTA Buttons */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                  <Link
+                    href={generateVehicleUrl(vehicle)}
+                    className="bg-primary hover:bg-primary/90 active:bg-primary/80 touch-manipulation rounded-lg px-6 py-3 text-center text-base font-semibold tracking-wide text-white transition-colors duration-200 sm:px-8 sm:py-4 sm:text-lg"
+                  >
+                    Ver Detalles
+                  </Link>
+                  <button className="touch-manipulation rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold tracking-wide text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 active:bg-white/30 sm:px-8 sm:py-4 sm:text-lg">
+                    Contactar Vendedor
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Navigation Arrows - Hidden on mobile, visible on tablet+ */}
       <button
         onClick={goToPrevious}
         className="absolute top-1/2 left-2 z-20 hidden -translate-y-1/2 touch-manipulation rounded-full border border-white/20 bg-white/10 p-2 backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 active:bg-white/30 sm:left-4 sm:block sm:p-3"
-        aria-label="Previous slide"
+        aria-label="Diapositiva anterior"
       >
         <ChevronLeft className="h-5 w-5 text-white sm:h-6 sm:w-6" />
       </button>
@@ -235,7 +227,7 @@ export default function HeroCarousel({
       <button
         onClick={goToNext}
         className="absolute top-1/2 right-2 z-20 hidden -translate-y-1/2 touch-manipulation rounded-full border border-white/20 bg-white/10 p-2 backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 active:bg-white/30 sm:right-4 sm:block sm:p-3"
-        aria-label="Next slide"
+        aria-label="Siguiente diapositiva"
       >
         <ChevronRight className="h-5 w-5 text-white sm:h-6 sm:w-6" />
       </button>
@@ -252,7 +244,7 @@ export default function HeroCarousel({
                 'h-2 w-2 rounded-full transition-all duration-300 sm:h-3 sm:w-3',
                 index === currentIndex ? 'w-6 bg-white sm:w-8' : 'bg-white/50 hover:bg-white/75'
               )}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Ir a diapositiva ${index + 1}`}
             />
           ))}
         </div>
@@ -261,7 +253,7 @@ export default function HeroCarousel({
         <button
           onClick={toggleAutoPlay}
           className="rounded-full border border-white/20 bg-white/10 p-1.5 backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 sm:p-2"
-          aria-label={isAutoPlaying ? 'Pause autoplay' : 'Start autoplay'}
+          aria-label={isAutoPlaying ? 'Pausar reproducción automática' : 'Iniciar reproducción automática'}
         >
           {isAutoPlaying ? (
             <PauseCircle className="h-4 w-4 text-white sm:h-5 sm:w-5" />
@@ -273,17 +265,15 @@ export default function HeroCarousel({
 
       {/* Scroll Hint */}
       {showScrollHint && (
-        <motion.div
-          className="absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center text-white/70 md:flex"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2, duration: 0.5 }}
+        <div
+          className="animate-fade-in absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center text-white/70 md:flex"
+          style={{ animationDelay: '2000ms' }}
         >
           <span className="mb-1 text-sm">Desliza para más</span>
-          <motion.div animate={{ y: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+          <div className="animate-bounce-gentle">
             <ChevronDown className="h-5 w-5" />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </div>
   );

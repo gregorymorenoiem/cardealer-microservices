@@ -5,26 +5,27 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   // Base styles
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 ring-offset-background',
   {
     variants: {
       variant: {
         // Primary - Verde OKLA
         default:
-          'bg-[#00A870] text-white shadow-sm hover:bg-[#009663] active:bg-[#008456] focus-visible:ring-[#00A870]',
+          'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:bg-primary/80 focus-visible:ring-primary',
         // Secondary - Outlined
         secondary:
-          'border-2 border-[#00A870] bg-transparent text-[#00A870] hover:bg-[#00A870]/10 active:bg-[#00A870]/20 focus-visible:ring-[#00A870]',
+          'border-2 border-primary bg-transparent text-primary hover:bg-primary/10 active:bg-primary/20 focus-visible:ring-primary',
         // Destructive - Red
         destructive:
-          'bg-red-600 text-white shadow-sm hover:bg-red-700 active:bg-red-800 focus-visible:ring-red-500',
+          'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 active:bg-destructive/80 focus-visible:ring-destructive',
         // Outline - Neutral
         outline:
-          'border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-500',
+          'border border-border bg-background text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring',
         // Ghost - No background
-        ghost: 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500',
+        ghost:
+          'text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring',
         // Link - Text only
-        link: 'text-[#00A870] underline-offset-4 hover:underline focus-visible:ring-[#00A870]',
+        link: 'text-primary underline-offset-4 hover:underline focus-visible:ring-primary',
       },
       size: {
         default: 'h-10 px-4 py-2',
@@ -94,6 +95,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading || undefined}
         {...props}
       >
         {loading ? (

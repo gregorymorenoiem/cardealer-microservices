@@ -12,7 +12,12 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { authService, type LoginRequest, type RegisterRequest } from '@/services/auth';
+import {
+  authService,
+  TwoFactorRequiredError,
+  type LoginRequest,
+  type RegisterRequest,
+} from '@/services/auth';
 import type { User } from '@/types';
 
 // =============================================================================
@@ -28,6 +33,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (data: LoginRequest) => Promise<void>;
+  verifyTwoFactorLogin: (tempToken: string, code: string) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -97,6 +103,11 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
         error: null,
       });
     } catch (err) {
+      // If 2FA is required, stop loading and re-throw — the login page handles this
+      if (err instanceof TwoFactorRequiredError) {
+        setState(prev => ({ ...prev, isLoading: false }));
+        throw err;
+      }
       const error = err as { message?: string };
       setState(prev => ({
         ...prev,
@@ -107,17 +118,44 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     }
   };
 
-  const register = async (data: RegisterRequest) => {
+  /**
+   * Complete login after 2FA verification.
+   * Called from the login page after the user enters their 2FA code.
+   */
+  const verifyTwoFactorLogin = async (tempToken: string, code: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const { user } = await authService.register(data);
+      const { user } = await authService.verifyTwoFactorLogin(tempToken, code);
       setState({
         user,
         isAuthenticated: true,
         isLoading: false,
         error: null,
       });
+    } catch (err) {
+      const error = err as { message?: string };
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error.message || 'Código de verificación inválido',
+      }));
+      throw err;
+    }
+  };
+
+  const register = async (data: RegisterRequest) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      await authService.register(data);
+      // Do NOT set user/authenticated state — user must verify email first.
+      // The registration page handles redirect to /verificar-email.
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: null,
+      }));
     } catch (err) {
       const error = err as { message?: string };
       setState(prev => ({
@@ -157,6 +195,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   const value: AuthContextValue = {
     ...state,
     login,
+    verifyTwoFactorLogin,
     register,
     logout,
     refreshUser,

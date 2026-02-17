@@ -14,19 +14,30 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { authService } from '@/services/auth';
+import { authService, TwoFactorRequiredError } from '@/services/auth';
+import { useAuth } from '@/hooks/use-auth';
+import { sanitizeEmail } from '@/lib/security/sanitize';
 
 function LoginForm({ redirectUrl }: { redirectUrl: string }) {
   const router = useRouter();
+  const { login, verifyTwoFactorLogin } = useAuth();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // 2FA state
+  const [twoFactorState, setTwoFactorState] = React.useState<{
+    required: boolean;
+    tempToken: string;
+    twoFactorType: string;
+  } | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = React.useState('');
 
   const [formData, setFormData] = React.useState({
     email: '',
@@ -40,9 +51,10 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
     setIsLoading(true);
 
     try {
-      await authService.login({
-        email: formData.email,
-        password: formData.password,
+      // Use the auth context login to update global state
+      await login({
+        email: sanitizeEmail(formData.email),
+        password: formData.password, // Password NOT sanitized per security policy
         rememberMe: formData.rememberMe,
       });
 
@@ -50,6 +62,16 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
       router.push(redirectUrl);
       router.refresh();
     } catch (err) {
+      // If 2FA is required, show the 2FA code form
+      if (err instanceof TwoFactorRequiredError) {
+        setTwoFactorState({
+          required: true,
+          tempToken: err.tempToken,
+          twoFactorType: err.twoFactorType,
+        });
+        setIsLoading(false);
+        return;
+      }
       const error = err as { message?: string };
       setError(error.message || 'Error al iniciar sesión. Verifica tus credenciales.');
     } finally {
@@ -57,16 +79,111 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
     }
   };
 
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await verifyTwoFactorLogin(twoFactorState!.tempToken, twoFactorCode);
+
+      // Redirect after successful 2FA verification
+      router.push(redirectUrl);
+      router.refresh();
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Código de verificación inválido. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setTwoFactorState(null);
+    setTwoFactorCode('');
+    setError(null);
+  };
+
   const handleSocialLogin = (provider: 'google' | 'apple') => {
     authService.loginWithProvider(provider);
   };
+
+  // ── 2FA Code Form ──────────────────────────────────────────
+  if (twoFactorState?.required) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2 text-center">
+          <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+            <ShieldCheck className="text-primary h-6 w-6" />
+          </div>
+          <h1 className="text-foreground text-2xl font-bold">Verificación en dos pasos</h1>
+          <p className="text-muted-foreground">
+            Ingresa el código de 6 dígitos de tu aplicación autenticadora
+          </p>
+        </div>
+
+        <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="twoFactorCode">Código de verificación</Label>
+            <Input
+              id="twoFactorCode"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              placeholder="000000"
+              value={twoFactorCode}
+              onChange={e => {
+                const value = e.target.value.replace(/\D/g, '');
+                setTwoFactorCode(value);
+              }}
+              required
+              autoFocus
+              autoComplete="one-time-code"
+              disabled={isLoading}
+              className="text-center text-2xl tracking-[0.5em]"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || twoFactorCode.length !== 6}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              'Verificar'
+            )}
+          </Button>
+
+          <button
+            type="button"
+            onClick={handleBackToLogin}
+            className="text-muted-foreground hover:text-foreground w-full text-center text-sm"
+          >
+            ← Volver al inicio de sesión
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Bienvenido de vuelta</h1>
-        <p className="text-gray-600">Ingresa a tu cuenta para continuar</p>
+        <h1 className="text-foreground text-2xl font-bold">Bienvenido de vuelta</h1>
+        <p className="text-muted-foreground">Ingresa a tu cuenta para continuar</p>
       </div>
 
       {/* Social Login */}
@@ -116,7 +233,7 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
           <Separator className="w-full" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-gray-50 px-2 text-gray-500">o continúa con email</span>
+          <span className="bg-muted/50 text-muted-foreground px-2">o continúa con email</span>
         </div>
       </div>
 
@@ -133,7 +250,7 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Mail className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="email"
               type="email"
@@ -152,7 +269,7 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
         <div className="space-y-2">
           <Label htmlFor="password">Contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -167,7 +284,7 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -182,9 +299,9 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
               type="checkbox"
               checked={formData.rememberMe}
               onChange={e => setFormData({ ...formData, rememberMe: e.target.checked })}
-              className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
+              className="text-primary focus:ring-primary border-border h-4 w-4 rounded"
             />
-            <span className="text-sm text-gray-600">Recordarme</span>
+            <span className="text-muted-foreground text-sm">Recordarme</span>
           </label>
           <Link href="/recuperar-contrasena" className="text-primary text-sm hover:underline">
             ¿Olvidaste tu contraseña?
@@ -205,7 +322,7 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
       </form>
 
       {/* Register link */}
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-muted-foreground text-center text-sm">
         ¿No tienes cuenta?{' '}
         <Link href="/registro" className="text-primary font-medium hover:underline">
           Regístrate gratis
@@ -217,7 +334,13 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/';
+  // Support both 'redirect' (from AdminAuthGuard) and 'callbackUrl' (from middleware)
+  const rawRedirect = searchParams.get('redirect') || searchParams.get('callbackUrl') || '/';
+
+  // Security: Prevent open redirect (CWE-601) — only allow relative paths
+  const redirectUrl =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/';
+
   return <LoginForm redirectUrl={redirectUrl} />;
 }
 

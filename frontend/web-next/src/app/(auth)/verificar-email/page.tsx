@@ -97,8 +97,8 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Verifica tu email</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">Verifica tu email</h1>
+          <p className="text-muted-foreground">
             Te hemos enviado un email con un enlace de verificación. Revisa tu bandeja de entrada y
             haz clic en el enlace para activar tu cuenta.
           </p>
@@ -114,8 +114,8 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
         </div>
 
         {/* Resend section */}
-        <div className="space-y-3 border-t border-gray-200 pt-4">
-          <p className="text-sm text-gray-600">
+        <div className="space-y-3 border-t border-border pt-4">
+          <p className="text-sm text-muted-foreground">
             ¿No recibiste el email? Ingresa tu correo para reenviarlo:
           </p>
 
@@ -174,8 +174,8 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Verificando tu email</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">Verificando tu email</h1>
+          <p className="text-muted-foreground">
             Por favor espera mientras verificamos tu dirección de email...
           </p>
         </div>
@@ -192,8 +192,8 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">¡Email verificado!</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">¡Email verificado!</h1>
+          <p className="text-muted-foreground">
             Tu cuenta ha sido activada exitosamente. Ya puedes iniciar sesión y comenzar a explorar
             OKLA.
           </p>
@@ -214,15 +214,15 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">Error de verificación</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold text-foreground">Error de verificación</h1>
+        <p className="text-muted-foreground">
           {error || 'No pudimos verificar tu email. El enlace puede haber expirado.'}
         </p>
       </div>
 
       {/* Resend section */}
-      <div className="space-y-3 border-t border-gray-200 pt-4">
-        <p className="text-sm text-gray-600">
+      <div className="space-y-3 border-t border-border pt-4">
+        <p className="text-sm text-muted-foreground">
           Ingresa tu email para solicitar un nuevo enlace de verificación:
         </p>
 

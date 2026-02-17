@@ -50,7 +50,7 @@ export function SimilarVehicles({ vehicleId, limit = 4, className }: SimilarVehi
     return (
       <div className={className}>
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">Vehículos similares</h2>
+          <h2 className="text-xl font-bold text-foreground">Vehículos similares</h2>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: limit }).map((_, i) => (
@@ -68,7 +68,7 @@ export function SimilarVehicles({ vehicleId, limit = 4, className }: SimilarVehi
   return (
     <div className={className}>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Vehículos similares</h2>
+        <h2 className="text-xl font-bold text-foreground">Vehículos similares</h2>
         <Link
           href="/vehiculos"
           className="text-primary flex items-center gap-1 text-sm hover:underline"

@@ -52,7 +52,8 @@ export interface AdminUser {
   email: string;
   phone?: string;
   avatar?: string;
-  type: 'buyer' | 'seller' | 'dealer';
+  type: 'buyer' | 'seller' | 'dealer' | 'dealer_employee' | 'admin' | 'platform_employee' | 'guest';
+  userIntent?: 'browse' | 'buy' | 'sell' | 'buy_and_sell';
   status: 'active' | 'suspended' | 'pending' | 'banned';
   verified: boolean;
   emailVerified: boolean;
@@ -61,6 +62,26 @@ export interface AdminUser {
   vehiclesCount: number;
   favoritesCount: number;
   dealsCount: number;
+}
+
+export interface AdminUserDetail extends AdminUser {
+  address?: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  birthDate?: string;
+  gender?: string;
+  updatedAt?: string;
+  twoFactorEnabled: boolean;
+  recentActivity: {
+    id: string;
+    action: string;
+    timestamp: string;
+    target?: string;
+    ipAddress?: string;
+  }[];
+  vehicles: { id: string; title: string; price: number; status: string; createdAt: string }[];
+  reports: { id: string; type: string; status: string; createdAt: string }[];
 }
 
 export interface UserFilters {
@@ -85,7 +106,7 @@ export interface AdminVehicle {
   status: 'active' | 'pending' | 'rejected' | 'sold' | 'paused';
   sellerId: string;
   sellerName: string;
-  sellerType: 'individual' | 'dealer';
+  sellerType: 'seller' | 'dealer';
   views: number;
   leads: number;
   featured: boolean;
@@ -202,8 +223,8 @@ export async function getUsers(filters: UserFilters = {}): Promise<PaginatedResp
   return response.data;
 }
 
-export async function getUserById(id: string): Promise<AdminUser> {
-  const response = await apiClient.get<AdminUser>(`/api/admin/users/${id}`);
+export async function getUserById(id: string): Promise<AdminUserDetail> {
+  const response = await apiClient.get<AdminUserDetail>(`/api/admin/users/${id}`);
   return response.data;
 }
 
@@ -364,6 +385,111 @@ export async function getReportStats(): Promise<{
 }
 
 // ============================================================
+// MODERATION
+// ============================================================
+
+export interface ModerationItem {
+  id: string;
+  type: 'vehicle' | 'dealer' | 'user' | 'content';
+  targetId: string;
+  title: string;
+  description: string;
+  price?: number;
+  images: string[];
+  sellerName: string;
+  sellerType: 'seller' | 'dealer';
+  sellerId: string;
+  submittedAt: string;
+  flagReason?: string;
+  priority: 'normal' | 'high' | 'urgent';
+  status: 'pending' | 'approved' | 'rejected' | 'escalated';
+  reviewedAt?: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  notes?: string;
+}
+
+export interface ModerationFilters {
+  type?: string;
+  priority?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ModerationStats {
+  inQueue: number;
+  highPriority: number;
+  reviewedToday: number;
+  rejectedToday: number;
+  approvedToday: number;
+  escalatedCount: number;
+  avgReviewTimeMinutes: number;
+}
+
+export interface ModerationActionRequest {
+  action: 'approve' | 'reject' | 'escalate' | 'skip';
+  reason?: string;
+  notes?: string;
+}
+
+export interface ModerationActionResponse {
+  success: boolean;
+  message: string;
+  itemId: string;
+  newStatus: string;
+}
+
+export async function getModerationQueue(
+  filters: ModerationFilters = {}
+): Promise<PaginatedResponse<ModerationItem>> {
+  const response = await apiClient.get<PaginatedResponse<ModerationItem>>(
+    '/api/admin/moderation/queue',
+    { params: filters }
+  );
+  return response.data;
+}
+
+export async function getModerationStats(): Promise<ModerationStats> {
+  const response = await apiClient.get<ModerationStats>('/api/admin/moderation/stats');
+  return response.data;
+}
+
+export async function getModerationItem(id: string): Promise<ModerationItem> {
+  const response = await apiClient.get<ModerationItem>(`/api/admin/moderation/${id}`);
+  return response.data;
+}
+
+export async function processModerationAction(
+  id: string,
+  action: ModerationActionRequest
+): Promise<ModerationActionResponse> {
+  const response = await apiClient.post<ModerationActionResponse>(
+    `/api/admin/moderation/${id}/action`,
+    action
+  );
+  return response.data;
+}
+
+export async function approveModerationItem(id: string): Promise<ModerationActionResponse> {
+  const response = await apiClient.post<ModerationActionResponse>(
+    `/api/admin/moderation/${id}/approve`
+  );
+  return response.data;
+}
+
+export async function rejectModerationItem(
+  id: string,
+  reason: string
+): Promise<ModerationActionResponse> {
+  const response = await apiClient.post<ModerationActionResponse>(
+    `/api/admin/moderation/${id}/reject`,
+    { reason }
+  );
+  return response.data;
+}
+
+// ============================================================
 // EXPORT
 // ============================================================
 
@@ -400,6 +526,13 @@ export const adminService = {
   getReportById,
   updateReportStatus,
   getReportStats,
+  // Moderation
+  getModerationQueue,
+  getModerationStats,
+  getModerationItem,
+  processModerationAction,
+  approveModerationItem,
+  rejectModerationItem,
 };
 
 export default adminService;

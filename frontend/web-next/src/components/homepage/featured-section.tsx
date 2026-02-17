@@ -11,14 +11,13 @@ import { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 // Color mappings for accent colors
 const accentColorClasses: Record<string, { bg: string; text: string; border: string }> = {
   blue: { bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-500' },
-  green: { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-500' },
+  green: { bg: 'bg-primary/100', text: 'text-primary', border: 'border-primary' },
   amber: { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-500' },
   red: { bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-500' },
   purple: { bg: 'bg-purple-500', text: 'text-purple-600', border: 'border-purple-500' },
@@ -102,18 +101,20 @@ export default function FeaturedSection({
   if (listings.length === 0) return null;
 
   return (
-    <section className={cn('bg-white py-10 lg:py-12', className)}>
+    <section className={cn('bg-background py-10 lg:py-12', className)}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
               <div className={cn('h-8 w-1 rounded-full', colors.bg)} />
-              <h2 className="text-2xl leading-tight font-bold tracking-tight text-slate-900 md:text-3xl">
+              <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight md:text-3xl">
                 {title}
               </h2>
             </div>
-            {subtitle && <p className="mt-2 ml-4 leading-relaxed text-slate-600">{subtitle}</p>}
+            {subtitle && (
+              <p className="text-muted-foreground mt-2 ml-4 leading-relaxed">{subtitle}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -125,8 +126,8 @@ export default function FeaturedSection({
                 className={cn(
                   'rounded-full border p-2 transition-colors',
                   canScrollLeft
-                    ? 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                    : 'cursor-not-allowed border-gray-200 text-gray-300'
+                    ? 'border-border hover:border-muted-foreground hover:bg-accent'
+                    : 'border-border/50 text-muted-foreground/50 cursor-not-allowed'
                 )}
                 aria-label="Scroll left"
               >
@@ -138,8 +139,8 @@ export default function FeaturedSection({
                 className={cn(
                   'rounded-full border p-2 transition-colors',
                   canScrollRight
-                    ? 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                    : 'cursor-not-allowed border-gray-200 text-gray-300'
+                    ? 'border-border hover:border-muted-foreground hover:bg-accent'
+                    : 'border-border/50 text-muted-foreground/50 cursor-not-allowed'
                 )}
                 aria-label="Scroll right"
               >
@@ -165,21 +166,20 @@ export default function FeaturedSection({
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {listings.map((item, index) => (
-            <motion.div
+            <div
               key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="w-[280px] flex-shrink-0 snap-start sm:w-[300px]"
+              className="animate-slide-up w-[280px] flex-shrink-0 snap-start sm:w-[300px]"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <Link href={generateVehicleUrl(item)} className="group block">
-                <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
+                <div className="border-border bg-card overflow-hidden rounded-xl border shadow-md transition-shadow duration-300 hover:shadow-xl">
                   {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
                       src={item.imageUrl || '/placeholder-car.jpg'}
                       alt={item.title}
                       fill
+                      sizes="300px"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Category Badge */}
@@ -195,26 +195,26 @@ export default function FeaturedSection({
 
                   {/* Content */}
                   <div className="p-4">
-                    <h3 className="group-hover:text-primary mb-1 line-clamp-1 leading-snug font-bold tracking-tight text-slate-900 transition-colors">
+                    <h3 className="group-hover:text-primary text-foreground mb-1 line-clamp-1 leading-snug font-bold tracking-tight transition-colors">
                       {item.title}
                     </h3>
                     <p className={cn('mb-2 text-xl font-bold tracking-tight', colors.text)}>
                       {formatCurrency(item.price)}
                     </p>
 
-                    <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                    <div className="text-muted-foreground flex items-center gap-3 text-sm font-medium">
                       <span>{formatMileage(item.mileage)}</span>
-                      <span className="text-slate-300">•</span>
+                      <span className="text-muted-foreground/50">•</span>
                       <span>{item.transmission}</span>
                     </div>
 
-                    <div className="mt-2 flex items-center gap-1 text-sm text-slate-500">
+                    <div className="text-muted-foreground/80 mt-2 flex items-center gap-1 text-sm">
                       <span className="truncate">{item.location}</span>
                     </div>
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

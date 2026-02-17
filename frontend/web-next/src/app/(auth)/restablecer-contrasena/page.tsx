@@ -57,8 +57,8 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Enlace inválido</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">Enlace inválido</h1>
+          <p className="text-muted-foreground">
             El enlace de recuperación no es válido o ha expirado. Por favor solicita uno nuevo.
           </p>
         </div>
@@ -110,8 +110,8 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">¡Contraseña actualizada!</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">¡Contraseña actualizada!</h1>
+          <p className="text-muted-foreground">
             Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva
             contraseña.
           </p>
@@ -128,8 +128,8 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">Nueva contraseña</h1>
-        <p className="text-gray-600">Crea una contraseña segura para tu cuenta.</p>
+        <h1 className="text-2xl font-bold text-foreground">Nueva contraseña</h1>
+        <p className="text-muted-foreground">Crea una contraseña segura para tu cuenta.</p>
       </div>
 
       {/* Form */}
@@ -145,7 +145,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className="space-y-2">
           <Label htmlFor="password">Nueva contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -161,7 +161,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -176,7 +176,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                   key={index}
                   className={cn(
                     'flex items-center gap-2 text-xs',
-                    req.test(formData.password) ? 'text-green-600' : 'text-gray-400'
+                    req.test(formData.password) ? 'text-green-600' : 'text-muted-foreground'
                   )}
                 >
                   {req.test(formData.password) ? (
@@ -195,7 +195,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
@@ -214,7 +214,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
               tabIndex={-1}
             >
               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

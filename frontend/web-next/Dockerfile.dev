@@ -1,0 +1,47 @@
+# ============================================
+# OKLA Frontend - Next.js 16 Docker Image
+# ============================================
+# Development build with HOT RELOAD support
+
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Install dependencies for better file watching
+RUN apk add --no-cache libc6-compat
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
+
+# Install ALL dependencies (including devDependencies for hot reload)
+RUN pnpm install
+
+# Copy application code (will be overridden by volume mount)
+COPY . .
+
+# Expose port 3000 for Next.js dev server
+EXPOSE 3000
+
+# Environment variables for development with hot reload
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+# Development/Local: Frontend talks to Gateway
+ARG NEXT_PUBLIC_API_URL=http://localhost:18443
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Set as ENV
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# Health check for Docker
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
+
+# Start Next.js in development mode with hot reload
+CMD ["pnpm", "dev"]

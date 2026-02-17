@@ -2,9 +2,19 @@
 
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/hooks/use-auth';
+import { SiteConfigProvider } from '@/providers/site-config-provider';
+
+// Lazy-load devtools — only in development, excluded from production bundle
+const ReactQueryDevtools =
+  process.env.NODE_ENV === 'development'
+    ? React.lazy(() =>
+        import('@tanstack/react-query-devtools').then(mod => ({
+          default: mod.ReactQueryDevtools,
+        }))
+      )
+    : () => null;
 
 function makeQueryClient() {
   return new QueryClient({
@@ -57,9 +67,13 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+        <SiteConfigProvider>
+          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+        </SiteConfigProvider>
       </AuthProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <React.Suspense fallback={null}>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </React.Suspense>
     </QueryClientProvider>
   );
 }

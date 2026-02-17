@@ -30,6 +30,13 @@ export function VehicleGallery({
 }: VehicleGalleryProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
+  const lightboxRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
+
+  // Touch swipe state
+  const touchStartRef = React.useRef<number | null>(null);
+  const touchEndRef = React.useRef<number | null>(null);
+  const minSwipeDistance = 50;
 
   // Sort images by order, primary first
   const sortedImages = React.useMemo(() => {
@@ -55,6 +62,27 @@ export function VehicleGallery({
     setCurrentIndex(index);
   }, []);
 
+  // Touch swipe handlers
+  const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = React.useCallback(() => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const distance = touchStartRef.current - touchEndRef.current;
+    if (Math.abs(distance) >= minSwipeDistance) {
+      if (distance > 0) goToNext();
+      else goToPrevious();
+    }
+    touchStartRef.current = null;
+    touchEndRef.current = null;
+  }, [goToNext, goToPrevious]);
+
   // Keyboard navigation
   React.useEffect(() => {
     if (!isLightboxOpen) return;
@@ -69,24 +97,57 @@ export function VehicleGallery({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, goToNext, goToPrevious]);
 
+  // Body scroll lock when lightbox is open
+  React.useEffect(() => {
+    if (isLightboxOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isLightboxOpen]);
+
+  // Focus trap for lightbox
+  React.useEffect(() => {
+    if (isLightboxOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      // Focus lightbox container
+      requestAnimationFrame(() => lightboxRef.current?.focus());
+    } else if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
+    }
+  }, [isLightboxOpen]);
+
   if (totalImages === 0) {
     return (
       <div
         className={cn(
-          'flex aspect-[16/10] items-center justify-center rounded-xl bg-gray-100',
+          'bg-muted flex aspect-[16/10] items-center justify-center rounded-xl',
           className
         )}
       >
-        <p className="text-gray-500">No hay imágenes disponibles</p>
+        <p className="text-muted-foreground">No hay imágenes disponibles</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className={cn('overflow-hidden rounded-xl bg-white', className)}>
+      <div className={cn('bg-card overflow-hidden rounded-xl', className)}>
         {/* Main Image */}
-        <div className="group relative aspect-[16/10]">
+        <div
+          className="group relative aspect-[16/10]"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <Image
             src={currentImage?.url || '/placeholder-car.jpg'}
             alt={currentImage?.alt || title}
@@ -101,14 +162,14 @@ export function VehicleGallery({
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute top-1/2 left-3 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-lg transition-opacity group-hover:opacity-100 hover:bg-white"
+                className="absolute top-1/2 left-3 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-opacity hover:bg-white md:opacity-0 md:group-hover:opacity-100"
                 aria-label="Imagen anterior"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute top-1/2 right-3 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-lg transition-opacity group-hover:opacity-100 hover:bg-white"
+                className="absolute top-1/2 right-3 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg transition-opacity hover:bg-white md:opacity-0 md:group-hover:opacity-100"
                 aria-label="Siguiente imagen"
               >
                 <ChevronRight className="h-6 w-6" />
@@ -119,7 +180,7 @@ export function VehicleGallery({
           {/* Expand Button */}
           <button
             onClick={() => setIsLightboxOpen(true)}
-            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
+            className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white transition-opacity hover:bg-black/80 md:opacity-0 md:group-hover:opacity-100"
             aria-label="Ver pantalla completa"
           >
             <Expand className="h-5 w-5" />
@@ -149,7 +210,7 @@ export function VehicleGallery({
 
         {/* Thumbnail Strip */}
         {totalImages > 1 && (
-          <div className="border-t p-3">
+          <div className="border-border border-t p-3">
             <div className="scrollbar-hide flex gap-2 overflow-x-auto">
               {sortedImages.map((image, index) => (
                 <button
@@ -159,7 +220,7 @@ export function VehicleGallery({
                     'relative h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all',
                     index === currentIndex
                       ? 'border-primary ring-primary/20 ring-2'
-                      : 'border-transparent hover:border-gray-300'
+                      : 'hover:border-border border-transparent'
                   )}
                   aria-label={`Ver imagen ${index + 1}`}
                 >
@@ -180,8 +241,16 @@ export function VehicleGallery({
       {/* Lightbox */}
       {isLightboxOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+          ref={lightboxRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Galería de imágenes: ${title}`}
+          tabIndex={-1}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 outline-none"
           onClick={() => setIsLightboxOpen(false)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Close Button */}
           <button

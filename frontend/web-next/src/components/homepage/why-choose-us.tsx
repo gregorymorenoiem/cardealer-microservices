@@ -7,7 +7,6 @@
 
 'use client';
 
-import { motion } from 'framer-motion';
 import {
   Shield,
   Search,
@@ -23,6 +22,7 @@ import {
   HeartHandshake,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useInView } from '@/hooks/use-in-view';
 import type { LucideIcon } from 'lucide-react';
 
 // =============================================================================
@@ -59,8 +59,8 @@ const VALUE_PROPS: ValueProp[] = [
     icon: Camera,
     title: 'Fotos Profesionales',
     description:
-      'Tecnología de inteligencia artificial para mejorar las fotos de tu vehículo y atraer más compradores.',
-    highlight: 'AI-Powered',
+      'Herramientas para mejorar las fotos de tu vehículo y atraer más compradores interesados.',
+    highlight: 'Alta Calidad',
     color: 'from-purple-500 to-purple-600',
   },
   {
@@ -69,7 +69,7 @@ const VALUE_PROPS: ValueProp[] = [
     description:
       'Análisis de mercado en tiempo real para que obtengas el mejor precio, ya sea que compres o vendas.',
     highlight: 'Precios Justos',
-    color: 'from-emerald-500 to-emerald-600',
+    color: 'from-primary to-primary',
   },
   {
     icon: MessageCircle,
@@ -102,16 +102,20 @@ const VALUE_PROPS: ValueProp[] = [
 // =============================================================================
 
 function GridVariant({ className }: { className?: string }) {
+  const { ref, inView } = useInView();
   return (
-    <div className={cn('grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8', className)}>
+    <div
+      ref={ref}
+      className={cn('grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8', className)}
+    >
       {VALUE_PROPS.map((prop, index) => (
-        <motion.div
+        <div
           key={prop.title}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ delay: index * 0.1, duration: 0.5 }}
-          className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:border-transparent hover:shadow-xl lg:p-8"
+          className={cn(
+            'group border-border bg-card relative overflow-hidden rounded-2xl border p-6 shadow-sm transition-all duration-500 hover:border-transparent hover:shadow-xl lg:p-8',
+            inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+          )}
+          style={{ transitionDelay: `${index * 100}ms` }}
         >
           {/* Background Gradient on Hover */}
           <div
@@ -133,18 +137,18 @@ function GridVariant({ className }: { className?: string }) {
 
           {/* Highlight Badge */}
           {prop.highlight && (
-            <span className="mb-3 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold tracking-wide text-slate-600">
+            <span className="bg-muted text-muted-foreground mb-3 inline-block rounded-full px-3 py-1 text-xs font-semibold tracking-wide">
               {prop.highlight}
             </span>
           )}
 
           {/* Title */}
-          <h3 className="mb-3 text-xl leading-snug font-bold tracking-tight text-slate-900 transition-colors group-hover:text-[#00A870]">
+          <h3 className="text-foreground group-hover:text-primary mb-3 text-xl leading-snug font-bold tracking-tight transition-colors">
             {prop.title}
           </h3>
 
           {/* Description */}
-          <p className="leading-relaxed text-slate-600">{prop.description}</p>
+          <p className="text-muted-foreground leading-relaxed">{prop.description}</p>
 
           {/* Decorative Corner */}
           <div
@@ -153,7 +157,7 @@ function GridVariant({ className }: { className?: string }) {
               prop.color
             )}
           />
-        </motion.div>
+        </div>
       ))}
     </div>
   );
@@ -164,19 +168,18 @@ function GridVariant({ className }: { className?: string }) {
 // =============================================================================
 
 function AlternatingVariant({ className }: { className?: string }) {
+  const { ref, inView } = useInView();
   return (
-    <div className={cn('space-y-16 lg:space-y-24', className)}>
+    <div ref={ref} className={cn('space-y-16 lg:space-y-24', className)}>
       {VALUE_PROPS.slice(0, 4).map((prop, index) => (
-        <motion.div
+        <div
           key={prop.title}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
           className={cn(
-            'flex flex-col items-center gap-8 lg:flex-row lg:gap-16',
-            index % 2 === 1 && 'lg:flex-row-reverse'
+            'flex flex-col items-center gap-8 transition-all duration-600 lg:flex-row lg:gap-16',
+            index % 2 === 1 && 'lg:flex-row-reverse',
+            inView ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           )}
+          style={{ transitionDelay: `${index * 150}ms` }}
         >
           {/* Visual */}
           <div className="relative flex-1">
@@ -186,7 +189,7 @@ function AlternatingVariant({ className }: { className?: string }) {
                 prop.color
               )}
             >
-              <div className="flex h-full w-full items-center justify-center rounded-3xl bg-white">
+              <div className="bg-background flex h-full w-full items-center justify-center rounded-3xl">
                 <prop.icon
                   className={cn(
                     'h-32 w-32 bg-gradient-to-br bg-clip-text',
@@ -196,7 +199,7 @@ function AlternatingVariant({ className }: { className?: string }) {
               </div>
             </div>
             {/* Decorative Dots */}
-            <div className="absolute top-8 left-8 -z-10 h-full w-full rounded-3xl bg-gray-100" />
+            <div className="bg-muted absolute top-8 left-8 -z-10 h-full w-full rounded-3xl" />
           </div>
 
           {/* Content */}
@@ -211,12 +214,12 @@ function AlternatingVariant({ className }: { className?: string }) {
                 {prop.highlight}
               </span>
             )}
-            <h3 className="mb-4 text-3xl font-bold text-gray-900 lg:text-4xl">{prop.title}</h3>
-            <p className="mx-auto max-w-lg text-lg leading-relaxed text-gray-600 lg:mx-0">
+            <h3 className="text-foreground mb-4 text-3xl font-bold lg:text-4xl">{prop.title}</h3>
+            <p className="text-muted-foreground mx-auto max-w-lg text-lg leading-relaxed lg:mx-0">
               {prop.description}
             </p>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
@@ -227,17 +230,20 @@ function AlternatingVariant({ className }: { className?: string }) {
 // =============================================================================
 
 function CardsVariant({ className }: { className?: string }) {
+  const { ref, inView } = useInView();
   return (
-    <div className={cn('grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6', className)}>
+    <div
+      ref={ref}
+      className={cn('grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6', className)}
+    >
       {VALUE_PROPS.map((prop, index) => (
-        <motion.div
+        <div
           key={prop.title}
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.05 }}
-          whileHover={{ y: -8 }}
-          className="group flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-sm transition-all duration-300 hover:shadow-lg lg:p-6"
+          className={cn(
+            'group border-border bg-card flex flex-col items-center rounded-2xl border p-4 text-center shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-lg lg:p-6',
+            inView ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
+          )}
+          style={{ transitionDelay: `${index * 50}ms` }}
         >
           {/* Icon */}
           <div
@@ -250,15 +256,15 @@ function CardsVariant({ className }: { className?: string }) {
           </div>
 
           {/* Title */}
-          <h4 className="mb-1 text-sm leading-snug font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-[#00A870] lg:text-base">
+          <h4 className="text-foreground group-hover:text-primary mb-1 text-sm leading-snug font-semibold tracking-tight transition-colors lg:text-base">
             {prop.title}
           </h4>
 
           {/* Highlight */}
           {prop.highlight && (
-            <span className="text-xs font-medium text-slate-500">{prop.highlight}</span>
+            <span className="text-muted-foreground text-xs font-medium">{prop.highlight}</span>
           )}
-        </motion.div>
+        </div>
       ))}
     </div>
   );
@@ -269,6 +275,7 @@ function CardsVariant({ className }: { className?: string }) {
 // =============================================================================
 
 export function WhyChooseUs({ className, variant = 'grid' }: WhyChooseUsProps) {
+  const { ref: headerRef, inView: headerInView } = useInView();
   const VariantComponent = {
     grid: GridVariant,
     alternating: AlternatingVariant,
@@ -276,28 +283,29 @@ export function WhyChooseUs({ className, variant = 'grid' }: WhyChooseUsProps) {
   }[variant];
 
   return (
-    <section className={cn('py-16 lg:py-24', className)}>
+    <section id="por-que-okla" className={cn('py-16 lg:py-24', className)}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-12 text-center lg:mb-16"
+        <div
+          ref={headerRef}
+          className={cn(
+            'mb-12 text-center transition-all duration-600 lg:mb-16',
+            headerInView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+          )}
         >
-          <span className="mb-4 inline-block rounded-full bg-[#00A870]/10 px-4 py-1.5 text-sm font-semibold tracking-wide text-[#00A870]">
+          <span className="bg-primary/10 text-primary mb-4 inline-block rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide">
             ¿Por qué OKLA?
           </span>
-          <h2 className="mb-4 text-3xl leading-tight font-bold tracking-tight text-slate-900 lg:text-5xl">
+          <h2 className="text-foreground mb-4 text-3xl leading-tight font-bold tracking-tight lg:text-5xl">
             La forma más inteligente de
             <br />
-            <span className="text-[#00A870]">comprar y vender</span> vehículos
+            <span className="text-primary">comprar y vender</span> vehículos
           </h2>
-          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600">
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg leading-relaxed">
             Miles de dominicanos confían en OKLA para encontrar su próximo vehículo o vender el suyo
             de forma rápida y segura.
           </p>
-        </motion.div>
+        </div>
 
         {/* Content */}
         <VariantComponent className={className} />

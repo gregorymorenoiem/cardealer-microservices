@@ -24,7 +24,7 @@ interface VehicleWithSeller extends Vehicle {
   seller?: {
     id: string;
     name: string;
-    type: 'individual' | 'dealer';
+    type: 'seller' | 'dealer';
     avatar?: string;
     phone?: string;
     email?: string;
@@ -45,16 +45,16 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
   const seller = vehicleWithSeller.seller;
   const isDealer = vehicle.sellerType === 'dealer';
 
-  // Mock seller data if not provided
+  // Fallback seller data if not provided from API
   const sellerData = seller || {
     id: vehicle.sellerId,
     name: isDealer ? 'Dealer Verificado' : 'Vendedor Particular',
     type: vehicle.sellerType,
-    phone: '809-555-0123',
+    phone: undefined,
     city: vehicle.location.city,
-    rating: 4.5,
-    reviewCount: 24,
-    isVerified: true,
+    rating: undefined,
+    reviewCount: undefined,
+    isVerified: false,
   };
 
   const handleCall = () => {
@@ -77,11 +77,11 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
   };
 
   return (
-    <div className={cn('rounded-xl bg-white p-6 shadow-sm', className)} data-testid="seller-info">
+    <div className={cn('rounded-xl bg-card p-6 shadow-sm', className)} data-testid="seller-info">
       {/* Seller header */}
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+        <div className="bg-muted relative flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full">
           {sellerData.avatar ? (
             <Image
               src={sellerData.avatar}
@@ -91,7 +91,7 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
               className="object-cover"
             />
           ) : (
-            <User className="h-6 w-6 text-gray-400" />
+            <User className="text-muted-foreground h-6 w-6" />
           )}
           {sellerData.isVerified && (
             <div className="bg-primary absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white">
@@ -103,7 +103,7 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
         {/* Seller info */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate font-semibold text-gray-900">{sellerData.name}</h3>
+            <h3 className="text-foreground truncate font-semibold">{sellerData.name}</h3>
             {isDealer && (
               <Badge variant="secondary" className="text-xs">
                 Dealer
@@ -117,13 +117,15 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
               <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               <span className="text-sm font-medium">{sellerData.rating.toFixed(1)}</span>
               {sellerData.reviewCount && (
-                <span className="text-sm text-gray-500">({sellerData.reviewCount} reseñas)</span>
+                <span className="text-muted-foreground text-sm">
+                  ({sellerData.reviewCount} reseñas)
+                </span>
               )}
             </div>
           )}
 
           {/* Location */}
-          <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+          <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-sm">
             <MapPin className="h-3.5 w-3.5" />
             <span>{sellerData.city || vehicle.location.city}</span>
           </div>
@@ -132,16 +134,18 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
 
       {/* Stats */}
       {isDealer && (
-        <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
+        <div className="border-border mt-4 grid grid-cols-2 gap-4 border-t pt-4">
           <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900">{sellerData.responseRate || 95}%</p>
-            <p className="text-xs text-gray-500">Tasa de respuesta</p>
+            <p className="text-foreground text-lg font-semibold">
+              {sellerData.responseRate || 95}%
+            </p>
+            <p className="text-muted-foreground text-xs">Tasa de respuesta</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900">
+            <p className="text-foreground text-lg font-semibold">
               {sellerData.responseTime || '< 1h'}
             </p>
-            <p className="text-xs text-gray-500">Tiempo de respuesta</p>
+            <p className="text-muted-foreground text-xs">Tiempo de respuesta</p>
           </div>
         </div>
       )}
@@ -180,12 +184,12 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
       </div>
 
       {/* Trust signals */}
-      <div className="mt-6 border-t pt-4">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+      <div className="border-border mt-6 border-t pt-4">
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
           <Shield className="text-primary h-4 w-4" />
           <span>Contacto verificado por OKLA</span>
         </div>
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="text-muted-foreground mt-2 text-xs">
           Nunca envíes dinero por adelantado. Conoce al vendedor en un lugar público.
         </p>
       </div>

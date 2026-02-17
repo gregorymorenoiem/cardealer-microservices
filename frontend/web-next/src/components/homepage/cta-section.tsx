@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowRight, Car, Camera, Shield, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useInView } from '@/hooks/use-in-view';
 
 interface CTAButton {
   label: string;
@@ -31,6 +31,7 @@ function PremiumCTA({
   secondaryButton,
   className,
 }: CTASectionProps) {
+  const { ref: contentRef, inView } = useInView();
   const benefits = [
     { icon: Camera, text: 'Fotos profesionales gratis' },
     { icon: TrendingUp, text: 'Precio de mercado sugerido' },
@@ -46,15 +47,10 @@ function PremiumCTA({
     >
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-[#00A870]/20 blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-[#00A870]/10 blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        <div className="bg-primary/20 animate-pulse-orb absolute -top-40 -right-40 h-96 w-96 rounded-full blur-3xl" />
+        <div
+          className="bg-primary/10 animate-pulse-orb absolute -bottom-40 -left-40 h-80 w-80 rounded-full blur-3xl"
+          style={{ animationDelay: '2s' }}
         />
         {/* Grid Pattern */}
         <div
@@ -73,13 +69,15 @@ function PremiumCTA({
         <div className="flex flex-col items-center gap-12 lg:flex-row lg:gap-20">
           {/* Content */}
           <div className="flex-1 text-center lg:text-left">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <div
+              ref={contentRef}
+              className={cn(
+                'transition-all duration-700',
+                inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+              )}
             >
               {/* Badge */}
-              <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#00A870]/20 px-4 py-1.5 text-sm font-semibold tracking-wide text-[#00A870]">
+              <span className="bg-primary/20 text-primary mb-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide">
                 <Car className="h-4 w-4" />
                 Publica Gratis
               </span>
@@ -97,31 +95,31 @@ function PremiumCTA({
               {/* Benefits */}
               <div className="mb-8 flex flex-wrap justify-center gap-4 lg:justify-start">
                 {benefits.map((benefit, index) => (
-                  <motion.div
+                  <div
                     key={benefit.text}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-2 text-white/90"
+                    className={cn(
+                      'flex items-center gap-2 text-white/90 transition-all duration-500',
+                      inView ? 'translate-x-0 opacity-100' : '-translate-x-5 opacity-0'
+                    )}
+                    style={{ transitionDelay: `${index * 100}ms` }}
                   >
-                    <benefit.icon className="h-5 w-5 text-[#00A870]" />
+                    <benefit.icon className="text-primary h-5 w-5" />
                     <span className="text-sm font-medium">{benefit.text}</span>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
               {/* Buttons */}
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <div className="transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
                   <Link
                     href={primaryButton.href}
-                    className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[#00A870] px-8 text-lg font-semibold tracking-wide text-white shadow-lg shadow-[#00A870]/30 transition-all hover:bg-[#009663]"
+                    className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 inline-flex h-14 items-center justify-center gap-2 rounded-xl px-8 text-lg font-semibold tracking-wide shadow-lg transition-all"
                   >
                     {primaryButton.label}
                     <ArrowRight className="h-5 w-5" />
                   </Link>
-                </motion.div>
+                </div>
 
                 {secondaryButton && (
                   <Link
@@ -132,22 +130,23 @@ function PremiumCTA({
                   </Link>
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Visual Element */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="hidden flex-1 justify-center lg:flex"
+          <div
+            className={cn(
+              'hidden flex-1 justify-center transition-all duration-700 lg:flex',
+              inView ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'
+            )}
+            style={{ transitionDelay: '200ms' }}
           >
             <div className="relative">
               {/* Car Illustration / Stats Card */}
               <div className="rounded-3xl border border-white/10 bg-white/10 p-8 backdrop-blur-sm">
                 <div className="mb-6 text-center">
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#00A870]/20">
-                    <Car className="h-10 w-10 text-[#00A870]" />
+                  <div className="bg-primary/20 mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl">
+                    <Car className="text-primary h-10 w-10" />
                   </div>
                   <h3 className="mb-2 text-2xl font-bold tracking-tight text-white">
                     Publica en 5 minutos
@@ -166,7 +165,7 @@ function PremiumCTA({
                     { value: '0%', label: 'Comisión' },
                   ].map(stat => (
                     <div key={stat.label} className="rounded-xl bg-white/5 p-3 text-center">
-                      <div className="text-xl font-bold tracking-tight text-[#00A870]">
+                      <div className="text-primary text-xl font-bold tracking-tight">
                         {stat.value}
                       </div>
                       <div className="text-xs font-medium text-white/70">{stat.label}</div>
@@ -176,15 +175,11 @@ function PremiumCTA({
               </div>
 
               {/* Floating Elements */}
-              <motion.div
-                animate={{ y: [-10, 10, -10] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="absolute -top-4 -right-4 rounded-xl bg-white p-3 shadow-xl"
-              >
-                <div className="font-bold text-[#00A870]">✓ Verificado</div>
-              </motion.div>
+              <div className="bg-card animate-float-y absolute -top-4 -right-4 rounded-xl p-3 shadow-xl">
+                <div className="text-primary font-bold">✓ Verificado</div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
@@ -203,20 +198,22 @@ function SimpleCTA({
   className,
 }: CTASectionProps) {
   return (
-    <section className={cn('bg-[#00A870] py-16 sm:py-24', className)}>
+    <section className={cn('bg-primary py-16 sm:py-24', className)}>
       <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-        <h2 className="text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl">
+        <h2 className="text-primary-foreground text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
           {title}
         </h2>
 
         {subtitle && (
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-white/95">{subtitle}</p>
+          <p className="text-primary-foreground/95 mx-auto mt-4 max-w-2xl text-lg leading-relaxed">
+            {subtitle}
+          </p>
         )}
 
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href={primaryButton.href}
-            className="inline-flex h-14 items-center justify-center gap-2 rounded-lg border-2 border-white bg-transparent px-8 text-lg font-semibold tracking-wide text-white transition-all hover:bg-white hover:text-[#00A870]"
+            className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary inline-flex h-14 items-center justify-center gap-2 rounded-lg border-2 bg-transparent px-8 text-lg font-semibold tracking-wide transition-all"
           >
             {primaryButton.label}
             <ArrowRight className="h-5 w-5" />
@@ -225,7 +222,7 @@ function SimpleCTA({
           {secondaryButton && (
             <Link
               href={secondaryButton.href}
-              className="inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-white px-8 text-lg font-semibold tracking-wide text-[#00A870] transition-all hover:bg-slate-100"
+              className="bg-card text-primary hover:bg-muted inline-flex h-14 items-center justify-center gap-2 rounded-lg px-8 text-lg font-semibold tracking-wide transition-all"
             >
               {secondaryButton.label}
             </Link>

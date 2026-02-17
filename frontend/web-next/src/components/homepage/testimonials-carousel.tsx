@@ -8,10 +8,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useInView } from '@/hooks/use-in-view';
 
 // =============================================================================
 // TYPES
@@ -102,7 +102,7 @@ function StarRating({ rating }: { rating: number }) {
           key={star}
           className={cn(
             'h-5 w-5',
-            star <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'
+            star <= rating ? 'fill-amber-400 text-amber-400' : 'fill-muted text-muted'
           )}
         />
       ))}
@@ -124,15 +124,15 @@ function Avatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
 
   if (imageUrl) {
     return (
-      <div className="relative h-16 w-16 overflow-hidden rounded-full shadow-lg ring-4 ring-white">
-        <Image src={imageUrl} alt={name} fill className="object-cover" />
+      <div className="ring-background relative h-16 w-16 overflow-hidden rounded-full shadow-lg ring-4">
+        <Image src={imageUrl} alt={name} fill sizes="64px" className="object-cover" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg ring-4 ring-white">
-      <span className="text-xl font-bold text-white">{initials}</span>
+    <div className="from-primary to-primary/80 ring-background flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br shadow-lg ring-4">
+      <span className="text-primary-foreground text-xl font-bold">{initials}</span>
     </div>
   );
 }
@@ -143,11 +143,11 @@ function Avatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <div className="relative rounded-3xl bg-white p-8 shadow-xl md:p-10">
+    <div className="bg-card relative rounded-3xl p-8 shadow-xl md:p-10">
       {/* Quote Icon */}
       <div className="absolute -top-4 left-8">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A870] shadow-lg">
-          <Quote className="h-5 w-5 fill-white text-white" />
+        <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-full shadow-lg">
+          <Quote className="fill-primary-foreground text-primary-foreground h-5 w-5" />
         </div>
       </div>
 
@@ -157,11 +157,11 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         <StarRating rating={testimonial.rating} />
 
         {/* Testimonial Text */}
-        <p className="mt-4 text-lg leading-relaxed text-gray-700">"{testimonial.content}"</p>
+        <p className="text-card-foreground mt-4 text-lg leading-relaxed">"{testimonial.content}"</p>
 
         {/* Vehicle Purchased */}
         {testimonial.vehiclePurchased && (
-          <p className="mt-4 text-sm font-medium text-[#00A870]">
+          <p className="text-primary mt-4 text-sm font-medium">
             Compró: {testimonial.vehiclePurchased}
           </p>
         )}
@@ -170,10 +170,10 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         <div className="mt-6 flex items-center gap-4">
           <Avatar name={testimonial.name} imageUrl={testimonial.avatarUrl} />
           <div>
-            <p className="font-semibold text-gray-900">{testimonial.name}</p>
-            <p className="text-sm text-gray-500">{testimonial.role}</p>
+            <p className="text-foreground font-semibold">{testimonial.name}</p>
+            <p className="text-muted-foreground text-sm">{testimonial.role}</p>
             {testimonial.location && (
-              <p className="text-xs text-gray-400">{testimonial.location}</p>
+              <p className="text-muted-foreground/70 text-xs">{testimonial.location}</p>
             )}
           </div>
         </div>
@@ -222,31 +222,22 @@ export function TestimonialsCarousel({
     >
       {/* Main Carousel */}
       <div className="relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="mx-auto max-w-3xl"
-          >
-            <TestimonialCard testimonial={testimonials[currentIndex]} />
-          </motion.div>
-        </AnimatePresence>
+        <div className="mx-auto max-w-3xl transition-opacity duration-500">
+          <TestimonialCard testimonial={testimonials[currentIndex]} />
+        </div>
       </div>
 
       {/* Navigation Arrows */}
       <div className="pointer-events-none absolute top-1/2 right-0 left-0 flex -translate-y-1/2 justify-between px-4">
         <button
           onClick={goToPrevious}
-          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-600 shadow-lg transition-all hover:text-[#00A870] hover:shadow-xl"
+          className="bg-card text-muted-foreground hover:text-primary pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
         <button
           onClick={goToNext}
-          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-600 shadow-lg transition-all hover:text-[#00A870] hover:shadow-xl"
+          className="bg-card text-muted-foreground hover:text-primary pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:shadow-xl"
         >
           <ChevronRight className="h-6 w-6" />
         </button>
@@ -260,7 +251,9 @@ export function TestimonialsCarousel({
             onClick={() => setCurrentIndex(index)}
             className={cn(
               'h-2.5 w-2.5 rounded-full transition-all duration-300',
-              index === currentIndex ? 'w-8 bg-[#00A870]' : 'bg-gray-300 hover:bg-gray-400'
+              index === currentIndex
+                ? 'bg-primary w-8'
+                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
             )}
           />
         ))}
@@ -289,18 +282,21 @@ export function TestimonialsGrid({
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
   };
 
+  const { ref, inView } = useInView();
+
   return (
-    <div className={cn(`grid ${columnClasses[columns]} gap-6 md:gap-8`, className)}>
+    <div ref={ref} className={cn(`grid ${columnClasses[columns]} gap-6 md:gap-8`, className)}>
       {testimonials.map((testimonial, index) => (
-        <motion.div
+        <div
           key={testimonial.id}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.1 }}
+          className={cn(
+            'transition-all duration-500',
+            inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+          )}
+          style={{ transitionDelay: `${index * 100}ms` }}
         >
           <TestimonialCard testimonial={testimonial} />
-        </motion.div>
+        </div>
       ))}
     </div>
   );

@@ -16,11 +16,11 @@ const dealRatingVariants = cva(
   {
     variants: {
       rating: {
-        great: 'bg-[#00A870] text-white',
-        good: 'bg-green-500 text-white',
-        fair: 'bg-amber-500 text-white',
-        high: 'bg-red-500 text-white',
-        uncertain: 'bg-gray-400 text-white',
+        great: 'bg-primary text-primary-foreground',
+        good: 'bg-green-500 text-white dark:bg-green-600',
+        fair: 'bg-amber-500 text-white dark:bg-amber-600',
+        high: 'bg-red-500 text-white dark:bg-red-600',
+        uncertain: 'bg-muted text-muted-foreground',
       },
       size: {
         sm: 'px-2 py-0.5 text-[10px]',

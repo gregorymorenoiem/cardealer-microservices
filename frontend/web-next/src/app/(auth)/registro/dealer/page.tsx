@@ -1,12 +1,17 @@
 /**
  * Dealer Registration Page
  *
- * Registration form for dealers
+ * Registration form for dealers (guest/pre-auth flow).
+ * Registers a new user account with AccountType=Dealer,
+ * then redirects to email verification.
+ *
+ * Connected to real APIs — February 2026
  */
 
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +37,18 @@ import {
   Shield,
   Star,
   TrendingUp,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import {
+  sanitizeText,
+  sanitizeEmail,
+  sanitizePhone,
+  sanitizeRNC,
+  sanitizeUrl,
+} from '@/lib/security/sanitize';
 
 const steps = [
   { id: 1, title: 'Tipo de Cuenta', icon: Building2 },
@@ -52,7 +67,11 @@ const benefits = [
 ];
 
 export default function DealerRegistrationPage() {
+  const router = useRouter();
+  const { register } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<'individual' | 'company'>('company');
   const [formData, setFormData] = useState({
     // Step 1
@@ -63,6 +82,8 @@ export default function DealerRegistrationPage() {
     contactName: '',
     email: '',
     phone: '',
+    password: '',
+    confirmPassword: '',
     website: '',
     // Step 3
     address: '',
@@ -75,6 +96,7 @@ export default function DealerRegistrationPage() {
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (error) setError(null);
   };
 
   const nextStep = () => {
@@ -85,16 +107,66 @@ export default function DealerRegistrationPage() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
+  const handleSubmit = async () => {
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      // Sanitize all inputs before sending
+      const sanitizedEmail = sanitizeEmail(formData.email);
+      const nameParts = sanitizeText(formData.contactName.trim(), { maxLength: 100 }).split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const sanitizedPhone = formData.phone ? sanitizePhone(formData.phone) : undefined;
+
+      // Step 1: Register the user account
+      await register({
+        firstName,
+        lastName,
+        email: sanitizedEmail,
+        phone: sanitizedPhone,
+        password: formData.password,
+        acceptTerms: formData.agreeTerms,
+      });
+
+      // Redirect to email verification page
+      router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}&dealer=true`);
+    } catch (err) {
+      const apiError = err as { message?: string };
+      setError(apiError.message || 'Error al crear la cuenta. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const progress = (currentStep / 4) * 100;
+  const canSubmit =
+    formData.agreeTerms &&
+    formData.agreeVerification &&
+    formData.businessName &&
+    formData.email &&
+    formData.password &&
+    formData.contactName &&
+    !isSubmitting;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-600 to-teal-700">
+    <div className="min-h-screen bg-gradient-to-br from-primary to-teal-700">
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 py-4">
           <Link href="/" className="inline-flex items-center gap-2 text-white">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
-              <Car className="h-6 w-6 text-emerald-600" />
+            <div className="bg-card flex h-10 w-10 items-center justify-center rounded-lg">
+              <Car className="h-6 w-6 text-primary" />
             </div>
             <span className="text-2xl font-bold">OKLA</span>
           </Link>
@@ -107,14 +179,14 @@ export default function DealerRegistrationPage() {
           <div className="hidden lg:block">
             <div className="sticky top-8">
               <h2 className="mb-6 text-2xl font-bold text-white">Únete como Dealer</h2>
-              <p className="mb-8 text-emerald-100">
+              <p className="mb-8 text-primary-foreground">
                 Accede a herramientas profesionales para vender más vehículos.
               </p>
 
               <div className="space-y-4">
                 {benefits.map((benefit, i) => (
                   <div key={i} className="flex items-center gap-3 text-white">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/100">
                       <Check className="h-4 w-4" />
                     </div>
                     <span>{benefit}</span>
@@ -133,7 +205,7 @@ export default function DealerRegistrationPage() {
                   "Desde que me uní a OKLA, mis ventas aumentaron un 40%. El panel es muy fácil de
                   usar."
                 </p>
-                <p className="font-medium text-emerald-200">— Carlos, Auto Premium RD</p>
+                <p className="font-medium text-primary/40">— Carlos, Auto Premium RD</p>
               </div>
             </div>
           </div>
@@ -144,7 +216,7 @@ export default function DealerRegistrationPage() {
               <CardHeader>
                 <div className="mb-6 flex items-center justify-between">
                   <CardTitle>Registro de Dealer</CardTitle>
-                  <span className="text-sm text-gray-500">Paso {currentStep} de 4</span>
+                  <span className="text-muted-foreground text-sm">Paso {currentStep} de 4</span>
                 </div>
                 <Progress value={progress} className="h-2" />
 
@@ -159,10 +231,10 @@ export default function DealerRegistrationPage() {
                         <div
                           className={`flex h-10 w-10 items-center justify-center rounded-full ${
                             isCompleted
-                              ? 'bg-emerald-600 text-white'
+                              ? 'bg-primary text-white'
                               : isActive
-                                ? 'border-2 border-emerald-600 bg-emerald-100 text-emerald-600'
-                                : 'bg-gray-100 text-gray-400'
+                                ? 'border-2 border-primary bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {isCompleted ? (
@@ -172,7 +244,7 @@ export default function DealerRegistrationPage() {
                           )}
                         </div>
                         <span
-                          className={`mt-2 text-xs ${isActive || isCompleted ? 'text-gray-900' : 'text-gray-400'}`}
+                          className={`mt-2 text-xs ${isActive || isCompleted ? 'text-foreground' : 'text-muted-foreground'}`}
                         >
                           {step.title}
                         </span>
@@ -183,6 +255,13 @@ export default function DealerRegistrationPage() {
               </CardHeader>
 
               <CardContent className="space-y-6">
+                {error && (
+                  <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
+
                 {currentStep === 1 && (
                   <div className="space-y-6">
                     <div>
@@ -192,13 +271,13 @@ export default function DealerRegistrationPage() {
                           onClick={() => handleChange('dealerType', 'independent')}
                           className={`rounded-xl border-2 p-6 text-left transition-colors ${
                             formData.dealerType === 'independent'
-                              ? 'border-emerald-600 bg-emerald-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-border'
                           }`}
                         >
-                          <Building2 className="mb-3 h-8 w-8 text-emerald-600" />
+                          <Building2 className="mb-3 h-8 w-8 text-primary" />
                           <h4 className="font-semibold">Dealer Independiente</h4>
-                          <p className="mt-1 text-sm text-gray-500">
+                          <p className="text-muted-foreground mt-1 text-sm">
                             Un solo local, inventario propio
                           </p>
                         </button>
@@ -206,13 +285,13 @@ export default function DealerRegistrationPage() {
                           onClick={() => handleChange('dealerType', 'chain')}
                           className={`rounded-xl border-2 p-6 text-left transition-colors ${
                             formData.dealerType === 'chain'
-                              ? 'border-emerald-600 bg-emerald-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-border'
                           }`}
                         >
-                          <TrendingUp className="mb-3 h-8 w-8 text-emerald-600" />
+                          <TrendingUp className="mb-3 h-8 w-8 text-primary" />
                           <h4 className="font-semibold">Cadena / Multi-sucursal</h4>
-                          <p className="mt-1 text-sm text-gray-500">
+                          <p className="text-muted-foreground mt-1 text-sm">
                             Múltiples locales o franquicia
                           </p>
                         </button>
@@ -226,8 +305,8 @@ export default function DealerRegistrationPage() {
                           onClick={() => setAccountType('individual')}
                           className={`flex-1 rounded-lg border-2 px-4 py-3 ${
                             accountType === 'individual'
-                              ? 'border-emerald-600 bg-emerald-50'
-                              : 'border-gray-200'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border'
                           }`}
                         >
                           Persona Física
@@ -236,8 +315,8 @@ export default function DealerRegistrationPage() {
                           onClick={() => setAccountType('company')}
                           className={`flex-1 rounded-lg border-2 px-4 py-3 ${
                             accountType === 'company'
-                              ? 'border-emerald-600 bg-emerald-50'
-                              : 'border-gray-200'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border'
                           }`}
                         >
                           Empresa (RNC)
@@ -279,7 +358,7 @@ export default function DealerRegistrationPage() {
                           Nombre del Contacto *
                         </label>
                         <Input
-                          placeholder="Tu nombre"
+                          placeholder="Tu nombre completo"
                           value={formData.contactName}
                           onChange={e => handleChange('contactName', e.target.value)}
                         />
@@ -294,6 +373,28 @@ export default function DealerRegistrationPage() {
                           placeholder="email@tudealer.com"
                           value={formData.email}
                           onChange={e => handleChange('email', e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Contraseña *</label>
+                        <Input
+                          type="password"
+                          placeholder="Mínimo 8 caracteres"
+                          value={formData.password}
+                          onChange={e => handleChange('password', e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">
+                          Confirmar Contraseña *
+                        </label>
+                        <Input
+                          type="password"
+                          placeholder="Repetir contraseña"
+                          value={formData.confirmPassword}
+                          onChange={e => handleChange('confirmPassword', e.target.value)}
                         />
                       </div>
 
@@ -366,8 +467,8 @@ export default function DealerRegistrationPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-gray-50 p-4">
-                      <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <p className="text-muted-foreground flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4" />
                         Podrás agregar múltiples ubicaciones después de completar el registro.
                       </p>
@@ -379,24 +480,24 @@ export default function DealerRegistrationPage() {
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold">Verificación</h3>
 
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
-                      <Shield className="mb-4 h-10 w-10 text-emerald-600" />
+                    <div className="rounded-xl border border-primary bg-primary/10 p-6">
+                      <Shield className="mb-4 h-10 w-10 text-primary" />
                       <h4 className="mb-2 text-lg font-semibold">Verificación de Dealer</h4>
-                      <p className="mb-4 text-sm text-gray-600">
+                      <p className="text-muted-foreground mb-4 text-sm">
                         Para garantizar la confianza de los compradores, verificamos todos los
                         dealers. Después de registrarte, deberás subir:
                       </p>
-                      <ul className="space-y-2 text-sm text-gray-600">
+                      <ul className="text-muted-foreground space-y-2 text-sm">
                         <li className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-emerald-600" />
+                          <Check className="h-4 w-4 text-primary" />
                           Cédula del representante legal
                         </li>
                         <li className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-emerald-600" />
+                          <Check className="h-4 w-4 text-primary" />
                           RNC y documentos de la empresa
                         </li>
                         <li className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-emerald-600" />
+                          <Check className="h-4 w-4 text-primary" />
                           Fotos del local/establecimiento
                         </li>
                       </ul>
@@ -411,13 +512,13 @@ export default function DealerRegistrationPage() {
                             handleChange('agreeTerms', checked as boolean)
                           }
                         />
-                        <label htmlFor="terms" className="text-sm text-gray-600">
+                        <label htmlFor="terms" className="text-muted-foreground text-sm">
                           Acepto los{' '}
-                          <Link href="/terminos" className="text-emerald-600 hover:underline">
+                          <Link href="/terminos" className="text-primary hover:underline">
                             Términos y Condiciones
                           </Link>{' '}
                           y la{' '}
-                          <Link href="/privacidad" className="text-emerald-600 hover:underline">
+                          <Link href="/privacidad" className="text-primary hover:underline">
                             Política de Privacidad
                           </Link>
                         </label>
@@ -431,7 +532,7 @@ export default function DealerRegistrationPage() {
                             handleChange('agreeVerification', checked as boolean)
                           }
                         />
-                        <label htmlFor="verification" className="text-sm text-gray-600">
+                        <label htmlFor="verification" className="text-muted-foreground text-sm">
                           Entiendo que debo completar la verificación de documentos para activar mi
                           cuenta
                         </label>
@@ -441,7 +542,7 @@ export default function DealerRegistrationPage() {
                 )}
 
                 {/* Navigation */}
-                <div className="flex justify-between border-t pt-6">
+                <div className="border-border flex justify-between border-t pt-6">
                   {currentStep > 1 ? (
                     <Button variant="outline" onClick={prevStep}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
@@ -457,26 +558,34 @@ export default function DealerRegistrationPage() {
                   )}
 
                   {currentStep < 4 ? (
-                    <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={nextStep}>
+                    <Button className="bg-primary hover:bg-primary/90" onClick={nextStep}>
                       Continuar
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Link href="/dealer">
-                      <Button
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                        disabled={!formData.agreeTerms || !formData.agreeVerification}
-                      >
-                        Crear Cuenta de Dealer
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <Button
+                      className="bg-primary hover:bg-primary/90"
+                      disabled={!canSubmit}
+                      onClick={handleSubmit}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creando cuenta...
+                        </>
+                      ) : (
+                        <>
+                          Crear Cuenta de Dealer
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            <p className="mt-6 text-center text-sm text-emerald-100">
+            <p className="mt-6 text-center text-sm text-primary-foreground">
               ¿Ya tienes cuenta de dealer?{' '}
               <Link href="/auth/login" className="font-medium text-white hover:underline">
                 Inicia sesión

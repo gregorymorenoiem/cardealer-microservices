@@ -118,7 +118,7 @@ export const favoritesService = {
    * Get all favorites for the authenticated user
    */
   async getFavorites(): Promise<FavoritesListResponse> {
-    const response = await apiClient.get<FavoritesListResponse>('/favorites');
+    const response = await apiClient.get<FavoritesListResponse>('/api/favorites');
     return response.data;
   },
 
@@ -128,7 +128,7 @@ export const favoritesService = {
   async isFavorite(vehicleId: string): Promise<boolean> {
     try {
       const response = await apiClient.get<{ isFavorite: boolean }>(
-        `/favorites/check/${vehicleId}`
+        `/api/favorites/check/${vehicleId}`
       );
       return response.data.isFavorite;
     } catch {
@@ -140,7 +140,8 @@ export const favoritesService = {
    * Add a vehicle to favorites
    */
   async addFavorite(request: AddFavoriteRequest): Promise<FavoriteVehicle> {
-    const response = await apiClient.post<FavoriteVehicle>('/favorites', request);
+    const { vehicleId, ...body } = request;
+    const response = await apiClient.post<FavoriteVehicle>(`/api/favorites/${vehicleId}`, body);
     return response.data;
   },
 
@@ -148,7 +149,7 @@ export const favoritesService = {
    * Remove a vehicle from favorites
    */
   async removeFavorite(vehicleId: string): Promise<void> {
-    await apiClient.delete(`/favorites/${vehicleId}`);
+    await apiClient.delete(`/api/favorites/${vehicleId}`);
   },
 
   /**
@@ -158,7 +159,7 @@ export const favoritesService = {
     vehicleId: string,
     request: UpdateFavoriteRequest
   ): Promise<FavoriteVehicle> {
-    const response = await apiClient.patch<FavoriteVehicle>(`/favorites/${vehicleId}`, request);
+    const response = await apiClient.put<FavoriteVehicle>(`/api/favorites/${vehicleId}`, request);
     return response.data;
   },
 
@@ -166,7 +167,7 @@ export const favoritesService = {
    * Get count of favorites
    */
   async getFavoritesCount(): Promise<number> {
-    const response = await apiClient.get<{ count: number }>('/favorites/count');
+    const response = await apiClient.get<{ count: number }>('/api/favorites/count');
     return response.data.count;
   },
 

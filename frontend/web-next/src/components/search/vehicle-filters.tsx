@@ -174,13 +174,13 @@ export function VehicleFilters({
     <div className={cn('space-y-4', className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Filtros</h2>
+        <h2 className="text-lg font-semibold text-foreground">Filtros</h2>
         {activeCount > 0 && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="gap-1 text-sm text-gray-500 hover:text-gray-900"
+            className="gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             Limpiar ({activeCount})
@@ -217,7 +217,7 @@ export function VehicleFilters({
                   }}
                 />
                 <span className="flex-1">{make.value}</span>
-                {make.count > 0 && <span className="text-xs text-gray-400">({make.count})</span>}
+                {make.count > 0 && <span className="text-xs text-muted-foreground">({make.count})</span>}
               </label>
             ))}
           </div>
@@ -235,7 +235,7 @@ export function VehicleFilters({
               className="w-full"
             />
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">RD$</span>
+              <span className="text-muted-foreground">RD$</span>
               <Input
                 type="number"
                 value={priceRange[0]}
@@ -243,7 +243,7 @@ export function VehicleFilters({
                 className="h-8"
                 placeholder="Min"
               />
-              <span className="text-gray-400">—</span>
+              <span className="text-muted-foreground">—</span>
               <Input
                 type="number"
                 value={priceRange[1]}
@@ -272,7 +272,7 @@ export function VehicleFilters({
                 </option>
               ))}
             </select>
-            <span className="text-gray-400">—</span>
+            <span className="text-muted-foreground">—</span>
             <select
               value={filters.yearMax || ''}
               onChange={e =>
@@ -338,9 +338,9 @@ export function VehicleFilters({
               step={5000}
               className="w-full"
             />
-            <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>0 km</span>
-              <span className="font-medium text-gray-900">{mileageMax.toLocaleString()} km</span>
+              <span className="font-medium text-foreground">{mileageMax.toLocaleString()} km</span>
             </div>
           </div>
         </FilterSection>

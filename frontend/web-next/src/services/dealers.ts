@@ -28,6 +28,9 @@ export interface DealerDto {
   phone: string;
   mobilePhone?: string;
   website?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  whatsAppNumber?: string;
   address: string;
   city: string;
   province: string;
@@ -91,6 +94,9 @@ export interface CreateDealerRequest {
   phone: string;
   mobilePhone?: string;
   website?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  whatsAppNumber?: string;
   address: string;
   city: string;
   province: string;
@@ -105,6 +111,9 @@ export interface UpdateDealerRequest {
   phone?: string;
   mobilePhone?: string;
   website?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  whatsAppNumber?: string;
   address?: string;
   city?: string;
   province?: string;
@@ -159,6 +168,9 @@ export function transformDealer(dto: DealerDto): Dealer {
     phone: dto.phone,
     mobilePhone: dto.mobilePhone,
     website: dto.website,
+    facebookUrl: dto.facebookUrl,
+    instagramUrl: dto.instagramUrl,
+    whatsAppNumber: dto.whatsAppNumber,
     address: dto.address,
     city: dto.city,
     province: dto.province,
@@ -341,6 +353,7 @@ export type DocumentType =
   | 'BusinessLicense'
   | 'IdentificationCard'
   | 'ProofOfAddress'
+  | 'ElectricityBill'
   | 'BankStatement'
   | 'TaxCertificate'
   | 'IncorporationDocs'
@@ -384,6 +397,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   BusinessLicense: 'Licencia Comercial',
   IdentificationCard: 'Cédula del Representante Legal',
   ProofOfAddress: 'Comprobante de Domicilio',
+  ElectricityBill: 'Factura de Luz (validación de domicilio)',
   BankStatement: 'Certificación Bancaria',
   TaxCertificate: 'Certificación Tributaria',
   IncorporationDocs: 'Acta Constitutiva',
@@ -393,20 +407,14 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   Other: 'Otro Documento',
 };
 
-// Required documents for verification
-export const REQUIRED_DOCUMENT_TYPES: DocumentType[] = [
-  'RNC',
-  'BusinessLicense',
-  'IdentificationCard',
-  'ProofOfAddress',
-];
+// Required documents for verification (minimal — only what's legally needed)
+export const REQUIRED_DOCUMENT_TYPES: DocumentType[] = ['IdentificationCard'];
 
-// Optional documents
+// Optional documents (boost dealer trust profile)
 export const OPTIONAL_DOCUMENT_TYPES: DocumentType[] = [
-  'BankStatement',
-  'TaxCertificate',
+  'ElectricityBill',
+  'BusinessLicense',
   'IncorporationDocs',
-  'InsurancePolicy',
 ];
 
 /**
@@ -476,14 +484,15 @@ export interface PlanInfo {
   isPopular?: boolean;
 }
 
+// Default DEALER_PLANS (updated dynamically via updateDealerPlansWithPricing)
 export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'starter',
     name: 'Starter',
-    price: 49,
-    maxListings: 15,
+    price: 2899,
+    maxListings: 20,
     features: [
-      'Hasta 15 vehículos',
+      'Hasta 20 vehículos',
       'Dashboard básico',
       'Soporte por email',
       'Badge de verificación',
@@ -494,11 +503,11 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'pro',
     name: 'Pro',
-    price: 129,
-    maxListings: 50,
+    price: 7499,
+    maxListings: 75,
     isPopular: true,
     features: [
-      'Hasta 50 vehículos',
+      'Hasta 75 vehículos',
       'Dashboard avanzado',
       'Soporte prioritario',
       'Badge de verificación',
@@ -511,7 +520,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'enterprise',
     name: 'Enterprise',
-    price: 299,
+    price: 17499,
     maxListings: -1, // unlimited
     features: [
       'Vehículos ilimitados',
@@ -528,35 +537,84 @@ export const DEALER_PLANS: PlanInfo[] = [
 ];
 
 /**
+ * Update DEALER_PLANS with dynamic pricing from ConfigurationService
+ */
+export function updateDealerPlansWithPricing(pricing: {
+  dealerStarter: number;
+  dealerPro: number;
+  dealerEnterprise: number;
+  starterMaxVehicles: number;
+  proMaxVehicles: number;
+  earlyBirdDiscount: number;
+  earlyBirdDeadline: string;
+  earlyBirdFreeMonths: number;
+}): void {
+  // Update Starter
+  DEALER_PLANS[0].price = pricing.dealerStarter;
+  DEALER_PLANS[0].maxListings = pricing.starterMaxVehicles;
+  DEALER_PLANS[0].features[0] = `Hasta ${pricing.starterMaxVehicles} vehículos`;
+  // Update Pro
+  DEALER_PLANS[1].price = pricing.dealerPro;
+  DEALER_PLANS[1].maxListings = pricing.proMaxVehicles;
+  DEALER_PLANS[1].features[0] = `Hasta ${pricing.proMaxVehicles} vehículos`;
+  // Update Enterprise
+  DEALER_PLANS[2].price = pricing.dealerEnterprise;
+
+  // Update early bird config
+  _earlyBirdDiscount = pricing.earlyBirdDiscount;
+  _earlyBirdDeadline = pricing.earlyBirdDeadline;
+  _earlyBirdFreeMonths = pricing.earlyBirdFreeMonths;
+}
+
+/**
  * Get plan info
  */
 export function getPlanInfo(plan: DealerPlan): PlanInfo | undefined {
   return DEALER_PLANS.find(p => p.plan === plan);
 }
 
+// Early bird configuration (updated from ConfigurationService)
+let _earlyBirdDiscount = 25;
+let _earlyBirdDeadline = '2026-12-31';
+let _earlyBirdFreeMonths = 2;
+
 /**
- * Check if early bird offer is active (until Jan 31, 2026)
+ * Check if early bird offer is active
  */
 export function isEarlyBirdActive(): boolean {
-  const deadline = new Date('2026-01-31T23:59:59');
+  const deadline = new Date(`${_earlyBirdDeadline}T23:59:59`);
   return new Date() < deadline;
 }
 
 /**
- * Calculate early bird price (20% discount)
+ * Calculate early bird price (dynamic discount %)
  */
 export function getEarlyBirdPrice(regularPrice: number): number {
-  return Math.round(regularPrice * 0.8);
+  return Math.round(regularPrice * (1 - _earlyBirdDiscount / 100));
 }
 
 /**
  * Get days remaining for early bird
  */
 export function getEarlyBirdDaysRemaining(): number {
-  const deadline = new Date('2026-01-31T23:59:59');
+  const deadline = new Date(`${_earlyBirdDeadline}T23:59:59`);
   const now = new Date();
   const diff = deadline.getTime() - now.getTime();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+/**
+ * Get early bird free months
+ */
+export function getEarlyBirdFreeMonths(): number {
+  return _earlyBirdFreeMonths;
+}
+
+/**
+ * Get early bird discount percentage
+ */
+export function getEarlyBirdDiscount(): number {
+  return _earlyBirdDiscount;
 }
 
 // ============================================================
@@ -584,6 +642,9 @@ export const dealerService = {
   isEarlyBirdActive,
   getEarlyBirdPrice,
   getEarlyBirdDaysRemaining,
+  getEarlyBirdFreeMonths,
+  getEarlyBirdDiscount,
+  updateDealerPlansWithPricing,
   DEALER_PLANS,
   DOCUMENT_TYPE_LABELS,
   REQUIRED_DOCUMENT_TYPES,

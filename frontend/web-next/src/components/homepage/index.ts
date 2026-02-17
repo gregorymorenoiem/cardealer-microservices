@@ -9,6 +9,7 @@
 export { default as HeroCarousel } from './hero-carousel';
 export { HeroStatic } from './hero-static';
 export { HeroEnhanced } from './hero-enhanced';
+export { HeroCompact } from './hero-compact';
 
 // Section components
 export { default as FeaturedSection } from './featured-section';

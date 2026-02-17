@@ -32,10 +32,19 @@ import {
   getReportById,
   updateReportStatus,
   getReportStats,
+  getModerationQueue,
+  getModerationStats,
+  getModerationItem,
+  processModerationAction,
+  approveModerationItem,
+  rejectModerationItem,
   type UserFilters,
+  type AdminUserDetail,
   type VehicleFilters,
   type DealerFilters,
   type ReportFilters,
+  type ModerationFilters,
+  type ModerationActionRequest,
 } from '@/services/admin';
 
 // =============================================================================
@@ -69,17 +78,25 @@ export const adminKeys = {
   reportsList: (filters: ReportFilters) => [...adminKeys.reports(), 'list', filters] as const,
   reportDetail: (id: string) => [...adminKeys.reports(), 'detail', id] as const,
   reportStats: () => [...adminKeys.reports(), 'stats'] as const,
+  // Moderation
+  moderation: () => [...adminKeys.all, 'moderation'] as const,
+  moderationQueue: (filters: ModerationFilters) =>
+    [...adminKeys.moderation(), 'queue', filters] as const,
+  moderationItem: (id: string) => [...adminKeys.moderation(), 'item', id] as const,
+  moderationStats: () => [...adminKeys.moderation(), 'stats'] as const,
 };
 
 // =============================================================================
-// DASHBOARD HOOKS
+// DASHBOARD HOOKS (silent background polling)
 // =============================================================================
 
 export function useDashboardStats() {
   return useQuery({
     queryKey: adminKeys.dashboardStats(),
     queryFn: getDashboardStats,
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -87,7 +104,9 @@ export function useRecentActivity(limit: number = 10) {
   return useQuery({
     queryKey: adminKeys.recentActivity(),
     queryFn: () => getRecentActivity(limit),
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -95,7 +114,9 @@ export function usePendingActions() {
   return useQuery({
     queryKey: adminKeys.pendingActions(),
     queryFn: getPendingActions,
-    staleTime: 60 * 1000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -107,7 +128,9 @@ export function useAdminUsers(filters: UserFilters = {}) {
   return useQuery({
     queryKey: adminKeys.usersList(filters),
     queryFn: () => getUsers(filters),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -124,7 +147,9 @@ export function useUserStats() {
   return useQuery({
     queryKey: adminKeys.userStats(),
     queryFn: getUserStats,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -169,7 +194,9 @@ export function useAdminVehicles(filters: VehicleFilters = {}) {
   return useQuery({
     queryKey: adminKeys.vehiclesList(filters),
     queryFn: () => getAdminVehicles(filters),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -186,7 +213,9 @@ export function useVehicleStats() {
   return useQuery({
     queryKey: adminKeys.vehicleStats(),
     queryFn: getVehicleStats,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -243,7 +272,9 @@ export function useAdminDealers(filters: DealerFilters = {}) {
   return useQuery({
     queryKey: adminKeys.dealersList(filters),
     queryFn: () => getAdminDealers(filters),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -260,7 +291,9 @@ export function useDealerStatsAdmin() {
   return useQuery({
     queryKey: adminKeys.dealerStats(),
     queryFn: getDealerStats,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -316,7 +349,9 @@ export function useAdminReports(filters: ReportFilters = {}) {
   return useQuery({
     queryKey: adminKeys.reportsList(filters),
     queryFn: () => getReports(filters),
-    staleTime: 60 * 1000,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -333,7 +368,9 @@ export function useReportStats() {
   return useQuery({
     queryKey: adminKeys.reportStats(),
     queryFn: getReportStats,
-    staleTime: 60 * 1000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -361,4 +398,86 @@ export function useUpdateReportStatus() {
 // RE-EXPORT TYPES
 // =============================================================================
 
-export type { UserFilters, VehicleFilters, DealerFilters, ReportFilters } from '@/services/admin';
+export type {
+  UserFilters,
+  AdminUserDetail,
+  VehicleFilters,
+  DealerFilters,
+  ReportFilters,
+  ModerationFilters,
+  ModerationItem,
+  ModerationStats,
+  ModerationActionRequest,
+  ModerationActionResponse,
+} from '@/services/admin';
+
+// =============================================================================
+// MODERATION HOOKS
+// =============================================================================
+
+export function useModerationQueue(filters: ModerationFilters = {}) {
+  return useQuery({
+    queryKey: adminKeys.moderationQueue(filters),
+    queryFn: () => getModerationQueue(filters),
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
+  });
+}
+
+export function useModerationStats() {
+  return useQuery({
+    queryKey: adminKeys.moderationStats(),
+    queryFn: getModerationStats,
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
+}
+
+export function useModerationItem(id: string) {
+  return useQuery({
+    queryKey: adminKeys.moderationItem(id),
+    queryFn: () => getModerationItem(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useProcessModerationAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: ModerationActionRequest }) =>
+      processModerationAction(id, action),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.moderation() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.moderationItem(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() });
+    },
+  });
+}
+
+export function useApproveModerationItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => approveModerationItem(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.moderation() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.moderationItem(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() });
+    },
+  });
+}
+
+export function useRejectModerationItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      rejectModerationItem(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.moderation() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.moderationItem(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() });
+    },
+  });
+}

@@ -30,7 +30,7 @@ export function VehicleTabs({ vehicle, className }: VehicleTabsProps) {
   return (
     <div className={cn('overflow-hidden rounded-xl bg-white shadow-sm', className)}>
       <Tabs defaultValue="description" className="w-full">
-        <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
+        <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
           <TabsTrigger
             value="description"
             className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
@@ -88,7 +88,7 @@ function DescriptionTab({ vehicle }: { vehicle: Vehicle }) {
   return (
     <div className="prose prose-gray max-w-none">
       <h3 className="mb-4 text-lg font-semibold">Acerca de este vehículo</h3>
-      <div className="whitespace-pre-line text-gray-600">{description.trim()}</div>
+      <div className="text-muted-foreground whitespace-pre-line">{description.trim()}</div>
     </div>
   );
 }
@@ -163,13 +163,13 @@ function SpecificationsTab({ vehicle }: { vehicle: Vehicle }) {
       <h3 className="mb-4 text-lg font-semibold">Especificaciones técnicas</h3>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {validSpecs.map((spec, index) => (
-          <div key={index} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+          <div key={index} className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-              <spec.icon className="h-5 w-5 text-gray-600" />
+              <spec.icon className="text-muted-foreground h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">{spec.label}</p>
-              <p className="font-medium text-gray-900">{spec.value}</p>
+              <p className="text-muted-foreground text-xs">{spec.label}</p>
+              <p className="text-foreground font-medium">{spec.value}</p>
             </div>
           </div>
         ))}
@@ -177,18 +177,18 @@ function SpecificationsTab({ vehicle }: { vehicle: Vehicle }) {
 
       {/* Engine details if available */}
       {(vehicle.engineSize || vehicle.horsepower) && (
-        <div className="mt-6 border-t pt-6">
-          <h4 className="mb-3 font-medium text-gray-900">Motorización</h4>
+        <div className="border-border mt-6 border-t pt-6">
+          <h4 className="text-foreground mb-3 font-medium">Motorización</h4>
           <div className="flex flex-wrap gap-4">
             {vehicle.engineSize && (
-              <div className="rounded-lg bg-gray-50 px-4 py-2">
-                <span className="text-sm text-gray-500">Motor: </span>
+              <div className="bg-muted/50 rounded-lg px-4 py-2">
+                <span className="text-muted-foreground text-sm">Motor: </span>
                 <span className="font-medium">{vehicle.engineSize}</span>
               </div>
             )}
             {vehicle.horsepower && (
-              <div className="rounded-lg bg-gray-50 px-4 py-2">
-                <span className="text-sm text-gray-500">Potencia: </span>
+              <div className="bg-muted/50 rounded-lg px-4 py-2">
+                <span className="text-muted-foreground text-sm">Potencia: </span>
                 <span className="font-medium">{vehicle.horsepower} HP</span>
               </div>
             )}
@@ -281,7 +281,7 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
       {showSimpleList ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature: string, index: number) => (
-            <div key={index} className="flex items-center gap-2 text-gray-700">
+            <div key={index} className="text-foreground flex items-center gap-2">
               <Check className="text-primary h-4 w-4 flex-shrink-0" />
               <span>{feature}</span>
             </div>
@@ -291,10 +291,10 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
         <div className="space-y-6">
           {categories.map((category, catIndex) => (
             <div key={catIndex}>
-              <h4 className="mb-3 font-medium text-gray-900">{category.name}</h4>
+              <h4 className="text-foreground mb-3 font-medium">{category.name}</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {category.features.map((feature: string, index: number) => (
-                  <div key={index} className="flex items-center gap-2 text-gray-700">
+                  <div key={index} className="text-foreground flex items-center gap-2">
                     <Check className="text-primary h-4 w-4 flex-shrink-0" />
                     <span>{feature}</span>
                   </div>
@@ -307,7 +307,7 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
 
       {/* Empty state */}
       {features.length === 0 && (
-        <p className="py-8 text-center text-gray-500">
+        <p className="text-muted-foreground py-8 text-center">
           No hay características listadas para este vehículo.
         </p>
       )}

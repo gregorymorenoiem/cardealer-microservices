@@ -75,10 +75,10 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Revisa tu email</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">Revisa tu email</h1>
+          <p className="text-muted-foreground">
             Hemos enviado instrucciones de recuperación a{' '}
-            <span className="font-medium text-gray-900">{email}</span>
+            <span className="font-medium text-foreground">{email}</span>
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
               )}
             </Button>
           ) : resendTimer > 0 ? (
-            <p className="text-sm text-gray-500">Puedes reenviar en {resendTimer} segundos</p>
+            <p className="text-sm text-muted-foreground">Puedes reenviar en {resendTimer} segundos</p>
           ) : null}
 
           <Link href="/login">
@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
       {/* Back link */}
       <Link
         href="/login"
-        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver al inicio de sesión
@@ -136,8 +136,8 @@ export default function ForgotPasswordPage() {
 
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">¿Olvidaste tu contraseña?</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold text-foreground">¿Olvidaste tu contraseña?</h1>
+        <p className="text-muted-foreground">
           No te preocupes, te enviaremos instrucciones para recuperarla.
         </p>
       </div>
@@ -155,7 +155,7 @@ export default function ForgotPasswordPage() {
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Mail className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="email"
               type="email"
@@ -185,7 +185,7 @@ export default function ForgotPasswordPage() {
       </form>
 
       {/* Login link */}
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-muted-foreground">
         ¿Recordaste tu contraseña?{' '}
         <Link href="/login" className="text-primary font-medium hover:underline">
           Inicia sesión

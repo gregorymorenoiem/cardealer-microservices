@@ -15,6 +15,8 @@
 import * as React from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { searchVehicles } from '@/services/vehicles';
+import type { VehicleSearchParams } from '@/types';
 
 // =============================================================================
 // TYPES
@@ -275,143 +277,89 @@ function countActiveFilters(filters: VehicleSearchFilters): number {
   return count;
 }
 
-// Mock API call - replace with real API
+// Map hook sort values to backend SortBy + SortDescending
+function mapSortParams(sortBy?: string): { sortBy?: string; sortOrder?: 'asc' | 'desc' } {
+  switch (sortBy) {
+    case 'price_asc':
+      return { sortBy: 'Price', sortOrder: 'asc' };
+    case 'price_desc':
+      return { sortBy: 'Price', sortOrder: 'desc' };
+    case 'year_desc':
+      return { sortBy: 'Year', sortOrder: 'desc' };
+    case 'year_asc':
+      return { sortBy: 'Year', sortOrder: 'asc' };
+    case 'mileage_asc':
+      return { sortBy: 'Mileage', sortOrder: 'asc' };
+    case 'newest':
+      return { sortBy: 'CreatedAt', sortOrder: 'desc' };
+    default:
+      return {};
+  }
+}
+
+// Real API call using vehicles service
 async function fetchVehicles(filters: VehicleSearchFilters): Promise<VehicleSearchResponse> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const sort = mapSortParams(filters.sortBy);
 
-  // Mock data
-  const mockVehicles: VehicleSearchResult[] = [
-    {
-      id: '1',
-      slug: 'toyota-camry-2023-se',
-      title: '2023 Toyota Camry SE',
-      make: 'Toyota',
-      model: 'Camry',
-      year: 2023,
-      price: 1850000,
-      mileage: 15000,
-      transmission: 'Automática',
-      fuelType: 'Gasolina',
-      bodyType: 'Sedán',
-      location: 'Santo Domingo',
-      imageUrl: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=80',
-      dealRating: 'great',
-      isVerified: true,
-    },
-    {
-      id: '2',
-      slug: 'honda-accord-2023-sport',
-      title: '2023 Honda Accord Sport',
-      make: 'Honda',
-      model: 'Accord',
-      year: 2023,
-      price: 1920000,
-      mileage: 12000,
-      transmission: 'Automática',
-      fuelType: 'Gasolina',
-      bodyType: 'Sedán',
-      location: 'Santiago',
-      imageUrl: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80',
-      dealRating: 'good',
-    },
-    {
-      id: '3',
-      slug: 'hyundai-tucson-2022-limited',
-      title: '2022 Hyundai Tucson Limited',
-      make: 'Hyundai',
-      model: 'Tucson',
-      year: 2022,
-      price: 1650000,
-      mileage: 28000,
-      transmission: 'Automática',
-      fuelType: 'Gasolina',
-      bodyType: 'SUV',
-      location: 'Santo Domingo',
-      imageUrl: 'https://images.unsplash.com/photo-1625231334168-a8a4be79e7e6?w=800&q=80',
-      dealRating: 'great',
-      isFeatured: true,
-    },
-    {
-      id: '4',
-      slug: 'nissan-altima-2023-sv',
-      title: '2023 Nissan Altima SV',
-      make: 'Nissan',
-      model: 'Altima',
-      year: 2023,
-      price: 1580000,
-      mileage: 8000,
-      transmission: 'CVT',
-      fuelType: 'Gasolina',
-      bodyType: 'Sedán',
-      location: 'La Romana',
-      imageUrl: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=80',
-      dealRating: 'good',
-    },
-  ];
-
-  // Apply basic filtering
-  let filtered = [...mockVehicles];
-
-  if (filters.make) {
-    filtered = filtered.filter(v => v.make.toLowerCase() === filters.make?.toLowerCase());
-  }
-
-  if (filters.bodyType) {
-    filtered = filtered.filter(v => v.bodyType.toLowerCase() === filters.bodyType?.toLowerCase());
-  }
-
-  if (filters.priceMin) {
-    filtered = filtered.filter(v => v.price >= (filters.priceMin || 0));
-  }
-
-  if (filters.priceMax) {
-    filtered = filtered.filter(v => v.price <= (filters.priceMax || Infinity));
-  }
-
-  // Sorting
-  if (filters.sortBy === 'price_asc') {
-    filtered.sort((a, b) => a.price - b.price);
-  } else if (filters.sortBy === 'price_desc') {
-    filtered.sort((a, b) => b.price - a.price);
-  } else if (filters.sortBy === 'year_desc') {
-    filtered.sort((a, b) => b.year - a.year);
-  }
-
-  return {
-    vehicles: filtered,
-    total: filtered.length,
+  const params: VehicleSearchParams = {
+    q: filters.query,
+    make: filters.make,
+    model: filters.model,
+    yearMin: filters.yearMin,
+    yearMax: filters.yearMax,
+    priceMin: filters.priceMin,
+    priceMax: filters.priceMax,
+    mileageMax: filters.mileageMax,
+    bodyType: filters.bodyType as VehicleSearchParams['bodyType'],
+    transmission: filters.transmission,
+    fuelType: filters.fuelType,
+    condition: filters.condition,
+    province: filters.province,
     page: filters.page || 1,
-    totalPages: Math.ceil(filtered.length / (filters.limit || 24)),
-    facets: {
-      makes: [
-        { value: 'Toyota', count: 5 },
-        { value: 'Honda', count: 4 },
-        { value: 'Hyundai', count: 3 },
-        { value: 'Nissan', count: 3 },
-      ],
-      bodyTypes: [
-        { value: 'Sedán', count: 8 },
-        { value: 'SUV', count: 5 },
-        { value: 'Pickup', count: 2 },
-      ],
-      provinces: [
-        { value: 'Santo Domingo', count: 10 },
-        { value: 'Santiago', count: 4 },
-        { value: 'La Romana', count: 2 },
-      ],
-      fuelTypes: [
-        { value: 'Gasolina', count: 12 },
-        { value: 'Híbrido', count: 3 },
-        { value: 'Diesel', count: 1 },
-      ],
-      transmissions: [
-        { value: 'Automática', count: 13 },
-        { value: 'Manual', count: 2 },
-        { value: 'CVT', count: 1 },
-      ],
-    },
+    pageSize: filters.limit || 24,
+    sortBy: sort.sortBy,
+    sortOrder: sort.sortOrder,
   };
+
+  try {
+    const result = await searchVehicles(params);
+
+    // Transform PaginatedResponse<VehicleCardData> to VehicleSearchResponse
+    const vehicles: VehicleSearchResult[] = result.items.map(item => ({
+      id: item.id,
+      slug: item.slug,
+      title: `${item.year} ${item.make} ${item.model}${item.trim ? ' ' + item.trim : ''}`,
+      make: item.make,
+      model: item.model,
+      year: item.year,
+      price: item.price,
+      mileage: item.mileage,
+      transmission: item.transmission,
+      fuelType: item.fuelType,
+      bodyType: '',
+      location: item.location || '',
+      imageUrl: item.imageUrl || '/placeholder-car.jpg',
+      dealRating: item.dealRating as VehicleSearchResult['dealRating'],
+      isVerified: item.isCertified,
+      isFeatured: false,
+    }));
+
+    return {
+      vehicles,
+      total: result.pagination.totalItems,
+      page: result.pagination.page,
+      totalPages: result.pagination.totalPages,
+    };
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    // Return empty results on error
+    return {
+      vehicles: [],
+      total: 0,
+      page: filters.page || 1,
+      totalPages: 0,
+    };
+  }
 }
 
 // =============================================================================

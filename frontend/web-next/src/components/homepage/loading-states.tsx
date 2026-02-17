@@ -11,10 +11,10 @@ export function LoadingSection({
   className,
 }: LoadingSectionProps) {
   return (
-    <section className={cn('bg-gray-50 py-12', className)}>
+    <section className={cn('bg-muted py-12', className)}>
       <div className="mx-auto max-w-7xl px-4 text-center">
-        <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-[#00A870]" />
-        <p className="text-gray-600">{message}</p>
+        <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+        <p className="text-muted-foreground">{message}</p>
       </div>
     </section>
   );
@@ -57,7 +57,7 @@ export function SkeletonGrid({ count = 6, columns = 3, className }: SkeletonGrid
   return (
     <div className={cn('grid grid-cols-1 gap-4 md:gap-6', gridCols[columns], className)}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="aspect-[4/3] animate-pulse rounded-xl bg-gray-200" />
+        <div key={i} className="bg-muted aspect-[4/3] animate-pulse rounded-xl" />
       ))}
     </div>
   );

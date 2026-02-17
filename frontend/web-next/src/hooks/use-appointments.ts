@@ -77,6 +77,8 @@ export function useDealerAppointments(dealerId: string, filters?: AppointmentFil
     queryKey: appointmentKeys.dealerAppointments(dealerId, filters),
     queryFn: () => getDealerAppointments(dealerId, filters),
     enabled: !!dealerId,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

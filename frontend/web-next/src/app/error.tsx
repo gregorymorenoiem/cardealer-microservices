@@ -18,24 +18,26 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-          <AlertTriangle className="h-10 w-10 text-red-600" />
+        <div className="bg-destructive/10 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full">
+          <AlertTriangle className="text-destructive h-10 w-10" />
         </div>
 
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">Algo salió mal</h1>
+        <h1 className="text-foreground mb-2 text-2xl font-bold">Algo salió mal</h1>
 
-        <p className="mb-6 text-gray-600">
+        <p className="text-muted-foreground mb-6">
           Ha ocurrido un error inesperado. Estamos trabajando para resolverlo.
         </p>
 
         {error.digest && (
-          <p className="mb-6 font-mono text-xs text-gray-400">Error ID: {error.digest}</p>
+          <p className="text-muted-foreground/70 mb-6 font-mono text-xs">
+            Error ID: {error.digest}
+          </p>
         )}
 
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button onClick={reset} variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={reset} variant="default">
             <RefreshCw className="mr-2 h-4 w-4" />
             Intentar de nuevo
           </Button>
@@ -48,9 +50,9 @@ export default function Error({
           </Button>
         </div>
 
-        <p className="mt-8 text-sm text-gray-500">
+        <p className="text-muted-foreground mt-8 text-sm">
           Si el problema persiste,{' '}
-          <Link href="/contacto" className="text-emerald-600 hover:underline">
+          <Link href="/contacto" className="text-primary hover:underline">
             contáctanos
           </Link>
         </p>

@@ -2,7 +2,8 @@
  * Register Page
  *
  * Features:
- * - Full registration form
+ * - Full registration form with backend integration
+ * - Input sanitization for security
  * - Phone number with country code
  * - Password strength indicator
  * - Terms acceptance
@@ -14,12 +15,13 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, Check, X } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { authService } from '@/services/auth';
+import { sanitizeEmail, sanitizePhone, sanitizeText } from '@/lib/security/sanitize';
 import { cn } from '@/lib/utils';
 
 export default function RegisterPage() {
@@ -46,6 +48,7 @@ export default function RegisterPage() {
     { label: 'Al menos una mayúscula', test: (p: string) => /[A-Z]/.test(p) },
     { label: 'Al menos una minúscula', test: (p: string) => /[a-z]/.test(p) },
     { label: 'Al menos un número', test: (p: string) => /\d/.test(p) },
+    { label: 'Al menos un carácter especial', test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
   ];
 
   const passwordStrength = passwordRequirements.filter(req => req.test(formData.password)).length;
@@ -57,9 +60,31 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    // Validate
+    // ===== INPUT SANITIZATION (Security) =====
+    const sanitizedFirstName = sanitizeText(formData.firstName.trim(), { maxLength: 50 });
+    const sanitizedLastName = sanitizeText(formData.lastName.trim(), { maxLength: 50 });
+    const sanitizedEmail = sanitizeEmail(formData.email);
+    const sanitizedPhone = formData.phone ? sanitizePhone(formData.phone) : undefined;
+
+    // Validate sanitized inputs
+    if (!sanitizedFirstName || sanitizedFirstName.length < 2) {
+      setError('El nombre es inválido o muy corto');
+      return;
+    }
+
+    if (!sanitizedLastName || sanitizedLastName.length < 2) {
+      setError('El apellido es inválido o muy corto');
+      return;
+    }
+
+    if (!sanitizedEmail) {
+      setError('El email es inválido');
+      return;
+    }
+
+    // Validate password requirements
     if (!isPasswordValid) {
-      setError('La contraseña no cumple con los requisitos');
+      setError('La contraseña no cumple con todos los requisitos de seguridad');
       return;
     }
 
@@ -76,20 +101,31 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
+      // Send sanitized data to backend
       await authService.register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        password: formData.password,
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName,
+        email: sanitizedEmail,
+        phone: sanitizedPhone,
+        password: formData.password, // Password is NOT sanitized (would break it)
         acceptTerms: formData.acceptTerms,
       });
 
-      // Redirect to verification page
-      router.push('/verificar-email');
+      // Redirect to verification page with email pre-filled for resend
+      router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}`);
     } catch (err) {
-      const error = err as { message?: string };
-      setError(error.message || 'Error al crear la cuenta. Intenta de nuevo.');
+      // SECURITY: Handle specific error types
+      const error = err as { message?: string; status?: number; code?: string };
+
+      if (error.status === 409 || error.message?.includes('already exists')) {
+        setError('Ya existe una cuenta con este email. ¿Quieres iniciar sesión?');
+      } else if (error.status === 400) {
+        setError('Los datos ingresados no son válidos. Verifica e intenta de nuevo.');
+      } else if (error.status === 429) {
+        setError('Demasiados intentos. Por favor espera unos minutos.');
+      } else {
+        setError(error.message || 'Error al crear la cuenta. Intenta de nuevo.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +139,8 @@ export default function RegisterPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Crear cuenta</h1>
-        <p className="text-gray-600">Únete a la comunidad de OKLA</p>
+        <h1 className="text-foreground text-2xl font-bold">Crear cuenta</h1>
+        <p className="text-muted-foreground">Únete a la comunidad de OKLA</p>
       </div>
 
       {/* Social Login */}
@@ -154,7 +190,7 @@ export default function RegisterPage() {
           <Separator className="w-full" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-gray-50 px-2 text-gray-500">o regístrate con email</span>
+          <span className="bg-muted/50 text-muted-foreground px-2">o regístrate con email</span>
         </div>
       </div>
 
@@ -162,7 +198,7 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Error message */}
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
             {error}
           </div>
         )}
@@ -172,7 +208,7 @@ export default function RegisterPage() {
           <div className="space-y-2">
             <Label htmlFor="firstName">Nombre</Label>
             <div className="relative">
-              <User className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <User className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
               <Input
                 id="firstName"
                 type="text"
@@ -205,7 +241,7 @@ export default function RegisterPage() {
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Mail className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="email"
               type="email"
@@ -224,7 +260,7 @@ export default function RegisterPage() {
         <div className="space-y-2">
           <Label htmlFor="phone">Teléfono (opcional)</Label>
           <div className="relative">
-            <Phone className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Phone className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="phone"
               type="tel"
@@ -242,7 +278,7 @@ export default function RegisterPage() {
         <div className="space-y-2">
           <Label htmlFor="password">Contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -257,8 +293,9 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -272,7 +309,7 @@ export default function RegisterPage() {
                   key={index}
                   className={cn(
                     'flex items-center gap-2 text-xs',
-                    req.test(formData.password) ? 'text-green-600' : 'text-gray-400'
+                    req.test(formData.password) ? 'text-green-600' : 'text-muted-foreground'
                   )}
                 >
                   {req.test(formData.password) ? (
@@ -291,7 +328,7 @@ export default function RegisterPage() {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
@@ -304,20 +341,21 @@ export default function RegisterPage() {
               className={cn(
                 'pr-10 pl-10',
                 formData.confirmPassword &&
-                  (doPasswordsMatch ? 'border-green-500' : 'border-red-500')
+                  (doPasswordsMatch ? 'border-primary' : 'border-destructive')
               )}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
           {formData.confirmPassword && !doPasswordsMatch && (
-            <p className="text-xs text-red-500">Las contraseñas no coinciden</p>
+            <p className="text-xs text-destructive">Las contraseñas no coinciden</p>
           )}
         </div>
 
@@ -327,9 +365,9 @@ export default function RegisterPage() {
             type="checkbox"
             checked={formData.acceptTerms}
             onChange={e => setFormData({ ...formData, acceptTerms: e.target.checked })}
-            className="text-primary focus:ring-primary mt-0.5 h-4 w-4 rounded border-gray-300"
+            className="text-primary focus:ring-primary border-border mt-0.5 h-4 w-4 rounded"
           />
-          <span className="text-sm text-gray-600">
+          <span className="text-muted-foreground text-sm">
             Acepto los{' '}
             <Link href="/terminos" className="text-primary hover:underline">
               Términos y Condiciones
@@ -355,7 +393,7 @@ export default function RegisterPage() {
       </form>
 
       {/* Login link */}
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-muted-foreground text-center text-sm">
         ¿Ya tienes cuenta?{' '}
         <Link href="/login" className="text-primary font-medium hover:underline">
           Inicia sesión

@@ -241,7 +241,7 @@ export async function getAvailability(
   date: string
 ): Promise<AvailabilityResponse> {
   const response = await apiClient.get<AvailabilityResponse>(
-    `/api/availability/${providerId}?date=${date}`
+    `/api/timeslots/${providerId}/availability?date=${date}`
   );
   return response.data;
 }

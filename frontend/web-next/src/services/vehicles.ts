@@ -77,7 +77,7 @@ export interface VehicleImageDto {
 export interface SellerDto {
   id: string;
   name: string;
-  type: 'individual' | 'dealer';
+  type: 'seller' | 'dealer';
   avatar?: string;
   phone?: string;
   email?: string;
@@ -91,11 +91,41 @@ export interface SellerDto {
   listingsCount?: number;
 }
 
+/** Matches backend VehicleSearchResult (camelCase from .NET) */
 export interface VehicleSearchResponse {
-  items: VehicleDto[];
+  vehicles: VehicleDto[];
+  totalCount: number;
   page: number;
   pageSize: number;
-  totalItems: number;
+  totalPages: number;
+}
+
+/** Matches backend SellerVehicleDto */
+export interface SellerVehicleDto {
+  id: string;
+  title: string;
+  slug: string;
+  price: number;
+  currency: string;
+  status: string;
+  mainImageUrl?: string;
+  year: number;
+  make: string;
+  model: string;
+  mileage: number;
+  transmission?: string;
+  fuelType?: string;
+  views: number;
+  favorites: number;
+  createdAt: string;
+}
+
+/** Matches backend SellerVehiclesResponse */
+export interface SellerVehiclesResponse {
+  data: SellerVehicleDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
   totalPages: number;
 }
 
@@ -234,16 +264,16 @@ export async function getVehicleById(id: string): Promise<Vehicle> {
 export async function searchVehicles(
   params: VehicleSearchParams
 ): Promise<PaginatedResponse<VehicleCardData>> {
-  const response = await apiClient.get<VehicleSearchResponse>('/api/vehicles/search', {
+  const response = await apiClient.get<VehicleSearchResponse>('/api/vehicles', {
     params,
   });
 
   return {
-    items: response.data.items.map(transformToCardData),
+    items: response.data.vehicles.map(transformToCardData),
     pagination: {
       page: response.data.page,
       pageSize: response.data.pageSize,
-      totalItems: response.data.totalItems,
+      totalItems: response.data.totalCount,
       totalPages: response.data.totalPages,
       hasNextPage: response.data.page < response.data.totalPages,
       hasPreviousPage: response.data.page > 1,
@@ -288,23 +318,44 @@ export async function getVehiclesByDealer(
   dealerId: string,
   params: { page?: number; pageSize?: number; status?: string } = {}
 ): Promise<PaginatedResponse<VehicleCardData>> {
-  const response = await apiClient.get<VehicleSearchResponse>('/api/vehicles/search', {
-    params: {
-      sellerId: dealerId,
-      page: params.page || 1,
-      pageSize: params.pageSize || 20,
-      ...(params.status && { status: params.status }),
-    },
+  const page = params.page || 1;
+  const pageSize = params.pageSize || 20;
+
+  const queryParams: Record<string, string | number> = { page, pageSize };
+  if (params.status) queryParams.status = params.status;
+
+  const response = await apiClient.get<SellerVehiclesResponse>(`/api/vehicles/seller/${dealerId}`, {
+    params: queryParams,
   });
 
+  const items: VehicleCardData[] = response.data.data.map(v => ({
+    id: v.id,
+    slug: v.slug,
+    make: v.make,
+    model: v.model,
+    year: v.year,
+    price: v.price,
+    currency: (v.currency as 'DOP' | 'USD') || 'DOP',
+    mileage: v.mileage,
+    transmission: v.transmission || '',
+    fuelType: v.fuelType || '',
+    imageUrl: v.mainImageUrl || '/placeholder-car.jpg',
+    location: '',
+    status: (v.status?.toLowerCase() as VehicleCardData['status']) || 'active',
+    viewCount: v.views,
+    createdAt: v.createdAt,
+  }));
+
+  const totalPages = response.data.totalPages;
+
   return {
-    items: response.data.items.map(transformToCardData),
+    items,
     pagination: {
       page: response.data.page,
       pageSize: response.data.pageSize,
-      totalItems: response.data.totalItems,
-      totalPages: response.data.totalPages,
-      hasNextPage: response.data.page < response.data.totalPages,
+      totalItems: response.data.totalCount,
+      totalPages,
+      hasNextPage: response.data.page < totalPages,
       hasPreviousPage: response.data.page > 1,
     },
   };
@@ -381,6 +432,204 @@ export async function getVehicle360View(vehicleIdOrSlug: string): Promise<View36
       hasInterior360: false,
     };
   }
+}
+
+// ============================================================
+// VIN DECODE TYPES
+// ============================================================
+
+export interface FieldConfidence {
+  value: string;
+  source: string;
+  confidence: number; // 0.0 - 1.0
+}
+
+export interface SmartVinDecodeResult {
+  vin: string;
+  make: string;
+  model: string;
+  year: number | null;
+  trim: string | null;
+  bodyStyle: string | null;
+  vehicleType: string | null;
+  engineSize: string | null;
+  cylinders: number | null;
+  horsepower: number | null;
+  fuelType: string | null;
+  transmission: string | null;
+  driveType: string | null;
+  doors: number | null;
+  manufacturedIn: string | null;
+  plantCountry: string | null;
+
+  // Catalog match
+  catalogMakeId: string | null;
+  catalogModelId: string | null;
+  catalogTrimId: string | null;
+  hasCatalogMatch: boolean;
+
+  // Duplicate
+  isDuplicate: boolean;
+  existingVehicleId: string | null;
+  existingVehicleSlug: string | null;
+
+  // Quality
+  fieldConfidences: Record<string, FieldConfidence>;
+  suggestedDescription: string | null;
+
+  // Auto-fill
+  autoFill: VinAutoFillData | null;
+}
+
+export interface VinAutoFillData {
+  make: string;
+  model: string;
+  year: number;
+  trim: string | null;
+  vehicleType: string;
+  bodyStyle: string;
+  fuelType: string;
+  transmission: string;
+  driveType: string;
+  engineSize: string | null;
+  horsepower: number | null;
+  cylinders: number | null;
+}
+
+export interface VinExistsResponse {
+  exists: boolean;
+  vehicleId?: string;
+  slug?: string;
+  status?: string;
+}
+
+export interface BatchVinDecodeResponse {
+  results: SmartVinDecodeResult[];
+  errors: Record<string, string>;
+  totalRequested: number;
+  totalDecoded: number;
+  totalFailed: number;
+}
+
+// ============================================================
+// VIN DECODE FUNCTIONS
+// ============================================================
+
+/**
+ * Smart VIN decode with catalog matching and duplicate detection
+ */
+export async function decodeVinSmart(vin: string): Promise<SmartVinDecodeResult> {
+  const response = await apiClient.get<SmartVinDecodeResult>(
+    `/api/catalog/vin/${encodeURIComponent(vin)}/decode-smart`
+  );
+  return response.data;
+}
+
+/**
+ * Check if a VIN already exists (fast endpoint for real-time validation)
+ */
+export async function checkVinExists(vin: string): Promise<VinExistsResponse> {
+  const response = await apiClient.get<VinExistsResponse>(
+    `/api/vehicles/vin/${encodeURIComponent(vin)}/exists`
+  );
+  return response.data;
+}
+
+/**
+ * Batch VIN decode for dealers (max 50 VINs)
+ */
+export async function decodeVinBatch(vins: string[]): Promise<BatchVinDecodeResponse> {
+  const response = await apiClient.post<BatchVinDecodeResponse>('/api/catalog/vin/decode-batch', {
+    vins,
+    maxItems: 50,
+  });
+  return response.data;
+}
+
+/**
+ * Generate a vehicle description from specs (client-side template)
+ */
+export function generateVehicleDescription(specs: {
+  year?: number;
+  make?: string;
+  model?: string;
+  trim?: string;
+  engineSize?: string;
+  cylinders?: number;
+  horsepower?: number;
+  fuelType?: string;
+  transmission?: string;
+  driveType?: string;
+  mileage?: number;
+  condition?: string;
+  province?: string;
+}): string {
+  const parts: string[] = [];
+
+  // Title
+  const titleParts = [specs.year, specs.make, specs.model, specs.trim].filter(Boolean);
+  if (titleParts.length > 0) parts.push(titleParts.join(' '));
+
+  // Condition
+  if (specs.condition) {
+    const conditionLabels: Record<string, string> = {
+      new: 'nuevo',
+      used: 'usado',
+      certified: 'certificado pre-owned',
+    };
+    parts.push(`en condición ${conditionLabels[specs.condition] || specs.condition}.`);
+  }
+
+  // Engine
+  const engineParts: string[] = [];
+  if (specs.engineSize) engineParts.push(`Motor ${specs.engineSize}`);
+  if (specs.cylinders) engineParts.push(`${specs.cylinders} cilindros`);
+  if (specs.horsepower) engineParts.push(`${specs.horsepower} HP`);
+  if (engineParts.length > 0) parts.push(engineParts.join(', ') + '.');
+
+  // Transmission & drive
+  const transParts: string[] = [];
+  const transmissionLabels: Record<string, string> = {
+    automatic: 'automática',
+    manual: 'manual',
+    cvt: 'CVT',
+    dct: 'doble embrague',
+  };
+  const driveLabels: Record<string, string> = {
+    fwd: 'delantera (FWD)',
+    rwd: 'trasera (RWD)',
+    awd: 'total (AWD)',
+    '4wd': '4x4',
+  };
+  if (specs.transmission)
+    transParts.push(
+      `Transmisión ${transmissionLabels[specs.transmission.toLowerCase()] || specs.transmission}`
+    );
+  if (specs.driveType)
+    transParts.push(`tracción ${driveLabels[specs.driveType.toLowerCase()] || specs.driveType}`);
+  if (transParts.length > 0) parts.push(transParts.join(', ') + '.');
+
+  // Mileage
+  if (specs.mileage) parts.push(`${specs.mileage.toLocaleString('es-DO')} km recorridos.`);
+
+  // Fuel
+  const fuelLabels: Record<string, string> = {
+    gasoline: 'gasolina',
+    diesel: 'diésel',
+    hybrid: 'híbrido',
+    electric: 'eléctrico',
+  };
+  if (specs.fuelType)
+    parts.push(`Combustible: ${fuelLabels[specs.fuelType.toLowerCase()] || specs.fuelType}.`);
+
+  // Location
+  if (specs.province) {
+    parts.push(`Ubicado en ${specs.province}, República Dominicana.`);
+  } else {
+    parts.push('Ubicado en República Dominicana.');
+  }
+
+  return parts.join(' ');
 }
 
 // ============================================================
@@ -742,6 +991,12 @@ export const vehicleService = {
   create: createVehicle,
   update: updateVehicle,
   delete: deleteVehicle,
+
+  // VIN operations
+  decodeVinSmart,
+  checkVinExists,
+  decodeVinBatch,
+  generateDescription: generateVehicleDescription,
 
   // Catalog operations
   getMakes,

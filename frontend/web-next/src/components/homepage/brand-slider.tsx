@@ -8,10 +8,10 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useInView } from '@/hooks/use-in-view';
 
 // =============================================================================
 // TYPES
@@ -60,8 +60,8 @@ function BrandLogoPlaceholder({ name }: { name: string }) {
   const initials = name.substring(0, 2).toUpperCase();
 
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-gray-100 to-gray-200">
-      <span className="text-2xl font-bold text-gray-500">{initials}</span>
+    <div className="from-muted to-muted/80 flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br">
+      <span className="text-muted-foreground text-2xl font-bold">{initials}</span>
     </div>
   );
 }
@@ -73,11 +73,7 @@ function BrandLogoPlaceholder({ name }: { name: string }) {
 function BrandCard({ brand }: { brand: Brand }) {
   return (
     <Link href={`/vehiculos?make=${brand.slug}`} className="group flex-shrink-0">
-      <motion.div
-        className="relative h-24 w-32 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md transition-all duration-300 hover:border-[#00A870]/30 hover:shadow-xl md:h-28 md:w-40"
-        whileHover={{ scale: 1.05, y: -4 }}
-        whileTap={{ scale: 0.98 }}
-      >
+      <div className="border-border bg-card hover:border-primary/30 relative h-24 w-32 overflow-hidden rounded-2xl border shadow-md transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-xl active:scale-[0.98] md:h-28 md:w-40">
         {/* Logo Container */}
         <div className="absolute inset-2 flex items-center justify-center">
           {brand.logoUrl ? (
@@ -85,6 +81,7 @@ function BrandCard({ brand }: { brand: Brand }) {
               src={brand.logoUrl}
               alt={brand.name}
               fill
+              sizes="160px"
               className="object-contain p-4 grayscale transition-all duration-300 group-hover:grayscale-0"
             />
           ) : (
@@ -93,19 +90,19 @@ function BrandCard({ brand }: { brand: Brand }) {
         </div>
 
         {/* Hover Overlay with Name */}
-        <motion.div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 to-transparent pb-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 to-transparent pb-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <span className="text-sm font-semibold text-white">{brand.name}</span>
-        </motion.div>
+        </div>
 
         {/* Vehicle Count Badge */}
         {brand.vehicleCount && (
           <div className="absolute top-1 right-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <span className="rounded-full bg-[#00A870]/10 px-1.5 py-0.5 text-[10px] font-medium text-[#00A870]">
+            <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px] font-medium">
               {brand.vehicleCount.toLocaleString()}
             </span>
           </div>
         )}
-      </motion.div>
+      </div>
     </Link>
   );
 }
@@ -157,8 +154,8 @@ export function BrandSlider({
   return (
     <div className={cn('relative overflow-hidden py-4', className)}>
       {/* Gradient Masks */}
-      <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-20 bg-gradient-to-r from-white to-transparent md:w-40" />
-      <div className="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-20 bg-gradient-to-l from-white to-transparent md:w-40" />
+      <div className="from-background pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-20 bg-gradient-to-r to-transparent md:w-40" />
+      <div className="from-background pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-20 bg-gradient-to-l to-transparent md:w-40" />
 
       {/* Scrolling Container */}
       <div className="flex gap-4 overflow-hidden md:gap-6">
@@ -226,19 +223,22 @@ export function BrandGrid({
     8: 'grid-cols-4 md:grid-cols-8',
   };
 
+  const { ref, inView } = useInView();
+
   return (
-    <div className={cn(`grid ${columnClasses[columns]} gap-4`, className)}>
+    <div ref={ref} className={cn(`grid ${columnClasses[columns]} gap-4`, className)}>
       {brands.map((brand, index) => (
-        <motion.div
+        <div
           key={brand.id}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.05 }}
+          className={cn(
+            'transition-all duration-500',
+            inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+          )}
+          style={{ transitionDelay: `${index * 50}ms` }}
         >
           <Link
             href={`/vehiculos?make=${brand.slug}`}
-            className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 transition-all duration-300 hover:border-[#00A870]/30 hover:shadow-lg md:p-6"
+            className="group border-border bg-card hover:border-primary/30 flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all duration-300 hover:shadow-lg md:p-6"
           >
             {/* Logo */}
             <div className="relative h-16 w-16 md:h-20 md:w-20">
@@ -247,6 +247,7 @@ export function BrandGrid({
                   src={brand.logoUrl}
                   alt={brand.name}
                   fill
+                  sizes="80px"
                   className="object-contain grayscale transition-all duration-300 group-hover:grayscale-0"
                 />
               ) : (
@@ -255,18 +256,18 @@ export function BrandGrid({
             </div>
 
             {/* Name */}
-            <span className="text-sm font-semibold text-gray-700 transition-colors group-hover:text-[#00A870]">
+            <span className="text-foreground group-hover:text-primary text-sm font-semibold transition-colors">
               {brand.name}
             </span>
 
             {/* Vehicle Count */}
             {brand.vehicleCount && (
-              <span className="text-xs text-gray-400">
+              <span className="text-muted-foreground text-xs">
                 {brand.vehicleCount.toLocaleString()} vehículos
               </span>
             )}
           </Link>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

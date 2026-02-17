@@ -110,6 +110,76 @@ export function formatRelativeTime(date: Date | string): string {
 }
 
 /**
+ * Format date as short date (e.g., "7 feb 2026")
+ */
+export function formatShortDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('es-DO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(dateObj);
+}
+
+/**
+ * Format date with time (e.g., "7 de febrero de 2026, 14:30")
+ */
+export function formatDateTime(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('es-DO', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(dateObj);
+}
+
+/**
+ * Format time only (e.g., "14:30")
+ */
+export function formatTime(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('es-DO', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(dateObj);
+}
+
+/**
+ * Get smart date format based on how recent the date is
+ * - Today: "Hoy a las 14:30"
+ * - Yesterday: "Ayer a las 14:30"
+ * - This week: "Lunes a las 14:30"
+ * - This year: "7 de febrero"
+ * - Older: "7 de febrero de 2025"
+ */
+export function formatSmartDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+  const diffDays = Math.floor((today.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  const timeStr = formatTime(dateObj);
+
+  if (diffDays === 0) {
+    return `Hoy a las ${timeStr}`;
+  }
+  if (diffDays === 1) {
+    return `Ayer a las ${timeStr}`;
+  }
+  if (diffDays < 7) {
+    const dayName = new Intl.DateTimeFormat('es-DO', { weekday: 'long' }).format(dateObj);
+    return `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} a las ${timeStr}`;
+  }
+  if (dateObj.getFullYear() === now.getFullYear()) {
+    return new Intl.DateTimeFormat('es-DO', { day: 'numeric', month: 'long' }).format(dateObj);
+  }
+  return formatDate(dateObj);
+}
+
+/**
  * Truncate text with ellipsis
  */
 export function truncate(text: string, maxLength: number): string {

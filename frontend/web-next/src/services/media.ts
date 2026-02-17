@@ -190,6 +190,137 @@ export function revokePreviewUrl(url: string): void {
 }
 
 // ============================================================
+// VEHICLE IMAGE TYPES
+// ============================================================
+
+export interface VehicleImageUploadParams {
+  file: File;
+  vehicleId?: string;
+  imageType?: string;
+  sortOrder?: number;
+  isPrimary?: boolean;
+  compress?: boolean;
+}
+
+export interface VehicleImageUploadResponse {
+  mediaId: string;
+  originalUrl: string;
+  thumbnailUrl: string;
+  width: number;
+  height: number;
+  fileSize: number;
+  processingStatus: string;
+}
+
+export interface PresignedUrlFile {
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+}
+
+export interface PresignedUrlRequest {
+  files: PresignedUrlFile[];
+  vehicleId?: string;
+  category?: string;
+}
+
+export interface PresignedUrlResult {
+  mediaId: string;
+  presignedUrl: string;
+  expiresAt: string;
+  storageKey: string;
+  headers: Record<string, string>;
+}
+
+export interface ImageQualityResult {
+  overallScore: number;
+  isTooSmall: boolean;
+  warnings: string[];
+  suggestions: string[];
+  width: number;
+  height: number;
+  fileSize: number;
+}
+
+// ============================================================
+// VEHICLE IMAGE FUNCTIONS
+// ============================================================
+
+/**
+ * Upload a vehicle image with server-side compression & inline thumbnail
+ */
+export async function uploadVehicleImage(
+  params: VehicleImageUploadParams,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<VehicleImageUploadResponse> {
+  const formData = new FormData();
+  formData.append('File', params.file);
+  if (params.vehicleId) formData.append('VehicleId', params.vehicleId);
+  if (params.imageType) formData.append('ImageType', params.imageType);
+  if (params.sortOrder !== undefined) formData.append('SortOrder', String(params.sortOrder));
+  if (params.isPrimary !== undefined) formData.append('IsPrimary', String(params.isPrimary));
+  if (params.compress !== undefined) formData.append('Compress', String(params.compress));
+
+  const response = await apiClient.post<VehicleImageUploadResponse>(
+    '/api/media/upload/vehicle-image',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120_000,
+      onUploadProgress: progressEvent => {
+        if (onProgress && progressEvent.total) {
+          onProgress({
+            loaded: progressEvent.loaded,
+            total: progressEvent.total,
+            percentage: Math.round((progressEvent.loaded * 100) / progressEvent.total),
+          });
+        }
+      },
+    }
+  );
+
+  return response.data;
+}
+
+/**
+ * Get batch pre-signed S3 upload URLs
+ */
+export async function getPresignedUrls(
+  request: PresignedUrlRequest
+): Promise<PresignedUrlResult[]> {
+  const response = await apiClient.post<PresignedUrlResult[]>(
+    '/api/media/upload/presigned-urls',
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Validate image quality before upload (client-side check via backend)
+ */
+export async function validateImageQuality(
+  file: File
+): Promise<ImageQualityResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.post<ImageQualityResult>(
+    '/api/media/validate/quality',
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+
+  return response.data;
+}
+
+/**
+ * Finalize a pre-signed URL upload (confirm upload completed)
+ */
+export async function finalizeUpload(mediaId: string): Promise<void> {
+  await apiClient.post(`/api/media/${mediaId}/finalize`);
+}
+
+// ============================================================
 // SERVICE OBJECT
 // ============================================================
 
@@ -197,6 +328,10 @@ export const mediaService = {
   uploadImage,
   uploadImages,
   uploadFile,
+  uploadVehicleImage,
+  getPresignedUrls,
+  validateImageQuality,
+  finalizeUpload,
   deleteMedia,
   getMedia,
   validateImageFile,

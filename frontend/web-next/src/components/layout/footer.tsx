@@ -1,6 +1,9 @@
+'use client';
+
 import * as React from 'react';
 import Link from 'next/link';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { useSiteConfig } from '@/providers/site-config-provider';
 
 const footerLinks = {
   marketplace: {
@@ -16,7 +19,7 @@ const footerLinks = {
   company: {
     title: 'Compañía',
     links: [
-      { href: '/nosotros', label: 'Sobre OKLA' },
+      { href: '/nosotros', label: 'Sobre Nosotros' },
       { href: '/contacto', label: 'Contacto' },
       { href: '/blog', label: 'Blog' },
       { href: '/prensa', label: 'Prensa' },
@@ -51,42 +54,50 @@ const socialLinks = [
 ];
 
 export function Footer() {
+  const config = useSiteConfig();
   const currentYear = new Date().getFullYear();
 
+  const dynamicSocialLinks = [
+    { href: config.socialFacebook, icon: Facebook, label: 'Facebook' },
+    { href: config.socialInstagram, icon: Instagram, label: 'Instagram' },
+    { href: config.socialTwitter, icon: Twitter, label: 'Twitter' },
+    { href: config.socialYoutube, icon: Youtube, label: 'YouTube' },
+  ];
+
   return (
-    <footer className="border-t border-gray-200 bg-gray-50">
+    <footer className="border-border bg-muted/50 dark:bg-background border-t">
       {/* Main Footer */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00A870]">
-                <span className="text-xl font-bold text-white">O</span>
+              <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-lg">
+                <span className="text-primary-foreground text-xl font-bold">
+                  {config.siteName.charAt(0)}
+                </span>
               </div>
-              <span className="text-2xl font-bold text-gray-900">OKLA</span>
+              <span className="text-foreground text-2xl font-bold">{config.siteName}</span>
             </Link>
-            <p className="mt-4 text-sm text-gray-600">
-              El marketplace de vehículos #1 de República Dominicana. Compra y vende con confianza.
-            </p>
+            <p className="text-muted-foreground mt-4 text-sm">{config.siteDescription}</p>
 
             {/* Contact Info */}
             <div className="mt-6 space-y-2">
               <a
-                href="mailto:info@okla.com.do"
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#00A870]"
+                href={`mailto:${config.contactEmail}`}
+                className="text-muted-foreground hover:text-primary flex items-center gap-2 text-sm"
               >
                 <Mail className="h-4 w-4" />
-                info@okla.com.do
+                {config.contactEmail}
               </a>
               <a
-                href="tel:+18095551234"
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#00A870]"
+                href={config.phoneHref}
+                className="text-muted-foreground hover:text-primary flex items-center gap-2 text-sm"
               >
                 <Phone className="h-4 w-4" />
-                (809) 555-1234
+                {config.supportPhone}
               </a>
-              <p className="flex items-center gap-2 text-sm text-gray-600">
+              <p className="text-muted-foreground flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4" />
                 Santo Domingo, RD
               </p>
@@ -94,13 +105,13 @@ export function Footer() {
 
             {/* Social Links */}
             <div className="mt-6 flex gap-3">
-              {socialLinks.map(social => (
+              {dynamicSocialLinks.map(social => (
                 <a
                   key={social.label}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-200 text-gray-600 transition-colors hover:bg-[#00A870] hover:text-white"
+                  className="bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
                   aria-label={social.label}
                 >
                   <social.icon className="h-4 w-4" />
@@ -112,13 +123,13 @@ export function Footer() {
           {/* Links Columns */}
           {Object.entries(footerLinks).map(([key, section]) => (
             <div key={key}>
-              <h3 className="text-sm font-semibold text-gray-900">{section.title}</h3>
+              <h3 className="text-foreground text-sm font-semibold">{section.title}</h3>
               <ul className="mt-4 space-y-2">
                 {section.links.map(link => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-600 transition-colors hover:text-[#00A870]"
+                      className="text-muted-foreground hover:text-primary text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -131,19 +142,19 @@ export function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-200 bg-gray-100">
+      <div className="border-border bg-muted dark:bg-muted/50 border-t">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-6 sm:flex-row sm:px-6 lg:px-8">
-          <p className="text-sm text-gray-600">
-            © {currentYear} OKLA. Todos los derechos reservados.
+          <p className="text-muted-foreground text-sm">
+            © {currentYear} {config.siteName}. Todos los derechos reservados.
           </p>
           <div className="flex gap-6">
-            <Link href="/terminos" className="text-sm text-gray-600 hover:text-[#00A870]">
+            <Link href="/terminos" className="text-muted-foreground hover:text-primary text-sm">
               Términos
             </Link>
-            <Link href="/privacidad" className="text-sm text-gray-600 hover:text-[#00A870]">
+            <Link href="/privacidad" className="text-muted-foreground hover:text-primary text-sm">
               Privacidad
             </Link>
-            <Link href="/cookies" className="text-sm text-gray-600 hover:text-[#00A870]">
+            <Link href="/cookies" className="text-muted-foreground hover:text-primary text-sm">
               Cookies
             </Link>
           </div>

@@ -54,12 +54,12 @@ export function VehicleCard({
       <Link
         href={vehicleUrl}
         className={cn(
-          'group flex gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md',
+          'group border-border bg-card flex gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md',
           className
         )}
       >
         {/* Image */}
-        <div className="relative h-32 w-48 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+        <div className="bg-muted relative h-32 w-48 shrink-0 overflow-hidden rounded-lg">
           {!imageError && vehicle.imageUrl ? (
             <Image
               src={vehicle.imageUrl}
@@ -85,13 +85,13 @@ export function VehicleCard({
         {/* Content */}
         <div className="flex flex-1 flex-col justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900 group-hover:text-[#00A870]">
+            <h3 className="text-card-foreground group-hover:text-primary font-semibold">
               {vehicle.year} {vehicle.make} {vehicle.model}
             </h3>
-            {vehicle.trim && <p className="text-sm text-gray-500">{vehicle.trim}</p>}
+            {vehicle.trim && <p className="text-muted-foreground text-sm">{vehicle.trim}</p>}
           </div>
 
-          <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+          <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
             <span className="flex items-center gap-1">
               <Gauge className="h-3.5 w-3.5" />
               {formatMileage(vehicle.mileage)}
@@ -103,9 +103,7 @@ export function VehicleCard({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#00A870]">
-              {formatCurrency(vehicle.price)}
-            </span>
+            <span className="text-primary text-lg font-bold">{formatCurrency(vehicle.price)}</span>
             {showFavoriteButton && (
               <button
                 onClick={handleFavoriteClick}
@@ -113,7 +111,7 @@ export function VehicleCard({
                   'rounded-full p-2 transition-colors',
                   isFavorite
                     ? 'text-red-500 hover:text-red-600'
-                    : 'text-gray-400 hover:text-gray-600'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
                 aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
               >
@@ -131,12 +129,12 @@ export function VehicleCard({
       <Link
         href={vehicleUrl}
         className={cn(
-          'group block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md',
+          'group border-border bg-card block overflow-hidden rounded-lg border shadow-sm transition-all hover:shadow-md',
           className
         )}
       >
         {/* Image */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+        <div className="bg-muted relative aspect-[4/3] overflow-hidden">
           {!imageError && vehicle.imageUrl ? (
             <Image
               src={vehicle.imageUrl}
@@ -156,10 +154,10 @@ export function VehicleCard({
 
         {/* Content */}
         <div className="p-3">
-          <h3 className="truncate text-sm font-semibold text-gray-900 group-hover:text-[#00A870]">
+          <h3 className="text-card-foreground group-hover:text-primary truncate text-sm font-semibold">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h3>
-          <p className="mt-1 text-sm font-bold text-[#00A870]">{formatCurrency(vehicle.price)}</p>
+          <p className="text-primary mt-1 text-sm font-bold">{formatCurrency(vehicle.price)}</p>
         </div>
       </Link>
     );
@@ -170,14 +168,14 @@ export function VehicleCard({
     <Link
       href={vehicleUrl}
       className={cn(
-        'group block overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg',
+        'group border-border bg-card block overflow-hidden rounded-xl border shadow-sm transition-all hover:shadow-lg',
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Section */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+      <div className="bg-muted relative aspect-[16/10] overflow-hidden">
         {!imageError && vehicle.imageUrl ? (
           <Image
             src={vehicle.imageUrl}
@@ -209,11 +207,11 @@ export function VehicleCard({
           <button
             onClick={handleFavoriteClick}
             className={cn(
-              'absolute top-3 right-3 rounded-full bg-white/90 p-2 shadow-md backdrop-blur-sm transition-all',
+              'bg-background/90 absolute top-3 right-3 rounded-full p-2 shadow-md backdrop-blur-sm transition-all',
               isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-100',
               isFavorite
-                ? 'text-red-500 hover:bg-red-50'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-red-500'
+                ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
+                : 'text-muted-foreground hover:bg-muted hover:text-red-500'
             )}
             aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
           >
@@ -246,13 +244,13 @@ export function VehicleCard({
       {/* Content Section */}
       <div className="p-4">
         {/* Title */}
-        <h3 className="text-lg font-semibold text-gray-900 transition-colors group-hover:text-[#00A870]">
+        <h3 className="text-card-foreground group-hover:text-primary text-lg font-semibold transition-colors">
           {vehicle.year} {vehicle.make} {vehicle.model}
         </h3>
-        {vehicle.trim && <p className="mt-0.5 text-sm text-gray-500">{vehicle.trim}</p>}
+        {vehicle.trim && <p className="text-muted-foreground mt-0.5 text-sm">{vehicle.trim}</p>}
 
         {/* Specs Row */}
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+        <div className="text-muted-foreground mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <span className="flex items-center gap-1.5">
             <Gauge className="h-4 w-4" />
             {formatMileage(vehicle.mileage)}
@@ -270,28 +268,28 @@ export function VehicleCard({
         </div>
 
         {/* Location */}
-        <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
+        <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-sm">
           <MapPin className="h-4 w-4" />
           <span>{vehicle.location}</span>
         </div>
 
         {/* Price Section */}
-        <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-4">
+        <div className="border-border mt-4 flex items-end justify-between border-t pt-4">
           <div>
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-card-foreground text-2xl font-bold">
               {formatCurrency(vehicle.price)}
             </span>
             {vehicle.monthlyPayment && (
-              <p className="mt-0.5 text-sm text-gray-500">
+              <p className="text-muted-foreground mt-0.5 text-sm">
                 Est. {formatCurrency(vehicle.monthlyPayment)}/mes
               </p>
             )}
           </div>
           {vehicle.dealerName && (
             <div className="text-right text-sm">
-              <p className="font-medium text-gray-700">{vehicle.dealerName}</p>
+              <p className="text-foreground font-medium">{vehicle.dealerName}</p>
               {vehicle.dealerRating && (
-                <p className="text-gray-500">⭐ {vehicle.dealerRating.toFixed(1)}</p>
+                <p className="text-muted-foreground">⭐ {vehicle.dealerRating.toFixed(1)}</p>
               )}
             </div>
           )}
@@ -309,7 +307,7 @@ export function VehicleCardSkeleton({
 }) {
   if (variant === 'horizontal') {
     return (
-      <div className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4">
+      <div className="border-border bg-card flex gap-4 rounded-xl border p-4">
         <Skeleton className="h-32 w-48 shrink-0 rounded-lg" />
         <div className="flex flex-1 flex-col justify-between">
           <div>
@@ -325,7 +323,7 @@ export function VehicleCardSkeleton({
 
   if (variant === 'compact') {
     return (
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="border-border bg-card overflow-hidden rounded-lg border">
         <Skeleton className="aspect-[4/3] w-full" />
         <div className="p-3">
           <Skeleton className="h-4 w-full" />
@@ -336,7 +334,7 @@ export function VehicleCardSkeleton({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div className="border-border bg-card overflow-hidden rounded-xl border">
       <Skeleton className="aspect-[16/10] w-full" />
       <div className="p-4">
         <Skeleton className="h-6 w-3/4" />
@@ -347,7 +345,7 @@ export function VehicleCardSkeleton({
           <Skeleton className="h-4 w-20" />
         </div>
         <Skeleton className="mt-2 h-4 w-32" />
-        <div className="mt-4 border-t border-gray-100 pt-4">
+        <div className="border-border mt-4 border-t pt-4">
           <Skeleton className="h-8 w-28" />
           <Skeleton className="mt-1 h-4 w-20" />
         </div>
