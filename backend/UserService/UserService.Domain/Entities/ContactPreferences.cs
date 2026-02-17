@@ -63,7 +63,7 @@ public class ContactPreferences
 /// </summary>
 public enum SellerType
 {
-    Individual = 0,      // Vendedor particular
+    Seller = 0,          // Vendedor particular
     Dealer = 1,          // Concesionario
     PremiumDealer = 2    // Dealer con plan Pro/Enterprise
 }

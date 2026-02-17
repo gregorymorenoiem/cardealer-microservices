@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using UserService.Application.DTOs;
@@ -10,9 +11,12 @@ namespace UserService.Api.Controllers;
 
 /// <summary>
 /// Controller for managing dealers (dealerships/concesionarios)
+/// Requires authentication for write operations (OWASP A01:2021)
+/// Read operations are public for marketplace visibility
 /// </summary>
 [ApiController]
 [Route("api/dealers")]
+[Authorize]
 public class DealersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -51,10 +55,12 @@ public class DealersController : ControllerBase
 
     /// <summary>
     /// Get a dealer by ID
+    /// Public endpoint for marketplace dealer profile viewing
     /// </summary>
     /// <param name="dealerId">The dealer ID</param>
     /// <returns>The dealer details</returns>
     [HttpGet("{dealerId:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(DealerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DealerDto>> GetDealer(Guid dealerId)
@@ -77,6 +83,7 @@ public class DealersController : ControllerBase
     /// <param name="ownerUserId">The owner user ID</param>
     /// <returns>The dealer details</returns>
     [HttpGet("owner/{ownerUserId:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(DealerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DealerDto>> GetDealerByOwner(Guid ownerUserId)
@@ -124,11 +131,13 @@ public class DealersController : ControllerBase
 
     /// <summary>
     /// Verify a dealer (admin only)
+    /// Requires Admin or SuperAdmin role
     /// </summary>
     /// <param name="dealerId">The dealer ID</param>
     /// <param name="request">Verification data</param>
     /// <returns>Updated dealer</returns>
     [HttpPost("{dealerId:guid}/verify")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [ProducesResponseType(typeof(DealerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -154,10 +163,12 @@ public class DealersController : ControllerBase
 
     /// <summary>
     /// Deactivate a dealer (soft delete)
+    /// Requires Admin or SuperAdmin role
     /// </summary>
     /// <param name="dealerId">The dealer ID</param>
     /// <returns>Success status</returns>
     [HttpDelete("{dealerId:guid}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeactivateDealer(Guid dealerId)

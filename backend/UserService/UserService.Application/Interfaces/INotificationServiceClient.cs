@@ -55,5 +55,34 @@ namespace UserService.Application.Interfaces
             string businessName,
             string plan,
             bool isEarlyBird);
+
+        // ========================================
+        // ARCO PRIVACY EMAILS (Ley 172-13)
+        // ========================================
+
+        /// <summary>
+        /// Envía código de confirmación para eliminación de cuenta
+        /// </summary>
+        Task SendAccountDeletionConfirmationCodeAsync(
+            string email,
+            string firstName,
+            string confirmationCode,
+            DateTime gracePeriodEndsAt);
+
+        /// <summary>
+        /// Notifica que la cuenta será eliminada (recordatorio)
+        /// </summary>
+        Task SendAccountDeletionReminderAsync(
+            string email,
+            string firstName,
+            DateTime deletionDate,
+            int daysRemaining);
+
+        /// <summary>
+        /// Confirma que la cuenta ha sido eliminada
+        /// </summary>
+        Task SendAccountDeletedConfirmationAsync(
+            string email,
+            string firstName);
     }
 }

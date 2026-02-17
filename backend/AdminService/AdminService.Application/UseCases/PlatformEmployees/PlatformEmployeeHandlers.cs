@@ -4,6 +4,7 @@ using AdminService.Domain.Entities;
 using AdminService.Domain.Enums;
 using AdminService.Domain.Interfaces;
 using AdminService.Application.Exceptions;
+using AdminService.Application.Interfaces;
 
 namespace AdminService.Application.UseCases.PlatformEmployees;
 
@@ -545,6 +546,276 @@ public class GetPlatformEmployeeActivityQueryHandler : IRequestHandler<GetPlatfo
             TotalCount = totalCount,
             Page = request.Page,
             PageSize = request.PageSize
+        };
+    }
+}
+/// <summary>
+/// Handler para validar un token de invitación
+/// </summary>
+public class ValidatePlatformInvitationQueryHandler : IRequestHandler<ValidatePlatformInvitationQuery, ValidatePlatformInvitationResult?>
+{
+    private readonly IPlatformEmployeeRepository _employeeRepository;
+    private readonly IAdminUserRepository _adminUserRepository;
+    private readonly ILogger<ValidatePlatformInvitationQueryHandler> _logger;
+
+    public ValidatePlatformInvitationQueryHandler(
+        IPlatformEmployeeRepository employeeRepository,
+        IAdminUserRepository adminUserRepository,
+        ILogger<ValidatePlatformInvitationQueryHandler> logger)
+    {
+        _employeeRepository = employeeRepository;
+        _adminUserRepository = adminUserRepository;
+        _logger = logger;
+    }
+
+    public async Task<ValidatePlatformInvitationResult?> Handle(ValidatePlatformInvitationQuery request, CancellationToken cancellationToken)
+    {
+        var invitation = await _employeeRepository.GetInvitationByTokenAsync(request.Token);
+        
+        if (invitation == null)
+            return null;
+
+        var inviter = await _adminUserRepository.GetByIdAsync(invitation.InvitedBy);
+        var inviterName = inviter?.FullName ?? "Administrador";
+
+        return new ValidatePlatformInvitationResult
+        {
+            Email = invitation.Email,
+            Role = invitation.PlatformRole.ToString(),
+            InvitedByName = inviterName,
+            ExpirationDate = invitation.ExpirationDate,
+            IsExpired = invitation.ExpirationDate < DateTime.UtcNow,
+            IsValid = invitation.Status == InvitationStatus.Pending && invitation.ExpirationDate >= DateTime.UtcNow
+        };
+    }
+}
+
+/// <summary>
+/// Handler para aceptar una invitación de plataforma
+/// </summary>
+public class AcceptPlatformInvitationCommandHandler : IRequestHandler<AcceptPlatformInvitationCommand, AcceptPlatformInvitationResult>
+{
+    private readonly IPlatformEmployeeRepository _employeeRepository;
+    private readonly IAuthServiceClient _authServiceClient;
+    private readonly ILogger<AcceptPlatformInvitationCommandHandler> _logger;
+
+    public AcceptPlatformInvitationCommandHandler(
+        IPlatformEmployeeRepository employeeRepository,
+        IAuthServiceClient authServiceClient,
+        ILogger<AcceptPlatformInvitationCommandHandler> logger)
+    {
+        _employeeRepository = employeeRepository;
+        _authServiceClient = authServiceClient;
+        _logger = logger;
+    }
+
+    public async Task<AcceptPlatformInvitationResult> Handle(AcceptPlatformInvitationCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Processing platform invitation acceptance");
+
+        // Get invitation by token
+        var invitation = await _employeeRepository.GetInvitationByTokenAsync(request.Token);
+        
+        if (invitation == null)
+        {
+            return new AcceptPlatformInvitationResult
+            {
+                Success = false,
+                ErrorMessage = "Invitación no encontrada"
+            };
+        }
+
+        if (invitation.Status != InvitationStatus.Pending)
+        {
+            return new AcceptPlatformInvitationResult
+            {
+                Success = false,
+                ErrorMessage = "Esta invitación ya fue procesada"
+            };
+        }
+
+        if (invitation.ExpirationDate < DateTime.UtcNow)
+        {
+            return new AcceptPlatformInvitationResult
+            {
+                Success = false,
+                ErrorMessage = "Esta invitación ha expirado"
+            };
+        }
+
+        try
+        {
+            // Create admin user in AuthService
+            var createUserResult = await _authServiceClient.CreateAdminUserAsync(new CreateAdminUserRequest
+            {
+                Email = invitation.Email,
+                Password = request.Password,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                PhoneNumber = request.PhoneNumber,
+                Role = invitation.PlatformRole.ToString()
+            });
+
+            if (!createUserResult.Success)
+            {
+                return new AcceptPlatformInvitationResult
+                {
+                    Success = false,
+                    ErrorMessage = createUserResult.ErrorMessage ?? "Error al crear el usuario"
+                };
+            }
+
+            // Create platform employee record
+            var employee = new PlatformEmployee
+            {
+                Id = Guid.NewGuid(),
+                UserId = createUserResult.UserId,
+                PlatformRole = invitation.PlatformRole,
+                Permissions = invitation.Permissions,
+                Department = invitation.Department,
+                Status = EmployeeStatus.Active,
+                HireDate = DateTime.UtcNow,
+                AssignedBy = invitation.InvitedBy
+            };
+
+            await _employeeRepository.AddAsync(employee);
+
+            // Mark invitation as accepted
+            invitation.Status = InvitationStatus.Accepted;
+            invitation.AcceptedDate = DateTime.UtcNow;
+            await _employeeRepository.UpdateInvitationAsync(invitation);
+
+            _logger.LogInformation("Platform invitation accepted successfully for {Email}", invitation.Email);
+
+            return new AcceptPlatformInvitationResult
+            {
+                Success = true,
+                UserId = createUserResult.UserId,
+                Email = invitation.Email,
+                Role = invitation.PlatformRole.ToString(),
+                Permissions = invitation.Permissions?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>(),
+                AccessToken = createUserResult.AccessToken
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error accepting platform invitation for {Email}", invitation.Email);
+            return new AcceptPlatformInvitationResult
+            {
+                Success = false,
+                ErrorMessage = "Error interno al procesar la invitación"
+            };
+        }
+    }
+}
+
+/// <summary>
+/// Handler para verificar el estado de seguridad de la plataforma
+/// </summary>
+public class GetSecurityStatusQueryHandler : IRequestHandler<GetSecurityStatusQuery, SecurityStatusResult>
+{
+    private readonly IAuthServiceClient _authServiceClient;
+    private readonly ILogger<GetSecurityStatusQueryHandler> _logger;
+
+    public GetSecurityStatusQueryHandler(
+        IAuthServiceClient authServiceClient,
+        ILogger<GetSecurityStatusQueryHandler> logger)
+    {
+        _authServiceClient = authServiceClient;
+        _logger = logger;
+    }
+
+    public async Task<SecurityStatusResult> Handle(GetSecurityStatusQuery request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Checking platform security status");
+
+        var securityStatus = await _authServiceClient.GetSecurityStatusAsync();
+        
+        var recommendations = new List<string>();
+        
+        if (securityStatus.DefaultAdminExists)
+        {
+            recommendations.Add("⚠️ El usuario admin por defecto (admin@okla.local) aún existe. Se recomienda eliminarlo después de crear admins reales.");
+        }
+        
+        if (securityStatus.RealSuperAdminCount == 0)
+        {
+            recommendations.Add("🔴 CRÍTICO: No hay SuperAdmins reales. Invite a un SuperAdmin antes de eliminar el admin por defecto.");
+        }
+        else if (securityStatus.RealSuperAdminCount == 1)
+        {
+            recommendations.Add("⚠️ Solo hay un SuperAdmin real. Se recomienda tener al menos 2 por redundancia.");
+        }
+
+        if (!securityStatus.DefaultAdminExists && securityStatus.RealSuperAdminCount >= 1)
+        {
+            recommendations.Add("✅ La configuración de seguridad es correcta.");
+        }
+
+        return new SecurityStatusResult
+        {
+            DefaultAdminExists = securityStatus.DefaultAdminExists,
+            RealSuperAdminCount = securityStatus.RealSuperAdminCount,
+            CanDeleteDefaultAdmin = !securityStatus.DefaultAdminExists || securityStatus.RealSuperAdminCount >= 1,
+            Recommendations = recommendations.ToArray(),
+            CheckedAt = DateTime.UtcNow
+        };
+    }
+}
+
+/// <summary>
+/// Handler para eliminar el admin por defecto
+/// </summary>
+public class DeleteDefaultAdminCommandHandler : IRequestHandler<DeleteDefaultAdminCommand, DeleteDefaultAdminResult>
+{
+    private readonly IAuthServiceClient _authServiceClient;
+    private readonly ILogger<DeleteDefaultAdminCommandHandler> _logger;
+
+    public DeleteDefaultAdminCommandHandler(
+        IAuthServiceClient authServiceClient,
+        ILogger<DeleteDefaultAdminCommandHandler> logger)
+    {
+        _authServiceClient = authServiceClient;
+        _logger = logger;
+    }
+
+    public async Task<DeleteDefaultAdminResult> Handle(DeleteDefaultAdminCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogWarning("Attempting to delete default admin account. Requested by: {RequestedBy}", request.RequestedBy);
+
+        // First check security status
+        var securityStatus = await _authServiceClient.GetSecurityStatusAsync();
+        
+        if (!securityStatus.DefaultAdminExists)
+        {
+            return new DeleteDefaultAdminResult
+            {
+                Success = false,
+                ErrorMessage = "El usuario admin por defecto ya no existe"
+            };
+        }
+
+        if (securityStatus.RealSuperAdminCount == 0)
+        {
+            return new DeleteDefaultAdminResult
+            {
+                Success = false,
+                ErrorMessage = "No se puede eliminar el admin por defecto sin tener al menos un SuperAdmin real creado"
+            };
+        }
+
+        // Delete the default admin
+        var result = await _authServiceClient.DeleteDefaultAdminAsync(request.RequestedBy);
+        
+        if (result.Success)
+        {
+            _logger.LogWarning("Default admin account successfully deleted by {RequestedBy}", request.RequestedBy);
+        }
+
+        return new DeleteDefaultAdminResult
+        {
+            Success = result.Success,
+            ErrorMessage = result.ErrorMessage
         };
     }
 }

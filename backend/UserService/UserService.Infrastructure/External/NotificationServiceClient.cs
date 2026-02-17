@@ -335,5 +335,145 @@ El equipo de OKLA",
                 _logger.LogWarning(ex, "Failed to send dealer welcome email to {Email}", email);
             }
         }
+
+        // ========================================
+        // ARCO PRIVACY EMAILS (Ley 172-13)
+        // ========================================
+
+        public async Task SendAccountDeletionConfirmationCodeAsync(
+            string email,
+            string firstName,
+            string confirmationCode,
+            DateTime gracePeriodEndsAt)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                var gracePeriodFormatted = gracePeriodEndsAt.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-DO"));
+                
+                var notification = new
+                {
+                    To = email,
+                    Subject = "OKLA - Código de confirmación para eliminar tu cuenta",
+                    Body = $@"Hola {firstName},
+
+Recibimos tu solicitud para eliminar tu cuenta en OKLA.
+
+Tu código de confirmación es: {confirmationCode}
+
+⚠️ IMPORTANTE:
+- Este código expirará en 24 horas
+- Tu cuenta será eliminada permanentemente el {gracePeriodFormatted} (15 días de gracia según Ley 172-13)
+- Puedes cancelar esta solicitud en cualquier momento antes de esa fecha
+
+Para confirmar la eliminación:
+1. Ingresa a tu cuenta en OKLA
+2. Ve a Configuración > Seguridad
+3. Ingresa el código de confirmación: {confirmationCode}
+4. Confirma con tu contraseña
+
+Si no solicitaste eliminar tu cuenta, por favor ignora este correo o contacta a soporte inmediatamente.
+
+Atentamente,
+El equipo de OKLA",
+                    Type = "Email"
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", notification);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Account deletion confirmation code sent to {Email}", email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send account deletion confirmation code to {Email}", email);
+            }
+        }
+
+        public async Task SendAccountDeletionReminderAsync(
+            string email,
+            string firstName,
+            DateTime deletionDate,
+            int daysRemaining)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                var deletionDateFormatted = deletionDate.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-DO"));
+                
+                var notification = new
+                {
+                    To = email,
+                    Subject = $"OKLA - Tu cuenta será eliminada en {daysRemaining} día(s)",
+                    Body = $@"Hola {firstName},
+
+Te recordamos que tu cuenta en OKLA será eliminada permanentemente el {deletionDateFormatted}.
+
+Faltan {daysRemaining} día(s) para la eliminación.
+
+Si deseas conservar tu cuenta, puedes cancelar la solicitud de eliminación:
+1. Ingresa a tu cuenta en OKLA
+2. Ve a Configuración > Seguridad  
+3. Haz clic en 'Cancelar solicitud de eliminación'
+
+Una vez eliminada, no podrás recuperar:
+- Tu historial de búsquedas
+- Tus vehículos favoritos
+- Tus alertas de precios
+- Tus conversaciones con vendedores
+
+Atentamente,
+El equipo de OKLA",
+                    Type = "Email"
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", notification);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Account deletion reminder sent to {Email}", email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send account deletion reminder to {Email}", email);
+            }
+        }
+
+        public async Task SendAccountDeletedConfirmationAsync(
+            string email,
+            string firstName)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                
+                var notification = new
+                {
+                    To = email,
+                    Subject = "OKLA - Tu cuenta ha sido eliminada",
+                    Body = $@"Hola {firstName},
+
+Tu cuenta en OKLA ha sido eliminada exitosamente según tu solicitud.
+
+Todos tus datos personales han sido eliminados de nuestros sistemas de acuerdo con la Ley 172-13 de Protección de Datos Personales de República Dominicana.
+
+Si en el futuro deseas volver a utilizar OKLA, puedes crear una nueva cuenta.
+
+Gracias por haber sido parte de nuestra comunidad.
+
+Atentamente,
+El equipo de OKLA",
+                    Type = "Email"
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/notifications/email", notification);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Account deleted confirmation sent to {Email}", email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send account deleted confirmation to {Email}", email);
+            }
+        }
     }
 }

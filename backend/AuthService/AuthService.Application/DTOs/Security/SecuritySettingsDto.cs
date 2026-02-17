@@ -8,7 +8,18 @@ public record SecuritySettingsDto(
     string? TwoFactorType,
     string? LastPasswordChange,
     List<ActiveSessionDto> ActiveSessions,
-    List<LoginHistoryDto> RecentLogins
+    List<LoginHistoryDto> RecentLogins,
+    bool HasPassword,
+    List<LinkedProviderDto>? LinkedProviders = null
+);
+
+/// <summary>
+/// Linked OAuth provider information
+/// </summary>
+public record LinkedProviderDto(
+    string Provider,
+    string Email,
+    DateTime LinkedAt
 );
 
 /// <summary>

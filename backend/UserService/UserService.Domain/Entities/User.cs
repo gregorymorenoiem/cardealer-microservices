@@ -9,11 +9,29 @@ namespace UserService.Domain.Entities
     public enum AccountType
     {
         Guest,
-        Individual,
+        Buyer,
         Dealer,
         DealerEmployee,
         Admin,
-        PlatformEmployee
+        PlatformEmployee,
+        Seller
+    }
+
+    /// <summary>
+    /// Intención del usuario en la plataforma.
+    /// Define qué quiere hacer el usuario (comprar, vender, ambos).
+    /// Puede cambiar a lo largo del tiempo.
+    /// </summary>
+    public enum UserIntent
+    {
+        /// <summary>Solo navega (default al registrarse)</summary>
+        Browse,
+        /// <summary>Quiere comprar un vehículo (gratis)</summary>
+        Buy,
+        /// <summary>Quiere vender un vehículo ($29/listing)</summary>
+        Sell,
+        /// <summary>Quiere comprar y vender</summary>
+        BuyAndSell
     }
 
     /// <summary>
@@ -73,7 +91,10 @@ namespace UserService.Domain.Entities
         public DateTime? LastLoginAt { get; set; }
 
         // Account type system
-        public AccountType AccountType { get; set; } = AccountType.Individual;
+        public AccountType AccountType { get; set; } = AccountType.Buyer;
+
+        // User intent - what the user wants to do (buy, sell, both)
+        public UserIntent UserIntent { get; set; } = UserIntent.Browse;
 
         // Platform-level (if admin or platform employee)
         public PlatformRole? PlatformRole { get; set; }

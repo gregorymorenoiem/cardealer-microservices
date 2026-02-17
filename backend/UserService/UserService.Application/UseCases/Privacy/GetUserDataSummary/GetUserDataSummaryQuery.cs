@@ -32,7 +32,7 @@ public class GetUserDataSummaryQueryHandler : IRequestHandler<GetUserDataSummary
                 Phone: "+18091234567",
                 City: "Santo Domingo",
                 Province: "Distrito Nacional",
-                AccountType: "Individual",
+                AccountType: "Buyer",
                 MemberSince: DateTime.UtcNow.AddMonths(-6),
                 EmailVerified: true
             ),

@@ -296,7 +296,7 @@ public class SellerProfileControllerTests
             Id = Guid.NewGuid(),
             UserId = Guid.NewGuid(),
             DisplayName = "Test Seller",
-            Type = SellerType.Individual,
+            Type = SellerType.Seller,
             Bio = "Test bio",
             City = "Santo Domingo",
             Province = "Distrito Nacional",
@@ -308,7 +308,7 @@ public class SellerProfileControllerTests
 
         // Assert
         dto.DisplayName.Should().Be("Test Seller");
-        dto.Type.Should().Be(SellerType.Individual);
+        dto.Type.Should().Be(SellerType.Seller);
         dto.IsVerified.Should().BeTrue();
         dto.Badges.Should().HaveCount(2);
     }
@@ -407,7 +407,7 @@ public class SellerProfileControllerTests
         {
             Id = sellerId,
             UserId = Guid.NewGuid(),
-            SellerType = SellerType.Individual,
+            SellerType = SellerType.Seller,
             DisplayName = "Test Seller",
             FullName = "Test Seller Full Name",
             Bio = "Test seller bio",

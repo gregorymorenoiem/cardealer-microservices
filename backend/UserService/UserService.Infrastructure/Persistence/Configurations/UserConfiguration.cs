@@ -49,7 +49,7 @@ namespace UserService.Infrastructure.Persistence.Configurations
             // AccountType enum
             builder.Property(u => u.AccountType)
                 .IsRequired()
-                .HasDefaultValue(AccountType.Individual)
+                .HasDefaultValue(AccountType.Buyer)
                 .HasConversion<string>()
                 .HasMaxLength(50);
 

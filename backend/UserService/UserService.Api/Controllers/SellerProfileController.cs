@@ -604,7 +604,7 @@ public class SellerProfileController : ControllerBase
             ShowPhone = request.ShowPhone,
             ShowLocation = request.ShowLocation,
             PreferredContactMethod = request.PreferredContactMethod,
-            SellerType = SellerType.Individual,
+            SellerType = SellerType.Seller,
             VerificationStatus = SellerVerificationStatus.NotSubmitted
         };
 

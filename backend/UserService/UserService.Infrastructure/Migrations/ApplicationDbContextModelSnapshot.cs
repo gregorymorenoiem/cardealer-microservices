@@ -23,6 +23,76 @@ namespace UserService.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("UserService.Domain.Entities.ContactPreferences", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowInAppChat")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowPhoneCalls")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowWhatsApp")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AutoReplyMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AwayMessage")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("BlockAnonymousContacts")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ContactDays")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan>("ContactHoursEnd")
+                        .HasColumnType("interval");
+
+                    b.Property<TimeSpan>("ContactHoursStart")
+                        .HasColumnType("interval");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PreferredContactMethod")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("RequireVerifiedBuyers")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("SellerProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ShowEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowPhoneNumber")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShowWhatsAppNumber")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SellerProfileId")
+                        .IsUnique();
+
+                    b.ToTable("ContactPreferences");
+                });
+
             modelBuilder.Entity("UserService.Domain.Entities.Dealer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1020,6 +1090,104 @@ namespace UserService.Infrastructure.Migrations
                     b.ToTable("PlatformEmployeeInvitations");
                 });
 
+            modelBuilder.Entity("UserService.Domain.Entities.Privacy.PrivacyRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConfirmationCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletionReason")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DeletionReasonOther")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("DownloadToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("DownloadTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExportFormat")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("GracePeriodEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsConfirmed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ProcessedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConfirmationCode");
+
+                    b.HasIndex("GracePeriodEndsAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "Type", "Status");
+
+                    b.ToTable("PrivacyRequests", (string)null);
+                });
+
             modelBuilder.Entity("UserService.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1095,6 +1263,37 @@ namespace UserService.Infrastructure.Migrations
                     b.ToTable("error_logs", (string)null);
                 });
 
+            modelBuilder.Entity("UserService.Domain.Entities.SellerBadgeAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Badge")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EarnedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SellerProfileId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SellerProfileId");
+
+                    b.ToTable("SellerBadgeAssignments");
+                });
+
             modelBuilder.Entity("UserService.Domain.Entities.SellerProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1109,21 +1308,21 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AlternatePhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text");
 
                     b.Property<decimal>("AverageRating")
-                        .HasPrecision(3, 2)
-                        .HasColumnType("numeric(3,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Bio")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BusinessName")
                         .HasColumnType("text");
 
                     b.Property<bool>("CanSellHighValue")
@@ -1131,15 +1330,14 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Country")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
-                        .HasDefaultValue("DO");
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoverPhotoUrl")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1147,15 +1345,19 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("DealerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text");
+
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -1163,8 +1365,20 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsIdentityVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPhoneVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastActiveAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision");
+
+                    b.Property<int>("LeadsThisMonth")
+                        .HasColumnType("integer");
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("double precision");
@@ -1173,23 +1387,25 @@ namespace UserService.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Nationality")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PreferredContactMethod")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
+
+                    b.Property<int>("ResponseRate")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ResponseTimeMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SellerType")
                         .HasColumnType("integer");
 
                     b.Property<bool>("ShowLocation")
@@ -1200,8 +1416,7 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<int>("TotalListings")
                         .HasColumnType("integer");
@@ -1222,13 +1437,10 @@ namespace UserService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("VerificationNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<int>("VerificationStatus")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("VerifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1236,26 +1448,21 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<Guid?>("VerifiedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ViewsThisMonth")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("text");
+
                     b.Property<string>("WhatsApp")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ZipCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("City");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.HasIndex("VerificationStatus");
-
-                    b.HasIndex("Latitude", "Longitude");
-
-                    b.ToTable("SellerProfiles", (string)null);
+                    b.ToTable("SellerProfiles");
                 });
 
             modelBuilder.Entity("UserService.Domain.Entities.SubscriptionHistory", b =>
@@ -1304,7 +1511,7 @@ namespace UserService.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Individual");
+                        .HasDefaultValue("Buyer");
 
                     b.Property<string>("AutoReplyMessage")
                         .HasColumnType("text");
@@ -1403,6 +1610,9 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserIntent")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1569,6 +1779,17 @@ namespace UserService.Infrastructure.Migrations
                     b.ToTable("UserRoles", (string)null);
                 });
 
+            modelBuilder.Entity("UserService.Domain.Entities.ContactPreferences", b =>
+                {
+                    b.HasOne("UserService.Domain.Entities.SellerProfile", "SellerProfile")
+                        .WithOne("ContactPreferences")
+                        .HasForeignKey("UserService.Domain.Entities.ContactPreferences", "SellerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SellerProfile");
+                });
+
             modelBuilder.Entity("UserService.Domain.Entities.DealerEmployee", b =>
                 {
                     b.HasOne("UserService.Domain.Entities.Dealer", null)
@@ -1680,6 +1901,28 @@ namespace UserService.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("UserService.Domain.Entities.Privacy.PrivacyRequest", b =>
+                {
+                    b.HasOne("UserService.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UserService.Domain.Entities.SellerBadgeAssignment", b =>
+                {
+                    b.HasOne("UserService.Domain.Entities.SellerProfile", "SellerProfile")
+                        .WithMany("Badges")
+                        .HasForeignKey("SellerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SellerProfile");
+                });
+
             modelBuilder.Entity("UserService.Domain.Entities.SubscriptionHistory", b =>
                 {
                     b.HasOne("UserService.Domain.Entities.DealerSubscription", "DealerSubscription")
@@ -1714,6 +1957,10 @@ namespace UserService.Infrastructure.Migrations
 
             modelBuilder.Entity("UserService.Domain.Entities.SellerProfile", b =>
                 {
+                    b.Navigation("Badges");
+
+                    b.Navigation("ContactPreferences");
+
                     b.Navigation("IdentityDocuments");
                 });
 

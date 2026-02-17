@@ -37,7 +37,7 @@ public class TwoFactorService : ITwoFactorService
         var key = KeyGeneration.GenerateRandomKey(20);
         var base32Secret = Base32Encoding.ToString(key);
 
-        var issuer = "YourApp";
+        var issuer = "OKLA";
         var qrCodeUri = $"otpauth://totp/{issuer}:{email}?secret={base32Secret}&issuer={issuer}&digits=6";
         var qrCodeImage = _qrCodeService.GenerateQRCode(qrCodeUri);
 

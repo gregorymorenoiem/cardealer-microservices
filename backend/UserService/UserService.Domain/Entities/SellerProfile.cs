@@ -91,7 +91,7 @@ public class SellerProfile
     // ========================================
     // TIPO Y BADGES
     // ========================================
-    public SellerType SellerType { get; set; } = SellerType.Individual;
+    public SellerType SellerType { get; set; } = SellerType.Seller;
     public string? DisplayName { get; set; }
     public string? CoverPhotoUrl { get; set; }
     public bool IsPhoneVerified { get; set; } = false;

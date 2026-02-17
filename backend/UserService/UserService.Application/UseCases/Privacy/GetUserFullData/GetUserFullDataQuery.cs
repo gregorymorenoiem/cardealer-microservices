@@ -38,7 +38,7 @@ public class GetUserFullDataQueryHandler : IRequestHandler<GetUserFullDataQuery,
                 BusinessPhone: null,
                 BusinessAddress: null,
                 RNC: null,
-                AccountType: "Individual",
+                AccountType: "Buyer",
                 CreatedAt: DateTime.UtcNow.AddMonths(-6),
                 LastLoginAt: DateTime.UtcNow.AddHours(-2),
                 EmailVerified: true

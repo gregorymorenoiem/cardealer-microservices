@@ -35,7 +35,7 @@ public class AuthNotificationService : IAuthNotificationService
 
     public async Task SendPasswordResetEmailAsync(string email, string resetToken)
     {
-        var resetUrl = $"{_settings.FrontendBaseUrl}/reset-password?token={resetToken}";
+        var resetUrl = $"{_settings.FrontendBaseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
 
         if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
         {
@@ -61,7 +61,7 @@ public class AuthNotificationService : IAuthNotificationService
 
     public async Task SendEmailConfirmationAsync(string email, string confirmationToken)
     {
-        var confirmUrl = $"{_settings.FrontendBaseUrl}/verify-email?token={confirmationToken}";
+        var confirmUrl = $"{_settings.FrontendBaseUrl}/verificar-email?token={Uri.EscapeDataString(confirmationToken)}";
 
         if (_rabbitMqSettings.EnableRabbitMQ && _notificationProducer != null)
         {
@@ -818,8 +818,8 @@ public class AuthNotificationService : IAuthNotificationService
             _ => "Se detectó una actividad inusual en tu cuenta."
         };
         
-        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/forgot-password";
-        var supportUrl = $"{_settings.FrontendBaseUrl}/support";
+        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/recuperar-contrasena";
+        var supportUrl = $"{_settings.FrontendBaseUrl}/contacto";
 
         return $@"
             <!DOCTYPE html>
@@ -961,8 +961,8 @@ public class AuthNotificationService : IAuthNotificationService
     {
         var loginTime = sessionInfo.LoginTime.ToString("yyyy-MM-dd HH:mm:ss UTC");
         var location = sessionInfo.Location ?? "Ubicación desconocida";
-        var securityUrl = $"{_settings.FrontendBaseUrl}/settings/security";
-        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/forgot-password";
+        var securityUrl = $"{_settings.FrontendBaseUrl}/cuenta/seguridad";
+        var changePasswordUrl = $"{_settings.FrontendBaseUrl}/recuperar-contrasena";
 
         return $@"
             <!DOCTYPE html>

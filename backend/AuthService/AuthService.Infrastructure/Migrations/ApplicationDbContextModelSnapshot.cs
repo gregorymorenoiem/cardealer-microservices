@@ -61,6 +61,14 @@ namespace AuthService.Infrastructure.Migrations
                     b.Property<string>("ExternalUserId")
                         .HasColumnType("text");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<bool>("LockoutEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -78,7 +86,6 @@ namespace AuthService.Infrastructure.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
 
@@ -89,6 +96,10 @@ namespace AuthService.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("SecurityStamp")
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
@@ -98,6 +109,9 @@ namespace AuthService.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserIntent")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserName")
                         .IsRequired()

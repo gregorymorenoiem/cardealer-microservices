@@ -77,7 +77,7 @@ public class PrivacyControllerTests
                 Phone: "+18091234567",
                 City: "Santo Domingo",
                 Province: "DN",
-                AccountType: "Individual",
+                AccountType: "Buyer",
                 MemberSince: DateTime.UtcNow.AddYears(-1),
                 EmailVerified: true
             ),
@@ -138,7 +138,7 @@ public class PrivacyControllerTests
                 BusinessPhone: null,
                 BusinessAddress: null,
                 RNC: null,
-                AccountType: "Individual",
+                AccountType: "Buyer",
                 CreatedAt: DateTime.UtcNow.AddYears(-1),
                 LastLoginAt: DateTime.UtcNow,
                 EmailVerified: true

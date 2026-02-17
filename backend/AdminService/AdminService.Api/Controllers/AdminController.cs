@@ -24,13 +24,13 @@ public class AdminController : ControllerBase
     }
 
     // ========================================
-    // ADMIN USERS MANAGEMENT
+    // ADMIN STAFF MANAGEMENT (internal admin users, not platform users)
     // ========================================
 
     /// <summary>
-    /// Get all admin users
+    /// Get all admin staff users (internal admins, not platform customers)
     /// </summary>
-    [HttpGet("users")]
+    [HttpGet("staff")]
     [ProducesResponseType(typeof(PaginatedResult<AdminUserDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedResult<AdminUserDto>>> GetAdminUsers(
         [FromQuery] string? role = null,
@@ -45,9 +45,9 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// Get admin user by ID
+    /// Get admin staff user by ID
     /// </summary>
-    [HttpGet("users/{userId}")]
+    [HttpGet("staff/{userId}")]
     [ProducesResponseType(typeof(AdminUserDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AdminUserDetailDto>> GetAdminUser(Guid userId)
@@ -81,9 +81,9 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// Update admin user role (SuperAdmin only)
+    /// Update admin staff role (SuperAdmin only)
     /// </summary>
-    [HttpPut("users/{userId}/role")]
+    [HttpPut("staff/{userId}/role")]
     [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -98,9 +98,9 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// Suspend admin user (SuperAdmin only)
+    /// Suspend admin staff user (SuperAdmin only)
     /// </summary>
-    [HttpPost("users/{userId}/suspend")]
+    [HttpPost("staff/{userId}/suspend")]
     [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -114,9 +114,9 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// Reactivate admin user (SuperAdmin only)
+    /// Reactivate admin staff user (SuperAdmin only)
     /// </summary>
-    [HttpPost("users/{userId}/reactivate")]
+    [HttpPost("staff/{userId}/reactivate")]
     [Authorize(Roles = "SuperAdmin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -130,57 +130,9 @@ public class AdminController : ControllerBase
     }
 
     // ========================================
-    // DASHBOARD & OVERVIEW
+    // DASHBOARD & OVERVIEW → Use DashboardController (/api/admin/dashboard/*)
+    // These endpoints were consolidated into DashboardController to avoid duplication
     // ========================================
-
-    /// <summary>
-    /// Get admin dashboard overview
-    /// </summary>
-    [HttpGet("dashboard")]
-    [ProducesResponseType(typeof(AdminDashboardDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<AdminDashboardDto>> GetDashboard()
-    {
-        _logger.LogInformation("Getting admin dashboard overview");
-
-        var result = await _mediator.Send(new GetAdminDashboardQuery());
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Get pending items requiring admin attention
-    /// </summary>
-    [HttpGet("pending")]
-    [ProducesResponseType(typeof(PendingItemsDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PendingItemsDto>> GetPendingItems()
-    {
-        _logger.LogInformation("Getting pending items for admin review");
-
-        var result = await _mediator.Send(new GetPendingItemsQuery());
-        return Ok(result);
-    }
-
-    // ========================================
-    // ACTIVITY LOG
-    // ========================================
-
-    /// <summary>
-    /// Get admin activity log
-    /// </summary>
-    [HttpGet("activity")]
-    [ProducesResponseType(typeof(PaginatedResult<AdminActivityDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PaginatedResult<AdminActivityDto>>> GetActivityLog(
-        [FromQuery] Guid? adminId = null,
-        [FromQuery] string? action = null,
-        [FromQuery] DateTime? from = null,
-        [FromQuery] DateTime? to = null,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50)
-    {
-        _logger.LogInformation("Getting admin activity log");
-
-        var result = await _mediator.Send(new GetAdminActivityQuery(adminId, action, from, to, page, pageSize));
-        return Ok(result);
-    }
 
     // ========================================
     // SYSTEM SETTINGS (SuperAdmin only)

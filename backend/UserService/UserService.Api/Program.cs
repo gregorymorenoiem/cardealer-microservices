@@ -1,3 +1,5 @@
+using CarDealer.Shared.Middleware;
+using CarDealer.Shared.Messaging;
 using UserService.Domain.Interfaces;
 using UserService.Infrastructure.Messaging;
 using UserService.Infrastructure.Persistence;
@@ -44,13 +46,29 @@ builder.UseStandardSerilog("UserService", options =>
     options.RabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
 });
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 // Configurar Swagger con soporte JWT
 builder.Services.AddSwaggerGen(options =>
@@ -181,6 +199,7 @@ builder.Services.AddScoped<IDealerOnboardingRepository, UserService.Infrastructu
 builder.Services.AddScoped<IDealerModuleRepository, UserService.Infrastructure.Persistence.Repositories.DealerModuleRepository>();
 builder.Services.AddScoped<IModuleRepository, UserService.Infrastructure.Persistence.Repositories.ModuleRepository>();
 builder.Services.AddScoped<IUserOnboardingRepository, UserService.Infrastructure.Repositories.UserOnboardingRepository>();
+builder.Services.AddScoped<IPrivacyRequestRepository, UserService.Infrastructure.Persistence.PrivacyRequestRepository>();
 builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
 
 // Application Services - External clients
@@ -256,18 +275,17 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IReviewService
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<UserService.Application.Metrics.UserServiceMetrics>();
 
-// Dead Letter Queue para eventos fallidos (Singleton, en memoria)
-// TEMPORARY: Commented out for testing without RabbitMQ
-// builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-//     new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
+// Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
+// Shared RabbitMQ connection (1 connection per pod instead of N per class)
+builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "UserService");
+builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue, UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue>();
+builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
 // Event Publisher for RabbitMQ (con DLQ integrado)
 // NOTE: Using NoOpEventPublisher for development. Enable RabbitMQ in production.
 var useRabbitMq = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
 if (useRabbitMq)
 {
-    builder.Services.AddSingleton<UserService.Infrastructure.Messaging.IDeadLetterQueue>(sp =>
-        new UserService.Infrastructure.Messaging.InMemoryDeadLetterQueue(maxRetries: 5));
     builder.Services.AddSingleton<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IEventPublisher>(sp =>
         sp.GetRequiredService<UserService.Infrastructure.Messaging.RabbitMqEventPublisher>());
@@ -275,6 +293,9 @@ if (useRabbitMq)
 
     // Consumer for UserRegisteredEvent from AuthService - syncs users automatically
     builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserRegisteredEventConsumer>();
+
+    // Consumer for UserLoggedInEvent from AuthService - updates LastLoginAt
+    builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserLoggedInEventConsumer>();
 }
 else
 {
@@ -316,8 +337,8 @@ builder.Services.AddStandardErrorHandling(options =>
     options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
 });
 
@@ -347,8 +368,12 @@ app.UseGlobalErrorHandling();
 app.UseRequestLogging();
 
 // Swagger en desarrollo
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -360,6 +385,9 @@ app.UseMiddleware<RateLimitBypassMiddleware>();
 app.UseCustomRateLimiting(rateLimitingConfig);
 
 app.UseHttpsRedirection();
+
+// CORS middleware (before auth)
+app.UseCors();
 
 // Agregar autenticación y autorización
 app.UseAuthentication();
@@ -379,13 +407,8 @@ app.UseMiddleware<ResponseCaptureMiddleware>();
 
 app.MapControllers();
 
-// Health check endpoint - acceso anónimo
-app.MapGet("/health", [AllowAnonymous] () => Results.Ok(new
-{
-    service = "UserService",
-    status = "healthy",
-    timestamp = DateTime.UtcNow
-}));
+// Health check endpoints - acceso anónimo
+app.MapHealthChecks("/health");
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())

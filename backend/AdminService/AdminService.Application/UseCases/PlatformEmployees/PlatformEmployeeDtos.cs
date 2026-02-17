@@ -120,6 +120,80 @@ public record ResendPlatformInvitationCommand(
     Guid ResendBy
 ) : IRequest<PlatformEmployeeInvitationDto>;
 
+/// <summary>
+/// Command to accept a platform invitation and create the admin user
+/// </summary>
+public record AcceptPlatformInvitationCommand(
+    string Token,
+    string FirstName,
+    string LastName,
+    string Password,
+    string? PhoneNumber
+) : IRequest<AcceptPlatformInvitationResult>;
+
+/// <summary>
+/// Result of accepting an invitation
+/// </summary>
+public class AcceptPlatformInvitationResult
+{
+    public bool Success { get; set; }
+    public Guid UserId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public string[] Permissions { get; set; } = Array.Empty<string>();
+    public string? AccessToken { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// Query to validate an invitation token
+/// </summary>
+public record ValidatePlatformInvitationQuery(string Token) : IRequest<ValidatePlatformInvitationResult?>;
+
+/// <summary>
+/// Result of validating an invitation
+/// </summary>
+public class ValidatePlatformInvitationResult
+{
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public string InvitedByName { get; set; } = string.Empty;
+    public DateTime ExpirationDate { get; set; }
+    public bool IsExpired { get; set; }
+    public bool IsValid { get; set; }
+}
+
+/// <summary>
+/// Command to delete the default admin account (security measure)
+/// </summary>
+public record DeleteDefaultAdminCommand(Guid RequestedBy) : IRequest<DeleteDefaultAdminResult>;
+
+/// <summary>
+/// Result of deleting the default admin
+/// </summary>
+public class DeleteDefaultAdminResult
+{
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// Query to check platform security status
+/// </summary>
+public record GetSecurityStatusQuery() : IRequest<SecurityStatusResult>;
+
+/// <summary>
+/// Security status result
+/// </summary>
+public class SecurityStatusResult
+{
+    public bool DefaultAdminExists { get; set; }
+    public int RealSuperAdminCount { get; set; }
+    public bool CanDeleteDefaultAdmin { get; set; }
+    public string[] Recommendations { get; set; } = Array.Empty<string>();
+    public DateTime CheckedAt { get; set; }
+}
+
 // ============================================================================
 // HELPER CLASSES (duplicated for AdminService self-containment)
 // ============================================================================

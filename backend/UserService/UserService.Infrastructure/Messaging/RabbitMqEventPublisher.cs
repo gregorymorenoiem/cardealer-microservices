@@ -112,8 +112,8 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 var portStr = _configuration["RabbitMQ:Port"] ?? "5672";
                 var username = _configuration["RabbitMQ:Username"]
                     ?? _configuration["RabbitMQ:UserName"]
-                    ?? "guest";
-                var password = _configuration["RabbitMQ:Password"] ?? "guest";
+                    ?? throw new InvalidOperationException("RabbitMQ:Username is not configured");
+                var password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
                 var virtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/";
 
                 var factory = new ConnectionFactory

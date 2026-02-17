@@ -41,8 +41,18 @@ public class PrivacyController : ControllerBase
 
     private Guid GetUserId()
     {
-        var userIdClaim = User.FindFirst("sub") ?? User.FindFirst("userId");
+        // El JWT de AuthService usa ClaimTypes.NameIdentifier como claim principal
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier) 
+                       ?? User.FindFirst("sub") 
+                       ?? User.FindFirst("userId");
         return userIdClaim != null ? Guid.Parse(userIdClaim.Value) : Guid.Empty;
+    }
+
+    private string? GetUserEmail()
+    {
+        // El JWT de AuthService incluye el email en ClaimTypes.Email
+        var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Email);
+        return emailClaim?.Value;
     }
 
     #region Derecho de Acceso
@@ -172,11 +182,13 @@ public class PrivacyController : ControllerBase
     public async Task<ActionResult<AccountDeletionResponseDto>> RequestAccountDeletion([FromBody] RequestAccountDeletionDto request)
     {
         var userId = GetUserId();
+        var userEmail = GetUserEmail();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = Request.Headers.UserAgent.ToString();
 
         var command = new RequestAccountDeletionCommand(
             UserId: userId,
+            Email: userEmail,
             Reason: request.Reason,
             OtherReason: request.OtherReason,
             Feedback: request.Feedback,

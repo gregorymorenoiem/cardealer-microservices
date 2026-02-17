@@ -1,4 +1,5 @@
 using UserService.Domain.Entities;
+using UserService.Domain.Entities.Privacy;
 using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Infrastructure.Persistence
@@ -39,6 +40,9 @@ namespace UserService.Infrastructure.Persistence
         public DbSet<UserOnboarding> UserOnboardings => Set<UserOnboarding>();
         public DbSet<DealerOnboardingProcess> DealerOnboardingProcesses => Set<DealerOnboardingProcess>();
         public DbSet<DealerOnboarding> DealerOnboardings => Set<DealerOnboarding>();
+
+        // Privacy (ARCO - Ley 172-13)
+        public DbSet<PrivacyRequest> PrivacyRequests => Set<PrivacyRequest>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

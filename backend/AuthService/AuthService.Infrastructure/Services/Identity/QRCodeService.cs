@@ -11,6 +11,7 @@ public class QRCodeService : IQRCodeService
         using var qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
         using var qrCode = new PngByteQRCode(qrCodeData);
         var qrCodeImage = qrCode.GetGraphic(20);
-        return Convert.ToBase64String(qrCodeImage);
+        // Return as Data URL so it can be used directly in <img src="...">
+        return $"data:image/png;base64,{Convert.ToBase64String(qrCodeImage)}";
     }
 }

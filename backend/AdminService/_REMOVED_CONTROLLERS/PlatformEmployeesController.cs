@@ -197,6 +197,96 @@ public class PlatformEmployeesController : ControllerBase
     }
 
     /// <summary>
+    /// Accept a platform employee invitation (PUBLIC - no auth required)
+    /// This endpoint is used when a new admin accepts their invitation via email link
+    /// </summary>
+    [HttpPost("invitations/{token}/accept")]
+    [AllowAnonymous] // Public endpoint - invitation token provides security
+    [ProducesResponseType(typeof(AcceptInvitationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status410Gone)] // Invitation expired
+    public async Task<ActionResult<AcceptInvitationResponse>> AcceptInvitation(
+        string token,
+        [FromBody] AcceptPlatformInvitationRequest request)
+    {
+        _logger.LogInformation("Accepting platform employee invitation with token");
+
+        var command = new AcceptPlatformInvitationCommand(
+            Token: token,
+            FirstName: request.FirstName,
+            LastName: request.LastName,
+            Password: request.Password,
+            PhoneNumber: request.PhoneNumber
+        );
+
+        var result = await _mediator.Send(command);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Validate invitation token (PUBLIC - no auth required)
+    /// Used by frontend to check if invitation is valid before showing the form
+    /// </summary>
+    [HttpGet("invitations/{token}/validate")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ValidateInvitationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status410Gone)]
+    public async Task<ActionResult<ValidateInvitationResponse>> ValidateInvitation(string token)
+    {
+        _logger.LogInformation("Validating platform employee invitation token");
+
+        var result = await _mediator.Send(new ValidatePlatformInvitationQuery(token));
+
+        if (result == null)
+            return NotFound(new { error = "Invitación no encontrada" });
+
+        if (result.IsExpired)
+            return StatusCode(410, new { error = "Invitación expirada" });
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Delete the default admin account (SECURITY - only after creating real admins)
+    /// This should be called after the first real SuperAdmin has been created
+    /// </summary>
+    [HttpDelete("~/api/admin/security/default-admin")]
+    [Authorize(Roles = "SuperAdmin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult> DeleteDefaultAdmin()
+    {
+        var currentUserId = GetCurrentUserId();
+        _logger.LogWarning("SuperAdmin {UserId} is attempting to delete the default admin account", currentUserId);
+
+        var result = await _mediator.Send(new DeleteDefaultAdminCommand(currentUserId));
+
+        if (!result.Success)
+            return BadRequest(new { error = result.ErrorMessage });
+
+        _logger.LogWarning("Default admin account has been successfully deleted by {UserId}", currentUserId);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Check platform security status (default admin still exists, etc.)
+    /// </summary>
+    [HttpGet("~/api/admin/security/status")]
+    [Authorize(Roles = "SuperAdmin")]
+    [ProducesResponseType(typeof(SecurityStatusResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<SecurityStatusResponse>> GetSecurityStatus()
+    {
+        _logger.LogInformation("Checking platform security status");
+
+        var result = await _mediator.Send(new GetSecurityStatusQuery());
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Resend an invitation
     /// </summary>
     [HttpPost("invitations/{invitationId}/resend")]
@@ -317,9 +407,74 @@ public class SuspendEmployeeRequest
     public string? Reason { get; set; }
 }
 
+/// <summary>
+/// Request to accept a platform employee invitation
+/// </summary>
+public class AcceptPlatformInvitationRequest
+{
+    /// <summary>First name of the new admin</summary>
+    public string FirstName { get; set; } = string.Empty;
+    
+    /// <summary>Last name of the new admin</summary>
+    public string LastName { get; set; } = string.Empty;
+    
+    /// <summary>Password for the new account (min 8 chars, must include uppercase, lowercase, number, special char)</summary>
+    public string Password { get; set; } = string.Empty;
+    
+    /// <summary>Optional phone number</summary>
+    public string? PhoneNumber { get; set; }
+}
+
 // ============================================================================
 // RESPONSE DTOs
 // ============================================================================
+
+/// <summary>
+/// Response after successfully accepting an invitation
+/// </summary>
+public class AcceptInvitationResponse
+{
+    public Guid UserId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public string[] Permissions { get; set; } = Array.Empty<string>();
+    public string Message { get; set; } = string.Empty;
+    public string? AccessToken { get; set; } // Optional: auto-login after accepting
+}
+
+/// <summary>
+/// Response when validating an invitation token
+/// </summary>
+public class ValidateInvitationResponse
+{
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public string InvitedByName { get; set; } = string.Empty;
+    public DateTime ExpirationDate { get; set; }
+    public bool IsExpired { get; set; }
+    public bool IsValid { get; set; }
+}
+
+/// <summary>
+/// Platform security status response
+/// </summary>
+public class SecurityStatusResponse
+{
+    /// <summary>True if the default admin@okla.local account still exists</summary>
+    public bool DefaultAdminExists { get; set; }
+    
+    /// <summary>Number of real SuperAdmin accounts (excluding default)</summary>
+    public int RealSuperAdminCount { get; set; }
+    
+    /// <summary>True if it's safe to delete the default admin</summary>
+    public bool CanDeleteDefaultAdmin { get; set; }
+    
+    /// <summary>Security recommendations</summary>
+    public string[] Recommendations { get; set; } = Array.Empty<string>();
+    
+    /// <summary>Last security check timestamp</summary>
+    public DateTime CheckedAt { get; set; }
+}
 
 public class PlatformRoleDefinitionDto
 {
