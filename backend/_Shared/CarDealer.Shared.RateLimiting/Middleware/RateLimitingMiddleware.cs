@@ -12,6 +12,10 @@ public class RateLimitingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RateLimitingMiddleware> _logger;
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public RateLimitingMiddleware(
         RequestDelegate next,
@@ -54,10 +58,7 @@ public class RateLimitingMiddleware
                 resetAt = result.ResetAt
             };
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse, s_jsonOptions));
 
             return;
         }

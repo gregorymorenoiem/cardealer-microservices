@@ -188,16 +188,18 @@ public class ProblemDetails
         };
     }
 
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
     /// <summary>
-    /// Serializes to JSON
+    /// Serializes to JSON using cached serializer options for performance.
     /// </summary>
     public string ToJson()
     {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        });
+        return JsonSerializer.Serialize(this, s_jsonOptions);
     }
 }

@@ -27,8 +27,7 @@ RUN dotnet publish "VehiclesSaleService.Api.csproj" -c Release -o /app/publish /
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
 # Create non-root user and secrets directory (Alpine syntax)
 RUN addgroup -g 1000 appuser && \
@@ -40,6 +39,7 @@ RUN addgroup -g 1000 appuser && \
 RUN apk add --no-cache wget
 
 # Set Docker environment
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
 USER appuser
@@ -47,6 +47,6 @@ USER appuser
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "VehiclesSaleService.Api.dll"]

@@ -90,9 +90,9 @@ public static class MicroserviceSecretsConfiguration
         var port = int.Parse(secretProvider.GetSecret(SecretKeys.RabbitMqPort)
             ?? configuration["RabbitMQ:Port"] ?? "5672");
         var user = secretProvider.GetSecret(SecretKeys.RabbitMqUser)
-            ?? configuration["RabbitMQ:UserName"] ?? "guest";
+            ?? configuration["RabbitMQ:UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured");
         var password = secretProvider.GetSecret(SecretKeys.RabbitMqPassword)
-            ?? configuration["RabbitMQ:Password"] ?? "guest";
+            ?? configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
         var vhost = secretProvider.GetSecret(SecretKeys.RabbitMqVirtualHost)
             ?? configuration["RabbitMQ:VirtualHost"] ?? "/";
             

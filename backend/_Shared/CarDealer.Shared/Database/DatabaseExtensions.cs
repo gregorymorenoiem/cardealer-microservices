@@ -99,17 +99,9 @@ public static class DatabaseExtensions
                 break;
 
             case DatabaseProvider.SqlServer:
-                logger?.LogInformation("Configurando SQL Server");
-                options.UseSqlServer(connectionString, sqlServerOptions =>
-                {
-                    sqlServerOptions.EnableRetryOnFailure(
-                        maxRetryCount: config.MaxRetryCount,
-                        maxRetryDelay: TimeSpan.FromSeconds(config.MaxRetryDelay),
-                        errorNumbersToAdd: null);
-                    sqlServerOptions.CommandTimeout(config.CommandTimeout);
-                    sqlServerOptions.MigrationsAssembly(GetMigrationsAssembly<TContext>());
-                });
-                break;
+                throw new NotSupportedException(
+                    "SQL Server provider is not configured in this build. " +
+                    "This project uses PostgreSQL exclusively.");
 
             case DatabaseProvider.MySQL:
                 logger?.LogInformation("MySQL provider requested but not configured.");
@@ -120,22 +112,14 @@ public static class DatabaseExtensions
 
 
             case DatabaseProvider.Oracle:
-                logger?.LogInformation("Configurando Oracle Database");
-                options.UseOracle(connectionString, oracleOptions =>
-                {
-                    oracleOptions.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
-                    oracleOptions.CommandTimeout(config.CommandTimeout);
-                    oracleOptions.MigrationsAssembly(GetMigrationsAssembly<TContext>());
-                    // Oracle tiene retry automático en el driver
-                    oracleOptions.MaxBatchSize(config.MaxRetryCount);
-                });
-                break;
+                throw new NotSupportedException(
+                    "Oracle provider is not configured in this build. " +
+                    "This project uses PostgreSQL exclusively.");
 
             case DatabaseProvider.InMemory:
-                logger?.LogWarning("Configurando InMemory database. Solo para testing.");
-                var databaseName = $"{typeof(TContext).Name}_{Guid.NewGuid()}";
-                options.UseInMemoryDatabase(databaseName);
-                break;
+                throw new NotSupportedException(
+                    "InMemory provider is not configured in this build. " +
+                    "Add Microsoft.EntityFrameworkCore.InMemory package if needed for testing.");
 
             default:
                 throw new NotSupportedException(

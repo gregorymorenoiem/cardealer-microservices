@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Messaging;
 using VehiclesSaleService.Infrastructure.Persistence;
 using CarDealer.Contracts.Events.Vehicle;
+using CarDealer.Shared.Configuration;
 using Entities = VehiclesSaleService.Domain.Entities;
 
 namespace VehiclesSaleService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class VehiclesController : ControllerBase
 {
     private readonly IVehicleRepository _vehicleRepository;
@@ -18,25 +21,50 @@ public class VehiclesController : ControllerBase
     private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<VehiclesController> _logger;
     private readonly ApplicationDbContext _context;
+    private readonly IConfigurationServiceClient _configClient;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
         ICategoryRepository categoryRepository,
         IEventPublisher eventPublisher,
         ILogger<VehiclesController> logger,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        IConfigurationServiceClient configClient)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
         _eventPublisher = eventPublisher;
         _logger = logger;
         _context = context;
+        _configClient = configClient;
+    }
+
+    /// <summary>
+    /// Get effective vehicle listing settings from ConfigurationService (admin panel).
+    /// Used by frontend to enforce limits (max images, max price, KYC requirement, etc.)
+    /// </summary>
+    [HttpGet("settings")]
+    [AllowAnonymous]
+    public async Task<ActionResult> GetSettings()
+    {
+        var settings = new
+        {
+            MaxImagesPerListing = await _configClient.GetIntAsync("vehicles.max_images_per_listing", 30),
+            ListingExpirationDays = await _configClient.GetIntAsync("vehicles.listing_expiration_days", 90),
+            FeaturedDurationDays = await _configClient.GetIntAsync("vehicles.featured_duration_days", 30),
+            MaxPriceDop = await _configClient.GetDecimalAsync("vehicles.max_price_dop", 100_000_000m),
+            PaginationDefault = await _configClient.GetIntAsync("vehicles.pagination_default", 20),
+            RequireKycToSell = await _configClient.IsEnabledAsync("vehicles.require_kyc_to_sell", defaultValue: true),
+        };
+
+        return Ok(settings);
     }
 
     /// <summary>
     /// Search vehicles with filters and pagination
     /// </summary>
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<VehicleSearchResult>> Search([FromQuery] VehicleSearchRequest request)
     {
         var parameters = new VehicleSearchParameters
@@ -88,6 +116,7 @@ public class VehiclesController : ControllerBase
     /// Get vehicle by ID
     /// </summary>
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<Vehicle>> GetById(Guid id)
     {
         var vehicle = await _vehicleRepository.GetByIdAsync(id);
@@ -98,9 +127,43 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
+    /// Get vehicle by slug (format: {year}-{make}-{model}-{shortId})
+    /// </summary>
+    [HttpGet("slug/{slug}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<Vehicle>> GetBySlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return BadRequest(new { message = "Slug is required" });
+
+        // Extract the short ID from the slug (last 8 characters after the last dash)
+        var lastDash = slug.LastIndexOf('-');
+        if (lastDash < 0 || lastDash >= slug.Length - 1)
+            return NotFound(new { message = "Vehicle not found" });
+
+        var shortId = slug[(lastDash + 1)..];
+        if (shortId.Length != 8)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Search for vehicle whose ID starts with the short ID
+        var vehicles = await _context.Vehicles
+            .Include(v => v.Images)
+            .Where(v => !v.IsDeleted && v.Id.ToString().Replace("-", "").StartsWith(shortId))
+            .ToListAsync();
+
+        // Verify the full slug matches to avoid collisions
+        var vehicle = vehicles.FirstOrDefault(v => GenerateSlug(v) == slug);
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        return Ok(vehicle);
+    }
+
+    /// <summary>
     /// Get vehicle by VIN
     /// </summary>
     [HttpGet("vin/{vin}")]
+    [AllowAnonymous]
     public async Task<ActionResult<Vehicle>> GetByVIN(string vin)
     {
         var vehicle = await _vehicleRepository.GetByVINAsync(vin);
@@ -111,9 +174,37 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
+    /// Check if a VIN already exists in the system.
+    /// Fast endpoint for real-time validation while user types.
+    /// </summary>
+    [HttpGet("vin/{vin}/exists")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(VinExistsResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VinExistsResponse>> CheckVinExists(string vin)
+    {
+        if (string.IsNullOrWhiteSpace(vin) || vin.Length != 17)
+            return Ok(new VinExistsResponse { Exists = false });
+
+        vin = vin.ToUpperInvariant().Trim();
+
+        var vehicle = await _vehicleRepository.GetByVINAsync(vin);
+        if (vehicle == null)
+            return Ok(new VinExistsResponse { Exists = false });
+
+        return Ok(new VinExistsResponse
+        {
+            Exists = true,
+            VehicleId = vehicle.Id,
+            Slug = GenerateSlug(vehicle),
+            Status = vehicle.Status.ToString()
+        });
+    }
+
+    /// <summary>
     /// Get featured vehicles
     /// </summary>
     [HttpGet("featured")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Vehicle>>> GetFeatured([FromQuery] int take = 10)
     {
         var vehicles = await _vehicleRepository.GetFeaturedAsync(take);
@@ -124,6 +215,7 @@ public class VehiclesController : ControllerBase
     /// Get vehicles by dealer
     /// </summary>
     [HttpGet("dealer/{dealerId:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Vehicle>>> GetByDealer(Guid dealerId)
     {
         var vehicles = await _vehicleRepository.GetByDealerAsync(dealerId);
@@ -131,16 +223,100 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
+    /// Get vehicles by seller (user)
+    /// </summary>
+    [HttpGet("seller/{sellerId:guid}")]
+    public async Task<ActionResult<SellerVehiclesResponse>> GetBySeller(
+        Guid sellerId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 12,
+        [FromQuery] string? status = null)
+    {
+        var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
+        
+        // Filter by status if provided
+        if (!string.IsNullOrEmpty(status) && status != "all")
+        {
+            if (Enum.TryParse<VehicleStatus>(status, true, out var statusEnum))
+            {
+                vehicles = vehicles.Where(v => v.Status == statusEnum);
+            }
+        }
+        
+        // Filter out deleted vehicles
+        vehicles = vehicles.Where(v => !v.IsDeleted);
+        
+        var totalCount = vehicles.Count();
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        
+        var pagedVehicles = vehicles
+            .OrderByDescending(v => v.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(v => new SellerVehicleDto
+            {
+                Id = v.Id,
+                Title = v.Title,
+                Slug = GenerateSlug(v),
+                Price = v.Price,
+                Currency = v.Currency,
+                Status = v.Status.ToString(),
+                MainImageUrl = v.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
+                Year = v.Year,
+                Make = v.Make,
+                Model = v.Model,
+                Mileage = v.Mileage,
+                Transmission = v.Transmission.ToString(),
+                FuelType = v.FuelType.ToString(),
+                Views = v.ViewCount,
+                Favorites = v.FavoriteCount,
+                CreatedAt = v.CreatedAt
+            })
+            .ToList();
+        
+        return Ok(new SellerVehiclesResponse
+        {
+            Data = pagedVehicles,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        });
+    }
+
+    /// <summary>
+    /// Get seller vehicle statistics
+    /// </summary>
+    [HttpGet("seller/{sellerId:guid}/stats")]
+    public async Task<ActionResult<SellerVehicleStats>> GetSellerStats(Guid sellerId)
+    {
+        var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
+        var activeVehicles = vehicles.Where(v => !v.IsDeleted).ToList();
+        
+        return Ok(new SellerVehicleStats
+        {
+            TotalListings = activeVehicles.Count,
+            ActiveListings = activeVehicles.Count(v => v.Status == VehicleStatus.Active),
+            SoldListings = activeVehicles.Count(v => v.Status == VehicleStatus.Sold),
+            PendingListings = activeVehicles.Count(v => v.Status == VehicleStatus.PendingReview),
+            TotalViews = activeVehicles.Sum(v => v.ViewCount),
+            TotalFavorites = activeVehicles.Sum(v => v.FavoriteCount)
+        });
+    }
+
+    /// <summary>
     /// Compare multiple vehicles by their IDs
     /// </summary>
     [HttpPost("compare")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Vehicle>>> Compare([FromBody] CompareVehiclesRequest request)
     {
         if (request.VehicleIds == null || !request.VehicleIds.Any())
             return BadRequest(new { message = "At least one vehicle ID is required" });
 
-        if (request.VehicleIds.Count > 5)
-            return BadRequest(new { message = "Cannot compare more than 5 vehicles at once" });
+        const int defaultMaxCompare = 5;
+        if (request.VehicleIds.Count > defaultMaxCompare)
+            return BadRequest(new { message = $"Cannot compare more than {defaultMaxCompare} vehicles at once" });
 
         var vehicles = new List<Vehicle>();
         foreach (var id in request.VehicleIds)
@@ -356,6 +532,11 @@ public class VehiclesController : ControllerBase
             });
         }
 
+        // Load dynamic config from ConfigurationService
+        var maxPriceDop = await _configClient.GetDecimalAsync("vehicles.max_price_dop", 100_000_000m);
+        var maxImages = await _configClient.GetIntAsync("vehicles.max_images_per_listing", 30);
+        var listingExpirationDays = await _configClient.GetIntAsync("vehicles.listing_expiration_days", 90);
+
         // Validate required fields
         var validationErrors = new List<string>();
 
@@ -364,6 +545,9 @@ public class VehiclesController : ControllerBase
 
         if (vehicle.Price <= 0)
             validationErrors.Add("Price must be greater than 0");
+
+        if (vehicle.Price > maxPriceDop)
+            validationErrors.Add($"Price cannot exceed {maxPriceDop:N0} DOP");
 
         if (string.IsNullOrWhiteSpace(vehicle.Make))
             validationErrors.Add("Make is required");
@@ -374,8 +558,11 @@ public class VehiclesController : ControllerBase
         if (vehicle.Year < 1900 || vehicle.Year > DateTime.UtcNow.Year + 2)
             validationErrors.Add($"Year must be between 1900 and {DateTime.UtcNow.Year + 2}");
 
-        if (vehicle.Images.Count < 1) // Relaxed from 3 to 1 for testing
+        if (vehicle.Images.Count < 1)
             validationErrors.Add("At least 1 image is required (recommend 3+)");
+
+        if (vehicle.Images.Count > maxImages)
+            validationErrors.Add($"Maximum {maxImages} images allowed per listing");
 
         if (string.IsNullOrWhiteSpace(vehicle.SellerPhone) && string.IsNullOrWhiteSpace(vehicle.SellerEmail))
             validationErrors.Add("At least one contact method (phone or email) is required");
@@ -393,9 +580,12 @@ public class VehiclesController : ControllerBase
         vehicle.PublishedAt = DateTime.UtcNow;
         vehicle.UpdatedAt = DateTime.UtcNow;
 
+        // Set expiration based on dynamic config
+        var expiresAt = request?.ExpiresAt ?? DateTime.UtcNow.AddDays(listingExpirationDays);
+
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Vehicle published: {VehicleId} - {Title}", id, vehicle.Title);
+        _logger.LogInformation("Vehicle published: {VehicleId} - {Title}, expires: {ExpiresAt}", id, vehicle.Title, expiresAt);
 
         // Publish event
         try
@@ -422,8 +612,8 @@ public class VehiclesController : ControllerBase
             Id = vehicle.Id,
             Status = vehicle.Status,
             PublishedAt = vehicle.PublishedAt.Value,
-            ExpiresAt = request?.ExpiresAt,
-            Message = "Vehicle published successfully. It is now visible to buyers."
+            ExpiresAt = expiresAt,
+            Message = $"Vehicle published successfully. It is now visible to buyers. Expires: {expiresAt:yyyy-MM-dd}"
         });
     }
 
@@ -563,6 +753,7 @@ public class VehiclesController : ControllerBase
     /// Register a view for a vehicle
     /// </summary>
     [HttpPost("{id:guid}/views")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(RegisterViewResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RegisterViewResponse>> RegisterView(Guid id, [FromBody] RegisterViewRequest? request = null)
@@ -602,6 +793,12 @@ public class VehiclesController : ControllerBase
 
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
+
+        // Enforce max images per listing from ConfigurationService
+        var maxImages = await _configClient.GetIntAsync("vehicles.max_images_per_listing", 30);
+        var totalAfterAdd = vehicle.Images.Count + request.Images.Count;
+        if (totalAfterAdd > maxImages)
+            return BadRequest(new { message = $"Cannot exceed {maxImages} images per listing. Current: {vehicle.Images.Count}, Adding: {request.Images.Count}" });
 
         var existingMaxOrder = vehicle.Images.Any() ? vehicle.Images.Max(i => i.SortOrder) : -1;
         var addedImages = new List<VehicleImage>();
@@ -694,6 +891,20 @@ public class VehiclesController : ControllerBase
             VehiclesUpdated = vehicleIds.Count - errors.Count,
             Errors = errors
         });
+    }
+
+    // Helper method to generate a URL-friendly slug from vehicle data
+    private static string GenerateSlug(Vehicle vehicle)
+    {
+        // Generate slug like "2024-toyota-camry-{shortId}"
+        var baseSlug = $"{vehicle.Year}-{vehicle.Make}-{vehicle.Model}"
+            .ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace("--", "-");
+        
+        // Add short ID to ensure uniqueness
+        var shortId = vehicle.Id.ToString("N")[..8];
+        return $"{baseSlug}-{shortId}";
     }
 }
 
@@ -961,6 +1172,49 @@ public record RegisterViewResponse
     public Guid VehicleId { get; init; }
     public int TotalViews { get; init; }
     public string Message { get; init; } = string.Empty;
+}
+
+// ========================================
+// Seller Vehicles DTOs
+// ========================================
+
+public record SellerVehicleDto
+{
+    public Guid Id { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+    public string Currency { get; init; } = "DOP";
+    public string Status { get; init; } = string.Empty;
+    public string? MainImageUrl { get; init; }
+    public int Year { get; init; }
+    public string Make { get; init; } = string.Empty;
+    public string Model { get; init; } = string.Empty;
+    public int Mileage { get; init; }
+    public string? Transmission { get; init; }
+    public string? FuelType { get; init; }
+    public int Views { get; init; }
+    public int Favorites { get; init; }
+    public DateTime CreatedAt { get; init; }
+}
+
+public record SellerVehiclesResponse
+{
+    public List<SellerVehicleDto> Data { get; init; } = new();
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+    public int TotalPages { get; init; }
+}
+
+public record SellerVehicleStats
+{
+    public int TotalListings { get; init; }
+    public int ActiveListings { get; init; }
+    public int SoldListings { get; init; }
+    public int PendingListings { get; init; }
+    public int TotalViews { get; init; }
+    public int TotalFavorites { get; init; }
 }
 
 #endregion

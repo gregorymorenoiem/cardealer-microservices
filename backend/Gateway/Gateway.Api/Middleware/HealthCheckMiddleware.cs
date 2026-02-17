@@ -6,6 +6,15 @@ namespace Gateway.Api.Middleware;
 public class HealthCheckMiddleware
 {
     private readonly RequestDelegate _next;
+    private static readonly HashSet<string> AllowedOrigins = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "https://okla.com.do",
+        "https://www.okla.com.do",
+        "https://inelcasrl.com.do"
+    };
 
     public HealthCheckMiddleware(RequestDelegate next)
     {
@@ -22,8 +31,7 @@ public class HealthCheckMiddleware
             {
                 var origin = context.Request.Headers["Origin"].ToString();
 
-                // Allow localhost:5173 for development
-                if (origin == "http://localhost:5173" || origin == "https://inelcasrl.com.do")
+                if (AllowedOrigins.Contains(origin))
                 {
                     context.Response.Headers["Access-Control-Allow-Origin"] = origin;
                     context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";

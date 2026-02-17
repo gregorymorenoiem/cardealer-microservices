@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../VehiclesSaleService.Domain/VehiclesSaleService.Domain.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

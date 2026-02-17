@@ -76,18 +76,19 @@ public class RabbitMqAuditPublisher : IAuditPublisher, IDisposable
         }
     }
 
-    public async Task PublishAsync(AuditEvent auditEvent, CancellationToken cancellationToken = default)
+    public Task PublishAsync(AuditEvent auditEvent, CancellationToken cancellationToken = default)
     {
         if (!_options.Enabled)
         {
             _logger.LogDebug("Audit publishing is disabled");
-            return;
+            return Task.CompletedTask;
         }
 
         // Enriquecer evento con información del servicio
         auditEvent.Source = _options.ServiceName;
 
-        await Task.Run(() => Publish(auditEvent), cancellationToken);
+        Publish(auditEvent);
+        return Task.CompletedTask;
     }
 
     public void Publish(AuditEvent auditEvent)

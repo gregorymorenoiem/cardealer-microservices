@@ -24,7 +24,7 @@ public class Vehicle : ITenantEntity
     // ========================================
     public Guid SellerId { get; set; }
     public string SellerName { get; set; } = string.Empty;
-    public SellerType SellerType { get; set; } = SellerType.Individual;
+    public SellerType SellerType { get; set; } = SellerType.Seller;
     public string? SellerPhone { get; set; }
     public string? SellerEmail { get; set; }
     public string? SellerWhatsApp { get; set; }
@@ -157,6 +157,14 @@ public class Vehicle : ITenantEntity
     public bool IsFeatured { get; set; } = false;
 
     // ========================================
+    // CONCURRENCY CONTROL
+    // ========================================
+    /// <summary>
+    /// Optimistic concurrency token. Updated automatically on every save.
+    /// </summary>
+    public string ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
+
+    // ========================================
     // NAVEGACIÓN
     // ========================================
     public Guid? CategoryId { get; set; }
@@ -286,7 +294,7 @@ public enum VehicleCondition
 /// </summary>
 public enum SellerType
 {
-    Individual = 0,     // Vendedor particular
+    Seller = 0,         // Vendedor particular
     Dealer = 1,         // Concesionario/Lote
     Franchise = 2,      // Concesionario oficial de marca
     Wholesale = 3       // Mayorista

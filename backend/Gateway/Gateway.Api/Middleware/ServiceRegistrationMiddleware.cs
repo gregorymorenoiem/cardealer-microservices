@@ -18,56 +18,57 @@ public class ServiceRegistrationMiddleware
     {
         if (!_isRegistered)
         {
-            lock (_lock)
-            {
-                if (!_isRegistered)
-                {
-                    var serviceName = configuration["Service:Name"] ?? "Gateway";
-                    var host = configuration["Service:Host"] ?? "localhost";
-                    var portString = configuration["Service:Port"] ?? "5008";
-                    var healthCheckUrl = configuration["Service:HealthCheckUrl"] ?? $"http://{host}:{portString}/health";
-
-                    if (!int.TryParse(portString, out var port))
-                    {
-                        port = 5008;
-                    }
-
-                    var instanceId = $"{serviceName}-{Guid.NewGuid()}";
-                    var tags = new[] { "gateway", "routing", "api-gateway", "consumer" };
-                    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
-
-                    var instance = new ServiceInstance
-                    {
-                        Id = instanceId,
-                        ServiceName = serviceName,
-                        Host = host,
-                        Port = port,
-                        HealthCheckUrl = healthCheckUrl,
-                        HealthCheckInterval = 10,
-                        HealthCheckTimeout = 5,
-                        Tags = tags.ToList(),
-                        Metadata = new Dictionary<string, string>
-                        {
-                            { "version", "1.0.0" },
-                            { "environment", environment },
-                            { "ocelot", "true" }
-                        }
-                    };
-
-                    try
-                    {
-                        serviceRegistry.RegisterServiceAsync(instance).Wait();
-                        _isRegistered = true;
-                        Console.WriteLine($"[ServiceDiscovery] {serviceName} registered successfully with Consul. Instance: {instanceId}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[ServiceDiscovery] Error registering {serviceName}: {ex.Message}");
-                    }
-                }
-            }
+            await RegisterServiceOnceAsync(serviceRegistry, configuration);
         }
 
         await _next(context);
+    }
+
+    private static async Task RegisterServiceOnceAsync(IServiceRegistry serviceRegistry, IConfiguration configuration)
+    {
+        if (_isRegistered) return;
+
+        try
+        {
+            var serviceName = configuration["Service:Name"] ?? "Gateway";
+            var host = configuration["Service:Host"] ?? "localhost";
+            var portString = configuration["Service:Port"] ?? "5008";
+            var healthCheckUrl = configuration["Service:HealthCheckUrl"] ?? $"http://{host}:{portString}/health";
+
+            if (!int.TryParse(portString, out var port))
+            {
+                port = 5008;
+            }
+
+            var instanceId = $"{serviceName}-{Guid.NewGuid()}";
+            var tags = new[] { "gateway", "routing", "api-gateway", "consumer" };
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+            var instance = new ServiceInstance
+            {
+                Id = instanceId,
+                ServiceName = serviceName,
+                Host = host,
+                Port = port,
+                HealthCheckUrl = healthCheckUrl,
+                HealthCheckInterval = 10,
+                HealthCheckTimeout = 5,
+                Tags = tags.ToList(),
+                Metadata = new Dictionary<string, string>
+                {
+                    { "version", "1.0.0" },
+                    { "environment", environment },
+                    { "ocelot", "true" }
+                }
+            };
+
+            await serviceRegistry.RegisterServiceAsync(instance);
+            _isRegistered = true;
+            Console.WriteLine($"[ServiceDiscovery] {serviceName} registered successfully with Consul. Instance: {instanceId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ServiceDiscovery] Error registering service: {ex.Message}");
+        }
     }
 }

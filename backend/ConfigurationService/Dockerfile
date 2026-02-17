@@ -31,14 +31,14 @@ RUN dotnet publish "ConfigurationService.Api.csproj" -c Release -o /app/publish 
 # Runtime stage - Alpine para menor superficie de ataque
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
 # Install wget for healthcheck and create secrets directory
 RUN apk add --no-cache wget && \
     mkdir -p /run/secrets
 
 # Set environment to Docker
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
 # Create non-root user (Alpine uses addgroup/adduser)
@@ -51,6 +51,6 @@ USER appuser
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "ConfigurationService.Api.dll"]

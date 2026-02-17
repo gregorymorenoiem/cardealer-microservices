@@ -20,6 +20,10 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
     private IModel? _channel;
     private readonly object _lock = new();
     private bool _disposed;
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public RabbitMQErrorPublisher(
         IOptions<ErrorHandlingOptions> options,
@@ -29,23 +33,25 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
         _logger = logger;
     }
 
-    public async Task PublishAsync(ErrorEvent errorEvent, CancellationToken cancellationToken = default)
+    public Task PublishAsync(ErrorEvent errorEvent, CancellationToken cancellationToken = default)
     {
         if (!_options.RabbitMQ.Enabled)
         {
             _logger.LogDebug("RabbitMQ error publishing is disabled");
-            return;
+            return Task.CompletedTask;
         }
 
         try
         {
-            await Task.Run(() => PublishToRabbitMQ(errorEvent), cancellationToken);
+            PublishToRabbitMQ(errorEvent);
         }
         catch (Exception ex)
         {
             // Log but don't throw - we don't want error publishing to break the app
             _logger.LogWarning(ex, "Failed to publish error to RabbitMQ: {Message}", ex.Message);
         }
+
+        return Task.CompletedTask;
     }
 
     public async Task PublishExceptionAsync(
@@ -122,10 +128,7 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
             return;
         }
 
-        var json = JsonSerializer.Serialize(errorEvent, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var json = JsonSerializer.Serialize(errorEvent, s_jsonOptions);
         var body = Encoding.UTF8.GetBytes(json);
 
         var properties = _channel.CreateBasicProperties();

@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using CarDealer.Shared.ErrorHandling.Interfaces;
 using CarDealer.Shared.ErrorHandling.Models;
@@ -51,12 +53,24 @@ public class GlobalExceptionMiddleware
         var spanId = Activity.Current?.SpanId.ToString();
         var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault();
 
-        // Log the exception
-        _logger.LogError(exception,
-            "Unhandled exception in {Method} {Path}: {Message}",
-            context.Request.Method,
-            context.Request.Path,
-            exception.Message);
+        // Log at appropriate level: client errors (4xx) as Warning, server errors (5xx) as Error
+        var isClientError = TryGetServiceException(exception, out var exStatusCode, out _) && exStatusCode >= 400 && exStatusCode < 500;
+        if (isClientError || exception is UnauthorizedAccessException || exception is KeyNotFoundException || exception is ValidationException)
+        {
+            _logger.LogWarning(exception,
+                "Client error in {Method} {Path}: {Message}",
+                context.Request.Method,
+                context.Request.Path,
+                exception.Message);
+        }
+        else
+        {
+            _logger.LogError(exception,
+                "Unhandled exception in {Method} {Path}: {Message}",
+                context.Request.Method,
+                context.Request.Path,
+                exception.Message);
+        }
 
         // Publish to ErrorService (non-blocking)
         _ = PublishErrorAsync(context, exception, errorPublisher, traceId, spanId, correlationId);
@@ -129,11 +143,57 @@ public class GlobalExceptionMiddleware
                 TraceId = traceId,
                 ErrorCode = "TIMEOUT"
             },
+            // Handle service-specific exceptions that carry StatusCode/ErrorCode via reflection
+            // This covers AuthServiceException and similar base classes from any microservice
+            _ when TryGetServiceException(exception, out var statusCode, out var errorCode) => new Models.ProblemDetails
+            {
+                Type = statusCode switch
+                {
+                    400 => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    401 => "https://tools.ietf.org/html/rfc7235#section-3.1",
+                    403 => "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+                    404 => "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                    409 => "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+                    503 => "https://tools.ietf.org/html/rfc7231#section-6.6.4",
+                    _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+                },
+                Title = errorCode ?? "Error",
+                Status = statusCode,
+                Detail = exception.Message,
+                TraceId = traceId,
+                ErrorCode = errorCode ?? "UNKNOWN_ERROR"
+            },
             _ => Models.ProblemDetails.InternalServerError(
                 _options.IncludeExceptionDetails ? exception.Message : null,
                 traceId,
                 _options.IncludeExceptionDetails)
         };
+    }
+
+    // Cache reflection lookups per exception type to avoid repeated reflection on hot path
+    private static readonly ConcurrentDictionary<Type, (PropertyInfo? StatusCode, PropertyInfo? ErrorCode)> s_exceptionPropertyCache = new();
+
+    /// <summary>
+    /// Tries to extract StatusCode and ErrorCode from service-specific exceptions
+    /// (e.g., AuthServiceException, or any exception with int StatusCode and string ErrorCode properties).
+    /// Uses cached reflection for performance.
+    /// </summary>
+    private static bool TryGetServiceException(Exception exception, out int statusCode, out string? errorCode)
+    {
+        var type = exception.GetType();
+        var (statusCodeProp, errorCodeProp) = s_exceptionPropertyCache.GetOrAdd(type, t =>
+            (t.GetProperty("StatusCode", typeof(int)), t.GetProperty("ErrorCode", typeof(string))));
+
+        if (statusCodeProp != null)
+        {
+            statusCode = (int)(statusCodeProp.GetValue(exception) ?? 500);
+            errorCode = errorCodeProp?.GetValue(exception) as string;
+            return true;
+        }
+
+        statusCode = 500;
+        errorCode = null;
+        return false;
     }
 
     private static Models.ProblemDetails CreateValidationProblemDetails(

@@ -1,12 +1,14 @@
 using ConfigurationService.Application.Commands;
 using ConfigurationService.Application.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ConfigurationService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class ConfigurationsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -17,7 +19,8 @@ public class ConfigurationsController : ControllerBase
     }
 
     [HttpGet("{key}")]
-    public async Task<IActionResult> Get(string key, [FromQuery] string environment, [FromQuery] string? tenantId = null)
+    [AllowAnonymous] // Allow internal services to read configs
+    public async Task<IActionResult> Get(string key, [FromQuery] string environment = "Development", [FromQuery] string? tenantId = null)
     {
         var query = new GetConfigurationQuery(key, environment, tenantId);
         var result = await _mediator.Send(query);
@@ -29,9 +32,27 @@ public class ConfigurationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string environment, [FromQuery] string? tenantId = null)
+    [AllowAnonymous] // Allow internal services and admin UI to read configs
+    public async Task<IActionResult> GetAll([FromQuery] string environment = "Development", [FromQuery] string? tenantId = null)
     {
         var query = new GetAllConfigurationsQuery(environment, tenantId);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpGet("category/{category}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetByCategory(string category, [FromQuery] string environment = "Development", [FromQuery] string? tenantId = null)
+    {
+        var query = new GetConfigurationsByCategoryQuery(category, environment, tenantId);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/history")]
+    public async Task<IActionResult> GetHistory(Guid id)
+    {
+        var query = new GetConfigurationHistoryQuery(id);
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -49,6 +70,13 @@ public class ConfigurationsController : ControllerBase
         if (id != command.Id)
             return BadRequest("ID mismatch");
 
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> BulkUpsert([FromBody] BulkUpsertConfigurationsCommand command)
+    {
         var result = await _mediator.Send(command);
         return Ok(result);
     }

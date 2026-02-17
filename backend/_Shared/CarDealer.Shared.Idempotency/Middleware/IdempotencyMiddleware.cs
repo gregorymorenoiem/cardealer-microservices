@@ -19,6 +19,10 @@ public class IdempotencyMiddleware
     private readonly RequestDelegate _next;
     private readonly IdempotencyOptions _options;
     private readonly ILogger<IdempotencyMiddleware> _logger;
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public IdempotencyMiddleware(
         RequestDelegate next,
@@ -86,10 +90,7 @@ public class IdempotencyMiddleware
                     instance = path
                 };
                 
-                await context.Response.WriteAsync(JsonSerializer.Serialize(error, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                }));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
                 return;
             }
             
@@ -141,10 +142,7 @@ public class IdempotencyMiddleware
                 instance = path
             };
             
-            await context.Response.WriteAsync(JsonSerializer.Serialize(error, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
             return;
         }
 
@@ -164,10 +162,7 @@ public class IdempotencyMiddleware
                 instance = path
             };
             
-            await context.Response.WriteAsync(JsonSerializer.Serialize(error, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
             return;
         }
 
@@ -220,10 +215,7 @@ public class IdempotencyMiddleware
                 instance = path
             };
             
-            await context.Response.WriteAsync(JsonSerializer.Serialize(error, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
             return;
         }
 

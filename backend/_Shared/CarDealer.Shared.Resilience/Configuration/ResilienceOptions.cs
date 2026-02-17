@@ -31,6 +31,21 @@ public class ResilienceOptions
     /// Configuración de rate limiting
     /// </summary>
     public RateLimiterOptions RateLimiter { get; set; } = new();
+
+    /// <summary>
+    /// Configuración de Bulkhead Isolation (limitar concurrencia)
+    /// </summary>
+    public BulkheadOptions Bulkhead { get; set; } = new();
+
+    /// <summary>
+    /// Configuración de Hedging (request hedging para réplicas)
+    /// </summary>
+    public HedgingOptions Hedging { get; set; } = new();
+
+    /// <summary>
+    /// Configuración de Fallback (respuestas degradadas)
+    /// </summary>
+    public FallbackOptions Fallback { get; set; } = new();
 }
 
 /// <summary>

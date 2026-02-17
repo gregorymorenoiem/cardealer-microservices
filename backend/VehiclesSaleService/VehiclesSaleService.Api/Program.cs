@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -9,9 +10,12 @@ using VehiclesSaleService.Infrastructure.Messaging;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.MultiTenancy;
+// ConfigurationServiceClient for dynamic config from admin panel
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,8 +32,8 @@ builder.UseStandardSerilog("VehiclesSaleService", options =>
     options.RabbitMQEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", false);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
 });
 
 // ========================================
@@ -93,6 +97,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 // ========================================
+// CONFIGURATION SERVICE CLIENT (dynamic config from admin panel)
+// ========================================
+
+builder.Services.AddConfigurationServiceClient(builder.Configuration, "VehiclesSaleService");
+
+// ========================================
 // DEPENDENCY INJECTION
 // ========================================
 
@@ -111,7 +121,8 @@ builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 var jwtSecret = builder.Configuration["Jwt:Key"] 
     ?? builder.Configuration["JWT:Secret"]
     ?? Environment.GetEnvironmentVariable("JWT_SECRET")
-    ?? "DefaultDevSecretKeyThatIsAtLeast32Characters!";
+    ?? throw new InvalidOperationException(
+        "JWT secret key is not configured. Set 'Jwt:Key' in appsettings, 'JWT:Secret', or 'JWT_SECRET' environment variable.");
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] 
     ?? builder.Configuration["JWT:Issuer"] 
@@ -130,9 +141,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
-            ValidateAudience = false, // Allow any audience since Gateway forwards requests
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(5),
+            ClockSkew = TimeSpan.Zero, // Security: No tolerance for expired tokens (CWE-613)
             NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
@@ -145,15 +157,45 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddDefaultPolicy(, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
 // ========================================
+// ========================================
+// RATE LIMITING
+// ========================================
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("VehiclesPolicy", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = builder.Configuration.GetValue<int>("Security:RateLimit:RequestsPerMinute", 120);
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // HEALTH CHECKS
 // ========================================
 
@@ -182,9 +224,28 @@ builder.Services.AddStandardErrorHandling(options =>
     options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:User is not configured");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
+});
+
+// ============================================================================
+// TRANSVERSAL SERVICES - Audit & Error clients
+// ============================================================================
+builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IAuditServiceClient, VehiclesSaleService.Infrastructure.External.AuditServiceClient>(client =>
+{
+    var auditServiceUrl = builder.Configuration["ServiceUrls:AuditService"] ?? "http://auditservice:8080";
+    client.BaseAddress = new Uri(auditServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IErrorServiceClient, VehiclesSaleService.Infrastructure.External.ErrorServiceClient>(client =>
+{
+    var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"] ?? "http://errorservice:8080";
+    client.BaseAddress = new Uri(errorServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 var app = builder.Build();
@@ -200,13 +261,18 @@ app.UseGlobalErrorHandling();
 app.UseRequestLogging();
 
 // Swagger en desarrollo
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
+app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
