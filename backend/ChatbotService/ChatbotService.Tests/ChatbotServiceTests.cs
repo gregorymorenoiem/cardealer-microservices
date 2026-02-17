@@ -92,7 +92,7 @@ public class ChatMessageTests
             Content = "¿Tienen carros Toyota en venta?",
             Type = MessageType.UserText,
             IsFromBot = false,
-            DialogflowIntentName = "vehicle.search",
+            IntentName = "vehicle.search",
             ConfidenceScore = 0.95m,
             CreatedAt = DateTime.UtcNow
         };
@@ -101,7 +101,7 @@ public class ChatMessageTests
         message.Content.Should().Contain("Toyota");
         message.Type.Should().Be(MessageType.UserText);
         message.IsFromBot.Should().BeFalse();
-        message.DialogflowIntentName.Should().Be("vehicle.search");
+        message.IntentName.Should().Be("vehicle.search");
         message.ConfidenceScore.Should().Be(0.95m);
     }
 
@@ -140,8 +140,8 @@ public class ChatbotConfigurationTests
         {
             Id = Guid.NewGuid(),
             Name = "OKLA Chatbot",
-            DialogflowProjectId = "okla-chatbot",
-            DialogflowLanguageCode = "es"
+            LlmProjectId = "okla-chatbot",
+            LanguageCode = "es"
         };
 
         // Assert
@@ -260,14 +260,14 @@ public class QuickResponseTests
             Category = "general",
             Response = "¡Hola! Soy el asistente virtual de OKLA.",
             Priority = 100,
-            BypassDialogflow = true,
+            BypassLlm = true,
             IsActive = true
         };
 
         // Assert
         response.Name.Should().Be("Greeting");
         response.ResponseText.Should().Be("¡Hola! Soy el asistente virtual de OKLA.");
-        response.BypassDialogflow.Should().BeTrue();
+        response.BypassLlm.Should().BeTrue();
         response.Priority.Should().Be(100);
     }
 

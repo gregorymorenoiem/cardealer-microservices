@@ -1,0 +1,79 @@
+version: "3.8"
+
+# ===================================================================
+# OKLA Chatbot LLM Server — Docker Compose (desarrollo local)
+# ===================================================================
+
+services:
+  # ─────────────────────────────────────────────────────
+  # LLM Inference Server (llama.cpp via llama-cpp-python)
+  # ─────────────────────────────────────────────────────
+  llm-server:
+    build:
+      context: ./LlmServer
+      dockerfile: Dockerfile
+    container_name: okla-llm-server
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montar el directorio con el modelo GGUF
+      - ${LLM_MODEL_DIR:-./LlmServer/models}:/models:ro
+    environment:
+      - MODEL_PATH=/models/okla-llama3-8b-q4_k_m.gguf
+      - HOST=0.0.0.0
+      - PORT=8000
+      - N_CTX=2048
+      - N_GPU_LAYERS=0 # CPU only en desarrollo
+      - N_THREADS=4
+      - MAX_TOKENS=400
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s # El modelo tarda en cargar
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G # Llama 3 8B Q4_K_M ~4.5GB + overhead
+        reservations:
+          memory: 6G
+    networks:
+      - okla-network
+
+  # ─────────────────────────────────────────────────────
+  # ChatbotService (.NET 8)
+  # Se conecta al LLM Server
+  # ─────────────────────────────────────────────────────
+  chatbotservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: okla-chatbotservice
+    ports:
+      - "5060:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=chatbotservice;Username=postgres;Password=postgres
+      - LlmService__ServerUrl=http://llm-server:8000
+      - LlmService__ModelId=okla-llama3-8b
+      - LlmService__LanguageCode=es
+      - LlmService__TimeoutSeconds=60
+      - LlmService__Temperature=0.3
+      - LlmService__MaxTokens=400
+      - LlmService__RepetitionPenalty=1.15
+      - RabbitMQ__Host=rabbitmq
+      - Redis__ConnectionString=redis:6379
+    depends_on:
+      llm-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - okla-network
+
+networks:
+  okla-network:
+    external: true
+    name: cardealer-microservices_default

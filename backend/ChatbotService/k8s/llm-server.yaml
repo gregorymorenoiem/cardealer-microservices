@@ -1,0 +1,232 @@
+# ===================================================================
+# OKLA LLM Server — Kubernetes Deployment
+#
+# Despliega el servidor llama.cpp que sirve el modelo GGUF fine-tuned.
+# El modelo se monta como PersistentVolume.
+# ===================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: okla
+  labels:
+    app.kubernetes.io/part-of: okla
+---
+# ─────────────────────────────────────────────────────
+# ConfigMap — Configuración del LLM Server
+# ─────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-server-config
+  namespace: okla
+  labels:
+    app: llm-server
+    component: chatbot
+data:
+  MODEL_PATH: "/models/okla-llama3-8b-q4_k_m.gguf"
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  N_CTX: "4096"
+  N_GPU_LAYERS: "0"
+  N_THREADS: "4"
+  MAX_TOKENS: "600"
+
+---
+# ─────────────────────────────────────────────────────
+# PersistentVolumeClaim — Almacenamiento del modelo GGUF
+# El modelo (~4.5 GB) se descarga una vez y se persiste.
+# ─────────────────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llm-model-storage
+  namespace: okla
+  labels:
+    app: llm-server
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: do-block-storage # Digital Ocean block storage
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# ─────────────────────────────────────────────────────
+# Deployment — LLM Inference Server
+# ─────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-server
+  namespace: okla
+  labels:
+    app: llm-server
+    component: chatbot
+    tier: inference
+spec:
+  replicas: 1 # Single replica por limitación de memoria GPU/CPU
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: llm-server
+  template:
+    metadata:
+      labels:
+        app: llm-server
+        component: chatbot
+    spec:
+      containers:
+        - name: llm-server
+          image: ghcr.io/gregorymorenoiem/okla-llm-server:latest
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: llm-server-config
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+              readOnly: true
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+            limits:
+              cpu: "4"
+              memory: "10Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 120 # El modelo tarda en cargar
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 18 # 30 + 18*10 = 210s max startup
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: llm-model-storage
+      # Asegurar que se ejecute en un nodo con suficiente RAM
+      nodeSelector:
+        node.kubernetes.io/instance-type: s-4vcpu-8gb # DO droplet con 8GB RAM
+
+---
+# ─────────────────────────────────────────────────────
+# Service — Expone el LLM Server dentro del cluster
+# Solo accesible desde ChatbotService (red interna K8s)
+# ─────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-server
+  namespace: okla
+  labels:
+    app: llm-server
+    component: chatbot
+spec:
+  type: ClusterIP # Solo acceso interno — NO expuesto a internet
+  selector:
+    app: llm-server
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+
+---
+# ─────────────────────────────────────────────────────
+# HorizontalPodAutoscaler — Escalado automático (futuro)
+# Deshabilitado por ahora (1 replica por costos)
+# ─────────────────────────────────────────────────────
+# apiVersion: autoscaling/v2
+# kind: HorizontalPodAutoscaler
+# metadata:
+#   name: llm-server-hpa
+#   namespace: okla
+# spec:
+#   scaleTargetRef:
+#     apiVersion: apps/v1
+#     kind: Deployment
+#     name: llm-server
+#   minReplicas: 1
+#   maxReplicas: 3
+#   metrics:
+#     - type: Resource
+#       resource:
+#         name: cpu
+#         target:
+#           type: Utilization
+#           averageUtilization: 80
+
+---
+# ─────────────────────────────────────────────────────
+# Job — Descarga del modelo GGUF (ejecutar una vez)
+# Descarga el modelo desde HuggingFace Hub al PVC.
+# ─────────────────────────────────────────────────────
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-llm-model
+  namespace: okla
+  labels:
+    app: llm-server
+    component: setup
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: downloader
+          image: python:3.11-slim
+          command:
+            - /bin/bash
+            - -c
+            - |
+              pip install huggingface-hub
+              python -c "
+              from huggingface_hub import hf_hub_download
+              hf_hub_download(
+                  repo_id='gregorymorenoiem/okla-chatbot-llama3-8b',
+                  filename='okla-llama3-8b-q4_k_m.gguf',
+                  local_dir='/models',
+                  local_dir_use_symlinks=False
+              )
+              print('✅ Model downloaded successfully')
+              "
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: llm-model-storage
