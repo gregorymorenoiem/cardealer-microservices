@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 // ComplianceService - Program.cs
 // Punto de entrada del servicio de cumplimiento regulatorio
 
@@ -48,6 +49,9 @@ builder.Services.AddScoped<IComplianceMetricRepository, ComplianceMetricReposito
 
 // ============ MediatR Configuration ============
 builder.Services.AddMediatR(cfg => 
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ComplianceService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(CreateFrameworkCommand).Assembly);
 });
@@ -93,11 +97,26 @@ builder.Services.AddAuthorization(options =>
 // ============ CORS Configuration ============
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddDefaultPolicy(, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -176,6 +195,10 @@ var app = builder.Build();
 // ============ Middleware Pipeline ============
 
 // Swagger (all environments for API documentation)
+
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -184,7 +207,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

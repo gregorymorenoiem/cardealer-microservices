@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
 using InventoryManagementService.Infrastructure.Persistence;
 using InventoryManagementService.Domain.Interfaces;
@@ -23,6 +24,9 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg => 
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(InventoryManagementService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssemblyContaining<InventoryManagementService.Application.DTOs.InventoryItemDto>());
 
 // Repositories
@@ -32,16 +36,31 @@ builder.Services.AddScoped<IBulkImportJobRepository, BulkImportJobRepository>();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddDefaultPolicy(, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "your-super-secret-key-min-32-characters";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "InventoryManagementService";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "InventoryManagementService";
 
@@ -69,13 +88,17 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

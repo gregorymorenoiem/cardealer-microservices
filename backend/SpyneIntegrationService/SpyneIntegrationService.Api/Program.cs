@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,6 +22,9 @@ builder.Services.AddDbContext<SpyneDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg => 
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(SpyneIntegrationService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssemblyContaining<TransformImageCommandValidator>());
 
 // FluentValidation
@@ -50,7 +54,7 @@ builder.Services.AddHttpClient<ISpyneApiClient, SpyneApiClient>(client =>
 .AddStandardResilienceHandler();
 
 // Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "DefaultDevelopmentKeyThatIsAtLeast32Characters";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "OKLA";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -166,6 +170,10 @@ var app = builder.Build();
 // ==================== MIDDLEWARE ====================
 
 // Swagger (always enabled for this service)
+
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {

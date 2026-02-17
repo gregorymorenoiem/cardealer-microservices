@@ -202,16 +202,47 @@ public class AIProcessingController : ControllerBase
     [AllowAnonymous]
     public IActionResult GetProcessedImage(string filename)
     {
-        var imagePath = Path.Combine("/app/processed-images", filename);
-        
+        // Security: Prevent path traversal (CWE-22, OWASP A01:2021)
+        if (string.IsNullOrWhiteSpace(filename) ||
+            filename.Contains("..") ||
+            filename.Contains('/') ||
+            filename.Contains('\\') ||
+            filename.Contains('~') ||
+            Path.GetFileName(filename) != filename)
+        {
+            _logger.LogWarning("Path traversal attempt blocked: {Filename}", filename);
+            return BadRequest(new { error = "Invalid filename" });
+        }
+
+        // Whitelist allowed extensions
+        var extension = Path.GetExtension(filename).ToLowerInvariant();
+        if (extension is not (".png" or ".jpg" or ".jpeg" or ".webp"))
+        {
+            return BadRequest(new { error = "Unsupported image format" });
+        }
+
+        var baseDir = Path.GetFullPath("/app/processed-images");
+        var imagePath = Path.GetFullPath(Path.Combine(baseDir, filename));
+
+        // Double-check resolved path stays within base directory
+        if (!imagePath.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Path traversal attempt blocked (resolved): {Path}", imagePath);
+            return BadRequest(new { error = "Invalid filename" });
+        }
+
         if (!System.IO.File.Exists(imagePath))
         {
             _logger.LogWarning("Image not found: {Path}", imagePath);
             return NotFound();
         }
         
-        var contentType = filename.EndsWith(".png") ? "image/png" : 
-                         filename.EndsWith(".webp") ? "image/webp" : "image/jpeg";
+        var contentType = extension switch
+        {
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => "image/jpeg"
+        };
         
         return PhysicalFile(imagePath, contentType);
     }

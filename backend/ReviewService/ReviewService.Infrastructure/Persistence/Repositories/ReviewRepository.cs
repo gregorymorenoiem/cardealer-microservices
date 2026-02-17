@@ -102,9 +102,15 @@ public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
     /// </summary>
     public async Task<IEnumerable<Review>> SearchByContentAsync(string searchTerm)
     {
+        // Security (CWE-943): Escape LIKE wildcard characters to prevent wildcard injection
+        var escapedTerm = searchTerm
+            .Replace("\\", "\\\\")  // Escape backslash first
+            .Replace("%", "\\%")    // Escape % wildcard
+            .Replace("_", "\\_");   // Escape _ wildcard
+
         return await _context.Reviews
-            .Where(r => EF.Functions.ILike(r.Title, $"%{searchTerm}%") ||
-                        EF.Functions.ILike(r.Content, $"%{searchTerm}%"))
+            .Where(r => EF.Functions.ILike(r.Title, $"%{escapedTerm}%") ||
+                        EF.Functions.ILike(r.Content, $"%{escapedTerm}%"))
             .OrderByDescending(r => r.CreatedAt)
             .Take(100)
             .ToListAsync();

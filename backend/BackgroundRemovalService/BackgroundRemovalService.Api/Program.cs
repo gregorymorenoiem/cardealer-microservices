@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Amazon.S3;
 using BackgroundRemovalService.Application.DTOs;
 using BackgroundRemovalService.Application.Features.Handlers;
@@ -114,6 +115,9 @@ builder.Services.AddScoped<IValidator<CreateRemovalJobRequest>, CreateRemovalJob
 
 // === MediatR ===
 builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(BackgroundRemovalService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(CreateRemovalJobCommandHandler).Assembly);
 });
@@ -160,9 +164,24 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -185,8 +204,12 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // === Swagger ===
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

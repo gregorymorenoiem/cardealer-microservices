@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using FluentValidation;
@@ -53,6 +54,9 @@ builder.Services.AddDbContext<TaxDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg => 
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(TaxComplianceService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssembly(typeof(CreateTaxpayerHandler).Assembly));
 
 // FluentValidation
@@ -67,7 +71,7 @@ builder.Services.AddScoped<IReporte606Repository, Reporte606Repository>();
 builder.Services.AddScoped<IReporte607Repository, Reporte607Repository>();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "default-development-key-change-in-production-min-32-chars";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "CarDealer";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "CarDealer";
 
@@ -98,17 +102,36 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        if (isDev)
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://api.okla.com.do")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

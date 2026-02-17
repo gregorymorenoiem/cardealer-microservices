@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
 # Create secrets directory and set environment
 RUN mkdir -p /run/secrets
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -28,10 +28,12 @@ RUN dotnet publish "IntegrationService.Api.csproj" -c Release -o /app/publish /p
 
 FROM base AS final
 WORKDIR /app
+RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
+USER appuser
 COPY --from=publish /app/publish .
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "IntegrationService.Api.dll"]

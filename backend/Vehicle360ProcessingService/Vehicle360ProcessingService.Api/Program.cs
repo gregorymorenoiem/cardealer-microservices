@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +77,9 @@ builder.Services.AddAuthorization();
 
 // MediatR
 builder.Services.AddMediatR(cfg => 
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Vehicle360ProcessingService.Application.Behaviors.ValidationBehavior<,>));
     cfg.RegisterServicesFromAssemblyContaining<StartVehicle360ProcessingHandler>());
 
 // FluentValidation
@@ -120,8 +124,12 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

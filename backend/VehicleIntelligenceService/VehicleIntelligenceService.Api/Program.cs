@@ -1,3 +1,4 @@
+using CarDealer.Shared.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -29,12 +30,15 @@ builder.Services.AddScoped<IPricingEngine, PricingEngine>();
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(VehicleIntelligenceService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(GetPriceSuggestionQuery).Assembly);
 });
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "your-super-secret-key-min-32-chars-long-12345678";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "VehicleIntelligenceService";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "VehicleIntelligenceServiceUsers";
 
@@ -89,8 +93,12 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+// OWASP Security Headers
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
 if (app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

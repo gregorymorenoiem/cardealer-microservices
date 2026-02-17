@@ -32,18 +32,31 @@ public static class SpyneBackgrounds
 }
 
 /// <summary>
-/// Tipo de cuenta del usuario (sincronizado con UserService)
+/// Tipo de cuenta del usuario (sincronizado con AuthService)
+/// Values match AuthService.Domain.Enums.AccountType
 /// </summary>
 public enum AccountType
 {
-    /// <summary>Comprador o Vendedor Individual (acceso limitado a Spyne)</summary>
-    Individual = 0,
+    /// <summary>Usuario invitado</summary>
+    Guest = 0,
+    
+    /// <summary>Comprador registrado (no publica vehículos)</summary>
+    Buyer = 1,
     
     /// <summary>Dealer con membresía (acceso completo a Spyne)</summary>
-    Dealer = 1,
+    Dealer = 2,
+    
+    /// <summary>Empleado de dealer</summary>
+    DealerEmployee = 3,
     
     /// <summary>Administrador (acceso completo)</summary>
-    Admin = 2
+    Admin = 4,
+    
+    /// <summary>Empleado de plataforma</summary>
+    PlatformEmployee = 5,
+    
+    /// <summary>Vendedor Individual (acceso limitado a Spyne)</summary>
+    Seller = 6
 }
 
 /// <summary>
@@ -56,10 +69,10 @@ public class SpyneUserContext
     public bool HasActiveSubscription { get; set; }
     
     /// <summary>True si el usuario puede acceder a 360° Spin</summary>
-    public bool CanUse360Spin => AccountType == AccountType.Dealer && HasActiveSubscription || AccountType == AccountType.Admin;
+    public bool CanUse360Spin => (AccountType == AccountType.Dealer && HasActiveSubscription) || AccountType == AccountType.Admin || AccountType == AccountType.PlatformEmployee;
     
     /// <summary>True si puede usar el background Showroom Gris</summary>
-    public bool CanUseShowroomBackground => AccountType == AccountType.Dealer && HasActiveSubscription || AccountType == AccountType.Admin;
+    public bool CanUseShowroomBackground => (AccountType == AccountType.Dealer && HasActiveSubscription) || AccountType == AccountType.Admin || AccountType == AccountType.PlatformEmployee;
     
     /// <summary>Obtiene los backgrounds disponibles para este usuario</summary>
     public string[] GetAvailableBackgrounds() => CanUseShowroomBackground 
@@ -124,7 +137,7 @@ public class VehicleImageController : ControllerBase
         // Determine user context and validate background
         var userContext = new SpyneUserContext
         {
-            AccountType = request.AccountType ?? AccountType.Individual,
+            AccountType = request.AccountType ?? AccountType.Buyer,
             HasActiveSubscription = request.HasActiveSubscription ?? false
         };
         
@@ -436,7 +449,7 @@ public class VehicleImageController : ControllerBase
         // Validate dealer membership
         var userContext = new SpyneUserContext
         {
-            AccountType = request.AccountType ?? AccountType.Individual,
+            AccountType = request.AccountType ?? AccountType.Buyer,
             HasActiveSubscription = request.HasActiveSubscription ?? false
         };
         
