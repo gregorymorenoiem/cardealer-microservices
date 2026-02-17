@@ -48,3 +48,4 @@ vitest.config.ts
 .prettierrc
 .prettierignore
 eslint.config.mjs
+pnpm-workspace.yaml

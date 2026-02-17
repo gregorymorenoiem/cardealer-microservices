@@ -32,8 +32,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Production: Frontend only talks to Gateway
-ARG NEXT_PUBLIC_API_URL=https://api.okla.com.do
+# Production: BFF pattern — browser uses relative URLs, Next.js rewrites to gateway
+ARG NEXT_PUBLIC_API_URL=
 ARG NEXT_PUBLIC_SITE_URL=https://okla.com.do
 
 # Set as ENV so Next.js can read them during build
