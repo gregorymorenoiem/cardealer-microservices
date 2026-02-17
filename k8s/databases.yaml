@@ -746,11 +746,11 @@ spec:
 # =============================================================================
 # SHARED POSTGRES PASSWORD SECRET
 # =============================================================================
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgres-password
-  namespace: okla
-type: Opaque
-stringData:
-  password: "OklaDB2025!"
+# ⚠️ This secret is created dynamically by deploy-digitalocean.yml
+#    using GitHub Secrets. DO NOT hardcode passwords here.
+# =============================================================================
+# The postgres-password secret is created in the deploy workflow as:
+#   kubectl create secret generic postgres-password \
+#     --from-literal=password="${{ secrets.POSTGRES_PASSWORD }}" \
+#     -n okla --dry-run=client -o yaml | kubectl apply -f -
+# =============================================================================

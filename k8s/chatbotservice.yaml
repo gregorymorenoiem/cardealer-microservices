@@ -61,7 +61,7 @@ spec:
     spec:
       containers:
         - name: chatbotservice
-          image: ghcr.io/okla-rd/chatbotservice:latest
+          image: ghcr.io/gregorymorenoiem/chatbotservice:latest
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -84,7 +84,12 @@ spec:
                   name: okla-secrets
                   key: jwt-secret-key
             - name: Redis__ConnectionString
-              value: "redis:6379"
+              value: "redis:6379,password=$(REDIS_PASSWORD)"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: REDIS_PASSWORD
             - name: RabbitMQ__Host
               value: "rabbitmq"
             - name: RabbitMQ__Username
@@ -97,6 +102,21 @@ spec:
                 secretKeyRef:
                   name: okla-secrets
                   key: rabbitmq-password
+            - name: WhatsApp__VerifyToken
+              valueFrom:
+                secretKeyRef:
+                  name: okla-secrets
+                  key: whatsapp-verify-token
+            - name: WhatsApp__AccessToken
+              valueFrom:
+                secretKeyRef:
+                  name: okla-secrets
+                  key: whatsapp-access-token
+            - name: WhatsApp__PhoneNumberId
+              valueFrom:
+                secretKeyRef:
+                  name: okla-secrets
+                  key: whatsapp-phone-number-id
           resources:
             requests:
               cpu: "100m"
@@ -180,7 +200,7 @@ spec:
     spec:
       containers:
         - name: llm-server
-          image: ghcr.io/okla-rd/llm-server:latest
+          image: ghcr.io/gregorymorenoiem/llm-server:latest
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -270,7 +290,7 @@ metadata:
   namespace: okla
 spec:
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi

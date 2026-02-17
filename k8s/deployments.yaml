@@ -636,6 +636,8 @@ spec:
                 name: redis-secrets
             - secretRef:
                 name: rabbitmq-secrets
+            - secretRef:
+                name: external-services-secrets
           resources:
             requests:
               memory: "128Mi"
@@ -738,6 +740,8 @@ spec:
                 name: redis-secrets
             - secretRef:
                 name: rabbitmq-secrets
+            - secretRef:
+                name: external-services-secrets
           resources:
             requests:
               memory: "128Mi"
@@ -831,6 +835,8 @@ spec:
                 name: redis-secrets
             - secretRef:
                 name: rabbitmq-secrets
+            - secretRef:
+                name: external-services-secrets
           resources:
             requests:
               memory: "128Mi"

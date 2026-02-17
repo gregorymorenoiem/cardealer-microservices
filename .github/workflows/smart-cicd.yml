@@ -444,6 +444,20 @@ jobs:
     secrets: inherit
 
   # ============================================
+  # CHATBOT (MLOps — dedicated pipeline)
+  # ============================================
+  chatbotservice:
+    name: 🤖 ChatbotService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.chatbotservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: chatbotservice
+      service-path: backend/ChatbotService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
   # FRONTEND
   # ============================================
   frontend-web:
@@ -474,6 +488,7 @@ jobs:
       - auditservice
       - idempotencyservice
       - adminservice
+      - chatbotservice
       - gateway
       - frontend-web
     if: |
@@ -501,7 +516,8 @@ jobs:
           # Apply Kubernetes manifests in order
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmaps.yaml
-          kubectl apply -f k8s/db-secrets.yaml
+          # NOTE: db-secrets are created dynamically by deploy-digitalocean.yml
+          # Do NOT apply k8s/db-secrets.yaml (it's only a template reference)
 
           # Deploy infrastructure (PostgreSQL + Redis + RabbitMQ)
           kubectl apply -f k8s/infrastructure.yaml
@@ -521,11 +537,16 @@ jobs:
           kubectl apply -f k8s/services.yaml
           kubectl apply -f k8s/ingress.yaml
 
+          # Deploy ChatbotService + LLM Server (separate manifest)
+          kubectl apply -f k8s/chatbotservice.yaml
+
       - name: ✅ Verify deployment
         run: |
           kubectl rollout status deployment/frontend-web -n okla --timeout=300s
           kubectl rollout status deployment/gateway -n okla --timeout=300s
           kubectl rollout status deployment/authservice -n okla --timeout=300s
+          kubectl rollout status deployment/chatbotservice -n okla --timeout=300s || true
+          kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
 
   # ============================================
   # SUMMARY
@@ -542,6 +563,7 @@ jobs:
       - auditservice
       - idempotencyservice
       - adminservice
+      - chatbotservice
       - gateway
       - frontend-web
     if: always()
@@ -563,5 +585,6 @@ jobs:
           echo "| AuditService | ${{ needs.auditservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| IdempotencyService | ${{ needs.idempotencyservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdminService | ${{ needs.adminservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

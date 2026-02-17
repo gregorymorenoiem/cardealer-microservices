@@ -379,8 +379,8 @@ jobs:
       - name: 🏷️ Update image tags in manifest
         run: |
           VERSION="${{ needs.detect-changes.outputs.version }}"
-          sed -i "s|ghcr.io/okla-rd/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
-          sed -i "s|ghcr.io/okla-rd/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i "s|ghcr.io/gregorymorenoiem/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i "s|ghcr.io/gregorymorenoiem/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
 
       - name: 🚀 Apply Kubernetes manifests
         run: |
