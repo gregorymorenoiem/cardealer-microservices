@@ -43,6 +43,8 @@ spec:
           labelSelector:
             matchLabels:
               app: frontend-web
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: frontend-web
           image: ghcr.io/gregorymorenoiem/cardealer-web:${IMAGE_TAG}
@@ -136,6 +138,8 @@ spec:
           labelSelector:
             matchLabels:
               app: gateway
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: gateway
           image: ghcr.io/gregorymorenoiem/gateway:${IMAGE_TAG}
@@ -234,6 +238,8 @@ spec:
           labelSelector:
             matchLabels:
               app: authservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: authservice
           image: ghcr.io/gregorymorenoiem/authservice:${IMAGE_TAG}
@@ -327,6 +333,8 @@ spec:
           labelSelector:
             matchLabels:
               app: userservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: userservice
           image: ghcr.io/gregorymorenoiem/userservice:${IMAGE_TAG}
@@ -420,6 +428,8 @@ spec:
           labelSelector:
             matchLabels:
               app: roleservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: roleservice
           image: ghcr.io/gregorymorenoiem/roleservice:${IMAGE_TAG}
@@ -518,6 +528,8 @@ spec:
           labelSelector:
             matchLabels:
               app: vehiclessaleservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: vehiclessaleservice
           image: ghcr.io/gregorymorenoiem/vehiclessaleservice:${IMAGE_TAG}
@@ -611,6 +623,8 @@ spec:
           labelSelector:
             matchLabels:
               app: mediaservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: mediaservice
           image: ghcr.io/gregorymorenoiem/mediaservice:${IMAGE_TAG}
@@ -721,6 +735,8 @@ spec:
           labelSelector:
             matchLabels:
               app: billingservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: billingservice
           image: ghcr.io/gregorymorenoiem/billingservice:${IMAGE_TAG}
@@ -816,6 +832,8 @@ spec:
           labelSelector:
             matchLabels:
               app: notificationservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: notificationservice
           image: ghcr.io/gregorymorenoiem/notificationservice:${IMAGE_TAG}
@@ -911,6 +929,8 @@ spec:
           labelSelector:
             matchLabels:
               app: errorservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: errorservice
           image: ghcr.io/gregorymorenoiem/errorservice:${IMAGE_TAG}
@@ -1005,6 +1025,8 @@ spec:
           labelSelector:
             matchLabels:
               app: reviewservice
+      imagePullSecrets:
+        - name: registry-credentials
       containers:
         - name: reviewservice
           image: ghcr.io/gregorymorenoiem/cardealer-reviewservice:${IMAGE_TAG}

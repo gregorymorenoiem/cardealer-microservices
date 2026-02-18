@@ -117,14 +117,14 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted lg:hidden"
+              className="hover:bg-muted flex h-11 w-11 items-center justify-center rounded-lg lg:hidden"
               aria-label="Abrir menú de navegación"
             >
               <Menu className="h-5 w-5" />
             </button>
             <Link href="/dealer" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-lg font-bold text-primary-foreground">O</span>
+              <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
+                <span className="text-primary-foreground text-lg font-bold">O</span>
               </div>
               <div className="hidden sm:block">
                 <span className="text-foreground text-xl font-bold">OKLA</span>
@@ -136,28 +136,28 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <Link
               href="/dealer/mensajes"
-              className="text-muted-foreground hover:text-foreground relative flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted relative flex h-11 w-11 items-center justify-center rounded-lg"
               aria-label="Mensajes"
             >
               <MessageSquare className="h-5 w-5" />
             </Link>
             <Link
               href="/dealer/notificaciones"
-              className="text-muted-foreground hover:text-foreground relative flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted relative flex h-11 w-11 items-center justify-center rounded-lg"
               aria-label="Notificaciones"
             >
               <Bell className="h-5 w-5" />
             </Link>
             <Link
               href="/ayuda"
-              className="text-muted-foreground hover:text-foreground hidden h-11 w-11 items-center justify-center rounded-lg hover:bg-muted sm:flex"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted hidden h-11 w-11 items-center justify-center rounded-lg sm:flex"
               aria-label="Ayuda"
             >
               <HelpCircle className="h-5 w-5" />
             </Link>
             <div className="flex items-center gap-2 border-l pl-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                <Building className="h-4 w-4 text-primary" />
+              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                <Building className="text-primary h-4 w-4" />
               </div>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium">{user?.firstName || 'Dealer'}</p>
@@ -171,7 +171,10 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="flex">
         {/* Desktop Sidebar */}
         <aside className="bg-card sticky top-16 hidden h-[calc(100vh-4rem)] w-64 flex-col border-r lg:flex">
-          <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Navegación del portal dealer">
+          <nav
+            className="flex-1 space-y-1 overflow-y-auto p-4"
+            aria-label="Navegación del portal dealer"
+          >
             {mainLinks.map(link => {
               const Icon = link.icon;
               return (
@@ -181,7 +184,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
                     isActivePath(link.href)
-                      ? 'bg-primary/10 font-medium text-primary'
+                      ? 'bg-primary/10 text-primary font-medium'
                       : 'text-foreground hover:bg-primary/5 hover:text-primary'
                   )}
                 >
@@ -204,7 +207,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
                       isActivePath(link.href)
-                        ? 'bg-primary/10 font-medium text-primary'
+                        ? 'bg-primary/10 text-primary font-medium'
                         : 'text-foreground hover:bg-primary/5 hover:text-primary'
                     )}
                   >
@@ -228,7 +231,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
                       isActivePath(link.href)
-                        ? 'bg-primary/10 font-medium text-primary'
+                        ? 'bg-primary/10 text-primary font-medium'
                         : 'text-foreground hover:bg-primary/5 hover:text-primary'
                     )}
                   >
@@ -244,7 +247,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+              className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Cerrar Sesión
@@ -257,13 +260,16 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
           <SheetContent side="left" className="w-[280px] p-0">
             <SheetHeader className="border-b p-4">
               <SheetTitle className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <span className="text-lg font-bold text-primary-foreground">O</span>
+                <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
+                  <span className="text-primary-foreground text-lg font-bold">O</span>
                 </div>
                 OKLA Dealer
               </SheetTitle>
             </SheetHeader>
-            <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Menú de navegación móvil">
+            <nav
+              className="flex-1 space-y-1 overflow-y-auto p-4"
+              aria-label="Menú de navegación móvil"
+            >
               {mainLinks.map(link => {
                 const Icon = link.icon;
                 return (
@@ -274,7 +280,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
                       isActivePath(link.href)
-                        ? 'bg-primary/10 font-medium text-primary'
+                        ? 'bg-primary/10 text-primary font-medium'
                         : 'text-foreground hover:bg-primary/5'
                     )}
                   >
@@ -298,7 +304,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
                         isActivePath(link.href)
-                          ? 'bg-primary/10 font-medium text-primary'
+                          ? 'bg-primary/10 text-primary font-medium'
                           : 'text-foreground hover:bg-primary/5'
                       )}
                     >
@@ -323,7 +329,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
                         isActivePath(link.href)
-                          ? 'bg-primary/10 font-medium text-primary'
+                          ? 'bg-primary/10 text-primary font-medium'
                           : 'text-foreground hover:bg-primary/5'
                       )}
                     >
@@ -338,7 +344,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                  className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                   Cerrar Sesión
@@ -354,7 +360,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Navigation */}
       <nav
-        className="bg-card border-border fixed bottom-0 left-0 right-0 z-40 border-t lg:hidden"
+        className="bg-card border-border fixed right-0 bottom-0 left-0 z-40 border-t lg:hidden"
         aria-label="Navegación rápida"
       >
         <div className="flex justify-around">
@@ -379,7 +385,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(true)}
-            className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-xs"
             aria-label="Más opciones"
           >
             <Menu className="h-5 w-5" />
