@@ -15,13 +15,13 @@ public static class LoggingServiceExtensions
     /// Adds logging configuration options to the service collection
     /// </summary>
     public static IServiceCollection AddStandardLogging(
-        this IServiceCollection services, 
+        this IServiceCollection services,
         IConfiguration configuration,
         string serviceName)
     {
         var options = new LoggingOptions { ServiceName = serviceName };
         configuration.GetSection(LoggingOptions.SectionName).Bind(options);
-        
+
         services.Configure<LoggingOptions>(opt =>
         {
             opt.ServiceName = serviceName;
@@ -52,10 +52,10 @@ public static class LoggingServiceExtensions
                 diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
                 diagnosticContext.Set("QueryString", httpContext.Request.QueryString.Value);
                 diagnosticContext.Set("ContentType", httpContext.Request.ContentType ?? "N/A");
-                
+
                 var userAgent = httpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown";
                 diagnosticContext.Set("UserAgent", userAgent);
-                
+
                 if (httpContext.User.Identity?.IsAuthenticated == true)
                 {
                     diagnosticContext.Set("UserId", httpContext.User.FindFirst("sub")?.Value ?? "N/A");

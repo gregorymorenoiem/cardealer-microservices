@@ -130,8 +130,8 @@ public static class ObservabilityExtensions
                 metrics
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation();
-                    // Note: AddRuntimeInstrumentation() requires OpenTelemetry.Instrumentation.Runtime package
-                    // Uncomment when package is added: .AddRuntimeInstrumentation();
+                // Note: AddRuntimeInstrumentation() requires OpenTelemetry.Instrumentation.Runtime package
+                // Uncomment when package is added: .AddRuntimeInstrumentation();
 
                 // Add OTLP exporter for metrics
                 if (options.Metrics.Otlp.Enabled)
@@ -175,7 +175,7 @@ public static class ObservabilityExtensions
             ServiceName = serviceName,
             ServiceVersion = "1.0.0"
         };
-        
+
         // Allow programmatic configuration
         configureOptions?.Invoke(options);
 
@@ -219,7 +219,7 @@ public static class ObservabilityExtensions
                             // Exclude health check and other endpoints from tracing
                             var path = httpContext.Request.Path.Value?.ToLowerInvariant();
                             if (path == null) return true;
-                            
+
                             // Check against excluded paths
                             foreach (var excludedPath in options.Tracing.ExcludedPaths)
                             {

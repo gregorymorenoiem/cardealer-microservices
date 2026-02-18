@@ -18,7 +18,7 @@ namespace ErrorService.Application.UseCases.GetErrorStats
         public async Task<GetErrorStatsResponse> Handle(GetErrorStatsQuery query, CancellationToken cancellationToken)
         {
             var stats = await _errorLogRepository.GetStatsAsync(query.Request.From, query.Request.To);
-            
+
             return new GetErrorStatsResponse(
                 stats.TotalErrors,
                 stats.ErrorsLast24Hours,

@@ -100,7 +100,7 @@ public class TwoFactorRealFlowTests : IClassFixture<CustomWebApplicationFactory>
         // Arrange
         var (token, userId) = await GetAuthTokenAndUserIdAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var request = new Verify2FARequest(userId, "123456", TwoFactorAuthType.Authenticator);
+        var request = new Verify2FARequest("123456", TwoFactorAuthType.Authenticator);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/verify", request);

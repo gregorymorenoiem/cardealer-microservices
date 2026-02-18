@@ -212,7 +212,7 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        
+
         _channel?.Dispose();
         _connection?.Dispose();
         _disposed = true;

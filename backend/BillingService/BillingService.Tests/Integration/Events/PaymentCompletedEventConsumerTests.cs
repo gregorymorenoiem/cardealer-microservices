@@ -223,7 +223,7 @@ public class PaymentCompletedEventConsumerTests : IDisposable
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             var evt = JsonSerializer.Deserialize<PaymentCompletedEvent>(message);
-            receivedEvents.Add(evt);
+            receivedEvents.Add(evt!);
 
             _channel.BasicAck(ea.DeliveryTag, multiple: false);
 

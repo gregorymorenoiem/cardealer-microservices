@@ -12,42 +12,42 @@ public class ProblemDetails
     /// A URI reference that identifies the problem type
     /// </summary>
     public string Type { get; set; } = "about:blank";
-    
+
     /// <summary>
     /// A short, human-readable summary of the problem type
     /// </summary>
     public string Title { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// The HTTP status code
     /// </summary>
     public int Status { get; set; }
-    
+
     /// <summary>
     /// A human-readable explanation specific to this occurrence
     /// </summary>
     public string? Detail { get; set; }
-    
+
     /// <summary>
     /// A URI reference that identifies the specific occurrence
     /// </summary>
     public string? Instance { get; set; }
-    
+
     /// <summary>
     /// Trace ID for correlation
     /// </summary>
     public string? TraceId { get; set; }
-    
+
     /// <summary>
     /// Error code for programmatic handling
     /// </summary>
     public string? ErrorCode { get; set; }
-    
+
     /// <summary>
     /// Validation errors (for 400 responses)
     /// </summary>
     public Dictionary<string, string[]>? Errors { get; set; }
-    
+
     /// <summary>
     /// Additional extension properties
     /// </summary>
@@ -57,7 +57,7 @@ public class ProblemDetails
     /// Creates a ProblemDetails for validation errors
     /// </summary>
     public static ProblemDetails ValidationError(
-        Dictionary<string, string[]> errors, 
+        Dictionary<string, string[]> errors,
         string? traceId = null,
         string? instance = null)
     {

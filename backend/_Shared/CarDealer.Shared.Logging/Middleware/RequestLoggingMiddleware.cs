@@ -24,15 +24,15 @@ public class RequestLoggingMiddleware
         var stopwatch = Stopwatch.StartNew();
         var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
         var spanId = Activity.Current?.SpanId.ToString() ?? "N/A";
-        
+
         // Extract user info if authenticated
-        var userId = context.User?.FindFirst("sub")?.Value 
-                  ?? context.User?.FindFirst("userId")?.Value 
+        var userId = context.User?.FindFirst("sub")?.Value
+                  ?? context.User?.FindFirst("userId")?.Value
                   ?? "anonymous";
-        
-        var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault() 
+
+        var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault()
                          ?? Guid.NewGuid().ToString("N");
-        
+
         // Set correlation ID in response headers
         context.Response.Headers["X-Correlation-Id"] = correlationId;
         context.Response.Headers["X-Trace-Id"] = traceId;
@@ -50,15 +50,15 @@ public class RequestLoggingMiddleware
             try
             {
                 await _next(context);
-                
+
                 stopwatch.Stop();
-                
+
                 var statusCode = context.Response.StatusCode;
-                var level = statusCode >= 500 ? LogLevel.Error 
-                          : statusCode >= 400 ? LogLevel.Warning 
+                var level = statusCode >= 500 ? LogLevel.Error
+                          : statusCode >= 400 ? LogLevel.Warning
                           : LogLevel.Information;
-                
-                _logger.Log(level, 
+
+                _logger.Log(level,
                     "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMs}ms",
                     context.Request.Method,
                     context.Request.Path,
@@ -68,13 +68,13 @@ public class RequestLoggingMiddleware
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                
+
                 _logger.LogError(ex,
                     "HTTP {Method} {Path} failed after {ElapsedMs}ms",
                     context.Request.Method,
                     context.Request.Path,
                     stopwatch.ElapsedMilliseconds);
-                
+
                 throw; // Re-throw to let other middleware handle the exception
             }
         }

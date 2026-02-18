@@ -144,7 +144,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var revokedDeviceCheck = await _revokedDeviceService.CheckIfDeviceIsRevokedAsync(
             user.Id,
             _requestContext.IpAddress,
-            _requestContext.UserAgent,
+            _requestContext.UserAgent ?? "unknown",
             cancellationToken);
 
         if (revokedDeviceCheck.IsRevoked)

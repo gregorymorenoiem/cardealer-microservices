@@ -45,7 +45,7 @@ public class GlobalExceptionMiddleware
     }
 
     private async Task HandleExceptionAsync(
-        HttpContext context, 
+        HttpContext context,
         Exception exception,
         IErrorPublisher errorPublisher)
     {
@@ -123,7 +123,7 @@ public class GlobalExceptionMiddleware
                 exception.Message, traceId),
             KeyNotFoundException => Models.ProblemDetails.NotFound(
                 exception.Message, traceId, path),
-            InvalidOperationException when exception.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) 
+            InvalidOperationException when exception.Message.Contains("not found", StringComparison.OrdinalIgnoreCase)
                 => Models.ProblemDetails.NotFound(exception.Message, traceId, path),
             OperationCanceledException => new Models.ProblemDetails
             {
@@ -197,7 +197,7 @@ public class GlobalExceptionMiddleware
     }
 
     private static Models.ProblemDetails CreateValidationProblemDetails(
-        ValidationException validationEx, 
+        ValidationException validationEx,
         string? traceId,
         string path)
     {

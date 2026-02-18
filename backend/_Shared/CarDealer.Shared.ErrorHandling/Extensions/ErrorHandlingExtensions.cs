@@ -24,7 +24,7 @@ public static class ErrorHandlingExtensions
         // Bind configuration
         var options = new ErrorHandlingOptions { ServiceName = serviceName };
         configuration.GetSection(ErrorHandlingOptions.SectionName).Bind(options);
-        
+
         services.Configure<ErrorHandlingOptions>(opt =>
         {
             opt.ServiceName = serviceName;
@@ -56,7 +56,7 @@ public static class ErrorHandlingExtensions
         });
 
         services.AddSingleton<IErrorPublisher, RabbitMQErrorPublisher>();
-        
+
         return services;
     }
 

@@ -21,29 +21,29 @@ public static class MicroserviceSecretsConfiguration
     {
         var secretProvider = CompositeSecretProvider.CreateDefault();
         var prefix = string.IsNullOrEmpty(serviceName) ? "" : $"{serviceName.ToUpperInvariant()}_";
-        
+
         // 1. Intentar connection string completa específica del servicio
         var connectionString = secretProvider.GetSecret($"{prefix}DATABASE_CONNECTION_STRING")
             ?? secretProvider.GetSecret(SecretKeys.DatabaseConnectionString);
-            
+
         if (!string.IsNullOrEmpty(connectionString))
             return connectionString;
-            
+
         // 2. Intentar construir desde variables individuales
         var host = secretProvider.GetSecret(SecretKeys.DatabaseHost);
         var password = secretProvider.GetSecret(SecretKeys.DatabasePassword);
-        
+
         if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(password))
         {
             var port = secretProvider.GetSecret(SecretKeys.DatabasePort) ?? "5432";
-            var database = secretProvider.GetSecret(SecretKeys.DatabaseName) 
+            var database = secretProvider.GetSecret(SecretKeys.DatabaseName)
                 ?? serviceName.ToLowerInvariant().Replace("service", "");
             var user = secretProvider.GetSecret(SecretKeys.DatabaseUser) ?? "postgres";
-            
+
             return $"Host={host};Port={port};Database={database};Username={user};Password={password};" +
                    "Pooling=true;Minimum Pool Size=5;Maximum Pool Size=20";
         }
-        
+
         // 3. Fallback a configuración tradicional
         return configuration.GetConnectionString("DefaultConnection")
             ?? configuration["Database:ConnectionStrings:PostgreSQL"]
@@ -56,23 +56,23 @@ public static class MicroserviceSecretsConfiguration
     public static string? GetRedisConnectionString(IConfiguration configuration)
     {
         var secretProvider = CompositeSecretProvider.CreateDefault();
-        
+
         var connectionString = secretProvider.GetSecret(SecretKeys.RedisConnectionString);
         if (!string.IsNullOrEmpty(connectionString))
             return connectionString;
-            
+
         var host = secretProvider.GetSecret(SecretKeys.RedisHost);
         if (!string.IsNullOrEmpty(host))
         {
             var port = secretProvider.GetSecret(SecretKeys.RedisPort) ?? "6379";
             var password = secretProvider.GetSecret(SecretKeys.RedisPassword);
-            
+
             var redis = $"{host}:{port}";
             if (!string.IsNullOrEmpty(password))
                 redis += $",password={password}";
             return redis;
         }
-        
+
         return configuration.GetConnectionString("Redis")
             ?? configuration["Cache:RedisConnectionString"];
     }
@@ -84,7 +84,7 @@ public static class MicroserviceSecretsConfiguration
         IConfiguration configuration)
     {
         var secretProvider = CompositeSecretProvider.CreateDefault();
-        
+
         var host = secretProvider.GetSecret(SecretKeys.RabbitMqHost)
             ?? configuration["RabbitMQ:HostName"] ?? "localhost";
         var port = int.Parse(secretProvider.GetSecret(SecretKeys.RabbitMqPort)
@@ -95,7 +95,7 @@ public static class MicroserviceSecretsConfiguration
             ?? configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
         var vhost = secretProvider.GetSecret(SecretKeys.RabbitMqVirtualHost)
             ?? configuration["RabbitMQ:VirtualHost"] ?? "/";
-            
+
         return (host, port, user, password, vhost);
     }
 
@@ -106,19 +106,19 @@ public static class MicroserviceSecretsConfiguration
         IConfiguration configuration)
     {
         var secretProvider = CompositeSecretProvider.CreateDefault();
-        
+
         var key = secretProvider.GetSecret(SecretKeys.JwtSecretKey)
             ?? configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("JWT Key not configured");
-            
+
         var issuer = secretProvider.GetSecret(SecretKeys.JwtIssuer)
             ?? configuration["Jwt:Issuer"]
             ?? "CarDealer";
-            
+
         var audience = secretProvider.GetSecret(SecretKeys.JwtAudience)
             ?? configuration["Jwt:Audience"]
             ?? "CarDealerServices";
-            
+
         return (key, issuer, audience);
     }
 
@@ -128,7 +128,7 @@ public static class MicroserviceSecretsConfiguration
     public static string? GetElasticsearchUrl(IConfiguration configuration)
     {
         var secretProvider = CompositeSecretProvider.CreateDefault();
-        
+
         return secretProvider.GetSecret(SecretKeys.ElasticsearchUrl)
             ?? configuration["ElasticSearch:ConnectionString"]
             ?? configuration["Elasticsearch:Url"];
@@ -140,7 +140,7 @@ public static class MicroserviceSecretsConfiguration
     public static void ValidateSecrets(ILogger logger, string serviceName)
     {
         var secretProvider = CompositeSecretProvider.CreateDefault();
-        
+
         if (!secretProvider.HasSecret(SecretKeys.DatabaseConnectionString) &&
             !secretProvider.HasSecret(SecretKeys.DatabasePassword))
         {

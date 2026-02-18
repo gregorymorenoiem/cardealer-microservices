@@ -16,7 +16,6 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Resilience.Extensions;
-using System.Threading.RateLimiting;
 
 using CarDealer.Shared.Configuration;
 

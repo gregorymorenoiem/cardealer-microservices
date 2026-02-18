@@ -174,23 +174,19 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
 
         try
         {
-            // Resolve dealer email from event data
+            // Resolve dealer email from event data using CreatedBy
             string? dealerEmail = null;
 
-            if (!string.IsNullOrWhiteSpace(eventData.DealerEmail))
+            if (eventData.CreatedBy != Guid.Empty)
             {
-                dealerEmail = eventData.DealerEmail;
-            }
-            else if (eventData.UserId != Guid.Empty)
-            {
-                // Fallback: try to resolve via UserService
+                // Resolve email via UserService using CreatedBy
                 try
                 {
                     var httpClientFactory = scope.ServiceProvider.GetService<IHttpClientFactory>();
                     if (httpClientFactory != null)
                     {
                         var client = httpClientFactory.CreateClient("UserService");
-                        var response = await client.GetAsync($"/api/users/{eventData.UserId}/email", cancellationToken);
+                        var response = await client.GetAsync($"/api/users/{eventData.CreatedBy}/email", cancellationToken);
                         if (response.IsSuccessStatusCode)
                         {
                             dealerEmail = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -199,15 +195,15 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to resolve dealer email from UserService for UserId: {UserId}", eventData.UserId);
+                    _logger.LogWarning(ex, "Failed to resolve dealer email from UserService for CreatedBy: {CreatedBy}", eventData.CreatedBy);
                 }
             }
 
             if (string.IsNullOrWhiteSpace(dealerEmail))
             {
                 _logger.LogWarning(
-                    "Could not resolve dealer email for VehicleId: {VehicleId}, UserId: {UserId}. Skipping email notification.",
-                    eventData.VehicleId, eventData.UserId);
+                    "Could not resolve dealer email for VehicleId: {VehicleId}, CreatedBy: {CreatedBy}. Skipping email notification.",
+                    eventData.VehicleId, eventData.CreatedBy);
                 return;
             }
 

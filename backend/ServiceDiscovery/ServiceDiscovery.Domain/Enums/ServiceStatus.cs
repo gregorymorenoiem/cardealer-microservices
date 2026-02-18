@@ -9,12 +9,12 @@ public enum ServiceStatus
     /// Service is registered and active
     /// </summary>
     Active = 0,
-    
+
     /// <summary>
     /// Service is temporarily inactive
     /// </summary>
     Inactive = 1,
-    
+
     /// <summary>
     /// Service has been deregistered
     /// </summary>

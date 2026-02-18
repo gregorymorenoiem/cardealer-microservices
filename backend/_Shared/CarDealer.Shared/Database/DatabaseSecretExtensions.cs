@@ -34,7 +34,7 @@ public static class DatabaseSecretExtensions
         // Leer configuración base (no secretos) desde appsettings
         var configSection = configuration.GetSection("Database");
         var providerStr = configSection["Provider"] ?? "PostgreSQL";
-        
+
         if (!Enum.TryParse<DatabaseProvider>(providerStr, ignoreCase: true, out var provider))
         {
             provider = DatabaseProvider.PostgreSQL;
@@ -62,7 +62,7 @@ public static class DatabaseSecretExtensions
         // Registrar DbContext
         services.AddDbContext<TContext>(options =>
         {
-            ConfigureDatabaseProvider(options, provider, connectionString, 
+            ConfigureDatabaseProvider(options, provider, connectionString,
                 commandTimeout, maxRetryCount, maxRetryDelay, logger);
 
             if (enableSensitiveLogging)

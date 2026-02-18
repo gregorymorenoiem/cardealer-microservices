@@ -249,15 +249,16 @@ public static class ServiceCollectionExtensions
             healthChecksBuilder.AddCheck<RedisHealthCheck>("redis", HealthStatus.Unhealthy, new[] { "cache", "redis", "ready" });
         }
 
-        // External Services Health Check
+        // External Services Health Check (NOT part of readiness — should not block pod from receiving traffic)
         var errorServiceUrl = configuration["ErrorService:BaseUrl"];
         var notificationServiceUrl = configuration["NotificationService:BaseUrl"];
         if (!string.IsNullOrEmpty(errorServiceUrl) || !string.IsNullOrEmpty(notificationServiceUrl))
         {
-            services.AddHttpClient<ExternalServiceHealthCheck>()
-                .AddPolicyHandler(GetRetryPolicy())
-                .AddPolicyHandler(GetCircuitBreakerPolicy());
-            healthChecksBuilder.AddCheck<ExternalServiceHealthCheck>("external-services", HealthStatus.Degraded, new[] { "external", "ready" });
+            services.AddHttpClient<ExternalServiceHealthCheck>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(3); // Fast-fail for health checks
+            });
+            healthChecksBuilder.AddCheck<ExternalServiceHealthCheck>("external-services", HealthStatus.Degraded, new[] { "external" });
         }
 
         return services;

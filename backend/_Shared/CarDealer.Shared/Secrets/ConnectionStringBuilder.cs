@@ -18,7 +18,7 @@ public static class ConnectionStringBuilder
         // Primero intentar obtener connection string completo
         var fullConnectionString = secrets.GetSecret($"{keyPrefix}DATABASE_CONNECTION_STRING")
                                    ?? secrets.GetSecret("DATABASE_CONNECTION_STRING");
-        
+
         if (!string.IsNullOrEmpty(fullConnectionString))
         {
             return fullConnectionString;
@@ -27,10 +27,10 @@ public static class ConnectionStringBuilder
         // Si no, construir desde partes
         var host = secrets.GetSecretOrDefault($"{keyPrefix}DATABASE_HOST", "localhost");
         var port = secrets.GetSecretOrDefault($"{keyPrefix}DATABASE_PORT", "5432");
-        var database = secrets.GetSecret($"{keyPrefix}DATABASE_NAME") 
+        var database = secrets.GetSecret($"{keyPrefix}DATABASE_NAME")
                        ?? throw new SecretNotFoundException($"{keyPrefix}DATABASE_NAME");
         var username = secrets.GetSecretOrDefault($"{keyPrefix}DATABASE_USER", "postgres");
-        var password = secrets.GetSecret($"{keyPrefix}DATABASE_PASSWORD") 
+        var password = secrets.GetSecret($"{keyPrefix}DATABASE_PASSWORD")
                        ?? throw new SecretNotFoundException($"{keyPrefix}DATABASE_PASSWORD");
 
         var pooling = secrets.GetSecretOrDefault($"{keyPrefix}DATABASE_POOLING", "true");
@@ -75,7 +75,7 @@ public static class ConnectionStringBuilder
 
         var fullConnectionString = secrets.GetSecret($"{keyPrefix}REDIS_CONNECTION_STRING")
                                    ?? secrets.GetSecret("REDIS_CONNECTION_STRING");
-        
+
         if (!string.IsNullOrEmpty(fullConnectionString))
         {
             return fullConnectionString;
@@ -86,7 +86,7 @@ public static class ConnectionStringBuilder
         var password = secrets.GetSecret($"{keyPrefix}REDIS_PASSWORD");
 
         var sb = new StringBuilder($"{host}:{port}");
-        
+
         if (!string.IsNullOrEmpty(password))
         {
             sb.Append($",password={password}");
@@ -104,7 +104,7 @@ public static class ConnectionStringBuilder
 
         var fullConnectionString = secrets.GetSecret($"{keyPrefix}RABBITMQ_CONNECTION_STRING")
                                    ?? secrets.GetSecret("RABBITMQ_CONNECTION_STRING");
-        
+
         if (!string.IsNullOrEmpty(fullConnectionString))
         {
             return fullConnectionString;
@@ -157,7 +157,7 @@ public static class ConnectionStringBuilder
             Issuer = secrets.GetSecretOrDefault(SecretKeys.JwtIssuer, "CarDealer"),
             Audience = secrets.GetSecretOrDefault(SecretKeys.JwtAudience, "CarDealerClients"),
             ExpiresMinutes = int.TryParse(
-                secrets.GetSecretOrDefault(SecretKeys.JwtExpiresMinutes, "60"), 
+                secrets.GetSecretOrDefault(SecretKeys.JwtExpiresMinutes, "60"),
                 out var minutes) ? minutes : 60,
             RefreshTokenExpiresDays = int.TryParse(
                 secrets.GetSecretOrDefault(SecretKeys.JwtRefreshTokenExpiresDays, "7"),

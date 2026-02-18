@@ -2,9 +2,12 @@ using Xunit;
 using Moq;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using AuthService.Api.Controllers;
 using AuthService.Application.Features.Auth.Commands.Register;
 using AuthService.Application.DTOs.Auth;
+using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Shared;
 
 namespace AuthService.Tests.Unit.Controllers
@@ -12,12 +15,22 @@ namespace AuthService.Tests.Unit.Controllers
     public class AuthControllerTests
     {
         private readonly Mock<IMediator> _mediatorMock;
+        private readonly Mock<IConfiguration> _configurationMock;
+        private readonly Mock<ILogger<AuthController>> _loggerMock;
+        private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
             _mediatorMock = new Mock<IMediator>();
-            _controller = new AuthController(_mediatorMock.Object);
+            _configurationMock = new Mock<IConfiguration>();
+            _loggerMock = new Mock<ILogger<AuthController>>();
+            _userRepositoryMock = new Mock<IUserRepository>();
+            _controller = new AuthController(
+                _mediatorMock.Object,
+                _configurationMock.Object,
+                _loggerMock.Object,
+                _userRepositoryMock.Object);
         }
 
         [Fact]

@@ -24,17 +24,17 @@ public static class SerilogExtensions
         return hostBuilder.UseSerilog((context, services, loggerConfig) =>
         {
             var options = new LoggingOptions { ServiceName = serviceName };
-            
+
             // Bind from configuration
             context.Configuration.GetSection(LoggingOptions.SectionName).Bind(options);
-            
+
             // Allow programmatic overrides
             configureOptions?.Invoke(options);
-            
+
             ConfigureLogger(loggerConfig, options, context.Configuration);
         });
     }
-    
+
     /// <summary>
     /// Adds standardized Serilog logging with Seq, Console, and optional RabbitMQ (WebApplicationBuilder overload)
     /// </summary>
@@ -46,16 +46,16 @@ public static class SerilogExtensions
         builder.Host.UseSerilog((context, services, loggerConfig) =>
         {
             var options = new LoggingOptions { ServiceName = serviceName };
-            
+
             // Bind from configuration
             context.Configuration.GetSection(LoggingOptions.SectionName).Bind(options);
-            
+
             // Allow programmatic overrides
             configureOptions?.Invoke(options);
-            
+
             ConfigureLogger(loggerConfig, options, context.Configuration);
         });
-        
+
         return builder;
     }
 

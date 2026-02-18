@@ -35,7 +35,7 @@ public class TwoFactorEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Verify2FA_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Arrange
-        var request = new Verify2FARequest("user-id", "123456", TwoFactorAuthType.Authenticator);
+        var request = new Verify2FARequest("123456", TwoFactorAuthType.Authenticator);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/TwoFactor/verify", request);

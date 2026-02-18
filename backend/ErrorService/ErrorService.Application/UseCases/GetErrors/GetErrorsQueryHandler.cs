@@ -29,7 +29,7 @@ namespace ErrorService.Application.UseCases.GetErrors
             };
 
             var errors = await _errorLogRepository.GetAsync(domainQuery);
-            
+
             var errorItems = errors.Select(error => new ErrorItemDto(
                 error.Id,
                 error.ServiceName,

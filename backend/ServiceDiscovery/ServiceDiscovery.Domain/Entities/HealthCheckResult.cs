@@ -11,37 +11,37 @@ public class HealthCheckResult
     /// The service instance that was checked
     /// </summary>
     public string InstanceId { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// The health status determined
     /// </summary>
     public HealthStatus Status { get; set; }
-    
+
     /// <summary>
     /// When the health check was performed
     /// </summary>
     public DateTime CheckedAt { get; set; } = DateTime.UtcNow;
-    
+
     /// <summary>
     /// Response time in milliseconds
     /// </summary>
     public long ResponseTimeMs { get; set; }
-    
+
     /// <summary>
     /// HTTP status code returned (if applicable)
     /// </summary>
     public int? StatusCode { get; set; }
-    
+
     /// <summary>
     /// Optional message describing the health check result
     /// </summary>
     public string? Message { get; set; }
-    
+
     /// <summary>
     /// Error message if the check failed
     /// </summary>
     public string? Error { get; set; }
-    
+
     /// <summary>
     /// Creates a successful health check result
     /// </summary>
@@ -56,7 +56,7 @@ public class HealthCheckResult
             Message = "Service is healthy"
         };
     }
-    
+
     /// <summary>
     /// Creates an unhealthy health check result
     /// </summary>
@@ -70,7 +70,7 @@ public class HealthCheckResult
             Message = "Service is unhealthy"
         };
     }
-    
+
     /// <summary>
     /// Creates a degraded health check result
     /// </summary>

@@ -11,12 +11,12 @@ public interface IHealthChecker
     /// Performs a health check on a specific service instance
     /// </summary>
     Task<HealthCheckResult> CheckHealthAsync(ServiceInstance instance, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Performs health checks on all instances of a service
     /// </summary>
     Task<List<HealthCheckResult>> CheckServiceHealthAsync(string serviceName, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Performs health checks on all registered services
     /// </summary>

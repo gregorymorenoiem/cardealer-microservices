@@ -37,7 +37,7 @@ public class AuditMiddleware
 
         // Verificar si la ruta debe ser excluida
         var path = context.Request.Path.Value ?? string.Empty;
-        if (_options.AutoAudit.ExcludePaths.Any(p => 
+        if (_options.AutoAudit.ExcludePaths.Any(p =>
             path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
         {
             await _next(context);
@@ -45,7 +45,7 @@ public class AuditMiddleware
         }
 
         // Verificar si solo queremos auditar mutaciones
-        if (_options.AutoAudit.OnlyMutations && 
+        if (_options.AutoAudit.OnlyMutations &&
             context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
         {
             await _next(context);
@@ -88,7 +88,7 @@ public class AuditMiddleware
                 StatusCode = context.Response.StatusCode,
                 ClientIp = context.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = context.Request.Headers["User-Agent"].FirstOrDefault(),
-                UserId = context.User?.FindFirst("sub")?.Value ?? 
+                UserId = context.User?.FindFirst("sub")?.Value ??
                          context.User?.FindFirst("id")?.Value,
                 UserEmail = context.User?.FindFirst("email")?.Value,
                 CorrelationId = context.Request.Headers["X-Correlation-ID"].FirstOrDefault() ??
@@ -158,7 +158,7 @@ public class AuditMiddleware
     private static AuditSeverity DetermineSeverity(int statusCode, Exception? exception)
     {
         if (exception != null) return AuditSeverity.Error;
-        
+
         return statusCode switch
         {
             >= 500 => AuditSeverity.Error,

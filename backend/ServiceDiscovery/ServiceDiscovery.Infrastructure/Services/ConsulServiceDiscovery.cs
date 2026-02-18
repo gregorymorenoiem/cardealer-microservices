@@ -13,54 +13,54 @@ public class ConsulServiceDiscovery : IServiceDiscovery
     private readonly IConsulClient _consulClient;
     private readonly Dictionary<string, int> _roundRobinCounters = new();
     private readonly object _lock = new();
-    
+
     public ConsulServiceDiscovery(IConsulClient consulClient)
     {
         _consulClient = consulClient;
     }
-    
+
     public async Task<List<ServiceInstance>> GetServiceInstancesAsync(string serviceName, CancellationToken cancellationToken = default)
     {
         var services = await _consulClient.Health.Service(serviceName, null, false, cancellationToken);
-        
+
         return services.Response.Select(MapToServiceInstance).ToList();
     }
-    
+
     public async Task<List<ServiceInstance>> GetHealthyInstancesAsync(string serviceName, CancellationToken cancellationToken = default)
     {
         var services = await _consulClient.Health.Service(serviceName, null, true, cancellationToken);
-        
+
         return services.Response.Select(MapToServiceInstance).ToList();
     }
-    
+
     public async Task<List<string>> GetServiceNamesAsync(CancellationToken cancellationToken = default)
     {
         var services = await _consulClient.Catalog.Services(cancellationToken);
-        
+
         return services.Response.Keys.ToList();
     }
-    
+
     public async Task<ServiceInstance?> GetServiceInstanceByIdAsync(string instanceId, CancellationToken cancellationToken = default)
     {
         var services = await _consulClient.Agent.Services(cancellationToken);
-        
+
         if (services.Response.TryGetValue(instanceId, out var service))
         {
             return MapToServiceInstance(service);
         }
-        
+
         return null;
     }
-    
+
     public async Task<ServiceInstance?> FindServiceInstanceAsync(string serviceName, CancellationToken cancellationToken = default)
     {
         var instances = await GetHealthyInstancesAsync(serviceName, cancellationToken);
-        
+
         if (instances.Count == 0)
         {
             return null;
         }
-        
+
         // Round-robin load balancing
         lock (_lock)
         {
@@ -68,14 +68,14 @@ public class ConsulServiceDiscovery : IServiceDiscovery
             {
                 _roundRobinCounters[serviceName] = 0;
             }
-            
+
             var index = _roundRobinCounters[serviceName] % instances.Count;
             _roundRobinCounters[serviceName]++;
-            
+
             return instances[index];
         }
     }
-    
+
     private ServiceInstance MapToServiceInstance(ServiceEntry entry)
     {
         var healthStatus = entry.Checks.All(c => c.Status == Consul.HealthStatus.Passing)
@@ -83,7 +83,7 @@ public class ConsulServiceDiscovery : IServiceDiscovery
             : entry.Checks.Any(c => c.Status == Consul.HealthStatus.Critical)
                 ? Domain.Enums.HealthStatus.Unhealthy
                 : Domain.Enums.HealthStatus.Degraded;
-        
+
         return new ServiceInstance
         {
             Id = entry.Service.ID,
@@ -96,7 +96,7 @@ public class ConsulServiceDiscovery : IServiceDiscovery
             Status = ServiceStatus.Active
         };
     }
-    
+
     private ServiceInstance MapToServiceInstance(AgentService service)
     {
         return new ServiceInstance

@@ -106,7 +106,7 @@ public class CompleteOnboardingStepCommandHandler : IRequestHandler<CompleteOnbo
                 if (data.ContainsKey("BusinessName"))
                     dealer.BusinessName = data["BusinessName"]?.ToString() ?? dealer.BusinessName;
                 if (data.ContainsKey("Phone"))
-                    dealer.Phone = data["Phone"]?.ToString();
+                    dealer.Phone = data["Phone"]?.ToString() ?? string.Empty;
                 break;
             case DealerOnboardingStep.Documents:
                 // Handle document uploads

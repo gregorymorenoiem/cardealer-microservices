@@ -211,7 +211,7 @@ if (rabbitMqEnabled)
     builder.Services.AddSingleton<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IEventPublisher>(sp =>
         sp.GetRequiredService<ErrorService.Infrastructure.Messaging.RabbitMqEventPublisher>());
-    
+
     // Background Service para procesar DLQ
     builder.Services.AddHostedService<ErrorService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
 }

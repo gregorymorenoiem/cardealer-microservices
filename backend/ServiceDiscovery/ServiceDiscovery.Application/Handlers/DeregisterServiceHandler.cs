@@ -9,12 +9,12 @@ namespace ServiceDiscovery.Application.Handlers;
 public class DeregisterServiceHandler : IRequestHandler<Commands.DeregisterServiceCommand, bool>
 {
     private readonly IServiceRegistry _registry;
-    
+
     public DeregisterServiceHandler(IServiceRegistry registry)
     {
         _registry = registry;
     }
-    
+
     public async Task<bool> Handle(Commands.DeregisterServiceCommand request, CancellationToken cancellationToken)
     {
         return await _registry.DeregisterServiceAsync(request.InstanceId, cancellationToken);

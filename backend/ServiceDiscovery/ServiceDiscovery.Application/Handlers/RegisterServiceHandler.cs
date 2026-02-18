@@ -10,12 +10,12 @@ namespace ServiceDiscovery.Application.Handlers;
 public class RegisterServiceHandler : IRequestHandler<Commands.RegisterServiceCommand, ServiceInstance>
 {
     private readonly IServiceRegistry _registry;
-    
+
     public RegisterServiceHandler(IServiceRegistry registry)
     {
         _registry = registry;
     }
-    
+
     public async Task<ServiceInstance> Handle(Commands.RegisterServiceCommand request, CancellationToken cancellationToken)
     {
         var instance = new ServiceInstance
@@ -32,12 +32,12 @@ public class RegisterServiceHandler : IRequestHandler<Commands.RegisterServiceCo
             Version = request.Version,
             RegisteredAt = DateTime.UtcNow
         };
-        
+
         if (!instance.IsValid())
         {
             throw new ArgumentException("Invalid service instance configuration");
         }
-        
+
         return await _registry.RegisterServiceAsync(instance, cancellationToken);
     }
 }

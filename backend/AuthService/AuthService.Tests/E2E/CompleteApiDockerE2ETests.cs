@@ -262,7 +262,7 @@ public class CompleteApiDockerE2ETests : IClassFixture<DockerWebApplicationFacto
         _output.WriteLine($"Testing 2FA verify without authentication");
 
         // Act
-        var request = new Verify2FARequest("user-id", "123456", Domain.Enums.TwoFactorAuthType.Authenticator);
+        var request = new Verify2FARequest("123456", Domain.Enums.TwoFactorAuthType.Authenticator);
         var response = await _client.PostAsJsonAsync("/api/twofactor/verify", request);
 
         // Assert

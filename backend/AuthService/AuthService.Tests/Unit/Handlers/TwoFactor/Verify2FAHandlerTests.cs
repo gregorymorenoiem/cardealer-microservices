@@ -18,16 +18,19 @@ public class Verify2FAHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<ITwoFactorService> _twoFactorServiceMock;
+    private readonly Mock<IAuthNotificationService> _notificationServiceMock;
     private readonly Verify2FACommandHandler _handler;
 
     public Verify2FAHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _twoFactorServiceMock = new Mock<ITwoFactorService>();
+        _notificationServiceMock = new Mock<IAuthNotificationService>();
         
         _handler = new Verify2FACommandHandler(
             _userRepositoryMock.Object,
-            _twoFactorServiceMock.Object);
+            _twoFactorServiceMock.Object,
+            _notificationServiceMock.Object);
     }
 
     [Fact]

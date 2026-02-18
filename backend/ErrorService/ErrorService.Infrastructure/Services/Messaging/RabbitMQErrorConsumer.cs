@@ -188,7 +188,7 @@ public class RabbitMQErrorConsumer : BackgroundService
                 ServiceName = errorEvent.ServiceName,
                 ExceptionType = errorEvent.ErrorCode,
                 Message = errorEvent.ErrorMessage,
-                  StackTrace = StackTraceSanitizer.Sanitize(errorEvent.StackTrace),
+                StackTrace = StackTraceSanitizer.Sanitize(errorEvent.StackTrace),
                 OccurredAt = errorEvent.Timestamp,
                 Endpoint = errorEvent.Endpoint,
                 HttpMethod = errorEvent.HttpMethod,

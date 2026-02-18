@@ -71,7 +71,7 @@ public class RegisterDealerCommandHandler : IRequestHandler<RegisterDealerComman
             Id = Guid.NewGuid(),
             BusinessName = request.BusinessName,
             Email = request.Email,
-            Phone = request.Phone,
+            Phone = request.Phone ?? string.Empty,
             OwnerUserId = request.UserId,
             CreatedAt = DateTime.UtcNow
         };

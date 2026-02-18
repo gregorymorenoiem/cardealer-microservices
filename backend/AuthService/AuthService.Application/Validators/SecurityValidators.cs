@@ -20,7 +20,7 @@ public static class SqlInjectionValidator
     /// <summary>
     /// Validates that the input does not contain SQL injection patterns.
     /// </summary>
-    public static IRuleBuilderOptions<T, string> NoSqlInjection<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoSqlInjection<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -51,7 +51,7 @@ public static class XssValidator
     /// <summary>
     /// Validates that the input does not contain XSS attack patterns.
     /// </summary>
-    public static IRuleBuilderOptions<T, string> NoXss<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoXss<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -82,7 +82,7 @@ public static class XssValidator
     /// <summary>
     /// Advanced XSS validation using pre-compiled regex patterns.
     /// </summary>
-    public static IRuleBuilderOptions<T, string> NoXssAdvanced<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoXssAdvanced<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -103,7 +103,7 @@ public static class SecurityValidator
     /// <summary>
     /// Validates input against both SQL Injection and XSS patterns.
     /// </summary>
-    public static IRuleBuilderOptions<T, string> NoSecurityThreats<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoSecurityThreats<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder
             .NoSqlInjection()

@@ -100,7 +100,7 @@ public class ContactRequestsController : ControllerBase
                 LastMessage = i.Messages?.OrderByDescending(m => m.SentAt).FirstOrDefault()?.Message
             }));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { error = "Error retrieving inquiries. Please try again later." });
         }
@@ -132,7 +132,7 @@ public class ContactRequestsController : ControllerBase
                 UnreadCount = i.Messages?.Count(m => m.IsFromBuyer && !m.IsRead) ?? 0
             }));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { error = "Error retrieving received inquiries. Please try again later." });
         }

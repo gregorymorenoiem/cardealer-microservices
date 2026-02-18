@@ -639,6 +639,16 @@ spec:
               value: "okla-media"
             - name: Storage__S3__Region
               value: "us-east-1"
+            - name: Storage__S3__AccessKey
+              valueFrom:
+                secretKeyRef:
+                  name: external-services-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: Storage__S3__SecretKey
+              valueFrom:
+                secretKeyRef:
+                  name: external-services-secrets
+                  key: AWS_SECRET_ACCESS_KEY
           envFrom:
             - configMapRef:
                 name: global-config
@@ -650,8 +660,6 @@ spec:
                 name: redis-secrets
             - secretRef:
                 name: rabbitmq-secrets
-            - secretRef:
-                name: external-services-secrets
           resources:
             requests:
               memory: "128Mi"
