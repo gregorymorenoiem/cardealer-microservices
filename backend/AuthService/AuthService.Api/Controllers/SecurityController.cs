@@ -341,6 +341,7 @@ public class SecurityController : ControllerBase
     /// - Maximum 3 verification attempts before lockout
     /// </remarks>
     /// <param name="sessionId">The GUID of the session to request revocation for</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost("sessions/{sessionId}/request-revoke")]
     [ProducesResponseType(typeof(ApiResponse<RequestSessionRevocationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -417,6 +418,7 @@ public class SecurityController : ControllerBase
     /// </remarks>
     /// <param name="sessionId">The GUID of the session to revoke</param>
     /// <param name="code">Optional verification code (if required by security policy)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     [HttpDelete("sessions/{sessionId}")]
     [ProducesResponseType(typeof(ApiResponse<RevokeSessionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -507,6 +509,7 @@ public class SecurityController : ControllerBase
     /// - Periodic security hygiene
     /// </remarks>
     /// <param name="keepCurrentSession">Keep the current session active (default: true)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     [HttpPost("sessions/revoke-all")]
     [ProducesResponseType(typeof(ApiResponse<RevokeAllSessionsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

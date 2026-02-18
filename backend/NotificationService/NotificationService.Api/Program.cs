@@ -48,7 +48,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
-builder.Services.AddLogging();
+// Note: AddLogging() removed — UseStandardSerilog() already configures logging via Serilog
 
 // CORS Configuration
 builder.Services.AddCors(options =>
