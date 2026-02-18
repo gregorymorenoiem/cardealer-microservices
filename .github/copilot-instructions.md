@@ -139,14 +139,22 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 | Block Storage                | 2× 10Gi PVCs          |        $2 |
 | **TOTAL**                    |                       |  **~$77** |
 
-### 💳 Pasarelas de Pago
+### 💳 Pasarelas de Pago (PaymentService)
 
-OKLA utiliza **dos pasarelas de pago** para maximizar conversiones:
+OKLA implementa **5 pasarelas** via Strategy + Factory + Registry pattern en `PaymentService`. Enum: `PaymentGateway` (0-4).
 
-| Pasarela                 | Uso Principal                              | Comisión | Depósito |
-| ------------------------ | ------------------------------------------ | -------- | -------- |
-| **Azul (Banco Popular)** | Tarjetas dominicanas (DEFAULT)             | ~2.5%    | 24-48h   |
-| **Stripe**               | Tarjetas internacionales, Apple/Google Pay | ~3.5%    | 7 días   |
+| #   | Pasarela                 | Tipo      | Estado           | Comisión       | Monedas       | Métodos de Pago                                    | Tokenización           |
+| --- | ------------------------ | --------- | ---------------- | -------------- | ------------- | -------------------------------------------------- | ---------------------- |
+| 0   | **Azul (Banco Popular)** | Banking   | ✅ **DEFAULT**   | 3.5%           | DOP, USD      | CreditCard, DebitCard, TokenizedCard               | Cybersource (incluido) |
+| 1   | **CardNET**              | Banking   | ❌ Deshabilitado | 3.0%           | DOP, USD      | CreditCard, DebitCard, ACH, TokenizedCard          | Bajo solicitud         |
+| 2   | **PixelPay**             | Fintech   | ✅ Habilitado    | 2.5% + US$0.15 | DOP, USD, EUR | CreditCard, DebitCard, MobilePayment, EWallet      | Native API             |
+| 3   | **Fygaro**               | Agregador | ❌ Deshabilitado | 3.0%           | DOP, USD      | CreditCard, DebitCard, TokenizedCard, Subscription | Módulo suscripción     |
+| 4   | **PayPal**               | Fintech   | ❌ Deshabilitado | 2.9% + US$0.30 | USD, EUR, DOP | CreditCard, DebitCard, PayPalWallet, TokenizedCard | Vault API              |
+
+> **Configuración:** Cada provider tiene su `Settings` class y sección en `appsettings.json` (`PaymentGateway:{Provider}`).
+> Default gateway configurable en `PaymentGateway:DefaultGateway`.
+> Exchange rates DOP↔USD/EUR via **Banco Central (BCRD)** — refresh diario 8:30 AM RD.
+> Admin puede habilitar/deshabilitar providers on-the-fly via `GatewayAvailabilityService`.
 
 ---
 
@@ -187,13 +195,12 @@ El proyecto cuenta con **86 microservicios** organizados por dominio:
 
 ### 💰 Pagos & Facturación
 
-| Servicio                  | Puerto | Descripción            |
-| ------------------------- | ------ | ---------------------- |
-| BillingService            | 15107  | Lógica de facturación  |
-| PaymentService            | -      | Procesamiento de pagos |
-| StripePaymentService      | -      | Integración Stripe     |
-| InvoicingService          | -      | Generación de facturas |
-| BankReconciliationService | -      | Conciliación bancaria  |
+| Servicio                  | Puerto | Descripción                                                      |
+| ------------------------- | ------ | ---------------------------------------------------------------- |
+| BillingService            | 15107  | Lógica de facturación                                            |
+| PaymentService            | -      | Procesamiento de pagos (Azul, PixelPay, CardNET, Fygaro, PayPal) |
+| InvoicingService          | -      | Generación de facturas                                           |
+| BankReconciliationService | -      | Conciliación bancaria                                            |
 
 ### 📧 Comunicación
 
@@ -288,7 +295,7 @@ cardealer-microservices/
 │   ├── VehiclesSaleService/        # Vehículos (principal)
 │   ├── MediaService/               # Archivos/Imágenes
 │   ├── NotificationService/        # Notificaciones
-│   ├── BillingService/             # Pagos Stripe + Azul
+│   ├── BillingService/             # Facturación y suscripciones
 │   ├── ErrorService/               # Errores centralizados
 │   └── ... (86 servicios total)
 ├── frontend/
