@@ -279,9 +279,12 @@ public class ChatController : ControllerBase
     {
         try
         {
+            if (!Guid.TryParse(request.AgentId, out var agentGuid))
+                return BadRequest(new { error = "AgentId must be a valid GUID" });
+
             var command = new TakeOverSessionCommand(
                 request.SessionToken,
-                request.AgentId,
+                agentGuid,
                 request.AgentName,
                 request.Reason);
 
@@ -324,5 +327,4 @@ public class ChatController : ControllerBase
             return StatusCode(500, new { error = "Internal server error" });
         }
     }
-}
 }

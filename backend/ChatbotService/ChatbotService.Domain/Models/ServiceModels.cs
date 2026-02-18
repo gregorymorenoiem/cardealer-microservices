@@ -177,6 +177,7 @@ public class AutoLearningSuggestion
     public float ConfidenceScore { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsApplied { get; set; }
+    public bool RequiresReview { get; set; } = true;
     public DateTime? AppliedAt { get; set; }
     public string? AppliedBy { get; set; }
 }
