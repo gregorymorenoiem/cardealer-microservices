@@ -187,7 +187,7 @@ metadata:
     app.okla.com/pipeline: "chatbot-cicd.yml"
     app.okla.com/model: "okla-llama3-8b-q4_k_m"
 spec:
-  replicas: 0  # Disabled: image not in GHCR + insufficient node resources
+  replicas: 0 # Disabled: image not in GHCR + insufficient node resources
   strategy:
     type: RollingUpdate
     rollingUpdate:

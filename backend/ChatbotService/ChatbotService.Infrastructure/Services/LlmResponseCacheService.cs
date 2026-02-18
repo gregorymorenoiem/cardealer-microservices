@@ -146,12 +146,13 @@ public class LlmResponseCacheService
     /// <summary>
     /// Invalidate all cached responses (e.g., after model update).
     /// </summary>
-    public async Task InvalidateAllAsync(CancellationToken ct = default)
+    public Task InvalidateAllAsync(CancellationToken ct = default)
     {
         _logger.LogInformation("Invalidating all LLM response cache entries");
         // Note: IDistributedCache doesn't support wildcard deletion.
         // For production, use StackExchange.Redis directly with SCAN/DEL.
         // For now, entries will naturally expire via TTL.
+        return Task.CompletedTask;
     }
 
     private static string BuildCacheKey(string query, string? systemPrompt)

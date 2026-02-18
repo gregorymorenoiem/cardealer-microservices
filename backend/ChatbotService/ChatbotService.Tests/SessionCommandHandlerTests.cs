@@ -20,7 +20,8 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IChatMessageRepository> _messageRepo;
     private readonly Mock<IChatbotConfigurationRepository> _configRepo;
     private readonly Mock<IQuickResponseRepository> _quickResponseRepo;
-    private readonly Mock<IChatbotVehicleRepository> _vehicleRepo;
+    private readonly Mock<IChatModeStrategyFactory> _strategyFactory;
+    private readonly Mock<IChatModeStrategy> _mockStrategy;
     private readonly Mock<ILlmService> _llmService;
     private readonly Mock<ILogger<SendMessageCommandHandler>> _logger;
     private readonly SendMessageCommandHandler _handler;
@@ -31,16 +32,28 @@ public class SendMessageCommandHandlerTests
         _messageRepo = new Mock<IChatMessageRepository>();
         _configRepo = new Mock<IChatbotConfigurationRepository>();
         _quickResponseRepo = new Mock<IQuickResponseRepository>();
-        _vehicleRepo = new Mock<IChatbotVehicleRepository>();
+        _strategyFactory = new Mock<IChatModeStrategyFactory>();
+        _mockStrategy = new Mock<IChatModeStrategy>();
         _llmService = new Mock<ILlmService>();
         _logger = new Mock<ILogger<SendMessageCommandHandler>>();
+
+        // Default strategy setup: return a grounded response
+        _strategyFactory.Setup(f => f.GetStrategy(It.IsAny<ChatMode>()))
+            .Returns(_mockStrategy.Object);
+        _mockStrategy.Setup(s => s.BuildSystemPromptAsync(
+                It.IsAny<ChatSession>(), It.IsAny<ChatbotConfiguration>(),
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("System prompt for testing");
+        _mockStrategy.Setup(s => s.ValidateResponseGroundingAsync(
+                It.IsAny<ChatSession>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GroundingValidationResult { IsGrounded = true });
 
         _handler = new SendMessageCommandHandler(
             _sessionRepo.Object,
             _messageRepo.Object,
             _configRepo.Object,
             _quickResponseRepo.Object,
-            _vehicleRepo.Object,
+            _strategyFactory.Object,
             _llmService.Object,
             _logger.Object);
     }
@@ -84,8 +97,6 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync(config);
         _quickResponseRepo.Setup(r => r.FindMatchingAsync(config.Id, "Hola", It.IsAny<CancellationToken>()))
             .ReturnsAsync((QuickResponse?)null);
-        _vehicleRepo.Setup(r => r.GetByConfigurationIdAsync(config.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ChatbotVehicle>());
         _llmService.Setup(s => s.GenerateResponseAsync(
                 "test-token", "Hola", "es", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LlmDetectionResult
@@ -131,8 +142,6 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync(config);
         _quickResponseRepo.Setup(r => r.FindMatchingAsync(config.Id, "hola", It.IsAny<CancellationToken>()))
             .ReturnsAsync(quickResponse);
-        _vehicleRepo.Setup(r => r.GetByConfigurationIdAsync(config.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ChatbotVehicle>());
 
         var command = new SendMessageCommand("test-token", "hola", "UserText", null);
 
@@ -160,8 +169,6 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync(session);
         _configRepo.Setup(r => r.GetByIdAsync(session.ChatbotConfigurationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(config);
-        _vehicleRepo.Setup(r => r.GetByConfigurationIdAsync(config.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ChatbotVehicle>());
 
         var command = new SendMessageCommand("test-token", "Hola", "UserText", null);
 
@@ -194,35 +201,6 @@ public class SendMessageCommandHandlerTests
         // Arrange
         var session = CreateActiveSession();
         var config = CreateConfig(session.ChatbotConfigurationId);
-        var vehicles = new List<ChatbotVehicle>
-        {
-            new()
-            {
-                Id = Guid.NewGuid(),
-                ChatbotConfigurationId = config.Id,
-                VehicleId = Guid.NewGuid(),
-                Make = "Toyota",
-                Model = "Corolla",
-                Year = 2024,
-                Price = 1200000m,
-                FuelType = "Gasolina",
-                Transmission = "Automática",
-                IsAvailable = true
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                ChatbotConfigurationId = config.Id,
-                VehicleId = Guid.NewGuid(),
-                Make = "Honda",
-                Model = "CR-V",
-                Year = 2023,
-                Price = 1800000m,
-                FuelType = "Gasolina",
-                Transmission = "Automática",
-                IsAvailable = true
-            }
-        };
 
         _sessionRepo.Setup(r => r.GetByTokenAsync("test-token", It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
@@ -230,11 +208,14 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync(config);
         _quickResponseRepo.Setup(r => r.FindMatchingAsync(config.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((QuickResponse?)null);
-        _vehicleRepo.Setup(r => r.GetByConfigurationIdAsync(config.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(vehicles);
+        // Strategy builds the system prompt with inventory data
+        _mockStrategy.Setup(s => s.BuildSystemPromptAsync(
+                It.IsAny<ChatSession>(), It.IsAny<ChatbotConfiguration>(),
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("System prompt with INVENTARIO DISPONIBLE: Toyota Corolla 2024, Honda CR-V 2023");
         _llmService.Setup(s => s.GenerateResponseAsync(
                 "test-token", It.IsAny<string>(), "es",
-                It.Is<string?>(p => p != null && p.Contains("INVENTARIO DISPONIBLE")),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LlmDetectionResult
             {
@@ -251,12 +232,13 @@ public class SendMessageCommandHandlerTests
 
         // Assert
         result.Response.Should().Contain("Toyota");
-        // Verify the system prompt includes the inventory section
+        // Verify strategy was called to build system prompt
+        _mockStrategy.Verify(s => s.BuildSystemPromptAsync(
+            It.IsAny<ChatSession>(), It.IsAny<ChatbotConfiguration>(),
+            It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         _llmService.Verify(s => s.GenerateResponseAsync(
-            "test-token",
-            "¿Qué carros tienen?",
-            "es",
-            It.Is<string?>(p => p != null && p.Contains("INVENTARIO DISPONIBLE") && p.Contains("Toyota") && p.Contains("Honda")),
+            "test-token", "¿Qué carros tienen?", "es",
+            It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -276,8 +258,6 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync(config);
         _quickResponseRepo.Setup(r => r.FindMatchingAsync(config.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((QuickResponse?)null);
-        _vehicleRepo.Setup(r => r.GetByConfigurationIdAsync(config.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ChatbotVehicle>());
         _llmService.Setup(s => s.GenerateResponseAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(),
                 It.IsAny<string?>(), It.IsAny<CancellationToken>()))

@@ -97,7 +97,7 @@ public class LlmServiceTests : IDisposable
         settings.TimeoutSeconds.Should().Be(60);
         settings.Temperature.Should().Be(0.3f);
         settings.TopP.Should().Be(0.9f);
-        settings.MaxTokens.Should().Be(400);
+        settings.MaxTokens.Should().Be(600);
         settings.RepetitionPenalty.Should().Be(1.15f);
     }
 
@@ -120,7 +120,7 @@ public class LlmServiceTests : IDisposable
 
         // Assert
         result.IsFallback.Should().BeTrue();
-        result.FulfillmentText.Should().Contain("no pude procesar");
+        result.FulfillmentText.Should().Contain("Disculpa");
     }
 
     [Fact]

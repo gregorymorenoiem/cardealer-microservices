@@ -204,7 +204,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         };
     }
 
-    public async Task<GroundingValidationResult> ValidateResponseGroundingAsync(
+    public Task<GroundingValidationResult> ValidateResponseGroundingAsync(
         ChatSession session, string llmResponse, CancellationToken ct = default)
     {
         var result = new GroundingValidationResult { IsGrounded = true };
@@ -236,7 +236,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
                 "Se recomienda basar las respuestas en datos concretos del inventario.";
         }
         
-        return result;
+        return Task.FromResult(result);
     }
 
     // ══════════════════════════════════════════════════════════════
