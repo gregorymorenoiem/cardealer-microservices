@@ -35,10 +35,13 @@ ENV NODE_ENV=production
 # Production: BFF pattern — browser uses relative URLs, Next.js rewrites to gateway
 ARG NEXT_PUBLIC_API_URL=
 ARG NEXT_PUBLIC_SITE_URL=https://okla.com.do
+# INTERNAL_API_URL used by rewrites() at build time to set the proxy destination
+ARG INTERNAL_API_URL=http://gateway:8080
 
 # Set as ENV so Next.js can read them during build
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV INTERNAL_API_URL=$INTERNAL_API_URL
 
 # Build the application
 RUN pnpm build
