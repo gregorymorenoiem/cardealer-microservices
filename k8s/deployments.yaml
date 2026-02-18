@@ -9,7 +9,7 @@
 
 ---
 # =============================================================================
-# FRONTEND WEB — 🔴 CRITICAL: minReplicas=2 para HA
+# FRONTEND WEB — Staging: 1 replica (scale to 2 for production HA)
 # =============================================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -20,7 +20,7 @@ metadata:
     app: frontend-web
     tier: frontend
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -113,7 +113,7 @@ metadata:
     app: gateway
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -215,7 +215,7 @@ metadata:
     app: authservice
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -505,7 +505,7 @@ metadata:
     app: vehiclessaleservice
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -720,7 +720,7 @@ metadata:
     app: billingservice
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
