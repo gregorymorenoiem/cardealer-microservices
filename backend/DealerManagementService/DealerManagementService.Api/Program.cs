@@ -19,9 +19,6 @@ using CarDealer.Shared.Audit.Extensions;
 const string ServiceName = "DealerManagementService";
 const string ServiceVersion = "1.0.0";
 
-// Bootstrap logger
-Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
-
 try
 {
     var builder = WebApplication.CreateBuilder(args);

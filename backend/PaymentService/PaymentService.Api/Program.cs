@@ -28,9 +28,6 @@ using PaymentService.Api;
 const string ServiceName = "PaymentService";
 const string ServiceVersion = "2.0.0";
 
-// Bootstrap logger for startup
-Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
-
 try
 {
     var builder = WebApplication.CreateBuilder(args);

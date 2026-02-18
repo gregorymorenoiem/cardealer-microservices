@@ -25,9 +25,6 @@ using System.Threading.RateLimiting;
 const string ServiceName = "AdminService";
 const string ServiceVersion = "1.0.0";
 
-// Bootstrap logger
-Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
-
 try
 {
     var builder = WebApplication.CreateBuilder(args);

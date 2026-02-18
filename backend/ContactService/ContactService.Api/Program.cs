@@ -22,9 +22,6 @@ using CarDealer.Shared.Configuration;
 const string ServiceName = "ContactService";
 const string ServiceVersion = "1.0.0";
 
-// Bootstrap logger
-Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
-
 try
 {
     var builder = WebApplication.CreateBuilder(args);

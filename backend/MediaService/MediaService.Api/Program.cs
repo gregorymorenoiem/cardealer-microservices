@@ -33,9 +33,6 @@ using Microsoft.AspNetCore.RateLimiting;
 const string ServiceName = "MediaService";
 const string ServiceVersion = "1.0.0";
 
-// Bootstrap logger using shared library
-Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
-
 var builder = WebApplication.CreateBuilder(args);
 
 // ============= CENTRALIZED LOGGING (Serilog → Seq) =============

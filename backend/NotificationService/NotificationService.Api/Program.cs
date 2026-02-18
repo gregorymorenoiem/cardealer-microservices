@@ -34,9 +34,6 @@ using CarDealer.Shared.Audit.Extensions;
 
 const string ServiceName = "NotificationService";
 
-// Bootstrap logger using shared library
-Log.Logger = SerilogExtensions.CreateBootstrapLogger(ServiceName);
-
 var builder = WebApplication.CreateBuilder(args);
 
 // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
