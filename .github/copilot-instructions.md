@@ -49,7 +49,7 @@ Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (
 | Capa                   | Tecnología                           | Versión     |
 | ---------------------- | ------------------------------------ | ----------- |
 | **Backend**            | .NET 8.0 LTS                         | net8.0      |
-| **Frontend Web**       | Next.js 14 + TypeScript + App Router | ^14.0.0     |
+| **Frontend Web**       | Next.js 16 + TypeScript + App Router | ^16.1.6     |
 | **Frontend Mobile**    | Flutter + Dart                       | SDK >=3.4.0 |
 | **Package Manager**    | pnpm (⚠️ NO usar npm ni yarn)        | 9+          |
 | **Base de Datos**      | PostgreSQL                           | 16+         |
@@ -76,21 +76,21 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 > ⚠️ **Staging optimizado:** Todos los servicios corren con **1 réplica** para minimizar costos (~$77/mes).
 > Para producción, escalar servicios críticos a 2 réplicas: `kubectl scale deployment frontend-web gateway authservice --replicas=2 -n okla`
 
-| Servicio                | Estado     | Réplicas | Puerto K8s | Imagen Docker                                   |
-| ----------------------- | ---------- | -------- | ---------- | ----------------------------------------------- |
-| **frontend-web**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`  |
-| **gateway**             | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`       |
-| **authservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`   |
-| **userservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`   |
-| **roleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`   |
+| Servicio                | Estado     | Réplicas | Puerto K8s | Imagen Docker                                         |
+| ----------------------- | ---------- | -------- | ---------- | ----------------------------------------------------- |
+| **frontend-web**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`        |
+| **gateway**             | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`             |
+| **authservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`         |
+| **userservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`         |
+| **roleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`         |
 | **vehiclessaleservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest` |
-| **mediaservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`  |
+| **mediaservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`        |
 | **notificationservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest` |
-| **billingservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`|
-| **errorservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`  |
-| **postgres**            | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                        |
-| **redis**               | ✅ Running | 1        | 6379       | In-cluster                                      |
-| **rabbitmq**            | ✅ Running | 1        | 5672/15672 | In-cluster                                      |
+| **billingservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`      |
+| **errorservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`        |
+| **postgres**            | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                              |
+| **redis**               | ✅ Running | 1        | 6379       | In-cluster                                            |
+| **rabbitmq**            | ✅ Running | 1        | 5672/15672 | In-cluster                                            |
 
 > ⚠️ **Servicios NO desplegados en K8s** (imagen Docker existe en GHCR pero no tienen deployment manifest):
 > `kycservice`, `auditservice`, `idempotencyservice`, `chatbotservice`, `adminservice`
@@ -99,14 +99,14 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 
 ### 💰 Costos Mensuales (Staging)
 
-| Recurso | Detalle | Costo/mes |
-|---------|---------|----------:|
-| DOKS Cluster (control plane) | Gratis en DO | $0 |
-| 2× Worker Nodes | `s-2vcpu-4gb` × 2 | $48 |
-| DO Managed PostgreSQL | `db-s-1vcpu-1gb` × 1 | $15 |
-| Load Balancer | 1× LB (Ingress NGINX) | $12 |
-| Block Storage | 2× 10Gi PVCs | $2 |
-| **TOTAL** | | **~$77** |
+| Recurso                      | Detalle               | Costo/mes |
+| ---------------------------- | --------------------- | --------: |
+| DOKS Cluster (control plane) | Gratis en DO          |        $0 |
+| 2× Worker Nodes              | `s-2vcpu-4gb` × 2     |       $48 |
+| DO Managed PostgreSQL        | `db-s-1vcpu-1gb` × 1  |       $15 |
+| Load Balancer                | 1× LB (Ingress NGINX) |       $12 |
+| Block Storage                | 2× 10Gi PVCs          |        $2 |
+| **TOTAL**                    |                       |  **~$77** |
 
 ### 💳 Pasarelas de Pago
 
@@ -261,7 +261,7 @@ cardealer-microservices/
 │   ├── ErrorService/               # Errores centralizados
 │   └── ... (86 servicios total)
 ├── frontend/
-│   ├── web-next/                   # Next.js 14 App Router
+│   ├── web-next/                   # Next.js 16 App Router
 │   │   ├── src/
 │   │   │   ├── app/               # App Router pages
 │   │   │   │   ├── (main)/        # Rutas principales
@@ -469,7 +469,110 @@ var result = await _mediator.Send(command);
 
 ---
 
-## 🖥️ FRONTEND (Next.js 14)
+## 🖥️ FRONTEND (Next.js 16)
+
+### Stack Frontend Completo
+
+| Librería                   | Versión | Uso                                                             |
+| -------------------------- | ------- | --------------------------------------------------------------- |
+| **Next.js**                | 16.1.6  | Framework (App Router)                                          |
+| **React**                  | 19.2.3  | UI Library                                                      |
+| **TypeScript**             | 5+      | Tipado                                                          |
+| **Tailwind CSS**           | v4      | Estilos (via `@tailwindcss/postcss`)                            |
+| **shadcn/ui**              | Latest  | Componentes UI (Radix primitives + CVA + tailwind-merge + clsx) |
+| **Zustand**                | 5.0.10  | State management global                                         |
+| **TanStack Query**         | 5.90.20 | Data fetching, caching, mutations                               |
+| **react-hook-form**        | 7.71.1  | Formularios                                                     |
+| **Zod**                    | 4.3.6   | Validación de schemas (con `@hookform/resolvers`)               |
+| **Recharts**               | 3.7.0   | Gráficas y dashboards                                           |
+| **Vitest**                 | 4.0.18  | Unit/component testing (⚠️ NO Jest)                             |
+| **@testing-library/react** | 16.3.2  | Testing de componentes                                          |
+| **Playwright**             | 1.58.1  | E2E testing                                                     |
+| **MSW**                    | 2.12.7  | API mocking para tests                                          |
+| **sonner**                 | Latest  | Toast notifications                                             |
+| **@dnd-kit**               | Latest  | Drag & drop                                                     |
+| **tesseract.js**           | Latest  | OCR para KYC document reading                                   |
+| **pnpm**                   | 9+      | Package manager (⚠️ NO npm/yarn)                                |
+
+> ⚠️ **IMPORTANTE — Dev Server:** Usar `pnpm dev --turbopack` para Turbopack (más rápido).
+
+### Patrones de Frontend Obligatorios
+
+```typescript
+// ✅ State management con Zustand
+import { create } from "zustand";
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+}));
+
+// ✅ Data fetching con TanStack Query
+import { useQuery, useMutation } from "@tanstack/react-query";
+export function useVehicles(filters: VehicleFilters) {
+  return useQuery({
+    queryKey: ["vehicles", filters],
+    queryFn: () => vehicleService.list(filters),
+  });
+}
+
+// ✅ Formularios con react-hook-form + Zod
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+const schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+const { register, handleSubmit } = useForm({ resolver: zodResolver(schema) });
+
+// ✅ Componentes shadcn/ui
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
+// ✅ Testing con Vitest (NO Jest)
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+```
+
+### Frontend Testing
+
+```typescript
+// ⚠️ USAR Vitest, NO Jest
+// Archivo: *.test.tsx o *.spec.tsx
+
+// Unit test
+import { describe, it, expect } from 'vitest';
+describe('formatPrice', () => {
+  it('should format RD currency', () => {
+    expect(formatPrice(150000)).toBe('RD$150,000');
+  });
+});
+
+// Component test
+import { render, screen } from '@testing-library/react';
+describe('VehicleCard', () => {
+  it('should render vehicle title', () => {
+    render(<VehicleCard vehicle={mockVehicle} />);
+    expect(screen.getByText('Toyota Corolla 2024')).toBeInTheDocument();
+  });
+});
+
+// API mocking con MSW
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+const server = setupServer(
+  http.get('/api/vehicles', () => HttpResponse.json({ data: mockVehicles }))
+);
+
+// E2E con Playwright
+import { test, expect } from '@playwright/test';
+test('user can search vehicles', async ({ page }) => {
+  await page.goto('/buscar');
+  await page.fill('[data-testid="search-input"]', 'Toyota');
+  await expect(page.locator('.vehicle-card')).toHaveCount(5);
+});
+```
 
 ### Estructura de App Router
 
@@ -691,29 +794,31 @@ SERVICES: "frontend-web,gateway,authservice,userservice,roleservice,vehiclessale
 
 El nombre de la imagen en `k8s/deployments.yaml` **DEBE** ser idéntico al que se pushea en el workflow de CI/CD.
 
-| Servicio | Imagen correcta (GHCR) | Archivo CI/CD |
-|----------|------------------------|---------------|
-| frontend-web | `ghcr.io/gregorymorenoiem/frontend-web:latest` | `_reusable-frontend.yml` |
-| gateway | `ghcr.io/gregorymorenoiem/gateway:latest` | `_reusable-dotnet-service.yml` |
-| authservice | `ghcr.io/gregorymorenoiem/authservice:latest` | `_reusable-dotnet-service.yml` |
-| (otros) | `ghcr.io/gregorymorenoiem/{service}:latest` | `_reusable-dotnet-service.yml` |
+| Servicio     | Imagen correcta (GHCR)                         | Archivo CI/CD                  |
+| ------------ | ---------------------------------------------- | ------------------------------ |
+| frontend-web | `ghcr.io/gregorymorenoiem/frontend-web:latest` | `_reusable-frontend.yml`       |
+| gateway      | `ghcr.io/gregorymorenoiem/gateway:latest`      | `_reusable-dotnet-service.yml` |
+| authservice  | `ghcr.io/gregorymorenoiem/authservice:latest`  | `_reusable-dotnet-service.yml` |
+| (otros)      | `ghcr.io/gregorymorenoiem/{service}:latest`    | `_reusable-dotnet-service.yml` |
 
-> 🔴 **INCIDENTE Feb 2026:** `deployments.yaml` referenciaba `cardealer-web:latest` (imagen vieja Vite/nginx) 
+> 🔴 **INCIDENTE Feb 2026:** `deployments.yaml` referenciaba `cardealer-web:latest` (imagen vieja Vite/nginx)
 > pero el CI/CD pushea `frontend-web:latest` (imagen Next.js nueva). Resultado: el frontend mostraba la página vieja.
 > **SIEMPRE** verificar que `deployments.yaml` y el workflow usan el MISMO nombre de imagen.
 
 #### 2. Docker Build Cache — Puede causar imágenes stale
 
-El workflow `_reusable-dotnet-service.yml` usa `cache-from: type=local` con `restore-keys`. Esto puede causar 
-que buildx reutilice ALL cached layers (incluyendo `COPY . .` y `dotnet publish`), produciendo imágenes con 
+El workflow `_reusable-dotnet-service.yml` usa `cache-from: type=local` con `restore-keys`. Esto puede causar
+que buildx reutilice ALL cached layers (incluyendo `COPY . .` y `dotnet publish`), produciendo imágenes con
 código viejo a pesar de que el CI reporta "build exitoso".
 
 **Síntomas:**
-- CI/CD muestra todos los pasos como `CACHED` 
+
+- CI/CD muestra todos los pasos como `CACHED`
 - El digest de la imagen nueva es idéntico al anterior
 - Los pods siguen ejecutando código viejo
 
 **Solución cuando ocurre:**
+
 ```bash
 # Listar y eliminar caches de buildx
 gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh cache delete {}
@@ -726,17 +831,18 @@ gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh 
 
 El K8s secret `registry-credentials` permite a los pods bajar imágenes de GHCR (privado).
 
-| Tipo de Token | Prefijo | Duración | Fuente |
-|---------------|---------|----------|--------|
-| GitHub Actions | `ghs_*` | ~1 hora (solo dura el workflow) | `secrets.GITHUB_TOKEN` en CI |
-| OAuth (CLI) | `gho_*` | ~8 horas | `gh auth token` |
-| PAT clásico | `ghp_*` | Configurable (hasta never) | GitHub Settings → Tokens |
-| Fine-grained PAT | `github_pat_*` | Configurable | GitHub Settings → Fine-grained |
+| Tipo de Token    | Prefijo        | Duración                        | Fuente                         |
+| ---------------- | -------------- | ------------------------------- | ------------------------------ |
+| GitHub Actions   | `ghs_*`        | ~1 hora (solo dura el workflow) | `secrets.GITHUB_TOKEN` en CI   |
+| OAuth (CLI)      | `gho_*`        | ~8 horas                        | `gh auth token`                |
+| PAT clásico      | `ghp_*`        | Configurable (hasta never)      | GitHub Settings → Tokens       |
+| Fine-grained PAT | `github_pat_*` | Configurable                    | GitHub Settings → Fine-grained |
 
-> 🔴 **INCIDENTE Feb 2026:** El secret usaba un token `ghs_*` efímero del CI/CD que expiró. 
+> 🔴 **INCIDENTE Feb 2026:** El secret usaba un token `ghs_*` efímero del CI/CD que expiró.
 > Resultado: `ImagePullBackOff` en todos los pods nuevos.
 
 **Para refrescar el secret:**
+
 ```bash
 # 1. Obtener token (usar PAT para larga duración)
 TOKEN=$(gh auth token)  # o usar un PAT clásico
@@ -750,7 +856,7 @@ kubectl create secret docker-registry registry-credentials \
   -n okla
 ```
 
-> ⚠️ **MEJOR PRÁCTICA:** Usar un **Fine-grained PAT** con scope `read:packages` y expiración larga (90 días+) 
+> ⚠️ **MEJOR PRÁCTICA:** Usar un **Fine-grained PAT** con scope `read:packages` y expiración larga (90 días+)
 > para el secret de K8s. NO usar tokens de workflow (`ghs_*`).
 
 ---
@@ -808,11 +914,11 @@ El frontend usa multi-stage con pnpm y standalone output:
 
 ### El Mismatch IDeadLetterQueue vs ISharedDeadLetterQueue
 
-La librería compartida `CarDealer.Shared` registra `ISharedDeadLetterQueue` (PostgreSQL-backed) via 
-`AddPostgreSqlDeadLetterQueue()`. Pero cada servicio tiene su propia interfaz local `IDeadLetterQueue` 
+La librería compartida `CarDealer.Shared` registra `ISharedDeadLetterQueue` (PostgreSQL-backed) via
+`AddPostgreSqlDeadLetterQueue()`. Pero cada servicio tiene su propia interfaz local `IDeadLetterQueue`
 (en `Domain.Interfaces` o `Infrastructure.Messaging`) que es la que `DeadLetterQueueProcessor` inyecta.
 
-> 🔴 **INCIDENTE Feb 2026:** 6 servicios crasheaban al iniciar con 
+> 🔴 **INCIDENTE Feb 2026:** 6 servicios crasheaban al iniciar con
 > `Unable to resolve service for type 'IDeadLetterQueue'`.
 
 **Regla:** Si un servicio usa `DeadLetterQueueProcessor` (HostedService), DEBE registrar `IDeadLetterQueue`:
@@ -824,15 +930,17 @@ builder.Services.AddHostedService<DeadLetterQueueProcessor>();
 ```
 
 **Servicios que requieren esta registración:**
+
 - AuthService, ErrorService, RoleService, AuditService, NotificationService, MediaService
 
 ### Regla General de DI
 
-**SIEMPRE verificar que todas las dependencias inyectadas en HostedServices, Controllers y Handlers 
-están registradas en `Program.cs`.** Un `AddHostedService<T>()` sin su correspondiente `AddSingleton<IDependency>()` 
+**SIEMPRE verificar que todas las dependencias inyectadas en HostedServices, Controllers y Handlers
+están registradas en `Program.cs`.** Un `AddHostedService<T>()` sin su correspondiente `AddSingleton<IDependency>()`
 causa crash silencioso al iniciar el pod.
 
 **Test de validación (recomendado):**
+
 ```csharp
 [Fact]
 public async Task Application_DI_Container_Resolves_All_Services()
@@ -850,10 +958,10 @@ public async Task Application_DI_Container_Resolves_All_Services()
 
 ### Queue Arguments Son Inmutables
 
-RabbitMQ **NO permite cambiar los argumentos** de una queue existente. Si el código declara una queue 
+RabbitMQ **NO permite cambiar los argumentos** de una queue existente. Si el código declara una queue
 con argumentos diferentes a los que ya tiene, RabbitMQ responde con `PRECONDITION_FAILED` y el servicio crashea.
 
-> 🔴 **INCIDENTE Feb 2026:** Queues existentes sin `x-dead-letter-exchange`. Código nuevo las declara 
+> 🔴 **INCIDENTE Feb 2026:** Queues existentes sin `x-dead-letter-exchange`. Código nuevo las declara
 > CON `x-dead-letter-exchange`. Resultado: `PRECONDITION_FAILED` y crash en loop.
 
 **Regla:** Si cambias argumentos de una queue (DLX, TTL, max-length, etc.):
@@ -867,6 +975,7 @@ kubectl exec deployment/rabbitmq -n okla -- rabbitmqctl delete_queue {queue-name
 ```
 
 **Argumentos comunes que causan PRECONDITION_FAILED si se cambian:**
+
 - `x-dead-letter-exchange`
 - `x-dead-letter-routing-key`
 - `x-message-ttl`
@@ -875,26 +984,26 @@ kubectl exec deployment/rabbitmq -n okla -- rabbitmqctl delete_queue {queue-name
 
 ### Queues Actuales en Producción
 
-| Exchange | Queue | DLX | Servicio |
-|----------|-------|-----|----------|
-| `notification-exchange` | `notification-queue` | `notification-exchange.dlx` | NotificationService |
+| Exchange                | Queue                      | DLX                         | Servicio            |
+| ----------------------- | -------------------------- | --------------------------- | ------------------- |
+| `notification-exchange` | `notification-queue`       | `notification-exchange.dlx` | NotificationService |
 | `notification-exchange` | `notification-email-queue` | `notification-exchange.dlx` | NotificationService |
-| `notification-exchange` | `notification-sms-queue` | `notification-exchange.dlx` | NotificationService |
-| `errors-exchange` | `errors.queue` | — | ErrorService |
-| `cardealer.events` | (varios por servicio) | — | Todos |
+| `notification-exchange` | `notification-sms-queue`   | `notification-exchange.dlx` | NotificationService |
+| `errors-exchange`       | `errors.queue`             | —                           | ErrorService        |
+| `cardealer.events`      | (varios por servicio)      | —                           | Todos               |
 
 ### Configuración de RabbitMQ en K8s
 
 Las credenciales de RabbitMQ se pasan via K8s secrets. Los servicios leen:
 
-| Variable de Entorno | Valor | Notas |
-|---------------------|-------|-------|
-| `RabbitMQ__HostName` | `rabbitmq` | Nombre del service K8s |
+| Variable de Entorno  | Valor        | Notas                                   |
+| -------------------- | ------------ | --------------------------------------- |
+| `RabbitMQ__HostName` | `rabbitmq`   | Nombre del service K8s                  |
 | `RabbitMQ__UserName` | `okla_admin` | ⚠️ También existe como `RabbitMQ__User` |
-| `RabbitMQ__Password` | (en secret) | |
-| `RabbitMQ__Port` | `5672` | |
+| `RabbitMQ__Password` | (en secret)  |                                         |
+| `RabbitMQ__Port`     | `5672`       |                                         |
 
-> ⚠️ **IMPORTANTE:** El secret de K8s tiene AMBAS keys `RabbitMQ__UserName` y `RabbitMQ__User` 
+> ⚠️ **IMPORTANTE:** El secret de K8s tiene AMBAS keys `RabbitMQ__UserName` y `RabbitMQ__User`
 > porque algunos servicios leen una u otra. Si creas un servicio nuevo, usar `RabbitMQ__UserName`.
 
 ---
@@ -923,11 +1032,12 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 });
 ```
 
-> 🔴 **INCIDENTE Feb 2026:** El endpoint `/health` (sin filtro) ejecutaba `ExternalServiceHealthCheck` 
-> que intentaba conectar a Consul en `localhost:8500` (no desplegado). Timeout de 200 segundos bloqueaba 
+> 🔴 **INCIDENTE Feb 2026:** El endpoint `/health` (sin filtro) ejecutaba `ExternalServiceHealthCheck`
+> que intentaba conectar a Consul en `localhost:8500` (no desplegado). Timeout de 200 segundos bloqueaba
 > el thread pool, causando que TAMBIÉN `/health/ready` fallara. Los pods entraban en restart loop.
 
 **Reglas:**
+
 1. ✅ **SIEMPRE** excluir checks con tag `"external"` del endpoint `/health`
 2. ✅ Los checks externos (Consul, servicios terceros) deben tener tag `["external"]`
 3. ✅ El endpoint `/health/live` NUNCA debe ejecutar checks reales (solo verifica proceso vivo)
@@ -936,7 +1046,7 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 
 ### Consul — NO Desplegado
 
-Consul (`localhost:8500`) **NO está desplegado** en el cluster K8s. Los servicios que lo referencian 
+Consul (`localhost:8500`) **NO está desplegado** en el cluster K8s. Los servicios que lo referencian
 (`ExternalServiceHealthCheck`, `ServiceRegistrationMiddleware`) emiten warnings no-fatales.
 Esto es esperado y no afecta la operación de los servicios.
 
@@ -946,10 +1056,10 @@ Esto es esperado y no afecta la operación de los servicios.
 
 ### Dos PostgreSQL en el Cluster
 
-| Recurso | Host | Puerto | Uso |
-|---------|------|--------|-----|
-| **DO Managed PostgreSQL** | `okla-db-do-user-31493168-0.g.db.ondigitalocean.com` | 25060 | Producción (backups automáticos, $15/mes) |
-| **In-cluster PostgreSQL** | `postgres` (K8s service) | 5432 | Staging/desarrollo (pod StatefulSet, sin backups) |
+| Recurso                   | Host                                                 | Puerto | Uso                                               |
+| ------------------------- | ---------------------------------------------------- | ------ | ------------------------------------------------- |
+| **DO Managed PostgreSQL** | `okla-db-do-user-31493168-0.g.db.ondigitalocean.com` | 25060  | Producción (backups automáticos, $15/mes)         |
+| **In-cluster PostgreSQL** | `postgres` (K8s service)                             | 5432   | Staging/desarrollo (pod StatefulSet, sin backups) |
 
 > ⚠️ Los servicios actualmente apuntan al **DO Managed PostgreSQL** via K8s secrets.
 > Las connection strings usan `sslmode=require` para la DB managed.
@@ -967,21 +1077,579 @@ chatbotservice_db, adminservice_db, dealermanagementservice_db, reviewservice_db
 
 ### Serilog — Crash Conocido
 
-> ⚠️ **REGLA:** NO usar `CreateBootstrapLogger()` si el servicio usa `UseStandardSerilog()` 
+> ⚠️ **REGLA:** NO usar `CreateBootstrapLogger()` si el servicio usa `UseStandardSerilog()`
 > (de CarDealer.Shared). La combinación causa "logger already frozen" crash al iniciar.
-> 
+>
 > ```csharp
 > // ❌ INCORRECTO — causa crash
 > Log.Logger = new LoggerConfiguration().CreateBootstrapLogger();
 > builder.UseStandardSerilog(); // BOOM: "logger already frozen"
-> 
+>
 > // ✅ CORRECTO
 > builder.UseStandardSerilog(); // Solo esto, sin CreateBootstrapLogger
 > ```
 
 ---
 
-## 🐛 TROUBLESHOOTING COMÚN
+## � SHARED LIBRARY — EXTENSIONES OBLIGATORIAS
+
+La carpeta `_Shared/` contiene librerías compartidas con **extension methods estandarizados** que TODOS los servicios DEBEN usar. **NO reimplementar funcionalidad que ya existe en shared.**
+
+### CarDealer.Shared — Extensions Obligatorias en Program.cs
+
+```csharp
+// ============= PROGRAM.CS — PATRÓN ESTÁNDAR =============
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Configuración externalizada (K8s secrets)
+builder.Configuration.AddMicroserviceSecrets();
+
+// 2. Serilog centralizado (Console + Seq) — ⚠️ NO usar CreateBootstrapLogger()
+builder.UseStandardSerilog();
+
+// 3. Base de datos (PostgreSQL + EF Core + retry + auto-migrate)
+builder.Services.AddStandardDatabase<ServiceDbContext>(builder.Configuration);
+
+// 4. RabbitMQ (singleton connection per pod)
+builder.Services.AddStandardRabbitMq(builder.Configuration);
+
+// 5. Dead Letter Queue (PostgreSQL-backed)
+builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration);
+
+// 6. OpenTelemetry (tracing + metrics + Prometheus)
+builder.Services.AddStandardObservability(builder.Configuration, "ServiceName");
+
+// 7. Global error handling (ProblemDetails + IErrorPublisher)
+builder.Services.AddGlobalErrorHandling(builder.Configuration);
+
+// 8. Security headers (OWASP)
+// (se configura en middleware, no en services)
+
+// 9. Audit middleware
+builder.Services.AddAuditMiddleware();
+
+// 10. MediatR + ValidationBehavior (auto-ejecuta FluentValidation)
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Command).Assembly));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+// 11. FluentValidation
+builder.Services.AddValidatorsFromAssembly(typeof(CommandValidator).Assembly);
+```
+
+| Extension Method | Paquete | Qué hace |
+|-----------------|---------|----------|
+| `AddMicroserviceSecrets()` | CarDealer.Shared | Lee config de K8s secrets |
+| `UseStandardSerilog()` | CarDealer.Shared | Serilog Console + Seq |
+| `AddStandardDatabase<T>()` | CarDealer.Shared | EF Core PostgreSQL + retry + auto-migrate |
+| `AddStandardRabbitMq()` | CarDealer.Shared | RabbitMQ singleton connection |
+| `AddPostgreSqlDeadLetterQueue()` | CarDealer.Shared | DLQ PostgreSQL-backed |
+| `AddStandardObservability()` | CarDealer.Shared | OpenTelemetry tracing + metrics |
+| `AddGlobalErrorHandling()` | CarDealer.Shared | GlobalExceptionMiddleware + IErrorPublisher |
+| `UseApiSecurityHeaders()` | CarDealer.Shared | OWASP security headers (CSP, HSTS, etc.) |
+| `AddAuditMiddleware()` | CarDealer.Shared | Audit event publishing via RabbitMQ |
+| `UseRequestLogging()` | CarDealer.Shared | Request logging con CorrelationId |
+
+### ValidationBehavior — Auto-ejecución de FluentValidation
+
+MediatR tiene un pipeline behavior que ejecuta automáticamente TODOS los validators FluentValidation antes del handler:
+
+```csharp
+// NO hacer validación manual en handlers — ValidationBehavior lo hace automáticamente
+// ❌ INCORRECTO
+public async Task<Result<T>> Handle(Command cmd, CancellationToken ct)
+{
+    var validation = await _validator.ValidateAsync(cmd); // Innecesario
+    if (!validation.IsValid) return Result.Fail(...);
+}
+
+// ✅ CORRECTO — ValidationBehavior ya ejecutó los validators
+public async Task<Result<T>> Handle(Command cmd, CancellationToken ct)
+{
+    // Si llegamos aquí, la validación ya pasó
+    var entity = new Entity(cmd.Name, cmd.Email);
+    await _repository.AddAsync(entity, ct);
+    return Result.Ok(entity.ToDto());
+}
+```
+
+Si la validación falla, `ValidationBehavior` lanza `ValidationException` que `GlobalExceptionMiddleware` convierte en RFC 7807 `ProblemDetails` (400).
+
+---
+
+## 🔄 MIDDLEWARE PIPELINE — ORDEN CANÓNICO
+
+El orden del middleware en `Program.cs` es **CRÍTICO**. Seguir este orden exacto:
+
+```csharp
+var app = builder.Build();
+
+// 1. Global error handling — SIEMPRE PRIMERO
+app.UseGlobalErrorHandling();
+
+// 2. Request logging (shared library — agrega CorrelationId, RequestId)
+app.UseRequestLogging();
+
+// 3. Security headers (OWASP — CSP, HSTS, X-Frame-Options)
+app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+// 4. Rate limiting
+app.UseMiddleware<RateLimitBypassMiddleware>();
+app.UseCustomRateLimiting(rateLimitingConfig);
+
+// 5. HTTPS redirection — solo fuera de K8s (K8s termina TLS en Ingress)
+if (!app.Environment.IsProduction()) app.UseHttpsRedirection();
+
+// 6. Swagger — solo desarrollo
+if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
+
+// 7. CORS — ANTES de auth
+app.UseCors();
+
+// 8. Authentication & Authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
+// 9. Audit middleware — DESPUÉS de auth (necesita userId)
+app.UseAuditMiddleware();
+
+// 10. Endpoints
+app.MapControllers();
+
+// 11. Health checks (3 endpoints obligatorios)
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+
+// 12. Prometheus metrics endpoint
+app.UsePrometheusScrapingEndpoint(); // Expone /metrics
+
+app.Run();
+
+// ⚠️ OBLIGATORIO al final del archivo — necesario para WebApplicationFactory en integration tests
+public partial class Program { }
+```
+
+> ⚠️ **REGLA:** Todo `Program.cs` DEBE terminar con `public partial class Program { }` para que los integration tests con `WebApplicationFactory<Program>` funcionen.
+
+---
+
+## 📡 API RESPONSE FORMATS — DOBLE FORMATO
+
+El sistema usa **dos formatos de respuesta** que coexisten. El frontend DEBE manejar ambos.
+
+### Formato 1: ApiResponse<T> (respuestas normales)
+
+```csharp
+// En {Service}.Shared/ApiResponse.cs — Usado en Controllers
+public class ApiResponse<T>
+{
+    public bool Success { get; set; }
+    public T? Data { get; set; }
+    public string? Error { get; set; }
+    public ApiMetadata? Metadata { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+    public static ApiResponse<T> Ok(T data) => new() { Success = true, Data = data };
+    public static ApiResponse<T> Fail(string error) => new() { Success = false, Error = error };
+}
+
+// Uso en controllers:
+return Ok(ApiResponse<UserDto>.Ok(user));
+return BadRequest(ApiResponse<UserDto>.Fail("Email ya registrado"));
+```
+
+```json
+// Response JSON (success)
+{ "success": true, "data": { "id": "...", "email": "..." }, "timestamp": "2026-02-18T..." }
+
+// Response JSON (error)
+{ "success": false, "error": "Email ya registrado", "timestamp": "2026-02-18T..." }
+```
+
+### Formato 2: RFC 7807 ProblemDetails (errores no manejados / validación)
+
+```json
+// Retornado automáticamente por GlobalExceptionMiddleware
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "detail": "Validation failed",
+  "traceId": "abc123",
+  "errorCode": "VALIDATION_ERROR",
+  "errors": { "Email": ["Email is required"], "Password": ["Minimum 8 characters"] }
+}
+```
+
+**Mapeo de excepciones a status codes:**
+
+| Excepción | Status | Cuándo |
+|-----------|--------|--------|
+| `ValidationException` | 400 | FluentValidation falla (automático via ValidationBehavior) |
+| `UnauthorizedAccessException` | 401 | Token inválido o expirado |
+| `KeyNotFoundException` | 404 | Entidad no encontrada |
+| `TimeoutException` | 504 | Timeout a servicio externo |
+| Cualquier otra | 500 | Error interno (detail oculto en prod) |
+
+### Frontend — Manejo de Ambos Formatos
+
+```typescript
+// En services/api.ts — wrapper que maneja ambos formatos
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const body = await response.json();
+    // Formato ProblemDetails (RFC 7807)
+    if (body.type && body.status) {
+      throw new ApiError(body.title, body.status, body.errors);
+    }
+    // Formato ApiResponse
+    if (body.success === false) {
+      throw new ApiError(body.error, response.status);
+    }
+    throw new ApiError('Unknown error', response.status);
+  }
+  const data = await response.json();
+  return data.data ?? data; // ApiResponse wraps in .data
+}
+```
+
+---
+
+## 📐 OBSERVABILITY — PATRONES OBLIGATORIOS
+
+### Structured Logging — Niveles
+
+| Nivel | Cuándo usar | Ejemplo |
+|-------|-------------|---------|
+| `Debug` | Detalles internos para desarrollo | `Log.Debug("Processing item {ItemId}", id)` |
+| `Information` | Eventos de negocio significativos | `Log.Information("User {UserId} registered", userId)` |
+| `Warning` | Algo inesperado pero no fatal | `Log.Warning("Retry {Attempt} for {Service}", n, svc)` |
+| `Error` | Error que afecta la operación | `Log.Error(ex, "Failed to process payment {PaymentId}", id)` |
+| `Fatal` | Error irrecuperable (app crash) | `Log.Fatal(ex, "Database connection lost")` |
+
+> ⚠️ **REGLA:** Usar **structured logging** con templates, NO concatenación de strings.
+> ✅ `Log.Information("User {UserId} logged in", userId)`
+> ❌ `Log.Information($"User {userId} logged in")`
+
+### Custom Metrics — Patrón ServiceMetrics
+
+Cada servicio crea una clase `ServiceMetrics` con contadores y histogramas:
+
+```csharp
+// En {Service}.Infrastructure/Metrics/ServiceMetrics.cs
+public class ServiceMetrics
+{
+    private readonly Counter<long> _operationCounter;
+    private readonly Histogram<double> _operationDuration;
+
+    public ServiceMetrics(IMeterFactory meterFactory)
+    {
+        var meter = meterFactory.Create("ServiceName", "1.0.0");
+        _operationCounter = meter.CreateCounter<long>(
+            "servicename.operations.total",  // Naming: {service}.{operation}.{unit}
+            description: "Total operations processed");
+        _operationDuration = meter.CreateHistogram<double>(
+            "servicename.operations.duration_ms",
+            unit: "ms",
+            description: "Operation duration in milliseconds");
+    }
+
+    public void RecordOperation(string type) => _operationCounter.Add(1, new("type", type));
+    public void RecordDuration(double ms) => _operationDuration.Record(ms);
+}
+```
+
+### Domain Events — Contrato EventBase
+
+```csharp
+// Todos los eventos DEBEN heredar de EventBase (en CarDealer.Contracts)
+public abstract class EventBase : IEvent
+{
+    public Guid EventId { get; set; } = Guid.NewGuid();
+    public DateTime OccurredAt { get; set; } = DateTime.UtcNow;
+    public abstract string EventType { get; }    // ⚠️ Formato: "{domain}.{entity}.{action}"
+    public int SchemaVersion { get; set; } = 1;  // Versionado de schema
+    public string? CorrelationId { get; set; }   // Trazabilidad cross-service
+}
+
+// Ejemplo:
+public class VehicleCreatedEvent : EventBase
+{
+    public override string EventType => "vehicles.vehicle.created";  // ← Naming convention
+    public Guid VehicleId { get; set; }
+    public string Title { get; set; }
+    public decimal Price { get; set; }
+}
+```
+
+**Convención de EventType:** `{domain}.{entity}.{action}` (e.g., `auth.user.registered`, `vehicles.vehicle.created`, `billing.payment.completed`).
+
+---
+
+## 🧪 TESTING — ESTÁNDARES OBLIGATORIOS
+
+### Stack de Testing Backend
+
+| Librería | Versión | Uso |
+|----------|---------|-----|
+| **xUnit** | 2.6.2 | Framework de tests |
+| **FluentAssertions** | 6.12.0 | Assertions legibles |
+| **Moq** | 4.20.70 | Mocking |
+| **WebApplicationFactory** | 8.0.0 | Integration tests |
+| **coverlet** | 6.0.0 | Code coverage |
+
+### Naming Convention
+
+```
+{Método}_{Escenario}_{Resultado}
+
+Ejemplos:
+  Login_WithValidCredentials_ReturnsToken
+  CreateVehicle_WithoutTitle_ReturnsValidationError
+  GetUser_WithNonExistentId_ReturnsNotFound
+```
+
+### Test Obligatorio — DI Startup
+
+```csharp
+// CADA servicio DEBE tener este test
+[Fact]
+public async Task Application_Starts_And_DI_Resolves_All_Services()
+{
+    await using var app = new WebApplicationFactory<Program>();
+    using var client = app.CreateClient();
+    var response = await client.GetAsync("/health");
+    response.EnsureSuccessStatusCode();
+}
+```
+
+### Test Pyramid — Targets
+
+| Tipo | Target Mínimo | Framework |
+|------|:---:|-----------|
+| Unit tests | 70% cobertura | xUnit + FluentAssertions + Moq |
+| Integration tests | Startup + CRUD | WebApplicationFactory |
+| E2E tests | Flujos críticos | Playwright (frontend), scripts (backend) |
+
+### Integration Test Infrastructure
+
+```csharp
+// En {Service}.Tests/CustomWebApplicationFactory.cs
+public class CustomWebApplicationFactory : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            // Reemplazar DB real con InMemory
+            services.RemoveAll(typeof(DbContextOptions<ServiceDbContext>));
+            services.AddDbContext<ServiceDbContext>(options =>
+                options.UseInMemoryDatabase("TestDb"));
+        });
+    }
+}
+```
+
+---
+
+## 🗄️ EF CORE — PATRONES DE PERSISTENCIA
+
+### DbContext Naming
+
+```csharp
+// Naming: {Service}DbContext — en {Service}.Infrastructure/Persistence/
+public class AuthServiceDbContext : DbContext
+{
+    public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AuthServiceDbContext).Assembly);
+        base.OnModelCreating(modelBuilder);
+    }
+}
+```
+
+### Entity Configuration
+
+```csharp
+// En Infrastructure/Persistence/Configurations/{Entity}Configuration.cs
+public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
+{
+    public void Configure(EntityTypeBuilder<Vehicle> builder)
+    {
+        builder.HasKey(v => v.Id);
+        builder.Property(v => v.Title).HasMaxLength(200).IsRequired();
+        builder.Property(v => v.Price).HasColumnType("decimal(18,2)");
+        builder.HasIndex(v => v.Slug).IsUnique();
+
+        // Soft delete — query filter global
+        builder.HasQueryFilter(v => !v.IsDeleted);
+    }
+}
+```
+
+### Soft Delete Pattern
+
+```csharp
+// En Domain/Entities — interfaz ISoftDeletable
+public interface ISoftDeletable
+{
+    bool IsDeleted { get; set; }
+    DateTime? DeletedAt { get; set; }
+}
+
+// En DbContext — override SaveChangesAsync
+public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+{
+    foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
+    {
+        if (entry.State == EntityState.Deleted)
+        {
+            entry.State = EntityState.Modified;
+            entry.Entity.IsDeleted = true;
+            entry.Entity.DeletedAt = DateTime.UtcNow;
+        }
+    }
+    return await base.SaveChangesAsync(ct);
+}
+```
+
+### Migration Commands
+
+```bash
+# Crear migration
+dotnet ef migrations add {NombreDescriptivo} \
+  --project {Service}.Infrastructure \
+  --startup-project {Service}.Api
+
+# Aplicar migration
+dotnet ef database update \
+  --project {Service}.Infrastructure \
+  --startup-project {Service}.Api
+
+# Revertir última migration
+dotnet ef migrations remove \
+  --project {Service}.Infrastructure \
+  --startup-project {Service}.Api
+```
+
+> ⚠️ **Auto-migration en K8s:** Si `EnableAutoMigration: true` en appsettings, las migrations se aplican al iniciar el pod. Para producción, preferir migrations explícitas.
+
+---
+
+## ⚡ PERFORMANCE — ESTÁNDARES
+
+### Targets de Respuesta
+
+| Endpoint | Target | Máximo |
+|----------|--------|--------|
+| Health check (`/health`) | < 100ms | 500ms |
+| Lectura simple (GET by ID) | < 200ms | 1s |
+| Lectura paginada (GET list) | < 500ms | 2s |
+| Escritura (POST/PUT) | < 500ms | 3s |
+| Búsqueda con filtros | < 1s | 5s |
+
+### Reglas de Performance
+
+1. ✅ **SIEMPRE paginar** listados — nunca retornar colecciones completas
+2. ✅ **Usar `AsNoTracking()`** para queries de solo lectura
+3. ✅ **Incluir solo lo necesario** — `Select()` específico en vez de `Include()` masivo
+4. ✅ **Indexes** en columnas usadas en WHERE, ORDER BY, y foreign keys
+5. ✅ **Redis cache** para datos que cambian poco (roles, configuración, catálogos)
+6. ✅ **Connection pooling** — configurado via `AddStandardDatabase()` (MaxPoolSize en config)
+7. ❌ **NUNCA** hacer N+1 queries — usar `Include()` o `Join()` cuando necesario
+8. ❌ **NUNCA** retornar entidades de dominio en controllers — siempre DTOs
+
+### Paginación Estándar
+
+```csharp
+// Request
+public record GetVehiclesQuery(int Page = 1, int PageSize = 20, string? SortBy = null) : IRequest<PagedResult<VehicleDto>>;
+
+// Response
+public class PagedResult<T>
+{
+    public List<T> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public bool HasNextPage => Page < TotalPages;
+    public bool HasPreviousPage => Page > 1;
+}
+```
+
+### CORS Configuration Estándar
+
+```csharp
+// CORS con headers específicos requeridos
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token",
+                           "X-Requested-With", "X-Idempotency-Key")
+              .AllowCredentials();
+    });
+});
+```
+
+---
+
+## 🤖 CHATBOT SERVICE — CONTEXTO LLM
+
+### Arquitectura
+
+El ChatbotService implementa un chatbot llamado **"Ana"** para asistencia automotriz en español dominicano.
+
+| Componente | Tecnología | Descripción |
+|-----------|------------|-------------|
+| **Backend** | .NET 8 (Clean Architecture) | API, gestión de sesiones, integración |
+| **Inference Server** | Python (FastAPI + llama-cpp-python) | Sirve el modelo LLM |
+| **Modelo** | Llama 3 (fine-tuned QLoRA) | GGUF Q4_K_M quantization |
+| **Dataset** | 37 intents, 1,376 templates | Español dominicano automotriz |
+
+### Configuración Clave
+
+| Parámetro | Valor | Razón |
+|-----------|-------|-------|
+| `N_CTX` | 4096 | Context window (tokens) |
+| `MAX_TOKENS` | 600 | Max response length |
+| `TEMPERATURE` | 0.7 | Balance creatividad/precisión |
+| `MODEL_FORMAT` | GGUF Q4_K_M | Optimizado para CPU |
+
+### Seguridad del Chatbot
+
+```csharp
+// PiiDetector.cs — Detecta y enmascara datos personales
+// PromptInjectionDetector.cs — Detecta intentos de inyección de prompt
+// Ambos son OBLIGATORIOS para cualquier endpoint que acepte texto libre del usuario
+```
+
+### Español Dominicano
+
+El chatbot usa español dominicano auténtico con 60+ mappings de slang regional. Los templates de respuesta están diseñados para ser naturales al mercado local.
+
+---
+
+## �🐛 TROUBLESHOOTING COMÚN
 
 ### 404 en Gateway
 
@@ -1559,7 +2227,7 @@ cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs 
 1. ✅ Usar Clean Architecture (Domain, Application, Infrastructure, Api)
 2. ✅ Implementar Health Checks (excluir checks `"external"` del endpoint `/health`)
 3. ✅ Agregar rutas al Gateway (ocelot.\*.json)
-4. ✅ Crear proyecto de tests
+4. ✅ Crear proyecto de tests (xUnit + FluentAssertions + Moq)
 5. ✅ Usar puerto 8080 en Kubernetes
 6. ✅ Integrar con AuditService para logging
 7. ✅ Implementar IdempotencyMiddleware si aplica
@@ -1570,6 +2238,14 @@ cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs 
 12. ✅ **NO usar `CreateBootstrapLogger()`** si el servicio usa `UseStandardSerilog()`
 13. ✅ **Verificar Health Checks** excluyen checks con tag `"external"` del endpoint `/health`
 14. ✅ **Usar OpenTelemetry 1.9.0** (NO 1.10.0 que requiere .NET 9)
+15. ✅ **Usar TODAS las shared extensions** (AddStandardDatabase, AddStandardObservability, etc.)
+16. ✅ **Seguir middleware pipeline canónico** (12 pasos en orden exacto)
+17. ✅ **Usar ApiResponse<T>** para respuestas y **ProblemDetails** para errores
+18. ✅ **Configurar Swagger/OpenAPI** con descripción de endpoints
+19. ✅ **Implementar paginación** (PagedResult<T>) para todos los listados
+20. ✅ **Agregar `public partial class Program { }`** al final de Program.cs
+21. ✅ **Crear test de DI startup** con WebApplicationFactory
+22. ✅ **Crear ServiceMetrics** class para métricas custom
 
 ### Al crear UI nueva:
 
@@ -1577,10 +2253,16 @@ cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs 
 2. ✅ Usar 'use client' solo cuando necesario
 3. ✅ Implementar loading.tsx y error.tsx
 4. ✅ Verificar responsive design
-5. ✅ Probar accesibilidad
+5. ✅ Probar accesibilidad (WCAG 2.1 AA)
 6. ✅ **Usar csrfFetch() o CsrfInput para forms/requests mutables**
 7. ✅ **Sanitizar TODO input de usuario antes de renderizar**
 8. ✅ **Usar sanitizeUrl() para cualquier URL de usuario**
+9. ✅ **Usar Zustand para state, TanStack Query para data fetching**
+10. ✅ **Usar react-hook-form + Zod para formularios**
+11. ✅ **Usar componentes shadcn/ui (NO crear componentes UI custom)**
+12. ✅ **Manejar ambos formatos de respuesta** (ApiResponse + ProblemDetails)
+13. ✅ **Escribir tests con Vitest (NO Jest)** + Testing Library
+14. ✅ **Usar next/image para imágenes** (optimización automática)
 
 ### Al modificar servicios existentes:
 
@@ -1645,4 +2327,4 @@ Antes de marcar una tarea como completada:
 ---
 
 _Documento mantenido por el equipo de desarrollo - Febrero 18, 2026_
-_86 Microservicios | Next.js 14 | .NET 8 | PostgreSQL | Kubernetes (DOKS)_
+_86 Microservicios | Next.js 16 | .NET 8 | PostgreSQL | Kubernetes (DOKS)_
