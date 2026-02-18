@@ -200,6 +200,7 @@ builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "AuthServic
 if (rabbitMqEnabled)
 {
     // RabbitMQ enabled - use real implementations with DLQ
+    builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
     builder.Services.AddHostedService<DeadLetterQueueProcessor>();
     builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IErrorEventProducer, RabbitMQErrorProducer>();

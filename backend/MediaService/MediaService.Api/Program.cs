@@ -163,6 +163,7 @@ if (rabbitMQEnabled)
 {
     // PostgreSQL-backed Dead Letter Queue (survives pod restarts during auto-scaling)
     builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "MediaService");
+    builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
     builder.Services.AddHostedService<DeadLetterQueueProcessor>();
 }
 

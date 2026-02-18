@@ -326,6 +326,7 @@ if (useRabbitMq)
     builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IEventPublisher>(sp =>
         sp.GetRequiredService<RoleService.Infrastructure.Messaging.RabbitMqEventPublisher>());
+    builder.Services.AddSingleton<RoleService.Infrastructure.Messaging.IDeadLetterQueue, RoleService.Infrastructure.Messaging.InMemoryDeadLetterQueue>();
     builder.Services.AddHostedService<RoleService.Infrastructure.Messaging.DeadLetterQueueProcessor>();
 }
 else

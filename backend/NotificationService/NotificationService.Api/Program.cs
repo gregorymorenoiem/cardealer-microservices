@@ -97,6 +97,7 @@ builder.Services.AddHostedService<PaymentReceiptNotificationConsumer>();
 
 // Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
 builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "NotificationService");
+builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
 builder.Services.AddHostedService<DeadLetterQueueProcessor>();
 
 // Shared RabbitMQ connection (1 connection per pod instead of N per class)

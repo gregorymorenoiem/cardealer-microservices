@@ -105,6 +105,7 @@ builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "AuditServi
 builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
 // Background Service para procesar DLQ
+builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
 builder.Services.AddHostedService<DeadLetterQueueProcessor>();
 
 // Métricas personalizadas (Singleton para compartir estado)
