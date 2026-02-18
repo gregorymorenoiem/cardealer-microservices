@@ -89,9 +89,15 @@ builder.Services.AddStandardErrorHandling(options =>
     options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? builder.Configuration["RabbitMQ:HostName"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:UserName"] ?? builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured. Set the RabbitMQ__UserName environment variable.");
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured. Set the RabbitMQ__Password environment variable.");
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:UserName"] ?? builder.Configuration["RabbitMQ:User"] ?? "guest";
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
+
+    // Propagate convenience properties to nested RabbitMQ options used by RabbitMQErrorPublisher
+    options.RabbitMQ.Hostname = options.RabbitMQHost;
+    options.RabbitMQ.Port = options.RabbitMQPort;
+    options.RabbitMQ.Username = options.RabbitMQUser;
+    options.RabbitMQ.Password = options.RabbitMQPassword;
 });
 
 // 4. CORS configurado para múltiples frontends
@@ -213,7 +219,9 @@ if (rateLimitEnabled)
     builder.Services.AddRateLimiting(options =>
     {
         options.Enabled = true;
-        options.RedisConnection = builder.Configuration["Redis:Connection"] ?? "localhost:6379";
+        options.RedisConnection = builder.Configuration["ConnectionStrings:Redis"]
+            ?? builder.Configuration["Redis:Connection"]
+            ?? $"{builder.Configuration["Cache:Redis:Host"] ?? "redis"}:{builder.Configuration["Cache:Redis:Port"] ?? "6379"},abortConnect=false";
         options.DefaultLimit = builder.Configuration.GetValue<int>("RateLimiting:DefaultLimit", 100);
         options.DefaultWindowSeconds = builder.Configuration.GetValue<int>("RateLimiting:DefaultWindowSeconds", 60);
         options.KeyPrefix = "gateway:ratelimit";

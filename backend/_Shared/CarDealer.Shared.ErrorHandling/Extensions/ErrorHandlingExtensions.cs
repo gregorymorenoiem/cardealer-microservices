@@ -45,6 +45,16 @@ public static class ErrorHandlingExtensions
         Action<ErrorHandlingOptions> configureOptions)
     {
         services.Configure(configureOptions);
+
+        // Propagate convenience properties to nested RabbitMQ options
+        services.PostConfigure<ErrorHandlingOptions>(opts =>
+        {
+            opts.RabbitMQ.Hostname = opts.RabbitMQHost;
+            opts.RabbitMQ.Port = opts.RabbitMQPort;
+            opts.RabbitMQ.Username = opts.RabbitMQUser;
+            opts.RabbitMQ.Password = opts.RabbitMQPassword;
+        });
+
         services.AddSingleton<IErrorPublisher, RabbitMQErrorPublisher>();
         
         return services;

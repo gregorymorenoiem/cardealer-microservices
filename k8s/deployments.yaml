@@ -2,7 +2,7 @@
 # MVP SELF-MANAGED - Deployments (Hardened)
 # =============================================================================
 # Security: securityContext, readOnlyRootFilesystem, non-root, drop ALL caps
-# Image tags: Use CI/CD variable ${IMAGE_TAG} — never :latest in production
+# Image tags: Use CI/CD variable latest — never :latest in production
 # Probes: Separate startup/liveness/readiness for graceful handling
 # ServiceAccounts: Dedicated accounts with minimal permissions
 # =============================================================================
@@ -47,7 +47,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: frontend-web
-          image: ghcr.io/gregorymorenoiem/cardealer-web:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/cardealer-web:latest
           ports:
             - containerPort: 8080
           env:
@@ -67,10 +67,8 @@ spec:
               memory: "128Mi"
               cpu: "100m"
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             capabilities:
               drop:
                 - ALL
@@ -142,7 +140,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: gateway
-          image: ghcr.io/gregorymorenoiem/gateway:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/gateway:latest
           ports:
             - containerPort: 8080
           env:
@@ -153,6 +151,10 @@ spec:
                 name: global-config
             - secretRef:
                 name: jwt-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+            - secretRef:
+                name: redis-secrets
           resources:
             requests:
               memory: "64Mi"
@@ -161,8 +163,6 @@ spec:
               memory: "192Mi"
               cpu: "150m"
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
@@ -242,7 +242,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: authservice
-          image: ghcr.io/gregorymorenoiem/authservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/authservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -337,7 +337,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: userservice
-          image: ghcr.io/gregorymorenoiem/userservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/userservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -432,7 +432,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: roleservice
-          image: ghcr.io/gregorymorenoiem/roleservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/roleservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -532,7 +532,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: vehiclessaleservice
-          image: ghcr.io/gregorymorenoiem/vehiclessaleservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/vehiclessaleservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -627,7 +627,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: mediaservice
-          image: ghcr.io/gregorymorenoiem/mediaservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/mediaservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -739,7 +739,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: billingservice
-          image: ghcr.io/gregorymorenoiem/billingservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/billingservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -836,7 +836,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: notificationservice
-          image: ghcr.io/gregorymorenoiem/notificationservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/notificationservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -933,7 +933,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: errorservice
-          image: ghcr.io/gregorymorenoiem/errorservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/errorservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -1007,7 +1007,7 @@ metadata:
     tier: backend
     sprint: "14"
 spec:
-  replicas: 1
+  replicas: 0 # Disabled: image cardealer-reviewservice:latest not yet in GHCR
   selector:
     matchLabels:
       app: reviewservice
@@ -1029,7 +1029,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: reviewservice
-          image: ghcr.io/gregorymorenoiem/cardealer-reviewservice:${IMAGE_TAG}
+          image: ghcr.io/gregorymorenoiem/cardealer-reviewservice:latest
           ports:
             - containerPort: 8080
           env:

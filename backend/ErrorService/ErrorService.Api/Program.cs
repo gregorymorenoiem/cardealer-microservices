@@ -282,6 +282,15 @@ builder.Services.AddOpenTelemetry()
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("ErrorService");
 
+// ErrorService IS the error service — register a NoOp IErrorPublisher to avoid
+// circular dependency (it shouldn't publish errors to itself via RabbitMQ).
+// This is needed because UseGlobalErrorHandling() injects IErrorPublisher.
+builder.Services.AddSingleton<CarDealer.Shared.ErrorHandling.Interfaces.IErrorPublisher>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<Program>>();
+    return new ErrorService.Api.Services.NoOpErrorPublisher(logger);
+});
+
 // Configurar Audit Publisher
 builder.Services.AddAuditPublisher(builder.Configuration);
 
