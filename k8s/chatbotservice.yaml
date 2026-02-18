@@ -49,7 +49,7 @@ metadata:
     app.okla.com/managed-by: "github-actions"
     app.okla.com/pipeline: "chatbot-cicd.yml"
 spec:
-  replicas: 0 # Disabled: database "chatbotservice" not yet created in PostgreSQL
+  replicas: 1
   selector:
     matchLabels:
       app: chatbotservice

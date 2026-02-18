@@ -146,6 +146,62 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: kycservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: kycservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auditservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: auditservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: idempotencyservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: idempotencyservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adminservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: adminservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: reviewservice
   namespace: okla
   labels:

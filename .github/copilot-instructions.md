@@ -88,12 +88,14 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 | **notificationservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest` |
 | **billingservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`      |
 | **errorservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`        |
+| **kycservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/kycservice:latest`          |
+| **auditservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`        |
+| **idempotencyservice**  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/idempotencyservice:latest`  |
+| **chatbotservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/chatbotservice:latest`      |
+| **adminservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/adminservice:latest`        |
 | **postgres**            | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                              |
 | **redis**               | ✅ Running | 1        | 6379       | In-cluster                                            |
 | **rabbitmq**            | ✅ Running | 1        | 5672/15672 | In-cluster                                            |
-
-> ⚠️ **Servicios NO desplegados en K8s** (imagen Docker existe en GHCR pero no tienen deployment manifest):
-> `kycservice`, `auditservice`, `idempotencyservice`, `chatbotservice`, `adminservice`
 
 **Load Balancer IP:** 146.190.199.0
 
@@ -1136,18 +1138,18 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 builder.Services.AddValidatorsFromAssembly(typeof(CommandValidator).Assembly);
 ```
 
-| Extension Method | Paquete | Qué hace |
-|-----------------|---------|----------|
-| `AddMicroserviceSecrets()` | CarDealer.Shared | Lee config de K8s secrets |
-| `UseStandardSerilog()` | CarDealer.Shared | Serilog Console + Seq |
-| `AddStandardDatabase<T>()` | CarDealer.Shared | EF Core PostgreSQL + retry + auto-migrate |
-| `AddStandardRabbitMq()` | CarDealer.Shared | RabbitMQ singleton connection |
-| `AddPostgreSqlDeadLetterQueue()` | CarDealer.Shared | DLQ PostgreSQL-backed |
-| `AddStandardObservability()` | CarDealer.Shared | OpenTelemetry tracing + metrics |
-| `AddGlobalErrorHandling()` | CarDealer.Shared | GlobalExceptionMiddleware + IErrorPublisher |
-| `UseApiSecurityHeaders()` | CarDealer.Shared | OWASP security headers (CSP, HSTS, etc.) |
-| `AddAuditMiddleware()` | CarDealer.Shared | Audit event publishing via RabbitMQ |
-| `UseRequestLogging()` | CarDealer.Shared | Request logging con CorrelationId |
+| Extension Method                 | Paquete          | Qué hace                                    |
+| -------------------------------- | ---------------- | ------------------------------------------- |
+| `AddMicroserviceSecrets()`       | CarDealer.Shared | Lee config de K8s secrets                   |
+| `UseStandardSerilog()`           | CarDealer.Shared | Serilog Console + Seq                       |
+| `AddStandardDatabase<T>()`       | CarDealer.Shared | EF Core PostgreSQL + retry + auto-migrate   |
+| `AddStandardRabbitMq()`          | CarDealer.Shared | RabbitMQ singleton connection               |
+| `AddPostgreSqlDeadLetterQueue()` | CarDealer.Shared | DLQ PostgreSQL-backed                       |
+| `AddStandardObservability()`     | CarDealer.Shared | OpenTelemetry tracing + metrics             |
+| `AddGlobalErrorHandling()`       | CarDealer.Shared | GlobalExceptionMiddleware + IErrorPublisher |
+| `UseApiSecurityHeaders()`        | CarDealer.Shared | OWASP security headers (CSP, HSTS, etc.)    |
+| `AddAuditMiddleware()`           | CarDealer.Shared | Audit event publishing via RabbitMQ         |
+| `UseRequestLogging()`            | CarDealer.Shared | Request logging con CorrelationId           |
 
 ### ValidationBehavior — Auto-ejecución de FluentValidation
 
@@ -1286,19 +1288,22 @@ return BadRequest(ApiResponse<UserDto>.Fail("Email ya registrado"));
   "detail": "Validation failed",
   "traceId": "abc123",
   "errorCode": "VALIDATION_ERROR",
-  "errors": { "Email": ["Email is required"], "Password": ["Minimum 8 characters"] }
+  "errors": {
+    "Email": ["Email is required"],
+    "Password": ["Minimum 8 characters"]
+  }
 }
 ```
 
 **Mapeo de excepciones a status codes:**
 
-| Excepción | Status | Cuándo |
-|-----------|--------|--------|
-| `ValidationException` | 400 | FluentValidation falla (automático via ValidationBehavior) |
-| `UnauthorizedAccessException` | 401 | Token inválido o expirado |
-| `KeyNotFoundException` | 404 | Entidad no encontrada |
-| `TimeoutException` | 504 | Timeout a servicio externo |
-| Cualquier otra | 500 | Error interno (detail oculto en prod) |
+| Excepción                     | Status | Cuándo                                                     |
+| ----------------------------- | ------ | ---------------------------------------------------------- |
+| `ValidationException`         | 400    | FluentValidation falla (automático via ValidationBehavior) |
+| `UnauthorizedAccessException` | 401    | Token inválido o expirado                                  |
+| `KeyNotFoundException`        | 404    | Entidad no encontrada                                      |
+| `TimeoutException`            | 504    | Timeout a servicio externo                                 |
+| Cualquier otra                | 500    | Error interno (detail oculto en prod)                      |
 
 ### Frontend — Manejo de Ambos Formatos
 
@@ -1315,7 +1320,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     if (body.success === false) {
       throw new ApiError(body.error, response.status);
     }
-    throw new ApiError('Unknown error', response.status);
+    throw new ApiError("Unknown error", response.status);
   }
   const data = await response.json();
   return data.data ?? data; // ApiResponse wraps in .data
@@ -1328,13 +1333,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 ### Structured Logging — Niveles
 
-| Nivel | Cuándo usar | Ejemplo |
-|-------|-------------|---------|
-| `Debug` | Detalles internos para desarrollo | `Log.Debug("Processing item {ItemId}", id)` |
-| `Information` | Eventos de negocio significativos | `Log.Information("User {UserId} registered", userId)` |
-| `Warning` | Algo inesperado pero no fatal | `Log.Warning("Retry {Attempt} for {Service}", n, svc)` |
-| `Error` | Error que afecta la operación | `Log.Error(ex, "Failed to process payment {PaymentId}", id)` |
-| `Fatal` | Error irrecuperable (app crash) | `Log.Fatal(ex, "Database connection lost")` |
+| Nivel         | Cuándo usar                       | Ejemplo                                                      |
+| ------------- | --------------------------------- | ------------------------------------------------------------ |
+| `Debug`       | Detalles internos para desarrollo | `Log.Debug("Processing item {ItemId}", id)`                  |
+| `Information` | Eventos de negocio significativos | `Log.Information("User {UserId} registered", userId)`        |
+| `Warning`     | Algo inesperado pero no fatal     | `Log.Warning("Retry {Attempt} for {Service}", n, svc)`       |
+| `Error`       | Error que afecta la operación     | `Log.Error(ex, "Failed to process payment {PaymentId}", id)` |
+| `Fatal`       | Error irrecuperable (app crash)   | `Log.Fatal(ex, "Database connection lost")`                  |
 
 > ⚠️ **REGLA:** Usar **structured logging** con templates, NO concatenación de strings.
 > ✅ `Log.Information("User {UserId} logged in", userId)`
@@ -1399,13 +1404,13 @@ public class VehicleCreatedEvent : EventBase
 
 ### Stack de Testing Backend
 
-| Librería | Versión | Uso |
-|----------|---------|-----|
-| **xUnit** | 2.6.2 | Framework de tests |
-| **FluentAssertions** | 6.12.0 | Assertions legibles |
-| **Moq** | 4.20.70 | Mocking |
-| **WebApplicationFactory** | 8.0.0 | Integration tests |
-| **coverlet** | 6.0.0 | Code coverage |
+| Librería                  | Versión | Uso                 |
+| ------------------------- | ------- | ------------------- |
+| **xUnit**                 | 2.6.2   | Framework de tests  |
+| **FluentAssertions**      | 6.12.0  | Assertions legibles |
+| **Moq**                   | 4.20.70 | Mocking             |
+| **WebApplicationFactory** | 8.0.0   | Integration tests   |
+| **coverlet**              | 6.0.0   | Code coverage       |
 
 ### Naming Convention
 
@@ -1434,11 +1439,11 @@ public async Task Application_Starts_And_DI_Resolves_All_Services()
 
 ### Test Pyramid — Targets
 
-| Tipo | Target Mínimo | Framework |
-|------|:---:|-----------|
-| Unit tests | 70% cobertura | xUnit + FluentAssertions + Moq |
-| Integration tests | Startup + CRUD | WebApplicationFactory |
-| E2E tests | Flujos críticos | Playwright (frontend), scripts (backend) |
+| Tipo              |  Target Mínimo  | Framework                                |
+| ----------------- | :-------------: | ---------------------------------------- |
+| Unit tests        |  70% cobertura  | xUnit + FluentAssertions + Moq           |
+| Integration tests | Startup + CRUD  | WebApplicationFactory                    |
+| E2E tests         | Flujos críticos | Playwright (frontend), scripts (backend) |
 
 ### Integration Test Infrastructure
 
@@ -1552,13 +1557,13 @@ dotnet ef migrations remove \
 
 ### Targets de Respuesta
 
-| Endpoint | Target | Máximo |
-|----------|--------|--------|
-| Health check (`/health`) | < 100ms | 500ms |
-| Lectura simple (GET by ID) | < 200ms | 1s |
-| Lectura paginada (GET list) | < 500ms | 2s |
-| Escritura (POST/PUT) | < 500ms | 3s |
-| Búsqueda con filtros | < 1s | 5s |
+| Endpoint                    | Target  | Máximo |
+| --------------------------- | ------- | ------ |
+| Health check (`/health`)    | < 100ms | 500ms  |
+| Lectura simple (GET by ID)  | < 200ms | 1s     |
+| Lectura paginada (GET list) | < 500ms | 2s     |
+| Escritura (POST/PUT)        | < 500ms | 3s     |
+| Búsqueda con filtros        | < 1s    | 5s     |
 
 ### Reglas de Performance
 
@@ -1619,21 +1624,21 @@ builder.Services.AddCors(options =>
 
 El ChatbotService implementa un chatbot llamado **"Ana"** para asistencia automotriz en español dominicano.
 
-| Componente | Tecnología | Descripción |
-|-----------|------------|-------------|
-| **Backend** | .NET 8 (Clean Architecture) | API, gestión de sesiones, integración |
-| **Inference Server** | Python (FastAPI + llama-cpp-python) | Sirve el modelo LLM |
-| **Modelo** | Llama 3 (fine-tuned QLoRA) | GGUF Q4_K_M quantization |
-| **Dataset** | 37 intents, 1,376 templates | Español dominicano automotriz |
+| Componente           | Tecnología                          | Descripción                           |
+| -------------------- | ----------------------------------- | ------------------------------------- |
+| **Backend**          | .NET 8 (Clean Architecture)         | API, gestión de sesiones, integración |
+| **Inference Server** | Python (FastAPI + llama-cpp-python) | Sirve el modelo LLM                   |
+| **Modelo**           | Llama 3 (fine-tuned QLoRA)          | GGUF Q4_K_M quantization              |
+| **Dataset**          | 37 intents, 1,376 templates         | Español dominicano automotriz         |
 
 ### Configuración Clave
 
-| Parámetro | Valor | Razón |
-|-----------|-------|-------|
-| `N_CTX` | 4096 | Context window (tokens) |
-| `MAX_TOKENS` | 600 | Max response length |
-| `TEMPERATURE` | 0.7 | Balance creatividad/precisión |
-| `MODEL_FORMAT` | GGUF Q4_K_M | Optimizado para CPU |
+| Parámetro      | Valor       | Razón                         |
+| -------------- | ----------- | ----------------------------- |
+| `N_CTX`        | 4096        | Context window (tokens)       |
+| `MAX_TOKENS`   | 600         | Max response length           |
+| `TEMPERATURE`  | 0.7         | Balance creatividad/precisión |
+| `MODEL_FORMAT` | GGUF Q4_K_M | Optimizado para CPU           |
 
 ### Seguridad del Chatbot
 

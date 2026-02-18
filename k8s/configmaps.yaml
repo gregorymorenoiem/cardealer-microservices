@@ -163,6 +163,147 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "errorservice", "Port": 8080 }]
         },
         {
+          "UpstreamPathTemplate": "/api/kyc/kycprofiles/pending",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/kycprofiles/pending",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "RouteClaimsRequirement": { "account_type": "4, 5" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/kyc/kycprofiles/statistics",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/kycprofiles/statistics",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "RouteClaimsRequirement": { "account_type": "4, 5" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/kyc/kycprofiles/expiring",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/kycprofiles/expiring",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "RouteClaimsRequirement": { "account_type": "4, 5" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/kyc/kycprofiles/settings",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/kycprofiles/settings",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "RouteClaimsRequirement": { "account_type": "4, 5" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/kyc/kycprofiles/{everything}",
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/kycprofiles/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+        },
+        {
+          "UpstreamPathTemplate": "/api/kyc/kycprofiles",
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+          "DownstreamPathTemplate": "/api/kycprofiles",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+        },
+        {
+          "UpstreamPathTemplate": "/api/kyc/{everything}",
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/kyc/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+        },
+        {
+          "UpstreamPathTemplate": "/api/audit/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/audit/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "auditservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/audit",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/audit",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "auditservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/idempotency/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/idempotency/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "idempotencyservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/idempotency",
+          "UpstreamHttpMethod": ["GET", "POST", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/idempotency",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "idempotencyservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/admin/employees",
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+          "DownstreamPathTemplate": "/api/admin/employees",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/admin/employees/{everything}",
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+          "DownstreamPathTemplate": "/api/admin/employees/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/admin/users/stats",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/admin/users/stats",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/admin/users/{id}/status",
+          "UpstreamHttpMethod": ["OPTIONS", "PATCH"],
+          "DownstreamPathTemplate": "/api/admin/users/{id}/status",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/admin/users/{id}/verify",
+          "UpstreamHttpMethod": ["OPTIONS", "POST"],
+          "DownstreamPathTemplate": "/api/admin/users/{id}/verify",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/admin/{everything}",
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH"],
+          "DownstreamPathTemplate": "/api/admin/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
           "UpstreamPathTemplate": "/api/chat/message",
           "UpstreamHttpMethod": ["POST", "OPTIONS"],
           "DownstreamPathTemplate": "/api/chat/message",
@@ -282,6 +423,22 @@ data:
         {
           "Key": "ChatbotService",
           "Config": [{ "Name": "Chatbot Service", "Version": "v1", "Url": "http://chatbotservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "KYCService",
+          "Config": [{ "Name": "KYC Service", "Version": "v1", "Url": "http://kycservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "AuditService",
+          "Config": [{ "Name": "Audit Service", "Version": "v1", "Url": "http://auditservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "IdempotencyService",
+          "Config": [{ "Name": "Idempotency Service", "Version": "v1", "Url": "http://idempotencyservice:8080/swagger/v1/swagger.json" }]
+        },
+        {
+          "Key": "AdminService",
+          "Config": [{ "Name": "Admin Service", "Version": "v1", "Url": "http://adminservice:8080/swagger/v1/swagger.json" }]
         }
       ],
       "GlobalConfiguration": {
