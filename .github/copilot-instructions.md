@@ -2,7 +2,7 @@
 
 Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (antes CarDealer).
 
-**Última actualización:** Febrero 7, 2026
+**Última actualización:** Febrero 18, 2026
 
 ---
 
@@ -71,28 +71,42 @@ Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (
 
 ### ✅ Servicios Core Desplegados en DOKS
 
-El proyecto está **EN PRODUCCIÓN** en Digital Ocean Kubernetes (cluster: `okla-cluster`, namespace: `okla`).
+El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-cluster`, namespace: `okla`).
 
-| Servicio                | Estado     | Puerto K8s | Descripción               |
-| ----------------------- | ---------- | ---------- | ------------------------- |
-| **frontend-web**        | ✅ Running | 8080       | Next.js 14 SSR/SSG        |
-| **gateway**             | ✅ Running | 8080       | Ocelot API Gateway        |
-| **authservice**         | ✅ Running | 8080       | Autenticación JWT         |
-| **userservice**         | ✅ Running | 8080       | Gestión de usuarios       |
-| **roleservice**         | ✅ Running | 8080       | Roles y permisos          |
-| **vehiclessaleservice** | ✅ Running | 8080       | CRUD vehículos + catálogo |
-| **mediaservice**        | ✅ Running | 8080       | Gestión de imágenes (S3)  |
-| **notificationservice** | ✅ Running | 8080       | Email/SMS/Push            |
-| **billingservice**      | ✅ Running | 8080       | Pagos (Stripe + Azul)     |
-| **errorservice**        | ✅ Running | 8080       | Centralización de errores |
-| **kycservice**          | ✅ Running | 8080       | Verificación de identidad |
-| **auditservice**        | ✅ Running | 8080       | Auditoría centralizada    |
-| **idempotencyservice**  | ✅ Running | 8080       | Control de idempotencia   |
-| **postgres**            | ✅ Running | 5432       | Base de datos principal   |
-| **redis**               | ✅ Running | 6379       | Cache distribuido         |
-| **rabbitmq**            | ✅ Running | 5672/15672 | Message broker            |
+> ⚠️ **Staging optimizado:** Todos los servicios corren con **1 réplica** para minimizar costos (~$77/mes).
+> Para producción, escalar servicios críticos a 2 réplicas: `kubectl scale deployment frontend-web gateway authservice --replicas=2 -n okla`
+
+| Servicio                | Estado     | Réplicas | Puerto K8s | Imagen Docker                                   |
+| ----------------------- | ---------- | -------- | ---------- | ----------------------------------------------- |
+| **frontend-web**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`  |
+| **gateway**             | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`       |
+| **authservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`   |
+| **userservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`   |
+| **roleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`   |
+| **vehiclessaleservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest` |
+| **mediaservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`  |
+| **notificationservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest` |
+| **billingservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`|
+| **errorservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`  |
+| **postgres**            | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                        |
+| **redis**               | ✅ Running | 1        | 6379       | In-cluster                                      |
+| **rabbitmq**            | ✅ Running | 1        | 5672/15672 | In-cluster                                      |
+
+> ⚠️ **Servicios NO desplegados en K8s** (imagen Docker existe en GHCR pero no tienen deployment manifest):
+> `kycservice`, `auditservice`, `idempotencyservice`, `chatbotservice`, `adminservice`
 
 **Load Balancer IP:** 146.190.199.0
+
+### 💰 Costos Mensuales (Staging)
+
+| Recurso | Detalle | Costo/mes |
+|---------|---------|----------:|
+| DOKS Cluster (control plane) | Gratis en DO | $0 |
+| 2× Worker Nodes | `s-2vcpu-4gb` × 2 | $48 |
+| DO Managed PostgreSQL | `db-s-1vcpu-1gb` × 1 | $15 |
+| Load Balancer | 1× LB (Ingress NGINX) | $12 |
+| Block Storage | 2× 10Gi PVCs | $2 |
+| **TOTAL** | | **~$77** |
 
 ### 💳 Pasarelas de Pago
 
@@ -671,6 +685,300 @@ El archivo `ocelot.prod.json` DEBE tener:
 SERVICES: "frontend-web,gateway,authservice,userservice,roleservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice,kycservice,auditservice,idempotencyservice"
 ```
 
+### ⚠️ REGLAS CRÍTICAS DE CI/CD
+
+#### 1. Nombres de Imagen Docker — DEBEN coincidir entre CI/CD y K8s
+
+El nombre de la imagen en `k8s/deployments.yaml` **DEBE** ser idéntico al que se pushea en el workflow de CI/CD.
+
+| Servicio | Imagen correcta (GHCR) | Archivo CI/CD |
+|----------|------------------------|---------------|
+| frontend-web | `ghcr.io/gregorymorenoiem/frontend-web:latest` | `_reusable-frontend.yml` |
+| gateway | `ghcr.io/gregorymorenoiem/gateway:latest` | `_reusable-dotnet-service.yml` |
+| authservice | `ghcr.io/gregorymorenoiem/authservice:latest` | `_reusable-dotnet-service.yml` |
+| (otros) | `ghcr.io/gregorymorenoiem/{service}:latest` | `_reusable-dotnet-service.yml` |
+
+> 🔴 **INCIDENTE Feb 2026:** `deployments.yaml` referenciaba `cardealer-web:latest` (imagen vieja Vite/nginx) 
+> pero el CI/CD pushea `frontend-web:latest` (imagen Next.js nueva). Resultado: el frontend mostraba la página vieja.
+> **SIEMPRE** verificar que `deployments.yaml` y el workflow usan el MISMO nombre de imagen.
+
+#### 2. Docker Build Cache — Puede causar imágenes stale
+
+El workflow `_reusable-dotnet-service.yml` usa `cache-from: type=local` con `restore-keys`. Esto puede causar 
+que buildx reutilice ALL cached layers (incluyendo `COPY . .` y `dotnet publish`), produciendo imágenes con 
+código viejo a pesar de que el CI reporta "build exitoso".
+
+**Síntomas:**
+- CI/CD muestra todos los pasos como `CACHED` 
+- El digest de la imagen nueva es idéntico al anterior
+- Los pods siguen ejecutando código viejo
+
+**Solución cuando ocurre:**
+```bash
+# Listar y eliminar caches de buildx
+gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh cache delete {}
+# Trigger nuevo build (commit vacío o touch)
+```
+
+**Prevención:** Si un servicio no recoge cambios después de push, sospechar del cache primero.
+
+#### 3. Registry Credentials — Tokens efímeros vs duraderos
+
+El K8s secret `registry-credentials` permite a los pods bajar imágenes de GHCR (privado).
+
+| Tipo de Token | Prefijo | Duración | Fuente |
+|---------------|---------|----------|--------|
+| GitHub Actions | `ghs_*` | ~1 hora (solo dura el workflow) | `secrets.GITHUB_TOKEN` en CI |
+| OAuth (CLI) | `gho_*` | ~8 horas | `gh auth token` |
+| PAT clásico | `ghp_*` | Configurable (hasta never) | GitHub Settings → Tokens |
+| Fine-grained PAT | `github_pat_*` | Configurable | GitHub Settings → Fine-grained |
+
+> 🔴 **INCIDENTE Feb 2026:** El secret usaba un token `ghs_*` efímero del CI/CD que expiró. 
+> Resultado: `ImagePullBackOff` en todos los pods nuevos.
+
+**Para refrescar el secret:**
+```bash
+# 1. Obtener token (usar PAT para larga duración)
+TOKEN=$(gh auth token)  # o usar un PAT clásico
+
+# 2. Recrear secret
+kubectl delete secret registry-credentials -n okla
+kubectl create secret docker-registry registry-credentials \
+  --docker-server=ghcr.io \
+  --docker-username=gregorymorenoiem \
+  --docker-password=$TOKEN \
+  -n okla
+```
+
+> ⚠️ **MEJOR PRÁCTICA:** Usar un **Fine-grained PAT** con scope `read:packages` y expiración larga (90 días+) 
+> para el secret de K8s. NO usar tokens de workflow (`ghs_*`).
+
+---
+
+## 🐳 DOCKER — REGLAS Y PATRONES
+
+### Dockerfiles Backend (.NET 8)
+
+Cada servicio tiene su Dockerfile en `backend/{Service}/Dockerfile`. Todos siguen multi-stage build:
+
+```dockerfile
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet publish "{Service}.Api/{Service}.Api.csproj" -c Release -o /app/publish
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "{Service}.Api.dll"]
+```
+
+> ⚠️ **IMPORTANTE — Contexto del build:** El CI/CD usa `context: ./backend` (NO `./backend/{Service}`).
+> Esto es necesario porque los servicios referencian `_Shared/` (CarDealer.Shared, CarDealer.Contracts).
+> Los Dockerfiles deben usar paths relativos desde `./backend/`.
+
+### Dockerfile Frontend (Next.js)
+
+El frontend usa multi-stage con pnpm y standalone output:
+
+```dockerfile
+# Key points:
+# - Usa pnpm (NO npm/yarn)
+# - Build args: NEXT_PUBLIC_API_URL= (vacío para BFF pattern)
+# - Standalone output con node server.js
+# - Puerto 8080 (para K8s)
+# - Runner: node:20-alpine (NO nginx)
+```
+
+> ⚠️ **REGLA:** El frontend en K8s corre como **Node.js server** (port 8080), NO como nginx.
+> La imagen vieja `cardealer-web` usaba nginx — ya NO se usa.
+
+### OpenTelemetry — Versión Compatible
+
+> ⚠️ **REGLA:** OpenTelemetry DEBE usar versión **1.9.0** (máximo). La versión 1.10.0 requiere .NET 9.
+> Si se actualiza a 1.10.0, el build falla con errores de API incompatible.
+
+---
+
+## 🔌 DEPENDENCY INJECTION (DI) — REGLAS CRÍTICAS
+
+### El Mismatch IDeadLetterQueue vs ISharedDeadLetterQueue
+
+La librería compartida `CarDealer.Shared` registra `ISharedDeadLetterQueue` (PostgreSQL-backed) via 
+`AddPostgreSqlDeadLetterQueue()`. Pero cada servicio tiene su propia interfaz local `IDeadLetterQueue` 
+(en `Domain.Interfaces` o `Infrastructure.Messaging`) que es la que `DeadLetterQueueProcessor` inyecta.
+
+> 🔴 **INCIDENTE Feb 2026:** 6 servicios crasheaban al iniciar con 
+> `Unable to resolve service for type 'IDeadLetterQueue'`.
+
+**Regla:** Si un servicio usa `DeadLetterQueueProcessor` (HostedService), DEBE registrar `IDeadLetterQueue`:
+
+```csharp
+// En Program.cs — DESPUÉS de AddPostgreSqlDeadLetterQueue y ANTES de AddHostedService<DeadLetterQueueProcessor>
+builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
+builder.Services.AddHostedService<DeadLetterQueueProcessor>();
+```
+
+**Servicios que requieren esta registración:**
+- AuthService, ErrorService, RoleService, AuditService, NotificationService, MediaService
+
+### Regla General de DI
+
+**SIEMPRE verificar que todas las dependencias inyectadas en HostedServices, Controllers y Handlers 
+están registradas en `Program.cs`.** Un `AddHostedService<T>()` sin su correspondiente `AddSingleton<IDependency>()` 
+causa crash silencioso al iniciar el pod.
+
+**Test de validación (recomendado):**
+```csharp
+[Fact]
+public async Task Application_DI_Container_Resolves_All_Services()
+{
+    await using var app = new WebApplicationFactory<Program>();
+    using var client = app.CreateClient();
+    var response = await client.GetAsync("/health");
+    response.EnsureSuccessStatusCode(); // Falla si DI no resuelve algún servicio
+}
+```
+
+---
+
+## 🐇 RABBITMQ — REGLAS CRÍTICAS
+
+### Queue Arguments Son Inmutables
+
+RabbitMQ **NO permite cambiar los argumentos** de una queue existente. Si el código declara una queue 
+con argumentos diferentes a los que ya tiene, RabbitMQ responde con `PRECONDITION_FAILED` y el servicio crashea.
+
+> 🔴 **INCIDENTE Feb 2026:** Queues existentes sin `x-dead-letter-exchange`. Código nuevo las declara 
+> CON `x-dead-letter-exchange`. Resultado: `PRECONDITION_FAILED` y crash en loop.
+
+**Regla:** Si cambias argumentos de una queue (DLX, TTL, max-length, etc.):
+
+1. **PRIMERO** eliminar la queue vieja manualmente
+2. **DESPUÉS** desplegar el código nuevo que la recrea con los argumentos nuevos
+
+```bash
+# Eliminar queue manualmente
+kubectl exec deployment/rabbitmq -n okla -- rabbitmqctl delete_queue {queue-name}
+```
+
+**Argumentos comunes que causan PRECONDITION_FAILED si se cambian:**
+- `x-dead-letter-exchange`
+- `x-dead-letter-routing-key`
+- `x-message-ttl`
+- `x-max-length`
+- `x-queue-type` (classic vs quorum)
+
+### Queues Actuales en Producción
+
+| Exchange | Queue | DLX | Servicio |
+|----------|-------|-----|----------|
+| `notification-exchange` | `notification-queue` | `notification-exchange.dlx` | NotificationService |
+| `notification-exchange` | `notification-email-queue` | `notification-exchange.dlx` | NotificationService |
+| `notification-exchange` | `notification-sms-queue` | `notification-exchange.dlx` | NotificationService |
+| `errors-exchange` | `errors.queue` | — | ErrorService |
+| `cardealer.events` | (varios por servicio) | — | Todos |
+
+### Configuración de RabbitMQ en K8s
+
+Las credenciales de RabbitMQ se pasan via K8s secrets. Los servicios leen:
+
+| Variable de Entorno | Valor | Notas |
+|---------------------|-------|-------|
+| `RabbitMQ__HostName` | `rabbitmq` | Nombre del service K8s |
+| `RabbitMQ__UserName` | `okla_admin` | ⚠️ También existe como `RabbitMQ__User` |
+| `RabbitMQ__Password` | (en secret) | |
+| `RabbitMQ__Port` | `5672` | |
+
+> ⚠️ **IMPORTANTE:** El secret de K8s tiene AMBAS keys `RabbitMQ__UserName` y `RabbitMQ__User` 
+> porque algunos servicios leen una u otra. Si creas un servicio nuevo, usar `RabbitMQ__UserName`.
+
+---
+
+## 🏥 HEALTH CHECKS — REGLAS CRÍTICAS
+
+### Configuración Correcta de Health Checks
+
+Cada servicio .NET debe configurar **3 endpoints** de health check:
+
+```csharp
+// En Program.cs
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external") // ⚠️ Excluir checks externos
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false // Solo verifica que el proceso responde
+});
+```
+
+> 🔴 **INCIDENTE Feb 2026:** El endpoint `/health` (sin filtro) ejecutaba `ExternalServiceHealthCheck` 
+> que intentaba conectar a Consul en `localhost:8500` (no desplegado). Timeout de 200 segundos bloqueaba 
+> el thread pool, causando que TAMBIÉN `/health/ready` fallara. Los pods entraban en restart loop.
+
+**Reglas:**
+1. ✅ **SIEMPRE** excluir checks con tag `"external"` del endpoint `/health`
+2. ✅ Los checks externos (Consul, servicios terceros) deben tener tag `["external"]`
+3. ✅ El endpoint `/health/live` NUNCA debe ejecutar checks reales (solo verifica proceso vivo)
+4. ✅ Health checks que conectan a servicios externos deben tener timeout ≤ 5 segundos
+5. ❌ **NUNCA** dejar el endpoint `/health` sin `Predicate` — cualquier check lento mata el pod
+
+### Consul — NO Desplegado
+
+Consul (`localhost:8500`) **NO está desplegado** en el cluster K8s. Los servicios que lo referencian 
+(`ExternalServiceHealthCheck`, `ServiceRegistrationMiddleware`) emiten warnings no-fatales.
+Esto es esperado y no afecta la operación de los servicios.
+
+---
+
+## 🗄️ BASES DE DATOS
+
+### Dos PostgreSQL en el Cluster
+
+| Recurso | Host | Puerto | Uso |
+|---------|------|--------|-----|
+| **DO Managed PostgreSQL** | `okla-db-do-user-31493168-0.g.db.ondigitalocean.com` | 25060 | Producción (backups automáticos, $15/mes) |
+| **In-cluster PostgreSQL** | `postgres` (K8s service) | 5432 | Staging/desarrollo (pod StatefulSet, sin backups) |
+
+> ⚠️ Los servicios actualmente apuntan al **DO Managed PostgreSQL** via K8s secrets.
+> Las connection strings usan `sslmode=require` para la DB managed.
+
+### Bases de Datos Creadas
+
+Cada microservicio tiene su propia base de datos (database-per-service pattern):
+
+```
+authservice_db, userservice_db, roleservice_db, vehiclessaleservice_db,
+mediaservice_db, notificationservice_db, billingservice_db, errorservice_db,
+kycservice_db, auditservice_db, idempotencyservice_db, contactservice_db,
+chatbotservice_db, adminservice_db, dealermanagementservice_db, reviewservice_db
+```
+
+### Serilog — Crash Conocido
+
+> ⚠️ **REGLA:** NO usar `CreateBootstrapLogger()` si el servicio usa `UseStandardSerilog()` 
+> (de CarDealer.Shared). La combinación causa "logger already frozen" crash al iniciar.
+> 
+> ```csharp
+> // ❌ INCORRECTO — causa crash
+> Log.Logger = new LoggerConfiguration().CreateBootstrapLogger();
+> builder.UseStandardSerilog(); // BOOM: "logger already frozen"
+> 
+> // ✅ CORRECTO
+> builder.UseStandardSerilog(); // Solo esto, sin CreateBootstrapLogger
+> ```
+
 ---
 
 ## 🐛 TROUBLESHOOTING COMÚN
@@ -697,6 +1005,87 @@ SERVICES: "frontend-web,gateway,authservice,userservice,roleservice,vehiclessale
 1. Verificar permisos de cámara en navegador
 2. Usar HTTPS (cámara requiere contexto seguro)
 3. Verificar que `react-webcam` está instalado
+
+### ImagePullBackOff en K8s
+
+1. **Verificar secret de registry:** `kubectl get secret registry-credentials -n okla -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d`
+2. **Verificar que el token no expiró** (tokens `ghs_*` duran ~1 hora)
+3. **Refrescar secret:**
+   ```bash
+   TOKEN=$(gh auth token)
+   kubectl delete secret registry-credentials -n okla
+   kubectl create secret docker-registry registry-credentials \
+     --docker-server=ghcr.io --docker-username=gregorymorenoiem \
+     --docker-password=$TOKEN -n okla
+   ```
+4. **Verificar nombre de imagen** — debe coincidir EXACTAMENTE con lo que CI/CD pushea a GHCR
+
+### Pod CrashLoopBackOff — DI Resolution Failure
+
+**Síntoma:** Pod inicia, crashea inmediatamente, logs muestran `Unable to resolve service for type 'IXxx'`
+
+1. Verificar que TODAS las interfaces inyectadas en HostedServices están registradas en `Program.cs`
+2. Caso común: `IDeadLetterQueue` no registrada (ver sección DI más arriba)
+3. **Test de validación:**
+   ```csharp
+   [Fact]
+   public async Task DI_Container_Resolves_All_Services()
+   {
+       await using var app = new WebApplicationFactory<Program>();
+       using var client = app.CreateClient();
+       var response = await client.GetAsync("/health");
+       response.EnsureSuccessStatusCode();
+   }
+   ```
+
+### Pod CrashLoopBackOff — RabbitMQ PRECONDITION_FAILED
+
+**Síntoma:** Logs muestran `PRECONDITION_FAILED - inequivalent arg 'x-dead-letter-exchange'`
+
+1. Los argumentos de una queue RabbitMQ son INMUTABLES
+2. **Solución:** Eliminar la queue vieja antes de desplegar el código nuevo:
+   ```bash
+   kubectl exec deployment/rabbitmq -n okla -- rabbitmqctl delete_queue {queue-name}
+   ```
+
+### Pod CrashLoopBackOff — Serilog "Logger Already Frozen"
+
+**Síntoma:** Logs muestran `System.InvalidOperationException: Logger already frozen`
+
+1. **Causa:** `CreateBootstrapLogger()` + `UseStandardSerilog()` en el mismo servicio
+2. **Solución:** Eliminar `Log.Logger = new LoggerConfiguration().CreateBootstrapLogger();`
+3. Solo usar `builder.UseStandardSerilog();`
+
+### Health Check Timeout — Pods en Restart Loop
+
+**Síntoma:** `/health/ready` tarda >200 segundos, pods reinician por readiness probe timeout
+
+1. **Causa:** `ExternalServiceHealthCheck` intenta conectar a Consul (`localhost:8500`) que no está desplegado
+2. **Solución:** Excluir checks con tag `"external"` del endpoint `/health`:
+   ```csharp
+   app.MapHealthChecks("/health", new HealthCheckOptions
+   {
+       Predicate = check => !check.Tags.Contains("external")
+   });
+   ```
+
+### Frontend Muestra Página Vieja
+
+1. **Verificar nombre de imagen** en `k8s/deployments.yaml` — debe ser `frontend-web:latest`, NO `cardealer-web:latest`
+2. **Verificar digest:** `kubectl get pod -n okla -l app=frontend-web -o jsonpath='{.items[0].status.containerStatuses[0].imageID}'`
+3. Si el digest es idéntico al anterior, limpiar Docker build cache:
+   ```bash
+   gh cache list --key "Linux-buildx-frontend" | awk '{print $1}' | xargs -I{} gh cache delete {}
+   ```
+
+### CI/CD Build Exitoso Pero Imagen No Cambia
+
+1. **Causa:** Docker buildx cache reutiliza ALL layers incluyendo `COPY . .` y `dotnet publish`
+2. **Síntoma:** Todos los pasos del build muestran `CACHED`, digest idéntico al anterior
+3. **Solución:** Limpiar cache de buildx para el servicio:
+   ```bash
+   gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh cache delete {}
+   ```
 
 ---
 
@@ -1168,7 +1557,7 @@ cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs 
 ### Al crear un nuevo microservicio:
 
 1. ✅ Usar Clean Architecture (Domain, Application, Infrastructure, Api)
-2. ✅ Implementar Health Checks
+2. ✅ Implementar Health Checks (excluir checks `"external"` del endpoint `/health`)
 3. ✅ Agregar rutas al Gateway (ocelot.\*.json)
 4. ✅ Crear proyecto de tests
 5. ✅ Usar puerto 8080 en Kubernetes
@@ -1176,6 +1565,11 @@ cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs 
 7. ✅ Implementar IdempotencyMiddleware si aplica
 8. ✅ **Copiar e implementar SecurityValidators.cs** (NoSqlInjection, NoXss)
 9. ✅ **Aplicar validadores de seguridad en TODOS los commands/queries**
+10. ✅ **Registrar TODAS las dependencias de DI** — verificar con test de startup
+11. ✅ **Verificar nombre de imagen Docker** coincide entre Dockerfile, CI/CD workflow y `k8s/deployments.yaml`
+12. ✅ **NO usar `CreateBootstrapLogger()`** si el servicio usa `UseStandardSerilog()`
+13. ✅ **Verificar Health Checks** excluyen checks con tag `"external"` del endpoint `/health`
+14. ✅ **Usar OpenTelemetry 1.9.0** (NO 1.10.0 que requiere .NET 9)
 
 ### Al crear UI nueva:
 
@@ -1195,6 +1589,21 @@ cp backend/AuthService/AuthService.Application/Validators/SecurityValidators.cs 
 3. ✅ Documentar cambios en CHANGELOG
 4. ✅ Probar en docker-compose antes de deploy
 5. ✅ **Verificar que todos los inputs tienen validadores de seguridad**
+6. ✅ **Verificar Docker build cache** — si la imagen no recoge cambios, limpiar cache de buildx
+7. ✅ **Verificar argumentos de queues RabbitMQ** — si cambiaron, eliminar queue vieja primero
+8. ✅ **Verificar DI registrations** — todo `AddHostedService<T>()` debe tener sus dependencias registradas
+9. ✅ **Verificar nombre de imagen** en `k8s/deployments.yaml` coincide con CI/CD
+
+### Al desplegar a Kubernetes:
+
+1. ✅ Verificar que la imagen Docker existe en GHCR con el nombre correcto
+2. ✅ Verificar que `registry-credentials` secret no ha expirado
+3. ✅ Verificar que el `k8s/deployments.yaml` usa el nombre de imagen correcto
+4. ✅ Verificar que los ConfigMaps están actualizados (especialmente `gateway-config`)
+5. ✅ Verificar que las environment variables en K8s secrets incluyen las keys correctas
+6. ✅ Verificar health check endpoints (`/health`, `/health/ready`, `/health/live`)
+7. ✅ Verificar que NO hay `CreateBootstrapLogger()` en el servicio
+8. ✅ Si se cambiaron argumentos de queues RabbitMQ, eliminar queues viejas primero
 
 ---
 
@@ -1235,5 +1644,5 @@ Antes de marcar una tarea como completada:
 
 ---
 
-_Documento mantenido por el equipo de desarrollo - Febrero 2026_
-_86 Microservicios | Next.js 14 | .NET 8 | PostgreSQL | Kubernetes_
+_Documento mantenido por el equipo de desarrollo - Febrero 18, 2026_
+_86 Microservicios | Next.js 14 | .NET 8 | PostgreSQL | Kubernetes (DOKS)_
