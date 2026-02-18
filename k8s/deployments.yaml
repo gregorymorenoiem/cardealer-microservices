@@ -6,6 +6,16 @@
 # Probes: Separate startup/liveness/readiness for graceful handling
 # ServiceAccounts: Dedicated accounts with minimal permissions
 # =============================================================================
+#
+# ⚠️ CLUSTER CAPACITY WARNING (Feb 2026):
+# Current cluster: 2× s-2vcpu-4gb nodes (~6GB allocatable total).
+# Only 12 core services can run simultaneously (replicas: 1).
+# The remaining 32 services are set to replicas: 0.
+# To enable more services, either:
+#   1. Add larger/more nodes to the cluster
+#   2. Enable services gradually: kubectl scale deployment/<name> --replicas=1 -n okla
+# All 44 service images exist in GHCR except idempotencyservice.
+# =============================================================================
 
 ---
 # =============================================================================
@@ -1109,7 +1119,7 @@ metadata:
     app: auditservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: crashes on startup (DLQ bug)
   selector:
     matchLabels:
       app: auditservice
@@ -1204,7 +1214,7 @@ metadata:
     app: idempotencyservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: no image in GHCR
   selector:
     matchLabels:
       app: idempotencyservice
@@ -1299,7 +1309,7 @@ metadata:
     app: adminservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: crashes on startup
   selector:
     matchLabels:
       app: adminservice
@@ -1383,6 +1393,101 @@ spec:
 
 ---
 # =============================================================================
+# CHATBOT SERVICE — Chatbot IA "Ana" + WhatsApp
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbotservice
+  namespace: okla
+  labels:
+    app: chatbotservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbotservice
+  template:
+    metadata:
+      labels:
+        app: chatbotservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: chatbotservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: chatbotservice
+          image: ghcr.io/gregorymorenoiem/chatbotservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: chatbotservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
 # REVIEW SERVICE (Sprint 14)
 # =============================================================================
 apiVersion: apps/v1
@@ -1395,7 +1500,7 @@ metadata:
     tier: backend
     sprint: "14"
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: reviewservice
@@ -1490,7 +1595,7 @@ metadata:
     app: aiprocessingservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: aiprocessingservice
@@ -1585,7 +1690,7 @@ metadata:
     app: alertservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: alertservice
@@ -1680,7 +1785,7 @@ metadata:
     app: apidocsservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: apidocsservice
@@ -1775,7 +1880,7 @@ metadata:
     app: appointmentservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: appointmentservice
@@ -1870,7 +1975,7 @@ metadata:
     app: backgroundremovalservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: backgroundremovalservice
@@ -1965,7 +2070,7 @@ metadata:
     app: cacheservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: cacheservice
@@ -2060,7 +2165,7 @@ metadata:
     app: comparisonservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: comparisonservice
@@ -2155,7 +2260,7 @@ metadata:
     app: configurationservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: configurationservice
@@ -2250,7 +2355,7 @@ metadata:
     app: contactservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: contactservice
@@ -2345,7 +2450,7 @@ metadata:
     app: crmservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: crmservice
@@ -2440,7 +2545,7 @@ metadata:
     app: dataprotectionservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: dataprotectionservice
@@ -2535,7 +2640,7 @@ metadata:
     app: dealeranalyticsservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: dealeranalyticsservice
@@ -2630,7 +2735,7 @@ metadata:
     app: dealermanagementservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: dealermanagementservice
@@ -2725,7 +2830,7 @@ metadata:
     app: integrationservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: integrationservice
@@ -2820,7 +2925,7 @@ metadata:
     app: inventorymanagementservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: inventorymanagementservice
@@ -2915,7 +3020,7 @@ metadata:
     app: leadscoringservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: leadscoringservice
@@ -3010,7 +3115,7 @@ metadata:
     app: maintenanceservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: maintenanceservice
@@ -3105,7 +3210,7 @@ metadata:
     app: marketingservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: marketingservice
@@ -3200,7 +3305,7 @@ metadata:
     app: messagebusservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: messagebusservice
@@ -3295,7 +3400,7 @@ metadata:
     app: paymentservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: paymentservice
@@ -3390,7 +3495,7 @@ metadata:
     app: ratelimitingservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: ratelimitingservice
@@ -3485,7 +3590,7 @@ metadata:
     app: recommendationservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: recommendationservice
@@ -3580,7 +3685,7 @@ metadata:
     app: reportsservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: reportsservice
@@ -3675,7 +3780,7 @@ metadata:
     app: schedulerservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: schedulerservice
@@ -3770,7 +3875,7 @@ metadata:
     app: servicediscovery
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: servicediscovery
@@ -3865,7 +3970,7 @@ metadata:
     app: staffservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: staffservice
@@ -3960,7 +4065,7 @@ metadata:
     app: vehicle360processingservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: vehicle360processingservice
@@ -4055,7 +4160,7 @@ metadata:
     app: vehicleintelligenceservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0  # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: vehicleintelligenceservice

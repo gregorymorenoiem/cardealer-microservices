@@ -202,6 +202,20 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: chatbotservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: chatbotservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: reviewservice
   namespace: okla
   labels:
