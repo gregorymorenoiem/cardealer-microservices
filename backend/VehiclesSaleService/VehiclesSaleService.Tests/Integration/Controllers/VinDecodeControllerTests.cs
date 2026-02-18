@@ -14,15 +14,18 @@ public class VinDecodeControllerTests
 {
     private readonly CatalogController _controller;
     private readonly Mock<IVehicleCatalogRepository> _catalogRepositoryMock;
+    private readonly Mock<IVehicleRepository> _vehicleRepositoryMock;
     private readonly Mock<ILogger<CatalogController>> _loggerMock;
 
     public VinDecodeControllerTests()
     {
         _catalogRepositoryMock = new Mock<IVehicleCatalogRepository>();
+        _vehicleRepositoryMock = new Mock<IVehicleRepository>();
         _loggerMock = new Mock<ILogger<CatalogController>>();
 
         _controller = new CatalogController(
             _catalogRepositoryMock.Object,
+            _vehicleRepositoryMock.Object,
             _loggerMock.Object
         );
     }

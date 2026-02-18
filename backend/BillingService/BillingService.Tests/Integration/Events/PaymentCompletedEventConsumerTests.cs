@@ -282,7 +282,7 @@ public class PaymentCompletedEventConsumerTests : IDisposable
     }
 
     [Fact]
-    public void Consumer_WithInvalidMessage_DoesNotCrash()
+    public async Task Consumer_WithInvalidMessage_DoesNotCrash()
     {
         // Arrange
         var errorOccurred = false;
@@ -322,7 +322,7 @@ public class PaymentCompletedEventConsumerTests : IDisposable
             body: messageBody);
 
         // Assert
-        var processed = messageProcessed.Task.Wait(TimeSpan.FromSeconds(5));
+        var processed = await messageProcessed.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(processed);
         Assert.True(errorOccurred, "Consumer should have handled invalid JSON error");
     }

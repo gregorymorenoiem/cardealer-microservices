@@ -8,9 +8,9 @@ namespace RoleService.Shared.Models
         public string? ErrorCode { get; set; }
 
         public static ApiResponse<T> Ok(T data) => new() { Success = true, Data = data };
-        public static ApiResponse<T> Fail(string error, string? errorCode = null) => new() 
-        { 
-            Success = false, 
+        public static ApiResponse<T> Fail(string error, string? errorCode = null) => new()
+        {
+            Success = false,
             Error = error,
             ErrorCode = errorCode
         };

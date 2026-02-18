@@ -13,7 +13,7 @@ public record CreateRoleRequest
     /// </summary>
     [Required]
     [StringLength(50, MinimumLength = 3)]
-    [RegularExpression(@"^[a-zA-Z][a-zA-Z0-9_-]*$", 
+    [RegularExpression(@"^[a-zA-Z][a-zA-Z0-9_-]*$",
         ErrorMessage = "Name must start with a letter and contain only letters, numbers, underscores and hyphens")]
     public string Name { get; init; } = string.Empty;
 

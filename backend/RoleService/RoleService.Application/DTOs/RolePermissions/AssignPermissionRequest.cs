@@ -12,7 +12,7 @@ public record AssignPermissionRequest
     /// </summary>
     [Required]
     public Guid RoleId { get; init; }
-    
+
     /// <summary>
     /// ID del permiso a asignar/remover
     /// </summary>

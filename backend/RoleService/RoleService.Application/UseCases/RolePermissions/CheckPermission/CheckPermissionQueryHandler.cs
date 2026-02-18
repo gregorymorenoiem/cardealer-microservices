@@ -76,7 +76,7 @@ public class CheckPermissionQueryHandler : IRequestHandler<CheckPermissionQuery,
                     {
                         // Obtener nombre del rol para la respuesta
                         var roleName = await GetRoleNameAsync(roleId, cancellationToken);
-                        
+
                         _logger.LogDebug(
                             "Permission GRANTED (cached) for role {RoleId} on resource {Resource} with action {Action}",
                             roleId, request.Resource, request.Action);
@@ -112,7 +112,7 @@ public class CheckPermissionQueryHandler : IRequestHandler<CheckPermissionQuery,
                 if (hasPermission)
                 {
                     var roleName = await GetRoleNameAsync(roleId, cancellationToken);
-                    
+
                     _logger.LogDebug(
                         "Permission GRANTED for role {RoleId} on resource {Resource} with action {Action}",
                         roleId, request.Resource, request.Action);

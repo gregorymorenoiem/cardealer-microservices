@@ -12,7 +12,7 @@ public record CreatePermissionRequest
     /// Nombre del permiso en formato resource:action (ej: "vehicles:create")
     /// </summary>
     [Required]
-    [RegularExpression(@"^[a-z]+:[a-z]+(-[a-z]+)*$", 
+    [RegularExpression(@"^[a-z]+:[a-z]+(-[a-z]+)*$",
         ErrorMessage = "Name must be in format 'resource:action' (lowercase)")]
     public string Name { get; init; } = string.Empty;
 

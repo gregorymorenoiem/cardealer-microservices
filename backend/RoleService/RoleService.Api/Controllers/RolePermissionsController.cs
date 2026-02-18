@@ -48,15 +48,15 @@ public class RolePermissionsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<AssignPermissionResponse>>> AssignPermission([FromBody] AssignPermissionRequest request)
     {
-        _logger.LogInformation("Assigning permission {PermissionId} to role {RoleId}", 
+        _logger.LogInformation("Assigning permission {PermissionId} to role {RoleId}",
             request.PermissionId, request.RoleId);
-        
+
         var command = new AssignPermissionCommand(request.RoleId, request.PermissionId);
         var result = await _mediator.Send(command);
-        
-        _logger.LogInformation("Permission {PermissionName} assigned to role {RoleName} successfully", 
+
+        _logger.LogInformation("Permission {PermissionName} assigned to role {RoleName} successfully",
             result.PermissionName, result.RoleName);
-        
+
         return Ok(ApiResponse<AssignPermissionResponse>.Ok(result));
     }
 
@@ -77,15 +77,15 @@ public class RolePermissionsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<RemovePermissionResponse>>> RemovePermission([FromBody] AssignPermissionRequest request)
     {
-        _logger.LogInformation("Removing permission {PermissionId} from role {RoleId}", 
+        _logger.LogInformation("Removing permission {PermissionId} from role {RoleId}",
             request.PermissionId, request.RoleId);
-        
+
         var command = new RemovePermissionCommand(request.RoleId, request.PermissionId);
         var result = await _mediator.Send(command);
-        
-        _logger.LogInformation("Permission {PermissionName} removed from role {RoleName} successfully", 
+
+        _logger.LogInformation("Permission {PermissionName} removed from role {RoleName} successfully",
             result.PermissionName, result.RoleName);
-        
+
         return Ok(ApiResponse<RemovePermissionResponse>.Ok(result));
     }
 
@@ -122,7 +122,7 @@ public class RolePermissionsController : ControllerBase
         if ((request.RoleIds == null || !request.RoleIds.Any()) && request.UserId == null)
         {
             throw new BadRequestException(
-                "Either RoleIds or UserId must be provided", 
+                "Either RoleIds or UserId must be provided",
                 "MISSING_ROLE_OR_USER");
         }
 
@@ -131,7 +131,7 @@ public class RolePermissionsController : ControllerBase
         {
             throw new BadRequestException("Resource is required", "MISSING_RESOURCE");
         }
-        
+
         if (string.IsNullOrWhiteSpace(request.Action))
         {
             throw new BadRequestException("Action is required", "MISSING_ACTION");
@@ -157,10 +157,10 @@ public class RolePermissionsController : ControllerBase
 
         var query = new CheckPermissionQuery(roleIds, request.Resource, request.Action);
         var result = await _mediator.Send(query);
-        
-        _logger.LogDebug("Permission check: {Resource}:{Action} = {HasPermission} (cached: {Cached})", 
+
+        _logger.LogDebug("Permission check: {Resource}:{Action} = {HasPermission} (cached: {Cached})",
             request.Resource, request.Action, result.HasPermission, result.Cached);
-        
+
         return Ok(ApiResponse<CheckPermissionResponse>.Ok(result));
     }
 }

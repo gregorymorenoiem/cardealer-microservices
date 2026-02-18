@@ -109,7 +109,7 @@ public class RequestUnlinkCodeCommandHandler : IRequestHandler<RequestUnlinkCode
             {
                 Code = code,
                 UserId = request.UserId,
-                Email = user.Email,
+                Email = user.Email ?? string.Empty,
                 Provider = request.Provider,
                 CreatedAt = DateTime.UtcNow,
                 IpAddress = request.IpAddress,
@@ -154,12 +154,12 @@ public class RequestUnlinkCodeCommandHandler : IRequestHandler<RequestUnlinkCode
 
             _logger.LogInformation(
                 "Unlink verification code sent. UserId: {UserId}, Provider: {Provider}, Email: {Email}, IP: {IpAddress}",
-                request.UserId, request.Provider, MaskEmail(user.Email), request.IpAddress);
+                request.UserId, request.Provider, MaskEmail(user.Email ?? string.Empty), request.IpAddress);
 
             return new RequestUnlinkCodeResponse(
                 Success: true,
                 Message: "Verification code sent to your email.",
-                MaskedEmail: MaskEmail(user.Email),
+                MaskedEmail: MaskEmail(user.Email ?? string.Empty),
                 ExpiresInMinutes: 10
             );
         }

@@ -5,7 +5,7 @@ namespace RoleService.Shared.Exceptions
     /// </summary>
     public class BadRequestException : AppException
     {
-        public BadRequestException(string message, string? errorCode = null) 
+        public BadRequestException(string message, string? errorCode = null)
             : base(message, 400, errorCode) { }
     }
 }

@@ -26,13 +26,13 @@ public class HttpErrorReporter : IErrorReporter
         try
         {
             var response = await _httpClient.PostAsJsonAsync("/api/errors", request);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<ErrorReportResponse>();
                 return result?.Id ?? Guid.NewGuid();
             }
-            
+
             _logger.LogWarning("Failed to report error to ErrorService. Status: {StatusCode}", response.StatusCode);
             return Guid.NewGuid();
         }

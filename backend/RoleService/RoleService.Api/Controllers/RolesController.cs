@@ -50,10 +50,10 @@ public class RolesController : ControllerBase
     public async Task<ActionResult<ApiResponse<CreateRoleResponse>>> CreateRole([FromBody] CreateRoleRequest request)
     {
         _logger.LogInformation("Creating role: {RoleName}", request.Name);
-        
+
         var command = new CreateRoleCommand(request);
         var result = await _mediator.Send(command);
-        
+
         _logger.LogInformation("Role created successfully: {RoleId}", result.Data.Id);
         return Ok(ApiResponse<CreateRoleResponse>.Ok(result));
     }
@@ -79,7 +79,7 @@ public class RolesController : ControllerBase
             pageSize = 100;
         if (page < 1)
             page = 1;
-            
+
         var query = new GetRolesQuery(isActive, page, pageSize);
         var result = await _mediator.Send(query);
         return Ok(ApiResponse<PaginatedResult<RoleListItemDto>>.Ok(result));
@@ -132,10 +132,10 @@ public class RolesController : ControllerBase
     public async Task<ActionResult<ApiResponse<UpdateRoleResponse>>> UpdateRole(Guid id, [FromBody] UpdateRoleRequest request)
     {
         _logger.LogInformation("Updating role: {RoleId}", id);
-        
+
         var command = new UpdateRoleCommand(id, request);
         var result = await _mediator.Send(command);
-        
+
         _logger.LogInformation("Role updated successfully: {RoleId}", id);
         return Ok(ApiResponse<UpdateRoleResponse>.Ok(result));
     }
@@ -160,10 +160,10 @@ public class RolesController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteRole(Guid id)
     {
         _logger.LogInformation("Deleting role: {RoleId}", id);
-        
+
         var command = new DeleteRoleCommand(id);
         var result = await _mediator.Send(command);
-        
+
         _logger.LogInformation("Role deleted successfully: {RoleId}", id);
         return Ok(ApiResponse<bool>.Ok(result));
     }

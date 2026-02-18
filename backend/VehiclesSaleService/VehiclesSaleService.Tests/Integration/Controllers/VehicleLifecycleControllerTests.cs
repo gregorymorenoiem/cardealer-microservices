@@ -8,6 +8,7 @@ using VehiclesSaleService.Domain.Interfaces;
 using VehiclesSaleService.Infrastructure.Messaging;
 using VehiclesSaleService.Infrastructure.Persistence;
 using CarDealer.Shared.MultiTenancy;
+using CarDealer.Shared.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using VehicleDriveType = VehiclesSaleService.Domain.Entities.DriveType;
 
@@ -24,6 +25,7 @@ public class VehicleLifecycleControllerTests : IDisposable
     private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
     private readonly Mock<IEventPublisher> _eventPublisherMock;
     private readonly Mock<ILogger<VehiclesController>> _loggerMock;
+    private readonly Mock<IConfigurationServiceClient> _configClientMock;
 
     public VehicleLifecycleControllerTests()
     {
@@ -42,13 +44,15 @@ public class VehicleLifecycleControllerTests : IDisposable
         _categoryRepositoryMock = new Mock<ICategoryRepository>();
         _eventPublisherMock = new Mock<IEventPublisher>();
         _loggerMock = new Mock<ILogger<VehiclesController>>();
+        _configClientMock = new Mock<IConfigurationServiceClient>();
 
         _controller = new VehiclesController(
             _vehicleRepositoryMock.Object,
             _categoryRepositoryMock.Object,
             _eventPublisherMock.Object,
             _loggerMock.Object,
-            _context
+            _context,
+            _configClientMock.Object
         );
     }
 

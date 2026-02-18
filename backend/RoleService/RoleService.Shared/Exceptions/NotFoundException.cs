@@ -5,7 +5,7 @@ namespace RoleService.Shared.Exceptions
     /// </summary>
     public class NotFoundException : AppException
     {
-        public NotFoundException(string message, string? errorCode = null) 
+        public NotFoundException(string message, string? errorCode = null)
             : base(message, 404, errorCode) { }
     }
 }

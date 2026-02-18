@@ -5,7 +5,7 @@ namespace RoleService.Shared.Exceptions
     /// </summary>
     public class ConflictException : AppException
     {
-        public ConflictException(string message, string? errorCode = null) 
+        public ConflictException(string message, string? errorCode = null)
             : base(message, 409, errorCode) { }
     }
 }

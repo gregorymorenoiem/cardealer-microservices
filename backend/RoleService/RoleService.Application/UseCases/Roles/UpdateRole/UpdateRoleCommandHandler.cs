@@ -41,7 +41,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Updat
     public async Task<UpdateRoleResponse> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
         var req = request.Request;
-        
+
         // Paso 1: Verificar que el rol existe
         var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role == null)
@@ -55,7 +55,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Updat
         {
             _logger.LogWarning("Attempted to modify system role: {RoleName}", role.Name);
             throw new BadRequestException(
-                $"System role '{role.Name}' cannot be modified. System roles are immutable.", 
+                $"System role '{role.Name}' cannot be modified. System roles are immutable.",
                 "ROLE_IS_SYSTEM");
         }
 

@@ -41,7 +41,6 @@ public class GetPresignedUrlsBatchCommandHandler
                 var storageKey = $"{request.Category}/{vehiclePart}/{fileName}";
 
                 // Create MediaAsset record (status: Uploaded — awaiting finalization)
-                var mediaType = Domain.Enums.MediaType.Image;
                 var imageMedia = new ImageMedia(
                     request.DealerId,
                     request.OwnerId,

@@ -17,7 +17,7 @@ public static class SqlInjectionValidator
         "WAITFOR DELAY", "BENCHMARK", "SLEEP("
     };
 
-    public static IRuleBuilderOptions<T, string> NoSqlInjection<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoSqlInjection<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -45,7 +45,7 @@ public static class XssValidator
         "ontransitionend=", "<img", "src=", "alert(", "confirm(", "prompt("
     };
 
-    public static IRuleBuilderOptions<T, string> NoXss<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoXss<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -58,7 +58,7 @@ public static class XssValidator
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }
 
-    public static IRuleBuilderOptions<T, string> NoXssAdvanced<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoXssAdvanced<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         var xssRegexPatterns = new[]
         {
@@ -91,7 +91,7 @@ public static class XssValidator
 /// </summary>
 public static class SecurityValidator
 {
-    public static IRuleBuilderOptions<T, string> NoSecurityThreats<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoSecurityThreats<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder
             .NoSqlInjection()

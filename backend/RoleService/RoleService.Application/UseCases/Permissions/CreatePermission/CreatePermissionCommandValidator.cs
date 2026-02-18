@@ -50,11 +50,11 @@ public class CreatePermissionCommandValidator : AbstractValidator<CreatePermissi
 
         // Validación de consistencia: Name debe coincidir con Resource:Action
         RuleFor(x => x.Request)
-            .Must(req => 
+            .Must(req =>
             {
                 if (string.IsNullOrEmpty(req.Name) || string.IsNullOrEmpty(req.Resource) || string.IsNullOrEmpty(req.Action))
                     return true; // Otras reglas capturarán esto
-                
+
                 var expectedName = $"{req.Resource.ToLowerInvariant()}:{req.Action.ToLowerInvariant()}";
                 return req.Name.Equals(expectedName, StringComparison.OrdinalIgnoreCase);
             })

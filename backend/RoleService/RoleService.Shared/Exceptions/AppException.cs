@@ -12,7 +12,7 @@ namespace RoleService.Shared.Exceptions
         /// Código de estado HTTP asociado a la excepción
         /// </summary>
         public int StatusCode { get; }
-        
+
         /// <summary>
         /// Código de error técnico (ej: "ROLE_NOT_FOUND")
         /// </summary>

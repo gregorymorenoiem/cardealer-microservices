@@ -230,9 +230,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
 
         // Parse device info once
-        var deviceInfo = ParseDeviceInfo(_requestContext.UserAgent);
-        var browser = ParseBrowser(_requestContext.UserAgent);
-        var operatingSystem = ParseOperatingSystem(_requestContext.UserAgent);
+        var userAgent = _requestContext.UserAgent ?? string.Empty;
+        var deviceInfo = ParseDeviceInfo(userAgent);
+        var browser = ParseBrowser(userAgent);
+        var operatingSystem = ParseOperatingSystem(userAgent);
 
         // Get geolocation from IP address
         string? locationString = null;

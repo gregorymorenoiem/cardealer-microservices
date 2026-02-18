@@ -5,7 +5,7 @@ namespace RoleService.Shared.Exceptions
     /// </summary>
     public class BadGatewayException : AppException
     {
-        public BadGatewayException(string message, string? errorCode = null) 
+        public BadGatewayException(string message, string? errorCode = null)
             : base(message, 502, errorCode) { }
     }
 }

@@ -39,7 +39,7 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Creat
     public async Task<CreateRoleResponse> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         var req = request.Request;
-        
+
         // Paso 1: Verificar que no exista un rol con el mismo nombre
         var existingRole = await _roleRepository.GetByNameAsync(req.Name, cancellationToken);
         if (existingRole != null)
@@ -83,15 +83,15 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Creat
         foreach (var permissionId in permissionIds)
         {
             await _rolePermissionRepository.AssignPermissionToRoleAsync(
-                role.Id, 
-                permissionId, 
-                currentUserId, 
+                role.Id,
+                permissionId,
+                currentUserId,
                 cancellationToken);
         }
-        
+
         if (permissionIds.Any())
         {
-            _logger.LogInformation("Assigned {Count} permissions to role {RoleId}", 
+            _logger.LogInformation("Assigned {Count} permissions to role {RoleId}",
                 permissionIds.Count, role.Id);
         }
 

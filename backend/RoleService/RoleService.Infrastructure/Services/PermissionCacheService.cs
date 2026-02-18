@@ -14,12 +14,12 @@ public class PermissionCacheService : IPermissionCacheService
 {
     private readonly IDistributedCache _cache;
     private readonly ILogger<PermissionCacheService> _logger;
-    
+
     /// <summary>
     /// TTL para verificaciones individuales de permisos (5 minutos según matriz).
     /// </summary>
     private static readonly TimeSpan PermissionCheckTtl = TimeSpan.FromMinutes(5);
-    
+
     /// <summary>
     /// TTL para lista completa de permisos de un rol.
     /// </summary>
@@ -185,7 +185,7 @@ public class PermissionCacheService : IPermissionCacheService
                 },
                 cancellationToken);
 
-            _logger.LogDebug("Cached role permissions: {Key} ({Count} permissions, TTL: {Ttl})", 
+            _logger.LogDebug("Cached role permissions: {Key} ({Count} permissions, TTL: {Ttl})",
                 key, permissionNames.Count, RolePermissionsTtl);
         }
         catch (Exception ex)

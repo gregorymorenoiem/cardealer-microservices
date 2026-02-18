@@ -24,7 +24,7 @@ public class GetRoleByIdQueryHandler : IRequestHandler<GetRoleByIdQuery, RoleDet
     public async Task<RoleDetailsDto?> Handle(GetRoleByIdQuery request, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Getting role by ID: {RoleId}", request.RoleId);
-        
+
         var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role == null)
         {
@@ -34,7 +34,7 @@ public class GetRoleByIdQueryHandler : IRequestHandler<GetRoleByIdQuery, RoleDet
 
         var permissions = await _roleRepository.GetRolePermissionsAsync(request.RoleId, cancellationToken);
 
-        _logger.LogDebug("Found role {RoleName} with {PermissionCount} permissions", 
+        _logger.LogDebug("Found role {RoleName} with {PermissionCount} permissions",
             role.Name, permissions.Count());
 
         return new RoleDetailsDto

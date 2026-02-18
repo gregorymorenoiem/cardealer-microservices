@@ -171,11 +171,11 @@ builder.Services.AddAuthorization(options =>
                 context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "SuperAdmin") ||
                 context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "Admin"))
                 return true;
-            
+
             // Verificar claim específico de permiso
             if (context.User.HasClaim("permission", "admin:manage-roles"))
                 return true;
-            
+
             return false;
         });
     });
@@ -194,11 +194,11 @@ builder.Services.AddAuthorization(options =>
             if (context.User.HasClaim("role", "SuperAdmin") ||
                 context.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "SuperAdmin"))
                 return true;
-            
+
             // Verificar claim específico de permiso
             if (context.User.HasClaim("permission", "admin:manage-permissions"))
                 return true;
-            
+
             return false;
         });
     });

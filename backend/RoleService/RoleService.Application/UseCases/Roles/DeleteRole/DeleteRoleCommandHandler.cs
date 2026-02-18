@@ -47,7 +47,7 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, bool>
         {
             _logger.LogWarning("Attempted to delete system role: {RoleName}", role.Name);
             throw new BadRequestException(
-                $"System role '{role.Name}' cannot be deleted. System roles are protected.", 
+                $"System role '{role.Name}' cannot be deleted. System roles are protected.",
                 "ROLE_IS_SYSTEM");
         }
 
@@ -59,7 +59,7 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, bool>
 
         // Paso 4: Eliminar el rol
         await _roleRepository.DeleteAsync(request.RoleId, cancellationToken);
-        _logger.LogInformation("Role deleted: {RoleId} - {RoleName} by {UserId}", 
+        _logger.LogInformation("Role deleted: {RoleId} - {RoleName} by {UserId}",
             request.RoleId, roleName, currentUserId);
 
         // Paso 5: Auditoría (fire-and-forget)

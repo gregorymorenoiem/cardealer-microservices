@@ -59,11 +59,11 @@ builder.Services.AddDbContext<KYCDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(KYCService.Application.Handlers.CreateKYCProfileHandler).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(KYCService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(KYCService.Application.Handlers.CreateKYCProfileHandler).Assembly));
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateKYCProfileValidator>();

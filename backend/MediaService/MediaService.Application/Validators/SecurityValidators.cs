@@ -24,8 +24,8 @@ public static class SecurityValidators
         "ontransitionend=", "<link"
     };
 
-    public static IRuleBuilderOptions<T, string> NoSqlInjection<T>(
-        this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoSqlInjection<T>(
+        this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(value =>
         {
@@ -39,8 +39,8 @@ public static class SecurityValidators
         .WithErrorCode("SECURITY_SQL_INJECTION");
     }
 
-    public static IRuleBuilderOptions<T, string> NoXss<T>(
-        this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string?> NoXss<T>(
+        this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(value =>
         {

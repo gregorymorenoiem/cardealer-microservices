@@ -71,7 +71,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             user.Id,
             newRefreshTokenValue,
             DateTime.UtcNow.AddDays(refreshTokenDays),
-            _requestContext.IpAddress
+            _requestContext.IpAddress ?? string.Empty
         );
 
         await _refreshTokenRepository.UpdateAsync(storedToken, cancellationToken);

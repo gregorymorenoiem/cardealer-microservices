@@ -49,19 +49,19 @@ public class PermissionsController : ControllerBase
         // Validar que el módulo es permitido
         if (!Permission.IsValidModule(request.Module))
         {
-            _logger.LogWarning("Invalid module attempted: {Module}. Allowed: {AllowedModules}", 
+            _logger.LogWarning("Invalid module attempted: {Module}. Allowed: {AllowedModules}",
                 request.Module, string.Join(", ", Permission.AllowedModules));
             return BadRequest(ApiResponse<object>.Fail(
                 $"Invalid module '{request.Module}'. Allowed modules: {string.Join(", ", Permission.AllowedModules)}",
                 "INVALID_MODULE"));
         }
-        
-        _logger.LogInformation("Creating permission: {PermissionName} in module {Module}", 
+
+        _logger.LogInformation("Creating permission: {PermissionName} in module {Module}",
             request.Name, request.Module);
-        
+
         var command = new CreatePermissionCommand(request);
         var result = await _mediator.Send(command);
-        
+
         _logger.LogInformation("Permission created successfully: {PermissionId}", result.Data.Id);
         return Ok(ApiResponse<CreatePermissionResponse>.Ok(result));
     }

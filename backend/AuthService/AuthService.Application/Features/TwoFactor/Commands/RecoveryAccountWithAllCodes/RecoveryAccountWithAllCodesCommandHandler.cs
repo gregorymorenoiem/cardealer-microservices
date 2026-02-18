@@ -143,7 +143,7 @@ public class RecoveryAccountWithAllCodesCommandHandler
         _logger.LogInformation("All recovery codes verified for user {UserId}. Proceeding with account recovery.", userId);
 
         // 10. Generate new authenticator secret
-        var setupResult = await _twoFactorService.GenerateAuthenticatorKeyAsync(user.Id.ToString(), user.Email);
+        var setupResult = await _twoFactorService.GenerateAuthenticatorKeyAsync(user.Id.ToString(), user.Email ?? string.Empty);
         var newSecret = setupResult.secret;
         var qrCodeUri = setupResult.qrCodeUri;
 

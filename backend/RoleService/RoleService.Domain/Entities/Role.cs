@@ -7,37 +7,37 @@ namespace RoleService.Domain.Entities;
 public class Role
 {
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// Nombre técnico del rol (ej: "DealerOwner"). Inmutable después de creación.
     /// </summary>
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Nombre visible para UI (ej: "Dueño de Concesionario")
     /// </summary>
     public string DisplayName { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Descripción del rol y sus propósitos
     /// </summary>
     public string Description { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Prioridad del rol (menor = mayor prioridad). SuperAdmin = 0, Admin = 1, etc.
     /// </summary>
     public int Priority { get; set; }
-    
+
     /// <summary>
     /// Si el rol está activo. Roles inactivos no pueden ser asignados.
     /// </summary>
     public bool IsActive { get; set; }
-    
+
     /// <summary>
     /// Si es un rol del sistema (SuperAdmin, Admin). Estos son inmutables.
     /// </summary>
     public bool IsSystemRole { get; set; }
-    
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
