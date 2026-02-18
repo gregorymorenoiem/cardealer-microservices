@@ -216,7 +216,7 @@ public class VehicleCreatedEventConsumerTests : IDisposable
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             var evt = JsonSerializer.Deserialize<VehicleCreatedEvent>(message);
-            receivedEvents.Add(evt);
+            receivedEvents.Add(evt!);
 
             _channel.BasicAck(ea.DeliveryTag, multiple: false);
 
@@ -271,7 +271,7 @@ public class VehicleCreatedEventConsumerTests : IDisposable
     }
 
     [Fact]
-    public void Consumer_WithInvalidMessage_DoesNotCrash()
+    public async Task Consumer_WithInvalidMessage_DoesNotCrash()
     {
         // Arrange
         var errorOccurred = false;
@@ -315,7 +315,7 @@ public class VehicleCreatedEventConsumerTests : IDisposable
             body: messageBody);
 
         // Assert
-        var processed = messageProcessed.Task.Wait(TimeSpan.FromSeconds(5));
+        var processed = await messageProcessed.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(processed);
         Assert.True(errorOccurred, "Consumer should have handled invalid JSON error");
     }

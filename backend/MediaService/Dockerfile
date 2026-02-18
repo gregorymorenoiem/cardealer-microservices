@@ -35,7 +35,8 @@ EXPOSE 8080
 RUN apk add --no-cache wget
 
 # Create non-root user, uploads directory and secrets directory
-RUN addgroup -g 1000 appgroup && adduser -D -u 1000 -G appgroup appuser && \
+RUN (addgroup -g 1000 appgroup 2>/dev/null || true) && \
+    (adduser -D -u 1000 -G appgroup appuser 2>/dev/null || true) && \
     mkdir -p /app/uploads && \
     mkdir -p /run/secrets && \
     chown -R appuser:appuser /app /run/secrets

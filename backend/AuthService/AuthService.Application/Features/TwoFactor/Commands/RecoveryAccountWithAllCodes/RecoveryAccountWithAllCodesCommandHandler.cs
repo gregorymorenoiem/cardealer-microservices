@@ -172,7 +172,7 @@ public class RecoveryAccountWithAllCodesCommandHandler
 
         return new RecoveryAccountWithAllCodesResponse(
             UserId: userId.ToString(),
-            Email: user.Email,
+            Email: user.Email ?? string.Empty,
             AccessToken: accessToken,
             RefreshToken: refreshTokenValue,
             ExpiresAt: expiresAt,
