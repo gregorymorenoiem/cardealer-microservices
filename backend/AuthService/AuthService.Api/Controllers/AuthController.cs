@@ -327,7 +327,7 @@ public class AuthController : ControllerBase
             return BadRequest(ApiResponse.Fail("New password is required"));
         }
         
-        var command = new ResetPasswordCommand(request.Token, request.NewPassword, request.ConfirmPassword);
+        var command = new ResetPasswordCommand(request.Token, request.NewPassword, request.ConfirmPassword ?? string.Empty);
         var result = await _mediator.Send(command);
         return Ok(ApiResponse<ResetPasswordResponse>.Ok(result));
     }

@@ -2,32 +2,29 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy shared projects
-COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj _Shared/CarDealer.Shared/
-COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj _Shared/CarDealer.Contracts/
-# Copy service projects
-COPY BillingService/BillingService.Domain/BillingService.Domain.csproj BillingService/BillingService.Domain/
-COPY BillingService/BillingService.Application/BillingService.Application.csproj BillingService/BillingService.Application/
-COPY BillingService/BillingService.Infrastructure/BillingService.Infrastructure.csproj BillingService/BillingService.Infrastructure/
-COPY BillingService/BillingService.Api/BillingService.Api.csproj BillingService/BillingService.Api/
+# Copy csproj files and restore
+COPY ["BillingService/BillingService.Api/BillingService.Api.csproj", "BillingService/BillingService.Api/"]
+COPY ["BillingService/BillingService.Application/BillingService.Application.csproj", "BillingService/BillingService.Application/"]
+COPY ["BillingService/BillingService.Domain/BillingService.Domain.csproj", "BillingService/BillingService.Domain/"]
+COPY ["BillingService/BillingService.Infrastructure/BillingService.Infrastructure.csproj", "BillingService/BillingService.Infrastructure/"]
+COPY ["BillingService/BillingService.Shared/BillingService.Shared.csproj", "BillingService/BillingService.Shared/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+COPY ["_Shared/CarDealer.Shared.Idempotency/CarDealer.Shared.Idempotency.csproj", "_Shared/CarDealer.Shared.Idempotency/"]
+COPY ["_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj", "_Shared/CarDealer.Shared.Logging/"]
+COPY ["_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj", "_Shared/CarDealer.Shared.ErrorHandling/"]
+COPY ["_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj", "_Shared/CarDealer.Shared.Observability/"]
+COPY ["_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj", "_Shared/CarDealer.Shared.Audit/"]
 
-# Restore dependencies
-WORKDIR /src/BillingService/BillingService.Api
-RUN dotnet restore
+RUN dotnet restore "BillingService/BillingService.Api/BillingService.Api.csproj"
 
-# Copy all source code
-WORKDIR /src
-COPY _Shared/CarDealer.Shared/ _Shared/CarDealer.Shared/
-COPY _Shared/CarDealer.Contracts/ _Shared/CarDealer.Contracts/
-COPY BillingService/ BillingService/
+# Copy everything else
+COPY . .
+WORKDIR "/src/BillingService/BillingService.Api"
 
-# Build the application
-WORKDIR /src/BillingService/BillingService.Api
-RUN dotnet build -c Release -o /app/build
-
-# Publish stage
+# Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "BillingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
@@ -37,19 +34,18 @@ WORKDIR /app
 RUN apk add --no-cache wget \
     && mkdir -p /run/secrets
 
-# Create non-root user for security
-RUN addgroup -S appgroup && adduser -S -G appgroup appuser
+# Create non-root user (Alpine syntax)
+RUN addgroup -g 1000 appgroup && \
+    adduser -D -u 1000 -G appgroup appuser && \
+    chown -R appuser:appgroup /app /run/secrets
 
-# Copy published files
-COPY --from=publish /app/publish .
+USER appuser
+
+COPY --from=publish --chown=appuser:appgroup /app/publish .
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
-
-# Change ownership and switch to non-root user
-RUN chown -R appuser:appgroup /app /run/secrets
-USER appuser
+ENV ASPNETCORE_URLS=http://+:8080
 
 # Expose port
 EXPOSE 8080

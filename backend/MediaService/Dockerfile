@@ -35,18 +35,18 @@ EXPOSE 8080
 RUN apk add --no-cache wget
 
 # Create non-root user, uploads directory and secrets directory
-RUN (addgroup -g 1000 appgroup 2>/dev/null || true) && \
-    (adduser -D -u 1000 -G appgroup appuser 2>/dev/null || true) && \
+RUN getent group appgroup || addgroup -g 1000 appgroup && \
+    getent passwd appuser || adduser -D -u 1000 -G appgroup appuser && \
     mkdir -p /app/uploads && \
     mkdir -p /run/secrets && \
-    chown -R appuser:appuser /app /run/secrets
+    chown -R appuser:appgroup /app /run/secrets
 USER appuser
 
 # Set Docker environment
 ENV ASPNETCORE_ENVIRONMENT=Docker
 ENV ASPNETCORE_URLS=http://+:8080
 
-COPY --from=publish --chown=appuser:appuser /app/publish .
+COPY --from=publish --chown=appuser:appgroup /app/publish .
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
