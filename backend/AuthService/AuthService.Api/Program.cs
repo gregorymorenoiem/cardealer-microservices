@@ -327,7 +327,10 @@ app.UseMiddleware<ServiceRegistrationMiddleware>();
 app.UseAuditMiddleware();
 
 // Health Checks
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external") // Exclude external service checks (Consul not available)
+});
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
