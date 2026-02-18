@@ -69,12 +69,15 @@ Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (
 
 ## 🚀 ESTADO DE PRODUCCIÓN (Febrero 2026)
 
-### ✅ Servicios Desplegados en DOKS (43 servicios)
+### ✅ Servicios Desplegados en DOKS (44 servicios definidos, 14 activos)
 
 El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-cluster`, namespace: `okla`).
 
-> ⚠️ **Staging optimizado:** Todos los servicios corren con **1 réplica** para minimizar costos (~$77/mes).
+> ⚠️ **Staging:** Cluster con 2× `s-4vcpu-8gb` nodes (~12GB allocatable, autoscale hasta 3).
+> Pool: `okla-pool-upgraded`. 14 servicios activos, 30 en `replicas: 0` (sin imagen Docker o bug de startup).
 > Para producción, escalar servicios críticos a 2 réplicas: `kubectl scale deployment frontend-web gateway authservice --replicas=2 -n okla`
+
+#### Servicios Activos (replicas: 1)
 
 | Servicio                        | Estado     | Réplicas | Puerto K8s | Imagen Docker                                                 |
 | ------------------------------- | ---------- | -------- | ---------- | ------------------------------------------------------------- |
@@ -85,59 +88,67 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 | **roleservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`                 |
 | **vehiclessaleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest`         |
 | **mediaservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`                |
-| **notificationservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest`         |
 | **billingservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`              |
+| **notificationservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest`         |
 | **errorservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`                |
 | **kycservice**                  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/kycservice:latest`                  |
-| **auditservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`                |
-| **idempotencyservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/idempotencyservice:latest`          |
 | **chatbotservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/chatbotservice:latest`              |
-| **adminservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/adminservice:latest`                |
-| **contactservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/contactservice:latest`              |
-| **reviewservice**               | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/reviewservice:latest`               |
-| **dealermanagementservice**     | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/dealermanagementservice:latest`     |
-| **dealeranalyticsservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/dealeranalyticsservice:latest`      |
-| **crmservice**                  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/crmservice:latest`                  |
-| **maintenanceservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/maintenanceservice:latest`          |
-| **comparisonservice**           | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/comparisonservice:latest`           |
-| **alertservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/alertservice:latest`                |
-| **appointmentservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/appointmentservice:latest`          |
-| **marketingservice**            | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/marketingservice:latest`            |
-| **staffservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/staffservice:latest`                |
-| **reportsservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/reportsservice:latest`              |
-| **inventorymanagementservice**  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/inventorymanagementservice:latest`  |
-| **paymentservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/paymentservice:latest`              |
-| **aiprocessingservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/aiprocessingservice:latest`         |
-| **vehicleintelligenceservice**  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehicleintelligenceservice:latest`  |
-| **recommendationservice**       | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/recommendationservice:latest`       |
-| **leadscoringservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/leadscoringservice:latest`          |
-| **backgroundremovalservice**    | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/backgroundremovalservice:latest`    |
-| **vehicle360processingservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehicle360processingservice:latest` |
-| **cacheservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/cacheservice:latest`                |
-| **messagebusservice**           | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/messagebusservice:latest`           |
-| **configurationservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/configurationservice:latest`        |
-| **schedulerservice**            | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/schedulerservice:latest`            |
-| **ratelimitingservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/ratelimitingservice:latest`         |
-| **servicediscovery**            | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/servicediscovery:latest`            |
-| **apidocsservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/apidocsservice:latest`              |
-| **integrationservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/integrationservice:latest`          |
-| **dataprotectionservice**       | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/dataprotectionservice:latest`       |
+| **auditservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`                |
 | **postgres**                    | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                                      |
 | **redis**                       | ✅ Running | 1        | 6379       | In-cluster                                                    |
 | **rabbitmq**                    | ✅ Running | 1        | 5672/15672 | In-cluster                                                    |
+
+#### Servicios Deshabilitados (replicas: 0)
+
+| Servicio                        | Razón                        | Imagen Docker |
+| ------------------------------- | ---------------------------- | ------------- |
+| **adminservice**                | 🐛 Crash al iniciar (DI bug) | ✅ Existe     |
+| **contactservice**              | 🐛 Crash al iniciar          | ✅ Existe     |
+| **idempotencyservice**          | ❌ Sin imagen en GHCR        | ❌ No existe  |
+| **reviewservice**               | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **dealermanagementservice**     | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **dealeranalyticsservice**      | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **crmservice**                  | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **maintenanceservice**          | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **comparisonservice**           | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **alertservice**                | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **appointmentservice**          | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **marketingservice**            | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **staffservice**                | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **reportsservice**              | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **inventorymanagementservice**  | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **paymentservice**              | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **aiprocessingservice**         | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **vehicleintelligenceservice**  | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **recommendationservice**       | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **leadscoringservice**          | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **backgroundremovalservice**    | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **vehicle360processingservice** | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **cacheservice**                | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **messagebusservice**           | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **configurationservice**        | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **schedulerservice**            | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **ratelimitingservice**         | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **servicediscovery**            | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **apidocsservice**              | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **integrationservice**          | 📦 Sin imagen en GHCR        | ❌ No existe  |
+| **dataprotectionservice**       | 📦 Sin imagen en GHCR        | ❌ No existe  |
 
 **Load Balancer IP:** 146.190.199.0
 
 ### 💰 Costos Mensuales (Staging)
 
-| Recurso                      | Detalle               | Costo/mes |
-| ---------------------------- | --------------------- | --------: |
-| DOKS Cluster (control plane) | Gratis en DO          |        $0 |
-| 2× Worker Nodes              | `s-2vcpu-4gb` × 2     |       $48 |
-| DO Managed PostgreSQL        | `db-s-1vcpu-1gb` × 1  |       $15 |
-| Load Balancer                | 1× LB (Ingress NGINX) |       $12 |
-| Block Storage                | 2× 10Gi PVCs          |        $2 |
-| **TOTAL**                    |                       |  **~$77** |
+| Recurso                      | Detalle                | Costo/mes |
+| ---------------------------- | ---------------------- | --------: |
+| DOKS Cluster (control plane) | Gratis en DO           |        $0 |
+| 2× Worker Nodes              | `s-4vcpu-8gb` × 2      |       $96 |
+| DO Managed PostgreSQL        | `db-s-1vcpu-1gb` × 1   |       $15 |
+| Load Balancer                | 1× LB (Ingress NGINX)  |       $12 |
+| Block Storage                | 2× 10Gi PVCs           |        $2 |
+| **TOTAL**                    |                        | **~$125** |
+
+> ℹ️ **Upgrade Feb 2026:** Nodos actualizados de `s-2vcpu-4gb` ($24/nodo) a `s-4vcpu-8gb` ($48/nodo).
+> Pool: `okla-pool-upgraded`, autoscale: 2-3 nodos. Capacidad: ~3890m CPU y ~6.4GB memoria por nodo.
 
 ### 💳 Pasarelas de Pago (PaymentService)
 
