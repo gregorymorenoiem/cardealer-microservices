@@ -1395,7 +1395,7 @@ metadata:
     tier: backend
     sprint: "14"
 spec:
-  replicas: 0 # Disabled: image cardealer-reviewservice:latest not yet in GHCR
+  replicas: 1
   selector:
     matchLabels:
       app: reviewservice
@@ -1417,7 +1417,7 @@ spec:
         - name: registry-credentials
       containers:
         - name: reviewservice
-          image: ghcr.io/gregorymorenoiem/cardealer-reviewservice:latest
+          image: ghcr.io/gregorymorenoiem/reviewservice:latest
           ports:
             - containerPort: 8080
           env:
@@ -1466,6 +1466,2666 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# AI PROCESSING SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiprocessingservice
+  namespace: okla
+  labels:
+    app: aiprocessingservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiprocessingservice
+  template:
+    metadata:
+      labels:
+        app: aiprocessingservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: aiprocessingservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: aiprocessingservice
+          image: ghcr.io/gregorymorenoiem/aiprocessingservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: aiprocessingservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# ALERTS SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertservice
+  namespace: okla
+  labels:
+    app: alertservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertservice
+  template:
+    metadata:
+      labels:
+        app: alertservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: alertservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: alertservice
+          image: ghcr.io/gregorymorenoiem/alertservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: alertservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# API DOCUMENTATION SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apidocsservice
+  namespace: okla
+  labels:
+    app: apidocsservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apidocsservice
+  template:
+    metadata:
+      labels:
+        app: apidocsservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: apidocsservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: apidocsservice
+          image: ghcr.io/gregorymorenoiem/apidocsservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: apidocsservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# APPOINTMENTS SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointmentservice
+  namespace: okla
+  labels:
+    app: appointmentservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointmentservice
+  template:
+    metadata:
+      labels:
+        app: appointmentservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: appointmentservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: appointmentservice
+          image: ghcr.io/gregorymorenoiem/appointmentservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: appointmentservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# BACKGROUND REMOVAL SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backgroundremovalservice
+  namespace: okla
+  labels:
+    app: backgroundremovalservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backgroundremovalservice
+  template:
+    metadata:
+      labels:
+        app: backgroundremovalservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: backgroundremovalservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: backgroundremovalservice
+          image: ghcr.io/gregorymorenoiem/backgroundremovalservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: backgroundremovalservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# CACHE SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cacheservice
+  namespace: okla
+  labels:
+    app: cacheservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cacheservice
+  template:
+    metadata:
+      labels:
+        app: cacheservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: cacheservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: cacheservice
+          image: ghcr.io/gregorymorenoiem/cacheservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: cacheservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# COMPARISON SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comparisonservice
+  namespace: okla
+  labels:
+    app: comparisonservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comparisonservice
+  template:
+    metadata:
+      labels:
+        app: comparisonservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: comparisonservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: comparisonservice
+          image: ghcr.io/gregorymorenoiem/comparisonservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: comparisonservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# CONFIGURATION SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: configurationservice
+  namespace: okla
+  labels:
+    app: configurationservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: configurationservice
+  template:
+    metadata:
+      labels:
+        app: configurationservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: configurationservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: configurationservice
+          image: ghcr.io/gregorymorenoiem/configurationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: configurationservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# CONTACT SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contactservice
+  namespace: okla
+  labels:
+    app: contactservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: contactservice
+  template:
+    metadata:
+      labels:
+        app: contactservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: contactservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: contactservice
+          image: ghcr.io/gregorymorenoiem/contactservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: contactservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# CRM SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crmservice
+  namespace: okla
+  labels:
+    app: crmservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crmservice
+  template:
+    metadata:
+      labels:
+        app: crmservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: crmservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: crmservice
+          image: ghcr.io/gregorymorenoiem/crmservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: crmservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# DATA PROTECTION SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataprotectionservice
+  namespace: okla
+  labels:
+    app: dataprotectionservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dataprotectionservice
+  template:
+    metadata:
+      labels:
+        app: dataprotectionservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: dataprotectionservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: dataprotectionservice
+          image: ghcr.io/gregorymorenoiem/dataprotectionservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: dataprotectionservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# DEALER ANALYTICS SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dealeranalyticsservice
+  namespace: okla
+  labels:
+    app: dealeranalyticsservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dealeranalyticsservice
+  template:
+    metadata:
+      labels:
+        app: dealeranalyticsservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: dealeranalyticsservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: dealeranalyticsservice
+          image: ghcr.io/gregorymorenoiem/dealeranalyticsservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: dealeranalyticsservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# DEALER MANAGEMENT SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dealermanagementservice
+  namespace: okla
+  labels:
+    app: dealermanagementservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dealermanagementservice
+  template:
+    metadata:
+      labels:
+        app: dealermanagementservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: dealermanagementservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: dealermanagementservice
+          image: ghcr.io/gregorymorenoiem/dealermanagementservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: dealermanagementservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# INTEGRATION SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: integrationservice
+  namespace: okla
+  labels:
+    app: integrationservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: integrationservice
+  template:
+    metadata:
+      labels:
+        app: integrationservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: integrationservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: integrationservice
+          image: ghcr.io/gregorymorenoiem/integrationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: integrationservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# INVENTORY MANAGEMENT SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventorymanagementservice
+  namespace: okla
+  labels:
+    app: inventorymanagementservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventorymanagementservice
+  template:
+    metadata:
+      labels:
+        app: inventorymanagementservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: inventorymanagementservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: inventorymanagementservice
+          image: ghcr.io/gregorymorenoiem/inventorymanagementservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: inventorymanagementservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# LEAD SCORING SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leadscoringservice
+  namespace: okla
+  labels:
+    app: leadscoringservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leadscoringservice
+  template:
+    metadata:
+      labels:
+        app: leadscoringservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: leadscoringservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: leadscoringservice
+          image: ghcr.io/gregorymorenoiem/leadscoringservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: leadscoringservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# MAINTENANCE SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maintenanceservice
+  namespace: okla
+  labels:
+    app: maintenanceservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maintenanceservice
+  template:
+    metadata:
+      labels:
+        app: maintenanceservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: maintenanceservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: maintenanceservice
+          image: ghcr.io/gregorymorenoiem/maintenanceservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: maintenanceservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# MARKETING SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketingservice
+  namespace: okla
+  labels:
+    app: marketingservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: marketingservice
+  template:
+    metadata:
+      labels:
+        app: marketingservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: marketingservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: marketingservice
+          image: ghcr.io/gregorymorenoiem/marketingservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: marketingservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# MESSAGE BUS SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messagebusservice
+  namespace: okla
+  labels:
+    app: messagebusservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messagebusservice
+  template:
+    metadata:
+      labels:
+        app: messagebusservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: messagebusservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: messagebusservice
+          image: ghcr.io/gregorymorenoiem/messagebusservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: messagebusservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# PAYMENT SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice
+  namespace: okla
+  labels:
+    app: paymentservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentservice
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: paymentservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: paymentservice
+          image: ghcr.io/gregorymorenoiem/paymentservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: paymentservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# RATE LIMITING SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimitingservice
+  namespace: okla
+  labels:
+    app: ratelimitingservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ratelimitingservice
+  template:
+    metadata:
+      labels:
+        app: ratelimitingservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: ratelimitingservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: ratelimitingservice
+          image: ghcr.io/gregorymorenoiem/ratelimitingservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: ratelimitingservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# RECOMMENDATION SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendationservice
+  namespace: okla
+  labels:
+    app: recommendationservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendationservice
+  template:
+    metadata:
+      labels:
+        app: recommendationservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: recommendationservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: recommendationservice
+          image: ghcr.io/gregorymorenoiem/recommendationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: recommendationservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# REPORTS SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reportsservice
+  namespace: okla
+  labels:
+    app: reportsservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reportsservice
+  template:
+    metadata:
+      labels:
+        app: reportsservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: reportsservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: reportsservice
+          image: ghcr.io/gregorymorenoiem/reportsservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: reportsservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# SCHEDULER SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedulerservice
+  namespace: okla
+  labels:
+    app: schedulerservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schedulerservice
+  template:
+    metadata:
+      labels:
+        app: schedulerservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: schedulerservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: schedulerservice
+          image: ghcr.io/gregorymorenoiem/schedulerservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: schedulerservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# SERVICE DISCOVERY SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicediscovery
+  namespace: okla
+  labels:
+    app: servicediscovery
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicediscovery
+  template:
+    metadata:
+      labels:
+        app: servicediscovery
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: servicediscovery
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: servicediscovery
+          image: ghcr.io/gregorymorenoiem/servicediscovery:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: servicediscovery-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# STAFF SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: staffservice
+  namespace: okla
+  labels:
+    app: staffservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: staffservice
+  template:
+    metadata:
+      labels:
+        app: staffservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: staffservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: staffservice
+          image: ghcr.io/gregorymorenoiem/staffservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: staffservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# VEHICLE 360 PROCESSING SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle360processingservice
+  namespace: okla
+  labels:
+    app: vehicle360processingservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vehicle360processingservice
+  template:
+    metadata:
+      labels:
+        app: vehicle360processingservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: vehicle360processingservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: vehicle360processingservice
+          image: ghcr.io/gregorymorenoiem/vehicle360processingservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: vehicle360processingservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# VEHICLE INTELLIGENCE SERVICE
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicleintelligenceservice
+  namespace: okla
+  labels:
+    app: vehicleintelligenceservice
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vehicleintelligenceservice
+  template:
+    metadata:
+      labels:
+        app: vehicleintelligenceservice
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: vehicleintelligenceservice
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: vehicleintelligenceservice
+          image: ghcr.io/gregorymorenoiem/vehicleintelligenceservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: vehicleintelligenceservice-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5

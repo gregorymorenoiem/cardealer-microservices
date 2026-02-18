@@ -216,3 +216,395 @@ spec:
       protocol: TCP
   selector:
     app: reviewservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aiprocessingservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: aiprocessingservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: alertservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apidocsservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: apidocsservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appointmentservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: appointmentservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backgroundremovalservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: backgroundremovalservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cacheservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: cacheservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comparisonservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: comparisonservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: configurationservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: configurationservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: contactservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: contactservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crmservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: crmservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dataprotectionservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: dataprotectionservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dealeranalyticsservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: dealeranalyticsservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dealermanagementservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: dealermanagementservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: integrationservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: integrationservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventorymanagementservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: inventorymanagementservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leadscoringservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: leadscoringservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maintenanceservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: maintenanceservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketingservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: marketingservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messagebusservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: messagebusservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: paymentservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratelimitingservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: ratelimitingservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendationservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: recommendationservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reportsservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: reportsservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: schedulerservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: schedulerservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicediscovery
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: servicediscovery
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: staffservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: staffservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicle360processingservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: vehicle360processingservice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicleintelligenceservice
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: vehicleintelligenceservice

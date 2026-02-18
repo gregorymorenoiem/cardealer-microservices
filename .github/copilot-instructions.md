@@ -69,33 +69,62 @@ Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (
 
 ## 🚀 ESTADO DE PRODUCCIÓN (Febrero 2026)
 
-### ✅ Servicios Core Desplegados en DOKS
+### ✅ Servicios Desplegados en DOKS (43 servicios)
 
 El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-cluster`, namespace: `okla`).
 
 > ⚠️ **Staging optimizado:** Todos los servicios corren con **1 réplica** para minimizar costos (~$77/mes).
 > Para producción, escalar servicios críticos a 2 réplicas: `kubectl scale deployment frontend-web gateway authservice --replicas=2 -n okla`
 
-| Servicio                | Estado     | Réplicas | Puerto K8s | Imagen Docker                                         |
-| ----------------------- | ---------- | -------- | ---------- | ----------------------------------------------------- |
-| **frontend-web**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`        |
-| **gateway**             | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`             |
-| **authservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`         |
-| **userservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`         |
-| **roleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`         |
-| **vehiclessaleservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest` |
-| **mediaservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`        |
-| **notificationservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest` |
-| **billingservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`      |
-| **errorservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`        |
-| **kycservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/kycservice:latest`          |
-| **auditservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`        |
-| **idempotencyservice**  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/idempotencyservice:latest`  |
-| **chatbotservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/chatbotservice:latest`      |
-| **adminservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/adminservice:latest`        |
-| **postgres**            | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                              |
-| **redis**               | ✅ Running | 1        | 6379       | In-cluster                                            |
-| **rabbitmq**            | ✅ Running | 1        | 5672/15672 | In-cluster                                            |
+| Servicio                        | Estado     | Réplicas | Puerto K8s | Imagen Docker                                                 |
+| ------------------------------- | ---------- | -------- | ---------- | ------------------------------------------------------------- |
+| **frontend-web**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`                |
+| **gateway**                     | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`                     |
+| **authservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`                 |
+| **userservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`                 |
+| **roleservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`                 |
+| **vehiclessaleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest`         |
+| **mediaservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`                |
+| **notificationservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest`         |
+| **billingservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`              |
+| **errorservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`                |
+| **kycservice**                  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/kycservice:latest`                  |
+| **auditservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`                |
+| **idempotencyservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/idempotencyservice:latest`          |
+| **chatbotservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/chatbotservice:latest`              |
+| **adminservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/adminservice:latest`                |
+| **contactservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/contactservice:latest`              |
+| **reviewservice**               | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/reviewservice:latest`               |
+| **dealermanagementservice**     | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/dealermanagementservice:latest`     |
+| **dealeranalyticsservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/dealeranalyticsservice:latest`      |
+| **crmservice**                  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/crmservice:latest`                  |
+| **maintenanceservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/maintenanceservice:latest`          |
+| **comparisonservice**           | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/comparisonservice:latest`           |
+| **alertservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/alertservice:latest`                |
+| **appointmentservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/appointmentservice:latest`          |
+| **marketingservice**            | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/marketingservice:latest`            |
+| **staffservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/staffservice:latest`                |
+| **reportsservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/reportsservice:latest`              |
+| **inventorymanagementservice**  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/inventorymanagementservice:latest`  |
+| **paymentservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/paymentservice:latest`              |
+| **aiprocessingservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/aiprocessingservice:latest`         |
+| **vehicleintelligenceservice**  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehicleintelligenceservice:latest`  |
+| **recommendationservice**       | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/recommendationservice:latest`       |
+| **leadscoringservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/leadscoringservice:latest`          |
+| **backgroundremovalservice**    | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/backgroundremovalservice:latest`    |
+| **vehicle360processingservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehicle360processingservice:latest` |
+| **cacheservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/cacheservice:latest`                |
+| **messagebusservice**           | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/messagebusservice:latest`           |
+| **configurationservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/configurationservice:latest`        |
+| **schedulerservice**            | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/schedulerservice:latest`            |
+| **ratelimitingservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/ratelimitingservice:latest`         |
+| **servicediscovery**            | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/servicediscovery:latest`            |
+| **apidocsservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/apidocsservice:latest`              |
+| **integrationservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/integrationservice:latest`          |
+| **dataprotectionservice**       | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/dataprotectionservice:latest`       |
+| **postgres**                    | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                                      |
+| **redis**                       | ✅ Running | 1        | 6379       | In-cluster                                                    |
+| **rabbitmq**                    | ✅ Running | 1        | 5672/15672 | In-cluster                                                    |
 
 **Load Balancer IP:** 146.190.199.0
 
@@ -787,7 +816,7 @@ El archivo `ocelot.prod.json` DEBE tener:
 ### Servicios en CI/CD
 
 ```yaml
-SERVICES: "frontend-web,gateway,authservice,userservice,roleservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice,kycservice,auditservice,idempotencyservice"
+SERVICES: "frontend-web,gateway,authservice,userservice,roleservice,vehiclessaleservice,mediaservice,notificationservice,billingservice,errorservice,kycservice,auditservice,idempotencyservice,adminservice,chatbotservice,contactservice,reviewservice,dealermanagementservice,dealeranalyticsservice,crmservice,maintenanceservice,comparisonservice,alertservice,appointmentservice,marketingservice,staffservice,reportsservice,inventorymanagementservice,paymentservice,aiprocessingservice,vehicleintelligenceservice,recommendationservice,leadscoringservice,backgroundremovalservice,vehicle360processingservice,cacheservice,messagebusservice,configurationservice,schedulerservice,ratelimitingservice,servicediscovery,apidocsservice,integrationservice,dataprotectionservice"
 ```
 
 ### ⚠️ REGLAS CRÍTICAS DE CI/CD
