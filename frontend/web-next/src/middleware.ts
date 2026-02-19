@@ -17,8 +17,8 @@ import type { NextRequest } from 'next/server';
 // CONSTANTS
 // =============================================================================
 
-const AUTH_COOKIE_NAME = 'auth-token';
-const REFRESH_COOKIE_NAME = 'refresh-token';
+const AUTH_COOKIE_NAME = 'okla_access_token';
+const REFRESH_COOKIE_NAME = 'okla_refresh_token';
 const MAINTENANCE_CACHE_COOKIE = 'maintenance-status';
 const MAINTENANCE_CACHE_TTL = 60; // seconds
 const LOGIN_PATH = '/login';

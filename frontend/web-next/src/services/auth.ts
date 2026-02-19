@@ -356,18 +356,20 @@ export async function register(data: RegisterRequest): Promise<{ email: string }
 
 /**
  * Logout current user
- * Backend requires refreshToken in request body
+ * Clears HttpOnly cookies via Server Action and legacy localStorage tokens.
+ * Backend logout API is best-effort — cookie clearing always happens.
  */
 export async function logout(): Promise<void> {
   try {
     // ── Server Action: logout processed server-side ──
+    // Try to send refresh token if available (legacy localStorage fallback)
     const refreshToken = authTokens.getRefreshToken();
     const accessToken = authTokens.getAccessToken();
-    if (refreshToken && accessToken) {
-      await serverLogout(refreshToken, accessToken);
-    }
+    // Always call serverLogout to clear HttpOnly cookies server-side,
+    // even if we don't have tokens in localStorage
+    await serverLogout(refreshToken || '', accessToken || '');
   } finally {
-    // Always clear tokens client-side, even if API call fails
+    // Clear legacy localStorage tokens
     authTokens.clearTokens();
   }
 }

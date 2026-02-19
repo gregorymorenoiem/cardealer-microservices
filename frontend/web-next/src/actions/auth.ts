@@ -11,6 +11,14 @@
  */
 
 import { getInternalApiUrl } from '@/lib/api-url';
+import { cookies } from 'next/headers';
+
+// =============================================================================
+// COOKIE CONSTANTS (must match backend AuthController.SetAuthCookies)
+// =============================================================================
+
+const AUTH_COOKIE_NAME = 'okla_access_token';
+const REFRESH_COOKIE_NAME = 'okla_refresh_token';
 
 // =============================================================================
 // TYPES (duplicated here because Server Actions can't import client-side types)
@@ -89,6 +97,49 @@ async function internalFetch<T>(
 }
 
 // =============================================================================
+// COOKIE HELPERS
+// =============================================================================
+
+/**
+ * Set auth cookies from Server Action response.
+ * Since Server Actions run server-side, we use `cookies()` from next/headers
+ * to set HttpOnly cookies on the response back to the browser.
+ *
+ * The backend also sets these via Set-Cookie headers, but those are consumed
+ * by the Node.js server-side fetch and never reach the browser.
+ */
+async function setAuthCookiesFromServerAction(accessToken: string, refreshToken: string) {
+  const cookieStore = await cookies();
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  cookieStore.set(AUTH_COOKIE_NAME, accessToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 24 * 60 * 60, // 24 hours (matches backend JWT expiration)
+  });
+
+  cookieStore.set(REFRESH_COOKIE_NAME, refreshToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60, // 30 days (matches backend refresh token expiration)
+  });
+}
+
+/**
+ * Clear auth cookies on logout.
+ */
+async function clearAuthCookiesFromServerAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete(AUTH_COOKIE_NAME);
+  cookieStore.delete(REFRESH_COOKIE_NAME);
+}
+
+// =============================================================================
 // AUTH ACTIONS
 // =============================================================================
 
@@ -122,7 +173,7 @@ export async function serverLogin(
 
     const loginData = response.data || response;
 
-    // 2FA required — return temp token
+    // 2FA required — return temp token (no cookies yet)
     if (loginData.requiresTwoFactor && loginData.tempToken) {
       return {
         success: true,
@@ -134,6 +185,11 @@ export async function serverLogin(
           twoFactorType: loginData.twoFactorType || 'authenticator',
         },
       };
+    }
+
+    // Set HttpOnly cookies so the browser sends them on subsequent requests
+    if (loginData.accessToken && loginData.refreshToken) {
+      await setAuthCookiesFromServerAction(loginData.accessToken, loginData.refreshToken);
     }
 
     return {
@@ -173,6 +229,11 @@ export async function serverVerify2FA(
     });
 
     const result = response.data || response;
+
+    // Set HttpOnly cookies so the browser sends them on subsequent requests
+    if (result.accessToken && result.refreshToken) {
+      await setAuthCookiesFromServerAction(result.accessToken, result.refreshToken);
+    }
 
     return {
       success: true,
@@ -378,12 +439,14 @@ export async function serverLogout(
       body: { refreshToken },
       token: accessToken,
     });
-
-    return { success: true };
   } catch {
-    // Always return success — tokens should be cleared client-side regardless
-    return { success: true };
+    // Ignore API errors — cookies should be cleared regardless
   }
+
+  // Always clear HttpOnly cookies server-side
+  await clearAuthCookiesFromServerAction();
+
+  return { success: true };
 }
 
 // =============================================================================
