@@ -1,4 +1,5 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MaintenanceService.Domain.Interfaces;
@@ -61,7 +62,7 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)
@@ -85,7 +86,7 @@ builder.Services.AddCors(options =>
 });
 
 // JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "your-secret-key-min-32-characters-long-for-security";
+var jwtSecret = builder.Configuration["Jwt:Key"] ?? builder.Configuration["Jwt:Secret"] ?? "your-secret-key-min-32-characters-long-for-security";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -95,9 +96,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "CarDealerAuth",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "CarDealerApi",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "okla-api",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "okla-clients",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -105,7 +107,7 @@ builder.Services.AddAuthorization();
 
 // Health checks
 builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString, name: "database");
+    .AddNpgSql(connectionString, name: "database", tags: new[] { "ready" });
 
 var app = builder.Build();
 
@@ -125,7 +127,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 app.MapGet("/", () => new
 {

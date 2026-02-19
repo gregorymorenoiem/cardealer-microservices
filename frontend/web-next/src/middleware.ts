@@ -26,7 +26,6 @@ const HOME_PATH = '/';
 const ACCOUNT_PATH = '/cuenta';
 const FORBIDDEN_PATH = '/403';
 const MAINTENANCE_PATH = '/mantenimiento';
-const MAINTENANCE_ENABLED = process.env.MAINTENANCE_CHECK_ENABLED === 'true';
 const MAINTENANCE_API_URL =
   (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443') +
   '/api/maintenance/status';
@@ -391,7 +390,7 @@ export async function middleware(request: NextRequest) {
     return userRoles.includes('admin') || userRoles.includes('platform_employee');
   })();
 
-  if (!isAdmin && MAINTENANCE_ENABLED) {
+  if (!isAdmin) {
     // Use cached maintenance status from cookie to avoid HTTP call on every navigation
     const cachedMaintenance = request.cookies.get(MAINTENANCE_CACHE_COOKIE)?.value;
     let isMaintenanceMode = false;
