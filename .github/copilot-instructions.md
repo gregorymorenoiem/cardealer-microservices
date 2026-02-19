@@ -79,24 +79,24 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 
 #### Servicios Activos (replicas: 1)
 
-| Servicio                        | Estado     | Réplicas | Puerto K8s | Imagen Docker                                                 |
-| ------------------------------- | ---------- | -------- | ---------- | ------------------------------------------------------------- |
-| **frontend-web**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`                |
-| **gateway**                     | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`                     |
-| **authservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`                 |
-| **userservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`                 |
-| **roleservice**                 | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`                 |
-| **vehiclessaleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest`         |
-| **mediaservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`                |
-| **billingservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`              |
-| **notificationservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest`         |
-| **errorservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`                |
-| **kycservice**                  | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/kycservice:latest`                  |
-| **chatbotservice**              | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/chatbotservice:latest`              |
-| **auditservice**                | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`                |
-| **postgres**                    | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                                      |
-| **redis**                       | ✅ Running | 1        | 6379       | In-cluster                                                    |
-| **rabbitmq**                    | ✅ Running | 1        | 5672/15672 | In-cluster                                                    |
+| Servicio                | Estado     | Réplicas | Puerto K8s | Imagen Docker                                         |
+| ----------------------- | ---------- | -------- | ---------- | ----------------------------------------------------- |
+| **frontend-web**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/frontend-web:latest`        |
+| **gateway**             | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/gateway:latest`             |
+| **authservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/authservice:latest`         |
+| **userservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/userservice:latest`         |
+| **roleservice**         | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/roleservice:latest`         |
+| **vehiclessaleservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/vehiclessaleservice:latest` |
+| **mediaservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/mediaservice:latest`        |
+| **billingservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/billingservice:latest`      |
+| **notificationservice** | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/notificationservice:latest` |
+| **errorservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/errorservice:latest`        |
+| **kycservice**          | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/kycservice:latest`          |
+| **chatbotservice**      | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/chatbotservice:latest`      |
+| **auditservice**        | ✅ Running | 1        | 8080       | `ghcr.io/gregorymorenoiem/auditservice:latest`        |
+| **postgres**            | ✅ Running | 1        | 5432       | In-cluster (StatefulSet)                              |
+| **redis**               | ✅ Running | 1        | 6379       | In-cluster                                            |
+| **rabbitmq**            | ✅ Running | 1        | 5672/15672 | In-cluster                                            |
 
 #### Servicios Deshabilitados (replicas: 0)
 
@@ -138,14 +138,14 @@ El proyecto está **EN STAGING** en Digital Ocean Kubernetes (cluster: `okla-clu
 
 ### 💰 Costos Mensuales (Staging)
 
-| Recurso                      | Detalle                | Costo/mes |
-| ---------------------------- | ---------------------- | --------: |
-| DOKS Cluster (control plane) | Gratis en DO           |        $0 |
-| 2× Worker Nodes              | `s-4vcpu-8gb` × 2      |       $96 |
-| DO Managed PostgreSQL        | `db-s-1vcpu-1gb` × 1   |       $15 |
-| Load Balancer                | 1× LB (Ingress NGINX)  |       $12 |
-| Block Storage                | 2× 10Gi PVCs           |        $2 |
-| **TOTAL**                    |                        | **~$125** |
+| Recurso                      | Detalle               | Costo/mes |
+| ---------------------------- | --------------------- | --------: |
+| DOKS Cluster (control plane) | Gratis en DO          |        $0 |
+| 2× Worker Nodes              | `s-4vcpu-8gb` × 2     |       $96 |
+| DO Managed PostgreSQL        | `db-s-1vcpu-1gb` × 1  |       $15 |
+| Load Balancer                | 1× LB (Ingress NGINX) |       $12 |
+| Block Storage                | 2× 10Gi PVCs          |        $2 |
+| **TOTAL**                    |                       | **~$125** |
 
 > ℹ️ **Upgrade Feb 2026:** Nodos actualizados de `s-2vcpu-4gb` ($24/nodo) a `s-4vcpu-8gb` ($48/nodo).
 > Pool: `okla-pool-upgraded`, autoscale: 2-3 nodos. Capacidad: ~3890m CPU y ~6.4GB memoria por nodo.
@@ -1667,25 +1667,39 @@ builder.Services.AddCors(options =>
 
 ## 🤖 CHATBOT SERVICE — CONTEXTO LLM
 
+> 📄 **Documentación completa:** Ver [`docs/CHATBOT_ARCHITECTURE.md`](../docs/CHATBOT_ARCHITECTURE.md) para arquitectura detallada, pipeline de 12 pasos, RAG, estrategias, y guía de despliegue.
+
 ### Arquitectura
 
 El ChatbotService implementa un chatbot llamado **"Ana"** para asistencia automotriz en español dominicano.
 
-| Componente           | Tecnología                          | Descripción                           |
-| -------------------- | ----------------------------------- | ------------------------------------- |
-| **Backend**          | .NET 8 (Clean Architecture)         | API, gestión de sesiones, integración |
-| **Inference Server** | Python (FastAPI + llama-cpp-python) | Sirve el modelo LLM                   |
-| **Modelo**           | Llama 3 (fine-tuned QLoRA)          | GGUF Q4_K_M quantization              |
-| **Dataset**          | 37 intents, 1,376 templates         | Español dominicano automotriz         |
+| Componente        | Tecnología                                | Descripción                                       |
+| ----------------- | ----------------------------------------- | ------------------------------------------------- |
+| **Backend**       | .NET 8 (Clean Architecture, CQRS+MediatR) | Orquesta pipeline de 12 pasos                    |
+| **Chat LLM**      | HuggingFace Inference Endpoints (GPU)     | Genera respuestas IA (~1-3 seg)                   |
+| **Embeddings**    | HuggingFace Inference API (gratis)        | Genera vectores 384-dim para RAG                  |
+| **Vector DB**     | PostgreSQL + pgvector                     | Búsqueda semántica de inventario                  |
+| **Modelo**        | `gregorymorenoiem/okla-chatbot-llama3-8b` | Llama 3 8B fine-tuned QLoRA, español dominicano   |
+| **Dataset**       | 37 intents, 1,376 templates              | Español dominicano automotriz                     |
 
-### Configuración Clave
+> ⚠️ **IMPORTANTE:** El modelo LLM **NUNCA** accede a la base de datos directamente. ChatbotService consulta PostgreSQL, selecciona los 5 vehículos más relevantes (RAG), y los inyecta en el system prompt.
 
-| Parámetro      | Valor       | Razón                         |
-| -------------- | ----------- | ----------------------------- |
-| `N_CTX`        | 4096        | Context window (tokens)       |
-| `MAX_TOKENS`   | 600         | Max response length           |
-| `TEMPERATURE`  | 0.7         | Balance creatividad/precisión |
-| `MODEL_FORMAT` | GGUF Q4_K_M | Optimizado para CPU           |
+### Configuración en K8s
+
+Los valores de LLM y embeddings se inyectan via K8s Secret `chatbot-llm-secrets`:
+
+| Variable                      | Ejemplo                                             | Descripción                        |
+| ----------------------------- | --------------------------------------------------- | ---------------------------------- |
+| `LlmService__ServerUrl`       | `https://xxxx.endpoints.huggingface.cloud`           | URL del HF Inference Endpoint      |
+| `LlmService__ApiKey`          | `hf_xxxxxxxxxxxx`                                    | HuggingFace API Token              |
+| `LlmService__ModelId`         | `okla-chatbot-llama3-8b`                             | ID del modelo                      |
+| `LlmService__CompletionsPath` | `/v1/chat/completions`                               | Ruta de la API                     |
+| `Embedding__ServerUrl`        | `https://api-inference.huggingface.co`               | URL de HF Inference API (gratis)   |
+| `Embedding__ApiKey`           | `hf_xxxxxxxxxxxx`                                    | Mismo token HF                     |
+| `Embedding__EmbeddingsPath`   | `/models/sentence-transformers/all-MiniLM-L6-v2`    | Modelo de embeddings               |
+| `Embedding__Provider`         | `huggingface`                                        | Formato de request (`huggingface` o `openai`) |
+
+> **Multi-proveedor:** Si `ApiKey` está vacío, no se envía `Authorization` header (modo self-hosted). La arquitectura soporta OpenAI, Groq, Together AI, o cualquier API compatible con `/v1/chat/completions`.
 
 ### Seguridad del Chatbot
 
@@ -1697,7 +1711,7 @@ El ChatbotService implementa un chatbot llamado **"Ana"** para asistencia automo
 
 ### Español Dominicano
 
-El chatbot usa español dominicano auténtico con 60+ mappings de slang regional. Los templates de respuesta están diseñados para ser naturales al mercado local.
+El chatbot usa español dominicano auténtico con 60+ mappings de slang regional. Los templates de respuesta están diseñados para ser naturales al mercado local (ej. "yipeta" → SUV).
 
 ---
 

@@ -1442,6 +1442,54 @@ spec:
                 secretKeyRef:
                   name: redis-secrets
                   key: Redis__Connection
+            # ═══════════════════════════════════════════════════════
+            # LLM Provider — HuggingFace Inference Endpoints
+            # Chat completions: tu modelo fine-tuned hosteado en HF
+            # ═══════════════════════════════════════════════════════
+            - name: LlmService__ServerUrl
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: LlmService__ServerUrl
+            - name: LlmService__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: LlmService__ApiKey
+            - name: LlmService__ModelId
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: LlmService__ModelId
+            - name: LlmService__CompletionsPath
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: LlmService__CompletionsPath
+            # ═══════════════════════════════════════════════════════
+            # Embedding Provider — HuggingFace Inference API (gratis)
+            # Embeddings para búsqueda vectorial RAG
+            # ═══════════════════════════════════════════════════════
+            - name: Embedding__ServerUrl
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: Embedding__ServerUrl
+            - name: Embedding__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: Embedding__ApiKey
+            - name: Embedding__EmbeddingsPath
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: Embedding__EmbeddingsPath
+            - name: Embedding__Provider
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-llm-secrets
+                  key: Embedding__Provider
           envFrom:
             - configMapRef:
                 name: global-config

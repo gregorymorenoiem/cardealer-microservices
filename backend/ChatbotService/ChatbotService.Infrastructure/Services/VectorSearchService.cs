@@ -9,11 +9,18 @@ using ChatbotService.Domain.Models;
 namespace ChatbotService.Infrastructure.Services;
 
 /// <summary>
-/// Configuración del servicio de embeddings
+/// Configuración del servicio de embeddings.
+/// Puede apuntar al LlmServer self-hosted o a un proveedor externo
+/// (HuggingFace Inference API, OpenAI, etc.).
 /// </summary>
 public class EmbeddingSettings
 {
-    /// <summary>URL del servidor de embeddings (LlmServer endpoint)</summary>
+    /// <summary>URL del servidor de embeddings.</summary>
+    /// <remarks>
+    /// - Self-hosted: "http://llm-server:8000" (mismo servidor que el LLM)
+    /// - HuggingFace Inference API: "https://api-inference.huggingface.co" (gratuito)
+    /// - OpenAI: "https://api.openai.com"
+    /// </remarks>
     public string ServerUrl { get; set; } = "http://llm-server:8000";
     
     /// <summary>Modelo de embeddings a usar</summary>
@@ -24,11 +31,35 @@ public class EmbeddingSettings
     
     /// <summary>Timeout en segundos para generar embeddings</summary>
     public int TimeoutSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// API Key para autenticación con proveedores externos (HuggingFace, OpenAI).
+    /// Si está vacío, no se envía header Authorization (modo self-hosted).
+    /// </summary>
+    public string? ApiKey { get; set; }
+
+    /// <summary>
+    /// Ruta del endpoint de embeddings. Default: /v1/embeddings (OpenAI-compatible).
+    /// Para HuggingFace Inference API gratuito usar:
+    /// "/models/sentence-transformers/all-MiniLM-L6-v2"
+    /// </summary>
+    public string EmbeddingsPath { get; set; } = "/v1/embeddings";
+
+    /// <summary>
+    /// Proveedor de embeddings. Determina el formato de request/response.
+    /// "openai" = formato OpenAI (compatible con llm-server, OpenAI, y HF Inference Endpoints).
+    /// "huggingface" = formato HuggingFace Inference API gratuito (request/response diferente).
+    /// </summary>
+    public string Provider { get; set; } = "openai";
 }
 
 /// <summary>
-/// Servicio que genera embeddings usando el endpoint /v1/embeddings del LlmServer.
-/// Usa sentence-transformers (all-MiniLM-L6-v2) para vectorización local.
+/// Servicio que genera embeddings de texto para búsqueda vectorial (RAG).
+/// Soporta múltiples proveedores:
+///   - Self-hosted llm-server (llama.cpp + sentence-transformers)
+///   - HuggingFace Inference API (gratuito)
+///   - OpenAI Embeddings API
+///   - Cualquier API compatible con formato OpenAI /v1/embeddings
 /// </summary>
 public class EmbeddingService : IEmbeddingService
 {
@@ -64,15 +95,30 @@ public class EmbeddingService : IEmbeddingService
         try
         {
             var client = _httpClientFactory.CreateClient("EmbeddingServer");
-            
+
+            if (_settings.Provider.Equals("huggingface", StringComparison.OrdinalIgnoreCase))
+            {
+                // ── HuggingFace Inference API (gratuito) ────────────────
+                // Request: { "inputs": ["text1", "text2"] }
+                // Response: [[0.1, 0.2, ...], [0.3, 0.4, ...]]
+                return await GenerateEmbeddingsHuggingFaceAsync(client, texts, linkedCts.Token);
+            }
+
+            // ── OpenAI-compatible format (llm-server, OpenAI, HF Endpoints) ──
             var request = new
             {
                 input = texts,
                 model = _settings.Model
             };
 
-            var response = await client.PostAsJsonAsync(
-                "/v1/embeddings", request, linkedCts.Token);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _settings.EmbeddingsPath);
+            if (!string.IsNullOrWhiteSpace(_settings.ApiKey))
+            {
+                httpRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+            }
+            httpRequest.Content = JsonContent.Create(request);
+
+            var response = await client.SendAsync(httpRequest, linkedCts.Token);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<EmbeddingResponse>(
@@ -107,6 +153,39 @@ public class EmbeddingService : IEmbeddingService
     {
         public int Index { get; set; }
         public float[] Embedding { get; set; } = Array.Empty<float>();
+    }
+
+    /// <summary>
+    /// Genera embeddings usando el formato de HuggingFace Inference API (gratuito).
+    /// Request:  { "inputs": ["text1", "text2"] }
+    /// Response: [[0.1, 0.2, ...], [0.3, 0.4, ...]]
+    /// </summary>
+    private async Task<List<float[]>> GenerateEmbeddingsHuggingFaceAsync(
+        HttpClient client, List<string> texts, CancellationToken ct)
+    {
+        var hfRequest = new { inputs = texts };
+
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, _settings.EmbeddingsPath);
+        if (!string.IsNullOrWhiteSpace(_settings.ApiKey))
+        {
+            httpRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+        }
+        httpRequest.Content = JsonContent.Create(hfRequest);
+
+        var response = await client.SendAsync(httpRequest, ct);
+        response.EnsureSuccessStatusCode();
+
+        // HF returns a flat array of arrays: [[0.1, 0.2, ...], [0.3, 0.4, ...]]
+        var embeddings = await response.Content.ReadFromJsonAsync<List<float[]>>(cancellationToken: ct);
+
+        if (embeddings == null || embeddings.Count != texts.Count)
+        {
+            _logger.LogWarning("HuggingFace embedding response mismatch: expected {Expected}, got {Actual}",
+                texts.Count, embeddings?.Count ?? 0);
+            return texts.Select(_ => new float[_settings.Dimensions]).ToList();
+        }
+
+        return embeddings;
     }
 }
 

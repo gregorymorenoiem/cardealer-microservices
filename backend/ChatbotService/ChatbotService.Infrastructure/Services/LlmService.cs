@@ -26,6 +26,18 @@ public class LlmSettings
     public int MaxTokens { get; set; } = 600;
     public float RepetitionPenalty { get; set; } = 1.15f;
     public string SystemPrompt { get; set; } = "Eres Ana, asistente de ventas de vehículos en República Dominicana. Responde en español breve y amigable. Ayuda con inventario, precios y financiamiento.";
+
+    /// <summary>
+    /// API Key para autenticación con proveedores externos (HuggingFace, OpenAI, Groq, etc.).
+    /// Si está vacío, no se envía header Authorization (modo self-hosted llm-server).
+    /// </summary>
+    public string? ApiKey { get; set; }
+
+    /// <summary>
+    /// Ruta del endpoint de chat completions. Default: /v1/chat/completions.
+    /// HuggingFace Inference Endpoints usa esta misma ruta.
+    /// </summary>
+    public string CompletionsPath { get; set; } = "/v1/chat/completions";
 }
 
 /// <summary>
@@ -161,7 +173,16 @@ public class LlmService : ILlmService
                         stop = new[] { "</s>", "<|eot_id|>" }
                     };
 
-                    var response = await client.PostAsJsonAsync("/v1/chat/completions", request, _jsonOptions, llmCts.Token);
+                    // Agregar Authorization header si hay ApiKey configurada
+                    // (HuggingFace, OpenAI, Groq, etc.)
+                    var httpRequest = new HttpRequestMessage(HttpMethod.Post, _settings.CompletionsPath);
+                    if (!string.IsNullOrWhiteSpace(_settings.ApiKey))
+                    {
+                        httpRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+                    }
+                    httpRequest.Content = JsonContent.Create(request, options: _jsonOptions);
+
+                    var response = await client.SendAsync(httpRequest, llmCts.Token);
                     response.EnsureSuccessStatusCode();
 
                     var completion = await response.Content.ReadFromJsonAsync<LlmCompletionResponse>(_jsonOptions, llmCts.Token);

@@ -92,7 +92,8 @@ public static class DependencyInjection
         // Observability — .NET 8 Metrics
         services.AddSingleton<ChatbotMetrics>();
 
-        // HTTP Client para LLM Server (llama.cpp)
+        // HTTP Client para LLM Server (chat completions)
+        // Puede apuntar a: llm-server local, HuggingFace Inference Endpoints, OpenAI, Groq, etc.
         // NOTE: NO se agregan Polly policies aquí porque LlmService ya tiene su propio
         // retry + circuit breaker interno. Duplicar policies causa retries en cascada.
         services.AddHttpClient("LlmServer", client =>
@@ -103,8 +104,16 @@ public static class DependencyInjection
         })
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
-            // Disable automatic redirect to avoid issues with LLM server
             AllowAutoRedirect = false,
+        });
+
+        // HTTP Client para Embedding Server (separado del LLM Server)
+        // Puede apuntar a: llm-server local, HuggingFace Inference API (gratis), OpenAI, etc.
+        services.AddHttpClient("EmbeddingServer", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Embedding:ServerUrl"] ?? "http://llm-server:8000");
+            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["Embedding:TimeoutSeconds"] ?? "30"));
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
         });
 
         // HTTP Clients with Polly resilience
