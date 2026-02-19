@@ -583,10 +583,14 @@ public class AuthController : ControllerBase
             Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
             "Development", StringComparison.OrdinalIgnoreCase);
 
+        // In K8s internal communication is via HTTP, but Gateway can read non-Secure cookies
+        // Only set Secure=true if we're actually communicating via HTTPS (detected by Request.IsHttps)
+        var secure = isProduction && Request.IsHttps;
+
         var accessCookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = isProduction,
+            Secure = secure,  // Only true if HTTPS detected
             SameSite = SameSiteMode.Lax,  // Changed from Strict to Lax — cookies sent in cross-site requests
             Path = "/",
             Expires = expiresAt,
@@ -596,7 +600,7 @@ public class AuthController : ControllerBase
         var refreshCookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = isProduction,
+            Secure = secure,  // Only true if HTTPS detected
             SameSite = SameSiteMode.Lax,  // Changed from Strict to Lax — cookies sent in cross-site requests
             Path = "/",  // Changed from "/api/auth" to "/" — needs to be sent to all endpoints
             Expires = DateTimeOffset.UtcNow.AddDays(7),
