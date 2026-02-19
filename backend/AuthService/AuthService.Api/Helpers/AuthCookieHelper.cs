@@ -26,7 +26,7 @@ public static class AuthCookieHelper
         {
             HttpOnly = true,
             Secure = isProduction,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,  // Changed from Strict to Lax — cookies sent in cross-site requests
             Path = "/",
             Expires = expiresAt,
             IsEssential = true
@@ -36,8 +36,8 @@ public static class AuthCookieHelper
         {
             HttpOnly = true,
             Secure = isProduction,
-            SameSite = SameSiteMode.Strict,
-            Path = "/api/auth",  // Only sent to auth endpoints
+            SameSite = SameSiteMode.Lax,  // Changed from Strict to Lax — cookies sent in cross-site requests
+            Path = "/",  // Changed from "/api/auth" to "/" — needs to be sent to all endpoints
             Expires = DateTimeOffset.UtcNow.AddDays(7),
             IsEssential = true
         };

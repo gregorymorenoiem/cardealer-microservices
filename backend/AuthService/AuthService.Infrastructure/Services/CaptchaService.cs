@@ -41,7 +41,22 @@ public class CaptchaService : ICaptchaService
 
         _secretKey = configuration["ReCaptcha:SecretKey"] ?? "";
         _minScore = decimal.TryParse(configuration["ReCaptcha:MinScore"], out var score) ? score : 0.5m;
-        _enabled = bool.TryParse(configuration["ReCaptcha:Enabled"], out var enabled) && enabled;
+
+        // Read configured enabled flag from ReCaptcha section
+        var recaptchaEnabled = bool.TryParse(configuration["ReCaptcha:Enabled"], out var enabled) && enabled;
+
+        // Allow override via environment variable `CAPTCHA__ENABLED` for testing/dev convenience.
+        // This env var maps to configuration key exactly as written when set in the environment.
+        var envOverride = configuration["CAPTCHA__ENABLED"] ?? configuration["Captcha__Enabled"];
+        if (!string.IsNullOrEmpty(envOverride) && bool.TryParse(envOverride, out var envEnabled))
+        {
+            _enabled = envEnabled;
+            _logger.LogInformation("reCAPTCHA enabled overridden by env CAPTCHA__ENABLED => {Enabled}", _enabled);
+        }
+        else
+        {
+            _enabled = recaptchaEnabled;
+        }
 
         if (_enabled && string.IsNullOrEmpty(_secretKey))
         {
