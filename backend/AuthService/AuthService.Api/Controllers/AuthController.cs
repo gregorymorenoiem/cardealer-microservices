@@ -583,9 +583,13 @@ public class AuthController : ControllerBase
             Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
             "Development", StringComparison.OrdinalIgnoreCase);
 
-        // In K8s internal communication is via HTTP, but Gateway can read non-Secure cookies
-        // Only set Secure=true if we're actually communicating via HTTPS (detected by Request.IsHttps)
-        var secure = isProduction && Request.IsHttps;
+        // In K8s production: Gateway (HTTPS) → Ocelot (terminates TLS) → Internal HTTP to AuthService
+        // Check both Request.IsHttps AND X-Forwarded-Proto header to detect original HTTPS from browser
+        var isHttps = Request.IsHttps || 
+                      (Request.Headers.TryGetValue("X-Forwarded-Proto", out var proto) && 
+                       proto.ToString().Equals("https", StringComparison.OrdinalIgnoreCase));
+        
+        var secure = isProduction && isHttps;
 
         var accessCookieOptions = new CookieOptions
         {
