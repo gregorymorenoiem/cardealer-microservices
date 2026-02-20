@@ -62,13 +62,13 @@ public class AzulWebhookValidationService : IAzulWebhookValidationService
     /// <summary>
     /// Extrae datos del payload del webhook
     /// </summary>
-    public Dictionary<string, object?> ExtractWebhookData(string payload)
+    public Dictionary<string, object> ExtractWebhookData(string payload)
     {
         try
         {
             using (var jsonDoc = JsonDocument.Parse(payload))
             {
-                var result = new Dictionary<string, object?>();
+                var result = new Dictionary<string, object>();
                 var root = jsonDoc.RootElement;
 
                 foreach (var property in root.EnumerateObject())
@@ -82,7 +82,7 @@ public class AzulWebhookValidationService : IAzulWebhookValidationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al extraer datos del webhook");
-            return new Dictionary<string, object?>();
+            return new Dictionary<string, object>();
         }
     }
 
