@@ -34,10 +34,10 @@ public partial class Program
 
         // Add MediatR
         builder.Services.AddMediatR(cfg =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ServiceDiscovery.Application.Behaviors.ValidationBehavior<,>));
             cfg.RegisterServicesFromAssembly(typeof(Application.Handlers.RegisterServiceHandler).Assembly));
+
+        // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+        builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ServiceDiscovery.Application.Behaviors.ValidationBehavior<,>));
 
         // Add CORS
         builder.Services.AddCors(options =>

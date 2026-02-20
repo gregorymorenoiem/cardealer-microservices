@@ -42,7 +42,7 @@ public class LeadsController : ControllerBase
         var vehicle = await _db.Vehicles
             .AsNoTracking()
             .Where(v => v.Id == request.VehicleId && !v.IsDeleted)
-            .Select(v => new { v.Id, v.Title, v.Price, v.SellerId, v.DealerId, Image = v.Images.OrderBy(i => i.DisplayOrder).Select(i => i.Url).FirstOrDefault() })
+            .Select(v => new { v.Id, v.Title, v.Price, v.SellerId, v.DealerId, Image = v.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() })
             .FirstOrDefaultAsync(ct);
 
         if (vehicle == null)

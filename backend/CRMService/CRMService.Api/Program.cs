@@ -54,10 +54,10 @@ builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
 
 // Configure MediatR
 builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CRMService.Application.DTOs.LeadDto).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(CRMService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(CRMService.Application.DTOs.LeadDto).Assembly));
 
 // Register FluentValidation validators
 builder.Services.AddValidatorsFromAssembly(
@@ -66,7 +66,7 @@ builder.Services.AddValidatorsFromAssembly(
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)

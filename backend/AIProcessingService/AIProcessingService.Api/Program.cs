@@ -68,11 +68,11 @@ builder.Services.AddScoped<IImageProcessingJobRepository, ImageProcessingJobRepo
 builder.Services.AddScoped<ISpin360JobRepository, Spin360JobRepository>();
 
 // MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(AIProcessingService.Application.Features.Commands.ProcessImageCommand).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(AIProcessingService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(AIProcessingService.Application.Features.Commands.ProcessImageCommand).Assembly));
 
 // MassTransit + RabbitMQ
 builder.Services.AddMassTransit(x =>

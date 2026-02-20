@@ -52,11 +52,11 @@ builder.Services.AddDbContext<DataProtectionDbContext>(options =>
     }));
 
 // MediatR Configuration
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateConsentCommandHandler).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(DataProtectionService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(CreateConsentCommandHandler).Assembly));
 
 // FluentValidation Configuration
 builder.Services.AddFluentValidationAutoValidation();
