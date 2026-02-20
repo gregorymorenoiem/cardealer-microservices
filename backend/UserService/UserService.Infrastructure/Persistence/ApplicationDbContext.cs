@@ -19,6 +19,7 @@ namespace UserService.Infrastructure.Persistence
         public DbSet<IdentityDocument> IdentityDocuments => Set<IdentityDocument>();
         public DbSet<ContactPreferences> ContactPreferences => Set<ContactPreferences>();
         public DbSet<SellerBadgeAssignment> SellerBadgeAssignments => Set<SellerBadgeAssignment>();
+        public DbSet<SellerConversion> SellerConversions => Set<SellerConversion>();
 
         // Entidades de empleados
         public DbSet<DealerEmployee> DealerEmployees => Set<DealerEmployee>();

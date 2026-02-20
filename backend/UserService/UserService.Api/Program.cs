@@ -193,6 +193,7 @@ builder.Services.AddScoped<IUserRoleRepository, UserService.Infrastructure.Persi
 builder.Services.AddScoped<IRoleRepository, UserService.Infrastructure.Persistence.EfRoleRepository>();
 builder.Services.AddScoped<IDealerRepository, UserService.Infrastructure.Persistence.DealerRepository>();
 builder.Services.AddScoped<ISellerProfileRepository, UserService.Infrastructure.Repositories.SellerProfileRepository>();
+builder.Services.AddScoped<ISellerConversionRepository, UserService.Infrastructure.Repositories.SellerConversionRepository>();
 builder.Services.AddScoped<IIdentityDocumentRepository, UserService.Infrastructure.Persistence.IdentityDocumentRepository>();
 builder.Services.AddScoped<IDealerEmployeeRepository, UserService.Infrastructure.Persistence.Repositories.DealerEmployeeRepository>();
 builder.Services.AddScoped<IDealerOnboardingRepository, UserService.Infrastructure.Persistence.Repositories.DealerOnboardingRepository>();
@@ -307,9 +308,9 @@ else
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(UserService.Application.UseCases.Users.CreateUser.CreateUserCommand).Assembly));
 
-// Registrar FluentValidation (si hay validadores)
-// builder.Services.AddValidatorsFromAssembly(
-//     typeof(UserService.Application.UseCases.Users.CreateUser.CreateUserCommand).Assembly);
+// Registrar FluentValidation
+builder.Services.AddValidatorsFromAssembly(
+    typeof(UserService.Application.UseCases.Sellers.ConvertBuyerToSeller.ConvertBuyerToSellerCommand).Assembly);
 
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
