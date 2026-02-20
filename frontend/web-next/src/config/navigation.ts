@@ -38,6 +38,7 @@ import {
   LayoutDashboard,
   ScrollText,
   Wrench,
+  CalendarDays,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -212,6 +213,7 @@ export const ADMIN_MAIN_NAVIGATION: NavItem[] = [
   { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
   { href: '/admin/vehiculos', label: 'Vehículos', icon: Car },
   { href: '/admin/dealers', label: 'Dealers', icon: Building2 },
+  { href: '/admin/reviews', label: 'Reseñas', icon: Star },
   { href: '/admin/reportes', label: 'Reportes', icon: Flag },
   { href: '/admin/kyc', label: 'Verificaciones KYC', icon: ShieldCheck },
 ];
@@ -248,6 +250,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     items: [
       { href: '/admin/usuarios', label: 'Usuarios', icon: Users },
       { href: '/admin/dealers', label: 'Dealers', icon: Building2 },
+      { href: '/admin/reviews', label: 'Reseñas', icon: Star },
       { href: '/admin/kyc', label: 'Verificaciones KYC', icon: ShieldCheck },
     ],
   },
