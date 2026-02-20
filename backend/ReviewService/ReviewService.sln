@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReviewService.Api", "ReviewService.Api\ReviewService.Api.csproj", "{B5D6498D-216F-4A60-B045-D3C5EA2FE013}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReviewService.Application", "ReviewService.Application\ReviewService.Application.csproj", "{BE603B20-7C8E-4B29-890B-8168ACA28FFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReviewService.Domain", "ReviewService.Domain\ReviewService.Domain.csproj", "{2E5A2188-FB8F-4970-B6AB-1A0B8E1562B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReviewService.Infrastructure", "ReviewService.Infrastructure\ReviewService.Infrastructure.csproj", "{D45FA57E-7A51-4E4E-A707-7BCC2C0D8AA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Contracts", "..\_Shared\CarDealer.Contracts\CarDealer.Contracts.csproj", "{CA22FD32-6644-4CAD-BD22-28DBF26C3216}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarDealer.Shared", "..\_Shared\CarDealer.Shared\CarDealer.Shared.csproj", "{E31AE985-39F7-4E17-B1CC-72BC1530255D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B5D6498D-216F-4A60-B045-D3C5EA2FE013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5D6498D-216F-4A60-B045-D3C5EA2FE013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5D6498D-216F-4A60-B045-D3C5EA2FE013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5D6498D-216F-4A60-B045-D3C5EA2FE013}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE603B20-7C8E-4B29-890B-8168ACA28FFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE603B20-7C8E-4B29-890B-8168ACA28FFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE603B20-7C8E-4B29-890B-8168ACA28FFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE603B20-7C8E-4B29-890B-8168ACA28FFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E5A2188-FB8F-4970-B6AB-1A0B8E1562B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E5A2188-FB8F-4970-B6AB-1A0B8E1562B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E5A2188-FB8F-4970-B6AB-1A0B8E1562B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E5A2188-FB8F-4970-B6AB-1A0B8E1562B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D45FA57E-7A51-4E4E-A707-7BCC2C0D8AA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D45FA57E-7A51-4E4E-A707-7BCC2C0D8AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D45FA57E-7A51-4E4E-A707-7BCC2C0D8AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D45FA57E-7A51-4E4E-A707-7BCC2C0D8AA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA22FD32-6644-4CAD-BD22-28DBF26C3216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA22FD32-6644-4CAD-BD22-28DBF26C3216}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA22FD32-6644-4CAD-BD22-28DBF26C3216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA22FD32-6644-4CAD-BD22-28DBF26C3216}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E31AE985-39F7-4E17-B1CC-72BC1530255D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E31AE985-39F7-4E17-B1CC-72BC1530255D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E31AE985-39F7-4E17-B1CC-72BC1530255D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E31AE985-39F7-4E17-B1CC-72BC1530255D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

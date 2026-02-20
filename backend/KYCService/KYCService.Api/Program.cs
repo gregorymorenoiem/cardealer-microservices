@@ -269,22 +269,23 @@ app.MapHealthChecks("/health");
 // Apply migrations on startup (all environments)
 using (var scope = app.Services.CreateScope())
 {
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<KYCDbContext>();
     try
     {
         dbContext.Database.Migrate();
-        Log.Information("KYCService database migrations applied successfully");
+        logger.LogInformation("KYCService database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Log.Warning(ex, "KYCService migration failed, trying EnsureCreated");
+        logger.LogWarning(ex, "KYCService migration failed, trying EnsureCreated");
         try
         {
             dbContext.Database.EnsureCreated();
         }
         catch (Exception ex2)
         {
-            Log.Error(ex2, "KYCService DB init failed — continuing startup");
+            logger.LogError(ex2, "KYCService DB init failed — continuing startup");
         }
     }
 }

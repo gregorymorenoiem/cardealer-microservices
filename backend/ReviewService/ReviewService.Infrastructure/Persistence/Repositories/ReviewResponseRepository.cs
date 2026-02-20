@@ -3,7 +3,6 @@ using ReviewService.Domain.Entities;
 using ReviewService.Domain.Interfaces;
 using ReviewService.Domain.Base;
 using ReviewService.Infrastructure.Persistence;
-using ReviewService.Infrastructure.Persistence;
 
 namespace ReviewService.Infrastructure.Persistence.Repositories;
 
@@ -12,7 +11,7 @@ namespace ReviewService.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class ReviewResponseRepository : Repository<ReviewResponse, Guid>, IReviewResponseRepository
 {
-    private readonly ReviewDbContext _context;
+    private new readonly ReviewDbContext _context;
 
     public ReviewResponseRepository(ReviewDbContext context) : base(context)
     {

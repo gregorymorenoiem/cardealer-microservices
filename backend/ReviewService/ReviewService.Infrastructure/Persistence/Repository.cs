@@ -35,11 +35,11 @@ public class Repository<TEntity, TId> : IRepository<TEntity, TId>
         return entity;
     }
 
-    public virtual async Task<TEntity> UpdateAsync(TEntity entity)
+    public virtual Task<TEntity> UpdateAsync(TEntity entity)
     {
         entity.UpdatedAt = DateTime.UtcNow;
         _dbSet.Update(entity);
-        return entity;
+        return Task.FromResult(entity);
     }
 
     public virtual async Task DeleteAsync(TId id)

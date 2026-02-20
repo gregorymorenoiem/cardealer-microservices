@@ -232,10 +232,10 @@ public class DealersController : ControllerBase
     [HttpGet("statistics")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult> GetStatistics()
+    public Task<ActionResult> GetStatistics()
     {
         // TODO: Implement statistics aggregation
-        return Ok(new
+        return Task.FromResult<ActionResult>(Ok(new
         {
             totalDealers = 0,
             activeDealers = 0,
@@ -246,7 +246,7 @@ public class DealersController : ControllerBase
                 pro = 0,
                 enterprise = 0
             }
-        });
+        }));
     }
 
     // ============================================

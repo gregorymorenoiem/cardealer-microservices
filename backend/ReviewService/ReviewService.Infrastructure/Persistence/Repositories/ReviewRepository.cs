@@ -11,7 +11,7 @@ namespace ReviewService.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
 {
-    private readonly ReviewDbContext _context;
+    private new readonly ReviewDbContext _context;
 
     public ReviewRepository(ReviewDbContext context) : base(context)
     {
