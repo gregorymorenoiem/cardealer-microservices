@@ -1559,7 +1559,7 @@ metadata:
     tier: backend
     sprint: "14"
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: reviewservice
@@ -1939,7 +1939,7 @@ metadata:
     app: appointmentservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: appointmentservice
@@ -2794,7 +2794,7 @@ metadata:
     app: dealermanagementservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: dealermanagementservice
