@@ -29,14 +29,7 @@ import {
   usePendingPaymentsAdmin,
   useRevenueByPlan,
 } from '@/hooks/use-admin-extended';
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
+import { formatPrice } from '@/lib/format';
 
 export default function AdminBillingPage() {
   const { data: revenue, isLoading: loadingRevenue } = useRevenueStats();
@@ -66,7 +59,7 @@ export default function AdminBillingPage() {
 
       {/* Revenue Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card className="bg-gradient-to-br from-primary to-primary text-white">
+        <Card className="from-primary to-primary bg-gradient-to-br text-white">
           <CardContent className="p-4">
             <div className="mb-2 flex items-center justify-between">
               <DollarSign className="h-5 w-5 opacity-80" />
@@ -227,7 +220,7 @@ export default function AdminBillingPage() {
                 planRevenue.map(plan => (
                   <div key={plan.plan} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-primary/100" />
+                      <div className="bg-primary/100 h-3 w-3 rounded-full" />
                       <span>{plan.plan}</span>
                     </div>
                     <span className="font-medium">{formatPrice(plan.revenue)}</span>

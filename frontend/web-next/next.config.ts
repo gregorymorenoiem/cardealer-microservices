@@ -198,6 +198,12 @@ const nextConfig: NextConfig = {
         destination: '/verificar-email',
         permanent: false, // Use 307 to preserve query params (token)
       },
+      // OAuth callback: old /auth/callback/:provider → new /callback/:provider
+      {
+        source: '/auth/callback/:provider',
+        destination: '/callback/:provider',
+        permanent: true,
+      },
     ];
   },
 

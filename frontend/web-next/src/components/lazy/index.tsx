@@ -176,10 +176,15 @@ export const LazyMap = createPlaceholder('Map');
 export const LazyDealerMap = createPlaceholder('DealerMap');
 
 /**
- * 360° Vehicle viewer
- * TODO: Create @/components/vehicle-detail/Vehicle360 when needed
+ * 360° Vehicle viewer — real component from @/components/vehicles/viewer-360
  */
-export const LazyVehicle360Viewer = createPlaceholder('Vehicle360');
+export const LazyVehicle360Viewer = dynamic(
+  () =>
+    import('@/components/vehicles/viewer-360').then(
+      mod => mod.Viewer360 as unknown as AnyComponent
+    ),
+  { loading: () => <GallerySkeleton />, ssr: false }
+);
 
 /**
  * Video player component
@@ -254,7 +259,9 @@ export const LazyAnalyticsDashboard = createPlaceholder('AnalyticsDashboard');
 export const LazyAdminDashboard = createPlaceholder('AdminDashboard');
 
 /**
- * Chat/Messaging component
- * TODO: Create @/components/messaging/MessagingPanel when needed
+ * Chat/Messaging component — real component from @/components/chat/ChatPanel
  */
-export const LazyMessaging = createPlaceholder('MessagingPanel');
+export const LazyMessaging = dynamic(
+  () => import('@/components/chat/ChatPanel').then(mod => mod.ChatPanel as unknown as AnyComponent),
+  { loading: () => <CardSkeleton />, ssr: false }
+);

@@ -73,7 +73,8 @@ export default function OAuthCallbackPage() {
           credentials: 'same-origin',
           body: JSON.stringify({
             code: code,
-            redirectUri: `${window.location.origin}/auth/callback/${provider}`,
+            // Support both old (/auth/callback/) and new (/callback/) paths
+            redirectUri: `${window.location.origin}/callback/${provider}`,
           }),
         });
 

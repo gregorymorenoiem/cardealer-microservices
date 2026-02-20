@@ -89,11 +89,9 @@ export async function convertToSeller(
   if (idempotencyKey) {
     headers['Idempotency-Key'] = idempotencyKey;
   }
-  const response = await apiClient.post<SellerConversionResult>(
-    '/api/sellers/convert',
-    data,
-    { headers }
-  );
+  const response = await apiClient.post<SellerConversionResult>('/api/sellers/convert', data, {
+    headers,
+  });
   return response.data;
 }
 
@@ -142,58 +140,6 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
   return response.data;
 }
 
-// ─── Dealer Registration API ────────────────────────────────────────────────
-
-export interface RegisterDealerRequest {
-  businessName: string;
-  tradeName?: string;
-  description?: string;
-  dealerType: 'Independent' | 'Franchise' | 'MultiLocation' | 'OnlineOnly' | 'Wholesale';
-  email: string;
-  phone: string;
-  whatsApp?: string;
-  website?: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode?: string;
-  country?: string;
-  businessRegistrationNumber?: string;
-  taxId?: string;
-  dealerLicenseNumber?: string;
-  licenseExpiryDate?: string;
-  logoUrl?: string;
-  bannerUrl?: string;
-}
-
-export interface DealerRegistrationResult {
-  id: string;
-  ownerUserId: string;
-  businessName: string;
-  verificationStatus: 'Pending' | 'UnderReview' | 'Verified' | 'Rejected' | 'Suspended';
-  isActive: boolean;
-  createdAt: string;
-}
-
-/**
- * Register a new dealer (company). Requires authentication.
- * Dealer starts with Pending status until admin approval.
- */
-export async function registerDealer(
-  data: RegisterDealerRequest
-): Promise<DealerRegistrationResult> {
-  const response = await apiClient.post<DealerRegistrationResult>('/api/dealers', data);
-  return response.data;
-}
-
-/**
- * Get the dealer profile for the currently authenticated user.
- */
-export async function getMyDealer(): Promise<DealerRegistrationResult | null> {
-  try {
-    const response = await apiClient.get<DealerRegistrationResult>('/api/dealers/me');
-    return response.data;
-  } catch {
-    return null;
-  }
-}
+// NOTE: Dealer registration types & functions live in @/services/dealers.ts
+// (RegisterDealerRequest, registerDealer, getMyDealer).
+// They were removed from sellers.ts to eliminate duplication.

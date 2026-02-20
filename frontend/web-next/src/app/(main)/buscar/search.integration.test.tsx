@@ -36,7 +36,7 @@ vi.mock('@/services/vehicles', () => ({
 }));
 
 // Import after mocking
-import { useVehicleSearch } from '@/hooks/use-vehicles';
+import { useVehicleList } from '@/hooks/use-vehicles';
 import { vehicleService } from '@/services/vehicles';
 
 const mockSearch = vehicleService.search as ReturnType<typeof vi.fn>;
@@ -110,9 +110,9 @@ describe('Vehicle Search Hook', () => {
     mockSearch.mockResolvedValue(mockSearchResponse);
   });
 
-  describe('useVehicleSearch', () => {
+  describe('useVehicleList', () => {
     it('should search vehicles with default params', async () => {
-      const { result } = renderHook(() => useVehicleSearch({}), {
+      const { result } = renderHook(() => useVehicleList({}), {
         wrapper: createWrapper(),
       });
 
@@ -135,7 +135,7 @@ describe('Vehicle Search Hook', () => {
         totalPages: 1,
       });
 
-      const { result } = renderHook(() => useVehicleSearch({ make: 'Toyota' }), {
+      const { result } = renderHook(() => useVehicleList({ make: 'Toyota' }), {
         wrapper: createWrapper(),
       });
 
@@ -159,7 +159,7 @@ describe('Vehicle Search Hook', () => {
         totalPages: 1,
       });
 
-      const { result } = renderHook(() => useVehicleSearch(filters), {
+      const { result } = renderHook(() => useVehicleList(filters), {
         wrapper: createWrapper(),
       });
 
@@ -180,7 +180,7 @@ describe('Vehicle Search Hook', () => {
         totalPages: 0,
       });
 
-      const { result } = renderHook(() => useVehicleSearch({ make: 'NonExistent' }), {
+      const { result } = renderHook(() => useVehicleList({ make: 'NonExistent' }), {
         wrapper: createWrapper(),
       });
 
@@ -195,7 +195,7 @@ describe('Vehicle Search Hook', () => {
     it('should handle search error', async () => {
       mockSearch.mockRejectedValue(new Error('Search failed'));
 
-      const { result } = renderHook(() => useVehicleSearch({}), {
+      const { result } = renderHook(() => useVehicleList({}), {
         wrapper: createWrapper(),
       });
 
@@ -222,7 +222,7 @@ describe('Search Pagination', () => {
       totalPages: 3,
     });
 
-    const { result } = renderHook(() => useVehicleSearch({ page: 2, pageSize: 1 }), {
+    const { result } = renderHook(() => useVehicleList({ page: 2, pageSize: 1 }), {
       wrapper: createWrapper(),
     });
 
@@ -244,7 +244,7 @@ describe('Search Pagination', () => {
       totalPages: 2,
     });
 
-    const { result } = renderHook(() => useVehicleSearch({ pageSize: 2 }), {
+    const { result } = renderHook(() => useVehicleList({ pageSize: 2 }), {
       wrapper: createWrapper(),
     });
 
@@ -272,7 +272,7 @@ describe('Search Sorting', () => {
       totalPages: 1,
     });
 
-    const { result } = renderHook(() => useVehicleSearch({ sortBy: 'price', sortOrder: 'asc' }), {
+    const { result } = renderHook(() => useVehicleList({ sortBy: 'price', sortOrder: 'asc' }), {
       wrapper: createWrapper(),
     });
 
@@ -295,7 +295,7 @@ describe('Search Sorting', () => {
       totalPages: 1,
     });
 
-    const { result } = renderHook(() => useVehicleSearch({ sortBy: 'year', sortOrder: 'desc' }), {
+    const { result } = renderHook(() => useVehicleList({ sortBy: 'year', sortOrder: 'desc' }), {
       wrapper: createWrapper(),
     });
 
@@ -316,7 +316,7 @@ describe('Search Filters', () => {
 
   describe('Price Range Filter', () => {
     it('should filter by min price', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ minPrice: 1000000 }), {
+      const { result } = renderHook(() => useVehicleList({ minPrice: 1000000 }), {
         wrapper: createWrapper(),
       });
 
@@ -328,7 +328,7 @@ describe('Search Filters', () => {
     });
 
     it('should filter by max price', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ maxPrice: 2000000 }), {
+      const { result } = renderHook(() => useVehicleList({ maxPrice: 2000000 }), {
         wrapper: createWrapper(),
       });
 
@@ -341,7 +341,7 @@ describe('Search Filters', () => {
 
     it('should filter by price range', async () => {
       const { result } = renderHook(
-        () => useVehicleSearch({ minPrice: 1500000, maxPrice: 2000000 }),
+        () => useVehicleList({ minPrice: 1500000, maxPrice: 2000000 }),
         { wrapper: createWrapper() }
       );
 
@@ -355,7 +355,7 @@ describe('Search Filters', () => {
 
   describe('Year Range Filter', () => {
     it('should filter by year range', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ minYear: 2022, maxYear: 2024 }), {
+      const { result } = renderHook(() => useVehicleList({ minYear: 2022, maxYear: 2024 }), {
         wrapper: createWrapper(),
       });
 
@@ -369,7 +369,7 @@ describe('Search Filters', () => {
 
   describe('Mileage Filter', () => {
     it('should filter by max mileage', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ maxMileage: 50000 }), {
+      const { result } = renderHook(() => useVehicleList({ maxMileage: 50000 }), {
         wrapper: createWrapper(),
       });
 
@@ -383,7 +383,7 @@ describe('Search Filters', () => {
 
   describe('Transmission Filter', () => {
     it('should filter by transmission type', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ transmission: 'automatic' }), {
+      const { result } = renderHook(() => useVehicleList({ transmission: 'automatic' }), {
         wrapper: createWrapper(),
       });
 
@@ -397,7 +397,7 @@ describe('Search Filters', () => {
 
   describe('Fuel Type Filter', () => {
     it('should filter by fuel type', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ fuelType: 'hybrid' }), {
+      const { result } = renderHook(() => useVehicleList({ fuelType: 'hybrid' }), {
         wrapper: createWrapper(),
       });
 
@@ -411,7 +411,7 @@ describe('Search Filters', () => {
 
   describe('Location Filter', () => {
     it('should filter by city', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ city: 'Santo Domingo' }), {
+      const { result } = renderHook(() => useVehicleList({ city: 'Santo Domingo' }), {
         wrapper: createWrapper(),
       });
 
@@ -423,7 +423,7 @@ describe('Search Filters', () => {
     });
 
     it('should filter by province', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ province: 'Santiago' }), {
+      const { result } = renderHook(() => useVehicleList({ province: 'Santiago' }), {
         wrapper: createWrapper(),
       });
 
@@ -437,7 +437,7 @@ describe('Search Filters', () => {
 
   describe('Condition Filter', () => {
     it('should filter by new condition', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ condition: 'new' }), {
+      const { result } = renderHook(() => useVehicleList({ condition: 'new' }), {
         wrapper: createWrapper(),
       });
 
@@ -449,7 +449,7 @@ describe('Search Filters', () => {
     });
 
     it('should filter by used condition', async () => {
-      const { result } = renderHook(() => useVehicleSearch({ condition: 'used' }), {
+      const { result } = renderHook(() => useVehicleList({ condition: 'used' }), {
         wrapper: createWrapper(),
       });
 
@@ -472,7 +472,7 @@ describe('Search Query Caching', () => {
     const wrapper = createWrapper();
 
     // First search
-    const { result: result1 } = renderHook(() => useVehicleSearch({ make: 'Toyota' }), { wrapper });
+    const { result: result1 } = renderHook(() => useVehicleList({ make: 'Toyota' }), { wrapper });
 
     await waitFor(() => {
       expect(result1.current.isLoading).toBe(false);
@@ -481,7 +481,7 @@ describe('Search Query Caching', () => {
     expect(mockSearch).toHaveBeenCalledTimes(1);
 
     // Same search should use cache
-    const { result: result2 } = renderHook(() => useVehicleSearch({ make: 'Toyota' }), { wrapper });
+    const { result: result2 } = renderHook(() => useVehicleList({ make: 'Toyota' }), { wrapper });
 
     expect(result2.current.data?.items).toHaveLength(3);
     expect(mockSearch).toHaveBeenCalledTimes(1); // No additional call
@@ -491,14 +491,14 @@ describe('Search Query Caching', () => {
     const wrapper = createWrapper();
 
     // First search
-    const { result: result1 } = renderHook(() => useVehicleSearch({ make: 'Toyota' }), { wrapper });
+    const { result: result1 } = renderHook(() => useVehicleList({ make: 'Toyota' }), { wrapper });
 
     await waitFor(() => {
       expect(result1.current.isLoading).toBe(false);
     });
 
     // Different search should make new call
-    const { result: result2 } = renderHook(() => useVehicleSearch({ make: 'Honda' }), { wrapper });
+    const { result: result2 } = renderHook(() => useVehicleList({ make: 'Honda' }), { wrapper });
 
     await waitFor(() => {
       expect(result2.current.isLoading).toBe(false);
@@ -522,7 +522,7 @@ describe('Text Search', () => {
       totalPages: 1,
     });
 
-    const { result } = renderHook(() => useVehicleSearch({ q: 'Toyota' }), {
+    const { result } = renderHook(() => useVehicleList({ q: 'Toyota' }), {
       wrapper: createWrapper(),
     });
 

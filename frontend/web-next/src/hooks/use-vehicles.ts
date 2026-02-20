@@ -81,9 +81,10 @@ export function useVehicle(id: string) {
 }
 
 /**
- * Search vehicles with filters
+ * List vehicles with filters (simple query wrapper).
+ * For the full search hook with URL sync and debounce, use useVehicleSearch from use-vehicle-search.ts.
  */
-export function useVehicleSearch(params: VehicleSearchParams, options?: { enabled?: boolean }) {
+export function useVehicleList(params: VehicleSearchParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: vehicleKeys.list(params),
     queryFn: () => vehicleService.search(params),
@@ -91,6 +92,9 @@ export function useVehicleSearch(params: VehicleSearchParams, options?: { enable
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
+
+/** @deprecated Use useVehicleList instead */
+export const useVehicleSearch = useVehicleList;
 
 /**
  * Get similar vehicles

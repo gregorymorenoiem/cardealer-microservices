@@ -7,6 +7,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -159,7 +160,7 @@ export default function DealerSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
+          <h1 className="text-foreground text-2xl font-bold">Configuración</h1>
           <p className="text-muted-foreground">Personaliza tu experiencia en OKLA</p>
         </div>
         {hasChanges && (
@@ -197,7 +198,7 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Nuevos leads</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         Recibe un email cuando alguien contacte
                       </p>
                     </div>
@@ -211,7 +212,9 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Mensajes</p>
-                      <p className="text-sm text-muted-foreground">Notificación de nuevos mensajes</p>
+                      <p className="text-muted-foreground text-sm">
+                        Notificación de nuevos mensajes
+                      </p>
                     </div>
                     <Switch
                       checked={notifications.emailMessages}
@@ -223,7 +226,7 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Citas programadas</p>
-                      <p className="text-sm text-muted-foreground">Recordatorios de test drives</p>
+                      <p className="text-muted-foreground text-sm">Recordatorios de test drives</p>
                     </div>
                     <Switch
                       checked={notifications.emailAppointments}
@@ -235,7 +238,9 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Reporte semanal</p>
-                      <p className="text-sm text-muted-foreground">Resumen de actividad cada lunes</p>
+                      <p className="text-muted-foreground text-sm">
+                        Resumen de actividad cada lunes
+                      </p>
                     </div>
                     <Switch
                       checked={notifications.emailWeeklyReport}
@@ -259,7 +264,7 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Nuevos leads urgentes</p>
-                      <p className="text-sm text-muted-foreground">Solo leads de alta prioridad</p>
+                      <p className="text-muted-foreground text-sm">Solo leads de alta prioridad</p>
                     </div>
                     <Switch
                       checked={notifications.smsNewLead}
@@ -271,7 +276,7 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Recordatorio de citas</p>
-                      <p className="text-sm text-muted-foreground">1 hora antes de cada cita</p>
+                      <p className="text-muted-foreground text-sm">1 hora antes de cada cita</p>
                     </div>
                     <Switch
                       checked={notifications.smsAppointments}
@@ -295,7 +300,7 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Mensajes</p>
-                      <p className="text-sm text-muted-foreground">Notificación instantánea</p>
+                      <p className="text-muted-foreground text-sm">Notificación instantánea</p>
                     </div>
                     <Switch
                       checked={notifications.pushMessages}
@@ -307,7 +312,7 @@ export default function DealerSettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Nuevos leads</p>
-                      <p className="text-sm text-muted-foreground">Alerta inmediata de contactos</p>
+                      <p className="text-muted-foreground text-sm">Alerta inmediata de contactos</p>
                     </div>
                     <Switch
                       checked={notifications.pushLeads}
@@ -321,7 +326,7 @@ export default function DealerSettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Security */}
+          {/* Security — Managed in /cuenta/seguridad */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -330,66 +335,17 @@ export default function DealerSettingsPage() {
               </CardTitle>
               <CardDescription>Protege tu cuenta</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Autenticación de dos factores</p>
-                  <p className="text-sm text-muted-foreground">Añade una capa extra de seguridad</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {twoFactorEnabled ? (
-                    <Badge className="bg-primary/10 text-primary">
-                      <Check className="mr-1 h-3 w-3" />
-                      Activo
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Desactivado</Badge>
-                  )}
-                  <Button variant="outline" size="sm">
-                    {twoFactorEnabled ? 'Configurar' : 'Activar'}
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label>Tiempo de sesión inactiva</Label>
-                <select
-                  className="mt-2 w-full rounded-md border p-2"
-                  value={sessionTimeout}
-                  onChange={e => setSessionTimeout(Number(e.target.value))}
-                >
-                  {sessionTimeoutOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Cierra sesión automáticamente después de inactividad
-                </p>
-              </div>
-
-              <div>
-                <Button variant="outline" className="w-full">
-                  <Key className="mr-2 h-4 w-4" />
-                  Cambiar Contraseña
-                </Button>
-              </div>
-
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-                  <div>
-                    <p className="font-medium text-amber-800">Sesiones activas</p>
-                    <p className="text-sm text-amber-600">
-                      Tienes 3 sesiones activas en diferentes dispositivos
-                    </p>
-                    <Button variant="link" className="h-auto p-0 text-amber-700">
-                      Ver y cerrar sesiones
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            <CardContent>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Gestiona tu contraseña, autenticación de dos factores y sesiones activas desde la
+                configuración de seguridad de tu cuenta.
+              </p>
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/cuenta/seguridad">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Ir a Seguridad de la Cuenta
+                </Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -417,7 +373,7 @@ export default function DealerSettingsPage() {
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-medium text-primary">
+                        <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full font-medium">
                           {employee.name
                             .split(' ')
                             .map(n => n[0])
@@ -427,7 +383,7 @@ export default function DealerSettingsPage() {
                       )}
                       <div>
                         <p className="font-medium">{employee.name}</p>
-                        <p className="text-sm text-muted-foreground">{employee.email}</p>
+                        <p className="text-muted-foreground text-sm">{employee.email}</p>
                       </div>
                     </div>
                     <Badge variant={employee.role === 'Owner' ? 'default' : 'outline'}>
@@ -436,7 +392,7 @@ export default function DealerSettingsPage() {
                   </div>
                 ))}
                 {activeEmployees.length === 0 && (
-                  <p className="py-4 text-center text-sm text-muted-foreground">
+                  <p className="text-muted-foreground py-4 text-center text-sm">
                     No hay empleados registrados
                   </p>
                 )}
@@ -445,7 +401,7 @@ export default function DealerSettingsPage() {
                 <Users className="mr-2 h-4 w-4" />
                 Invitar Empleado
               </Button>
-              <p className="mt-2 text-center text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-2 text-center text-xs">
                 Plan {dealer?.plan || 'Pro'}: {activeEmployees.length} de {maxEmployees} empleados
                 utilizados
               </p>
@@ -481,15 +437,15 @@ export default function DealerSettingsPage() {
             <Card className="border-primary bg-primary/10">
               <CardContent className="p-4">
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="rounded-full bg-primary/10 p-2">
-                    <Check className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/10 rounded-full p-2">
+                    <Check className="text-primary h-5 w-5" />
                   </div>
                   <div>
-                    <p className="font-medium text-primary">Cuenta Verificada</p>
-                    <p className="text-sm text-primary">Dealer oficial</p>
+                    <p className="text-primary font-medium">Cuenta Verificada</p>
+                    <p className="text-primary text-sm">Dealer oficial</p>
                   </div>
                 </div>
-                <div className="space-y-1 text-sm text-primary">
+                <div className="text-primary space-y-1 text-sm">
                   <p>✓ Documentos verificados</p>
                   <p>✓ Identidad confirmada</p>
                   {dealer.rnc && <p>✓ RNC validado</p>}
@@ -516,7 +472,7 @@ export default function DealerSettingsPage() {
               >
                 Eliminar Cuenta
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Eliminar tu cuenta es permanente y no se puede deshacer.
               </p>
             </CardContent>

@@ -87,7 +87,6 @@ const roleProtectedRoutes: Record<string, string[]> = {
   '/admin/dealers': ['admin', 'platform_employee'],
   '/admin/reportes': ['admin', 'platform_employee'],
   '/publicar': ['user', 'seller', 'dealer', 'dealer_employee', 'admin'],
-  '/vender/publicar': ['user', 'seller', 'dealer', 'dealer_employee', 'admin'],
   '/mis-vehiculos': ['user', 'seller', 'dealer', 'dealer_employee', 'admin'],
   '/cuenta': ['user', 'buyer', 'seller', 'dealer', 'dealer_employee', 'admin', 'platform_employee'],
   '/dashboard': ['user', 'buyer', 'seller', 'dealer', 'dealer_employee'],
@@ -121,7 +120,6 @@ const authenticatedRoutes = [
   '/checkout',
   '/dashboard',
   '/mensajes',
-  '/vender/publicar',
 ];
 
 // =============================================================================

@@ -247,13 +247,8 @@ export async function getDemandPrediction(
 // Helper Functions
 // ============================================================================
 
-export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-}
+/** @deprecated Import from '@/lib/format' instead */
+export { formatPrice } from '@/lib/format';
 
 export function getPricePositionLabel(position: string): string {
   const labels: Record<string, string> = {

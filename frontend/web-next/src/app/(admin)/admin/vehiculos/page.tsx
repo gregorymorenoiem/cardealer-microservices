@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatPrice as _fp } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,15 +99,7 @@ const getStatusBadge = (status: string) => {
 
 const formatPrice = (price: number, currency?: string) => {
   if (!price) return 'N/A';
-  if (currency) {
-    const formatted = price.toLocaleString('es-DO');
-    return currency === 'USD' ? `US$ ${formatted}` : `RD$ ${formatted}`;
-  }
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
+  return _fp(price, currency || 'DOP');
 };
 
 const formatDate = (dateString: string) => {
@@ -177,8 +170,8 @@ function EmptyModerationState() {
   return (
     <Card className="py-16">
       <CardContent className="flex flex-col items-center justify-center text-center">
-        <div className="mb-6 rounded-full bg-primary/10 p-6">
-          <Inbox className="h-12 w-12 text-primary" />
+        <div className="bg-primary/10 mb-6 rounded-full p-6">
+          <Inbox className="text-primary h-12 w-12" />
         </div>
         <h2 className="text-foreground mb-2 text-2xl font-bold">¡Cola de moderación vacía!</h2>
         <p className="text-muted-foreground mb-6 max-w-md">
@@ -269,7 +262,7 @@ function ModerationItemCard({
                   {item.images.map((img, idx) => (
                     <div
                       key={idx}
-                      className="bg-muted relative h-16 w-20 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg ring-primary hover:ring-2"
+                      className="bg-muted ring-primary relative h-16 w-20 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg hover:ring-2"
                     >
                       <Image
                         src={img}
@@ -308,7 +301,7 @@ function ModerationItemCard({
             {/* Title and Price */}
             <div>
               <h2 className="text-xl font-bold">{item.title}</h2>
-              <p className="text-2xl font-bold text-primary">{formatPrice(item.price || 0)}</p>
+              <p className="text-primary text-2xl font-bold">{formatPrice(item.price || 0)}</p>
             </div>
 
             {/* Description */}
@@ -343,7 +336,7 @@ function ModerationItemCard({
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <Button
-                className="flex-1 bg-primary hover:bg-primary/90"
+                className="bg-primary hover:bg-primary/90 flex-1"
                 onClick={onApprove}
                 disabled={isApproving || isRejecting}
               >
@@ -759,7 +752,7 @@ function VehiclesGridTab() {
             </div>
             <CardContent className="p-4">
               <h3 className="text-foreground mb-1 font-semibold">{vehicle.title}</h3>
-              <p className="mb-2 text-lg font-bold text-primary">
+              <p className="text-primary mb-2 text-lg font-bold">
                 {formatPrice(vehicle.price, vehicle.currency)}
               </p>
               <div className="text-muted-foreground mb-3 flex items-center gap-2 text-sm">
@@ -963,8 +956,8 @@ export default function AdminVehiclesPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <CheckCircle className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-xl font-bold">{stats?.active?.toLocaleString() || 0}</p>

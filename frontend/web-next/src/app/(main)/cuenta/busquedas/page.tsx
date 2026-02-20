@@ -37,14 +37,7 @@ import {
   type SavedSearch,
 } from '@/hooks/use-alerts';
 import type { VehicleSearchParams } from '@/types';
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
+import { formatPrice } from '@/lib/format';
 
 const getFilterChips = (params: VehicleSearchParams): string[] => {
   const chips: string[] = [];
@@ -183,8 +176,8 @@ export default function SavedSearchesPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Search className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Search className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats?.totalSavedSearches ?? searches.length}</p>

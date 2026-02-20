@@ -93,15 +93,25 @@ export function HeroCTA() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
       {!isAuthenticated ? (
-        <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-[#00A870]">
-          <Link href="/login?callbackUrl=/vender">
-            Iniciar sesión para vender
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-        </Button>
+        <>
+          <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-[#00A870]">
+            <Link href="/vender/registro">
+              Crear cuenta y vender
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
+          >
+            <Link href="/login?callbackUrl=/vender">Ya tengo cuenta</Link>
+          </Button>
+        </>
       ) : canSell ? (
         <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-[#00A870]">
-          <Link href="/vender/publicar">
+          <Link href="/publicar">
             <BadgeCheck className="h-5 w-5" />
             Publicar mi vehículo
             <ArrowRight className="h-5 w-5" />
@@ -152,14 +162,14 @@ export function FinalCTA() {
     <>
       {!isAuthenticated ? (
         <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-[#00A870]">
-          <Link href="/login?callbackUrl=/vender">
-            Iniciar sesión
+          <Link href="/vender/registro">
+            Crear cuenta y vender
             <ArrowRight className="h-5 w-5" />
           </Link>
         </Button>
       ) : canSell ? (
         <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-[#00A870]">
-          <Link href="/vender/publicar">
+          <Link href="/publicar">
             Publicar ahora
             <ArrowRight className="h-5 w-5" />
           </Link>
@@ -233,7 +243,7 @@ export function VenderPricing() {
             </li>
           </ul>
           <Button asChild variant="outline" className="w-full">
-            <Link href="/vender/publicar">Comenzar gratis</Link>
+            <Link href="/publicar">Comenzar gratis</Link>
           </Button>
         </CardContent>
       </Card>
@@ -281,7 +291,7 @@ export function VenderPricing() {
             </li>
           </ul>
           <Button asChild className="w-full bg-[#00A870] hover:bg-[#009663]">
-            <Link href="/vender/publicar?plan=premium">Elegir Premium</Link>
+            <Link href="/publicar?plan=premium">Elegir Premium</Link>
           </Button>
         </CardContent>
       </Card>

@@ -160,13 +160,13 @@ export default function DealerRegistrationPage() {
     !isSubmitting;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-teal-700">
+    <div className="from-primary min-h-screen bg-gradient-to-br to-teal-700">
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 py-4">
           <Link href="/" className="inline-flex items-center gap-2 text-white">
             <div className="bg-card flex h-10 w-10 items-center justify-center rounded-lg">
-              <Car className="h-6 w-6 text-primary" />
+              <Car className="text-primary h-6 w-6" />
             </div>
             <span className="text-2xl font-bold">OKLA</span>
           </Link>
@@ -179,14 +179,14 @@ export default function DealerRegistrationPage() {
           <div className="hidden lg:block">
             <div className="sticky top-8">
               <h2 className="mb-6 text-2xl font-bold text-white">Únete como Dealer</h2>
-              <p className="mb-8 text-primary-foreground">
+              <p className="text-primary-foreground mb-8">
                 Accede a herramientas profesionales para vender más vehículos.
               </p>
 
               <div className="space-y-4">
                 {benefits.map((benefit, i) => (
                   <div key={i} className="flex items-center gap-3 text-white">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/100">
+                    <div className="bg-primary/100 flex h-6 w-6 items-center justify-center rounded-full">
                       <Check className="h-4 w-4" />
                     </div>
                     <span>{benefit}</span>
@@ -205,7 +205,7 @@ export default function DealerRegistrationPage() {
                   "Desde que me uní a OKLA, mis ventas aumentaron un 40%. El panel es muy fácil de
                   usar."
                 </p>
-                <p className="font-medium text-primary/40">— Carlos, Auto Premium RD</p>
+                <p className="text-primary/40 font-medium">— Carlos, Auto Premium RD</p>
               </div>
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function DealerRegistrationPage() {
                             isCompleted
                               ? 'bg-primary text-white'
                               : isActive
-                                ? 'border-2 border-primary bg-primary/10 text-primary'
+                                ? 'border-primary bg-primary/10 text-primary border-2'
                                 : 'bg-muted text-muted-foreground'
                           }`}
                         >
@@ -275,7 +275,7 @@ export default function DealerRegistrationPage() {
                               : 'border-border hover:border-border'
                           }`}
                         >
-                          <Building2 className="mb-3 h-8 w-8 text-primary" />
+                          <Building2 className="text-primary mb-3 h-8 w-8" />
                           <h4 className="font-semibold">Dealer Independiente</h4>
                           <p className="text-muted-foreground mt-1 text-sm">
                             Un solo local, inventario propio
@@ -289,7 +289,7 @@ export default function DealerRegistrationPage() {
                               : 'border-border hover:border-border'
                           }`}
                         >
-                          <TrendingUp className="mb-3 h-8 w-8 text-primary" />
+                          <TrendingUp className="text-primary mb-3 h-8 w-8" />
                           <h4 className="font-semibold">Cadena / Multi-sucursal</h4>
                           <p className="text-muted-foreground mt-1 text-sm">
                             Múltiples locales o franquicia
@@ -480,8 +480,8 @@ export default function DealerRegistrationPage() {
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold">Verificación</h3>
 
-                    <div className="rounded-xl border border-primary bg-primary/10 p-6">
-                      <Shield className="mb-4 h-10 w-10 text-primary" />
+                    <div className="border-primary bg-primary/10 rounded-xl border p-6">
+                      <Shield className="text-primary mb-4 h-10 w-10" />
                       <h4 className="mb-2 text-lg font-semibold">Verificación de Dealer</h4>
                       <p className="text-muted-foreground mb-4 text-sm">
                         Para garantizar la confianza de los compradores, verificamos todos los
@@ -489,15 +489,15 @@ export default function DealerRegistrationPage() {
                       </p>
                       <ul className="text-muted-foreground space-y-2 text-sm">
                         <li className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="text-primary h-4 w-4" />
                           Cédula del representante legal
                         </li>
                         <li className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="text-primary h-4 w-4" />
                           RNC y documentos de la empresa
                         </li>
                         <li className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="text-primary h-4 w-4" />
                           Fotos del local/establecimiento
                         </li>
                       </ul>
@@ -549,7 +549,7 @@ export default function DealerRegistrationPage() {
                       Anterior
                     </Button>
                   ) : (
-                    <Link href="/auth/registro">
+                    <Link href="/registro">
                       <Button variant="outline">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Volver
@@ -585,9 +585,9 @@ export default function DealerRegistrationPage() {
               </CardContent>
             </Card>
 
-            <p className="mt-6 text-center text-sm text-primary-foreground">
+            <p className="text-primary-foreground mt-6 text-center text-sm">
               ¿Ya tienes cuenta de dealer?{' '}
-              <Link href="/auth/login" className="font-medium text-white hover:underline">
+              <Link href="/login" className="font-medium text-white hover:underline">
                 Inicia sesión
               </Link>
             </p>

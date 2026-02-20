@@ -253,7 +253,7 @@ export default function InventoryPage() {
             </Link>
           </Button>
           <Button className="bg-primary hover:bg-primary/90" asChild>
-            <Link href="/vender/publicar">
+            <Link href="/publicar">
               <Plus className="mr-2 h-4 w-4" />
               Agregar Vehículo
             </Link>
@@ -300,7 +300,7 @@ export default function InventoryPage() {
       {selectedVehicles.length > 0 && (
         <Card className="border-primary bg-primary/10">
           <CardContent className="flex items-center justify-between p-4">
-            <span className="text-sm text-primary">
+            <span className="text-primary text-sm">
               {selectedVehicles.length} vehículo(s) seleccionado(s)
             </span>
             <div className="flex gap-2">
@@ -346,7 +346,7 @@ export default function InventoryPage() {
                 </p>
               </div>
               <Button asChild className="bg-primary hover:bg-primary/90">
-                <Link href="/vender/publicar">
+                <Link href="/publicar">
                   <Plus className="mr-2 h-4 w-4" />
                   Agregar Vehículo
                 </Link>
@@ -413,7 +413,7 @@ export default function InventoryPage() {
                               <div>
                                 <Link
                                   href={`/vehiculos/${vehicle.slug}`}
-                                  className="font-medium transition-colors hover:text-primary"
+                                  className="hover:text-primary font-medium transition-colors"
                                 >
                                   {title}
                                 </Link>
