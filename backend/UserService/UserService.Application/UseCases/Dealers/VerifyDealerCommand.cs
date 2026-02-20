@@ -1,9 +1,12 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using UserService.Application.DTOs;
+using UserService.Application.Interfaces;
+using UserService.Application.Metrics;
 using UserService.Domain.Entities;
 using UserService.Domain.Interfaces;
 using UserService.Shared.Exceptions;
+using CarDealer.Contracts.Events.Dealer;
 
 namespace UserService.Application.UseCases.Dealers.VerifyDealer;
 
@@ -12,13 +15,22 @@ public record VerifyDealerCommand(Guid DealerId, VerifyDealerRequest Request) : 
 public class VerifyDealerCommandHandler : IRequestHandler<VerifyDealerCommand, DealerDto>
 {
     private readonly IDealerRepository _dealerRepository;
+    private readonly IEventPublisher _eventPublisher;
+    private readonly IAuditServiceClient _auditClient;
+    private readonly UserServiceMetrics _metrics;
     private readonly ILogger<VerifyDealerCommandHandler> _logger;
 
     public VerifyDealerCommandHandler(
         IDealerRepository dealerRepository,
+        IEventPublisher eventPublisher,
+        IAuditServiceClient auditClient,
+        UserServiceMetrics metrics,
         ILogger<VerifyDealerCommandHandler> logger)
     {
         _dealerRepository = dealerRepository;
+        _eventPublisher = eventPublisher;
+        _auditClient = auditClient;
+        _metrics = metrics;
         _logger = logger;
     }
 
@@ -39,9 +51,29 @@ public class VerifyDealerCommandHandler : IRequestHandler<VerifyDealerCommand, D
             dealer.VerifiedByUserId = request.VerifiedByUserId;
             dealer.VerificationNotes = request.Notes;
             dealer.RejectionReason = null;
+            dealer.IsActive = true;
             
-            _logger.LogInformation("Dealer {DealerId} verified by user {VerifiedByUserId}", 
+            _logger.LogInformation("Dealer {DealerId} verified by admin {VerifiedByUserId}", 
                 dealer.Id, request.VerifiedByUserId);
+
+            // Publish DealerCreatedEvent on approval
+            try
+            {
+                await _eventPublisher.PublishAsync(new DealerCreatedEvent
+                {
+                    DealerId = dealer.Id,
+                    OwnerUserId = dealer.OwnerUserId,
+                    ApprovedAt = dealer.VerifiedAt.Value
+                }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to publish DealerCreatedEvent for dealer {DealerId}. Event will be retried via DLQ.",
+                    dealer.Id);
+            }
+
+            _metrics.RecordDealerApproved();
         }
         else
         {
@@ -49,45 +81,29 @@ public class VerifyDealerCommandHandler : IRequestHandler<VerifyDealerCommand, D
             dealer.RejectionReason = request.Notes;
             dealer.VerifiedAt = null;
             dealer.VerifiedByUserId = null;
+            dealer.IsActive = false;
             
             _logger.LogInformation("Dealer {DealerId} rejected. Reason: {Reason}", 
                 dealer.Id, request.Notes);
+
+            _metrics.RecordDealerRejected();
         }
 
         dealer.UpdatedAt = DateTime.UtcNow;
 
         await _dealerRepository.UpdateAsync(dealer);
 
-        return new DealerDto
+        // Audit log
+        try
         {
-            Id = dealer.Id,
-            OwnerUserId = dealer.OwnerUserId,
-            BusinessName = dealer.BusinessName,
-            TradeName = dealer.TradeName,
-            Description = dealer.Description,
-            DealerType = dealer.DealerType,
-            Email = dealer.Email,
-            Phone = dealer.Phone,
-            WhatsApp = dealer.WhatsApp,
-            Website = dealer.Website,
-            Address = dealer.Address,
-            City = dealer.City,
-            State = dealer.State,
-            ZipCode = dealer.ZipCode,
-            Country = dealer.Country,
-            Latitude = dealer.Latitude,
-            Longitude = dealer.Longitude,
-            LogoUrl = dealer.LogoUrl,
-            BannerUrl = dealer.BannerUrl,
-            VerificationStatus = dealer.VerificationStatus,
-            VerifiedAt = dealer.VerifiedAt,
-            RejectionReason = dealer.RejectionReason,
-            AverageRating = dealer.AverageRating,
-            TotalReviews = dealer.TotalReviews,
-            ActiveListings = dealer.ActiveListings,
-            IsActive = dealer.IsActive,
-            CreatedAt = dealer.CreatedAt,
-            UpdatedAt = dealer.UpdatedAt
-        };
+            await _auditClient.LogDealerVerificationAsync(
+                dealer.Id, request.IsVerified, request.VerifiedByUserId.ToString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to log audit for dealer verification {DealerId}", dealer.Id);
+        }
+
+        return CreateDealer.CreateDealerCommandHandler.MapToDto(dealer);
     }
 }

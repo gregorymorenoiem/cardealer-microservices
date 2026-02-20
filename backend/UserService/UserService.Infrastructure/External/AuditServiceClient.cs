@@ -165,5 +165,90 @@ namespace UserService.Infrastructure.External
                 _logger.LogWarning(ex, "Failed to send audit log for role revocation");
             }
         }
+
+        public async Task LogSellerConversionAsync(Guid userId, Guid sellerProfileId, string previousAccountType, string performedBy)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                var auditLog = new
+                {
+                    EntityType = "SellerConversion",
+                    EntityId = sellerProfileId.ToString(),
+                    Action = "USER_CONVERTED_TO_SELLER",
+                    PerformedBy = performedBy,
+                    Details = $"User {userId} converted from {previousAccountType} to Seller. SellerProfileId: {sellerProfileId}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation(
+                    "Audit log sent for seller conversion: User {UserId}, SellerProfile {SellerProfileId}",
+                    userId, sellerProfileId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for seller conversion: User {UserId}", userId);
+            }
+        }
+
+        public async Task LogDealerRegistrationAsync(Guid dealerId, Guid ownerUserId, string businessName, string performedBy)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                var auditLog = new
+                {
+                    EntityType = "Dealer",
+                    EntityId = dealerId.ToString(),
+                    Action = "DEALER_REGISTRATION_REQUESTED",
+                    PerformedBy = performedBy,
+                    Details = $"Dealer registration requested: {businessName} (DealerId: {dealerId}) by user {ownerUserId}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation(
+                    "Audit log sent for dealer registration: Dealer {DealerId}, Owner {OwnerId}",
+                    dealerId, ownerUserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for dealer registration: Dealer {DealerId}", dealerId);
+            }
+        }
+
+        public async Task LogDealerVerificationAsync(Guid dealerId, bool isApproved, string performedBy)
+        {
+            try
+            {
+                var baseUrl = await GetServiceUrlAsync();
+                var action = isApproved ? "DEALER_APPROVED" : "DEALER_REJECTED";
+                var auditLog = new
+                {
+                    EntityType = "Dealer",
+                    EntityId = dealerId.ToString(),
+                    Action = action,
+                    PerformedBy = performedBy,
+                    Details = $"Dealer {dealerId} {(isApproved ? "approved" : "rejected")} by admin {performedBy}",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/audit", auditLog);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation(
+                    "Audit log sent for dealer verification: Dealer {DealerId}, Approved={IsApproved}",
+                    dealerId, isApproved);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send audit log for dealer verification: Dealer {DealerId}", dealerId);
+            }
+        }
     }
 }

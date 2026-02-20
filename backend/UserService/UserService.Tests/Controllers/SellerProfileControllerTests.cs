@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using UserService.Api.Controllers;
 using UserService.Application.DTOs;
+using UserService.Application.Interfaces;
 using UserService.Domain.Entities;
 using UserService.Domain.Interfaces;
 using Xunit;
@@ -18,6 +19,8 @@ public class SellerProfileControllerTests
     private readonly Mock<ISellerProfileRepository> _mockSellerProfileRepository;
     private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<IEventPublisher> _mockEventPublisher;
+    private readonly Mock<IVehiclesSaleServiceClient> _mockVehiclesClient;
+    private readonly Mock<IReviewServiceClient> _mockReviewClient;
     private readonly Mock<ILogger<SellerProfileController>> _mockLogger;
     private readonly SellerProfileController _controller;
 
@@ -26,12 +29,16 @@ public class SellerProfileControllerTests
         _mockSellerProfileRepository = new Mock<ISellerProfileRepository>();
         _mockUserRepository = new Mock<IUserRepository>();
         _mockEventPublisher = new Mock<IEventPublisher>();
+        _mockVehiclesClient = new Mock<IVehiclesSaleServiceClient>();
+        _mockReviewClient = new Mock<IReviewServiceClient>();
         _mockLogger = new Mock<ILogger<SellerProfileController>>();
         
         _controller = new SellerProfileController(
             _mockSellerProfileRepository.Object,
             _mockUserRepository.Object,
             _mockEventPublisher.Object,
+            _mockVehiclesClient.Object,
+            _mockReviewClient.Object,
             _mockLogger.Object);
     }
 

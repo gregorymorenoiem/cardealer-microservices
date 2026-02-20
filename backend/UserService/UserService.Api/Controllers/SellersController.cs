@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using UserService.Application.DTOs;
 using UserService.Application.UseCases.Sellers.CreateSellerProfile;
@@ -6,6 +7,8 @@ using UserService.Application.UseCases.Sellers.GetSellerProfile;
 using UserService.Application.UseCases.Sellers.UpdateSellerProfile;
 using UserService.Application.UseCases.Sellers.VerifySellerProfile;
 using UserService.Application.UseCases.Sellers.GetSellerStats;
+using UserService.Application.UseCases.Sellers.ConvertBuyerToSeller;
+using System.Security.Claims;
 
 namespace UserService.Api.Controllers
 {
@@ -17,10 +20,111 @@ namespace UserService.Api.Controllers
     public class SellersController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IConfiguration _configuration;
 
-        public SellersController(IMediator mediator)
+        public SellersController(IMediator mediator, IConfiguration configuration)
         {
             _mediator = mediator;
+            _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Convert a buyer account to a seller account.
+        /// Rejects Dealer/DealerEmployee accounts with CONVERSION_NOT_ALLOWED.
+        /// Supports Idempotency-Key header for safe retries.
+        /// </summary>
+        [HttpPost("convert")]
+        [Authorize]
+        [ProducesResponseType(typeof(SellerConversionResultDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(SellerConversionResultDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ConvertBuyerToSeller(
+            [FromBody] ConvertBuyerToSellerRequest request)
+        {
+            // Feature flag check
+            var featureEnabled = _configuration.GetValue<bool>("Features:SellerConversion", true);
+            if (!featureEnabled)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Type = "https://okla.com/errors/feature-disabled",
+                    Title = "Feature Disabled",
+                    Status = 400,
+                    Detail = "La conversión a vendedor no está disponible en este momento.",
+                    Extensions = { ["errorCode"] = "FEATURE_DISABLED" }
+                });
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("sub")?.Value
+                ?? User.FindFirst("userId")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new ProblemDetails
+                {
+                    Type = "https://okla.com/errors/unauthorized",
+                    Title = "Unauthorized",
+                    Status = 401,
+                    Detail = "No se pudo identificar al usuario autenticado."
+                });
+            }
+
+            var idempotencyKey = Request.Headers["Idempotency-Key"].FirstOrDefault();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.UserAgent.FirstOrDefault();
+
+            try
+            {
+                var command = new ConvertBuyerToSellerCommand(
+                    UserId: userId,
+                    Request: request,
+                    IdempotencyKey: idempotencyKey,
+                    IpAddress: ipAddress,
+                    UserAgent: userAgent);
+
+                var result = await _mediator.Send(command);
+
+                // If conversion was idempotent (existing), return 200
+                if (result.Source == "existing" || result.ConversionId == Guid.Empty)
+                {
+                    return Ok(result);
+                }
+
+                // If pending KYC verification, return 202
+                if (result.PendingVerification)
+                {
+                    return StatusCode(StatusCodes.Status202Accepted, result);
+                }
+
+                // New conversion — return 201
+                return StatusCode(StatusCodes.Status201Created, result);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "CONVERSION_NOT_ALLOWED")
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Type = "https://okla.com/errors/conversion-not-allowed",
+                    Title = "Conversion Not Allowed",
+                    Status = 400,
+                    Detail = "Los compradores no pueden convertirse en Dealers. Para registrar una empresa, utiliza el flujo 'Registrar Dealer'.",
+                    Extensions =
+                    {
+                        ["errorCode"] = "CONVERSION_NOT_ALLOWED"
+                    }
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Type = "https://okla.com/errors/not-found",
+                    Title = "User Not Found",
+                    Status = 404,
+                    Detail = ex.Message
+                });
+            }
         }
 
         /// <summary>

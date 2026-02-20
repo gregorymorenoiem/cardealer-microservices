@@ -6,6 +6,25 @@ Este documento proporciona contexto para GitHub Copilot sobre el proyecto OKLA (
 
 ---
 
+## 📝 Prompts y política de edición (nota importante)
+
+Este repositorio incluye una carpeta `prompts/` con plantillas recomendadas para GitHub Copilot / Copilot Chat.
+
+- Ubicación principal de plantillas: `prompts/` (prefiere esto sobre editar directamente este archivo).
+- Cómo referenciar plantillas en Copilot Chat: usa `#file:prompts/<subpath>.md` o `#codebase` para contexto amplio.
+- Metadatos recomendados por plantilla (añadir al inicio de cada `.md`):
+  - `version: 2.0`
+  - `lastUpdated: YYYY-MM-DD`
+  - `author: <nombre>`
+
+Política mínima para cambios:
+- No sobrescribir `copilot-instructions.md` sin PR y revisión de al menos 1 maintainer.
+- Para cambios rápidos en prompts, crea/edita archivos en `prompts/` y referencia desde este documento.
+- Cualquier cambio que afecte a procesos CI/CD o reglas de seguridad debe incluir pruebas o instrucciones claras en el PR.
+
+Esto mantiene un historial claro y evita pérdida de contexto o coste innecesario en requests premium.
+
+
 ## 📋 RESUMEN DEL PROYECTO
 
 **OKLA** es una plataforma de marketplace para compra y venta de vehículos en República Dominicana. Implementa arquitectura de **microservicios** con Clean Architecture, desplegada en **Digital Ocean Kubernetes (DOKS)**.
