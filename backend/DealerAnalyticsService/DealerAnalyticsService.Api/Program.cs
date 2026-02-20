@@ -40,12 +40,12 @@ builder.Services.AddDbContext<DealerAnalyticsService.Infrastructure.Persistence.
 // 2. MediatR Configuration
 // ============================================
 builder.Services.AddMediatR(cfg =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(DealerAnalyticsService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(GetDashboardAnalyticsQuery).Assembly);
 });
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(DealerAnalyticsService.Application.Behaviors.ValidationBehavior<,>));
 
 // ============================================
 // 3. Repository Pattern DI
@@ -92,7 +92,7 @@ if (enableBackgroundJobs)
 // ============================================
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)

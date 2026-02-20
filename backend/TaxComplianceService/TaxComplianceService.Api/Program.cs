@@ -53,11 +53,11 @@ builder.Services.AddDbContext<TaxDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateTaxpayerHandler).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(TaxComplianceService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(CreateTaxpayerHandler).Assembly));
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTaxpayerValidator>();

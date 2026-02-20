@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\InventoryManagementService.Application\InventoryManagementService.Application.csproj" />
     <ProjectReference Include="..\InventoryManagementService.Infrastructure\InventoryManagementService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

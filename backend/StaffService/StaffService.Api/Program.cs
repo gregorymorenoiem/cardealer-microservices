@@ -70,10 +70,10 @@ builder.Services.AddDbContext<StaffDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(StaffService.Application.Features.Staff.Commands.CreateStaffFromInvitationCommand).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(StaffService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(StaffService.Application.Features.Staff.Commands.CreateStaffFromInvitationCommand).Assembly));
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

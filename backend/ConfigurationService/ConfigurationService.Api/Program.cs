@@ -20,12 +20,12 @@ builder.Services.AddDbContext<ConfigurationDbContext>(options =>
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ConfigurationService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(ConfigurationService.Application.Commands.CreateConfigurationCommand).Assembly);
 });
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ConfigurationService.Application.Behaviors.ValidationBehavior<,>));
 
 // Encryption — key MUST be provided via env var or config in production
 var encryptionKey = builder.Configuration["Encryption:Key"]
@@ -63,7 +63,7 @@ builder.Services.AddScoped<IFeatureFlagManager, FeatureFlagManager>();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)

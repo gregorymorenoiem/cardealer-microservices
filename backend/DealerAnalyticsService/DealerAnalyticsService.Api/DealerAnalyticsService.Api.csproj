@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DealerAnalyticsService.Application\DealerAnalyticsService.Application.csproj" />
     <ProjectReference Include="..\DealerAnalyticsService.Infrastructure\DealerAnalyticsService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

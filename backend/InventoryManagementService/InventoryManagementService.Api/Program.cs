@@ -23,11 +23,10 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<InventoryManagementService.Application.DTOs.InventoryItemDto>());
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(InventoryManagementService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssemblyContaining<InventoryManagementService.Application.DTOs.InventoryItemDto>());
 
 // Repositories
 builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
@@ -36,7 +35,7 @@ builder.Services.AddScoped<IBulkImportJobRepository, BulkImportJobRepository>();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)

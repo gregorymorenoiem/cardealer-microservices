@@ -22,9 +22,9 @@ public class ComparisonServiceIntegrationTests
     public void ComparisonService_Domain_Should_BeAccessible()
     {
         // Verify domain layer is accessible
-        var type = typeof(Comparison);
+        var type = typeof(VehicleComparison);
         type.Should().NotBeNull();
-        type.Name.Should().Be("Comparison");
+        type.Name.Should().Be("VehicleComparison");
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class ComparisonServiceIntegrationTests
         var name = "My Vehicle Comparison";
         var vehicleIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
 
-        var comparison = new Comparison(userId, name, vehicleIds);
+        var comparison = new VehicleComparison(userId, name, vehicleIds);
 
         comparison.Should().NotBeNull();
         comparison.UserId.Should().Be(userId);
@@ -69,7 +69,7 @@ public class ComparisonServiceIntegrationTests
     public void ComparisonService_Should_HaveCorrectAssemblyStructure()
     {
         // Test that assemblies are loaded correctly
-        var domainAssembly = typeof(Comparison).Assembly;
+        var domainAssembly = typeof(VehicleComparison).Assembly;
         var infrastructureAssembly = typeof(ApplicationDbContext).Assembly;
 
         domainAssembly.Should().NotBeNull();

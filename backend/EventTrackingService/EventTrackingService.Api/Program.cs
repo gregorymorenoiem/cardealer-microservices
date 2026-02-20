@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)
@@ -43,12 +43,12 @@ builder.Services.AddControllers();
 
 // MediatR (CQRS)
 builder.Services.AddMediatR(cfg =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(EventTrackingService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(IngestEventCommand).Assembly);
 });
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(EventTrackingService.Application.Behaviors.ValidationBehavior<,>));
 
 // Event Repository - Use PostgreSQL for production-ready persistent storage
 // Supports auto-scaling: all replicas share the same database

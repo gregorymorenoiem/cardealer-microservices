@@ -14,8 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventTrackingService.Application\EventTrackingService.Application.csproj" />
-    <ProjectReference Include="..\EventTrackingService.Infrastructure\EventTrackingService.Infrastructure.csproj" />
+    <ProjectReference Include=".\..\EventTrackingService.Application\EventTrackingService.Application.csproj" />
+    <ProjectReference Include=".\..\EventTrackingService.Infrastructure\EventTrackingService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

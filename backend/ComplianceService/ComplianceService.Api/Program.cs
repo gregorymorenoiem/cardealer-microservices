@@ -48,13 +48,13 @@ builder.Services.AddScoped<ITrainingCompletionRepository, TrainingCompletionRepo
 builder.Services.AddScoped<IComplianceMetricRepository, ComplianceMetricRepository>();
 
 // ============ MediatR Configuration ============
-builder.Services.AddMediatR(cfg => 
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ComplianceService.Application.Behaviors.ValidationBehavior<,>));
+builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(CreateFrameworkCommand).Assembly);
 });
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ComplianceService.Application.Behaviors.ValidationBehavior<,>));
 
 // ============ FluentValidation Configuration ============
 builder.Services.AddFluentValidationAutoValidation();
@@ -97,7 +97,7 @@ builder.Services.AddAuthorization(options =>
 // ============ CORS Configuration ============
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)

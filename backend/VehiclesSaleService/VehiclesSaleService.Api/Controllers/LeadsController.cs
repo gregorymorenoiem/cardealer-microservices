@@ -84,7 +84,7 @@ public class LeadsController : ControllerBase
         var vehicleEntity = await _db.Vehicles.FindAsync(new object[] { vehicle.Id }, ct);
         if (vehicleEntity != null)
         {
-            vehicleEntity.InquiryCount = (vehicleEntity.InquiryCount ?? 0) + 1;
+            vehicleEntity.InquiryCount = vehicleEntity.InquiryCount + 1;
         }
 
         await _db.SaveChangesAsync(ct);

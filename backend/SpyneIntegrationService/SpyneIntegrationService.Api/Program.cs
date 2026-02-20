@@ -21,11 +21,11 @@ builder.Services.AddDbContext<SpyneDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblyContaining<TransformImageCommandValidator>());
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(SpyneIntegrationService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssemblyContaining<TransformImageCommandValidator>());
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<TransformImageCommandValidator>();

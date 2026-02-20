@@ -17,6 +17,7 @@
     <ProjectReference Include="..\VehicleIntelligenceService.Application\VehicleIntelligenceService.Application.csproj" />
     <ProjectReference Include="..\VehicleIntelligenceService.Infrastructure\VehicleIntelligenceService.Infrastructure.csproj" />
     <ProjectReference Include="..\VehicleIntelligenceService.Domain\VehicleIntelligenceService.Domain.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

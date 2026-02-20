@@ -77,10 +77,10 @@ public class TaxDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.RncCedula).IsRequired().HasMaxLength(11);
-            entity.Property(e => e.NcfNumber).IsRequired().HasMaxLength(19);
-            entity.Property(e => e.IdentificationType).HasConversion<string>();
-            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
-            entity.Property(e => e.ItbisAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Ncf).IsRequired().HasMaxLength(19);
+            entity.Property(e => e.TipoIdentificacion);
+            entity.Property(e => e.MontoFacturado).HasPrecision(18, 2);
+            entity.Property(e => e.ItbisFacturado).HasPrecision(18, 2);
             entity.Property(e => e.ItbisRetenido).HasPrecision(18, 2);
             entity.HasOne(e => e.TaxDeclaration)
                   .WithMany(d => d.Reporte606Items)
@@ -92,10 +92,10 @@ public class TaxDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.RncCedula).IsRequired().HasMaxLength(11);
-            entity.Property(e => e.NcfNumber).IsRequired().HasMaxLength(19);
-            entity.Property(e => e.IdentificationType).HasConversion<string>();
-            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
-            entity.Property(e => e.ItbisAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Ncf).IsRequired().HasMaxLength(19);
+            entity.Property(e => e.TipoIdentificacion);
+            entity.Property(e => e.MontoFacturado).HasPrecision(18, 2);
+            entity.Property(e => e.ItbisFacturado).HasPrecision(18, 2);
             entity.HasOne(e => e.TaxDeclaration)
                   .WithMany(d => d.Reporte607Items)
                   .HasForeignKey(e => e.TaxDeclarationId);

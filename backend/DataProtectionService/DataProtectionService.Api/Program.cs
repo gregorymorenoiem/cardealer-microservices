@@ -72,7 +72,7 @@ builder.Services.AddScoped<IAnonymizationRecordRepository, AnonymizationRecordRe
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)

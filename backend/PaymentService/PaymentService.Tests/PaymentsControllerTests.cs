@@ -22,12 +22,14 @@ public class PaymentsControllerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
     private readonly Mock<IPaymentGatewayRegistry> _registryMock;
+    private readonly Mock<IGatewayAvailabilityService> _availabilityMock;
     private readonly Mock<ILogger<PaymentsController>> _loggerMock;
 
     public PaymentsControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
         _registryMock = new Mock<IPaymentGatewayRegistry>();
+        _availabilityMock = new Mock<IGatewayAvailabilityService>();
         _loggerMock = new Mock<ILogger<PaymentsController>>();
     }
 
@@ -36,6 +38,7 @@ public class PaymentsControllerTests
         var controller = new PaymentsController(
             _mediatorMock.Object,
             _registryMock.Object,
+            _availabilityMock.Object,
             _loggerMock.Object);
         
         // Setup HttpContext

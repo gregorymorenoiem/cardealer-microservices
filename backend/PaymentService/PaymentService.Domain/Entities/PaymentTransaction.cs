@@ -153,4 +153,26 @@ public class PaymentTransaction
     /// Razón de disputa si aplica
     /// </summary>
     public string? DisputeReason { get; set; }
+
+    // ── Aliases for EF Core configuration compatibility ──
+
+    /// <summary>
+    /// ID de transacción en la pasarela (alias for ExternalTransactionId)
+    /// </summary>
+    public string? GatewayTransactionId { get; set; }
+
+    /// <summary>
+    /// Pasarela de pago utilizada (alias for PaymentGateway)
+    /// </summary>
+    public PaymentGateway Gateway { get; set; }
+
+    /// <summary>
+    /// Comisión cobrada por la pasarela en monto absoluto (alias for Commission)
+    /// </summary>
+    public decimal? CommissionAmount { get; set; }
+
+    /// <summary>
+    /// Porcentaje de comisión aplicado (alias for CommissionPercentage)
+    /// </summary>
+    public decimal? CommissionRate { get; set; }
 }

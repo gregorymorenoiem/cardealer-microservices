@@ -36,10 +36,10 @@ builder.Services.AddSwaggerGen(options =>
 
 // Add MediatR
 builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateJobCommandHandler).Assembly));
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(SchedulerService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(typeof(CreateJobCommandHandler).Assembly));
 
 // Add Infrastructure layer (includes Hangfire, EF Core, repositories)
 builder.Services.AddInfrastructure(builder.Configuration, connectionString);
