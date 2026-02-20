@@ -93,7 +93,7 @@ public class RefundCommandHandler : IRequestHandler<RefundCommand, ChargeRespons
 
             // Actualizar transacción con resultado
             refundTransaction.Status = refundResult.Success ? TransactionStatus.Refunded : TransactionStatus.Error;
-            refundTransaction.AzulTransactionId = refundResult.TransactionId;
+            refundTransaction.AzulTransactionId = refundResult.TransactionId ?? string.Empty;
             refundTransaction.ResponseCode = refundResult.ResponseCode;
             refundTransaction.ResponseMessage = refundResult.Message;
             refundTransaction.CompletedAt = refundResult.Success ? DateTime.UtcNow : null;
@@ -117,7 +117,7 @@ public class RefundCommandHandler : IRequestHandler<RefundCommand, ChargeRespons
             return new ChargeResponseDto
             {
                 TransactionId = refundTransaction.Id,
-                AzulTransactionId = refundTransaction.AzulTransactionId,
+                AzulTransactionId = refundTransaction.AzulTransactionId ?? string.Empty,
                 Status = refundTransaction.Status.ToString(),
                 ResponseCode = refundTransaction.ResponseCode,
                 ResponseMessage = refundTransaction.ResponseMessage,

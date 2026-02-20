@@ -2,21 +2,26 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj files and restore dependencies
-COPY ["InventoryManagementService/InventoryManagementService.Api/InventoryManagementService.Api.csproj", "InventoryManagementService.Api/"]
-COPY ["InventoryManagementService/InventoryManagementService.Application/InventoryManagementService.Application.csproj", "InventoryManagementService.Application/"]
-COPY ["InventoryManagementService/InventoryManagementService.Infrastructure/InventoryManagementService.Infrastructure.csproj", "InventoryManagementService.Infrastructure/"]
-COPY ["InventoryManagementService/InventoryManagementService.Domain/InventoryManagementService.Domain.csproj", "InventoryManagementService.Domain/"]
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
-RUN dotnet restore "InventoryManagementService.Api/InventoryManagementService.Api.csproj"
+# Copy csproj files and restore dependencies
+COPY ["InventoryManagementService/InventoryManagementService.Api/InventoryManagementService.Api.csproj", "InventoryManagementService/InventoryManagementService.Api/"]
+COPY ["InventoryManagementService/InventoryManagementService.Application/InventoryManagementService.Application.csproj", "InventoryManagementService/InventoryManagementService.Application/"]
+COPY ["InventoryManagementService/InventoryManagementService.Infrastructure/InventoryManagementService.Infrastructure.csproj", "InventoryManagementService/InventoryManagementService.Infrastructure/"]
+COPY ["InventoryManagementService/InventoryManagementService.Domain/InventoryManagementService.Domain.csproj", "InventoryManagementService/InventoryManagementService.Domain/"]
+
+RUN dotnet restore "InventoryManagementService/InventoryManagementService.Api/InventoryManagementService.Api.csproj"
 
 # Copy everything else and build
-COPY InventoryManagementService/ .
-WORKDIR "/src/InventoryManagementService.Api"
+COPY . .
+WORKDIR "/src/InventoryManagementService/InventoryManagementService.Api"
 RUN dotnet build "InventoryManagementService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
+WORKDIR "/src/InventoryManagementService/InventoryManagementService.Api"
 RUN dotnet publish "InventoryManagementService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 3: Runtime

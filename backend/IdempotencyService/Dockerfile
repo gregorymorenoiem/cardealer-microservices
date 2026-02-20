@@ -8,18 +8,18 @@ COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDeal
 
 # Copy csproj files and restore
 COPY ["IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj", "IdempotencyService/IdempotencyService.Api/"]
-COPY ["IdempotencyService/IdempotencyService.Application/IdempotencyService.Application.csproj", "IdempotencyService/IdempotencyService.Application/"]
-COPY ["IdempotencyService/IdempotencyService.Domain/IdempotencyService.Domain.csproj", "IdempotencyService/IdempotencyService.Domain/"]
-COPY ["IdempotencyService/IdempotencyService.Infrastructure/IdempotencyService.Infrastructure.csproj", "IdempotencyService/IdempotencyService.Infrastructure/"]
+COPY ["IdempotencyService/IdempotencyService.Core/IdempotencyService.Core.csproj", "IdempotencyService/IdempotencyService.Core/"]
 
 RUN dotnet restore "IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj"
 
-# Copy everything else
+# Copy everything else and build
 COPY . .
 WORKDIR "/src/IdempotencyService/IdempotencyService.Api"
+RUN dotnet build "IdempotencyService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
+WORKDIR "/src/IdempotencyService/IdempotencyService.Api"
 RUN dotnet publish "IdempotencyService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage

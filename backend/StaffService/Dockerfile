@@ -1,39 +1,47 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8080
-
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
 # Copy csproj files and restore
-COPY ["backend/StaffService/StaffService.Api/StaffService.Api.csproj", "backend/StaffService/StaffService.Api/"]
-COPY ["backend/StaffService/StaffService.Application/StaffService.Application.csproj", "backend/StaffService/StaffService.Application/"]
-COPY ["backend/StaffService/StaffService.Domain/StaffService.Domain.csproj", "backend/StaffService/StaffService.Domain/"]
-COPY ["backend/StaffService/StaffService.Infrastructure/StaffService.Infrastructure.csproj", "backend/StaffService/StaffService.Infrastructure/"]
-COPY ["backend/_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "backend/_Shared/CarDealer.Contracts/"]
-COPY ["backend/_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "backend/_Shared/CarDealer.Shared/"]
+COPY ["StaffService/StaffService.Api/StaffService.Api.csproj", "StaffService/StaffService.Api/"]
+COPY ["StaffService/StaffService.Application/StaffService.Application.csproj", "StaffService/StaffService.Application/"]
+COPY ["StaffService/StaffService.Domain/StaffService.Domain.csproj", "StaffService/StaffService.Domain/"]
+COPY ["StaffService/StaffService.Infrastructure/StaffService.Infrastructure.csproj", "StaffService/StaffService.Infrastructure/"]
 
-RUN dotnet restore "backend/StaffService/StaffService.Api/StaffService.Api.csproj"
+RUN dotnet restore "StaffService/StaffService.Api/StaffService.Api.csproj"
 
-# Copy everything and build
+# Copy everything else and build
 COPY . .
-WORKDIR "/src/backend/StaffService/StaffService.Api"
-RUN dotnet build "StaffService.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/StaffService/StaffService.Api"
+RUN dotnet build "StaffService.Api.csproj" -c Release -o /app/build
 
+# Publish stage
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "StaffService.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "StaffService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
-USER appuser
-COPY --from=publish /app/publish .
+EXPOSE 8080
 
-# Set environment variables
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
+
+RUN apk add --no-cache wget
+
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
+
+USER appuser
+COPY --from=publish --chown=appuser:appuser /app/publish .
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "StaffService.Api.dll"]

@@ -36,7 +36,7 @@ EXPOSE 8080
 RUN apk add --no-cache wget
 
 # Create secrets directory and non-root user (Alpine uses addgroup/adduser)
-RUN addgroup -g 1000 appgroup && adduser -D -u 1000 -G appgroup appuser && \
+RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser && \
     mkdir -p /run/secrets && \
     chown -R appuser:appuser /app /run/secrets
 

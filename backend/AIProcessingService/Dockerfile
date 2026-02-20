@@ -2,35 +2,46 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy project files
-COPY AIProcessingService.Api/AIProcessingService.Api.csproj AIProcessingService.Api/
-COPY AIProcessingService.Application/AIProcessingService.Application.csproj AIProcessingService.Application/
-COPY AIProcessingService.Infrastructure/AIProcessingService.Infrastructure.csproj AIProcessingService.Infrastructure/
-COPY AIProcessingService.Domain/AIProcessingService.Domain.csproj AIProcessingService.Domain/
+# Copy shared projects first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
-# Restore dependencies
-RUN dotnet restore AIProcessingService.Api/AIProcessingService.Api.csproj
+# Copy csproj files and restore
+COPY ["AIProcessingService/AIProcessingService.Api/AIProcessingService.Api.csproj", "AIProcessingService/AIProcessingService.Api/"]
+COPY ["AIProcessingService/AIProcessingService.Application/AIProcessingService.Application.csproj", "AIProcessingService/AIProcessingService.Application/"]
+COPY ["AIProcessingService/AIProcessingService.Infrastructure/AIProcessingService.Infrastructure.csproj", "AIProcessingService/AIProcessingService.Infrastructure/"]
+COPY ["AIProcessingService/AIProcessingService.Domain/AIProcessingService.Domain.csproj", "AIProcessingService/AIProcessingService.Domain/"]
 
-# Copy source code
+RUN dotnet restore "AIProcessingService/AIProcessingService.Api/AIProcessingService.Api.csproj"
+
+# Copy everything else and build
 COPY . .
+WORKDIR "/src/AIProcessingService/AIProcessingService.Api"
+RUN dotnet build "AIProcessingService.Api.csproj" -c Release -o /app/build
 
-# Build and publish
-WORKDIR /src/AIProcessingService.Api
-RUN dotnet publish -c Release -o /app/publish
+# Publish stage
+FROM build AS publish
+RUN dotnet publish "AIProcessingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
 EXPOSE 8080
+
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    mkdir -p /run/secrets && \
+    chown -R appuser:appuser /app /run/secrets
+
+RUN apk add --no-cache wget
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
-# Copy published files
-COPY --from=build /app/publish .
+USER appuser
+COPY --from=publish --chown=appuser:appuser /app/publish .
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "AIProcessingService.Api.dll"]
