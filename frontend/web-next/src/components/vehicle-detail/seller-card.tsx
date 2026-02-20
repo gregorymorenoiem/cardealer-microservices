@@ -8,7 +8,20 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Phone, MessageCircle, Mail, MapPin, Star, Check, Clock, Shield, User } from 'lucide-react';
+import {
+  Phone,
+  MessageCircle,
+  Mail,
+  MapPin,
+  Star,
+  Check,
+  Clock,
+  Shield,
+  User,
+  Bot,
+  CalendarDays,
+  Store,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -77,7 +90,7 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
   };
 
   return (
-    <div className={cn('rounded-xl bg-card p-6 shadow-sm', className)} data-testid="seller-info">
+    <div className={cn('bg-card rounded-xl p-6 shadow-sm', className)} data-testid="seller-info">
       {/* Seller header */}
       <div className="flex items-start gap-4">
         {/* Avatar */}
@@ -174,13 +187,30 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
           </Button>
         )}
 
-        {/* Message */}
-        <Button variant="outline" className="w-full gap-2" asChild>
-          <Link href={`/mensajes/nuevo?vehicleId=${vehicle.id}`}>
-            <Mail className="h-5 w-5" />
-            Enviar mensaje
-          </Link>
-        </Button>
+        {/* Message / Chat — context-aware */}
+        {isDealer ? (
+          <>
+            <Button variant="outline" className="w-full gap-2" asChild>
+              <Link href={`/dealers/${sellerData.id}?chat=open`}>
+                <Bot className="h-5 w-5" />
+                Chatear con Ana (IA)
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full gap-2" asChild>
+              <Link href={`/dealers/${sellerData.id}#reviews`}>
+                <CalendarDays className="h-5 w-5" />
+                Agendar visita
+              </Link>
+            </Button>
+          </>
+        ) : (
+          <Button variant="outline" className="w-full gap-2" asChild>
+            <Link href={`/mensajes/nuevo?vehicleId=${vehicle.id}`}>
+              <Mail className="h-5 w-5" />
+              Enviar mensaje
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Trust signals */}
@@ -194,14 +224,15 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
         </p>
       </div>
 
-      {/* View Seller Profile */}
+      {/* View Dealer Profile + Inventory */}
       {isDealer && (
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col items-center gap-1">
           <Link
             href={`/dealers/${sellerData.id}`}
-            className="text-primary flex items-center justify-center gap-1 text-sm hover:underline"
+            className="text-primary flex items-center gap-1 text-sm hover:underline"
           >
-            Ver perfil completo
+            <Store className="h-3.5 w-3.5" />
+            Ver perfil y todo el inventario
             <span aria-hidden="true">→</span>
           </Link>
         </div>

@@ -15,6 +15,7 @@ import {
   SimilarVehicles,
 } from '@/components/vehicle-detail';
 import { VehicleCardSkeleton } from '@/components/ui/vehicle-card';
+import { ReviewsSection } from '@/components/reviews';
 import type { Vehicle } from '@/types';
 
 interface VehicleDetailClientProps {
@@ -59,6 +60,14 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
             {/* Tabs - Description, Specs, Features */}
             <VehicleTabs vehicle={vehicle} />
+
+            {/* Reviews for the seller/dealer */}
+            <ReviewsSection
+              targetId={vehicle.sellerId}
+              targetType={vehicle.sellerType === 'dealer' ? 'dealer' : 'seller'}
+              vehicleId={vehicle.id}
+              vehicleTitle={title}
+            />
           </div>
 
           {/* Right column - Sticky sidebar */}

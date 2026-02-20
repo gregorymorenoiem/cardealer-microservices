@@ -14,7 +14,7 @@
 'use client';
 
 import * as React from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -32,17 +32,17 @@ import {
   Shield,
   CheckCircle,
   MessageSquare,
-  Calendar,
   Car,
   ExternalLink,
   Share2,
   AlertCircle,
-  Loader2,
 } from 'lucide-react';
 import { useDealerBySlug, useDealerLocations } from '@/hooks/use-dealers';
-import { useReviewsForTarget, useReviewStats } from '@/hooks/use-reviews';
+import { useReviewStats } from '@/hooks/use-reviews';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
-import type { Review as ReviewType } from '@/services/reviews';
+import { ReviewsSection } from '@/components/reviews';
+import { AppointmentCalendar } from '@/components/appointments';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 import type { VehicleCardData } from '@/types';
 
 // =============================================================================
@@ -118,52 +118,6 @@ function DealerNotFound() {
 }
 
 // =============================================================================
-// REVIEW ITEM COMPONENT
-// =============================================================================
-
-interface ReviewItemProps {
-  review: ReviewType;
-}
-
-function ReviewItem({ review }: ReviewItemProps) {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="mb-3 flex items-start justify-between">
-          <div>
-            <div className="font-semibold">{review.reviewerName}</div>
-            <div className="text-muted-foreground text-sm">
-              {new Date(review.createdAt).toLocaleDateString('es-DO', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </div>
-          </div>
-          <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`h-4 w-4 ${
-                  i < review.overallRating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-        <p className="text-foreground">{review.content}</p>
-        {review.isVerifiedPurchase && (
-          <div className="mt-3 text-sm text-primary">
-            <CheckCircle className="mr-1 inline h-4 w-4" />
-            Compra verificada
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
 
@@ -209,12 +163,13 @@ interface PageProps {
 
 export default function DealerProfileClient({ params }: PageProps) {
   const { slug } = React.use(params);
+  const searchParams = useSearchParams();
+  const chatAutoOpen = searchParams.get('chat') === 'open';
 
   // Fetch dealer data
   const { data: dealerData, isLoading: dealerLoading, error: dealerError } = useDealerBySlug(slug);
   const { data: locations } = useDealerLocations(dealerData?.id || '');
   const { data: reviewStats } = useReviewStats('dealer', dealerData?.id || '');
-  const { data: reviewsData } = useReviewsForTarget('dealer', dealerData?.id || '');
   const { data: vehiclesData, isLoading: vehiclesLoading } = useVehiclesByDealer(
     dealerData?.id || ''
   );
@@ -289,7 +244,6 @@ export default function DealerProfileClient({ params }: PageProps) {
   };
 
   // Get data from hooks
-  const reviews = reviewsData?.items || [];
   const vehicles = vehiclesData?.items || [];
 
   return (
@@ -320,7 +274,7 @@ export default function DealerProfileClient({ params }: PageProps) {
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold md:text-3xl">{dealer.name}</h1>
                 {dealer.isVerified && (
-                  <Badge className="gap-1 bg-primary/10 text-primary">
+                  <Badge className="bg-primary/10 text-primary gap-1">
                     <CheckCircle className="h-3 w-3" />
                     Verificado
                   </Badge>
@@ -435,89 +389,11 @@ export default function DealerProfileClient({ params }: PageProps) {
 
               {/* Reviews Tab */}
               <TabsContent value="reviews" className="mt-6">
-                <div className="space-y-4">
-                  {/* Rating Summary */}
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-6">
-                        <div className="text-center">
-                          <div className="text-4xl font-bold text-primary">{dealer.rating}</div>
-                          <div className="mt-1 flex items-center gap-0.5">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < Math.floor(dealer.rating)
-                                    ? 'fill-amber-500 text-amber-500'
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <div className="text-muted-foreground mt-1 text-sm">
-                            {dealer.totalReviews} reseñas
-                          </div>
-                        </div>
-
-                        <div className="flex-1 space-y-1">
-                          {[5, 4, 3, 2, 1].map(stars => (
-                            <div key={stars} className="flex items-center gap-2">
-                              <span className="w-3 text-sm">{stars}</span>
-                              <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                              <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-                                <div
-                                  className="h-full rounded-full bg-amber-500"
-                                  style={{
-                                    width: `${
-                                      stars === 5
-                                        ? 75
-                                        : stars === 4
-                                          ? 20
-                                          : stars === 3
-                                            ? 3
-                                            : stars === 2
-                                              ? 1
-                                              : 1
-                                    }%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Reviews List */}
-                  {reviews.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-8 text-center">
-                        <MessageSquare className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
-                        <p className="text-muted-foreground">
-                          Aún no hay reseñas para este dealer.
-                        </p>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          ¡Sé el primero en dejar una reseña!
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <>
-                      {reviews.slice(0, 5).map(review => (
-                        <ReviewItem key={review.id} review={review} />
-                      ))}
-
-                      {reviews.length > 5 && (
-                        <div className="text-center">
-                          <Button variant="outline">
-                            Ver todas las reseñas ({reviews.length})
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                <ReviewsSection
+                  targetId={dealerData.id}
+                  targetType="dealer"
+                  targetName={dealer.name}
+                />
               </TabsContent>
 
               {/* About Tab */}
@@ -609,7 +485,7 @@ export default function DealerProfileClient({ params }: PageProps) {
                       href={`https://instagram.com/${dealer.contact.instagramUrl.replace(/^@/, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-primary"
+                      className="hover:text-primary flex items-center gap-1"
                     >
                       {dealer.contact.instagramUrl}
                       <ExternalLink className="h-3 w-3" />
@@ -634,7 +510,7 @@ export default function DealerProfileClient({ params }: PageProps) {
                       href={`https://facebook.com/${dealer.contact.facebookUrl.replace(/^@/, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-primary"
+                      className="hover:text-primary flex items-center gap-1"
                     >
                       {dealer.contact.facebookUrl}
                       <ExternalLink className="h-3 w-3" />
@@ -649,7 +525,7 @@ export default function DealerProfileClient({ params }: PageProps) {
                       href={`https://wa.me/${dealer.contact.whatsAppNumber.replace(/[^0-9]/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-primary"
+                      className="hover:text-primary flex items-center gap-1"
                     >
                       WhatsApp: {dealer.contact.whatsAppNumber}
                       <ExternalLink className="h-3 w-3" />
@@ -680,22 +556,18 @@ export default function DealerProfileClient({ params }: PageProps) {
               </CardContent>
             </Card>
 
-            {/* Schedule Visit CTA */}
-            <Card className="border-primary bg-primary/10">
-              <CardContent className="p-6 text-center">
-                <Calendar className="mx-auto mb-3 h-10 w-10 text-primary" />
-                <h3 className="mb-2 font-semibold">¿Te interesa un vehículo?</h3>
-                <p className="text-muted-foreground mb-4 text-sm">
-                  Agenda una visita para ver el vehículo en persona
-                </p>
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Agendar Visita
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Schedule Visit - Interactive Calendar */}
+            <AppointmentCalendar
+              providerId={dealerData.id}
+              providerName={dealer.name}
+              location={`${dealer.location.address}, ${dealer.location.city}`}
+            />
           </div>
         </div>
       </div>
+
+      {/* Dealer-scoped Chatbot — auto-opens when ?chat=open */}
+      {chatAutoOpen && <ChatWidget dealerId={dealerData.id} />}
     </div>
   );
 }
