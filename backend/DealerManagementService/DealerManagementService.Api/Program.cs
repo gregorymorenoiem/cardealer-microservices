@@ -191,21 +191,18 @@ if (app.Environment.IsDevelopment())
     app.MapControllers();
     app.MapHealthChecks("/health");
 
-    // Auto-migrate database on startup (development only)
-    if (app.Environment.IsDevelopment())
+    // Auto-create database schema on startup (all environments)
+    using (var scope = app.Services.CreateScope())
     {
-        using (var scope = app.Services.CreateScope())
+        var dbContext = scope.ServiceProvider.GetRequiredService<DealerDbContext>();
+        try
         {
-            var dbContext = scope.ServiceProvider.GetRequiredService<DealerDbContext>();
-            try
-            {
-                dbContext.Database.EnsureCreated();
-                Log.Information("Database created/verified for {ServiceName}", ServiceName);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "An error occurred while creating the database for {ServiceName}", ServiceName);
-            }
+            dbContext.Database.EnsureCreated();
+            Log.Information("Database created/verified for {ServiceName}", ServiceName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while creating the database for {ServiceName}", ServiceName);
         }
     }
 

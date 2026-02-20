@@ -100,11 +100,19 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Ensure database tables are created on startup
+// Ensure database tables are created on startup (all environments)
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
-    db.Database.EnsureCreated();
+    try
+    {
+        db.Database.EnsureCreated();
+        Log.Information("AppointmentService database schema created/verified");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "AppointmentService DB init failed — continuing startup");
+    }
 }
 
 app.Run();

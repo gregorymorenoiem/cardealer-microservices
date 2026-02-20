@@ -83,7 +83,7 @@ builder.Services.AddAuthorization();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         if (isDev)
@@ -207,20 +207,18 @@ app.MapGet("/", () => new
     }
 });
 
-// Aplicar migraciones automáticamente en desarrollo
-if (app.Environment.IsDevelopment())
+// Apply database migrations on startup (all environments)
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ReviewDbContext>();
-    
     try
     {
         await context.Database.MigrateAsync();
-        Log.Information("Database migrations applied successfully");
+        Log.Information("ReviewService database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Error applying database migrations");
+        Log.Error(ex, "ReviewService migration failed — continuing startup");
     }
 }
 
