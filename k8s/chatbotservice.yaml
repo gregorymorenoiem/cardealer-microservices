@@ -85,13 +85,13 @@ spec:
                 secretKeyRef:
                   name: okla-secrets
                   key: jwt-secret-key
-            - name: Redis__ConnectionString
-              value: "redis:6379,password=$(REDIS_PASSWORD)"
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: redis-secrets
                   key: REDIS_PASSWORD
+            - name: Redis__ConnectionString
+              value: "redis:6379,password=$(REDIS_PASSWORD)"
             - name: RabbitMQ__Host
               value: "rabbitmq"
             - name: RabbitMQ__Username
@@ -146,9 +146,10 @@ spec:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 12
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
 
 ---
 # ── ChatbotService Service ───────────────────────────────────────────────────

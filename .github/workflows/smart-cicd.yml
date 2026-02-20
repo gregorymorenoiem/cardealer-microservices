@@ -83,6 +83,8 @@ jobs:
       integrationservice: ${{ steps.filter.outputs.integrationservice }}
       # Compliance
       dataprotectionservice: ${{ steps.filter.outputs.dataprotectionservice }}
+      # Advertising
+      advertisingservice: ${{ steps.filter.outputs.advertisingservice }}
       # Chatbot (MLOps pipeline)
       chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
       llm-server: ${{ steps.filter.outputs.llm-server }}
@@ -233,6 +235,10 @@ jobs:
             dataprotectionservice:
               - 'backend/DataProtectionService/**'
               - 'backend/_Shared/**'
+            # Advertising
+            advertisingservice:
+              - 'backend/AdvertisingService/**'
+              - 'backend/_Shared/**'
             # Chatbot
             chatbotservice:
               - 'backend/ChatbotService/ChatbotService.Api/**'
@@ -306,6 +312,7 @@ jobs:
           echo "| ApiDocsService | ${{ steps.filter.outputs.apidocsservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| IntegrationService | ${{ steps.filter.outputs.integrationservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| DataProtectionService | ${{ steps.filter.outputs.dataprotectionservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdvertisingService | ${{ steps.filter.outputs.advertisingservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
@@ -788,6 +795,21 @@ jobs:
     secrets: inherit
 
   # ============================================
+  # ADVERTISING
+  # ============================================
+
+  advertisingservice:
+    name: 📣 AdvertisingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.advertisingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: advertisingservice
+      service-path: backend/AdvertisingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
   # CHATBOT (MLOps — dedicated pipeline)
   # ============================================
 
@@ -885,6 +907,8 @@ jobs:
       - integrationservice
       # Compliance
       - dataprotectionservice
+      # Advertising
+      - advertisingservice
       # Chatbot + Gateway + Frontend
       - chatbotservice
       - gateway
@@ -998,6 +1022,8 @@ jobs:
       - integrationservice
       # Compliance
       - dataprotectionservice
+      # Advertising
+      - advertisingservice
       # Chatbot + Gateway + Frontend
       - chatbotservice
       - gateway
@@ -1054,6 +1080,7 @@ jobs:
           echo "| ApiDocsService | ${{ needs.apidocsservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| IntegrationService | ${{ needs.integrationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| DataProtectionService | ${{ needs.dataprotectionservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdvertisingService | ${{ needs.advertisingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

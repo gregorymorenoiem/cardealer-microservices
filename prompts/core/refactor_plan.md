@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #codebase
 Diseña un plan de refactor por fases (PRs pequeños e independientes).
 Criterios: mínimo riesgo, máximo impacto, cero breaking changes no anunciados.

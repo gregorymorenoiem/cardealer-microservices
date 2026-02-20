@@ -7,6 +7,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,9 +24,15 @@ import {
   ChevronRight,
   Shield,
   CreditCard,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
+import { useAuth } from '@/hooks/use-auth';
+import { useVehicle } from '@/hooks/use-vehicles';
+import { useCreateCampaign } from '@/hooks/use-advertising';
+import { toast } from 'sonner';
+import type { AdPlacementType, CampaignPricingModel } from '@/types/advertising';
 
 function useBoostPlans() {
   const { pricing, formatPrice, isLoading } = usePlatformPricing();
@@ -102,15 +109,61 @@ function useBoostPlans() {
 }
 
 export default function BoostVehiclePage() {
+  const params = useParams();
+  const router = useRouter();
+  const vehicleId = params.id as string;
+  const { user } = useAuth();
+  const { data: vehicle } = useVehicle(vehicleId);
+  const createCampaignMutation = useCreateCampaign();
+
   const [selectedPlan, setSelectedPlan] = useState('pro');
   const [isProcessing, setIsProcessing] = useState(false);
   const { boostPlans, testimonials, formatPrice, isLoading } = useBoostPlans();
 
-  const handlePurchase = () => {
+  const vehicleTitle = vehicle
+    ? `${vehicle.make} ${vehicle.model} ${vehicle.year}`
+    : 'Cargando vehículo...';
+
+  const planConfig: Record<string, { placement: AdPlacementType; days: number }> = {
+    basic: { placement: 'FeaturedSpot', days: 7 },
+    pro: { placement: 'FeaturedSpot', days: 15 },
+    premium: { placement: 'PremiumSpot', days: 30 },
+  };
+
+  const handlePurchase = async () => {
+    if (!user?.id || !vehicleId) {
+      toast.error('Debes iniciar sesión para destacar tu vehículo');
+      return;
+    }
+
+    const plan = boostPlans.find(p => p.id === selectedPlan);
+    const config = planConfig[selectedPlan];
+    if (!plan || !config) return;
+
     setIsProcessing(true);
-    setTimeout(() => {
-      window.location.href = '/mis-vehiculos';
-    }, 2000);
+    try {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + config.days);
+
+      await createCampaignMutation.mutateAsync({
+        ownerId: user.id,
+        ownerType: 'Individual',
+        vehicleId,
+        placementType: config.placement,
+        pricingModel: 'FixedMonthly' as CampaignPricingModel,
+        totalBudget: plan.price,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+
+      toast.success('¡Campaña creada! Procede al pago para activarla.');
+      router.push('/mis-vehiculos');
+    } catch {
+      toast.error('Error al crear la campaña. Inténtalo de nuevo.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const getColorClasses = (color: string, isSelected: boolean) => {
@@ -154,12 +207,12 @@ export default function BoostVehiclePage() {
           </Link>
           <div>
             <h1 className="text-foreground text-2xl font-bold">Destacar Vehículo</h1>
-            <p className="text-muted-foreground">Toyota Corolla XLE 2022</p>
+            <p className="text-muted-foreground">{vehicleTitle}</p>
           </div>
         </div>
 
         {/* Hero Stats */}
-        <Card className="mb-8 border-0 bg-gradient-to-r from-primary to-teal-500 text-white">
+        <Card className="from-primary mb-8 border-0 bg-gradient-to-r to-teal-500 text-white">
           <CardContent className="py-8">
             <div className="mb-6 text-center">
               <Sparkles className="mx-auto mb-4 h-12 w-12" />
@@ -174,21 +227,21 @@ export default function BoostVehiclePage() {
                   <Eye className="h-5 w-5" />
                   <span className="text-2xl font-bold">10x</span>
                 </div>
-                <p className="text-sm text-primary-foreground">Más vistas</p>
+                <p className="text-primary-foreground text-sm">Más vistas</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1">
                   <TrendingUp className="h-5 w-5" />
                   <span className="text-2xl font-bold">85%</span>
                 </div>
-                <p className="text-sm text-primary-foreground">Venden más rápido</p>
+                <p className="text-primary-foreground text-sm">Venden más rápido</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1">
                   <Clock className="h-5 w-5" />
                   <span className="text-2xl font-bold">7 días</span>
                 </div>
-                <p className="text-sm text-primary-foreground">Tiempo promedio</p>
+                <p className="text-primary-foreground text-sm">Tiempo promedio</p>
               </div>
             </div>
           </CardContent>
@@ -247,7 +300,7 @@ export default function BoostVehiclePage() {
                           RD$ {plan.price.toLocaleString()}
                         </p>
                         {plan.savings && (
-                          <p className="text-sm text-primary">Ahorras RD$ {plan.savings}</p>
+                          <p className="text-primary text-sm">Ahorras RD$ {plan.savings}</p>
                         )}
                         <div
                           className={`mt-2 ml-auto h-5 w-5 rounded-full border-2 ${
@@ -287,17 +340,17 @@ export default function BoostVehiclePage() {
                 </div>
                 <div className="border-border flex justify-between border-b py-2">
                   <span className="text-muted-foreground">Vehículo</span>
-                  <span className="text-right text-sm font-medium">Toyota Corolla 2022</span>
+                  <span className="text-right text-sm font-medium">{vehicleTitle}</span>
                 </div>
                 <div className="flex justify-between py-3 text-lg">
                   <span className="font-semibold">Total</span>
-                  <span className="font-bold text-primary">
+                  <span className="text-primary font-bold">
                     RD$ {selectedPlanData?.price.toLocaleString()}
                   </span>
                 </div>
 
                 <Button
-                  className="w-full bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 w-full"
                   size="lg"
                   onClick={handlePurchase}
                   disabled={isProcessing}

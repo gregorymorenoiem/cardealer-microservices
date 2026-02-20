@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #file:[RUTA DEL MÓDULO]
 Módulo a refactorizar: [NOMBRE / RUTA]
 Plan a seguir: [pega el plan del PR correspondiente de CORE-C]

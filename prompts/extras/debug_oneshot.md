@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: 'terminal_last_command' (o pega el stack trace completo)
 Archivo relevante: #file:[RUTA]
 

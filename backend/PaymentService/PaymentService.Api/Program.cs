@@ -20,6 +20,7 @@ using PaymentService.Domain.Interfaces;
 using PaymentService.Domain.Enums;
 using PaymentService.Infrastructure.Persistence;
 using PaymentService.Infrastructure.Repositories;
+using PaymentService.Infrastructure.Repositories;
 using PaymentService.Infrastructure.Services;
 using PaymentService.Infrastructure.Services.Settings;
 using PaymentService.Infrastructure.Services.Providers;
@@ -90,6 +91,9 @@ try
     builder.Services.AddScoped<IAzulTransactionRepository, AzulTransactionRepository>();
     builder.Services.AddScoped<IAzulSubscriptionRepository, AzulSubscriptionRepository>();
 
+    // ==================== INVOICING ====================
+    builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+
     // ==================== SAVED PAYMENT METHODS ====================
     builder.Services.AddScoped<ISavedPaymentMethodRepository, SavedPaymentMethodRepository>();
 
@@ -131,10 +135,10 @@ try
 
     // MediatR
     builder.Services.AddMediatR(config =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(PaymentService.Application.Behaviors.ValidationBehavior<,>));
         config.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+    // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+    builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(PaymentService.Application.Behaviors.ValidationBehavior<,>));
 
     // FluentValidation
     builder.Services.AddValidatorsFromAssemblyContaining<ChargeRequestValidator>();

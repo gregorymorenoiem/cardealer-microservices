@@ -29,6 +29,12 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<HomepageSectionConfig> HomepageSectionConfigs => Set<HomepageSectionConfig>();
     public DbSet<VehicleHomepageSection> VehicleHomepageSections => Set<VehicleHomepageSection>();
 
+    // ========================================
+    // LEADS & MESSAGING
+    // ========================================
+    public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<LeadMessage> LeadMessages => Set<LeadMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -683,6 +689,63 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.HasIndex(f => f.UserId);
             entity.HasIndex(f => f.VehicleId);
             entity.HasIndex(f => new { f.UserId, f.VehicleId }).IsUnique();
+        });
+
+        // ========================================
+        // LEAD CONFIGURATION
+        // ========================================
+
+        modelBuilder.Entity<Lead>(entity =>
+        {
+            entity.ToTable("leads");
+            entity.HasKey(l => l.Id);
+            entity.Property(l => l.Id).ValueGeneratedNever();
+            entity.Property(l => l.VehicleId).IsRequired();
+            entity.Property(l => l.SellerId).IsRequired();
+            entity.Property(l => l.BuyerName).IsRequired().HasMaxLength(200);
+            entity.Property(l => l.BuyerEmail).IsRequired().HasMaxLength(254);
+            entity.Property(l => l.BuyerPhone).HasMaxLength(20);
+            entity.Property(l => l.Message).IsRequired().HasMaxLength(2000);
+            entity.Property(l => l.VehicleTitle).HasMaxLength(300);
+            entity.Property(l => l.VehicleImageUrl).HasMaxLength(500);
+            entity.Property(l => l.VehiclePrice).HasPrecision(18, 2);
+            entity.Property(l => l.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(l => l.Source).HasConversion<string>().HasMaxLength(20);
+            entity.Property(l => l.IpAddress).HasMaxLength(45);
+            entity.Property(l => l.UserAgent).HasMaxLength(500);
+            entity.Property(l => l.CreatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(l => l.Vehicle)
+                .WithMany()
+                .HasForeignKey(l => l.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(l => l.Messages)
+                .WithOne(m => m.Lead)
+                .HasForeignKey(m => m.LeadId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(l => l.SellerId);
+            entity.HasIndex(l => l.DealerId);
+            entity.HasIndex(l => l.VehicleId);
+            entity.HasIndex(l => l.BuyerEmail);
+            entity.HasIndex(l => l.Status);
+            entity.HasIndex(l => l.CreatedAt);
+        });
+
+        modelBuilder.Entity<LeadMessage>(entity =>
+        {
+            entity.ToTable("lead_messages");
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Id).ValueGeneratedNever();
+            entity.Property(m => m.SenderId).IsRequired();
+            entity.Property(m => m.SenderName).IsRequired().HasMaxLength(200);
+            entity.Property(m => m.SenderRole).HasConversion<string>().HasMaxLength(20);
+            entity.Property(m => m.Content).IsRequired().HasMaxLength(5000);
+            entity.Property(m => m.CreatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(m => m.LeadId);
+            entity.HasIndex(m => m.CreatedAt);
         });
     }
 

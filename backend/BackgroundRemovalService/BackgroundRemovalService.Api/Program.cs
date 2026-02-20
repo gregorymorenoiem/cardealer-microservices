@@ -115,12 +115,12 @@ builder.Services.AddScoped<IValidator<CreateRemovalJobRequest>, CreateRemovalJob
 
 // === MediatR ===
 builder.Services.AddMediatR(cfg =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(BackgroundRemovalService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(CreateRemovalJobCommandHandler).Assembly);
 });
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(BackgroundRemovalService.Application.Behaviors.ValidationBehavior<,>));
 
 // === Controllers ===
 builder.Services.AddControllers();

@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #codebase
 Área de performance: [API / DB queries / Frontend bundle / memoria / etc.]
 

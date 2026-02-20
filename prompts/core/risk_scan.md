@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #codebase
 Escanea el repo para detectar los 10 mayores riesgos y deudas técnicas.
 Prioriza: seguridad (auth, secretos, inyección), CI/CD roto, errores silenciados,

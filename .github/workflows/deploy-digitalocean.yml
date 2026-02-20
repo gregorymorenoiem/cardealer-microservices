@@ -186,10 +186,13 @@ jobs:
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
           # --- Docker registry secret ---
+          # ⚠️ Uses GHCR_PAT (persistent Fine-grained PAT with read:packages scope)
+          # instead of GITHUB_TOKEN (ephemeral, expires after workflow completes).
+          # Without a persistent token, pods get ImagePullBackOff after workflow finishes.
           kubectl create secret docker-registry registry-credentials \
             --docker-server=ghcr.io \
-            --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --docker-username=${{ github.repository_owner }} \
+            --docker-password=${{ secrets.GHCR_PAT }} \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
           # --- Consolidated okla-secrets (chatbot + shared) ---

@@ -44,6 +44,16 @@ public class AzulDbContext : DbContext
     /// </summary>
     public DbSet<SavedPaymentMethod> SavedPaymentMethods { get; set; } = null!;
 
+    /// <summary>
+    /// Transacciones multi-gateway (genérico)
+    /// </summary>
+    public DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
+
+    /// <summary>
+    /// Facturas generadas (DGII-compliant)
+    /// </summary>
+    public DbSet<Invoice> Invoices { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -363,6 +373,71 @@ public class AzulDbContext : DbContext
                 .HasFilter("\"IsDefault\" = true");
             entity.HasIndex(e => new { e.Token, e.PaymentGateway }).IsUnique();
             entity.HasIndex(e => e.IsActive);
+        });
+
+        // ==================== PAYMENT TRANSACTIONS (Multi-Gateway) ====================
+        modelBuilder.Entity<PaymentTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.GatewayTransactionId).HasMaxLength(100);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).IsRequired().HasMaxLength(3).HasDefaultValue("DOP");
+            entity.Property(e => e.TransactionType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ResponseCode).HasMaxLength(10);
+            entity.Property(e => e.ResponseMessage).HasMaxLength(500);
+            entity.Property(e => e.AuthorizationCode).HasMaxLength(50);
+            entity.Property(e => e.CommissionAmount).HasPrecision(18, 4);
+            entity.Property(e => e.CommissionRate).HasPrecision(8, 4);
+            entity.Property(e => e.NetAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.GatewayTransactionId);
+            entity.HasIndex(e => e.Gateway);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        // ==================== INVOICES (DGII-Compliant) ====================
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.InvoiceNumber).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.Ncf).HasMaxLength(19);
+            entity.Property(e => e.Subtotal).HasPrecision(18, 2);
+            entity.Property(e => e.TaxRate).HasPrecision(5, 4);
+            entity.Property(e => e.TaxAmount).HasPrecision(18, 2);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).IsRequired().HasMaxLength(3).HasDefaultValue("DOP");
+            entity.Property(e => e.ExchangeRate).HasPrecision(18, 6);
+            entity.Property(e => e.AmountInDop).HasPrecision(18, 2);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.LineItemsJson).HasColumnType("jsonb");
+            entity.Property(e => e.BuyerName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.BuyerEmail).IsRequired().HasMaxLength(254);
+            entity.Property(e => e.BuyerRnc).HasMaxLength(11);
+            entity.Property(e => e.BuyerAddress).HasMaxLength(500);
+            entity.Property(e => e.BuyerPhone).HasMaxLength(20);
+            entity.Property(e => e.SellerName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.SellerRnc).HasMaxLength(11);
+            entity.Property(e => e.SellerAddress).HasMaxLength(500);
+            entity.Property(e => e.PdfUrl).HasMaxLength(500);
+            entity.Property(e => e.PdfStorageKey).HasMaxLength(255);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.CorrelationId).HasMaxLength(50);
+            entity.Property(e => e.IssuedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(e => e.InvoiceNumber).IsUnique();
+            entity.HasIndex(e => e.Ncf).IsUnique().HasFilter("\"Ncf\" IS NOT NULL");
+            entity.HasIndex(e => e.PaymentTransactionId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.DealerId);
+            entity.HasIndex(e => e.IssuedAt);
+            entity.HasIndex(e => e.Status);
         });
     }
 }

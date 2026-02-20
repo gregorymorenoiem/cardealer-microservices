@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #selection
 
 Actúa como un senior engineer haciendo code review. Prioriza:

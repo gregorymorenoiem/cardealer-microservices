@@ -20,6 +20,9 @@ import {
   SkeletonGrid,
   type FeaturedListingItem,
 } from '@/components/homepage';
+import FeaturedVehicles from '@/components/advertising/featured-vehicles';
+import { useBrands, useCategories } from '@/hooks/use-advertising';
+import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
 import {
   transformHomepageVehicleToVehicle,
   type HomepageSection,
@@ -77,6 +80,41 @@ export default function HomepageClient({ sections }: HomepageClientProps) {
   const deportivos = getSection('deportivos');
   const lujo = getSection('lujo');
 
+  // Dynamic brands & categories from AdvertisingService
+  const { data: apiBrands } = useBrands();
+  const { data: apiCategories } = useCategories();
+
+  const dynamicBrands = useMemo(() => {
+    if (!apiBrands || apiBrands.length === 0) return undefined;
+    return apiBrands
+      .filter((b: BrandConfig) => b.isActive)
+      .sort((a: BrandConfig, b: BrandConfig) => a.displayOrder - b.displayOrder)
+      .map((b: BrandConfig) => ({
+        id: b.id,
+        name: b.displayName,
+        slug: b.brandKey.toLowerCase(),
+        logoUrl: b.logoUrl || undefined,
+        vehicleCount: b.vehicleCount,
+      }));
+  }, [apiBrands]);
+
+  const dynamicCategories = useMemo(() => {
+    if (!apiCategories || apiCategories.length === 0) return undefined;
+    return apiCategories
+      .filter((c: CategoryImageConfig) => c.isActive)
+      .sort((a: CategoryImageConfig, b: CategoryImageConfig) => a.displayOrder - b.displayOrder)
+      .map((c: CategoryImageConfig) => ({
+        id: c.id,
+        name: c.displayName,
+        slug: c.categoryKey.toLowerCase(),
+        description: c.description,
+        vehicleCount: 0,
+        imageUrl: c.imageUrl,
+        gradient: c.accentColor || 'from-blue-600 to-blue-800',
+        trending: c.isTrending,
+      }));
+  }, [apiCategories]);
+
   const heroVehicles: Vehicle[] = useMemo(() => {
     const source = carousel?.vehicles.length ? carousel : destacados;
     if (!source || source.vehicles.length === 0) return [];
@@ -119,9 +157,15 @@ export default function HomepageClient({ sections }: HomepageClientProps) {
           <h2 className="text-muted-foreground mb-4 text-center text-xs font-semibold tracking-widest uppercase">
             Las marcas más buscadas en República Dominicana
           </h2>
-          <BrandSlider autoScroll scrollSpeed={40} />
+          <BrandSlider brands={dynamicBrands} autoScroll scrollSpeed={40} />
         </div>
       </section>
+
+      {/* Featured Sponsored Vehicles */}
+      <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={8} />
+
+      {/* Premium Sponsored Vehicles */}
+      <FeaturedVehicles title="💎 Vehículos Premium" placementType="PremiumSpot" maxItems={4} />
 
       {/* Browse by Category */}
       <section className="bg-muted/50 dark:bg-muted/20 py-12 lg:py-16">
@@ -137,7 +181,7 @@ export default function HomepageClient({ sections }: HomepageClientProps) {
               Desde SUVs familiares hasta deportivos de alto rendimiento.
             </p>
           </div>
-          <CategoryCards />
+          <CategoryCards categories={dynamicCategories} />
         </div>
       </section>
 

@@ -76,11 +76,11 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // MediatR
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblyContaining<StartVehicle360ProcessingHandler>());
 
 // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Vehicle360ProcessingService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssemblyContaining<StartVehicle360ProcessingHandler>());
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<StartVehicle360ProcessingCommandValidator>();
@@ -140,7 +140,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Health check endpoints
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("db")
@@ -161,3 +164,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+public partial class Program { }

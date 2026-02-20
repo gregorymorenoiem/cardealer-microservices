@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #file:[RUTA DEL MÓDULO A TESTEAR]
 Framework: detecta el framework de tests del repo y adáptate.
 

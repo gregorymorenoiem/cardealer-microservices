@@ -2265,6 +2265,155 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 8080 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    // ── AdvertisingService ──────────────────────────────────────────
+
+    {
+      "UpstreamPathTemplate": "/api/advertising/campaigns",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/campaigns",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/campaigns/{id}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/campaigns/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/campaigns/owner/{ownerId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/campaigns/owner/{ownerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/campaigns/{id}/pause",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/campaigns/{id}/pause",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/campaigns/{id}/resume",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/campaigns/{id}/resume",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/campaigns/{id}/cancel",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/campaigns/{id}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/tracking/impression",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/tracking/impression",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/tracking/click",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/tracking/click",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/rotation/{section}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/rotation/{section}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/rotation/config/{section}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/rotation/config/{section}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/rotation/config",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/advertising/rotation/config",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/rotation/refresh",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/advertising/rotation/refresh",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/homepage/categories",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/homepage/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/homepage/categories",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/advertising/homepage/categories",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/homepage/brands",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/homepage/brands",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/homepage/brands",
+      "UpstreamHttpMethod": ["PUT"],
+      "DownstreamPathTemplate": "/api/advertising/homepage/brands",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/reports/campaign/{campaignId}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/reports/campaign/{campaignId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/reports/platform",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/reports/platform",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
     }
   ],
   "GlobalConfiguration": {

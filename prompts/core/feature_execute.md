@@ -1,3 +1,9 @@
+---
+version: 2.0
+lastUpdated: 2026-02-19
+author: gregorymoreno
+---
+
 Context: #codebase
 Spec a implementar: [pega la spec de CORE-E]
 

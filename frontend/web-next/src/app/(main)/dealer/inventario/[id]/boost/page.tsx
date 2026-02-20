@@ -33,6 +33,9 @@ import { useVehicle } from '@/hooks/use-vehicles';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useKpis } from '@/hooks/use-dealer-analytics';
+import { useCreateCampaign } from '@/hooks/use-advertising';
+import { toast } from 'sonner';
+import type { AdPlacementType, CampaignPricingModel } from '@/types/advertising';
 
 function useDealerBoostPlans() {
   const { pricing, formatPrice, isLoading } = usePlatformPricing();
@@ -90,6 +93,7 @@ export default function DealerVehicleBoostPage() {
   const { data: vehicle, isLoading: vehicleLoading } = useVehicle(vehicleId);
   const { data: dealer } = useCurrentDealer();
   const { data: kpis } = useKpis(dealer?.id || '');
+  const createCampaignMutation = useCreateCampaign();
   const [selectedPlan, setSelectedPlan] = useState<string>('pro');
   const [isProcessing, setIsProcessing] = useState(false);
   const { boostPlans, formatPrice, isLoading } = useDealerBoostPlans();
@@ -126,10 +130,46 @@ export default function DealerVehicleBoostPage() {
     ];
   })();
 
-  const handleBoost = () => {
+  const planConfig: Record<string, { placement: AdPlacementType; days: number }> = {
+    basic: { placement: 'FeaturedSpot', days: 7 },
+    pro: { placement: 'FeaturedSpot', days: 15 },
+    premium: { placement: 'PremiumSpot', days: 30 },
+  };
+
+  const handleBoost = async () => {
+    if (!dealer?.id || !vehicleId) {
+      toast.error('No se pudo identificar el dealer o vehículo');
+      return;
+    }
+
+    const plan = boostPlans.find(p => p.id === selectedPlan);
+    const config = planConfig[selectedPlan];
+    if (!plan || !config) return;
+
     setIsProcessing(true);
-    // Navigate to checkout with boost parameters
-    router.push(`/dealer/checkout?type=boost&plan=${selectedPlan}&vehicleId=${vehicleId}`);
+    try {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + config.days);
+
+      await createCampaignMutation.mutateAsync({
+        ownerId: dealer.id,
+        ownerType: 'Dealer',
+        vehicleId,
+        placementType: config.placement,
+        pricingModel: 'FixedMonthly' as CampaignPricingModel,
+        totalBudget: plan.price,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+
+      toast.success('¡Campaña creada! Procede al pago para activarla.');
+      router.push(`/dealer/checkout?type=boost&plan=${selectedPlan}&vehicleId=${vehicleId}`);
+    } catch {
+      toast.error('Error al crear la campaña. Inténtalo de nuevo.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const selected = boostPlans.find(p => p.id === selectedPlan);
@@ -192,7 +232,7 @@ export default function DealerVehicleBoostPage() {
             )}
             <div className="flex-1">
               <h3 className="font-semibold text-white">{vehicleTitle}</h3>
-              <p className="font-bold text-primary/80">RD$ {vehicle.price.toLocaleString()}</p>
+              <p className="text-primary/80 font-bold">RD$ {vehicle.price.toLocaleString()}</p>
               <div className="mt-1 flex items-center gap-4 text-sm text-slate-400">
                 <span className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
@@ -214,10 +254,10 @@ export default function DealerVehicleBoostPage() {
       </Card>
 
       {/* Results Preview */}
-      <Card className="mb-8 border-primary bg-gradient-to-r from-primary/40 to-teal-900/40">
+      <Card className="border-primary from-primary/40 mb-8 bg-gradient-to-r to-teal-900/40">
         <CardContent className="p-6">
           <div className="mb-4 flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-primary/80" />
+            <Sparkles className="text-primary/80 h-6 w-6" />
             <h3 className="text-lg font-semibold text-white">Resultados promedio con Boost</h3>
           </div>
           <div className="grid grid-cols-3 gap-6">
@@ -226,10 +266,10 @@ export default function DealerVehicleBoostPage() {
                 <p className="mb-2 text-sm text-slate-400">{r.metric}</p>
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-slate-500 line-through">{r.before}</span>
-                  <TrendingUp className="h-4 w-4 text-primary/80" />
+                  <TrendingUp className="text-primary/80 h-4 w-4" />
                   <span className="font-bold text-white">{r.after}</span>
                 </div>
-                <Badge className="mt-2 bg-primary">{r.increase}</Badge>
+                <Badge className="bg-primary mt-2">{r.increase}</Badge>
               </div>
             ))}
           </div>
@@ -247,12 +287,12 @@ export default function DealerVehicleBoostPage() {
                 onClick={() => setSelectedPlan(plan.id)}
                 className={`relative rounded-xl p-6 text-left transition-all ${
                   selectedPlan === plan.id
-                    ? 'bg-slate-700 ring-2 ring-primary'
+                    ? 'ring-primary bg-slate-700 ring-2'
                     : 'border border-slate-700 bg-slate-800 hover:border-slate-600'
                 }`}
               >
                 {plan.recommended && (
-                  <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary">
+                  <Badge className="bg-primary absolute -top-2 left-1/2 -translate-x-1/2">
                     Recomendado
                   </Badge>
                 )}
@@ -284,14 +324,14 @@ export default function DealerVehicleBoostPage() {
                 <p className="mb-4 text-sm text-slate-400">{plan.duration}</p>
 
                 <div className="mb-4 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary/80" />
-                  <span className="font-medium text-primary/80">{plan.multiplier} más vistas</span>
+                  <TrendingUp className="text-primary/80 h-4 w-4" />
+                  <span className="text-primary/80 font-medium">{plan.multiplier} más vistas</span>
                 </div>
 
                 <ul className="space-y-2">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
+                      <Check className="text-primary/80 mt-0.5 h-4 w-4 shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -339,7 +379,7 @@ export default function DealerVehicleBoostPage() {
               </div>
 
               <Button
-                className="w-full bg-primary hover:bg-primary/90"
+                className="bg-primary hover:bg-primary/90 w-full"
                 onClick={handleBoost}
                 disabled={isProcessing}
               >
