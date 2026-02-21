@@ -163,7 +163,7 @@ export const DEALER_NAVIGATION: NavSection[] = [
   {
     title: 'Portal Dealer',
     items: [
-      { href: '/dealer', label: 'Dashboard Dealer', icon: Building2 },
+      { href: '/cuenta', label: 'Dashboard', icon: Home },
       { href: '/dealer/inventario', label: 'Inventario', icon: Package },
       { href: '/dealer/publicar', label: 'Publicar Vehículo', icon: Upload },
       { href: '/dealer/importar', label: 'Importar Masivo', icon: FileText },
