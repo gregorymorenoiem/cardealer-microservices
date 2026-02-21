@@ -20,7 +20,6 @@ using PaymentService.Domain.Interfaces;
 using PaymentService.Domain.Enums;
 using PaymentService.Infrastructure.Persistence;
 using PaymentService.Infrastructure.Repositories;
-using PaymentService.Infrastructure.Repositories;
 using PaymentService.Infrastructure.Services;
 using PaymentService.Infrastructure.Services.Settings;
 using PaymentService.Infrastructure.Services.Providers;

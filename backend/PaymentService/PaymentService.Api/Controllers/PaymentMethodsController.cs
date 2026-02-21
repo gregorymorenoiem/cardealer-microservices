@@ -183,7 +183,7 @@ public class PaymentMethodsController : ControllerBase
                     ExpiryMonth = request.Card.ExpMonth.ToString(),
                     ExpiryYear = NormalizeYear(request.Card.ExpYear).ToString(),
                     CVV = request.Card.Cvv,
-                    CardholderName = request.Card.CardHolderName
+                    CardholderName = request.Card.CardHolderName ?? string.Empty
                 };
 
                 var tokenResult = await provider.TokenizeCardAsync(cardData, cancellationToken);
