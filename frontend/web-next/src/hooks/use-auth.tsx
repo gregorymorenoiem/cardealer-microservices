@@ -32,8 +32,8 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (data: LoginRequest) => Promise<void>;
-  verifyTwoFactorLogin: (tempToken: string, code: string) => Promise<void>;
+  login: (data: LoginRequest) => Promise<{ user: User }>;
+  verifyTwoFactorLogin: (tempToken: string, code: string) => Promise<{ user: User }>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -91,7 +91,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     }
   };
 
-  const login = async (data: LoginRequest) => {
+  const login = async (data: LoginRequest): Promise<{ user: User }> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -102,6 +102,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
         isLoading: false,
         error: null,
       });
+      return { user };
     } catch (err) {
       // If 2FA is required, stop loading and re-throw — the login page handles this
       if (err instanceof TwoFactorRequiredError) {
@@ -122,7 +123,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
    * Complete login after 2FA verification.
    * Called from the login page after the user enters their 2FA code.
    */
-  const verifyTwoFactorLogin = async (tempToken: string, code: string) => {
+  const verifyTwoFactorLogin = async (tempToken: string, code: string): Promise<{ user: User }> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -133,6 +134,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
         isLoading: false,
         error: null,
       });
+      return { user };
     } catch (err) {
       const error = err as { message?: string };
       setState(prev => ({

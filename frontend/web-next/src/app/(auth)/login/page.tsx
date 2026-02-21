@@ -23,6 +23,31 @@ import { authService, TwoFactorRequiredError } from '@/services/auth';
 import { useAuth } from '@/hooks/use-auth';
 import { sanitizeEmail } from '@/lib/security/sanitize';
 
+/**
+ * Returns the correct post-login destination based on the user's accountType.
+ * Falls back to the explicit redirectUrl if it is not the root '/'.
+ */
+function getPostLoginRedirect(user: import('@/types').User | null, redirectUrl: string): string {
+  // If the user was already heading somewhere specific, respect that
+  if (redirectUrl && redirectUrl !== '/') return redirectUrl;
+
+  switch (user?.accountType) {
+    case 'seller':
+      // /vender/dashboard redirects to /cuenta — send directly to avoid extra hop
+      return '/cuenta';
+    case 'dealer':
+    case 'dealer_employee':
+      // /dealer redirects to /cuenta — send directly to avoid extra hop
+      return '/cuenta';
+    case 'admin':
+    case 'platform_employee':
+      return '/admin';
+    default:
+      // buyer, guest → home
+      return '/';
+  }
+}
+
 function LoginForm({ redirectUrl }: { redirectUrl: string }) {
   const router = useRouter();
   const auth = useAuth();
@@ -53,15 +78,15 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
 
     try {
       // Use the auth context login to update global state
-      await login({
+      const { user: loggedUser } = await login({
         email: sanitizeEmail(formData.email),
         password: formData.password, // Password NOT sanitized per security policy
         rememberMe: formData.rememberMe,
       });
 
-      // Redirect after successful login
-      const finalRedirect =
-        redirectUrl === '/' && auth.user?.accountType === 'seller' ? '/vender' : redirectUrl;
+      // Redirect after successful login — use the user returned by login() directly
+      // to avoid the React state update race condition (auth.user still stale here)
+      const finalRedirect = getPostLoginRedirect(loggedUser, redirectUrl);
       router.push(finalRedirect);
       router.refresh();
     } catch (err) {
@@ -88,11 +113,10 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
     setIsLoading(true);
 
     try {
-      await verifyTwoFactorLogin(twoFactorState!.tempToken, twoFactorCode);
+      const { user: loggedUser2fa } = await verifyTwoFactorLogin(twoFactorState!.tempToken, twoFactorCode);
 
       // Redirect after successful 2FA verification
-      const finalRedirect2 =
-        redirectUrl === '/' && auth.user?.accountType === 'seller' ? '/vender' : redirectUrl;
+      const finalRedirect2 = getPostLoginRedirect(loggedUser2fa, redirectUrl);
       router.push(finalRedirect2);
       router.refresh();
     } catch (err) {
