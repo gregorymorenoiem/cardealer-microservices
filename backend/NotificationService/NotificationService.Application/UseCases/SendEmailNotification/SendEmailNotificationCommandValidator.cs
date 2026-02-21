@@ -20,6 +20,10 @@ public class SendEmailNotificationCommandValidator : AbstractValidator<SendEmail
 
         RuleFor(x => x.Request.Body)
             .NotEmpty().WithMessage("Body is required")
-            .NoSqlInjection().NoXss();
+            // NOTE: NoSqlInjection() is intentionally NOT applied to Body because email bodies
+            // are HTML content that legitimately contain words like "create", "select", "update"
+            // as natural language or HTML tags. Applying SQL injection detection to HTML email
+            // bodies causes false positives. XSS protection is still applied via NoXss().
+            .NoXss();
     }
 }
