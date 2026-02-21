@@ -5,10 +5,10 @@ public class NotificationServiceRabbitMQSettings
 {
     public bool EnableRabbitMQ { get; set; } = true;
     public string QueueName { get; set; } = "notification-queue";
-    public string ExchangeName { get; set; } = "notification-exchange";
+    public string ExchangeName { get; set; } = "cardealer.events";
     public string RoutingKey { get; set; } = "notification.auth";
 
-    // Opcional: Configuraciones específicas para tipos de notificación
+    // Opcional: Configuraciones especï¿½ficas para tipos de notificaciï¿½n
     public string EmailQueueName { get; set; } = "notification-email-queue";
     public string SmsQueueName { get; set; } = "notification-sms-queue";
     public string PushQueueName { get; set; } = "notification-push-queue";

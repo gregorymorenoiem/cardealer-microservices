@@ -116,7 +116,7 @@ public class RabbitMQNotificationConsumer : BackgroundService
         _channel.QueueBind(
             queue: _settings.EmailQueueName,
             exchange: _settings.ExchangeName,
-            routingKey: "notification.email");
+            routingKey: "notification.auth");
 
         // Cola específica para SMS with DLQ
         _channel.QueueDeclare(
