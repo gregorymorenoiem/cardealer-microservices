@@ -49,7 +49,8 @@ public class RabbitMqEventConsumer : BackgroundService
                 return;
             }
 
-            var consumer = new EventingBasicConsumer(_channel);
+            // DispatchConsumersAsync=true requires AsyncEventingBasicConsumer
+            var consumer = new AsyncEventingBasicConsumer(_channel);
 
             consumer.Received += async (model, ea) =>
             {
@@ -91,10 +92,10 @@ public class RabbitMqEventConsumer : BackgroundService
     {
         try
         {
-            var rabbitMqHost = _configuration["RabbitMQ:Host"] ?? "localhost";
+            var rabbitMqHost = _configuration["RabbitMQ:Host"] ?? _configuration["RabbitMQ:HostName"] ?? "localhost";
             var rabbitMqPort = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672");
-            var rabbitMqUser = _configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured");
-            var rabbitMqPassword = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
+            var rabbitMqUser = _configuration["RabbitMQ:UserName"] ?? _configuration["RabbitMQ:Username"] ?? "guest";
+            var rabbitMqPassword = _configuration["RabbitMQ:Password"] ?? "guest";
 
             var factory = new ConnectionFactory
             {
