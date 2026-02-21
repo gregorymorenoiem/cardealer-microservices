@@ -80,6 +80,11 @@ export interface UpdateSellerProfileRequest {
 /**
  * Convert a buyer account to a seller account.
  * Requires authentication. Supports Idempotency-Key header.
+ *
+ * Throws:
+ * - 401 if not authenticated or token expired
+ * - 400 if validation fails or conversion not allowed
+ * - 404 if endpoint is unreachable
  */
 export async function convertToSeller(
   data: ConvertToSellerRequest,
@@ -89,10 +94,27 @@ export async function convertToSeller(
   if (idempotencyKey) {
     headers['Idempotency-Key'] = idempotencyKey;
   }
-  const response = await apiClient.post<SellerConversionResult>('/api/sellers/convert', data, {
-    headers,
-  });
-  return response.data;
+
+  try {
+    const response = await apiClient.post<SellerConversionResult>('/api/sellers/convert', data, {
+      headers,
+    });
+    return response.data;
+  } catch (error: unknown) {
+    // Enhance error with additional context
+    const axiosError = error as any;
+    if (axiosError?.response?.status === 401) {
+      const err = new Error('Authentication required. Please log in again.');
+      (err as any).status = 401;
+      throw err;
+    }
+    if (axiosError?.response?.status === 404) {
+      const err = new Error('Seller conversion endpoint not found. Service may be unavailable.');
+      (err as any).status = 404;
+      throw err;
+    }
+    throw error;
+  }
 }
 
 /**

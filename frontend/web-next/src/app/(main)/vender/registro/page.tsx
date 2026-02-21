@@ -215,7 +215,7 @@ function clearDraft() {
 
 export default function SellerRegistrationPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading, register } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, login, register } = useAuth();
 
   // ── Mutations ──
   const convertToSeller = useConvertToSeller();
@@ -311,12 +311,32 @@ export default function SellerRegistrationPage() {
         acceptTerms: true,
       };
       await register(registerData);
-      toast.success('¡Cuenta creada!', {
-        description: 'Revisa tu correo para verificar tu cuenta.',
-      });
-      // Advance to Step 2 — even though email isn't verified yet,
-      // we allow the user to continue setting up their profile.
-      setCurrentStep(1);
+
+      // After registration, automatically log in the user with the credentials they just provided
+      // This allows them to continue to the seller profile step without verification
+      try {
+        // Use the login function from useAuth hook
+        await login({
+          email: accountData.email,
+          password: accountData.password,
+        });
+
+        toast.success('¡Cuenta creada y sesión iniciada!', {
+          description: 'Continuaremos con tu perfil de vendedor.',
+        });
+        // Advance to Step 2 — user is now authenticated
+        setCurrentStep(1);
+      } catch (loginErr) {
+        // If auto-login fails, just notify user to verify email and log in manually
+        console.warn('Auto-login failed after registration', loginErr);
+        toast.success('¡Cuenta creada!', {
+          description: 'Inicia sesión para continuar con tu perfil de vendedor.',
+        });
+        // Redirect to login page with redirect parameter
+        router.push(
+          `/login?email=${encodeURIComponent(accountData.email)}&redirect=${encodeURIComponent('/vender/registro')}`
+        );
+      }
     } catch (err) {
       const error = err as { message?: string };
       setGlobalError(error.message || 'Error al crear la cuenta. Intenta de nuevo.');
@@ -334,18 +354,48 @@ export default function SellerRegistrationPage() {
     try {
       if (isLoggedIn && user) {
         // Existing user → convert to seller
-        const result = await convertToSeller.mutateAsync({
-          data: {
-            businessName: profileData.businessName || profileData.displayName,
-            description: profileData.description || undefined,
-            phone: profileData.phone || undefined,
-            location: profileData.location || undefined,
-            specialties: profileData.specialties.length > 0 ? profileData.specialties : undefined,
-            acceptTerms: true,
-          },
-          idempotencyKey: `convert-seller-${user.id}-${Date.now()}`,
-        });
-        setSellerProfileId(result.sellerProfileId);
+        try {
+          const result = await convertToSeller.mutateAsync({
+            data: {
+              businessName: profileData.businessName || profileData.displayName,
+              description: profileData.description || undefined,
+              phone: profileData.phone || undefined,
+              location: profileData.location || undefined,
+              specialties: profileData.specialties.length > 0 ? profileData.specialties : undefined,
+              acceptTerms: true,
+            },
+            idempotencyKey: `convert-seller-${user.id}-${Date.now()}`,
+          });
+          setSellerProfileId(result.sellerProfileId);
+        } catch (err: unknown) {
+          // Enhanced error handling for conversion failures
+          const error = err as any;
+
+          // Check for 401 Unauthorized (auth token issue)
+          if (error?.response?.status === 401 || error?.status === 401) {
+            console.error('🔐 Auth token issue - status 401. User:', user.id);
+            setGlobalError(
+              'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión y intenta de nuevo.'
+            );
+            // Optionally trigger logout
+            return;
+          }
+
+          // Check for 404 (endpoint not found)
+          if (error?.response?.status === 404 || error?.status === 404) {
+            console.error('🚫 Endpoint not found - status 404. URL:', error?.config?.url);
+            setGlobalError(
+              'El servicio de conversión no está disponible temporalmente. Por favor, intenta en unos momentos.'
+            );
+            return;
+          }
+
+          // Generic error message
+          const message =
+            error?.message || error?.response?.data?.detail || 'Error al convertirse a vendedor.';
+          console.error('❌ Profile submit error:', { error, userID: user.id });
+          setGlobalError(message);
+        }
       } else {
         // New user just registered → create seller profile
         const profile = await createSellerProfile.mutateAsync({
@@ -360,10 +410,14 @@ export default function SellerRegistrationPage() {
         setSellerProfileId(profile.id);
       }
 
-      toast.success('¡Perfil de vendedor creado!');
-      setCurrentStep(2);
+      // Only advance if no error occurred
+      if (!globalError) {
+        toast.success('¡Perfil de vendedor creado!');
+        setCurrentStep(2);
+      }
     } catch (err) {
-      const error = err as { message?: string };
+      const error = err as { message?: string; status?: number };
+      console.error('❌ handleProfileSubmit caught error:', error);
       setGlobalError(error.message || 'Error al crear el perfil de vendedor.');
     } finally {
       setIsSubmitting(false);
