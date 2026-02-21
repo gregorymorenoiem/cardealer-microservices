@@ -1120,7 +1120,7 @@ metadata:
     app: auditservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: crashes on startup (DLQ bug)
+  replicas: 1
   selector:
     matchLabels:
       app: auditservice
