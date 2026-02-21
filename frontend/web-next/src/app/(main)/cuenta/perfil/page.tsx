@@ -108,10 +108,16 @@ export default function ProfilePage() {
     setError(null);
     setSuccess(false);
 
-    // Check if UserService profile exists
+    // If UserService wasn't available at load time, try once more before blocking the save
     if (!userServiceAvailable) {
-      setError('Tu perfil aún no está sincronizado. Las ediciones estarán disponibles pronto.');
-      return;
+      try {
+        await userService.getCurrentProfile();
+        setUserServiceAvailable(true);
+        // Fall through and save normally
+      } catch {
+        setError('Tu perfil aún no está disponible para editar. Intenta recargar la página en unos momentos.');
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -203,6 +209,14 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
         <p className="text-muted-foreground">Actualiza tu información personal</p>
       </div>
+
+      {/* Sync pending info banner */}
+      {!userServiceAvailable && !error && (
+        <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          Tu perfil está siendo sincronizado. Los datos de arriba provienen de tu cuenta de acceso. En breve podrás editarlos.
+        </div>
+      )}
 
       {/* Success/Error Messages */}
       {success && (
