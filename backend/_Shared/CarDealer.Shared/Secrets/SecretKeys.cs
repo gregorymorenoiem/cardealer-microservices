@@ -157,6 +157,16 @@ public static class SecretKeys
     /// <summary>PayPal Client Secret</summary>
     public const string PaypalClientSecret = "PAYPAL_CLIENT_SECRET";
 
+    // ===== RESEND (Email provider) =====
+    /// <summary>API Key for Resend</summary>
+    public const string ResendApiKey = "RESEND_API_KEY";
+
+    /// <summary>From email for Resend provider</summary>
+    public const string ResendFromEmail = "RESEND_FROM_EMAIL";
+
+    /// <summary>From name for Resend provider</summary>
+    public const string ResendFromName = "RESEND_FROM_NAME";
+
     // ===== CONSUL / SERVICE DISCOVERY =====
     /// <summary>Dirección de Consul</summary>
     public const string ConsulAddress = "CONSUL_ADDRESS";

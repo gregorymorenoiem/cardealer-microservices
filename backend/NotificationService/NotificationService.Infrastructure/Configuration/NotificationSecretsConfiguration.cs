@@ -73,6 +73,25 @@ public static class NotificationSecretsConfiguration
             {
                 settings.Firebase.ProjectId = firebaseProjectId;
             }
+
+            // Resend (alternative email provider)
+            var resendApiKey = secretProvider.GetSecret(SecretKeys.ResendApiKey);
+            if (!string.IsNullOrEmpty(resendApiKey))
+            {
+                settings.Resend.ApiKey = resendApiKey;
+            }
+
+            var resendFromEmail = secretProvider.GetSecret(SecretKeys.ResendFromEmail);
+            if (!string.IsNullOrEmpty(resendFromEmail))
+            {
+                settings.Resend.FromEmail = resendFromEmail;
+            }
+
+            var resendFromName = secretProvider.GetSecret(SecretKeys.ResendFromName);
+            if (!string.IsNullOrEmpty(resendFromName))
+            {
+                settings.Resend.FromName = resendFromName;
+            }
         });
 
         return services;
@@ -100,12 +119,19 @@ public static class NotificationSecretsConfiguration
         }
 
         // Email - Opcional con graceful degradation
-        if (!secretProvider.HasSecret(SecretKeys.SendGridApiKey))
+        var hasSendGrid = secretProvider.HasSecret(SecretKeys.SendGridApiKey);
+        var hasResend = secretProvider.HasSecret(SecretKeys.ResendApiKey);
+
+        if (!hasSendGrid && !hasResend)
         {
             logger.LogWarning(
-                "SendGrid API key not configured. Email notifications will be disabled. " +
-                "Set {Key} environment variable to enable.",
-                SecretKeys.SendGridApiKey);
+                "No email provider configured (SendGrid or Resend). Email notifications will be disabled. " +
+                "Set {SendGridKey} or {ResendKey} environment variable to enable.",
+                SecretKeys.SendGridApiKey, SecretKeys.ResendApiKey);
+        }
+        else if (!hasSendGrid && hasResend)
+        {
+            logger.LogInformation("SendGrid not configured but Resend credentials found. Using Resend provider.");
         }
 
         // SMS - Opcional con graceful degradation
