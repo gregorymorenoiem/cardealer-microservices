@@ -1,15 +1,16 @@
+import { redirect } from 'next/navigation';
+
 /**
- * Dealer Bulk Import Page
+ * Dealer Import Redirect Page
  *
- * Allows dealers to import vehicles in bulk via CSV/Excel upload
+ * Legacy route redirect: /dealer/importar → /dealer/inventario/importar
+ * The canonical import page with full API integration is at the inventario route.
+ *
+ * Keeping this for backward compatibility with bookmarks and email links.
  */
-
-'use client';
-
-import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+export default function DealerImportPage() {
+  redirect('/dealer/inventario/importar');
+}
 import {
   Upload,
   FileSpreadsheet,

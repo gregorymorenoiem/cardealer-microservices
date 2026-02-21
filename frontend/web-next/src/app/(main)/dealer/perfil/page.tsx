@@ -1,18 +1,17 @@
+import { redirect } from 'next/navigation';
+
 /**
- * Dealer Profile Page
+ * Dealer Profile Redirect Page
  *
- * Manage dealer profile and public information with real API integration
+ * Legacy route redirect: /dealer/perfil → /cuenta/perfil
+ * The canonical dealer profile is now part of the role-aware profile page
+ * that handles personal info + dealer business card for dealers.
+ *
+ * Keeping this for backward compatibility with bookmarks and email links.
  */
-
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+export default function DealerProfilePage() {
+  redirect('/cuenta/perfil');
+}
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Building,

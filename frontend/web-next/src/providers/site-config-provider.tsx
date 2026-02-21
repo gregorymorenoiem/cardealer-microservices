@@ -178,10 +178,14 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
     setError(null);
 
     try {
+      const environment =
+        process.env.NEXT_PUBLIC_APP_ENV ??
+        (process.env.NODE_ENV === 'production' ? 'Production' : 'Development');
+
       const response = await apiClient.get<Array<{ key: string; value: string }>>(
         '/api/configurations/category/general',
         {
-          params: { environment: 'Development' },
+          params: { environment },
         }
       );
 

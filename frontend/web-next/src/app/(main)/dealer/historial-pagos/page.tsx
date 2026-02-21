@@ -1,17 +1,16 @@
+import { redirect } from 'next/navigation';
+
 /**
- * Dealer Payment History Page
+ * Dealer Payment History Redirect Page
  *
- * Shows billing and payment transaction history for dealers
+ * Legacy route redirect: /dealer/historial-pagos → /dealer/facturacion/historial
+ * The canonical billing history with invoices is at the facturacion route.
+ *
+ * Keeping this for backward compatibility with bookmarks and email links.
  */
-
-'use client';
-
-import * as React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
+export default function DealerPaymentHistoryPage() {
+  redirect('/dealer/facturacion/historial');
+}
 import {
   Select,
   SelectContent,

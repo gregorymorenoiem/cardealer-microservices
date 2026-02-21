@@ -392,9 +392,7 @@ export default function ProfilePage() {
             ? sanitizeText(dealerForm.legalName.trim(), { maxLength: 200 })
             : undefined,
           phone: dealerForm.phone ? sanitizePhone(dealerForm.phone) : undefined,
-          mobilePhone: dealerForm.mobilePhone
-            ? sanitizePhone(dealerForm.mobilePhone)
-            : undefined,
+          mobilePhone: dealerForm.mobilePhone ? sanitizePhone(dealerForm.mobilePhone) : undefined,
           website: dealerForm.website ? sanitizeUrl(dealerForm.website.trim()) : undefined,
           address: dealerForm.address
             ? sanitizeText(dealerForm.address.trim(), { maxLength: 300 })
@@ -830,9 +828,7 @@ export default function ProfilePage() {
                         id="sellerDisplayName"
                         placeholder="Como aparece en tus anuncios"
                         value={sellerForm.displayName}
-                        onChange={e =>
-                          setSellerForm(s => ({ ...s, displayName: e.target.value }))
-                        }
+                        onChange={e => setSellerForm(s => ({ ...s, displayName: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -877,9 +873,7 @@ export default function ProfilePage() {
                           id="sellerLocation"
                           placeholder="Ej: Santo Domingo, Distrito Nacional"
                           value={sellerForm.location}
-                          onChange={e =>
-                            setSellerForm(s => ({ ...s, location: e.target.value }))
-                          }
+                          onChange={e => setSellerForm(s => ({ ...s, location: e.target.value }))}
                           className="pl-10"
                         />
                       </div>
@@ -919,7 +913,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => removeSpecialty(i)}
-                              className="text-muted-foreground hover:text-red-500 ml-1"
+                              className="text-muted-foreground ml-1 hover:text-red-500"
                             >
                               <X className="h-3 w-3" />
                             </button>

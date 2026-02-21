@@ -15,7 +15,20 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, Check, X, AlertCircle, ShoppingBag, Tag } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  Check,
+  X,
+  AlertCircle,
+  ShoppingBag,
+  Tag,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -201,7 +214,10 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Error message */}
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+          <div
+            className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border p-3 text-sm"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -222,7 +238,7 @@ export default function RegisterPage() {
             >
               <ShoppingBag className="h-5 w-5" />
               <span className="font-medium">Comprar</span>
-              <span className="text-xs text-center text-muted-foreground">Busco un vehículo</span>
+              <span className="text-muted-foreground text-center text-xs">Busco un vehículo</span>
             </button>
             <button
               type="button"
@@ -236,7 +252,9 @@ export default function RegisterPage() {
             >
               <Tag className="h-5 w-5" />
               <span className="font-medium">Vender</span>
-              <span className="text-xs text-center text-muted-foreground">Quiero publicar vehículos</span>
+              <span className="text-muted-foreground text-center text-xs">
+                Quiero publicar vehículos
+              </span>
             </button>
           </div>
         </div>
@@ -393,7 +411,7 @@ export default function RegisterPage() {
             </button>
           </div>
           {formData.confirmPassword && !doPasswordsMatch && (
-            <p className="text-xs text-destructive">Las contraseñas no coinciden</p>
+            <p className="text-destructive text-xs">Las contraseñas no coinciden</p>
           )}
         </div>
 

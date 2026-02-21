@@ -22,18 +22,21 @@ POST /api/auth/register → UserRegisteredEvent publicado
 ## 🚀 ROOT CAUSES IDENTIFICADOS
 
 ### 1. Database Schema Mismatch
+
 - **Problema:** Tabla `notifications` en PostgreSQL faltaba columna `UpdatedAt`
 - **Síntoma:** `Npgsql.PostgresException: 42703: column n0.UpdatedAt does not exist`
 - **Impacto:** `EfNotificationQueueRepository.GetPendingAsync()` fallaba inmediatamente
 - **Resultado:** Queue processing bloqueado completamente
 
 ### 2. Resend Credentials No Configuradas
+
 - **Problema:** K8s secret `external-services-secrets` no tenía variables Resend
 - **Síntoma:** NotificationService no podía cargar Resend API key
 - **Impacto:** Provider defaulteaba a SendGrid (unconfigured, mocked)
 - **Resultado:** Emails se "simulaban" en mock mode (no se enviaban)
 
 ### 3. Código No Cargaba Resend Settings
+
 - **Problema:** `NotificationSecretsConfiguration.cs` solo cargaba SendGrid, Twilio, Firebase
 - **Síntoma:** Resend settings nunca se inicializaban desde K8s secrets
 - **Impacto:** Resend API key no era inyectado a `ResendEmailService`
@@ -44,21 +47,24 @@ POST /api/auth/register → UserRegisteredEvent publicado
 ## ✅ FIXES APLICADOS
 
 ### Fix 1: Database Migration
+
 **Archivo:** `backend/NotificationService/NotificationService.Infrastructure/Persistence/Migrations/20260220_AddUpdatedAtToNotifications.cs`
 
 ```csharp
 // Add UpdatedAt column to notifications table
-ALTER TABLE notifications ADD COLUMN "UpdatedAt" 
+ALTER TABLE notifications ADD COLUMN "UpdatedAt"
     TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 UPDATE notifications SET "UpdatedAt" = created_at;
 ```
 
 **Status:** ✅ Applied to PostgreSQL in K8s
+
 - Columna ahora existe en BD
 - EF Core queries funcionan
 - Queue processing can continue
 
 ### Fix 2: Código - Agregar Resend Constants
+
 **Archivo:** `backend/_Shared/CarDealer.Shared/Secrets/SecretKeys.cs`
 
 ```csharp
@@ -70,6 +76,7 @@ public const string ResendFromName = "RESEND_FROM_NAME";
 **Status:** ✅ Commited y pushed to GitHub
 
 ### Fix 3: Código - Load Resend from Secrets
+
 **Archivo:** `backend/NotificationService/NotificationService.Infrastructure/Configuration/NotificationSecretsConfiguration.cs`
 
 ```csharp
@@ -89,6 +96,7 @@ if (!string.IsNullOrEmpty(resendFromName))
 **Status:** ✅ Committed and pushed to GitHub
 
 ### Fix 4: K8s Secret - Patch with Resend Credentials
+
 **Secret:** `external-services-secrets`
 
 ```yaml
@@ -100,7 +108,9 @@ RESEND_FROM_NAME: OKLA Notificaciones
 **Status:** ✅ Patched in K8s cluster
 
 ### Fix 5: Pod Restart
+
 **Action:** Restarted NotificationService deployment to pick up:
+
 - New secrets
 - New column in DB (via AutoMigrate=true)
 
@@ -110,33 +120,36 @@ RESEND_FROM_NAME: OKLA Notificaciones
 
 ## 🧪 PRUEBAS VERIFICADAS
 
-| Test | Result | Details |
-|------|--------|---------|
-| Pod Health | ✅ 200 OK | NotificationService respondiendo |
-| Resend API Key | ✅ Loaded | `RESEND_API_KEY=re_Bi3rubbH_LTn...` |
-| Database Column | ✅ Exists | `UpdatedAt` column en `notifications` table |
-| Queue Processing | ✅ Completed | "Queue processing completed" en logs (sin errores) |
-| RabbitMQ Queues | ✅ 6 Active | notification-email-queue, notification-sms-queue, etc. |
-| RabbitMQ Consumers | ✅ Started | Consuming from 3 queues sin errores |
-| DLQ Processor | ✅ Running | Dead Letter Queue processor activo |
+| Test               | Result       | Details                                                |
+| ------------------ | ------------ | ------------------------------------------------------ |
+| Pod Health         | ✅ 200 OK    | NotificationService respondiendo                       |
+| Resend API Key     | ✅ Loaded    | `RESEND_API_KEY=re_Bi3rubbH_LTn...`                    |
+| Database Column    | ✅ Exists    | `UpdatedAt` column en `notifications` table            |
+| Queue Processing   | ✅ Completed | "Queue processing completed" en logs (sin errores)     |
+| RabbitMQ Queues    | ✅ 6 Active  | notification-email-queue, notification-sms-queue, etc. |
+| RabbitMQ Consumers | ✅ Started   | Consuming from 3 queues sin errores                    |
+| DLQ Processor      | ✅ Running   | Dead Letter Queue processor activo                     |
 
 ---
 
 ## 📊 COMPONENTES FINALES
 
 ### Infrastructure
+
 - **NotificationService Pod:** `notificationservice-5c5b958c85-pn4tf` (Running 11m)
 - **PostgreSQL:** `notificationservice` database + UpdatedAt column
 - **RabbitMQ:** `rabbitmq-d47f9cb95-n7j8q` (Running 2d15h)
 - **API Gateway:** Healthy, routing /api/notifications correctly
 
 ### Configuration
+
 - **Email Provider:** Resend (Primary) + SendGrid (Fallback)
 - **SMS Provider:** Twilio (Mocked - no credentials)
 - **Resend Settings:** Fully loaded from K8s secrets
 - **Database:** AutoMigrate enabled, migrations applied
 
 ### Queues
+
 - `notification-queue` - General notifications
 - `notification-email-queue` - Email notifications
 - `notification-sms-queue` - SMS notifications
@@ -171,17 +184,23 @@ RESEND_FROM_NAME: OKLA Notificaciones
 ## ⚠️ Notas Importantes
 
 ### CSRF Token
+
 El endpoint `/api/auth/resend-verification` requiere CSRF token válido.
+
 - **Solución:** Usar desde browser (frontend genera automáticamente)
 - **Para curl:** Agregar header `-H "X-CSRF-Token: <token>"`
 
 ### Twilio SMS
+
 Está configurado para MOCKED (credenciales no presentes).
+
 - **Estado:** OK - es intencional
 - **Si necesitas SMS:** Agregar `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` a K8s secret
 
 ### Consul
+
 No está desplegado - errores esperados.
+
 - **Impacto:** Ninguno en funcionalidad de notificaciones
 - **Logs:** Ignorar errores "Failed to register NotificationService with Consul"
 
@@ -189,10 +208,10 @@ No está desplegado - errores esperados.
 
 ## 📝 Commits Realizados
 
-| Commit | Message | Files |
-|--------|---------|-------|
+| Commit     | Message                                            | Files                          |
+| ---------- | -------------------------------------------------- | ------------------------------ |
 | `bd84e4be` | fix(notifications): add UpdatedAt column migration | 2 files (migration + designer) |
-| `bd84e4be` | fix(notifications): add Resend secret loading | 2 files (SecretKeys, Config) |
+| `bd84e4be` | fix(notifications): add Resend secret loading      | 2 files (SecretKeys, Config)   |
 
 **GitHub:** https://github.com/gregorymorenoiem/cardealer-microservices/commit/bd84e4be
 
@@ -216,4 +235,3 @@ No está desplegado - errores esperados.
 **Generated:** February 20, 2026
 **By:** GitHub Copilot AI
 **Status:** ✅ READY FOR PRODUCTION
-

@@ -52,6 +52,15 @@ const publicRoutes = [
   '/nosotros',
   '/terminos',
   '/privacidad',
+  '/cookies',
+  '/seguridad',
+  '/reportar',
+  '/empleos',
+  '/prensa',
+  '/precios',
+  '/guias',
+  '/blog',
+  '/faq',
   '/vender', // Landing page is public
   '/auth/callback', // OAuth callback routes (must be public)
   '/mantenimiento', // Maintenance page always accessible

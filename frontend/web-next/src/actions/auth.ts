@@ -277,7 +277,7 @@ export async function serverRegister(
         password,
         acceptTerms,
         ...(accountType && { accountType }),
-        ...(userIntent  && { userIntent }),
+        ...(userIntent && { userIntent }),
       },
     });
 
