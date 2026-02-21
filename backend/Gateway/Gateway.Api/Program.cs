@@ -288,6 +288,27 @@ if (rateLimitEnabled)
 // Health check middleware BEFORE Ocelot to intercept /health requests
 app.UseHealthCheckMiddleware();
 
+// BFF Cookie → Bearer Authorization transformation
+// The browser sends the JWT as an HttpOnly cookie (okla_access_token).
+// Next.js rewrites forward this cookie to the Gateway, but downstream
+// microservices expect `Authorization: Bearer {token}` — not a cookie.
+// This middleware bridges the gap: if there is no Authorization header
+// but the auth cookie is present, it is injected as a Bearer token so
+// that ALL downstream services (UserService, VehiclesSaleService, etc.)
+// can validate it with their standard [Authorize] middleware.
+app.Use(async (context, next) =>
+{
+    if (!context.Request.Headers.ContainsKey("Authorization"))
+    {
+        var accessToken = context.Request.Cookies["okla_access_token"];
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            context.Request.Headers.Append("Authorization", $"Bearer {accessToken}");
+        }
+    }
+    await next();
+});
+
 // Use routing for other endpoints
 app.UseRouting();
 

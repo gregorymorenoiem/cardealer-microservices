@@ -47,13 +47,36 @@ public class UserRegisteredEventConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Wait a bit for RabbitMQ to be ready
+        // Wait a bit for the rest of the app (DB migrations, RabbitMQ) to be ready
         await Task.Delay(5000, stoppingToken);
+
+        // Retry loop — handles transient failures at startup (DB overloaded, RabbitMQ not yet ready)
+        const int maxRetries = 10;
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            if (stoppingToken.IsCancellationRequested) return;
+
+            InitializeRabbitMQ();
+
+            if (_channel != null)
+                break; // Successfully connected
+
+            var delay = TimeSpan.FromSeconds(Math.Min(attempt * 5, 60)); // 5s, 10s, … up to 60s
+            _logger.LogWarning(
+                "UserRegisteredEventConsumer: RabbitMQ not ready (attempt {Attempt}/{Max}). Retrying in {Delay}s…",
+                attempt, maxRetries, delay.TotalSeconds);
+
+            if (attempt == maxRetries)
+            {
+                _logger.LogError("UserRegisteredEventConsumer: Exhausted {Max} retries. Consumer will NOT start.", maxRetries);
+                return;
+            }
+
+            await Task.Delay(delay, stoppingToken);
+        }
 
         try
         {
-            InitializeRabbitMQ();
-
             if (_channel == null)
             {
                 _logger.LogWarning("RabbitMQ channel not available, UserRegisteredEventConsumer will not start");
