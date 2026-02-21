@@ -72,9 +72,10 @@ public class RabbitMQErrorConsumer : BackgroundService
             _channel = _connection.CreateModel();
 
             // Declarar exchange y queue (mismo que el productor)
+            // ⚠️ errors.exchange is Topic type (matches CarDealer.Shared.ErrorHandling.RabbitMQErrorPublisher)
             _channel.ExchangeDeclare(
                 exchange: _settings.ExchangeName,
-                type: ExchangeType.Direct,
+                type: ExchangeType.Topic,
                 durable: true,
                 autoDelete: false);
 

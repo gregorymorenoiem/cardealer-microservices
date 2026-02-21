@@ -8,8 +8,13 @@ public class NotificationServiceSettings
     /// <summary>Request timeout in seconds</summary>
     public int TimeoutSeconds { get; set; } = 30; // Valor por defecto
 
-    /// <summary>Base URL of the Frontend application (used for links in emails)</summary>
-    public string FrontendBaseUrl { get; set; } = "http://localhost:3000"; // Valor por defecto, AJUSTAR
+    /// <summary>
+    /// Base URL of the Frontend application (used for links in emails).
+    /// Override via env var: NotificationService__FrontendBaseUrl
+    ///   - Local dev: http://localhost:3000
+    ///   - Staging/Production: https://okla.com.do
+    /// </summary>
+    public string FrontendBaseUrl { get; set; } = "http://localhost:3000";
 
     /// <summary>Whether to enable notifications via the service</summary>
     public bool EnableNotifications { get; set; } = true; // Valor por defecto

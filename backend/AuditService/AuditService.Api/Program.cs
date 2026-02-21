@@ -104,6 +104,9 @@ builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "AuditServi
 // Shared RabbitMQ connection (1 connection per pod instead of N per class)
 builder.Services.AddSharedRabbitMqConnection(builder.Configuration);
 
+// Event Consumer — listens to cardealer.events exchange, routes all events to audit.all-events queue
+builder.Services.AddHostedService<AuditService.Infrastructure.Messaging.RabbitMqEventConsumer>();
+
 // Background Service para procesar DLQ
 builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
 builder.Services.AddHostedService<DeadLetterQueueProcessor>();
