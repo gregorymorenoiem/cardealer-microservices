@@ -80,8 +80,20 @@ builder.Services.AddStandardErrorHandling(options =>
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
 });
 
-// 7b. Audit Publisher
-builder.Services.AddAuditPublisher(builder.Configuration);
+// 7b. Audit Publisher — usa credenciales de RabbitMQ existentes
+builder.Services.AddAuditPublisher(options =>
+{
+    options.ServiceName = "AdvertisingService";
+    options.Enabled = true;
+    options.RabbitMq = new CarDealer.Shared.Audit.Configuration.RabbitMqConfig
+    {
+        Host = builder.Configuration["RabbitMQ:HostName"] ?? "rabbitmq",
+        Port = int.TryParse(builder.Configuration["RabbitMQ:Port"], out var auditPort) ? auditPort : 5672,
+        Username = builder.Configuration["RabbitMQ:UserName"] ?? "okla_admin",
+        Password = builder.Configuration["RabbitMQ:Password"] ?? "okla_secret",
+        VirtualHost = builder.Configuration["RabbitMQ:VirtualHost"] ?? "/"
+    };
+});
 
 // 8. Infrastructure layer (repos, services, jobs, consumer)
 builder.Services.AddInfrastructure(builder.Configuration);
