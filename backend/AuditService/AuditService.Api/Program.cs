@@ -239,6 +239,11 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = check => check.Tags.Contains("ready")
 });
 
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // Only verifies process is alive — no real checks
+});
+
 // MapHealthChecksUI - DISABLED (UI configuration commented out above)
 /*
 app.MapHealthChecksUI(setup =>
