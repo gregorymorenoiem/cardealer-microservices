@@ -55,24 +55,14 @@ public class RabbitMQNotificationProducer : INotificationEventProducer, IDisposa
         _channel = _connection.CreateModel();
 
         // Declarar exchange para notificaciones
+        // NOTA: Solo declaramos el exchange. La cola y el binding son responsabilidad
+        // del consumer (NotificationService). El producer no debe declarar colas
+        // para evitar conflictos de argumentos (x-dead-letter-exchange, etc.).
         _channel.ExchangeDeclare(
             exchange: _settings.ExchangeName,
             type: ExchangeType.Direct,
             durable: true,
             autoDelete: false);
-
-        // Declarar cola principal de notificaciones
-        _channel.QueueDeclare(
-            queue: _settings.QueueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null);
-
-        _channel.QueueBind(
-            queue: _settings.QueueName,
-            exchange: _settings.ExchangeName,
-            routingKey: _settings.RoutingKey);
 
         // Cola de retry para fallos
         _channel.QueueDeclare(
