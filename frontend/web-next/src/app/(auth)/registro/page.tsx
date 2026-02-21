@@ -15,7 +15,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, Check, X, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, Check, X, AlertCircle, ShoppingBag, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +40,7 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     acceptTerms: false,
+    accountType: 'buyer' as 'buyer' | 'seller',
   });
 
   // Password requirements
@@ -109,6 +110,8 @@ export default function RegisterPage() {
         phone: sanitizedPhone,
         password: formData.password, // Password is NOT sanitized (would break it)
         acceptTerms: formData.acceptTerms,
+        accountType: formData.accountType,
+        userIntent: formData.accountType === 'seller' ? 'sell' : 'browse',
       });
 
       // Redirect to verification page with email pre-filled for resend
@@ -202,6 +205,41 @@ export default function RegisterPage() {
             {error}
           </div>
         )}
+
+        {/* Account type selector */}
+        <div className="space-y-2">
+          <Label>¿Qué quieres hacer en OKLA?</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, accountType: 'buyer' })}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-sm transition-colors',
+                formData.accountType === 'buyer'
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-border text-muted-foreground hover:border-primary/50'
+              )}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              <span className="font-medium">Comprar</span>
+              <span className="text-xs text-center text-muted-foreground">Busco un vehículo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, accountType: 'seller' })}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-sm transition-colors',
+                formData.accountType === 'seller'
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-border text-muted-foreground hover:border-primary/50'
+              )}
+            >
+              <Tag className="h-5 w-5" />
+              <span className="font-medium">Vender</span>
+              <span className="text-xs text-center text-muted-foreground">Quiero publicar vehículos</span>
+            </button>
+          </div>
+        </div>
 
         {/* Name fields */}
         <div className="grid grid-cols-2 gap-4">

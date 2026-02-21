@@ -187,12 +187,25 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
                     durable: true,
                     autoDelete: false);
 
-                // Declare queue
+                // Declare queue with DLX arguments to match ErrorService's queue declaration.
+                // ErrorService owns the queue and declares it with x-dead-letter-exchange.
+                // All publishers MUST use the same arguments to avoid PRECONDITION_FAILED.
+                var dlxExchange = $"{_options.RabbitMQ.Exchange}.dlx";
+                var queueArgs = new Dictionary<string, object>
+                {
+                    { "x-dead-letter-exchange", dlxExchange },
+                    { "x-dead-letter-routing-key", _options.RabbitMQ.RoutingKey }
+                };
+
+                // Ensure DLX exchange exists before declaring the queue with it
+                _channel.ExchangeDeclare(dlxExchange, ExchangeType.Direct, durable: true, autoDelete: false);
+
                 _channel.QueueDeclare(
                     queue: _options.RabbitMQ.Queue,
                     durable: true,
                     exclusive: false,
-                    autoDelete: false);
+                    autoDelete: false,
+                    arguments: queueArgs);
 
                 // Bind queue to exchange
                 _channel.QueueBind(

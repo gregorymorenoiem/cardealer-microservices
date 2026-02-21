@@ -1,4 +1,5 @@
 using AuthService.Application.DTOs.Auth;
+using AuthService.Domain.Enums;
 using MediatR;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
@@ -7,6 +8,7 @@ namespace AuthService.Application.Features.Auth.Commands.Register;
 /// Command for user registration.
 /// Accepts firstName and lastName from frontend and constructs UserName internally.
 /// Also accepts optional phone and acceptTerms for validation.
+/// AccountType defaults to Buyer. Sellers can register directly with AccountType.Seller.
 /// </summary>
 public record RegisterCommand(
     string? UserName,
@@ -15,7 +17,9 @@ public record RegisterCommand(
     string? FirstName = null,
     string? LastName = null,
     string? Phone = null,
-    bool AcceptTerms = true
+    bool AcceptTerms = true,
+    AccountType AccountType = AccountType.Buyer,
+    UserIntent UserIntent = UserIntent.Browse
 ) : IRequest<RegisterResponse>
 {
     /// <summary>

@@ -262,12 +262,23 @@ export async function serverRegister(
   email: string,
   password: string,
   acceptTerms: boolean,
-  phone?: string
+  phone?: string,
+  accountType?: string,
+  userIntent?: string
 ): Promise<ActionResult<RegisterResult>> {
   try {
     await internalFetch('/api/auth/register', {
       method: 'POST',
-      body: { firstName, lastName, email, phone, password, acceptTerms },
+      body: {
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        acceptTerms,
+        ...(accountType && { accountType }),
+        ...(userIntent  && { userIntent }),
+      },
     });
 
     return {

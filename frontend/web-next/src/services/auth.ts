@@ -43,6 +43,10 @@ export interface RegisterRequest {
   phone?: string;
   password: string;
   acceptTerms: boolean;
+  /** Account type to register as. Defaults to 'buyer' if not provided. */
+  accountType?: 'buyer' | 'seller';
+  /** User intent. Auto-derived from accountType if not set explicitly. */
+  userIntent?: 'browse' | 'buy' | 'sell' | 'buy_and_sell';
 }
 
 export interface AuthResponse {
@@ -343,7 +347,9 @@ export async function register(data: RegisterRequest): Promise<{ email: string }
     data.email,
     data.password,
     data.acceptTerms,
-    data.phone
+    data.phone,
+    data.accountType,
+    data.userIntent
   );
 
   if (!result.success) {

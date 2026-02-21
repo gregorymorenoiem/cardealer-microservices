@@ -267,6 +267,22 @@ public class AuthController : ControllerBase
     [Audit("AUTH_REGISTER", "Register", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
+        // Map string accountType from frontend ("seller", "buyer") to domain enum
+        var accountType = request.AccountType?.ToLowerInvariant() switch
+        {
+            "seller" => Domain.Enums.AccountType.Seller,
+            _ => Domain.Enums.AccountType.Buyer   // default: Buyer
+        };
+
+        // Map string userIntent from frontend ("sell", "buy", "buy_and_sell") to domain enum
+        var userIntent = request.UserIntent?.ToLowerInvariant() switch
+        {
+            "sell"         => Domain.Enums.UserIntent.Sell,
+            "buy"          => Domain.Enums.UserIntent.Buy,
+            "buy_and_sell" => Domain.Enums.UserIntent.BuyAndSell,
+            _              => Domain.Enums.UserIntent.Browse   // default: Browse
+        };
+
         var command = new RegisterCommand(
             request.UserName,
             request.Email,
@@ -274,7 +290,9 @@ public class AuthController : ControllerBase
             request.FirstName,
             request.LastName,
             request.Phone,
-            request.AcceptTerms
+            request.AcceptTerms,
+            accountType,
+            userIntent
         );
         var result = await _mediator.Send(command);
         return Ok(ApiResponse<RegisterResponse>.Ok(result));
