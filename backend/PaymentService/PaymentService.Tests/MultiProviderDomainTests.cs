@@ -197,6 +197,7 @@ public class MultiProviderDomainTests
         var commission = amount * percent / 100;
 
         // Assert
+        _ = gateway; // used to satisfy xUnit1026 (Theory parameter must be used)
         commission.Should().Be(expectedCommission);
     }
 
