@@ -133,11 +133,11 @@ public class ErrorCriticalEventConsumer : BackgroundService
 
             // Subscribir al queue con auto-ack deshabilitado
             _channel.BasicConsume(
-                queue: "notification.error.critical",
+                queue: "notification-service.error-critical",
                 autoAck: false,
                 consumer: consumer);
 
-            _logger.LogInformation("ErrorCriticalEventConsumer started successfully, listening to queue: notification.error.critical");
+            _logger.LogInformation("ErrorCriticalEventConsumer started successfully, listening to queue: notification-service.error-critical");
 
             // Mantener el servicio ejecutándose
             await Task.Delay(Timeout.Infinite, stoppingToken);

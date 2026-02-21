@@ -77,9 +77,10 @@ public class UserRegisteredNotificationConsumer : BackgroundService
             _channel = _connection.CreateModel();
 
             // ✅ Declarar Dead Letter Exchange para mensajes fallidos
+            // cardealer.events.dlx is Direct type (must match live RabbitMQ topology)
             _channel.ExchangeDeclare(
                 exchange: DeadLetterExchange,
-                type: ExchangeType.Topic,
+                type: ExchangeType.Direct,
                 durable: true
             );
 
