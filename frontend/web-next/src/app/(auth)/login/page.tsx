@@ -25,7 +25,8 @@ import { sanitizeEmail } from '@/lib/security/sanitize';
 
 function LoginForm({ redirectUrl }: { redirectUrl: string }) {
   const router = useRouter();
-  const { login, verifyTwoFactorLogin } = useAuth();
+  const auth = useAuth();
+  const { login, verifyTwoFactorLogin } = auth;
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -59,7 +60,9 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
       });
 
       // Redirect after successful login
-      router.push(redirectUrl);
+      const finalRedirect =
+        redirectUrl === '/' && auth.user?.accountType === 'seller' ? '/vender' : redirectUrl;
+      router.push(finalRedirect);
       router.refresh();
     } catch (err) {
       // If 2FA is required, show the 2FA code form
@@ -88,7 +91,9 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
       await verifyTwoFactorLogin(twoFactorState!.tempToken, twoFactorCode);
 
       // Redirect after successful 2FA verification
-      router.push(redirectUrl);
+      const finalRedirect2 =
+        redirectUrl === '/' && auth.user?.accountType === 'seller' ? '/vender' : redirectUrl;
+      router.push(finalRedirect2);
       router.refresh();
     } catch (err) {
       const error = err as { message?: string };
