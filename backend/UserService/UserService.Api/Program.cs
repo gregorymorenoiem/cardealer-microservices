@@ -303,6 +303,9 @@ if (useRabbitMq)
     // Consumer for UserLoggedInEvent from AuthService - updates LastLoginAt
     builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserLoggedInEventConsumer>();
 
+    // Consumer for KYCProfileStatusChangedEvent from KYCService - sets IsVerified on User
+    builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.KYCProfileApprovedEventConsumer>();
+
     // Daily job — anonymizes accounts after 15-day grace period (Ley 172-13)
     builder.Services.AddHostedService<UserService.Infrastructure.BackgroundJobs.AccountDeletionWorker>();
 }
