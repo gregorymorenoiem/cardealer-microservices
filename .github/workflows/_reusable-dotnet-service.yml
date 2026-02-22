@@ -127,7 +127,7 @@ jobs:
             cat /tmp/nuget-audit-direct.txt
             exit 1
           fi
-          
+
           if grep -q "^\s*>" /tmp/nuget-audit-all.txt 2>/dev/null; then
             echo "⚠️ Transitive vulnerabilities detected (from upstream packages):"
             grep "^   >" /tmp/nuget-audit-all.txt || true
@@ -196,7 +196,7 @@ jobs:
         with:
           registry: ${{ inputs.docker-registry }}
           username: ${{ secrets.REGISTRY_USERNAME || github.actor }}
-          password: ${{ secrets.REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: 🏗️ Build Docker image
         uses: docker/build-push-action@v5
