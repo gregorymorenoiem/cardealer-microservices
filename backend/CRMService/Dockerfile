@@ -20,7 +20,6 @@ COPY ["CRMService/CRMService.Api/CRMService.Api.csproj", "CRMService/CRMService.
 COPY ["CRMService/CRMService.Application/CRMService.Application.csproj", "CRMService/CRMService.Application/"]
 COPY ["CRMService/CRMService.Domain/CRMService.Domain.csproj", "CRMService/CRMService.Domain/"]
 COPY ["CRMService/CRMService.Infrastructure/CRMService.Infrastructure.csproj", "CRMService/CRMService.Infrastructure/"]
-COPY ["SharedKernel/SharedKernel.csproj", "SharedKernel/"]
 
 # Restore dependencies
 RUN dotnet restore "CRMService/CRMService.Api/CRMService.Api.csproj"
