@@ -139,12 +139,11 @@ export async function getCurrentProfile(): Promise<UserProfileDto> {
   try {
     const response = await apiClient.get<UserProfileDto>('/api/users/me');
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If 404, user exists in AuthService but not in UserService (common with OAuth users)
-    if (error.response?.status === 404) {
-      const notFoundError = new Error('Profile not found in UserService');
-      (notFoundError as any).code = 'PROFILE_NOT_FOUND';
-      throw notFoundError;
+    const axiosError = error as { response?: { status: number } };
+    if (axiosError.response?.status === 404) {
+      throw Object.assign(new Error('Profile not found in UserService'), { code: 'PROFILE_NOT_FOUND' });
     }
     throw error;
   }
@@ -158,13 +157,13 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<UserPro
   try {
     const response = await apiClient.put<UserProfileDto>('/api/users/me', data);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      const notFoundError = new Error(
-        'Tu perfil aún no está sincronizado. Por favor intenta más tarde.'
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status: number } };
+    if (axiosError.response?.status === 404) {
+      throw Object.assign(
+        new Error('Tu perfil aún no está sincronizado. Por favor intenta más tarde.'),
+        { code: 'PROFILE_NOT_FOUND' }
       );
-      (notFoundError as any).code = 'PROFILE_NOT_FOUND';
-      throw notFoundError;
     }
     throw error;
   }
@@ -184,13 +183,13 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
       },
     });
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      const notFoundError = new Error(
-        'Tu perfil aún no está sincronizado. Por favor intenta más tarde.'
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status: number } };
+    if (axiosError.response?.status === 404) {
+      throw Object.assign(
+        new Error('Tu perfil aún no está sincronizado. Por favor intenta más tarde.'),
+        { code: 'PROFILE_NOT_FOUND' }
       );
-      (notFoundError as any).code = 'PROFILE_NOT_FOUND';
-      throw notFoundError;
     }
     throw error;
   }
@@ -202,8 +201,9 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
 export async function deleteAvatar(): Promise<void> {
   try {
     await apiClient.delete('/api/users/me/avatar');
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status: number } };
+    if (axiosError.response?.status === 404) {
       // Ignore 404 - profile doesn't exist
       return;
     }
@@ -219,8 +219,9 @@ export async function getUserStats(): Promise<UserStats | null> {
   try {
     const response = await apiClient.get<UserStats>('/api/users/me/stats');
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status: number } };
+    if (axiosError.response?.status === 404) {
       return null;
     }
     throw error;

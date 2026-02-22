@@ -56,23 +56,6 @@ export interface AuthResponse {
   user?: UserDto;
 }
 
-// Backend LoginResponse structure (wrapped in ApiResponse)
-interface BackendLoginResponse {
-  success: boolean;
-  data: {
-    userId: string;
-    email: string;
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: string;
-    requiresTwoFactor?: boolean;
-    tempToken?: string;
-    twoFactorType?: string;
-    requiresRevokedDeviceVerification?: boolean;
-    deviceFingerprint?: string;
-  };
-}
-
 export interface UserDto {
   id: string;
   email: string;
@@ -621,31 +604,6 @@ export async function revokeAllSessions(): Promise<void> {
 // TWO-FACTOR AUTHENTICATION
 // ============================================================
 
-/**
- * Backend response types for 2FA
- */
-interface BackendEnable2FAResponse {
-  data?: {
-    secret: string;
-    qrCodeUri: string;
-    recoveryCodes: string[];
-    message?: string;
-  };
-  secret?: string;
-  qrCodeUri?: string;
-  recoveryCodes?: string[];
-  message?: string;
-}
-
-interface BackendVerify2FAResponse {
-  data?: {
-    success: boolean;
-    message: string;
-  };
-  success?: boolean;
-  message?: string;
-}
-
 interface BackendGenerateRecoveryCodesResponse {
   data?: {
     recoveryCodes: string[];
@@ -920,7 +878,7 @@ export async function getAccountDeletionStatus(): Promise<AccountDeletionStatus 
  * @deprecated Use requestAccountDeletion + confirmAccountDeletion instead
  * Legacy function for backwards compatibility
  */
-export async function deleteAccount(password: string): Promise<void> {
+export async function deleteAccount(_password: string): Promise<void> {
   // This is now a 2-step process, this function is kept for compatibility
   // but should be replaced with the new flow
   throw new Error(

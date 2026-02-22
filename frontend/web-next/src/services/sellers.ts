@@ -102,16 +102,12 @@ export async function convertToSeller(
     return response.data;
   } catch (error: unknown) {
     // Enhance error with additional context
-    const axiosError = error as any;
+    const axiosError = error as { response?: { status: number } };
     if (axiosError?.response?.status === 401) {
-      const err = new Error('Authentication required. Please log in again.');
-      (err as any).status = 401;
-      throw err;
+      throw Object.assign(new Error('Authentication required. Please log in again.'), { status: 401 });
     }
     if (axiosError?.response?.status === 404) {
-      const err = new Error('Seller conversion endpoint not found. Service may be unavailable.');
-      (err as any).status = 404;
-      throw err;
+      throw Object.assign(new Error('Seller conversion endpoint not found. Service may be unavailable.'), { status: 404 });
     }
     throw error;
   }

@@ -22,7 +22,6 @@ const REFRESH_COOKIE_NAME = 'okla_refresh_token';
 const MAINTENANCE_CACHE_COOKIE = 'maintenance-status';
 const MAINTENANCE_CACHE_TTL = 60; // seconds
 const LOGIN_PATH = '/login';
-const HOME_PATH = '/';
 const ACCOUNT_PATH = '/cuenta';
 const FORBIDDEN_PATH = '/403';
 const MAINTENANCE_PATH = '/mantenimiento';
@@ -244,7 +243,7 @@ function isTokenExpired(payload: TokenPayload): boolean {
 /**
  * Create redirect response with security headers
  */
-function createRedirect(url: URL, request: NextRequest): NextResponse {
+function createRedirect(url: URL, _request: NextRequest): NextResponse {
   const response = NextResponse.redirect(url);
   addSecurityHeaders(response);
   return response;

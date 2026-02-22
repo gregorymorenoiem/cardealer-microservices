@@ -371,33 +371,6 @@ export interface DocumentData {
 const KYC_BASE_URL = '/api/kyc';
 
 /**
- * Map frontend fields to backend format
- */
-function mapToBackendFormat(data: CreateKYCProfileRequest | Partial<CreateKYCProfileRequest>) {
-  return {
-    userId: data.userId,
-    fullName:
-      data.firstName && data.lastName
-        ? `${data.firstName} ${data.lastName}`.trim()
-        : data.firstName || '',
-    lastName: data.lastName,
-    primaryDocumentNumber: data.documentNumber,
-    primaryDocumentType: data.documentType,
-    dateOfBirth: data.dateOfBirth,
-    nationality: data.nationality,
-    address: data.address,
-    city: data.city,
-    province: data.province,
-    country: 'DO',
-    phone: data.phoneNumber,
-    sourceOfFunds: data.sourceOfFunds,
-    occupation: data.occupation,
-    expectedTransactionVolume: data.expectedMonthlyTransaction?.toString(),
-    entityType: EntityType.Individual,
-  };
-}
-
-/**
  * Get KYC profile by user ID
  * Returns null if profile doesn't exist (404) - this is expected for new users
  */
@@ -442,15 +415,6 @@ export async function getKYCProfileByUserId(userId: string): Promise<KYCProfile 
 export async function getKYCProfileById(id: string): Promise<KYCProfile> {
   const response = await apiClient.get<KYCProfile>(`${KYC_BASE_URL}/kycprofiles/${id}`);
   return response.data;
-}
-
-/**
- * Generate a unique idempotency key for critical operations
- */
-function generateIdempotencyKey(): string {
-  const timestamp = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).substring(2, 15);
-  return `kyc_${timestamp}_${randomPart}`;
 }
 
 /**

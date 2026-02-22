@@ -36,22 +36,17 @@ function AccountLayoutContent({ children }: AccountLayoutProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  // AuthGuard guarantees user is defined at this point
-  if (!user) return null;
-
-  // Prevent sellers and dealers from using the generic `/cuenta` area.
-  // Sellers should go to `/vender` and dealers to `/dealer` (including dealer employees).
+  // Redirect dealer accounts to their own portal.
+  // Sellers manage listings/account via /cuenta like buyers.
   React.useEffect(() => {
     if (!user) return;
-    if (user.accountType === 'seller') {
-      router.replace('/vender');
-      return;
-    }
     if (user.accountType === 'dealer' || user.accountType === 'dealer_employee') {
-      router.replace('/dealer');
-      return;
+      router.replace('/dealer/dashboard');
     }
   }, [user, router]);
+
+  // AuthGuard guarantees user is defined at this point
+  if (!user) return null;
 
   const handleLogout = async () => {
     await logout();
