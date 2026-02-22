@@ -68,11 +68,14 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         user.LastName = request.LastName?.Trim();
         
         // Set AccountType and UserIntent from request (default: Buyer / Browse)
-        // Only allow safe types at registration: Buyer or Seller.
-        // Dealer, Admin, PlatformEmployee require special onboarding flows.
-        user.AccountType = request.AccountType == Domain.Enums.AccountType.Seller
-            ? Domain.Enums.AccountType.Seller
-            : Domain.Enums.AccountType.Buyer;
+        // Buyer, Seller, and Dealer can register directly.
+        // Admin and PlatformEmployee require special onboarding flows.
+        user.AccountType = request.AccountType switch
+        {
+            Domain.Enums.AccountType.Seller => Domain.Enums.AccountType.Seller,
+            Domain.Enums.AccountType.Dealer => Domain.Enums.AccountType.Dealer,
+            _ => Domain.Enums.AccountType.Buyer
+        };
 
         // Auto-set UserIntent based on AccountType if caller didn't override it
         user.UserIntent = request.UserIntent != Domain.Enums.UserIntent.Browse

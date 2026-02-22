@@ -42,6 +42,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
+import { createDealer } from '@/services/dealers';
+import type { CreateDealerRequest } from '@/services/dealers';
 import {
   sanitizeText,
   sanitizeEmail,
@@ -68,7 +70,7 @@ const benefits = [
 
 export default function DealerRegistrationPage() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, login } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +119,14 @@ export default function DealerRegistrationPage() {
       setError('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
+    if (!formData.businessName.trim()) {
+      setError('El nombre del negocio es requerido.');
+      return;
+    }
+    if (!formData.address.trim() || !formData.city.trim() || !formData.province) {
+      setError('La dirección completa es requerida.');
+      return;
+    }
 
     setError(null);
     setIsSubmitting(true);
@@ -126,10 +136,24 @@ export default function DealerRegistrationPage() {
       const sanitizedEmail = sanitizeEmail(formData.email);
       const nameParts = sanitizeText(formData.contactName.trim(), { maxLength: 100 }).split(' ');
       const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+      const lastName = nameParts.slice(1).join(' ') || firstName;
       const sanitizedPhone = formData.phone ? sanitizePhone(formData.phone) : undefined;
 
-      // Step 1: Register the user account
+      // Build the dealer profile payload (to be sent after auth)
+      const dealerPayload: CreateDealerRequest = {
+        businessName: sanitizeText(formData.businessName, { maxLength: 200 }),
+        businessRegistrationNumber: formData.rnc ? sanitizeRNC(formData.rnc) : undefined,
+        dealerType: formData.dealerType === 'chain' ? 'Chain' : 'Independent',
+        email: sanitizedEmail,
+        phone: formData.phone,
+        website: formData.website ? (sanitizeUrl(formData.website) || undefined) : undefined,
+        address: sanitizeText(formData.address, { maxLength: 300 }),
+        city: sanitizeText(formData.city, { maxLength: 100 }),
+        state: formData.province,
+        country: 'DO',
+      };
+
+      // Step 1: Register the user account as a dealer
       await register({
         firstName,
         lastName,
@@ -137,10 +161,30 @@ export default function DealerRegistrationPage() {
         phone: sanitizedPhone,
         password: formData.password,
         acceptTerms: formData.agreeTerms,
+        accountType: 'dealer',
       });
 
-      // Redirect to email verification page
-      router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}&dealer=true`);
+      // Step 2: Auto-login so we can create the dealer profile immediately
+      try {
+        await login({
+          email: sanitizedEmail,
+          password: formData.password,
+        });
+
+        // Step 3: Create the dealer profile (user is now authenticated)
+        await createDealer(dealerPayload);
+
+        // Success — go to dealer dashboard
+        router.push('/mis-vehiculos');
+      } catch {
+        // Auto-login failed (most likely email verification required).
+        // Save the dealer data so it can be created after the user verifies and logs in.
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('pending-dealer-registration', JSON.stringify(dealerPayload));
+        }
+        // Redirect to email verification page
+        router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}&dealer=true`);
+      }
     } catch (err) {
       const apiError = err as { message?: string };
       setError(apiError.message || 'Error al crear la cuenta. Intenta de nuevo.');

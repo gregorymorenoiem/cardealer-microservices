@@ -61,18 +61,17 @@ export type AccountFormData = z.infer<typeof accountSchema>;
 /** RNC dominicano: 9 dígitos (personas físicas) u 11 dígitos (personas jurídicas) */
 const rncRegex = /^(\d{9}|\d{11})$/;
 
+/**
+ * Esquema base para vendedores independientes (personas físicas)
+ * NO requiere RNC ni nombre comercial
+ */
 export const sellerProfileSchema = z.object({
   displayName: z
     .string()
-    .min(3, 'El nombre público debe tener al menos 3 caracteres')
-    .max(100, 'El nombre público no puede exceder 100 caracteres'),
-  businessName: z
-    .string()
-    .min(3, 'El nombre del negocio debe tener al menos 3 caracteres')
-    .max(150, 'El nombre del negocio no puede exceder 150 caracteres')
-    .optional()
-    .or(z.literal('')),
-  rnc: z.string().regex(rncRegex, 'El RNC debe tener 9 o 11 dígitos').optional().or(z.literal('')),
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  businessName: z.string().optional(), // Optional for individual sellers
+  rnc: z.string().optional(), // Optional for individual sellers
   description: z
     .string()
     .max(500, 'La descripción no puede exceder 500 caracteres')
@@ -94,12 +93,38 @@ export const sellerProfileSchema = z.object({
 export type SellerProfileFormData = z.infer<typeof sellerProfileSchema>;
 
 /**
- * When accountType === 'dealer', RNC is required.
- * Apply this refinement in the component based on context.
+ * Esquema para dealers (personas jurídicas / empresas)
+ * REQUIERE RNC y nombre comercial
  */
-export const sellerProfileDealerSchema = sellerProfileSchema.extend({
-  rnc: z.string().regex(rncRegex, 'El RNC es obligatorio para dealers (9 o 11 dígitos)'),
-  businessName: z.string().min(3, 'El nombre del negocio es obligatorio para dealers'),
+export const sellerProfileDealerSchema = z.object({
+  displayName: z
+    .string()
+    .min(3, 'El nombre de la empresa debe tener al menos 3 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  businessName: z
+    .string()
+    .min(3, 'El nombre legal es obligatorio para dealers')
+    .max(150, 'El nombre no puede exceder 150 caracteres'),
+  rnc: z
+    .string()
+    .regex(rncRegex, 'El RNC es obligatorio para dealers (9 o 11 dígitos)')
+    .min(1, 'El RNC es obligatorio'),
+  description: z
+    .string()
+    .max(500, 'La descripción no puede exceder 500 caracteres')
+    .optional()
+    .or(z.literal('')),
+  phone: z
+    .string()
+    .regex(/^\d{10}$/, 'Ingresa un número de 10 dígitos')
+    .optional()
+    .or(z.literal('')),
+  location: z
+    .string()
+    .max(200, 'La ubicación no puede exceder 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+  specialties: z.array(z.string()).optional().default([]),
 });
 
 export type SellerProfileDealerFormData = z.infer<typeof sellerProfileDealerSchema>;

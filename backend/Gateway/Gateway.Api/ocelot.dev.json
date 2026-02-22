@@ -1478,7 +1478,22 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/dealers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "userservice", "Port": 80 }
+      ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealers",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

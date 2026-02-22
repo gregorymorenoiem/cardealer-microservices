@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { authService, TwoFactorRequiredError } from '@/services/auth';
+import { createDealer } from '@/services/dealers';
 import { useAuth } from '@/hooks/use-auth';
 import { sanitizeEmail } from '@/lib/security/sanitize';
 import type { User } from '@/types';
@@ -101,6 +102,22 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
       // Redirect after successful login — use the user returned by login() directly
       // to avoid the React state update race condition (auth.user still stale here)
       const finalRedirect = getPostLoginRedirect(loggedUser, redirectUrl);
+
+      // If this is a dealer who registered with pending profile data, create it now
+      if (loggedUser?.accountType === 'dealer' && typeof window !== 'undefined') {
+        const pendingDealer = localStorage.getItem('pending-dealer-registration');
+        if (pendingDealer) {
+          try {
+            const dealerData = JSON.parse(pendingDealer);
+            await createDealer(dealerData);
+          } catch {
+            // Dealer profile creation failed — user can set it up from their dashboard
+          } finally {
+            localStorage.removeItem('pending-dealer-registration');
+          }
+        }
+      }
+
       router.push(finalRedirect);
       router.refresh();
     } catch (err) {

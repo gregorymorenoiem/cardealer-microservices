@@ -267,10 +267,11 @@ public class AuthController : ControllerBase
     [Audit("AUTH_REGISTER", "Register", ResourceType = "User", Severity = AuditSeverity.Warning)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        // Map string accountType from frontend ("seller", "buyer") to domain enum
+        // Map string accountType from frontend ("seller", "buyer", "dealer") to domain enum
         var accountType = request.AccountType?.ToLowerInvariant() switch
         {
             "seller" => Domain.Enums.AccountType.Seller,
+            "dealer" => Domain.Enums.AccountType.Dealer,
             _ => Domain.Enums.AccountType.Buyer   // default: Buyer
         };
 

@@ -352,18 +352,45 @@ export default function SellerRegistrationPage() {
     setGlobalError(null);
     setIsSubmitting(true);
     try {
+      // Validate based on account type (check both wizard state and actual user accountType)
+      const { sellerProfileSchema, sellerProfileDealerSchema } =
+        await import('@/lib/validations/seller-onboarding');
+      const effectiveIsDealer =
+        accountData.accountType === 'dealer' || user?.accountType === 'dealer';
+      const schema = effectiveIsDealer ? sellerProfileDealerSchema : sellerProfileSchema;
+      const validation = schema.safeParse(profileData);
+
+      if (!validation.success) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const issues = (validation as any).error?.issues ?? (validation as any).error?.errors ?? [];
+        const errors = (issues as Array<{ message: string }>).map(e => e.message).join(', ');
+        setGlobalError(`Validación: ${errors}`);
+        return;
+      }
+
       if (isLoggedIn && user) {
         // Existing user → convert to seller
+        // isDealer: check both wizard state AND actual user accountType for logged-in users
+        const isDealer = accountData.accountType === 'dealer' || user.accountType === 'dealer';
+
         try {
+          // ConvertBuyerToSellerRequest ONLY accepts these fields — no phone, location etc.
+          // The handler pulls FullName, Email, Phone, Address from the user's profile automatically.
+          const conversionPayload = {
+            // businessName is required by the frontend type but ignored by backend (uses user profile)
+            businessName: isDealer
+              ? profileData.businessName || profileData.displayName
+              : profileData.displayName || user.firstName || '',
+            bio: profileData.description || undefined,
+            acceptTerms: true,
+            acceptsOffers: true,
+            showPhone: !!profileData.phone,
+            showLocation: !!profileData.location,
+            preferredContactMethod: 'whatsapp',
+          };
+
           const result = await convertToSeller.mutateAsync({
-            data: {
-              businessName: profileData.businessName || profileData.displayName,
-              description: profileData.description || undefined,
-              phone: profileData.phone || undefined,
-              location: profileData.location || undefined,
-              specialties: profileData.specialties.length > 0 ? profileData.specialties : undefined,
-              acceptTerms: true,
-            },
+            data: conversionPayload,
             idempotencyKey: `convert-seller-${user.id}-${Date.now()}`,
           });
           setSellerProfileId(result.sellerProfileId);
@@ -398,15 +425,31 @@ export default function SellerRegistrationPage() {
         }
       } else {
         // New user just registered → create seller profile
-        const profile = await createSellerProfile.mutateAsync({
-          userId: user?.id || '', // Will be set after registration
-          businessName: profileData.businessName || profileData.displayName,
-          displayName: profileData.displayName,
-          description: profileData.description || undefined,
-          phone: profileData.phone || undefined,
-          location: profileData.location || undefined,
-          specialties: profileData.specialties.length > 0 ? profileData.specialties : undefined,
-        });
+        const profilePayload =
+          accountData.accountType === 'dealer'
+            ? {
+                userId: user?.id || '',
+                displayName: profileData.displayName,
+                businessName: profileData.businessName || profileData.displayName,
+                rnc: profileData.rnc,
+                description: profileData.description || undefined,
+                phone: profileData.phone || undefined,
+                location: profileData.location || undefined,
+                specialties:
+                  profileData.specialties.length > 0 ? profileData.specialties : undefined,
+              }
+            : {
+                userId: user?.id || '',
+                displayName: profileData.displayName,
+                businessName: profileData.displayName, // For individual sellers, use displayName
+                description: profileData.description || undefined,
+                phone: profileData.phone || undefined,
+                location: profileData.location || undefined,
+                specialties:
+                  profileData.specialties.length > 0 ? profileData.specialties : undefined,
+              };
+
+        const profile = await createSellerProfile.mutateAsync(profilePayload);
         setSellerProfileId(profile.id);
       }
 
@@ -597,7 +640,7 @@ export default function SellerRegistrationPage() {
             <ProfileStep
               data={profileData}
               onChange={partial => setProfileData(prev => ({ ...prev, ...partial }))}
-              isDealer={accountData.accountType === 'dealer'}
+              isDealer={accountData.accountType === 'dealer' || user?.accountType === 'dealer'}
               onSubmit={handleProfileSubmit}
               onBack={!isLoggedIn ? handleBack : () => {}}
               isLoading={isSubmitting}

@@ -44,7 +44,7 @@ export interface RegisterRequest {
   password: string;
   acceptTerms: boolean;
   /** Account type to register as. Defaults to 'buyer' if not provided. */
-  accountType?: 'buyer' | 'seller';
+  accountType?: 'buyer' | 'seller' | 'dealer';
   /** User intent. Auto-derived from accountType if not set explicitly. */
   userIntent?: 'browse' | 'buy' | 'sell' | 'buy_and_sell';
 }

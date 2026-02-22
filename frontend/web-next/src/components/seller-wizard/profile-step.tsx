@@ -68,10 +68,12 @@ export function ProfileStep({
       {/* Header */}
       <div className="space-y-1">
         <h3 className="text-lg font-semibold">
-          {isDealer ? 'Perfil de tu dealer' : 'Tu perfil de vendedor'}
+          {isDealer ? 'Perfil de tu empresa' : 'Tu perfil de vendedor'}
         </h3>
         <p className="text-muted-foreground text-sm">
-          Esta información será visible para los compradores.
+          {isDealer
+            ? 'Información sobre tu negocio. Será visible para los compradores.'
+            : 'Información personal que será visible para los compradores.'}
           {userName && (
             <>
               {' '}
@@ -81,57 +83,76 @@ export function ProfileStep({
         </p>
       </div>
 
-      {/* Display Name */}
-      <div className="space-y-2">
-        <Label htmlFor="displayName">
-          <Store className="mr-1 inline h-4 w-4" />
-          Nombre público *
-        </Label>
-        <Input
-          id="displayName"
-          value={data.displayName}
-          onChange={e => onChange({ displayName: e.target.value })}
-          placeholder={isDealer ? 'Ej: Auto Dominicana Premium' : 'Ej: Juan Pérez Autos'}
-          required
-          maxLength={100}
-        />
-        <p className="text-muted-foreground text-xs">
-          Así te verán los compradores en tus publicaciones
-        </p>
-      </div>
-
-      {/* Business Name (dealer only) */}
-      {isDealer && (
+      {/* Display Name (seller only) */}
+      {!isDealer && (
         <div className="space-y-2">
-          <Label htmlFor="businessName">Razón Social *</Label>
+          <Label htmlFor="displayName">
+            <Store className="mr-1 inline h-4 w-4" />
+            Nombre público *
+          </Label>
           <Input
-            id="businessName"
-            value={data.businessName ?? ''}
-            onChange={e => onChange({ businessName: e.target.value })}
-            placeholder="Nombre legal de la empresa"
+            id="displayName"
+            value={data.displayName}
+            onChange={e => onChange({ displayName: e.target.value })}
+            placeholder="Ej: Juan Pérez"
             required
-            maxLength={150}
+            maxLength={100}
           />
+          <p className="text-muted-foreground text-xs">
+            Así te verán los compradores en tus publicaciones
+          </p>
         </div>
       )}
 
-      {/* RNC */}
-      <div className="space-y-2">
-        <Label htmlFor="rnc">
-          RNC {isDealer ? '*' : <span className="text-muted-foreground">(opcional)</span>}
-        </Label>
-        <Input
-          id="rnc"
-          value={data.rnc ?? ''}
-          onChange={e => onChange({ rnc: e.target.value.replace(/\D/g, '').slice(0, 11) })}
-          placeholder="123456789"
-          maxLength={11}
-          required={isDealer}
-        />
-        <p className="text-muted-foreground text-xs">
-          Registro Nacional del Contribuyente (9 o 11 dígitos)
-        </p>
-      </div>
+      {/* Business Name (dealer only) */}
+      {isDealer && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="displayName">
+              <Store className="mr-1 inline h-4 w-4" />
+              Nombre de la Empresa *
+            </Label>
+            <Input
+              id="displayName"
+              value={data.displayName}
+              onChange={e => onChange({ displayName: e.target.value })}
+              placeholder="Ej: Auto Dominicana Premium"
+              required
+              maxLength={100}
+            />
+            <p className="text-muted-foreground text-xs">
+              Así te verán los compradores en tus publicaciones
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="businessName">Razón Social *</Label>
+            <Input
+              id="businessName"
+              value={data.businessName ?? ''}
+              onChange={e => onChange({ businessName: e.target.value })}
+              placeholder="Nombre legal de la empresa"
+              required
+              maxLength={150}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="rnc">RNC *</Label>
+            <Input
+              id="rnc"
+              value={data.rnc ?? ''}
+              onChange={e => onChange({ rnc: e.target.value.replace(/\D/g, '').slice(0, 11) })}
+              placeholder="Ej: 10123456789"
+              maxLength={11}
+              required
+            />
+            <p className="text-muted-foreground text-xs">
+              Registro Nacional del Contribuyente (9 o 11 dígitos)
+            </p>
+          </div>
+        </>
+      )}
 
       {/* Phone */}
       <div className="space-y-2">
