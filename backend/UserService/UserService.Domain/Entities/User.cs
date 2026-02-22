@@ -85,6 +85,15 @@ namespace UserService.Domain.Entities
         public string? BusinessHours { get; set; } = "9:00 AM - 6:00 PM";
         public string? AutoReplyMessage { get; set; }
         public bool IsEmailVerified { get; set; } = false;
+
+        /// <summary>
+        /// True when the user's KYC has been approved by an Admin/Compliance officer.
+        /// Set by KYCProfileApprovedEventConsumer when kyc.profile.status_changed event is received.
+        /// </summary>
+        public bool IsVerified { get; set; } = false;
+
+        /// <summary>Timestamp when KYC was approved and IsVerified was set to true.</summary>
+        public DateTime? VerifiedAt { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
