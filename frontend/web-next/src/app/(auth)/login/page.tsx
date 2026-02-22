@@ -22,12 +22,13 @@ import { Separator } from '@/components/ui/separator';
 import { authService, TwoFactorRequiredError } from '@/services/auth';
 import { useAuth } from '@/hooks/use-auth';
 import { sanitizeEmail } from '@/lib/security/sanitize';
+import type { User } from '@/types';
 
 /**
  * Returns the correct post-login destination based on the user's accountType.
  * Falls back to the explicit redirectUrl if it is not the root '/'.
  */
-function getPostLoginRedirect(user: import('@/types').User | null, redirectUrl: string): string {
+function getPostLoginRedirect(user: User | null, redirectUrl: string): string {
   // If the user was already heading somewhere specific, respect that
   if (redirectUrl && redirectUrl !== '/') return redirectUrl;
 
@@ -113,7 +114,10 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
     setIsLoading(true);
 
     try {
-      const { user: loggedUser2fa } = await verifyTwoFactorLogin(twoFactorState!.tempToken, twoFactorCode);
+      const { user: loggedUser2fa } = await verifyTwoFactorLogin(
+        twoFactorState!.tempToken,
+        twoFactorCode
+      );
 
       // Redirect after successful 2FA verification
       const finalRedirect2 = getPostLoginRedirect(loggedUser2fa, redirectUrl);
