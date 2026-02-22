@@ -2,18 +2,22 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["Vehicle360ProcessingService.Api/Vehicle360ProcessingService.Api.csproj", "Vehicle360ProcessingService.Api/"]
-COPY ["Vehicle360ProcessingService.Application/Vehicle360ProcessingService.Application.csproj", "Vehicle360ProcessingService.Application/"]
-COPY ["Vehicle360ProcessingService.Infrastructure/Vehicle360ProcessingService.Infrastructure.csproj", "Vehicle360ProcessingService.Infrastructure/"]
-COPY ["Vehicle360ProcessingService.Domain/Vehicle360ProcessingService.Domain.csproj", "Vehicle360ProcessingService.Domain/"]
+# Copy shared libraries first
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+
+# Copy project files
+COPY ["Vehicle360ProcessingService/Vehicle360ProcessingService.Api/Vehicle360ProcessingService.Api.csproj", "Vehicle360ProcessingService/Vehicle360ProcessingService.Api/"]
+COPY ["Vehicle360ProcessingService/Vehicle360ProcessingService.Application/Vehicle360ProcessingService.Application.csproj", "Vehicle360ProcessingService/Vehicle360ProcessingService.Application/"]
+COPY ["Vehicle360ProcessingService/Vehicle360ProcessingService.Infrastructure/Vehicle360ProcessingService.Infrastructure.csproj", "Vehicle360ProcessingService/Vehicle360ProcessingService.Infrastructure/"]
+COPY ["Vehicle360ProcessingService/Vehicle360ProcessingService.Domain/Vehicle360ProcessingService.Domain.csproj", "Vehicle360ProcessingService/Vehicle360ProcessingService.Domain/"]
 
 # Restore packages
-RUN dotnet restore "Vehicle360ProcessingService.Api/Vehicle360ProcessingService.Api.csproj"
+RUN dotnet restore "Vehicle360ProcessingService/Vehicle360ProcessingService.Api/Vehicle360ProcessingService.Api.csproj"
 
 # Copy everything and build
 COPY . .
-WORKDIR "/src/Vehicle360ProcessingService.Api"
+WORKDIR "/src/Vehicle360ProcessingService/Vehicle360ProcessingService.Api"
 RUN dotnet build "Vehicle360ProcessingService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
