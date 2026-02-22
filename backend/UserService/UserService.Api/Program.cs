@@ -302,6 +302,9 @@ if (useRabbitMq)
 
     // Consumer for UserLoggedInEvent from AuthService - updates LastLoginAt
     builder.Services.AddHostedService<UserService.Infrastructure.Services.Messaging.UserLoggedInEventConsumer>();
+
+    // Daily job — anonymizes accounts after 15-day grace period (Ley 172-13)
+    builder.Services.AddHostedService<UserService.Infrastructure.BackgroundJobs.AccountDeletionWorker>();
 }
 else
 {
