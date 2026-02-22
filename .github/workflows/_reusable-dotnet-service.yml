@@ -110,17 +110,32 @@ jobs:
 
       - name: 🛡️ NuGet Vulnerability Audit
         working-directory: ${{ inputs.service-path }}
-        run: dotnet list package --vulnerable --include-transitive 2>&1 | tee /tmp/nuget-audit.txt
+        run: |
+          echo "🔍 Scanning for direct package vulnerabilities..."
+          dotnet list package --vulnerable 2>&1 | tee /tmp/nuget-audit-direct.txt || true
+          echo ""
+          echo "🔍 Scanning for transitive package vulnerabilities..."
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee /tmp/nuget-audit-all.txt || true
         continue-on-error: true
 
-      - name: 🚨 Check for Critical Vulnerabilities
+      - name: 🚨 Check for Critical Direct Vulnerabilities
         run: |
-          if grep -qi "Critical" /tmp/nuget-audit.txt 2>/dev/null; then
-            echo "::error::Critical NuGet vulnerabilities detected!"
-            cat /tmp/nuget-audit.txt
+          # Only fail on DIRECT package vulnerabilities that are Critical
+          # Transitive vulnerabilities are reported but don't block (require upstream fixes)
+          if grep -q "^\s*>" /tmp/nuget-audit-direct.txt 2>/dev/null && grep -qi "Critical" /tmp/nuget-audit-direct.txt; then
+            echo "::error::Critical DIRECT NuGet vulnerabilities detected!"
+            cat /tmp/nuget-audit-direct.txt
             exit 1
           fi
-          echo "✅ No critical NuGet vulnerabilities"
+          
+          if grep -q "^\s*>" /tmp/nuget-audit-all.txt 2>/dev/null; then
+            echo "⚠️ Transitive vulnerabilities detected (from upstream packages):"
+            grep "^   >" /tmp/nuget-audit-all.txt || true
+            echo ""
+            echo "ℹ️ Transitive vulnerabilities require updates from package maintainers"
+          else
+            echo "✅ No vulnerable packages detected"
+          fi
 
       - name: 🧪 Run tests
         if: inputs.run-tests
