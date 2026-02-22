@@ -25,20 +25,33 @@ import { sanitizeEmail } from '@/lib/security/sanitize';
 import type { User } from '@/types';
 
 /**
+ * Landing/marketing pages that should never be used as post-login destinations.
+ * Authenticated users landing on these get redirected to their role-based portal.
+ */
+const MARKETING_PAGES = new Set([
+  '/vender',           // Seller marketing landing
+  '/dealer',           // Dealer marketing landing
+  '/dealer/landing',   // Dealer landing variant
+  '/dealer/pricing',   // Dealer pricing page
+]);
+
+/**
  * Returns the correct post-login destination based on the user's accountType.
- * Falls back to the explicit redirectUrl if it is not the root '/'.
+ * Falls back to the explicit redirectUrl if it is not the root '/' and not
+ * a marketing/landing page that has no meaning for authenticated users.
  */
 function getPostLoginRedirect(user: User | null, redirectUrl: string): string {
-  // If the user was already heading somewhere specific, respect that
-  if (redirectUrl && redirectUrl !== '/') return redirectUrl;
+  // If the user was heading somewhere specific (not root, not a marketing page) — respect it
+  if (redirectUrl && redirectUrl !== '/' && !MARKETING_PAGES.has(redirectUrl)) {
+    return redirectUrl;
+  }
 
+  // Role-based default portal
   switch (user?.accountType) {
     case 'seller':
-      // /vender/dashboard redirects to /cuenta — send directly to avoid extra hop
       return '/cuenta';
     case 'dealer':
     case 'dealer_employee':
-      // /dealer redirects to /cuenta — send directly to avoid extra hop
       return '/cuenta';
     case 'admin':
     case 'platform_employee':

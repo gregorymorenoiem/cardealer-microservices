@@ -106,7 +106,7 @@ export function HeroCTA() {
             size="lg"
             className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
           >
-            <Link href="/login?callbackUrl=/vender">Ya tengo cuenta</Link>
+            <Link href="/login">Ya tengo cuenta</Link>
           </Button>
         </>
       ) : canSell ? (
