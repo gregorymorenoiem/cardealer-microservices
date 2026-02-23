@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +33,8 @@ namespace AuthService.Tests.Integration.Factories
             builder.UseSetting("Jwt:Audience", "AuthService.Tests");
             builder.UseSetting("Jwt:ExpirationMinutes", "60");
             builder.UseSetting("Database:AutoMigrate", "false"); // Disable migrations for InMemory
+            builder.UseSetting("Database:SeedDefaultAdmin", "false"); // Disable admin seeding (no ADMIN_SEED_PASSWORD in tests)
+            builder.UseSetting("Cache:EnableDistributedCache", "false"); // Use in-memory cache instead of Redis
 
             builder.ConfigureTestServices(services =>
             {
@@ -45,6 +48,10 @@ namespace AuthService.Tests.Integration.Factories
                     options.EnableSensitiveDataLogging();
                     options.EnableDetailedErrors();
                 });
+
+                // Replace Redis distributed cache with in-memory cache for tests
+                services.RemoveAll<IDistributedCache>();
+                services.AddDistributedMemoryCache();
 
                 // Mock RabbitMQ services
                 services.RemoveAll<IErrorEventProducer>();

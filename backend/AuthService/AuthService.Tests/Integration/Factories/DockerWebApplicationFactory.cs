@@ -3,14 +3,20 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AuthService.Infrastructure.Persistence;
+using AuthService.Domain.Interfaces.Services;
+using AuthService.Infrastructure.Services.Messaging;
+using AuthService.Infrastructure.External;
+using AuthService.Domain.Interfaces;
 using AuthService.Shared;
 using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
 using Xunit;
+using Moq;
 
 namespace AuthService.Tests.Integration.Factories
 {
@@ -50,6 +56,8 @@ namespace AuthService.Tests.Integration.Factories
             builder.UseSetting("Jwt:ExpirationInMinutes", "60");
             builder.UseSetting("Jwt:RefreshTokenExpirationInDays", "7");
             builder.UseSetting("Database:AutoMigrate", "false");
+            builder.UseSetting("Database:SeedDefaultAdmin", "false"); // Disable admin seeding (no ADMIN_SEED_PASSWORD in tests)
+            builder.UseSetting("Cache:EnableDistributedCache", "false"); // Use in-memory cache instead of Redis
 
             builder.ConfigureAppConfiguration((context, config) =>
             {
@@ -99,6 +107,24 @@ namespace AuthService.Tests.Integration.Factories
                     options.EnableSensitiveDataLogging();
                     options.EnableDetailedErrors();
                 });
+
+                // Replace Redis distributed cache with in-memory cache for tests
+                services.RemoveAll<IDistributedCache>();
+                services.AddDistributedMemoryCache();
+
+                // Mock RabbitMQ and external messaging services
+                services.RemoveAll<IErrorEventProducer>();
+                services.RemoveAll<INotificationEventProducer>();
+                services.RemoveAll<IEventPublisher>();
+                services.RemoveAll<NotificationServiceClient>();
+                services.AddSingleton(_ => Mock.Of<IErrorEventProducer>());
+                services.AddSingleton(_ => Mock.Of<INotificationEventProducer>());
+                services.AddSingleton(_ => Mock.Of<IEventPublisher>());
+                services.AddSingleton(_ => Mock.Of<NotificationServiceClient>());
+
+                // Mock IAuthNotificationService
+                services.RemoveAll<IAuthNotificationService>();
+                services.AddSingleton(_ => Mock.Of<IAuthNotificationService>());
 
                 // Ensure IPasswordHasher<object> is registered
                 if (!services.Any(x => x.ServiceType == typeof(IPasswordHasher<object>)))
