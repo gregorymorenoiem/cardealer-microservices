@@ -152,12 +152,17 @@ export default function AdminKycPage() {
   }, []);
 
   useEffect(() => {
+    // Only fetch when auth is resolved and user is confirmed admin
+    // Avoids 401 cascade and /auth/refresh-token rate limiting (429)
+    if (authLoading || !user || user.accountType !== 'admin') return;
     fetchProfiles();
     fetchStatistics();
-  }, [fetchProfiles, fetchStatistics]);
+  }, [authLoading, user, fetchProfiles, fetchStatistics]);
 
-  // Silent background polling (professional pattern: Stripe, Vercel, AWS)
+  // Silent background polling — guarded by auth to prevent 401→429 loops
   useEffect(() => {
+    if (authLoading || !user || user.accountType !== 'admin') return;
+
     const profilesInterval = setInterval(() => {
       if (!document.hidden) fetchProfiles(true);
     }, 30_000);
@@ -170,7 +175,7 @@ export default function AdminKycPage() {
       clearInterval(profilesInterval);
       clearInterval(statsInterval);
     };
-  }, [fetchProfiles, fetchStatistics]);
+  }, [authLoading, user, fetchProfiles, fetchStatistics]);
 
   // Load profile details when selected
   useEffect(() => {

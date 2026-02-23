@@ -182,10 +182,14 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
         process.env.NEXT_PUBLIC_APP_ENV ??
         (process.env.NODE_ENV === 'production' ? 'Production' : 'Development');
 
+      // Use _silentAuth so a 401 (unauthenticated pages) does NOT trigger
+      // the global refresh-token interceptor — avoids 401→429 rate-limit cascade
       const response = await apiClient.get<Array<{ key: string; value: string }>>(
         '/api/configurations/category/general',
         {
           params: { environment },
+          // @ts-expect-error — custom flag read by api-client interceptor
+          _silentAuth: true,
         }
       );
 
@@ -199,10 +203,10 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
       setCache(built);
       setIsLoaded(true);
     } catch {
-      // API unreachable or 401 — use defaults silently (public pages won't have token)
+      // API unreachable, 401, or 404 (ConfigurationService not deployed) —
+      // use defaults silently; public pages work fine without dynamic config
       setConfig(DEFAULT_CONFIG);
       setIsLoaded(true);
-      setError('Usando configuración por defecto');
     } finally {
       setIsLoading(false);
     }
