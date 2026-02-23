@@ -83,6 +83,7 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
                 existingProfile.Address = request.Address;
                 existingProfile.City = request.City;
                 existingProfile.Province = request.Province;
+                existingProfile.Sector = request.Sector;
                 existingProfile.PostalCode = request.PostalCode;
                 existingProfile.Country = request.Country ?? "DO";
                 existingProfile.Occupation = request.Occupation;
@@ -154,6 +155,7 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
             Phone = request.Phone,
             MobilePhone = request.MobilePhone,
             Address = request.Address,
+            Sector = request.Sector,
             City = request.City,
             Province = request.Province,
             PostalCode = request.PostalCode,
@@ -234,10 +236,14 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
         PrimaryDocumentExpiry = p.PrimaryDocumentExpiry,
         Email = p.Email,
         Phone = p.Phone,
+        Gender = p.Gender,
         Address = p.Address,
+        Sector = p.Sector,
         City = p.City,
         Province = p.Province,
+        PostalCode = p.PostalCode,
         Country = p.Country,
+        Occupation = p.Occupation,
         IsPEP = p.IsPEP,
         PEPPosition = p.PEPPosition,
         BusinessName = p.BusinessName,

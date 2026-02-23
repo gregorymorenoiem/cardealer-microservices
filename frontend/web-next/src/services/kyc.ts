@@ -296,6 +296,9 @@ export interface CreateKYCProfileRequest {
   address: string;
   city: string;
   province: string;
+  gender?: string;
+  sector?: string;
+  postalCode?: string;
   phoneNumber: string;
   sourceOfFunds?: string;
   occupation?: string;
@@ -436,6 +439,9 @@ export async function createKYCProfile(data: CreateKYCProfileRequest): Promise<K
     address: data.address,
     city: data.city,
     province: data.province,
+    gender: data.gender,
+    sector: data.sector,
+    postalCode: data.postalCode,
     phoneNumber: data.phoneNumber,
     sourceOfFunds: data.sourceOfFunds,
     occupation: data.occupation,

@@ -429,11 +429,14 @@ export default function VerificacionPage() {
         nationality: sanitizeText(personalInfo.nationality.trim(), { maxLength: 50 }),
         documentNumber: personalInfo.documentNumber.replace(/[^0-9-]/g, ''),
         documentType: DocumentType.Cedula,
-        address: sanitizeText(`${address.street}, ${address.postalCode}`.trim(), {
+        address: sanitizeText(address.street.trim(), {
           maxLength: 300,
         }),
         city: sanitizeText(address.city.trim(), { maxLength: 100 }),
         province: sanitizeText(address.province.trim(), { maxLength: 100 }),
+        gender: personalInfo.gender || undefined,
+        sector: address.sector ? sanitizeText(address.sector.trim(), { maxLength: 100 }) : undefined,
+        postalCode: address.postalCode ? sanitizeText(address.postalCode.trim(), { maxLength: 20 }) : undefined,
         phoneNumber: sanitizePhone(personalInfo.phoneNumber) || personalInfo.phoneNumber,
         sourceOfFunds: 'Ingresos laborales',
         occupation: sanitizeText(personalInfo.occupation.trim(), { maxLength: 100 }),

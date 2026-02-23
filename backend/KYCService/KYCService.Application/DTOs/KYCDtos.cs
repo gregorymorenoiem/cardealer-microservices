@@ -113,6 +113,9 @@ public record KYCDocumentDto
     public KYCDocumentStatus Status { get; init; }
     public string StatusName => Status.ToString();
     public string? RejectionReason { get; init; }
+    public string? ExtractedNumber { get; init; }
+    public DateTime? ExtractedExpiry { get; init; }
+    public string? ExtractedName { get; init; }
     public DateTime UploadedAt { get; init; }
     public DateTime? VerifiedAt { get; init; }
 }

@@ -34,6 +34,7 @@ public record CreateKYCProfileCommand : IRequest<KYCProfileDto>
     
     // Dirección
     public string? Address { get; init; }
+    public string? Sector { get; init; }
     public string? City { get; init; }
     public string? Province { get; init; }
     public string? PostalCode { get; init; }

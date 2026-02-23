@@ -209,6 +209,9 @@ export async function serverCreateKYCProfile(data: {
   address: string;
   city: string;
   province: string;
+  gender?: string;
+  sector?: string;
+  postalCode?: string;
   phoneNumber: string;
   sourceOfFunds?: string;
   occupation?: string;
@@ -236,9 +239,12 @@ export async function serverCreateKYCProfile(data: {
       primaryDocumentType: data.documentType,
       dateOfBirth: data.dateOfBirth,
       nationality: data.nationality,
+      gender: data.gender || undefined,
       address: data.address,
+      sector: data.sector || undefined,
       city: data.city,
       province: data.province,
+      postalCode: data.postalCode || undefined,
       country: 'DO',
       phone: data.phoneNumber,
       sourceOfFunds: data.sourceOfFunds,
