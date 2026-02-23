@@ -14,6 +14,12 @@ import { cookies } from 'next/headers';
 import { getInternalApiUrl } from '@/lib/api-url';
 
 // =============================================================================
+// COOKIE CONSTANTS (must match backend AuthController.SetAuthCookies)
+// =============================================================================
+
+const AUTH_COOKIE_NAME = 'okla_access_token';
+
+// =============================================================================
 // TYPES
 // =============================================================================
 
@@ -197,10 +203,21 @@ export async function serverCreateKYCProfile(
     sourceOfFunds?: string;
     occupation?: string;
     expectedMonthlyTransaction?: number;
-  },
-  accessToken: string
+  }
 ): Promise<ActionResult<KYCProfileResult>> {
   try {
+    // SECURITY: Read access token from HttpOnly cookie (set by AuthController on login)
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
+
     const mappedData = {
       userId: data.userId,
       fullName: `${data.firstName} ${data.lastName}`.trim(),
@@ -260,10 +277,20 @@ export async function serverUpdateKYCProfile(
     sourceOfFunds?: string;
     occupation?: string;
     expectedMonthlyTransaction?: number;
-  },
-  accessToken: string
+  }
 ): Promise<ActionResult<KYCProfileResult>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
+
     const mappedData: Record<string, unknown> = { id: profileId };
     if (data.firstName || data.lastName) {
       mappedData.fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
@@ -305,10 +332,19 @@ export async function serverUpdateKYCProfile(
  * Browser NEVER sees: /api/kyc/.../submit
  */
 export async function serverSubmitKYCForReview(
-  profileId: string,
-  accessToken: string
+  profileId: string
 ): Promise<ActionResult<KYCProfileResult>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
     const idempotencyKey = generateIdempotencyKey();
 
     const response = await internalFetch<KYCProfileResult>(
@@ -342,10 +378,19 @@ export async function serverSubmitKYCForReview(
  * Browser NEVER sees: media upload URLs, storage keys, S3 paths
  */
 export async function serverUploadKYCDocument(
-  formData: FormData,
-  accessToken: string
+  formData: FormData
 ): Promise<ActionResult<KYCDocumentResult>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
     const profileId = formData.get('profileId') as string;
     const documentType = parseInt(formData.get('documentType') as string, 10);
     const side = formData.get('side') as string | null;
@@ -416,10 +461,19 @@ export async function serverUploadKYCDocument(
  * Delete KYC document — server-side
  */
 export async function serverDeleteKYCDocument(
-  documentId: string,
-  accessToken: string
-): Promise<ActionResult> {
+  documentId: string
+): Promise<ActionResult<void>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
     await internalFetch(`${KYC_BASE}/documents/${documentId}`, {
       method: 'DELETE',
       token: accessToken,
@@ -445,10 +499,19 @@ export async function serverDeleteKYCDocument(
  * Browser NEVER sees: selfie data, biometric scores, liveness data, verification results
  */
 export async function serverProcessIdentityVerification(
-  formData: FormData,
-  accessToken: string
+  formData: FormData
 ): Promise<ActionResult<IdentityVerificationResult>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
     const profileId = formData.get('profileId') as string;
     const selfie = formData.get('selfie') as File;
     const livenessDataStr = formData.get('livenessData') as string | null;
@@ -502,10 +565,20 @@ export async function serverApproveKYCProfile(
   profileId: string,
   approvedBy: string,
   approvedByName: string,
-  accessToken: string,
   notes?: string
 ): Promise<ActionResult<KYCProfileResult>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
+
     const idempotencyKey = generateIdempotencyKey();
 
     const response = await internalFetch<KYCProfileResult>(
@@ -543,10 +616,20 @@ export async function serverRejectKYCProfile(
   rejectedBy: string,
   rejectedByName: string,
   rejectionReason: string,
-  accessToken: string,
   notes?: string
 ): Promise<ActionResult<KYCProfileResult>> {
   try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
+
     const idempotencyKey = generateIdempotencyKey();
 
     const response = await internalFetch<KYCProfileResult>(

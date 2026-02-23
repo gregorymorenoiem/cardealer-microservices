@@ -422,7 +422,6 @@ export async function getKYCProfileById(id: string): Promise<KYCProfile> {
  */
 export async function createKYCProfile(data: CreateKYCProfileRequest): Promise<KYCProfile> {
   // ── Server Action: KYC profile creation server-side, personal data invisible to browser ──
-  const accessToken = authTokens.getAccessToken();
   const result = await serverCreateKYCProfile(
     {
       userId: data.userId,
@@ -439,8 +438,7 @@ export async function createKYCProfile(data: CreateKYCProfileRequest): Promise<K
       sourceOfFunds: data.sourceOfFunds,
       occupation: data.occupation,
       expectedMonthlyTransaction: data.expectedMonthlyTransaction,
-    },
-    accessToken || ''
+    }
   );
 
   if (!result.success || !result.data) {
@@ -458,7 +456,6 @@ export async function updateKYCProfile(
   data: Partial<CreateKYCProfileRequest>
 ): Promise<KYCProfile> {
   // ── Server Action: KYC profile update server-side ──
-  const accessToken = authTokens.getAccessToken();
   const result = await serverUpdateKYCProfile(
     id,
     {
@@ -475,8 +472,7 @@ export async function updateKYCProfile(
       sourceOfFunds: data.sourceOfFunds,
       occupation: data.occupation,
       expectedMonthlyTransaction: data.expectedMonthlyTransaction,
-    },
-    accessToken || ''
+    }
   );
 
   if (!result.success || !result.data) {
@@ -491,7 +487,6 @@ export async function updateKYCProfile(
  */
 export async function uploadKYCDocument(request: UploadDocumentRequest): Promise<KYCDocument> {
   // ── Server Action: document upload server-side, file data & storage keys invisible ──
-  const accessToken = authTokens.getAccessToken();
 
   const formData = new FormData();
   formData.append('profileId', request.profileId);
@@ -501,7 +496,7 @@ export async function uploadKYCDocument(request: UploadDocumentRequest): Promise
     formData.append('side', request.side);
   }
 
-  const result = await serverUploadKYCDocument(formData, accessToken || '');
+  const result = await serverUploadKYCDocument(formData);
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error al cargar el documento');
@@ -525,8 +520,7 @@ export async function getKYCDocuments(profileId: string): Promise<KYCDocument[]>
  */
 export async function deleteKYCDocument(documentId: string): Promise<void> {
   // ── Server Action: document deletion server-side ──
-  const accessToken = authTokens.getAccessToken();
-  const result = await serverDeleteKYCDocument(documentId, accessToken || '');
+  const result = await serverDeleteKYCDocument(documentId);
   if (!result.success) {
     throw new Error(result.error || 'Error al eliminar el documento');
   }
@@ -538,7 +532,7 @@ export async function deleteKYCDocument(documentId: string): Promise<void> {
 export async function submitKYCForReview(profileId: string): Promise<KYCProfile> {
   // ── Server Action: submission processed server-side ──
   const accessToken = authTokens.getAccessToken();
-  const result = await serverSubmitKYCForReview(profileId, accessToken || '');
+  const result = await serverSubmitKYCForReview(profileId);
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error al enviar el perfil para revisión');
@@ -565,7 +559,7 @@ export async function processIdentityVerification(request: {
     formData.append('livenessData', JSON.stringify(request.livenessData));
   }
 
-  const result = await serverProcessIdentityVerification(formData, accessToken || '');
+  const result = await serverProcessIdentityVerification(formData);
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error en la verificación de identidad');
@@ -742,12 +736,10 @@ export async function approveKYCProfile(
   notes?: string
 ): Promise<KYCProfile> {
   // ── Server Action: admin approval processed server-side ──
-  const accessToken = authTokens.getAccessToken();
   const result = await serverApproveKYCProfile(
     profileId,
     approvedBy,
     approvedByName,
-    accessToken || '',
     notes
   );
 
@@ -769,13 +761,11 @@ export async function rejectKYCProfile(
   notes?: string
 ): Promise<KYCProfile> {
   // ── Server Action: admin rejection processed server-side ──
-  const accessToken = authTokens.getAccessToken();
   const result = await serverRejectKYCProfile(
     profileId,
     rejectedBy,
     rejectedByName,
     rejectionReason,
-    accessToken || '',
     notes
   );
 
