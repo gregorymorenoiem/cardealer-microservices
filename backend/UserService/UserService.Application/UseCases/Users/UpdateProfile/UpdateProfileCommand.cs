@@ -97,7 +97,7 @@ namespace UserService.Application.UseCases.Users.UpdateProfile
                 City = user.City,
                 Province = user.Province,
                 AccountType = user.AccountType.ToString().ToLowerInvariant(),
-                IsVerified = user.EmailConfirmed,
+                IsVerified = user.IsVerified,
                 IsEmailVerified = user.IsEmailVerified,
                 IsPhoneVerified = false,
                 VehicleCount = 0,

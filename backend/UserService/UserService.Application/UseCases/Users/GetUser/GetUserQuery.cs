@@ -41,7 +41,7 @@ namespace UserService.Application.UseCases.Users.GetUser
                 City = user.City,
                 Province = user.Province,
                 AccountType = user.AccountType.ToString().ToLowerInvariant(),
-                IsVerified = user.IsEmailVerified,
+                IsVerified = user.IsVerified,
                 IsEmailVerified = user.IsEmailVerified,
                 IsPhoneVerified = false,
                 VehicleCount = 0,

@@ -113,7 +113,7 @@ namespace UserService.Application.UseCases.Users.GetOrCreateUser
                 City = user.City,
                 Province = user.Province,
                 AccountType = user.AccountType.ToString().ToLowerInvariant(),
-                IsVerified = user.EmailConfirmed,
+                IsVerified = user.IsVerified,
                 IsEmailVerified = user.IsEmailVerified,
                 IsPhoneVerified = false, // Not yet tracked
                 VehicleCount = 0, // Would need to query VehiclesSaleService
