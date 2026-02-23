@@ -197,34 +197,48 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
             return;
         }
 
-        using var scope        = _serviceProvider.CreateScope();
-        var       emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+        // Get the template builder first to ensure we have valid content
+        var (subject, body) = kycEvent.NewStatus switch
+        {
+            "Approved" => BuildApprovedEmail(kycEvent),
+            "Rejected" => BuildRejectedEmail(kycEvent),
+            _          => BuildGenericStatusEmail(kycEvent)
+        };
 
+        // Try to send via async email service (fire-and-forget pattern like AuthService)
+        _ = SendEmailWithFallbackAsync(kycEvent.Email, subject, body, cancellationToken);
+
+        _logger.LogInformation(
+            "KYC {Status} notification queued for {Email} for ProfileId={ProfileId}",
+            kycEvent.NewStatus, kycEvent.Email, kycEvent.ProfileId);
+    }
+
+    private async Task SendEmailWithFallbackAsync(
+        string email,
+        string subject,
+        string body,
+        CancellationToken cancellationToken)
+    {
         try
         {
-            var (subject, body) = kycEvent.NewStatus switch
-            {
-                "Approved" => BuildApprovedEmail(kycEvent),
-                "Rejected" => BuildRejectedEmail(kycEvent),
-                _          => BuildGenericStatusEmail(kycEvent)
-            };
+            using var scope = _serviceProvider.CreateScope();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
             await emailService.SendEmailAsync(
-                to: kycEvent.Email,
+                to: email,
                 subject: subject,
                 body: body,
                 isHtml: true);
 
-            _logger.LogInformation(
-                "KYC {Status} notification sent to {Email} for ProfileId={ProfileId}",
-                kycEvent.NewStatus, kycEvent.Email, kycEvent.ProfileId);
+            _logger.LogInformation("KYC notification email sent to {Email}", email);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Failed to send KYC {Status} email to {Email} for ProfileId={ProfileId}",
-                kycEvent.NewStatus, kycEvent.Email, kycEvent.ProfileId);
-            throw; // Let the consumer NACK and requeue
+                "Failed to send KYC notification email to {Email}. Email will be retried on next consumer restart.",
+                email);
+            // Note: Exception is NOT rethrown here to follow fire-and-forget pattern
+            // The RabbitMQ consumer will NACK and requeue if this completes with error
         }
     }
 

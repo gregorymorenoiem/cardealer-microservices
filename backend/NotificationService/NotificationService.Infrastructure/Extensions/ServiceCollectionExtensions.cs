@@ -100,6 +100,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<RabbitMQNotificationConsumer>();
         services.AddHostedService<NotificationQueueBackgroundService>();
         services.AddHostedService<ScheduledNotificationWorker>();
+        services.AddHostedService<KYCStatusChangedNotificationConsumer>();  // KYC approval/rejection emails
 
         return services;
     }
