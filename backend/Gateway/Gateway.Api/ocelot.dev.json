@@ -2067,7 +2067,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "account_type": "4, 5"
+        "role": "Compliance"
       }
     },
     {
@@ -2080,7 +2080,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "account_type": "4, 5"
+        "role": "Compliance"
       }
     },
     {
@@ -2093,7 +2093,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "account_type": "4, 5"
+        "role": "Compliance"
       }
     },
     {
@@ -2106,7 +2106,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "account_type": "4, 5"
+        "role": "Compliance"
       }
     },
 
@@ -2126,7 +2126,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-      "RouteClaimsRequirement": { "account_type": "4, 5" }
+      "RouteClaimsRequirement": { "role": "Compliance" }
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/submit",
@@ -2144,7 +2144,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-      "RouteClaimsRequirement": { "account_type": "4, 5" }
+      "RouteClaimsRequirement": { "role": "Compliance" }
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/reject",
@@ -2153,7 +2153,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-      "RouteClaimsRequirement": { "account_type": "4, 5" }
+      "RouteClaimsRequirement": { "role": "Compliance" }
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/draft",
@@ -2189,7 +2189,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-      "RouteClaimsRequirement": { "account_type": "4, 5" }
+      "RouteClaimsRequirement": { "role": "Compliance" }
     },
     {
       "UpstreamPathTemplate": "/api/kyc/documents/{documentId}/url",
