@@ -497,6 +497,26 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
             };
         }
 
+        // Si llegamos aquí pero tenemos StorageKey, intentar obtener URL aunque FileUrl esté vacío
+        if (!string.IsNullOrWhiteSpace(document.StorageKey))
+        {
+            _logger.LogWarning("Document {DocumentId} has StorageKey but no FileUrl - attempting to get fresh URL", request.DocumentId);
+            var freshUrl = await _mediaServiceClient.GetFreshUrlAsync(document.StorageKey, cancellationToken);
+            
+            if (freshUrl != null)
+            {
+                return new DocumentUrlDto
+                {
+                    DocumentId = document.Id,
+                    Url = freshUrl.Url,
+                    ExpiresAt = freshUrl.ExpiresAt
+                };
+            }
+            
+            _logger.LogError("Failed to get fresh URL for document {DocumentId} with StorageKey {StorageKey}", 
+                request.DocumentId, document.StorageKey);
+        }
+
         throw new InvalidOperationException($"Document {request.DocumentId} has no valid URL or storage key");
     }
 

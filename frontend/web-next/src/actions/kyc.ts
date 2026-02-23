@@ -478,13 +478,28 @@ export async function serverUploadKYCDocument(
     const uploadResult = await internalFetchFormData<{
       url: string;
       publicId: string;
-      storageKey: string;
+      storageKey?: string;
     }>('/api/media/upload', mediaFormData, {
       token: accessToken,
     });
 
     const fileUrl = uploadResult.url;
-    const storageKey = uploadResult.storageKey || uploadResult.publicId;
+    // Construct storageKey from URL if not provided by MediaService
+    // URL format: https://bucket.s3.region.amazonaws.com/kyc-documents/2026/02/23/guid.jpg
+    let storageKey = uploadResult.storageKey;
+    if (!storageKey && uploadResult.url) {
+      try {
+        const url = new URL(uploadResult.url);
+        const path = url.pathname.substring(1); // Remove leading /
+        storageKey = path || uploadResult.publicId;
+      } catch {
+        storageKey = uploadResult.publicId;
+      }
+    }
+    // Fallback: use publicId if storageKey couldn't be extracted
+    if (!storageKey) {
+      storageKey = uploadResult.publicId;
+    }
 
     // Step 2: Register document in KYC service
     const idempotencyKey = generateIdempotencyKey();
