@@ -100,6 +100,16 @@ async function internalFetch<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // SECURITY: Add CSRF token from cookie for mutations (POST, PUT, PATCH, DELETE)
+  // The middleware requires both X-CSRF-Token header and csrf_token cookie
+  if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+    const cookieStore = await cookies();
+    const csrfToken = cookieStore.get('csrf_token')?.value;
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+  }
+
   const response = await fetch(url, {
     method,
     headers,
