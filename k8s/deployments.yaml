@@ -646,9 +646,9 @@ spec:
             - name: Storage__Provider
               value: "s3"
             - name: Storage__S3__BucketName
-              value: "okla-media"
+              value: "okla-images-2026"
             - name: Storage__S3__Region
-              value: "us-east-1"
+              value: "us-east-2"
             - name: Storage__S3__AccessKey
               valueFrom:
                 secretKeyRef:
