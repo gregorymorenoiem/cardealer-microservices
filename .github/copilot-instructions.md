@@ -201,11 +201,43 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 ### 5.2 CI/CD (GitHub Actions)
 
-- Image names **must** match exactly between CI/CD and `k8s/deployments.yaml` (e.g., `ghcr.io/gregorymorenoiem/frontend-web:latest`).
-- If a build doesn't reflect code changes, clear Docker buildx cache:
-  ```bash
-  gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh cache delete {}
-  ```
+Note: GitHub Actions builds and publishes the production Docker images used in deployments. Do NOT build and push production images locally from macOS for the cluster deployment; use the repository CI instead.
+
+- CI-built images are authoritative: only images produced by GitHub Actions should be deployed to the cluster. Local builds from macOS can produce platform-incompatible images (arm64 vs amd64) and cause ImagePull or runtime failures.
+- Image names **must** match exactly between CI/CD and `k8s/deployments.yaml` (e.g., `ghcr.io/gregorymorenoiem/frontend-web:latest`). Prefer immutable tags (for example, use commit SHA tags) for production releases.
+- How to trigger a build:
+  - Push commits to `main` (or the branch configured to build/pack images).
+  - Use the GitHub Actions `workflow_dispatch` UI to manually trigger the build workflow when needed.
+  - If you need to force a rebuild, create an empty commit: `git commit --allow-empty -m "rebuild: trigger CI image build" && git push`.
+- How to verify the build and published image:
+  - Open the repository Actions page and inspect the latest workflow run for the build-and-push job. Ensure the job succeeded and the image digest was printed.
+  - Confirm the image exists in GitHub Container Registry (GHCR) or your configured registry.
+  - After the image is published, restart the deployment (if your deployment does not auto-roll) and check pod events.
+- Quick verification commands (CI and deployment):
+
+```bash
+# check actions run (open in browser): https://github.com/<owner>/<repo>/actions
+# restart deployment to pull latest image
+kubectl rollout restart deployment/kycservice -n okla
+kubectl rollout status deployment/kycservice -n okla
+kubectl get pods -n okla -l app=kycservice -o wide
+kubectl logs -n okla -l app=kycservice --follow
+```
+
+- If a build doesn't reflect code changes, clear Docker buildx cache used by CI (example):
+
+```bash
+gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh cache delete {}
+```
+
+- Local development guidance (if you must build locally):
+  - Use an ephemeral Linux runner or an M1-aware workflow: prefer testing in a Linux CI runner before pushing to GHCR.
+  - When building locally, use `docker buildx build --platform linux/amd64` and verify the image in a Linux environment before pushing.
+
+- Recommended enforcement (process changes):
+  - Protect `main` and require passing CI checks before merge.
+  - Use immutable image tags (commit SHA) in deployment manifests instead of `:latest` for production.
+  - Add the build status badge to the README for quick visibility.
 
 ### 5.3 RabbitMQ
 

@@ -46,11 +46,20 @@ public class KYCDocumentsController : ControllerBase
         Guid profileId, 
         [FromBody] UploadKYCDocumentCommand command)
     {
-        if (profileId != command.KYCProfileId)
-            return BadRequest("Profile ID mismatch");
+        _logger.LogInformation("=== CONTROLLER: UploadDocument START === ProfileId: {ProfileId}, DocumentType: {Type}, DocumentName: {DocumentName}", 
+            profileId, command.Type, command.DocumentName);
 
+        if (profileId != command.KYCProfileId)
+        {
+            _logger.LogWarning("Profile ID mismatch: URL={UrlId}, Command={CommandId}", profileId, command.KYCProfileId);
+            return BadRequest("Profile ID mismatch");
+        }
+
+        _logger.LogInformation("Sending command to handler: StorageKey={StorageKey}, FileUrl={FileUrl}", command.StorageKey, command.FileUrl);
+        
         var result = await _mediator.Send(command);
-        _logger.LogInformation("Document uploaded for KYC Profile {ProfileId}", profileId);
+        
+        _logger.LogInformation("=== CONTROLLER: UploadDocument SUCCESS === Document uploaded with ID: {DocumentId}", result.Id);
         return CreatedAtAction(nameof(GetDocuments), new { profileId }, result);
     }
 

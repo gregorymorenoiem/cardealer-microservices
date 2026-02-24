@@ -157,10 +157,12 @@ public class KYCProfileRepository : IKYCProfileRepository
 public class KYCDocumentRepository : IKYCDocumentRepository
 {
     private readonly KYCDbContext _context;
+    private readonly ILogger<KYCDocumentRepository> _logger;
 
-    public KYCDocumentRepository(KYCDbContext context)
+    public KYCDocumentRepository(KYCDbContext context, ILogger<KYCDocumentRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<KYCDocument?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -188,8 +190,18 @@ public class KYCDocumentRepository : IKYCDocumentRepository
 
     public async Task<KYCDocument> CreateAsync(KYCDocument document, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("=== REPOSITORY: CreateAsync START === Document ID: {DocumentId}, ProfileId: {ProfileId}, Type: {Type}", 
+            document.Id, document.KYCProfileId, document.Type);
+        
         _context.KYCDocuments.Add(document);
-        await _context.SaveChangesAsync(cancellationToken);
+        
+        _logger.LogInformation("Document added to context, calling SaveChangesAsync...");
+        
+        var changeCount = await _context.SaveChangesAsync(cancellationToken);
+        
+        _logger.LogInformation("=== REPOSITORY: CreateAsync SUCCESS === SaveChanges returned {ChangeCount} changes. Document persisted: {DocumentId}", 
+            changeCount, document.Id);
+        
         return document;
     }
 
