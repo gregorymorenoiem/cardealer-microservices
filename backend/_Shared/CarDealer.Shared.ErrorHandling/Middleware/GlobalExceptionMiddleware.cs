@@ -51,7 +51,14 @@ public class GlobalExceptionMiddleware
     {
         var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
         var spanId = Activity.Current?.SpanId.ToString();
+        // Capture request properties before any async gap — the HttpContext may be
+        // disposed once the response is sent (fire-and-forget tasks would see a closed stream)
+        var requestMethod = context.Request.Method;
+        var requestPath = context.Request.Path.ToString();
         var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault();
+        var clientIp = GetClientIp(context);
+        var userAgent = context.Request.Headers["User-Agent"].FirstOrDefault();
+        var userId = context.User?.FindFirst("sub")?.Value ?? context.User?.FindFirst("userId")?.Value;
 
         // Log at appropriate level: client errors (4xx) as Warning, server errors (5xx) as Error
         var isClientError = TryGetServiceException(exception, out var exStatusCode, out _) && exStatusCode >= 400 && exStatusCode < 500;
@@ -59,51 +66,76 @@ public class GlobalExceptionMiddleware
         {
             _logger.LogWarning(exception,
                 "Client error in {Method} {Path}: {Message}",
-                context.Request.Method,
-                context.Request.Path,
-                exception.Message);
+                requestMethod, requestPath, exception.Message);
         }
         else
         {
             _logger.LogError(exception,
                 "Unhandled exception in {Method} {Path}: {Message}",
-                context.Request.Method,
-                context.Request.Path,
-                exception.Message);
+                requestMethod, requestPath, exception.Message);
         }
 
-        // Publish to ErrorService (non-blocking)
-        _ = PublishErrorAsync(context, exception, errorPublisher, traceId, spanId, correlationId);
+        // Publish to ErrorService (non-blocking) — use captured values, not context
+        _ = PublishErrorAsync(exception, errorPublisher, traceId, spanId, correlationId,
+            requestPath, requestMethod, userId, clientIp, userAgent);
+
+        // Guard: if the response has already started (e.g. client disconnected), do not attempt
+        // to write to the closed stream — this prevents ObjectDisposedException bubbling up.
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning(
+                "Response already started for {Method} {Path}; cannot write error response for: {ExType}",
+                requestMethod, requestPath, exception.GetType().Name);
+            return;
+        }
 
         // Build the response
-        var problemDetails = CreateProblemDetails(exception, traceId, context.Request.Path);
+        var problemDetails = CreateProblemDetails(exception, traceId, requestPath);
 
-        context.Response.ContentType = "application/problem+json";
-        context.Response.StatusCode = problemDetails.Status;
-
-        await context.Response.WriteAsync(problemDetails.ToJson());
+        try
+        {
+            context.Response.ContentType = "application/problem+json";
+            context.Response.StatusCode = problemDetails.Status ?? 500;
+            await context.Response.WriteAsync(problemDetails.ToJson());
+        }
+        catch (ObjectDisposedException ode)
+        {
+            _logger.LogWarning(ode,
+                "Stream disposed before error response could be written for {Method} {Path}",
+                requestMethod, requestPath);
+        }
+        catch (InvalidOperationException ioe)
+        {
+            _logger.LogWarning(ioe,
+                "Cannot write error response (response already started?) for {Method} {Path}",
+                requestMethod, requestPath);
+        }
     }
 
     private async Task PublishErrorAsync(
-        HttpContext context,
         Exception exception,
         IErrorPublisher errorPublisher,
         string? traceId,
         string? spanId,
-        string? correlationId)
+        string? correlationId,
+        string requestPath,
+        string requestMethod,
+        string? userId,
+        string clientIp,
+        string? userAgent)
     {
         try
         {
             var errorContext = new ErrorContext
             {
-                RequestPath = context.Request.Path,
-                RequestMethod = context.Request.Method,
-                UserId = context.User?.FindFirst("sub")?.Value ?? context.User?.FindFirst("userId")?.Value,
+                RequestPath = requestPath,
+                RequestMethod = requestMethod,
+                UserId = userId,
                 CorrelationId = correlationId,
                 TraceId = traceId,
                 SpanId = spanId,
-                ClientIp = GetClientIp(context),
-                UserAgent = context.Request.Headers["User-Agent"].FirstOrDefault()
+                ClientIp = clientIp,
+                UserAgent = userAgent
             };
 
             await errorPublisher.PublishExceptionAsync(exception, errorContext);

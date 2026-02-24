@@ -202,13 +202,13 @@ spec:
           volumeMounts:
             - name: ocelot-config
               mountPath: /app/ocelot.prod.json
-              subPath: ocelot.json
+              subPath: ocelot.prod.json
             - name: tmp
               mountPath: /tmp
       volumes:
         - name: ocelot-config
           configMap:
-            name: gateway-config
+            name: gateway-ocelot
         - name: tmp
           emptyDir: {}
 
