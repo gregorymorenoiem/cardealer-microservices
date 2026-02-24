@@ -6,10 +6,12 @@ using MediaService.Application.Features.Media.Commands.GetPresignedUrlsBatch;
 using MediaService.Application.Features.Media.Queries.GetMedia;
 using MediaService.Application.Features.Media.Queries.ValidateImageQuality;
 using MediaService.Domain.Interfaces.Services;
+using MediaService.Infrastructure.Services.Storage;
 using MediaService.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using CarDealer.Shared.Configuration;
 
@@ -29,6 +31,7 @@ public class MediaController : ControllerBase
     private readonly IMediaStorageService _storageService;
     private readonly IConfigurationServiceClient _configClient;
     private readonly ILogger<MediaController> _logger;
+    private readonly S3StorageOptions _s3Options;
 
     // Magic bytes for file type validation (prevents content-type spoofing)
     private static readonly Dictionary<string, byte[][]> MagicBytes = new()
@@ -65,11 +68,13 @@ public class MediaController : ControllerBase
         IMediator mediator,
         IMediaStorageService storageService,
         IConfigurationServiceClient configClient,
+        IOptions<S3StorageOptions> s3Options,
         ILogger<MediaController> logger)
     {
         _mediator = mediator;
         _storageService = storageService;
         _configClient = configClient;
+        _s3Options = s3Options.Value;
         _logger = logger;
     }
 
@@ -305,11 +310,13 @@ public class MediaController : ControllerBase
 
     /// <summary>
     /// Generates a fresh pre-signed URL for accessing a file by its storageKey.
-    /// SECURITY: Requires authentication to prevent unauthorized access to private files.
-    /// The URL is valid for 1 hour.
+    /// SECURITY: AllowAnonymous is intentional — this is a service-to-service endpoint
+    /// (e.g. KYCService → MediaService, pod-to-pod). External traffic reaches this path
+    /// via the Ocelot Gateway which already enforces Bearer auth on /api/media/{everything}.
+    /// The storageKey is UUID-based (unguessable) and path traversal is blocked below.
     /// </summary>
     [HttpGet("url")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult<object>> GetFreshUrl([FromQuery] string storageKey)
     {
         if (string.IsNullOrWhiteSpace(storageKey))
@@ -335,7 +342,7 @@ public class MediaController : ControllerBase
 
             // Generate fresh URL
             var url = await _storageService.GetFileUrlAsync(storageKey);
-            var expiresAt = DateTime.UtcNow.AddHours(1);
+            var expiresAt = DateTime.UtcNow.AddMinutes(_s3Options.PreSignedUrlExpirationMinutes);
 
             return Ok(new
             {
