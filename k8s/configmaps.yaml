@@ -4,6 +4,20 @@
 # ⚠️ SECURITY: NO credentials here. All secrets go in secrets.yaml
 # RabbitMQ, Redis, DB credentials are in Kubernetes Secrets
 # =============================================================================
+#
+# NOTE: gateway-ocelot is the production Ocelot gateway routing configuration.
+# It is sourced from backend/Gateway/Gateway.Api/ocelot.prod.json and must
+# be kept in sync. If you modify the routes in ocelot.prod.json, regenerate
+# this configmap:
+#
+#   cat backend/Gateway/Gateway.Api/ocelot.prod.json | sed 's/^/    /' >> k8s/configmaps.yaml
+#
+# After updating, apply and restart the gateway:
+#
+#   kubectl apply -f k8s/configmaps.yaml
+#   kubectl rollout restart deployment/gateway -n okla
+#
+# =============================================================================
 
 ---
 apiVersion: v1
