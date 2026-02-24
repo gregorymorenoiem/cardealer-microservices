@@ -154,7 +154,7 @@ export function LoadingDetailPanel() {
   return (
     <div className="flex h-full items-center justify-center">
       <div className="text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="text-primary mx-auto h-8 w-8 animate-spin" />
         <p className="text-muted-foreground mt-2">Cargando detalles...</p>
       </div>
     </div>
@@ -178,29 +178,40 @@ export function DocumentImage({ documentId, alt, className }: DocumentImageProps
 
   useEffect(() => {
     let isMounted = true;
-    // State is reset via key changes or initial render (loading=true by default)
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-    getDocumentFreshUrl(documentId)
-      .then(response => {
-        if (isMounted && response?.url) {
-          setImageUrl(response.url);
-        } else if (isMounted) {
-          setError(true);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setError(true);
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
+    const loadUrl = () => {
+      getDocumentFreshUrl(documentId)
+        .then(response => {
+          if (!isMounted) return;
+          if (response?.url) {
+            setImageUrl(response.url);
+            setError(false);
+
+            // Schedule a refresh 5 minutes before the URL expires.
+            // Falls back to 23h55m if expiresAt is missing (matches the 24h TTL config).
+            const expiresAt = response.expiresAt
+              ? new Date(response.expiresAt).getTime()
+              : Date.now() + 23 * 60 * 60 * 1000 + 55 * 60 * 1000;
+            const refreshIn = Math.max(expiresAt - Date.now() - 5 * 60 * 1000, 60 * 1000);
+            refreshTimer = setTimeout(loadUrl, refreshIn);
+          } else {
+            setError(true);
+          }
+        })
+        .catch(() => {
+          if (isMounted) setError(true);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    };
+
+    loadUrl();
 
     return () => {
       isMounted = false;
+      if (refreshTimer) clearTimeout(refreshTimer);
     };
   }, [documentId]);
 
@@ -276,7 +287,7 @@ export function ValidatableField({
             variant={checked === true ? 'default' : 'outline'}
             className={cn(
               'h-7 w-7 p-0',
-              checked === true && 'bg-primary text-white hover:bg-primary/90'
+              checked === true && 'bg-primary hover:bg-primary/90 text-white'
             )}
             onClick={onToggle}
             title="Aprobar"
@@ -305,7 +316,7 @@ export function ValidatableField({
       {!canValidate && checked !== undefined && (
         <div className="ml-2 flex-shrink-0">
           {checked ? (
-            <CheckCircle className="h-4 w-4 text-primary" />
+            <CheckCircle className="text-primary h-4 w-4" />
           ) : (
             <XCircle className="h-4 w-4 text-red-600" />
           )}
@@ -363,7 +374,7 @@ export function VerificationChecklist({ checks, onToggle }: VerificationChecklis
                   )}
                 >
                   {checks[item.key] ? (
-                    <CheckSquare className="h-4 w-4 flex-shrink-0 text-primary" />
+                    <CheckSquare className="text-primary h-4 w-4 flex-shrink-0" />
                   ) : (
                     <Square className="text-muted-foreground h-4 w-4 flex-shrink-0" />
                   )}
@@ -415,7 +426,7 @@ function ScoreBar({ label, score, passed, icon: Icon, provider, verifiedAt }: Sc
         <div className="flex items-center gap-2">
           <span className={cn('text-lg font-bold', getScoreTextColor(score))}>{score}%</span>
           {passed ? (
-            <CheckCircle className="h-4 w-4 text-primary" />
+            <CheckCircle className="text-primary h-4 w-4" />
           ) : (
             <XCircle className="h-4 w-4 text-red-500" />
           )}
@@ -685,9 +696,7 @@ export function ImageViewer({ images, currentIndex, onClose, onNavigate }: Image
                 setCompareIndex(null);
               }
             }}
-            className={cn(
-              compareMode ? 'bg-primary text-white' : 'text-white hover:bg-white/10'
-            )}
+            className={cn(compareMode ? 'bg-primary text-white' : 'text-white hover:bg-white/10')}
             title="Comparar lado a lado"
           >
             <Columns className="mr-1 h-4 w-4" />
@@ -796,7 +805,7 @@ export function ImageViewer({ images, currentIndex, onClose, onNavigate }: Image
               className={cn(
                 'h-16 w-16 overflow-hidden rounded-md border-2 transition-all',
                 idx === currentIndex
-                  ? 'border-primary ring-2 ring-primary/50'
+                  ? 'border-primary ring-primary/50 ring-2'
                   : 'border-white/20 opacity-60 hover:opacity-100'
               )}
             >

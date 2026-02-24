@@ -134,7 +134,7 @@ public class S3StorageService : IMediaStorageService
         {
             BucketName = _options.BucketName,
             Key = storageKey,
-            Expires = DateTime.UtcNow.AddHours(1)
+            Expires = DateTime.UtcNow.AddMinutes(_options.PreSignedUrlExpirationMinutes)
         };
 
         return await Task.FromResult(_s3Client.GetPreSignedURL(request));
