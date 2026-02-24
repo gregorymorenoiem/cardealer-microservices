@@ -37,13 +37,48 @@ const MARKETING_PAGES = new Set([
 ]);
 
 /**
+ * Guards against a callbackUrl that the user doesn't have permission to visit.
+ *
+ * Example: a seller navigates to /admin → middleware redirects to
+ * /login?callbackUrl=/admin → after login the seller would be sent to /admin,
+ * which the middleware then rejects with a 403. We skip the callbackUrl for
+ * paths the user cannot access so they land on their own portal instead.
+ */
+function isRedirectAllowedForUser(user: User | null, redirectUrl: string): boolean {
+  if (!user) return false;
+  const type = user.accountType;
+
+  // Admin-only section: only admin / platform_employee
+  if (redirectUrl.startsWith('/admin')) {
+    return type === 'admin' || type === 'platform_employee';
+  }
+
+  // Dealer section (data-heavy sub-pages): only dealer roles + admins
+  if (redirectUrl.startsWith('/dealer')) {
+    return (
+      type === 'dealer' ||
+      type === 'dealer_employee' ||
+      type === 'admin' ||
+      type === 'platform_employee'
+    );
+  }
+
+  return true;
+}
+
+/**
  * Returns the correct post-login destination based on the user's accountType.
- * Falls back to the explicit redirectUrl if it is not the root '/' and not
- * a marketing/landing page that has no meaning for authenticated users.
+ * Respects the explicit redirectUrl only when the user has permission to access it,
+ * and it is not the root '/' nor a marketing/landing page.
  */
 function getPostLoginRedirect(user: User | null, redirectUrl: string): string {
-  // If the user was heading somewhere specific (not root, not a marketing page) — respect it
-  if (redirectUrl && redirectUrl !== '/' && !MARKETING_PAGES.has(redirectUrl)) {
+  // If the user was heading somewhere specific — respect it, but validate role first.
+  if (
+    redirectUrl &&
+    redirectUrl !== '/' &&
+    !MARKETING_PAGES.has(redirectUrl) &&
+    isRedirectAllowedForUser(user, redirectUrl)
+  ) {
     return redirectUrl;
   }
 

@@ -213,6 +213,28 @@ export interface SecuritySettings {
 // TRANSFORM FUNCTIONS
 // ============================================================
 
+/**
+ * Normalize backend account-type strings to the frontend canonical format.
+ *
+ * The backend emits AccountType.ToString().ToLowerInvariant() which produces:
+ *   "dealeremployee"    (AccountType.DealerEmployee = 3)
+ *   "platformemployee"  (AccountType.PlatformEmployee = 5)
+ *
+ * The frontend type and all switch/case blocks expect the underscore forms:
+ *   "dealer_employee" / "platform_employee"
+ *
+ * Fixing this here (single source of truth) ensures every consumer of
+ * transformUser() — login redirect, middleware role checks, etc. — sees the
+ * correct value without per-callsite workarounds.
+ */
+function normalizeAccountType(type: string): User['accountType'] {
+  const map: Record<string, User['accountType']> = {
+    dealeremployee: 'dealer_employee',
+    platformemployee: 'platform_employee',
+  };
+  return (map[type] ?? type) as User['accountType'];
+}
+
 export const transformUser = (dto: UserDto): User => ({
   id: dto.id,
   email: dto.email,
@@ -221,7 +243,7 @@ export const transformUser = (dto: UserDto): User => ({
   fullName: dto.fullName,
   avatarUrl: dto.avatarUrl,
   phone: dto.phone,
-  accountType: dto.accountType,
+  accountType: normalizeAccountType(dto.accountType),
   userIntent: dto.userIntent,
   isVerified: dto.isVerified,
   isEmailVerified: dto.isEmailVerified,

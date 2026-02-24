@@ -112,12 +112,31 @@ async function internalFetch<T>(
     }
   }
 
-  const response = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    cache: 'no-store',
-  });
+  // Timeout guard: if the internal fetch hangs (slow Gateway / pod restart),
+  // abort after 20 s and throw a user-readable error.
+  // Without this the Server Action would hang until Next.js terminates it and
+  // the browser receives an HTML error page instead of JSON, causing the
+  // infamous "An unexpected response was received from the server." toast.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20_000);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('La solicitud tardó demasiado. Por favor, intenta de nuevo.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
