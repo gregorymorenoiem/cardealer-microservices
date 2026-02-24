@@ -108,6 +108,8 @@ public class SellerProfileControllerTests
         
         _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
             .ReturnsAsync(profile);
+        _mockVehiclesClient.Setup(c => c.GetSellerListingsAsync(sellerId, 1, 12, null))
+            .ReturnsAsync(new SellerListingsResult { Page = 1, PageSize = 12 });
 
         // Act
         var result = await _controller.GetSellerListings(sellerId, 1, 12, null);
@@ -127,6 +129,8 @@ public class SellerProfileControllerTests
         
         _mockSellerProfileRepository.Setup(r => r.GetByIdAsync(sellerId))
             .ReturnsAsync(profile);
+        _mockReviewClient.Setup(c => c.GetSellerReviewsAsync(sellerId, 1, 10, null))
+            .ReturnsAsync(new SellerReviewsResult { Page = 1, PageSize = 10 });
 
         // Act
         var result = await _controller.GetSellerReviews(sellerId, 1, 10, null);
