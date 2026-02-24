@@ -37,6 +37,10 @@ public static class ServiceCollectionExtensions
         services.Configure<LocalStorageOptions>(configuration.GetSection("Storage:Local"));
         services.Configure<AzureBlobStorageOptions>(configuration.GetSection("Storage:Azure"));
         services.Configure<S3StorageOptions>(configuration.GetSection("Storage:S3"));
+        // Also register the canonical S3StorageOptions from Services.Storage namespace so
+        // IOptions<MediaService.Infrastructure.Services.Storage.S3StorageOptions> (used in
+        // MediaController.GetFreshUrl) resolves correctly instead of using the default value of 60.
+        services.Configure<MediaService.Infrastructure.Services.Storage.S3StorageOptions>(configuration.GetSection("Storage:S3"));
 
         // Storage Services - Registro dinámico
         // Performance: Storage services are thread-safe → use Singleton to reuse TCP connections
