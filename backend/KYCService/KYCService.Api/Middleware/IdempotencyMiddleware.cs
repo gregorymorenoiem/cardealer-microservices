@@ -74,9 +74,20 @@ public class IdempotencyMiddleware
         var requestHash = await GenerateRequestHashAsync(context);
 
         // Check IdempotencyService for existing key
-        var checkResult = await idempotencyClient.CheckAsync(idempotencyKey, requestHash);
+        IdempotencyCheckResponse? checkResult = null;
+        try
+        {
+            checkResult = await idempotencyClient.CheckAsync(idempotencyKey, requestHash);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "IdempotencyService check failed, proceeding without idempotency check");
+            // If IdempotencyService is unavailable, proceed normally
+            await _next(context);
+            return;
+        }
 
-        if (checkResult.Exists)
+        if (checkResult != null && checkResult.Exists)
         {
             if (checkResult.IsProcessing)
             {
@@ -151,7 +162,18 @@ public class IdempotencyMiddleware
             ClientId = userIdClaim
         };
 
-        var started = await idempotencyClient.StartProcessingAsync(startRequest);
+        bool started = false;
+        try
+        {
+            started = await idempotencyClient.StartProcessingAsync(startRequest);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "IdempotencyService start failed, proceeding without idempotency");
+            // If IdempotencyService is unavailable, proceed normally
+            await _next(context);
+            return;
+        }
         
         if (!started)
         {
