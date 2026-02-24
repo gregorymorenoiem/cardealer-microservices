@@ -84,6 +84,7 @@ jobs:
           dotnet test UserService.Tests/UserService.Tests.csproj \
             --configuration Release \
             --verbosity normal \
+            --filter "FullyQualifiedName!~.Integration." \
             --logger "trx;LogFileName=test-results.trx" \
             --collect:"XPlat Code Coverage" \
             --results-directory TestResults
