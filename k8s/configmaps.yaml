@@ -184,7 +184,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "RouteClaimsRequirement": { "account_type": "4, 5" }
+          "RouteClaimsRequirement": { "role": "Compliance" }
         },
         {
           "UpstreamPathTemplate": "/api/kyc/kycprofiles/statistics",
@@ -193,7 +193,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "RouteClaimsRequirement": { "account_type": "4, 5" }
+          "RouteClaimsRequirement": { "role": "Compliance" }
         },
         {
           "UpstreamPathTemplate": "/api/kyc/kycprofiles/expiring",
@@ -202,7 +202,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "RouteClaimsRequirement": { "account_type": "4, 5" }
+          "RouteClaimsRequirement": { "role": "Compliance" }
         },
         {
           "UpstreamPathTemplate": "/api/kyc/kycprofiles/settings",
@@ -211,7 +211,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }],
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "RouteClaimsRequirement": { "account_type": "4, 5" }
+          "RouteClaimsRequirement": { "role": "Compliance" }
         },
         {
           "UpstreamPathTemplate": "/api/kyc/kycprofiles/{everything}",
@@ -1321,7 +1321,7 @@ data:
           "UpstreamPathTemplate": "/api/notifications/health",
           "UpstreamHttpMethod": ["GET"]
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/products/health",
           "UpstreamHttpMethod": ["GET"],
@@ -1405,7 +1405,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/catalog",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
@@ -1435,7 +1435,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/categories",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
@@ -1480,7 +1480,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/homepagesections",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
@@ -1539,7 +1539,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/media/health",
           "UpstreamHttpMethod": ["GET"],
@@ -1573,7 +1573,7 @@ data:
             "TimeoutValue": 120000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/billing/health",
           "UpstreamHttpMethod": ["GET"],
@@ -1596,7 +1596,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/users/health",
           "UpstreamHttpMethod": ["GET"],
@@ -1634,7 +1634,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/privacy/rights-info",
           "UpstreamHttpMethod": ["GET"],
@@ -1827,7 +1827,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/dealers/health",
           "UpstreamHttpMethod": ["GET"],
@@ -1951,7 +1951,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/sellers/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2012,7 +2012,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/roles/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2035,7 +2035,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/admin/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2061,7 +2061,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/crm/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2084,7 +2084,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/reports/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2107,7 +2107,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/contactrequests/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2130,7 +2130,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/vehiclecomparisons/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2199,7 +2199,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/appointments/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2274,7 +2274,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/recommendations/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2297,7 +2297,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/chatbot/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2305,7 +2305,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }]
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/chat/start",
           "UpstreamHttpMethod": ["POST", "OPTIONS"],
@@ -2399,7 +2399,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "chatbotservice", "Port": 8080 }]
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",
           "UpstreamHttpMethod": ["GET", "POST"],
@@ -2412,7 +2412,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/chat/handoff/{everything}",
           "UpstreamHttpMethod": ["POST", "OPTIONS"],
@@ -2443,7 +2443,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/vehicle-intelligence/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2466,7 +2466,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/azul-payment/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2489,7 +2489,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/payments/providers/available",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
@@ -2532,7 +2532,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/savedsearches/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2645,7 +2645,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/pricealerts/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2743,7 +2743,7 @@ data:
             "TimeoutValue": 30000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/kyc/health",
           "UpstreamHttpMethod": ["GET"],
@@ -2751,7 +2751,7 @@ data:
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 8080 }]
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/kyc/kycprofiles/pending",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
@@ -2804,7 +2804,7 @@ data:
             "role": "Compliance"
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/kyc/kycprofiles/user/{userId}",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
@@ -2994,7 +2994,7 @@ data:
             "TimeoutValue": 120000
           }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/configurations/health",
           "UpstreamHttpMethod": ["GET"],
@@ -3107,7 +3107,7 @@ data:
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
           "RouteClaimsRequirement": { "role": "Compliance" }
         },
-    
+
         {
           "UpstreamPathTemplate": "/api/maintenance/health",
           "UpstreamHttpMethod": ["GET"],
@@ -3290,9 +3290,9 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "paymentservice", "Port": 8080 }],
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
         },
-    
+
         // ── AdvertisingService ──────────────────────────────────────────
-    
+
         {
           "UpstreamPathTemplate": "/api/advertising/campaigns",
           "UpstreamHttpMethod": ["POST"],
