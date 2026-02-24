@@ -516,22 +516,37 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
 {
     private readonly IKYCDocumentRepository _repository;
     private readonly IKYCProfileRepository _profileRepository;
+    private readonly ILogger<UploadKYCDocumentHandler> _logger;
 
-    public UploadKYCDocumentHandler(IKYCDocumentRepository repository, IKYCProfileRepository profileRepository)
+    public UploadKYCDocumentHandler(
+        IKYCDocumentRepository repository, 
+        IKYCProfileRepository profileRepository,
+        ILogger<UploadKYCDocumentHandler> logger)
     {
         _repository = repository;
         _profileRepository = profileRepository;
+        _logger = logger;
     }
 
     public async Task<KYCDocumentDto> Handle(UploadKYCDocumentCommand request, CancellationToken cancellationToken)
     {
-        // Verificar que el perfil existe
-        var profile = await _profileRepository.GetByIdAsync(request.KYCProfileId, cancellationToken)
-            ?? throw new InvalidOperationException($"KYC Profile with ID {request.KYCProfileId} not found");
+        _logger.LogInformation("Starting document upload for KYC Profile {ProfileId}, DocumentType: {Type}, DocumentName: {DocumentName}", 
+            request.KYCProfileId, request.Type, request.DocumentName);
 
+        // Verificar que el perfil existe
+        var profile = await _profileRepository.GetByIdAsync(request.KYCProfileId, cancellationToken);
+        if (profile == null)
+        {
+            _logger.LogWarning("KYC Profile {ProfileId} not found for document upload", request.KYCProfileId);
+            throw new InvalidOperationException($"KYC Profile with ID {request.KYCProfileId} not found");
+        }
+
+        _logger.LogInformation("Profile found: Status={Status}, FullName={FullName}", profile.Status, profile.FullName);
+
+        var documentId = Guid.NewGuid();
         var document = new KYCDocument
         {
-            Id = Guid.NewGuid(),
+            Id = documentId,
             KYCProfileId = request.KYCProfileId,
             Type = request.Type,
             DocumentName = request.DocumentName,
@@ -547,17 +562,27 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             UploadedAt = DateTime.UtcNow
         };
 
+        _logger.LogInformation("Creating document with ID {DocumentId}, StorageKey: {StorageKey}", documentId, request.StorageKey);
+        
         var created = await _repository.CreateAsync(document, cancellationToken);
+        
+        _logger.LogInformation("Document created successfully: {DocumentId}", created.Id);
 
         // Actualizar estado del perfil si está pendiente
         if (profile.Status == KYCStatus.Pending)
         {
+            _logger.LogInformation("Profile was Pending, updating to InProgress");
             profile.Status = KYCStatus.InProgress;
             profile.UpdatedAt = DateTime.UtcNow;
             await _profileRepository.UpdateAsync(profile, cancellationToken);
+            _logger.LogInformation("Profile status updated to InProgress");
+        }
+        else
+        {
+            _logger.LogInformation("Profile status is {Status}, no status update needed", profile.Status);
         }
 
-        return new KYCDocumentDto
+        var dto = new KYCDocumentDto
         {
             Id = created.Id,
             KYCProfileId = created.KYCProfileId,
@@ -572,6 +597,9 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             Status = created.Status,
             UploadedAt = created.UploadedAt
         };
+
+        _logger.LogInformation("Document upload completed successfully for KYC Profile {ProfileId}", request.KYCProfileId);
+        return dto;
     }
 }
 
