@@ -451,28 +451,17 @@ function SellerDashboard() {
           <h1 className="text-foreground text-2xl font-bold">Mi Panel de Vendedor</h1>
           <p className="text-muted-foreground">Gestiona tus publicaciones y consultas</p>
         </div>
-        {!kycLoading &&
-          (canSell ? (
-            <Link href="/vender/publicar">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Publicar Vehículo
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/cuenta/verificacion">
-              <Button
-                variant="outline"
-                className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
-              >
-                <Shield className="h-4 w-4" />
-                Verificar para publicar
-              </Button>
-            </Link>
-          ))}
+        {!kycLoading && canSell && (
+          <Link href="/vender/publicar">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Publicar Vehículo
+            </Button>
+          </Link>
+        )}
       </div>
 
-      {/* Verification banner — shown while unverified */}
+      {/* Verification banner — shown while unverified with "Verificar ahora" button inside */}
       <VerificationBanner />
 
       {isLoading ? (
