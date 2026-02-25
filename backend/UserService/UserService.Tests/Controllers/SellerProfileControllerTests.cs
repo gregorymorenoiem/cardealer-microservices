@@ -425,8 +425,6 @@ public class SellerProfileControllerTests
             City = "Santo Domingo",
             State = "Distrito Nacional",
             Country = "DO",
-            Phone = "809-555-1234",
-            Email = "test@seller.com",
             Address = "Test Address",
             IsActive = true,
             VerificationStatus = SellerVerificationStatus.NotSubmitted,

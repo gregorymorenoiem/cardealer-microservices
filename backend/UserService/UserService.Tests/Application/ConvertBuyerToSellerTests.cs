@@ -104,7 +104,6 @@ public class ConvertBuyerToSellerTests
         result.NewAccountType.Should().Be("Seller");
         result.SellerProfile.Should().NotBeNull();
         result.SellerProfile!.FullName.Should().Be("Test Buyer");
-        result.SellerProfile.Email.Should().Be("buyer@test.com");
 
         // Verify DB row created
         _sellerProfileRepositoryMock.Verify(r => r.AddAsync(It.IsAny<SellerProfile>()), Times.Once);
@@ -145,8 +144,6 @@ public class ConvertBuyerToSellerTests
             Id = Guid.NewGuid(),
             UserId = userId,
             FullName = "Test Buyer",
-            Email = "buyer@test.com",
-            Phone = "8091234567",
             Address = string.Empty,
             City = "Santo Domingo",
             State = "DN",
@@ -266,8 +263,6 @@ public class ConvertBuyerToSellerTests
             Id = sellerProfileId,
             UserId = userId,
             FullName = "Test Buyer",
-            Email = "buyer@test.com",
-            Phone = "8091234567",
             Address = string.Empty,
             City = "Santo Domingo",
             State = "DN",

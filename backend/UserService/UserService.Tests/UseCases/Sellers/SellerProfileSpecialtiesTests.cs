@@ -41,8 +41,6 @@ public class SellerProfileSpecialtiesTests
         {
             UserId = userId,
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             Country = "DO",
             Specialties = specialties
@@ -90,8 +88,6 @@ public class SellerProfileSpecialtiesTests
         {
             UserId = userId,
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             Country = "DO",
             Specialties = null // No specialties
@@ -140,8 +136,6 @@ public class SellerProfileSpecialtiesTests
         {
             UserId = userId,
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             Country = "DO",
             Specialties = specialties
@@ -189,8 +183,6 @@ public class SellerProfileSpecialtiesTests
             Id = sellerId,
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             Specialties = oldSpecialties
         };
@@ -237,8 +229,6 @@ public class SellerProfileSpecialtiesTests
             Id = sellerId,
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             Specialties = new[] { "Sedanes", "SUVs" }
         };
@@ -284,8 +274,6 @@ public class SellerProfileSpecialtiesTests
             Id = sellerId,
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             Specialties = originalSpecialties
         };
@@ -366,8 +354,6 @@ public class SellerProfileSpecialtiesTests
         {
             UserId = userId,
             FullName = "Juan García",
-            Phone = "+1-809-555-0123",
-            Email = "juan@example.com",
             Specialties = new[] { "Sedanes" }
         };
 
@@ -412,8 +398,6 @@ public class SellerProfileSpecialtiesTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Test Seller",
-            Phone = "+1-809-555-0123",
-            Email = "test@example.com",
             Specialties = new[] { "Sedanes", "SUVs", "Camionetas" }
         };
 

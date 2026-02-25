@@ -27,8 +27,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123",
@@ -52,8 +50,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             // City = null ← Missing!
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123"
@@ -76,8 +72,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             // State = null ← Missing!
             Address = "Calle Las Flores #123"
@@ -100,8 +94,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             State = "Provincia Inexistente", // ← Invalid province
             Address = "Calle Las Flores #123"
@@ -124,8 +116,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "S", // ← Too short (min 2)
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123"
@@ -148,8 +138,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = new string('A', 101), // ← Too long (max 100)
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123"
@@ -172,8 +160,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo 123", // ← Contains numbers
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123"
@@ -196,8 +182,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             State = "Distrito Nacional",
             Address = new string('A', 501), // ← Too long (max 500)
@@ -221,8 +205,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123",
@@ -246,8 +228,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             State = "Distrito Nacional",
             Address = "Calle Las Flores #123",
@@ -271,8 +251,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             Address = "Calle Las Flores #123", // ← Address without city/state
             City = "", // ← Missing
             State = ""  // ← Missing
@@ -295,8 +273,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             Specialties = new[] { "Sedanes", "SUVs" }, // ← Specialties without location
             City = "", // ← Missing
             State = ""  // ← Missing
@@ -328,8 +304,6 @@ public class SellerProfileLocationTests
             {
                 UserId = Guid.NewGuid(),
                 FullName = "Juan García",
-                Phone = "+18095551234",
-                Email = "juan@example.com",
                 City = province,
                 State = province,
                 Address = "Test Address",
@@ -545,8 +519,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "J.G",
-            Phone = "+18095551234",
-            Email = "j@e.com",
             City = "SD", // Minimum 2 chars
             State = "DN", // Minimum 2 chars
             Address = "", // Optional
@@ -571,8 +543,6 @@ public class SellerProfileLocationTests
         {
             UserId = Guid.NewGuid(),
             FullName = "Juan García",
-            Phone = "+18095551234",
-            Email = "juan@example.com",
             City = "Santo Domingo",
             State = "Distrito Nacional",
             Address = "Calle José María Liñán #456", // Contains á, í, ñ
