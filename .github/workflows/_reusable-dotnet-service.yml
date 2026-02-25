@@ -168,6 +168,9 @@ jobs:
     needs: build-and-test
     runs-on: [self-hosted, macOS, ARM64]
     if: inputs.run-docker-build
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: 📥 Checkout code
@@ -208,8 +211,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.docker-registry }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏗️ Build Docker image
         timeout-minutes: 45
