@@ -77,11 +77,6 @@ export const sellerProfileSchema = z.object({
     .max(500, 'La descripción no puede exceder 500 caracteres')
     .optional()
     .or(z.literal('')),
-  phone: z
-    .string()
-    .regex(/^\d{10}$/, 'Ingresa un número de 10 dígitos')
-    .optional()
-    .or(z.literal('')),
   location: z
     .string()
     .max(200, 'La ubicación no puede exceder 200 caracteres')
@@ -112,11 +107,6 @@ export const sellerProfileDealerSchema = z.object({
   description: z
     .string()
     .max(500, 'La descripción no puede exceder 500 caracteres')
-    .optional()
-    .or(z.literal('')),
-  phone: z
-    .string()
-    .regex(/^\d{10}$/, 'Ingresa un número de 10 dígitos')
     .optional()
     .or(z.literal('')),
   location: z

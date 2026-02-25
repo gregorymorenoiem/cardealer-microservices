@@ -154,24 +154,6 @@ export function ProfileStep({
         </>
       )}
 
-      {/* Phone */}
-      <div className="space-y-2">
-        <Label htmlFor="profilePhone">
-          Teléfono de contacto <span className="text-muted-foreground">(opcional)</span>
-        </Label>
-        <div className="flex gap-2">
-          <div className="bg-muted flex items-center rounded-md border px-3 text-sm">+1</div>
-          <Input
-            id="profilePhone"
-            type="tel"
-            value={data.phone ?? ''}
-            onChange={e => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-            placeholder="8091234567"
-            maxLength={10}
-          />
-        </div>
-      </div>
-
       {/* Description */}
       <div className="space-y-2">
         <Label htmlFor="description">

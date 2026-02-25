@@ -109,7 +109,6 @@ interface SellerBizForm {
   businessName: string;
   displayName: string;
   description: string;
-  phone: string;
   location: string;
   specialties: string[];
 }
@@ -180,7 +179,6 @@ export default function ProfilePage() {
     businessName: '',
     displayName: '',
     description: '',
-    phone: '',
     location: '',
     specialties: [],
   });
@@ -260,7 +258,6 @@ export default function ProfilePage() {
         businessName: s.businessName || '',
         displayName: s.displayName || '',
         description: s.description || '',
-        phone: s.phone || '',
         location: s.location || '',
         specialties: s.specialties || [],
       });
@@ -354,7 +351,6 @@ export default function ProfilePage() {
           description: sellerForm.description
             ? sanitizeText(sellerForm.description, { maxLength: 1000 })
             : undefined,
-          phone: sellerForm.phone ? sanitizePhone(sellerForm.phone) : undefined,
           location: sellerForm.location
             ? sanitizeText(sellerForm.location.trim(), { maxLength: 200 })
             : undefined,
@@ -850,21 +846,6 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="sellerPhone">Teléfono de contacto</Label>
-                      <div className="relative">
-                        <Phone className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                        <Input
-                          id="sellerPhone"
-                          type="tel"
-                          placeholder="809-555-0123"
-                          value={sellerForm.phone}
-                          onChange={e => setSellerForm(s => ({ ...s, phone: e.target.value }))}
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="sellerLocation">Ubicación</Label>
                       <div className="relative">

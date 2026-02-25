@@ -10,7 +10,6 @@ import { apiClient } from '@/lib/api-client';
 export interface ConvertToSellerRequest {
   businessName: string;
   description?: string;
-  phone?: string;
   location?: string;
   specialties?: string[];
   acceptTerms: boolean;
@@ -33,7 +32,6 @@ export interface SellerProfile {
   businessName: string;
   displayName: string;
   description?: string;
-  phone?: string;
   location?: string;
   specialties?: string[];
   isVerified: boolean;
@@ -61,7 +59,6 @@ export interface CreateSellerProfileRequest {
   businessName: string;
   displayName: string;
   description?: string;
-  phone?: string;
   location?: string;
   specialties?: string[];
 }
@@ -70,7 +67,6 @@ export interface UpdateSellerProfileRequest {
   businessName?: string;
   displayName?: string;
   description?: string;
-  phone?: string;
   location?: string;
   specialties?: string[];
 }

@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { convertToSeller, type ConvertToSellerRequest } from '@/services/sellers';
-import { sanitizeText, sanitizePhone } from '@/lib/security/sanitize';
+import { sanitizeText } from '@/lib/security/sanitize';
 
 type ConversionStep = 'info' | 'form' | 'processing' | 'success' | 'error';
 
@@ -40,7 +40,6 @@ export default function ConvertToSellerPage() {
   const [formData, setFormData] = useState({
     businessName: '',
     description: '',
-    phone: '',
     location: '',
     acceptTerms: false,
   });
@@ -69,7 +68,6 @@ export default function ConvertToSellerPage() {
       const sanitizedData: ConvertToSellerRequest = {
         businessName: sanitizeText(formData.businessName.trim(), { maxLength: 150 }),
         description: formData.description ? sanitizeText(formData.description.trim(), { maxLength: 2000 }) : undefined,
-        phone: formData.phone ? sanitizePhone(formData.phone) : undefined,
         location: formData.location ? sanitizeText(formData.location.trim(), { maxLength: 200 }) : undefined,
         acceptTerms: formData.acceptTerms,
       };
@@ -225,18 +223,6 @@ export default function ConvertToSellerPage() {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   maxLength={2000}
                   rows={4}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="phone">Teléfono de contacto (opcional)</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="809-555-1234"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  maxLength={20}
                 />
               </div>
 
