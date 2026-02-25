@@ -106,10 +106,9 @@ interface PersonalForm {
 }
 
 interface SellerBizForm {
-  businessName: string;
-  displayName: string;
-  description: string;
-  location: string;
+  fullName: string;
+  bio: string;
+  city: string;
   specialties: string[];
 }
 
@@ -176,10 +175,9 @@ export default function ProfilePage() {
   const sellerQuery = useSellerByUserId(accountType === 'seller' ? authUser?.id : undefined);
   const updateSellerMutation = useUpdateSellerProfile();
   const [sellerForm, setSellerForm] = React.useState<SellerBizForm>({
-    businessName: '',
-    displayName: '',
-    description: '',
-    location: '',
+    fullName: '',
+    bio: '',
+    city: '',
     specialties: [],
   });
   const [sellerSaving, setSellerSaving] = React.useState(false);
@@ -255,10 +253,9 @@ export default function ProfilePage() {
     if (sellerQuery.data) {
       const s = sellerQuery.data;
       setSellerForm({
-        businessName: s.businessName || '',
-        displayName: s.displayName || '',
-        description: s.description || '',
-        location: s.location || '',
+        fullName: s.fullName || '',
+        bio: s.bio || '',
+        city: s.city || '',
         specialties: s.specialties || [],
       });
     }
@@ -346,13 +343,12 @@ export default function ProfilePage() {
       await updateSellerMutation.mutateAsync({
         sellerId: sellerQuery.data.id,
         data: {
-          businessName: sanitizeText(sellerForm.businessName.trim(), { maxLength: 100 }),
-          displayName: sanitizeText(sellerForm.displayName.trim(), { maxLength: 100 }),
-          description: sellerForm.description
-            ? sanitizeText(sellerForm.description, { maxLength: 1000 })
+          fullName: sellerForm.fullName.trim() ? sanitizeText(sellerForm.fullName.trim(), { maxLength: 100 }) : undefined,
+          bio: sellerForm.bio
+            ? sanitizeText(sellerForm.bio, { maxLength: 1000 })
             : undefined,
-          location: sellerForm.location
-            ? sanitizeText(sellerForm.location.trim(), { maxLength: 200 })
+          city: sellerForm.city
+            ? sanitizeText(sellerForm.city.trim(), { maxLength: 100 })
             : undefined,
           specialties: sellerForm.specialties.length > 0 ? sellerForm.specialties : undefined,
         },
@@ -801,32 +797,23 @@ export default function ProfilePage() {
 
               {!sellerQuery.isLoading && !sellerQuery.isError && (
                 <>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="sellerBusinessName">Nombre del negocio</Label>
-                      <div className="relative">
-                        <Building2 className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                        <Input
-                          id="sellerBusinessName"
-                          placeholder="Ej: Juan Vende Carros"
-                          value={sellerForm.businessName}
-                          onChange={e =>
-                            setSellerForm(s => ({ ...s, businessName: e.target.value }))
-                          }
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sellerDisplayName">Nombre público</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="sellerFullName">Nombre del vendedor / negocio</Label>
+                    <div className="relative">
+                      <Building2 className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                       <Input
-                        id="sellerDisplayName"
-                        placeholder="Como aparece en tus anuncios"
-                        value={sellerForm.displayName}
-                        onChange={e => setSellerForm(s => ({ ...s, displayName: e.target.value }))}
+                        id="sellerFullName"
+                        placeholder="Ej: Juan Pérez / JP Autos"
+                        value={sellerForm.fullName}
+                        onChange={e =>
+                          setSellerForm(s => ({ ...s, fullName: e.target.value }))
+                        }
+                        className="pl-10"
                       />
                     </div>
+                    <p className="text-muted-foreground text-xs">
+                      Así aparecerás en tus anuncios y perfil público
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -834,30 +821,28 @@ export default function ProfilePage() {
                     <textarea
                       id="sellerDesc"
                       placeholder="Describe tu actividad como vendedor, qué tipos de vehículos ofreces..."
-                      value={sellerForm.description}
-                      onChange={e => setSellerForm(s => ({ ...s, description: e.target.value }))}
+                      value={sellerForm.bio}
+                      onChange={e => setSellerForm(s => ({ ...s, bio: e.target.value }))}
                       rows={3}
                       maxLength={1000}
                       className="focus:ring-primary/20 focus:border-primary border-border w-full resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                     />
                     <p className="text-muted-foreground text-right text-xs">
-                      {sellerForm.description.length}/1000
+                      {sellerForm.bio.length}/1000
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="sellerLocation">Ubicación</Label>
-                      <div className="relative">
-                        <MapPin className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                        <Input
-                          id="sellerLocation"
-                          placeholder="Ej: Santo Domingo, Distrito Nacional"
-                          value={sellerForm.location}
-                          onChange={e => setSellerForm(s => ({ ...s, location: e.target.value }))}
-                          className="pl-10"
-                        />
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sellerCity">Ubicación</Label>
+                    <div className="relative">
+                      <MapPin className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                      <Input
+                        id="sellerCity"
+                        placeholder="Ej: Santo Domingo, Distrito Nacional"
+                        value={sellerForm.city}
+                        onChange={e => setSellerForm(s => ({ ...s, city: e.target.value }))}
+                        className="pl-10"
+                      />
                     </div>
                   </div>
 

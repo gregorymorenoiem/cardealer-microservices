@@ -28,7 +28,7 @@ export default function PublicarPage() {
     isSeller &&
     !sellerQuery.isLoading &&
     canSell &&
-    (!sellerQuery.data || !sellerQuery.data.displayName);
+    (!sellerQuery.data || !sellerQuery.data.fullName);
 
   // Show loading state while KYC + seller profile data loads
   if (isLoading || (isSeller && sellerQuery.isLoading)) {

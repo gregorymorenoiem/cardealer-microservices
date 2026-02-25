@@ -29,10 +29,10 @@ export interface SellerConversionResult {
 export interface SellerProfile {
   id: string;
   userId: string;
-  businessName: string;
-  displayName: string;
-  description?: string;
-  location?: string;
+  fullName: string;
+  bio?: string;
+  city?: string;
+  state?: string;
   specialties?: string[];
   isVerified: boolean;
   averageRating: number;
@@ -64,10 +64,9 @@ export interface CreateSellerProfileRequest {
 }
 
 export interface UpdateSellerProfileRequest {
-  businessName?: string;
-  displayName?: string;
-  description?: string;
-  location?: string;
+  fullName?: string;
+  bio?: string;
+  city?: string;
   specialties?: string[];
 }
 

@@ -1,6 +1,6 @@
 /**
  * Convert to Seller Page
- * 
+ *
  * Allows buyers to convert their account to a seller account.
  * Requires authentication. Dealers/DealerEmployees are rejected.
  */
@@ -67,8 +67,12 @@ export default function ConvertToSellerPage() {
     try {
       const sanitizedData: ConvertToSellerRequest = {
         businessName: sanitizeText(formData.businessName.trim(), { maxLength: 150 }),
-        description: formData.description ? sanitizeText(formData.description.trim(), { maxLength: 2000 }) : undefined,
-        location: formData.location ? sanitizeText(formData.location.trim(), { maxLength: 200 }) : undefined,
+        description: formData.description
+          ? sanitizeText(formData.description.trim(), { maxLength: 2000 })
+          : undefined,
+        location: formData.location
+          ? sanitizeText(formData.location.trim(), { maxLength: 200 })
+          : undefined,
         acceptTerms: formData.acceptTerms,
       };
 
@@ -83,15 +87,22 @@ export default function ConvertToSellerPage() {
         setStep('success');
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string; extensions?: { errorCode?: string } } } };
+      const error = err as {
+        response?: { data?: { detail?: string; extensions?: { errorCode?: string } } };
+      };
       const errorCode = error?.response?.data?.extensions?.errorCode;
-      
+
       if (errorCode === 'CONVERSION_NOT_ALLOWED') {
-        setError('Tu tipo de cuenta no permite esta conversión. Si eres un Dealer, ya tienes acceso a las funciones de venta.');
+        setError(
+          'Tu tipo de cuenta no permite esta conversión. Si eres un Dealer, ya tienes acceso a las funciones de venta.'
+        );
       } else if (errorCode === 'FEATURE_DISABLED') {
         setError('La conversión a vendedor no está disponible en este momento. Intenta más tarde.');
       } else {
-        setError(error?.response?.data?.detail || 'Ocurrió un error al procesar tu solicitud. Intenta de nuevo.');
+        setError(
+          error?.response?.data?.detail ||
+            'Ocurrió un error al procesar tu solicitud. Intenta de nuevo.'
+        );
       }
       setStep('error');
     }
@@ -101,14 +112,17 @@ export default function ConvertToSellerPage() {
   if (step === 'info') {
     return (
       <div className="container mx-auto max-w-3xl px-4 py-8">
-        <Link href="/cuenta" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          href="/cuenta"
+          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-2 text-sm"
+        >
           <ArrowLeft className="h-4 w-4" />
           Volver a mi cuenta
         </Link>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Conviértete en Vendedor</h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="text-muted-foreground mt-2">
             Empieza a vender tus vehículos en OKLA. La conversión es rápida y sencilla.
           </p>
         </div>
@@ -119,7 +133,7 @@ export default function ConvertToSellerPage() {
             <CardContent className="flex flex-col items-center p-6 text-center">
               <DollarSign className="mb-3 h-10 w-10 text-green-600" />
               <h3 className="font-semibold">Publica y Vende</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Lista tus vehículos y alcanza miles de compradores.
               </p>
             </CardContent>
@@ -128,7 +142,7 @@ export default function ConvertToSellerPage() {
             <CardContent className="flex flex-col items-center p-6 text-center">
               <BarChart3 className="mb-3 h-10 w-10 text-blue-600" />
               <h3 className="font-semibold">Estadísticas</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Accede a métricas de tus publicaciones y visitas.
               </p>
             </CardContent>
@@ -137,7 +151,7 @@ export default function ConvertToSellerPage() {
             <CardContent className="flex flex-col items-center p-6 text-center">
               <ShieldCheck className="mb-3 h-10 w-10 text-purple-600" />
               <h3 className="font-semibold">Perfil Verificado</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Obtén la insignia de vendedor verificado.
               </p>
             </CardContent>
@@ -189,7 +203,10 @@ export default function ConvertToSellerPage() {
   if (step === 'form') {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-8">
-        <button onClick={() => setStep('info')} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <button
+          onClick={() => setStep('info')}
+          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-2 text-sm"
+        >
           <ArrowLeft className="h-4 w-4" />
           Volver
         </button>
@@ -205,11 +222,11 @@ export default function ConvertToSellerPage() {
                   id="businessName"
                   placeholder="Ej: Vehículos Juan Pérez"
                   value={formData.businessName}
-                  onChange={(e) => handleInputChange('businessName', e.target.value)}
+                  onChange={e => handleInputChange('businessName', e.target.value)}
                   maxLength={150}
                   required
                 />
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   Este nombre se mostrará en tu perfil de vendedor.
                 </p>
               </div>
@@ -220,7 +237,7 @@ export default function ConvertToSellerPage() {
                   id="description"
                   placeholder="Cuéntanos sobre ti como vendedor..."
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={e => handleInputChange('description', e.target.value)}
                   maxLength={2000}
                   rows={4}
                 />
@@ -232,7 +249,7 @@ export default function ConvertToSellerPage() {
                   id="location"
                   placeholder="Ej: Santo Domingo, DN"
                   value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  onChange={e => handleInputChange('location', e.target.value)}
                   maxLength={200}
                 />
               </div>
@@ -241,11 +258,11 @@ export default function ConvertToSellerPage() {
                 <Checkbox
                   id="acceptTerms"
                   checked={formData.acceptTerms}
-                  onCheckedChange={(checked) => handleInputChange('acceptTerms', !!checked)}
+                  onCheckedChange={checked => handleInputChange('acceptTerms', !!checked)}
                 />
                 <label htmlFor="acceptTerms" className="cursor-pointer text-sm leading-snug">
                   Acepto los{' '}
-                  <Link href="/terminos" className="font-medium text-primary underline">
+                  <Link href="/terminos" className="text-primary font-medium underline">
                     Términos y Condiciones
                   </Link>{' '}
                   para vendedores individuales en OKLA, incluyendo el precio de $29 por publicación.
@@ -279,11 +296,9 @@ export default function ConvertToSellerPage() {
   if (step === 'processing') {
     return (
       <div className="container mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center">
-        <Loader2 className="mb-6 h-12 w-12 animate-spin text-primary" />
+        <Loader2 className="text-primary mb-6 h-12 w-12 animate-spin" />
         <h2 className="text-xl font-semibold">Procesando tu solicitud...</h2>
-        <p className="mt-2 text-muted-foreground">
-          Esto tomará solo unos segundos.
-        </p>
+        <p className="text-muted-foreground mt-2">Esto tomará solo unos segundos.</p>
       </div>
     );
   }
@@ -296,16 +311,15 @@ export default function ConvertToSellerPage() {
           <CheckCircle className="h-12 w-12 text-green-600" />
         </div>
         <h2 className="text-2xl font-bold">¡Solicitud Enviada!</h2>
-        <p className="mt-3 text-muted-foreground">
-          Tu solicitud de conversión a vendedor ha sido recibida. Puede requerir verificación antes de activarse.
+        <p className="text-muted-foreground mt-3">
+          Tu solicitud de conversión a vendedor ha sido recibida. Puede requerir verificación antes
+          de activarse.
         </p>
         <div className="mt-8 flex gap-3">
           <Button variant="outline" onClick={() => router.push('/cuenta')}>
             Ir a mi cuenta
           </Button>
-          <Button onClick={() => router.push('/publicar')}>
-            Publicar vehículo
-          </Button>
+          <Button onClick={() => router.push('/publicar')}>Publicar vehículo</Button>
         </div>
       </div>
     );
@@ -318,14 +332,19 @@ export default function ConvertToSellerPage() {
         <AlertCircle className="h-12 w-12 text-red-600" />
       </div>
       <h2 className="text-2xl font-bold">Error en la Conversión</h2>
-      <p className="mt-3 text-muted-foreground">
+      <p className="text-muted-foreground mt-3">
         {error || 'Ocurrió un error inesperado. Por favor intenta de nuevo.'}
       </p>
       <div className="mt-8 flex gap-3">
         <Button variant="outline" onClick={() => router.push('/cuenta')}>
           Volver a mi cuenta
         </Button>
-        <Button onClick={() => { setError(null); setStep('info'); }}>
+        <Button
+          onClick={() => {
+            setError(null);
+            setStep('info');
+          }}
+        >
           Intentar de nuevo
         </Button>
       </div>

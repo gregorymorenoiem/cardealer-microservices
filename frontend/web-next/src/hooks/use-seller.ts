@@ -121,7 +121,9 @@ export function useUpdateSellerProfile() {
     mutationFn: ({ sellerId, data }: { sellerId: string; data: UpdateSellerProfileRequest }) =>
       updateSellerProfile(sellerId, data),
     onSuccess: profile => {
+      // Update both cache keys so the byUser query doesn't flicker on refetch
       queryClient.setQueryData(sellerKeys.profile(profile.id), profile);
+      queryClient.setQueryData(sellerKeys.byUser(profile.userId), profile);
       queryClient.invalidateQueries({ queryKey: sellerKeys.all });
     },
   });
