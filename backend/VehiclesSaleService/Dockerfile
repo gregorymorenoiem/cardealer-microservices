@@ -63,3 +63,5 @@ ENTRYPOINT ["dotnet", "VehiclesSaleService.Api.dll"]
 # trigger 1772028282
 
 # network-host fix
+
+# ci-trigger: GITHUB_TOKEN auth fix
