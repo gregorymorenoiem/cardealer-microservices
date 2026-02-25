@@ -41,10 +41,6 @@ on:
         type: string
         default: "ghcr.io"
     secrets:
-      REGISTRY_USERNAME:
-        required: false
-      REGISTRY_PASSWORD:
-        required: false
 
 jobs:
   # ============================================
@@ -168,21 +164,14 @@ jobs:
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 📦 Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-frontend-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-frontend-
-
-      - name: 🔐 Login to Container Registry
+      - name: � Login to Container Registry
         if: inputs.run-docker-push
+        timeout-minutes: 2
         uses: docker/login-action@v3
         with:
           registry: ${{ inputs.docker-registry }}
-          username: ${{ secrets.REGISTRY_USERNAME || github.actor }}
-          password: ${{ secrets.REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: 🏷️ Generate version
         id: version
@@ -200,13 +189,13 @@ jobs:
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:${{ steps.version.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache-frontend-web
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-frontend-web,mode=max
           build-args: |
             NEXT_PUBLIC_API_URL=
             NEXT_PUBLIC_SITE_URL=https://okla.com.do
 
       - name: 🧹 Move cache
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          rm -rf /tmp/.buildx-cache-frontend-web
+          mv /tmp/.buildx-cache-new-frontend-web /tmp/.buildx-cache-frontend-web
