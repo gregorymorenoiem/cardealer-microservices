@@ -1,10 +1,13 @@
 name: CI/CD - Tests & Deployment
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  # Disabled: replaced by smart-cicd.yml which runs on self-hosted runner
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual run"
+        required: false
+        default: "manual"
 
 env:
   NODE_VERSION: "20.x"

@@ -25,13 +25,13 @@ on:
         default: "all"
         type: string
 
-  # Trigger automático después de CI exitoso
+  # Trigger automático después de CI exitoso en main
   workflow_run:
     workflows: ["🚀 Smart CI/CD"]
     types:
       - completed
     branches:
-      - development # push a development → deploy automático a staging K8s
+      - main
 
 env:
   REGISTRY: ghcr.io
