@@ -159,8 +159,9 @@ export function VehicleInfoForm({
     if (!data.makeId && !data.make) return '';
     if (data.makeId) {
       // Try to resolve slug from catalog list first (most reliable)
-      const catalogMake = (makes as Array<{ id?: string; name: string; slug?: string }>)
-        .find(m => m.id === data.makeId);
+      const catalogMake = (makes as Array<{ id?: string; name: string; slug?: string }>).find(
+        m => m.id === data.makeId
+      );
       if (catalogMake?.slug) return catalogMake.slug;
       // Fall back to UUID (works with updated backend)
       return data.makeId;
