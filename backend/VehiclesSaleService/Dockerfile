@@ -61,3 +61,5 @@ ENTRYPOINT ["dotnet", "VehiclesSaleService.Api.dll"]
 
 # Wed Feb 25 09:48:42 AST 2026
 # trigger 1772028282
+
+# network-host fix

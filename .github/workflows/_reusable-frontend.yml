@@ -179,6 +179,9 @@ jobs:
         # Docker Desktop on macOS ARM64 already bundles QEMU for linux/amd64 —
         # setup-qemu-action is not needed and causes exit code 1 on Mac runners.
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
 
       - name: � Login to Container Registry
         if: inputs.run-docker-push
@@ -196,12 +199,14 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: 🏗️ Build Docker image
+        timeout-minutes: 45
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.working-directory }}
           file: ${{ inputs.working-directory }}/Dockerfile
           push: ${{ inputs.run-docker-push }}
           platforms: linux/amd64
+          network: host
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:${{ steps.version.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:latest
