@@ -11,6 +11,12 @@ RUN mkdir -p /run/secrets
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["MarketingService/MarketingService.Api/MarketingService.Api.csproj", "MarketingService/MarketingService.Api/"]
 COPY ["MarketingService/MarketingService.Application/MarketingService.Application.csproj", "MarketingService/MarketingService.Application/"]
 COPY ["MarketingService/MarketingService.Domain/MarketingService.Domain.csproj", "MarketingService/MarketingService.Domain/"]

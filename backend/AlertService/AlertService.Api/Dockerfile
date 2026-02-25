@@ -5,6 +5,12 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["backend/AlertService/AlertService.Api/AlertService.Api.csproj", "backend/AlertService/AlertService.Api/"]
 COPY ["backend/AlertService/AlertService.Domain/AlertService.Domain.csproj", "backend/AlertService/AlertService.Domain/"]
 COPY ["backend/AlertService/AlertService.Infrastructure/AlertService.Infrastructure.csproj", "backend/AlertService/AlertService.Infrastructure/"]

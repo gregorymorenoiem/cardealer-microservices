@@ -3,6 +3,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+
 # Copy solution and project files
 COPY ["MessageBusService/MessageBusService.Api/MessageBusService.Api.csproj", "MessageBusService/MessageBusService.Api/"]
 COPY ["MessageBusService/MessageBusService.Application/MessageBusService.Application.csproj", "MessageBusService/MessageBusService.Application/"]

@@ -2,6 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+
 # Copy csproj files and restore
 COPY ["AuditService/AuditService.Api/AuditService.Api.csproj", "AuditService/AuditService.Api/"]
 COPY ["AuditService/AuditService.Application/AuditService.Application.csproj", "AuditService/AuditService.Application/"]

@@ -2,6 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
 WORKDIR /src
 
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+
 # Copy everything and restore
 COPY . .
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj"

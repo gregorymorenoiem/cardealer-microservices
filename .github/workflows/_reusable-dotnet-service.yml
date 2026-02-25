@@ -209,6 +209,7 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: 🏗️ Build Docker image
+        timeout-minutes: 45
         uses: docker/build-push-action@v5
         with:
           context: ./backend

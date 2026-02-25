@@ -2,6 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+
 COPY ["AdvertisingService/AdvertisingService.Api/AdvertisingService.Api.csproj", "AdvertisingService/AdvertisingService.Api/"]
 COPY ["AdvertisingService/AdvertisingService.Application/AdvertisingService.Application.csproj", "AdvertisingService/AdvertisingService.Application/"]
 COPY ["AdvertisingService/AdvertisingService.Domain/AdvertisingService.Domain.csproj", "AdvertisingService/AdvertisingService.Domain/"]
