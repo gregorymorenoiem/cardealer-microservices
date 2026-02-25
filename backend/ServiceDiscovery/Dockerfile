@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -12,7 +13,7 @@ COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Applicatio
 COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
 COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
 
-RUN dotnet restore "ServiceDiscovery/ServiceDiscovery.Api/ServiceDiscovery.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ServiceDiscovery/ServiceDiscovery.Api/ServiceDiscovery.Api.csproj"
 
 # Copy shared source files
 COPY ["_Shared/", "_Shared/"]
@@ -20,11 +21,11 @@ COPY ["_Shared/", "_Shared/"]
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/ServiceDiscovery/ServiceDiscovery.Api"
-RUN dotnet build "ServiceDiscovery.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ServiceDiscovery.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "ServiceDiscovery.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ServiceDiscovery.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -10,17 +11,17 @@ COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDeal
 COPY ["IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj", "IdempotencyService/IdempotencyService.Api/"]
 COPY ["IdempotencyService/IdempotencyService.Core/IdempotencyService.Core.csproj", "IdempotencyService/IdempotencyService.Core/"]
 
-RUN dotnet restore "IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/IdempotencyService/IdempotencyService.Api"
-RUN dotnet build "IdempotencyService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "IdempotencyService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
 WORKDIR "/src/IdempotencyService/IdempotencyService.Api"
-RUN dotnet publish "IdempotencyService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "IdempotencyService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

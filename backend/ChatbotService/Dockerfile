@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -22,7 +23,7 @@ COPY ["ChatbotService/ChatbotService.Domain/ChatbotService.Domain.csproj", "Chat
 COPY ["ChatbotService/ChatbotService.Infrastructure/ChatbotService.Infrastructure.csproj", "ChatbotService/ChatbotService.Infrastructure/"]
 
 # Restore dependencies
-RUN dotnet restore "ChatbotService/ChatbotService.Api/ChatbotService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ChatbotService/ChatbotService.Api/ChatbotService.Api.csproj"
 
 # Copy all source code
 COPY _Shared/ _Shared/
@@ -32,10 +33,10 @@ COPY ChatbotService/ ChatbotService/
 
 # Build
 WORKDIR "/src/ChatbotService/ChatbotService.Api"
-RUN dotnet build "ChatbotService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ChatbotService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ChatbotService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ChatbotService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

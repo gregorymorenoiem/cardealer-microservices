@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
@@ -12,13 +13,13 @@ COPY ["_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csp
 COPY ["_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj", "_Shared/CarDealer.Shared.Observability/"]
 COPY ["_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj", "_Shared/CarDealer.Shared.Audit/"]
 
-RUN dotnet restore "AdvertisingService/AdvertisingService.Api/AdvertisingService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AdvertisingService/AdvertisingService.Api/AdvertisingService.Api.csproj"
 
 COPY . .
 WORKDIR "/src/AdvertisingService/AdvertisingService.Api"
 
 FROM build AS publish
-RUN dotnet publish "AdvertisingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AdvertisingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app

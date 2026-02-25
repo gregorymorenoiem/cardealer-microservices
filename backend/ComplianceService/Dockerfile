@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ComplianceService - Servicio de Cumplimiento Regulatorio
 # Multi-stage build para optimización
 
@@ -15,17 +16,17 @@ COPY ["ComplianceService.Application/ComplianceService.Application.csproj", "Com
 COPY ["ComplianceService.Domain/ComplianceService.Domain.csproj", "ComplianceService.Domain/"]
 COPY ["ComplianceService.Infrastructure/ComplianceService.Infrastructure.csproj", "ComplianceService.Infrastructure/"]
 
-RUN dotnet restore "ComplianceService.Api/ComplianceService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ComplianceService.Api/ComplianceService.Api.csproj"
 
 # Copiar todo el código fuente
 COPY . .
 
 # Build de la aplicación
 WORKDIR "/src/ComplianceService.Api"
-RUN dotnet build "ComplianceService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ComplianceService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ComplianceService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ComplianceService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

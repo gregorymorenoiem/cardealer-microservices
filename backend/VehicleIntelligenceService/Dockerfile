@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -13,7 +14,7 @@ COPY VehicleIntelligenceService/VehicleIntelligenceService.Api/VehicleIntelligen
 
 # Restore dependencies
 WORKDIR /src/VehicleIntelligenceService/VehicleIntelligenceService.Api
-RUN dotnet restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore
 
 # Copy all source code
 WORKDIR /src
@@ -23,11 +24,11 @@ COPY VehicleIntelligenceService/ VehicleIntelligenceService/
 
 # Build the application
 WORKDIR /src/VehicleIntelligenceService/VehicleIntelligenceService.Api
-RUN dotnet build -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

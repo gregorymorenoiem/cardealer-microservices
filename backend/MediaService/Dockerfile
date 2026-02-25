@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -16,7 +17,7 @@ COPY ["MediaService/MediaService.Domain/MediaService.Domain.csproj", "MediaServi
 COPY ["MediaService/MediaService.Infrastructure/MediaService.Infrastructure.csproj", "MediaService/MediaService.Infrastructure/"]
 COPY ["MediaService/MediaService.Shared/MediaService.Shared.csproj", "MediaService/MediaService.Shared/"]
 
-RUN dotnet restore "MediaService/MediaService.Api/MediaService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "MediaService/MediaService.Api/MediaService.Api.csproj"
 
 # Copy everything else
 COPY . .
@@ -24,7 +25,7 @@ WORKDIR "/src/MediaService/MediaService.Api"
 
 # Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
-RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

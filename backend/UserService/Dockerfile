@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -18,16 +19,16 @@ COPY ["UserService/UserService.Domain/UserService.Domain.csproj", "UserService/U
 COPY ["UserService/UserService.Infrastructure/UserService.Infrastructure.csproj", "UserService/UserService.Infrastructure/"]
 COPY ["UserService/UserService.Shared/UserService.Shared.csproj", "UserService/UserService.Shared/"]
 
-RUN dotnet restore "UserService/UserService.Api/UserService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "UserService/UserService.Api/UserService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/UserService/UserService.Api"
-RUN dotnet build "UserService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "UserService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "UserService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "UserService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

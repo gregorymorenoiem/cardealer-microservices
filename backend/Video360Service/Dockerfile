@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
@@ -12,17 +13,17 @@ COPY ["Video360Service.Domain/Video360Service.Domain.csproj", "Video360Service.D
 COPY ["Video360Service.Infrastructure/Video360Service.Infrastructure.csproj", "Video360Service.Infrastructure/"]
 
 # Restore dependencies
-RUN dotnet restore "Video360Service.Api/Video360Service.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "Video360Service.Api/Video360Service.Api.csproj"
 
 # Copy source code
 COPY . .
 
 # Build
 WORKDIR "/src/Video360Service.Api"
-RUN dotnet build "Video360Service.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "Video360Service.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Video360Service.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "Video360Service.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

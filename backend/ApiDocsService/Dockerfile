@@ -1,12 +1,13 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
 WORKDIR /src
 
 # Copy everything and restore
 COPY . .
-RUN dotnet restore "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj"
 
 # Build
-RUN dotnet build "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj" -c Release -o /app/build --no-restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj" -c Release -o /app/build --no-restore
 
 # Change to build output directory
 WORKDIR /app/build

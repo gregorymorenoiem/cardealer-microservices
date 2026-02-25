@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -11,7 +12,7 @@ COPY ["AuthService/AuthService.Shared/AuthService.Shared.csproj", "AuthService/A
 COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
-RUN dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AuthService/AuthService.Api/AuthService.Api.csproj"
 
 # Copy everything else
 COPY . .
@@ -19,7 +20,7 @@ WORKDIR "/src/AuthService/AuthService.Api"
 
 # Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
-RUN dotnet publish "AuthService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AuthService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

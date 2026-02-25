@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -21,7 +22,7 @@ COPY ["ReportsService/ReportsService.Application/ReportsService.Application.cspr
 COPY ["ReportsService/ReportsService.Domain/ReportsService.Domain.csproj", "ReportsService/ReportsService.Domain/"]
 COPY ["ReportsService/ReportsService.Infrastructure/ReportsService.Infrastructure.csproj", "ReportsService/ReportsService.Infrastructure/"]
 
-RUN dotnet restore "ReportsService/ReportsService.Api/ReportsService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ReportsService/ReportsService.Api/ReportsService.Api.csproj"
 
 # Copy shared source code
 COPY ["_Shared/", "_Shared/"]
@@ -30,10 +31,10 @@ COPY ["_Shared/", "_Shared/"]
 COPY ["ReportsService/", "ReportsService/"]
 
 WORKDIR "/src/ReportsService/ReportsService.Api"
-RUN dotnet build "ReportsService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ReportsService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ReportsService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ReportsService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

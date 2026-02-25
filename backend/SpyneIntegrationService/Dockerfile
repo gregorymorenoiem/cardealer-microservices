@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # SpyneIntegrationService
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
@@ -14,17 +15,17 @@ COPY ["SpyneIntegrationService.Domain/SpyneIntegrationService.Domain.csproj", "S
 COPY ["SpyneIntegrationService.Infrastructure/SpyneIntegrationService.Infrastructure.csproj", "SpyneIntegrationService.Infrastructure/"]
 
 # Restore dependencies
-RUN dotnet restore "SpyneIntegrationService.Api/SpyneIntegrationService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "SpyneIntegrationService.Api/SpyneIntegrationService.Api.csproj"
 
 # Copy source code
 COPY . .
 
 # Build
 WORKDIR "/src/SpyneIntegrationService.Api"
-RUN dotnet build "SpyneIntegrationService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "SpyneIntegrationService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "SpyneIntegrationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "SpyneIntegrationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

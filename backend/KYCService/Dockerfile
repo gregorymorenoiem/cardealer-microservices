@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -12,7 +13,7 @@ COPY ["KYCService/KYCService.Application/KYCService.Application.csproj", "KYCSer
 COPY ["KYCService/KYCService.Domain/KYCService.Domain.csproj", "KYCService/KYCService.Domain/"]
 COPY ["KYCService/KYCService.Infrastructure/KYCService.Infrastructure.csproj", "KYCService/KYCService.Infrastructure/"]
 
-RUN dotnet restore "KYCService/KYCService.Api/KYCService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "KYCService/KYCService.Api/KYCService.Api.csproj"
 
 # Copy everything else
 COPY . .
@@ -20,7 +21,7 @@ WORKDIR "/src/KYCService/KYCService.Api"
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "KYCService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "KYCService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

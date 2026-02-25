@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -18,13 +19,13 @@ COPY ["IntegrationService/IntegrationService.Api/IntegrationService.Api.csproj",
 COPY ["IntegrationService/IntegrationService.Application/IntegrationService.Application.csproj", "IntegrationService/IntegrationService.Application/"]
 COPY ["IntegrationService/IntegrationService.Domain/IntegrationService.Domain.csproj", "IntegrationService/IntegrationService.Domain/"]
 COPY ["IntegrationService/IntegrationService.Infrastructure/IntegrationService.Infrastructure.csproj", "IntegrationService/IntegrationService.Infrastructure/"]
-RUN dotnet restore "IntegrationService/IntegrationService.Api/IntegrationService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "IntegrationService/IntegrationService.Api/IntegrationService.Api.csproj"
 COPY . .
 WORKDIR "/src/IntegrationService/IntegrationService.Api"
-RUN dotnet build "IntegrationService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "IntegrationService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "IntegrationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "IntegrationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

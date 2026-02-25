@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -13,13 +14,13 @@ COPY ["AppointmentService/AppointmentService.Domain/AppointmentService.Domain.cs
 COPY ["AppointmentService/AppointmentService.Infrastructure/AppointmentService.Infrastructure.csproj", "AppointmentService/AppointmentService.Infrastructure/"]
 COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
-RUN dotnet restore "AppointmentService/AppointmentService.Api/AppointmentService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AppointmentService/AppointmentService.Api/AppointmentService.Api.csproj"
 COPY . .
 WORKDIR "/src/AppointmentService/AppointmentService.Api"
-RUN dotnet build "AppointmentService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "AppointmentService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "AppointmentService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AppointmentService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

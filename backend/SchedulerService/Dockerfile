@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -13,7 +14,7 @@ COPY ["SchedulerService/SchedulerService.Application/SchedulerService.Applicatio
 COPY ["SchedulerService/SchedulerService.Domain/SchedulerService.Domain.csproj", "SchedulerService/SchedulerService.Domain/"]
 
 # Restore dependencies
-RUN dotnet restore "SchedulerService/SchedulerService.Api/SchedulerService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "SchedulerService/SchedulerService.Api/SchedulerService.Api.csproj"
 
 # Copy everything else
 COPY _Shared/ ./_Shared/
@@ -21,11 +22,11 @@ COPY SchedulerService/ ./SchedulerService/
 
 # Build
 WORKDIR "/src/SchedulerService/SchedulerService.Api"
-RUN dotnet build "SchedulerService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "SchedulerService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "SchedulerService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "SchedulerService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -12,16 +13,16 @@ COPY ["StaffService/StaffService.Application/StaffService.Application.csproj", "
 COPY ["StaffService/StaffService.Domain/StaffService.Domain.csproj", "StaffService/StaffService.Domain/"]
 COPY ["StaffService/StaffService.Infrastructure/StaffService.Infrastructure.csproj", "StaffService/StaffService.Infrastructure/"]
 
-RUN dotnet restore "StaffService/StaffService.Api/StaffService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "StaffService/StaffService.Api/StaffService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/StaffService/StaffService.Api"
-RUN dotnet build "StaffService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "StaffService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "StaffService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "StaffService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

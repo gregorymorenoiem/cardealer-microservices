@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -13,16 +14,16 @@ COPY ["VehiclesSaleService/VehiclesSaleService.Domain/VehiclesSaleService.Domain
 COPY ["VehiclesSaleService/VehiclesSaleService.Infrastructure/VehiclesSaleService.Infrastructure.csproj", "VehiclesSaleService/VehiclesSaleService.Infrastructure/"]
 COPY ["VehiclesSaleService/VehiclesSaleService.Shared/VehiclesSaleService.Shared.csproj", "VehiclesSaleService/VehiclesSaleService.Shared/"]
 
-RUN dotnet restore "VehiclesSaleService/VehiclesSaleService.Api/VehiclesSaleService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "VehiclesSaleService/VehiclesSaleService.Api/VehiclesSaleService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/VehiclesSaleService/VehiclesSaleService.Api"
-RUN dotnet build "VehiclesSaleService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "VehiclesSaleService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "VehiclesSaleService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "VehiclesSaleService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -14,7 +15,7 @@ COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Sha
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
 # Restore dependencies
-RUN dotnet restore "MessageBusService/MessageBusService.Api/MessageBusService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "MessageBusService/MessageBusService.Api/MessageBusService.Api.csproj"
 
 # Copy everything else
 COPY MessageBusService/ MessageBusService/
@@ -23,11 +24,11 @@ COPY _Shared/ _Shared/
 
 # Build
 WORKDIR "/src/MessageBusService/MessageBusService.Api"
-RUN dotnet build "MessageBusService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "MessageBusService.Api.csproj" -c Release -o /app/build
 
 # Publish
 FROM build AS publish
-RUN dotnet publish "MessageBusService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "MessageBusService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage - Alpine para menor superficie de ataque
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime

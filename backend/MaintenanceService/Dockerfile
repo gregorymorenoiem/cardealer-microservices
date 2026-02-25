@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -16,16 +17,16 @@ COPY ["MaintenanceService/MaintenanceService.Api/MaintenanceService.Api.csproj",
 COPY ["MaintenanceService/MaintenanceService.Domain/MaintenanceService.Domain.csproj", "MaintenanceService/MaintenanceService.Domain/"]
 COPY ["MaintenanceService/MaintenanceService.Infrastructure/MaintenanceService.Infrastructure.csproj", "MaintenanceService/MaintenanceService.Infrastructure/"]
 
-RUN dotnet restore "MaintenanceService/MaintenanceService.Api/MaintenanceService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "MaintenanceService/MaintenanceService.Api/MaintenanceService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/MaintenanceService/MaintenanceService.Api"
-RUN dotnet build "MaintenanceService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "MaintenanceService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "MaintenanceService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "MaintenanceService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -17,16 +18,16 @@ COPY ["ConfigurationService/ConfigurationService.Application/ConfigurationServic
 COPY ["ConfigurationService/ConfigurationService.Domain/ConfigurationService.Domain.csproj", "ConfigurationService/ConfigurationService.Domain/"]
 COPY ["ConfigurationService/ConfigurationService.Infrastructure/ConfigurationService.Infrastructure.csproj", "ConfigurationService/ConfigurationService.Infrastructure/"]
 
-RUN dotnet restore "ConfigurationService/ConfigurationService.Api/ConfigurationService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ConfigurationService/ConfigurationService.Api/ConfigurationService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/ConfigurationService/ConfigurationService.Api"
-RUN dotnet build "ConfigurationService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ConfigurationService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "ConfigurationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ConfigurationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage - Alpine para menor superficie de ataque
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

@@ -186,15 +186,6 @@ jobs:
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Cache Docker layers
-      - name: 📦 Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ inputs.service-name }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ inputs.service-name }}-
-
       - name: 🔐 Login to Container Registry
         if: inputs.run-docker-push
         uses: docker/login-action@v3
@@ -213,16 +204,16 @@ jobs:
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.service-name }}
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-${{ inputs.service-name }},mode=max
           build-args: |
             BUILD_VERSION=${{ needs.build-and-test.outputs.version }}
 
-      # Fix cache growth
+      # Fix cache growth — rotates per-service cache directories
       - name: 🧹 Move cache
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          rm -rf /tmp/.buildx-cache-${{ inputs.service-name }}
+          mv /tmp/.buildx-cache-new-${{ inputs.service-name }} /tmp/.buildx-cache-${{ inputs.service-name }}
 
       - name: 🔒 Run Trivy vulnerability scanner
         if: inputs.run-docker-build

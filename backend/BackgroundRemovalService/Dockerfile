@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -13,7 +14,7 @@ COPY ["backend/_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj"
 COPY ["backend/_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj", "_Shared/CarDealer.Shared.ErrorHandling/"]
 
 # Restore dependencies
-RUN dotnet restore "BackgroundRemovalService/BackgroundRemovalService.Api/BackgroundRemovalService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "BackgroundRemovalService/BackgroundRemovalService.Api/BackgroundRemovalService.Api.csproj"
 
 # Copy source code
 COPY backend/BackgroundRemovalService/ BackgroundRemovalService/
@@ -21,7 +22,7 @@ COPY backend/_Shared/ _Shared/
 
 # Build and publish
 WORKDIR /src/BackgroundRemovalService/BackgroundRemovalService.Api
-RUN dotnet publish -c Release -o /app/publish --no-restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish -c Release -o /app/publish --no-restore
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime

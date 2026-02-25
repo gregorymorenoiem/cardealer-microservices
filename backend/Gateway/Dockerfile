@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -16,7 +17,7 @@ COPY ["Gateway/Gateway.Application/Gateway.Application.csproj", "Gateway/Gateway
 COPY ["Gateway/Gateway.Infrastructure/Gateway.Infrastructure.csproj", "Gateway/Gateway.Infrastructure/"]
 COPY ["Gateway/Gateway.Domain/Gateway.Domain.csproj", "Gateway/Gateway.Domain/"]
 
-RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 
 # Copy everything else
 COPY . .
@@ -24,7 +25,7 @@ WORKDIR "/src/Gateway/Gateway.Api"
 
 # Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
-RUN dotnet publish "Gateway.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "Gateway.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

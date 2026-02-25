@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -17,16 +18,16 @@ COPY ["DealerAnalyticsService/DealerAnalyticsService.Application/DealerAnalytics
 COPY ["DealerAnalyticsService/DealerAnalyticsService.Domain/DealerAnalyticsService.Domain.csproj", "DealerAnalyticsService/DealerAnalyticsService.Domain/"]
 COPY ["DealerAnalyticsService/DealerAnalyticsService.Infrastructure/DealerAnalyticsService.Infrastructure.csproj", "DealerAnalyticsService/DealerAnalyticsService.Infrastructure/"]
 
-RUN dotnet restore "DealerAnalyticsService/DealerAnalyticsService.Api/DealerAnalyticsService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "DealerAnalyticsService/DealerAnalyticsService.Api/DealerAnalyticsService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/DealerAnalyticsService/DealerAnalyticsService.Api"
-RUN dotnet build "DealerAnalyticsService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "DealerAnalyticsService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "DealerAnalyticsService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "DealerAnalyticsService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

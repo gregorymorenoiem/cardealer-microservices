@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 
@@ -25,7 +26,7 @@ COPY ["CacheService/CacheService.Application/CacheService.Application.csproj", "
 COPY ["CacheService/CacheService.Domain/CacheService.Domain.csproj", "CacheService/CacheService.Domain/"]
 COPY ["CacheService/CacheService.Infrastructure/CacheService.Infrastructure.csproj", "CacheService/CacheService.Infrastructure/"]
 
-RUN dotnet restore "CacheService/CacheService.Api/CacheService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "CacheService/CacheService.Api/CacheService.Api.csproj"
 
 # Copy all source files
 COPY _Shared/ ./_Shared/
@@ -34,11 +35,11 @@ COPY CacheService/ ./CacheService/
 
 # Build the application
 WORKDIR "/src/CacheService/CacheService.Api"
-RUN dotnet build "CacheService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "CacheService.Api.csproj" -c Release -o /app/build
 
 # Publish the application
 FROM build AS publish
-RUN dotnet publish "CacheService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "CacheService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Final stage
 FROM base AS final

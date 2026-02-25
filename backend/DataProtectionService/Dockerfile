@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -12,16 +13,16 @@ COPY ["DataProtectionService/DataProtectionService.Application/DataProtectionSer
 COPY ["DataProtectionService/DataProtectionService.Domain/DataProtectionService.Domain.csproj", "DataProtectionService/DataProtectionService.Domain/"]
 COPY ["DataProtectionService/DataProtectionService.Infrastructure/DataProtectionService.Infrastructure.csproj", "DataProtectionService/DataProtectionService.Infrastructure/"]
 
-RUN dotnet restore "DataProtectionService/DataProtectionService.Api/DataProtectionService.Api.csproj"
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "DataProtectionService/DataProtectionService.Api/DataProtectionService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/DataProtectionService/DataProtectionService.Api"
-RUN dotnet build "DataProtectionService.Api.csproj" -c Release -o /app/build
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "DataProtectionService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "DataProtectionService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "DataProtectionService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
