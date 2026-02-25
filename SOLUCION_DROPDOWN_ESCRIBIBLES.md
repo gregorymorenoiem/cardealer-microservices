@@ -2,14 +2,16 @@
 
 ## Problema Identificado
 
-En el wizard de publicación de vehículos (`SmartPublishWizard`), los campos dropdown (Marca, Modelo, Tipo de Carrocería, etc.) **NO eran escribibles**. 
+En el wizard de publicación de vehículos (`SmartPublishWizard`), los campos dropdown (Marca, Modelo, Tipo de Carrocería, etc.) **NO eran escribibles**.
 
 Esto causaba que:
+
 - Los datos auto-completados desde el VIN **no podían editarse**
 - Los usuarios no podían **buscar/filtrar** opciones rápidamente
 - Los datos se quedaban con el valor original del VIN sin poder cambiarlos
 
 ### Ejemplo del Problema:
+
 ```
 Marca: Toyota (del VIN - NO se puede cambiar)
 Modelo: Corolla (del VIN - NO se puede cambiar)
@@ -27,6 +29,7 @@ Aunque el usuario quisiera cambiar a "Honda Civic", no podía escribir en el dro
 **Archivo:** `src/components/ui/searchable-select.tsx`
 
 Características:
+
 - ✅ **Escribible** - Permite escribir para filtrar opciones
 - ✅ **Searchable** - Busca en label Y value
 - ✅ **Keyboard Navigation** - Soporta Escape, Enter, etc.
@@ -50,6 +53,7 @@ Características:
 ### 2. Actualizado: `vehicle-info-form.tsx`
 
 Cambios:
+
 - Reemplazó `<select>` HTML (read-only) con `<SearchableSelect />` (escribible)
 - Mantiene toda la lógica de VIN auto-fill y validación
 - Compatible con los campos auto-completados (muestra badge "VIN")
@@ -123,4 +127,3 @@ frontend/web-next/
 1. **Agregar validación visual** en SearchableSelect cuando no hay resultados
 2. **Implementar lazy-load** si hay muchas opciones (ej: colores)
 3. **Agregar keyboard shortcuts** para acceso rápido (ej: ↑↓ para navegar)
-
