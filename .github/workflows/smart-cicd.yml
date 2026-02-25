@@ -5,9 +5,9 @@
 # Ahorra ~80% de minutos de GitHub Actions
 #
 # Branching Strategy:
-#   - main: Producción (deploy automático a DOKS)
-#   - development: Staging/Integración (build + tests)
-#   - sprint/*: Solo tests, no build imágenes
+#   - main:        CI/CD completo (build + test + push Docker images). Sin auto-deploy.
+#   - development: CI/CD completo (build + test + push Docker images) + auto-deploy a K8s DOKS (staging).
+#   - sprint/*:    Solo tests, no build imágenes.
 # =============================================================================
 
 name: 🚀 Smart CI/CD
@@ -331,7 +331,7 @@ jobs:
     with:
       service-name: authservice
       service-path: backend/AuthService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   userservice:
@@ -342,7 +342,7 @@ jobs:
     with:
       service-name: userservice
       service-path: backend/UserService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   roleservice:
@@ -353,7 +353,7 @@ jobs:
     with:
       service-name: roleservice
       service-path: backend/RoleService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   errorservice:
@@ -364,7 +364,7 @@ jobs:
     with:
       service-name: errorservice
       service-path: backend/ErrorService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   notificationservice:
@@ -375,7 +375,7 @@ jobs:
     with:
       service-name: notificationservice
       service-path: backend/NotificationService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   vehiclessaleservice:
@@ -386,7 +386,7 @@ jobs:
     with:
       service-name: vehiclessaleservice
       service-path: backend/VehiclesSaleService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   mediaservice:
@@ -397,7 +397,7 @@ jobs:
     with:
       service-name: mediaservice
       service-path: backend/MediaService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   billingservice:
@@ -408,7 +408,7 @@ jobs:
     with:
       service-name: billingservice
       service-path: backend/BillingService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   kycservice:
@@ -419,7 +419,7 @@ jobs:
     with:
       service-name: kycservice
       service-path: backend/KYCService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   auditservice:
@@ -430,7 +430,7 @@ jobs:
     with:
       service-name: auditservice
       service-path: backend/AuditService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   idempotencyservice:
@@ -441,7 +441,7 @@ jobs:
     with:
       service-name: idempotencyservice
       service-path: backend/IdempotencyService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   adminservice:
@@ -452,7 +452,7 @@ jobs:
     with:
       service-name: adminservice
       service-path: backend/AdminService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -467,7 +467,7 @@ jobs:
     with:
       service-name: contactservice
       service-path: backend/ContactService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   reviewservice:
@@ -478,7 +478,7 @@ jobs:
     with:
       service-name: reviewservice
       service-path: backend/ReviewService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   dealermanagementservice:
@@ -489,7 +489,7 @@ jobs:
     with:
       service-name: dealermanagementservice
       service-path: backend/DealerManagementService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   dealeranalyticsservice:
@@ -500,7 +500,7 @@ jobs:
     with:
       service-name: dealeranalyticsservice
       service-path: backend/DealerAnalyticsService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   crmservice:
@@ -511,7 +511,7 @@ jobs:
     with:
       service-name: crmservice
       service-path: backend/CRMService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   maintenanceservice:
@@ -522,7 +522,7 @@ jobs:
     with:
       service-name: maintenanceservice
       service-path: backend/MaintenanceService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   comparisonservice:
@@ -533,7 +533,7 @@ jobs:
     with:
       service-name: comparisonservice
       service-path: backend/ComparisonService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   alertservice:
@@ -544,7 +544,7 @@ jobs:
     with:
       service-name: alertservice
       service-path: backend/AlertService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   appointmentservice:
@@ -555,7 +555,7 @@ jobs:
     with:
       service-name: appointmentservice
       service-path: backend/AppointmentService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   marketingservice:
@@ -566,7 +566,7 @@ jobs:
     with:
       service-name: marketingservice
       service-path: backend/MarketingService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   staffservice:
@@ -577,7 +577,7 @@ jobs:
     with:
       service-name: staffservice
       service-path: backend/StaffService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   reportsservice:
@@ -588,7 +588,7 @@ jobs:
     with:
       service-name: reportsservice
       service-path: backend/ReportsService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   inventorymanagementservice:
@@ -599,7 +599,7 @@ jobs:
     with:
       service-name: inventorymanagementservice
       service-path: backend/InventoryManagementService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -614,7 +614,7 @@ jobs:
     with:
       service-name: paymentservice
       service-path: backend/PaymentService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -629,7 +629,7 @@ jobs:
     with:
       service-name: aiprocessingservice
       service-path: backend/AIProcessingService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   vehicleintelligenceservice:
@@ -640,7 +640,7 @@ jobs:
     with:
       service-name: vehicleintelligenceservice
       service-path: backend/VehicleIntelligenceService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   recommendationservice:
@@ -651,7 +651,7 @@ jobs:
     with:
       service-name: recommendationservice
       service-path: backend/RecommendationService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   leadscoringservice:
@@ -662,7 +662,7 @@ jobs:
     with:
       service-name: leadscoringservice
       service-path: backend/LeadScoringService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   backgroundremovalservice:
@@ -673,7 +673,7 @@ jobs:
     with:
       service-name: backgroundremovalservice
       service-path: backend/BackgroundRemovalService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   vehicle360processingservice:
@@ -684,7 +684,7 @@ jobs:
     with:
       service-name: vehicle360processingservice
       service-path: backend/Vehicle360ProcessingService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -699,7 +699,7 @@ jobs:
     with:
       service-name: cacheservice
       service-path: backend/CacheService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   messagebusservice:
@@ -710,7 +710,7 @@ jobs:
     with:
       service-name: messagebusservice
       service-path: backend/MessageBusService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   configurationservice:
@@ -721,7 +721,7 @@ jobs:
     with:
       service-name: configurationservice
       service-path: backend/ConfigurationService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   schedulerservice:
@@ -732,7 +732,7 @@ jobs:
     with:
       service-name: schedulerservice
       service-path: backend/SchedulerService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   ratelimitingservice:
@@ -743,7 +743,7 @@ jobs:
     with:
       service-name: ratelimitingservice
       service-path: backend/RateLimitingService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   servicediscovery:
@@ -754,7 +754,7 @@ jobs:
     with:
       service-name: servicediscovery
       service-path: backend/ServiceDiscovery
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   apidocsservice:
@@ -765,7 +765,7 @@ jobs:
     with:
       service-name: apidocsservice
       service-path: backend/ApiDocsService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   integrationservice:
@@ -776,7 +776,7 @@ jobs:
     with:
       service-name: integrationservice
       service-path: backend/IntegrationService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -791,7 +791,7 @@ jobs:
     with:
       service-name: dataprotectionservice
       service-path: backend/DataProtectionService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -806,7 +806,7 @@ jobs:
     with:
       service-name: advertisingservice
       service-path: backend/AdvertisingService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -821,7 +821,7 @@ jobs:
     with:
       service-name: chatbotservice
       service-path: backend/ChatbotService
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -837,7 +837,7 @@ jobs:
       service-name: gateway
       service-path: backend/Gateway
       run-tests: false
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================
@@ -850,7 +850,7 @@ jobs:
     if: needs.detect-changes.outputs.frontend-web == 'true'
     uses: ./.github/workflows/_reusable-frontend.yml
     with:
-      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+      run-docker-push: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' }}
     secrets: inherit
 
   # ============================================

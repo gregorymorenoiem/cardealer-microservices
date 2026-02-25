@@ -31,7 +31,7 @@ on:
     types:
       - completed
     branches:
-      - main
+      - development # push a development → deploy automático a staging K8s
 
 env:
   REGISTRY: ghcr.io
@@ -44,7 +44,7 @@ jobs:
   prepare:
     name: 📋 Prepare Deployment
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'development' || github.event.workflow_run.head_branch == 'main')) || github.event_name == 'workflow_dispatch' }}
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
       version: ${{ steps.version.outputs.version }}
@@ -59,6 +59,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.workflow_run.head_branch }}" == "main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
           else
             echo "environment=staging" >> $GITHUB_OUTPUT
           fi
