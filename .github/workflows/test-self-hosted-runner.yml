@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/test-self-hosted-runner.yml'
+      - ".github/workflows/test-self-hosted-runner.yml"
     branches: [main]
 
 jobs:
@@ -84,11 +84,7 @@ jobs:
           docker buildx create --use --name okla-test-builder 2>/dev/null || true
 
           # Build linux/amd64 test image
-          cat > /tmp/TestDockerfile << 'EOF'
-FROM --platform=linux/amd64 alpine:3.20
-RUN echo "Built by self-hosted runner on $(uname -m)" > /hello.txt
-CMD ["cat", "/hello.txt"]
-EOF
+          printf 'FROM --platform=linux/amd64 alpine:3.20\nRUN echo "Built by self-hosted runner" > /hello.txt\nCMD ["cat", "/hello.txt"]\n' > /tmp/TestDockerfile
           docker buildx build \
             --platform linux/amd64 \
             --file /tmp/TestDockerfile \
