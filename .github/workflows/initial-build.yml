@@ -26,7 +26,7 @@ env:
 jobs:
   build-all:
     name: 🏗️ Build All Services
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     if: ${{ inputs.confirm == 'build-all' }}
 
     strategy:

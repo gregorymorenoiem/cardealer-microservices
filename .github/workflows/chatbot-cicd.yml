@@ -63,7 +63,7 @@ jobs:
   # ============================================
   detect-changes:
     name: 🔍 Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     outputs:
       chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
       llm-server: ${{ steps.filter.outputs.llm-server }}
@@ -110,7 +110,7 @@ jobs:
     name: 🔨 Build ChatbotService
     needs: detect-changes
     if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - uses: actions/checkout@v4
@@ -160,7 +160,7 @@ jobs:
     name: 🐳 Docker ChatbotService
     needs: [detect-changes, build-chatbotservice]
     if: always() && (needs.build-chatbotservice.result == 'success' || needs.detect-changes.outputs.chatbotservice != 'true')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - uses: actions/checkout@v4
@@ -201,7 +201,7 @@ jobs:
     name: 🐳 Docker LLM Server
     needs: detect-changes
     if: needs.detect-changes.outputs.llm-server == 'true' || github.event.inputs.force_deploy == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - uses: actions/checkout@v4
@@ -247,18 +247,13 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.inputs.skip_eval_gate != 'true' &&
       !contains(needs.*.result, 'failure')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: 📦 Install eval dependencies
+      - name: � Install eval dependencies
         run: |
-          pip install requests tqdm
+          pip3 install requests tqdm
 
       - name: 🔍 Validate model-registry.json
         run: |
@@ -362,16 +357,15 @@ jobs:
       always() &&
       github.ref == 'refs/heads/main' &&
       !contains(needs.*.result, 'failure')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     environment: production
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔧 Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: 🔐 Setup Kubernetes
         run: doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
@@ -379,8 +373,8 @@ jobs:
       - name: 🏷️ Update image tags in manifest
         run: |
           VERSION="${{ needs.detect-changes.outputs.version }}"
-          sed -i "s|ghcr.io/gregorymorenoiem/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
-          sed -i "s|ghcr.io/gregorymorenoiem/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i '' "s|ghcr.io/gregorymorenoiem/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i '' "s|ghcr.io/gregorymorenoiem/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
 
       - name: 🚀 Apply Kubernetes manifests
         run: |
@@ -401,7 +395,7 @@ jobs:
           echo "🔍 Running smoke tests..."
 
           # Install smoke test dependencies
-          pip install requests > /dev/null 2>&1
+          pip3 install requests > /dev/null 2>&1
 
           # Check if LLM Server is running (may be scaled to 0 for GPU cost savings)
           LLM_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
@@ -473,7 +467,7 @@ jobs:
         deploy,
       ]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📊 Generate summary

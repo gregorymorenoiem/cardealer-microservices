@@ -19,7 +19,7 @@ jobs:
   # ==========================================
   backend-tests:
     name: Backend Tests (.NET 8)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     strategy:
       matrix:
@@ -72,7 +72,7 @@ jobs:
   # ==========================================
   frontend-unit-tests:
     name: Frontend Unit Tests (Vitest)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout code
@@ -122,7 +122,7 @@ jobs:
   # ==========================================
   frontend-e2e-tests:
     name: Frontend E2E Tests (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout code
@@ -144,7 +144,7 @@ jobs:
 
       - name: Install Playwright Browsers
         working-directory: frontend/web-next
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       - name: Run E2E tests
         working-directory: frontend/web-next
@@ -164,7 +164,7 @@ jobs:
   # ==========================================
   code-quality:
     name: Code Quality Checks
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout code
@@ -197,7 +197,7 @@ jobs:
   # ==========================================
   docker-build:
     name: Docker Build - ${{ matrix.service }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: [backend-tests]
 
     strategy:
@@ -233,7 +233,7 @@ jobs:
   # ==========================================
   integration-tests:
     name: Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: [docker-build]
     # Skip integration tests by default — enable manually if needed
     if: false
@@ -266,7 +266,7 @@ jobs:
   # ==========================================
   deploy-staging:
     name: Deploy to Staging
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs:
       [frontend-unit-tests, frontend-e2e-tests, backend-tests, code-quality]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -288,7 +288,7 @@ jobs:
   # ==========================================
   security-scan:
     name: Security Scanning
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout code
