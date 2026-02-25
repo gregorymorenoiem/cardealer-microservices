@@ -960,6 +960,7 @@ export interface CreateVehicleRequest {
   sellerName?: string;
   sellerPhone?: string;
   sellerEmail?: string;
+  sellerWhatsApp?: string;
   isNegotiable?: boolean;
 }
 
@@ -1044,6 +1045,7 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
     sellerName: data.sellerName,
     sellerPhone: data.sellerPhone,
     sellerEmail: data.sellerEmail,
+    sellerWhatsApp: data.sellerWhatsApp,
     // Appearance
     exteriorColor: data.exteriorColor,
     interiorColor: data.interiorColor,

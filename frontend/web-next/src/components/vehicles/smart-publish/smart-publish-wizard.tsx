@@ -12,6 +12,8 @@ import { PricingStep } from './pricing-step';
 import { ReviewStep } from './review-step';
 import { CsvImportWizard } from './csv-import-wizard';
 import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
+import { useSellerByUserId } from '@/hooks/use-seller';
+import { useAuth } from '@/hooks/use-auth';
 import type { SmartVinDecodeResult, CreateVehicleRequest } from '@/services/vehicles';
 import type { CsvVehicleRow } from './csv-import-wizard';
 import { toast } from 'sonner';
@@ -160,15 +162,46 @@ export function SmartPublishWizard({
   userId,
 }: SmartPublishWizardProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<WizardStep>('method');
   const [formData, setFormData] = useState<VehicleFormData>(initialFormData);
   const [vinDecodeResult, setVinDecodeResult] = useState<SmartVinDecodeResult | null>(null);
   const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const createVehicle = useCreateVehicle();
   const publishVehicle = usePublishVehicle();
   const draftKey = `${DRAFT_KEY_PREFIX}${userId || dealerId || 'anonymous'}`;
+
+  // Fetch seller profile to pre-populate location and contact fields
+  const { data: sellerProfile, isLoading: sellerProfileLoading } = useSellerByUserId(userId);
+
+  // Pre-populate form data from seller profile + authenticated user (runs once on profile load)
+  // We wait for the seller profile query to complete before populating to avoid partial updates.
+  useEffect(() => {
+    if (profileLoaded) return;
+    if (!user) return;
+    // If userId is provided, wait for the seller profile query to finish loading
+    if (userId && sellerProfileLoading) return;
+
+    const updates: Partial<VehicleFormData> = {};
+
+    // Location from seller profile
+    if (sellerProfile?.state) updates.province = sellerProfile.state;
+    if (sellerProfile?.city) updates.city = sellerProfile.city;
+
+    // Contact from seller profile + user
+    if (sellerProfile?.fullName) updates.sellerName = sellerProfile.fullName;
+    if (user?.phone) updates.sellerPhone = user.phone;
+    if (user?.email) updates.sellerEmail = user.email;
+    if (sellerProfile?.whatsApp) updates.sellerWhatsApp = sellerProfile.whatsApp;
+
+    if (Object.keys(updates).length > 0) {
+      setFormData(prev => ({ ...prev, ...updates }));
+    }
+    setProfileLoaded(true);
+  }, [sellerProfile, sellerProfileLoading, user, userId, profileLoaded]);
 
   // Check for existing draft on mount
   useEffect(() => {
@@ -279,15 +312,18 @@ export function SmartPublishWizard({
           filled.add('vehicleType');
         }
         if (af.bodyStyle) {
-          updates.bodyStyle = af.bodyStyle;
+          // Normalize to lowercase to match catalog option values (e.g. "SUV" → "suv")
+          updates.bodyStyle = af.bodyStyle.toLowerCase();
           filled.add('bodyStyle');
         }
         if (af.fuelType) {
-          updates.fuelType = af.fuelType;
+          // Normalize to lowercase to match catalog option values (e.g. "Gasoline" → "gasoline")
+          updates.fuelType = af.fuelType.toLowerCase();
           filled.add('fuelType');
         }
         if (af.transmission) {
-          updates.transmission = af.transmission;
+          // Normalize to lowercase to match catalog option values (e.g. "CVT" → "cvt")
+          updates.transmission = af.transmission.toLowerCase();
           filled.add('transmission');
         }
         if (af.driveType) {
@@ -308,6 +344,7 @@ export function SmartPublishWizard({
         }
       }
       // Catalog IDs and extra fields from top-level result
+      // These IDs are used by VehicleInfoForm to resolve canonical make/model names from catalog
       if (result.catalogMakeId) updates.makeId = result.catalogMakeId;
       if (result.catalogModelId) updates.modelId = result.catalogModelId;
       if (result.catalogTrimId) updates.trimId = result.catalogTrimId;
@@ -376,6 +413,7 @@ export function SmartPublishWizard({
       sellerName: formData.sellerName || undefined,
       sellerPhone: formData.sellerPhone || undefined,
       sellerEmail: formData.sellerEmail || undefined,
+      sellerWhatsApp: formData.sellerWhatsApp || undefined,
       isNegotiable: formData.isNegotiable,
     };
 

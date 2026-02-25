@@ -30,15 +30,46 @@ export interface SellerProfile {
   id: string;
   userId: string;
   fullName: string;
+  displayName?: string;
   bio?: string;
+  avatarUrl?: string;
+
+  // Contact — phone and email live on the User entity (FASE 3 decision)
+  whatsApp?: string;
+
+  // Location
+  address?: string;
   city?: string;
-  state?: string;
-  specialties?: string[];
+  state?: string; // Province in DR context
+  zipCode?: string;
+  country?: string;
+
+  // Verification
+  verificationStatus?: number;
   isVerified: boolean;
+  verifiedAt?: string;
+
+  // Metrics
   averageRating: number;
   totalReviews: number;
   totalListings: number;
+  activeListings?: number;
+  totalSales?: number;
   activeSales: number;
+
+  // Configuration
+  isActive?: boolean;
+  acceptsOffers?: boolean;
+  showPhone?: boolean;
+  showLocation?: boolean;
+  preferredContactMethod?: string;
+  maxActiveListings?: number;
+  canSellHighValue?: boolean;
+
+  // Specialties
+  specialties?: string[];
+
+  // Audit
   memberSince: string;
   createdAt: string;
   updatedAt?: string;

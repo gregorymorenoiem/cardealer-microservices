@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import {
   useMakes,
   useModelsByMake,
@@ -8,12 +8,11 @@ import {
   useFuelTypes,
   useTransmissions,
   useColors,
-  useProvinces,
   useFeatures,
 } from '@/hooks/use-vehicles';
 import type { VehicleFormData } from './smart-publish-wizard';
 import { sanitizeText, sanitizeMileage, sanitizeYear } from '@/lib/security/sanitize';
-import { Check, ChevronDown, Sparkles } from 'lucide-react';
+import { Check, ChevronDown, Sparkles, MapPin, User } from 'lucide-react';
 
 // ============================================================
 // Static Data
@@ -163,8 +162,29 @@ export function VehicleInfoForm({
   const { data: fuelTypes = [], isLoading: fuelLoading } = useFuelTypes();
   const { data: transmissions = [], isLoading: transLoading } = useTransmissions();
   const { data: colors = [], isLoading: colorsLoading } = useColors();
-  const { data: provinces = [], isLoading: provLoading } = useProvinces();
   const { data: featuresByCategory = {} } = useFeatures();
+
+  // ── Sync canonical make name from catalog when a makeId is set (e.g. from VIN decode) ──
+  // VIN decode may return make as "HONDA" (uppercase) while catalog stores "Honda".
+  // Using the catalogMakeId we can resolve the correct name after catalog data loads.
+  useEffect(() => {
+    if (!data.makeId || makes.length === 0) return;
+    const catalogMake = makes.find((m: { id?: string; name: string }) => m.id === data.makeId);
+    if (catalogMake && catalogMake.name !== data.make) {
+      onChange({ make: catalogMake.name });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.makeId, makes]);
+
+  // ── Sync canonical model name from catalog when a modelId is set (e.g. from VIN decode) ──
+  useEffect(() => {
+    if (!data.modelId || models.length === 0) return;
+    const catalogModel = models.find((m: { id?: string; name: string }) => m.id === data.modelId);
+    if (catalogModel && catalogModel.name !== data.model) {
+      onChange({ model: catalogModel.name });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.modelId, models]);
 
   // Derived options
   const makeOptions = useMemo(
@@ -209,12 +229,6 @@ export function VehicleInfoForm({
   const colorOptions = useMemo(
     () => colors.map((c: { value: string; label: string }) => ({ value: c.value, label: c.label })),
     [colors]
-  );
-
-  const provOptions = useMemo(
-    () =>
-      provinces.map((p: { value: string; label: string }) => ({ value: p.value, label: p.label })),
-    [provinces]
   );
 
   const yearOptions = useMemo(
@@ -468,55 +482,59 @@ export function VehicleInfoForm({
         </div>
       </section>
 
-      {/* ── Section: Location ── */}
+      {/* ── Section: Location (read-only from seller profile) ── */}
       <section>
         <h3 className="mb-4 text-sm font-semibold tracking-wider text-gray-500 uppercase">
           Ubicación
         </h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <SelectField
-            label="Provincia"
-            value={data.province}
-            onChange={val => onChange({ province: val, city: '' })}
-            options={provOptions}
-            isLoading={provLoading}
-            required
-          />
-          <TextField
-            label="Ciudad / Sector"
-            value={data.city}
-            onChange={val => onChange({ city: sanitizeText(val, { maxLength: 100 }) })}
-            placeholder="Ej: Piantini, Naco..."
-            required
-          />
+        <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+          <div>
+            <p className="text-sm font-medium text-emerald-800">
+              {[data.city, data.province].filter(Boolean).join(', ') || 'No configurada'}
+            </p>
+            <p className="mt-0.5 text-xs text-emerald-600">
+              Ubicación tomada de tu perfil de vendedor.{' '}
+              <a href="/cuenta/perfil" className="underline hover:text-emerald-800">
+                Editar perfil
+              </a>
+            </p>
+          </div>
         </div>
       </section>
 
       {/* ── Section: Contact ── */}
       <section>
         <h3 className="mb-4 text-sm font-semibold tracking-wider text-gray-500 uppercase">
-          Información de Contacto
+          Contacto para esta publicación
         </h3>
+
+        {/* Profile data summary (read-only) */}
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <User className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-500" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-800">
+              {data.sellerName || 'Nombre de tu perfil'}
+            </p>
+            <p className="text-xs text-gray-500">{data.sellerEmail || 'Email de tu perfil'}</p>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Nombre y correo se toman de tu perfil de vendedor.{' '}
+              <a href="/cuenta/perfil" className="underline hover:text-gray-600">
+                Editar perfil
+              </a>
+            </p>
+          </div>
+        </div>
+
+        {/* Editable contact fields for this listing */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
-            label="Nombre"
-            value={data.sellerName}
-            onChange={val => onChange({ sellerName: sanitizeText(val, { maxLength: 100 }) })}
-            placeholder="Tu nombre"
-          />
-          <TextField
-            label="Teléfono"
+            label="Teléfono para esta publicación"
             value={data.sellerPhone}
             onChange={val =>
               onChange({ sellerPhone: val.replace(/[^\d\-+() ]/g, '').slice(0, 15) })
             }
             placeholder="809-000-0000"
-          />
-          <TextField
-            label="Email"
-            value={data.sellerEmail}
-            onChange={val => onChange({ sellerEmail: val.trim().toLowerCase() })}
-            placeholder="correo@ejemplo.com"
           />
           <TextField
             label="WhatsApp"
@@ -527,6 +545,10 @@ export function VehicleInfoForm({
             placeholder="809-000-0000"
           />
         </div>
+        <p className="mt-2 text-xs text-gray-400">
+          El teléfono puede ser diferente al registrado en tu perfil (p. ej. número de negocio
+          específico para este anuncio).
+        </p>
       </section>
     </div>
   );

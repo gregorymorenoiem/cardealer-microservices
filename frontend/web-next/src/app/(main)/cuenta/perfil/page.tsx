@@ -841,7 +841,10 @@ export default function ProfilePage() {
 
                   {/* Specialties badges */}
                   <div className="space-y-3">
-                    <Label>Especialidades <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                    <Label>
+                      Especialidades{' '}
+                      <span className="text-muted-foreground font-normal">(opcional)</span>
+                    </Label>
                     <p className="text-muted-foreground text-xs">
                       Toca las especialidades en las que te enfocas
                     </p>
