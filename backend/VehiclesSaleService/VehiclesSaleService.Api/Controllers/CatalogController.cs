@@ -507,7 +507,7 @@ public class CatalogController : ControllerBase
             var modelName = nhtsaResult.Model ?? string.Empty;
             var trimName = nhtsaResult.Trim;
 
-            // 5. Match against local catalog (fuzzy match)
+            // 5. Match against local catalog (fuzzy match) — auto-inserts make/model when not found
             Guid? catalogMakeId = null;
             Guid? catalogModelId = null;
             Guid? catalogTrimId = null;
@@ -521,41 +521,66 @@ public class CatalogController : ControllerBase
                     m.Name.Contains(makeName, StringComparison.OrdinalIgnoreCase) ||
                     makeName.Contains(m.Name, StringComparison.OrdinalIgnoreCase));
 
-                if (matchedMake != null)
+                // Auto-create the make if not found in catalog
+                if (matchedMake == null)
                 {
-                    catalogMakeId = matchedMake.Id;
-                    hasCatalogMatch = true;
-
-                    if (!string.IsNullOrWhiteSpace(modelName))
+                    _logger.LogInformation("VIN {VIN}: Make '{Make}' not found in catalog — auto-adding", vin, makeName);
+                    matchedMake = await _catalogRepository.UpsertMakeAsync(new VehicleMake
                     {
-                        var models = await _catalogRepository.GetModelsByMakeIdAsync(matchedMake.Id);
-                        var matchedModel = models.FirstOrDefault(m =>
-                            m.Name.Equals(modelName, StringComparison.OrdinalIgnoreCase) ||
-                            m.Name.Contains(modelName, StringComparison.OrdinalIgnoreCase) ||
-                            modelName.Contains(m.Name, StringComparison.OrdinalIgnoreCase));
+                        Name = makeName,
+                        Slug = ToSlug(makeName),
+                        Country = nhtsaResult.PlantCountry,
+                        IsActive = true,
+                        IsPopular = false
+                    });
+                }
 
-                        if (matchedModel != null)
+                catalogMakeId = matchedMake.Id;
+                hasCatalogMatch = true;
+
+                if (!string.IsNullOrWhiteSpace(modelName))
+                {
+                    var models = await _catalogRepository.GetModelsByMakeIdAsync(matchedMake.Id);
+                    var matchedModel = models.FirstOrDefault(m =>
+                        m.Name.Equals(modelName, StringComparison.OrdinalIgnoreCase) ||
+                        m.Name.Contains(modelName, StringComparison.OrdinalIgnoreCase) ||
+                        modelName.Contains(m.Name, StringComparison.OrdinalIgnoreCase));
+
+                    // Auto-create the model if not found under this make
+                    if (matchedModel == null)
+                    {
+                        _logger.LogInformation("VIN {VIN}: Model '{Model}' not found for make '{Make}' — auto-adding", vin, modelName, makeName);
+                        matchedModel = await _catalogRepository.UpsertModelAsync(new VehicleModel
                         {
-                            catalogModelId = matchedModel.Id;
+                            MakeId = matchedMake.Id,
+                            Name = modelName,
+                            Slug = ToSlug(modelName),
+                            VehicleType = ParseVehicleTypeEnum(vehicleType),
+                            DefaultBodyStyle = ParseBodyStyleEnum(bodyStyle),
+                            StartYear = year > 0 ? year : null,
+                            IsActive = true,
+                            IsPopular = false
+                        });
+                    }
 
-                            if (year > 0)
-                            {
-                                var trims = await _catalogRepository.GetTrimsByModelAndYearAsync(matchedModel.Id, year);
-                                var matchedTrim = trims.FirstOrDefault(t =>
-                                    !string.IsNullOrWhiteSpace(trimName) &&
-                                    (t.Name.Equals(trimName, StringComparison.OrdinalIgnoreCase) ||
-                                     t.Name.Contains(trimName, StringComparison.OrdinalIgnoreCase)));
+                    catalogModelId = matchedModel.Id;
 
-                                if (matchedTrim != null)
-                                {
-                                    catalogTrimId = matchedTrim.Id;
-                                    // Enrich with trim specs if NHTSA data was incomplete
-                                    if (horsepower == 0 && matchedTrim.Horsepower.HasValue)
-                                        horsepower = matchedTrim.Horsepower.Value;
-                                    if (string.IsNullOrEmpty(engineSize) && !string.IsNullOrEmpty(matchedTrim.EngineSize))
-                                        engineSize = matchedTrim.EngineSize;
-                                }
-                            }
+                    if (year > 0)
+                    {
+                        var trims = await _catalogRepository.GetTrimsByModelAndYearAsync(matchedModel.Id, year);
+                        var matchedTrim = trims.FirstOrDefault(t =>
+                            !string.IsNullOrWhiteSpace(trimName) &&
+                            (t.Name.Equals(trimName, StringComparison.OrdinalIgnoreCase) ||
+                             t.Name.Contains(trimName, StringComparison.OrdinalIgnoreCase)));
+
+                        if (matchedTrim != null)
+                        {
+                            catalogTrimId = matchedTrim.Id;
+                            // Enrich with trim specs if NHTSA data was incomplete
+                            if (horsepower == 0 && matchedTrim.Horsepower.HasValue)
+                                horsepower = matchedTrim.Horsepower.Value;
+                            if (string.IsNullOrEmpty(engineSize) && !string.IsNullOrEmpty(matchedTrim.EngineSize))
+                                engineSize = matchedTrim.EngineSize;
                         }
                     }
                 }
@@ -857,6 +882,39 @@ public class CatalogController : ControllerBase
             _ => "FWD"
         };
     }
+
+    /// <summary>Converts a display name to a URL-friendly slug.</summary>
+    private static string ToSlug(string name)
+        => System.Text.RegularExpressions.Regex
+            .Replace(name.ToLowerInvariant().Trim(), @"[^a-z0-9]+", "-")
+            .Trim('-');
+
+    /// <summary>Parses the mapped vehicle-type string back to the domain enum.</summary>
+    private static VehicleType ParseVehicleTypeEnum(string vehicleTypeStr) => vehicleTypeStr switch
+    {
+        "Truck"      => VehicleType.Truck,
+        "SUV"        => VehicleType.SUV,
+        "Van"        => VehicleType.Van,
+        "Motorcycle" => VehicleType.Motorcycle,
+        "Commercial" => VehicleType.Commercial,
+        _            => VehicleType.Car
+    };
+
+    /// <summary>Parses the mapped body-style string back to the domain enum (nullable).</summary>
+    private static BodyStyle? ParseBodyStyleEnum(string bodyStyleStr) => bodyStyleStr switch
+    {
+        "SUV"         => BodyStyle.SUV,
+        "Pickup"      => BodyStyle.Pickup,
+        "Minivan"     => BodyStyle.Minivan,
+        "Van"         => BodyStyle.Van,
+        "Coupe"       => BodyStyle.Coupe,
+        "Convertible" => BodyStyle.Convertible,
+        "Hatchback"   => BodyStyle.Hatchback,
+        "Wagon"       => BodyStyle.Wagon,
+        "Crossover"   => BodyStyle.Crossover,
+        "Sedan"       => BodyStyle.Sedan,
+        _             => null
+    };
 
     private static string MapBodyStyle(string? nhtsaBodyClass)
     {
