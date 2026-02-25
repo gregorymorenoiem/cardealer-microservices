@@ -111,10 +111,12 @@ public class CatalogController : ControllerBase
     // ========================================
 
     /// <summary>
-    /// Obtiene todos los modelos de una marca.
+    /// Obtiene todos los modelos de una marca por slug, UUID o nombre.
     /// </summary>
     /// <remarks>
-    /// Ejemplo: GET /api/catalog/makes/toyota/models
+    /// Ejemplo: GET /api/catalog/makes/toyota/models           (slug)
+    /// Ejemplo: GET /api/catalog/makes/HONDA/models            (name, case-insensitive)
+    /// Ejemplo: GET /api/catalog/makes/{uuid}/models           (UUID from VIN decode)
     /// Retorna: Camry, Corolla, RAV4, Tacoma, etc.
     /// </remarks>
     [HttpGet("makes/{makeSlug}/models")]
@@ -122,11 +124,38 @@ public class CatalogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<ModelDto>>> GetModelsByMake(string makeSlug)
     {
-        var make = await _catalogRepository.GetMakeBySlugAsync(makeSlug);
+        VehicleMake? make = null;
+
+        // 1. Try UUID (from VIN decode catalogMakeId)
+        if (Guid.TryParse(makeSlug, out var makeGuid))
+        {
+            make = await _catalogRepository.GetMakeByIdAsync(makeGuid);
+        }
+
+        // 2. Try exact slug (e.g. "toyota")
+        if (make == null)
+        {
+            make = await _catalogRepository.GetMakeBySlugAsync(makeSlug);
+        }
+
+        // 3. Try lowercase slug (e.g. "HONDA" → "honda")
+        if (make == null && makeSlug != makeSlug.ToLowerInvariant())
+        {
+            make = await _catalogRepository.GetMakeBySlugAsync(makeSlug.ToLowerInvariant());
+        }
+
+        // 4. Try by name (case-insensitive search, e.g. "HONDA" → "Honda")
+        if (make == null)
+        {
+            var searchResults = await _catalogRepository.SearchMakesAsync(makeSlug);
+            make = searchResults.FirstOrDefault(m =>
+                m.Name.Equals(makeSlug, StringComparison.OrdinalIgnoreCase));
+        }
+
         if (make == null)
             return NotFound(new { message = $"Make '{makeSlug}' not found" });
 
-        var models = await _catalogRepository.GetModelsByMakeSlugAsync(makeSlug);
+        var models = await _catalogRepository.GetModelsByMakeIdAsync(make.Id);
         var dtos = models.Select(m => new ModelDto
         {
             Id = m.Id,
