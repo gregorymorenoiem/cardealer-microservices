@@ -320,3 +320,4 @@ Console.WriteLine($"📦 Environment: {app.Environment.EnvironmentName}");
 Console.WriteLine($"🗄️  Database: {connectionString}");
 
 app.Run();
+# env-fix 1772030483
