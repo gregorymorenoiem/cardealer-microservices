@@ -7,6 +7,7 @@ namespace VehiclesSaleService.Api.Controllers;
 /// <summary>
 /// Controller para el catálogo maestro de vehículos.
 /// Proporciona datos para auto-completar formularios de publicación.
+/// Endpoints: makes (by slug/UUID/name), models (by slug/UUID/name), VIN decode.
 /// 
 /// Flujo de uso:
 /// 1. GET /catalog/makes - Lista de marcas
