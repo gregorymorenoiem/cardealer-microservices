@@ -90,17 +90,16 @@ jobs:
   deploy:
     name: 🚀 Deploy to ${{ needs.prepare.outputs.environment }}
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     environment: ${{ needs.prepare.outputs.environment }}
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: 🔐 Configure Kubernetes
         run: |
@@ -355,16 +354,15 @@ jobs:
   # ============================================
   rollback:
     name: ⏪ Rollback
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     if: failure() && github.event_name == 'workflow_dispatch'
     needs: [prepare, deploy]
     environment: ${{ needs.prepare.outputs.environment }}
 
     steps:
-      - name: 🔧 Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: 🔐 Configure Kubernetes
         run: |
