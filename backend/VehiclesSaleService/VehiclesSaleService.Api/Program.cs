@@ -296,10 +296,14 @@ app.MapHealthChecks("/health");
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
         await dbContext.Database.MigrateAsync();
         Console.WriteLine("✅ Database migration completed successfully");
+
+        // Seed catalog data (makes, models) if empty
+        await VehiclesSaleService.Infrastructure.Persistence.CatalogDataSeeder.SeedAsync(dbContext, startupLogger);
     }
     catch (Exception ex)
     {

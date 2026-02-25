@@ -1114,7 +1114,10 @@ export interface CatalogOption {
 export async function getMakes(): Promise<VehicleMake[]> {
   try {
     const response = await apiClient.get<VehicleMake[]>('/api/catalog/makes');
-    return response.data;
+    const data = response.data;
+    // Fallback if API returns empty array (catalog not seeded yet)
+    if (!Array.isArray(data) || data.length === 0) return getStaticMakes();
+    return data;
   } catch {
     // Fallback to static list if API fails
     return getStaticMakes();
@@ -1127,10 +1130,12 @@ export async function getMakes(): Promise<VehicleMake[]> {
 export async function getModelsByMake(makeId: string): Promise<VehicleModel[]> {
   try {
     const response = await apiClient.get<VehicleModel[]>(`/api/catalog/makes/${makeId}/models`);
-    return response.data;
+    const data = response.data;
+    // Fallback if API returns empty array (catalog not seeded yet)
+    if (!Array.isArray(data) || data.length === 0) return getStaticModelsByMake(makeId);
+    return data;
   } catch {
-    // Fallback to empty list
-    return [];
+    return getStaticModelsByMake(makeId);
   }
 }
 
@@ -1140,7 +1145,9 @@ export async function getModelsByMake(makeId: string): Promise<VehicleModel[]> {
 export async function getBodyTypes(): Promise<CatalogOption[]> {
   try {
     const response = await apiClient.get<CatalogOption[]>('/api/catalog/body-types');
-    return response.data;
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticBodyTypes();
+    return data;
   } catch {
     return getStaticBodyTypes();
   }
@@ -1152,7 +1159,9 @@ export async function getBodyTypes(): Promise<CatalogOption[]> {
 export async function getFuelTypes(): Promise<CatalogOption[]> {
   try {
     const response = await apiClient.get<CatalogOption[]>('/api/catalog/fuel-types');
-    return response.data;
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticFuelTypes();
+    return data;
   } catch {
     return getStaticFuelTypes();
   }
@@ -1164,7 +1173,9 @@ export async function getFuelTypes(): Promise<CatalogOption[]> {
 export async function getTransmissions(): Promise<CatalogOption[]> {
   try {
     const response = await apiClient.get<CatalogOption[]>('/api/catalog/transmissions');
-    return response.data;
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticTransmissions();
+    return data;
   } catch {
     return getStaticTransmissions();
   }
@@ -1176,7 +1187,9 @@ export async function getTransmissions(): Promise<CatalogOption[]> {
 export async function getColors(): Promise<CatalogOption[]> {
   try {
     const response = await apiClient.get<CatalogOption[]>('/api/catalog/colors');
-    return response.data;
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticColors();
+    return data;
   } catch {
     return getStaticColors();
   }
@@ -1209,6 +1222,135 @@ export async function getFeatures(): Promise<Record<string, string[]>> {
 // ============================================================
 // STATIC FALLBACK DATA
 // ============================================================
+
+const STATIC_MODELS_BY_MAKE: Record<string, string[]> = {
+  toyota: [
+    'Corolla',
+    'Camry',
+    'RAV4',
+    'Hilux',
+    'Fortuner',
+    'Land Cruiser',
+    'Prado',
+    'Yaris',
+    'C-HR',
+    'Highlander',
+    'Tacoma',
+    'Tundra',
+    '4Runner',
+    'Sequoia',
+  ],
+  honda: [
+    'Civic',
+    'Accord',
+    'CR-V',
+    'HR-V',
+    'Pilot',
+    'Odyssey',
+    'Passport',
+    'Ridgeline',
+    'Fit',
+    'Jazz',
+  ],
+  hyundai: [
+    'Elantra',
+    'Sonata',
+    'Tucson',
+    'Santa Fe',
+    'Accent',
+    'Kona',
+    'Palisade',
+    'Creta',
+    'Ioniq 5',
+    'Genesis G80',
+  ],
+  nissan: [
+    'Sentra',
+    'Altima',
+    'Maxima',
+    'Pathfinder',
+    'Frontier',
+    'Titan',
+    'Rogue',
+    'Murano',
+    'Armada',
+    'X-Trail',
+    'Kicks',
+    'Versa',
+  ],
+  kia: [
+    'Rio',
+    'Forte',
+    'Stinger',
+    'Sportage',
+    'Sorento',
+    'Telluride',
+    'Seltos',
+    'Soul',
+    'Carnival',
+    'Stonic',
+  ],
+  mazda: ['Mazda3', 'Mazda6', 'CX-3', 'CX-5', 'CX-9', 'CX-30', 'MX-5 Miata', 'BT-50'],
+  ford: [
+    'Mustang',
+    'F-150',
+    'Explorer',
+    'Escape',
+    'Bronco',
+    'Edge',
+    'Expedition',
+    'EcoSport',
+    'Ranger',
+    'Maverick',
+  ],
+  chevrolet: [
+    'Spark',
+    'Cruze',
+    'Malibu',
+    'Camaro',
+    'Silverado',
+    'Colorado',
+    'Equinox',
+    'Blazer',
+    'Traverse',
+    'Tahoe',
+    'Suburban',
+    'Trailblazer',
+  ],
+  bmw: ['Serie 3', 'Serie 5', 'Serie 7', 'X1', 'X3', 'X5', 'X7', 'M3', 'M5'],
+  'mercedes-benz': ['Clase C', 'Clase E', 'Clase S', 'GLA', 'GLC', 'GLE', 'GLS', 'CLA', 'AMG GT'],
+  audi: ['A3', 'A4', 'A6', 'A8', 'Q3', 'Q5', 'Q7', 'TT', 'R8'],
+  volkswagen: ['Jetta', 'Passat', 'Golf', 'Tiguan', 'Atlas', 'Taos', 'Polo', 'T-Cross'],
+  lexus: ['IS', 'ES', 'GS', 'LS', 'NX', 'RX', 'GX', 'LX'],
+  jeep: ['Wrangler', 'Cherokee', 'Grand Cherokee', 'Compass', 'Renegade', 'Gladiator', 'Commander'],
+  mitsubishi: ['Lancer', 'Galant', 'Eclipse Cross', 'Outlander', 'ASX', 'L200', 'Montero'],
+  suzuki: ['Swift', 'Vitara', 'S-Cross', 'Grand Vitara', 'Jimny', 'Ertiga'],
+  subaru: ['Impreza', 'Legacy', 'Outback', 'Forester', 'Crosstrek', 'WRX', 'BRZ'],
+  dodge: ['Charger', 'Challenger', 'Durango', 'Ram 1500', 'Journey', 'Dart'],
+};
+
+function getStaticModelsByMake(makeId: string): VehicleModel[] {
+  // makeId can be "make-1", "Toyota", "toyota", etc.
+  const normalizedKey = makeId
+    .toLowerCase()
+    .replace(/^make-\d+$/, '') // strip "make-N" IDs
+    .replace(/\s+/g, '-');
+
+  // Try direct match first, then partial match
+  const models =
+    STATIC_MODELS_BY_MAKE[normalizedKey] ??
+    Object.entries(STATIC_MODELS_BY_MAKE).find(
+      ([key]) => key.includes(normalizedKey) || normalizedKey.includes(key)
+    )?.[1] ??
+    [];
+
+  return models.map((name, i) => ({
+    id: `model-${normalizedKey}-${i + 1}`,
+    name,
+    slug: name.toLowerCase().replace(/\s+/g, '-'),
+    makeId,
+  }));
+}
 
 function getStaticMakes(): VehicleMake[] {
   const makes = [
