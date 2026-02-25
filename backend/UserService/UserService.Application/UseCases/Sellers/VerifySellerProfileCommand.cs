@@ -79,10 +79,8 @@ public class VerifySellerProfileCommandHandler : IRequestHandler<VerifySellerPro
             Nationality = profile.Nationality,
             Bio = profile.Bio,
             AvatarUrl = profile.AvatarUrl,
-            Phone = profile.Phone,
-            AlternatePhone = profile.AlternatePhone,
+            // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = profile.WhatsApp,
-            Email = profile.Email,
             Address = profile.Address,
             City = profile.City,
             State = profile.State,

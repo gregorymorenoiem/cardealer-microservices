@@ -368,7 +368,7 @@ public class SellerProfileController : ControllerBase
         if (request.Bio != null) profile.Bio = request.Bio;
         if (request.City != null) profile.City = request.City;
         if (request.Province != null) profile.State = request.Province;
-        if (request.Phone != null) profile.Phone = request.Phone;
+        // FASE 3: Phone removed - use User entity properties instead
         if (request.WhatsApp != null) profile.WhatsApp = request.WhatsApp;
         if (request.Website != null) profile.Website = request.Website;
         if (request.AcceptsOffers.HasValue) profile.AcceptsOffers = request.AcceptsOffers.Value;
@@ -383,7 +383,7 @@ public class SellerProfileController : ControllerBase
         if (request.Bio != null) updatedFields.Add("Bio");
         if (request.City != null) updatedFields.Add("City");
         if (request.Province != null) updatedFields.Add("Province");
-        if (request.Phone != null) updatedFields.Add("Phone");
+        // FASE 3: Phone removed - use User entity properties instead
         if (request.WhatsApp != null) updatedFields.Add("WhatsApp");
         if (request.Website != null) updatedFields.Add("Website");
         
@@ -589,10 +589,8 @@ public class SellerProfileController : ControllerBase
             DisplayName = request.FullName,
             DateOfBirth = request.DateOfBirth,
             Nationality = request.Nationality,
-            Phone = request.Phone,
-            AlternatePhone = request.AlternatePhone,
+            // FASE 3: Phone, AlternatePhone, and Email removed - use User entity properties instead
             WhatsApp = request.WhatsApp,
-            Email = request.Email,
             Address = request.Address,
             City = request.City,
             State = request.State,
@@ -620,11 +618,12 @@ public class SellerProfileController : ControllerBase
         });
 
         // Publicar evento de creación de perfil
+        // FASE 3: Email removed - use User entity properties instead
         await _eventPublisher.PublishAsync(SellerProfileCreatedEvent.Create(
             profile.Id,
             profile.UserId,
             profile.FullName ?? "",
-            profile.Email ?? "",
+            "", // Email moved to User entity
             profile.SellerType.ToString(),
             profile.City ?? ""
         ));
@@ -835,10 +834,8 @@ public class SellerProfileController : ControllerBase
             Nationality = profile.Nationality,
             Bio = profile.Bio,
             AvatarUrl = profile.AvatarUrl,
-            Phone = profile.Phone,
-            AlternatePhone = profile.AlternatePhone,
+            // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = profile.WhatsApp,
-            Email = profile.Email,
             Address = profile.Address,
             City = profile.City,
             State = profile.State,

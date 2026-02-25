@@ -39,10 +39,8 @@ public class GetSellerProfileQueryHandler : IRequestHandler<GetSellerProfileQuer
             Nationality = profile.Nationality,
             Bio = profile.Bio,
             AvatarUrl = profile.AvatarUrl,
-            Phone = profile.Phone,
-            AlternatePhone = profile.AlternatePhone,
+            // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = profile.WhatsApp,
-            Email = profile.Email,
             Address = profile.Address,
             City = profile.City,
             State = profile.State,
@@ -66,6 +64,7 @@ public class GetSellerProfileQueryHandler : IRequestHandler<GetSellerProfileQuer
             PreferredContactMethod = profile.PreferredContactMethod,
             MaxActiveListings = profile.MaxActiveListings,
             CanSellHighValue = profile.CanSellHighValue,
+            Specialties = profile.Specialties,
             CreatedAt = profile.CreatedAt,
             UpdatedAt = profile.UpdatedAt,
             IdentityDocuments = profile.IdentityDocuments?.Select(d => new IdentityDocumentDto
@@ -113,10 +112,8 @@ public class GetSellerProfileByUserQueryHandler : IRequestHandler<GetSellerProfi
             Nationality = profile.Nationality,
             Bio = profile.Bio,
             AvatarUrl = profile.AvatarUrl,
-            Phone = profile.Phone,
-            AlternatePhone = profile.AlternatePhone,
+            // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = profile.WhatsApp,
-            Email = profile.Email,
             Address = profile.Address,
             City = profile.City,
             State = profile.State,
@@ -132,6 +129,7 @@ public class GetSellerProfileByUserQueryHandler : IRequestHandler<GetSellerProfi
             IsActive = profile.IsActive,
             ShowPhone = profile.ShowPhone,
             ShowLocation = profile.ShowLocation,
+            Specialties = profile.Specialties,
             CreatedAt = profile.CreatedAt,
             UpdatedAt = profile.UpdatedAt
         };

@@ -22,10 +22,9 @@ public class SellerProfileDto
     public string? AvatarUrl { get; set; }
 
     // Contact
-    public string Phone { get; set; } = string.Empty;
-    public string? AlternatePhone { get; set; }
+    // NOTE: Phone comes from User.PhoneNumber (FASE 3: Removed from SellerProfile)
+    // NOTE: Email comes from User.Email (FASE 3: Removed from SellerProfile)
     public string? WhatsApp { get; set; }
-    public string Email { get; set; } = string.Empty;
 
     // Location
     public string Address { get; set; } = string.Empty;
@@ -57,6 +56,9 @@ public class SellerProfileDto
     public string? PreferredContactMethod { get; set; }
     public int MaxActiveListings { get; set; }
     public bool CanSellHighValue { get; set; }
+
+    // Specialties
+    public string[] Specialties { get; set; } = Array.Empty<string>();
 
     // Audit
     public DateTime CreatedAt { get; set; }
@@ -105,10 +107,9 @@ public class CreateSellerProfileRequest
     public string? Nationality { get; set; }
 
     // Contact
-    public string Phone { get; set; } = string.Empty;
-    public string? AlternatePhone { get; set; }
+    // NOTE: Phone comes from User.PhoneNumber (FASE 3: Removed from SellerProfile)
+    // NOTE: Email comes from User.Email (FASE 3: Removed from SellerProfile)
     public string? WhatsApp { get; set; }
-    public string Email { get; set; } = string.Empty;
 
     // Location
     public string Address { get; set; } = string.Empty;
@@ -118,6 +119,9 @@ public class CreateSellerProfileRequest
     public string Country { get; set; } = "DO";
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+
+    // Specialties
+    public string[]? Specialties { get; set; }
 
     // Preferences
     public bool AcceptsOffers { get; set; } = true;
@@ -138,8 +142,7 @@ public class UpdateSellerProfileRequest
     public string? AvatarUrl { get; set; }
 
     // Contact
-    public string? Phone { get; set; }
-    public string? AlternatePhone { get; set; }
+    // NOTE: Phone comes from User.PhoneNumber (FASE 3: Removed from SellerProfile)
     public string? WhatsApp { get; set; }
 
     // Location
@@ -150,6 +153,9 @@ public class UpdateSellerProfileRequest
     public string? Country { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+
+    // Specialties
+    public string[]? Specialties { get; set; }
 
     // Preferences
     public bool? AcceptsOffers { get; set; }

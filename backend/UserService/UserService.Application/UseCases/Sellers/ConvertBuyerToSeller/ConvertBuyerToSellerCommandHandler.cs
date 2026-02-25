@@ -125,8 +125,7 @@ public class ConvertBuyerToSellerCommandHandler
             Id = Guid.NewGuid(),
             UserId = user.Id,
             FullName = user.FullName,
-            Email = user.Email,
-            Phone = user.PhoneNumber,
+            // FASE 3: Email and Phone removed - use User entity properties instead
             Address = user.BusinessAddress ?? string.Empty,
             City = user.City ?? string.Empty,
             State = user.Province ?? string.Empty,
@@ -258,10 +257,8 @@ public class ConvertBuyerToSellerCommandHandler
             Nationality = profile.Nationality,
             Bio = profile.Bio,
             AvatarUrl = profile.AvatarUrl,
-            Phone = profile.Phone,
-            AlternatePhone = profile.AlternatePhone,
+            // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = profile.WhatsApp,
-            Email = profile.Email,
             Address = profile.Address,
             City = profile.City,
             State = profile.State,

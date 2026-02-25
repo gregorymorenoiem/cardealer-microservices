@@ -37,10 +37,9 @@ public class SellerProfile
     // ========================================
     // CONTACTO
     // ========================================
-    public string Phone { get; set; } = string.Empty;
-    public string? AlternatePhone { get; set; }
+    // NOTE: Primary phone comes from User.PhoneNumber (FASE 3: Removed duplicated Phone field)
+    // NOTE: Email comes from User.Email (FASE 3: Removed duplicated Email field)
     public string? WhatsApp { get; set; }
-    public string Email { get; set; } = string.Empty;
 
     // ========================================
     // UBICACIÓN
@@ -87,6 +86,11 @@ public class SellerProfile
     // ========================================
     public int MaxActiveListings { get; set; } = 3; // Sin verificar: 3, Verificado: 10
     public bool CanSellHighValue { get; set; } = false; // >$50k requiere verificación
+
+    // ========================================
+    // ESPECIALIDADES
+    // ========================================
+    public string[] Specialties { get; set; } = Array.Empty<string>();
 
     // ========================================
     // TIPO Y BADGES

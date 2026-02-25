@@ -39,9 +39,7 @@ public class UpdateSellerProfileCommandHandler : IRequestHandler<UpdateSellerPro
         if (request.Nationality != null) profile.Nationality = request.Nationality;
         if (request.AvatarUrl != null) profile.AvatarUrl = request.AvatarUrl;
 
-        // Contact
-        if (request.Phone != null) profile.Phone = request.Phone;
-        if (request.AlternatePhone != null) profile.AlternatePhone = request.AlternatePhone;
+        // FASE 3: Phone and AlternatePhone removed - use User entity properties instead
         if (request.WhatsApp != null) profile.WhatsApp = request.WhatsApp;
 
         // Location
@@ -60,6 +58,9 @@ public class UpdateSellerProfileCommandHandler : IRequestHandler<UpdateSellerPro
         if (request.PreferredContactMethod != null) profile.PreferredContactMethod = request.PreferredContactMethod;
         if (request.IsActive.HasValue) profile.IsActive = request.IsActive.Value;
 
+        // Specialties
+        if (request.Specialties != null) profile.Specialties = request.Specialties;
+
         profile.UpdatedAt = DateTime.UtcNow;
 
         await _sellerProfileRepository.UpdateAsync(profile);
@@ -75,10 +76,8 @@ public class UpdateSellerProfileCommandHandler : IRequestHandler<UpdateSellerPro
             Nationality = profile.Nationality,
             Bio = profile.Bio,
             AvatarUrl = profile.AvatarUrl,
-            Phone = profile.Phone,
-            AlternatePhone = profile.AlternatePhone,
+            // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = profile.WhatsApp,
-            Email = profile.Email,
             Address = profile.Address,
             City = profile.City,
             State = profile.State,
@@ -102,6 +101,7 @@ public class UpdateSellerProfileCommandHandler : IRequestHandler<UpdateSellerPro
             PreferredContactMethod = profile.PreferredContactMethod,
             MaxActiveListings = profile.MaxActiveListings,
             CanSellHighValue = profile.CanSellHighValue,
+            Specialties = profile.Specialties,
             CreatedAt = profile.CreatedAt,
             UpdatedAt = profile.UpdatedAt
         };
