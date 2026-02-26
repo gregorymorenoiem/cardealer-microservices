@@ -1104,6 +1104,21 @@ export interface CatalogOption {
   label: string;
 }
 
+/**
+ * Normalize a raw catalog item from the API to { value, label }.
+ *
+ * The backend CatalogOptionDto previously used { id, name } property names.
+ * It was corrected to { value, label }, but this helper provides a safety net
+ * for cached responses or any future schema drift.
+ */
+function normalizeCatalogOption(item: unknown): CatalogOption {
+  const obj = item as Record<string, unknown>;
+  return {
+    value: ((obj.value ?? obj.id ?? '') as string).toLowerCase(),
+    label: (obj.label ?? obj.name ?? '') as string,
+  };
+}
+
 // ============================================================
 // CATALOG FUNCTIONS
 // ============================================================
@@ -1144,10 +1159,12 @@ export async function getModelsByMake(makeId: string): Promise<VehicleModel[]> {
  */
 export async function getBodyTypes(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/body-types');
+    const response = await apiClient.get<unknown[]>('/api/catalog/body-types');
     const data = response.data;
     if (!Array.isArray(data) || data.length === 0) return getStaticBodyTypes();
-    return data;
+    // Normalize: handle both { value, label } and legacy { id, name } formats
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticBodyTypes();
   } catch {
     return getStaticBodyTypes();
   }
@@ -1158,10 +1175,11 @@ export async function getBodyTypes(): Promise<CatalogOption[]> {
  */
 export async function getFuelTypes(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/fuel-types');
+    const response = await apiClient.get<unknown[]>('/api/catalog/fuel-types');
     const data = response.data;
     if (!Array.isArray(data) || data.length === 0) return getStaticFuelTypes();
-    return data;
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticFuelTypes();
   } catch {
     return getStaticFuelTypes();
   }
@@ -1172,10 +1190,11 @@ export async function getFuelTypes(): Promise<CatalogOption[]> {
  */
 export async function getTransmissions(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/transmissions');
+    const response = await apiClient.get<unknown[]>('/api/catalog/transmissions');
     const data = response.data;
     if (!Array.isArray(data) || data.length === 0) return getStaticTransmissions();
-    return data;
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticTransmissions();
   } catch {
     return getStaticTransmissions();
   }
@@ -1186,10 +1205,11 @@ export async function getTransmissions(): Promise<CatalogOption[]> {
  */
 export async function getColors(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/colors');
+    const response = await apiClient.get<unknown[]>('/api/catalog/colors');
     const data = response.data;
     if (!Array.isArray(data) || data.length === 0) return getStaticColors();
-    return data;
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticColors();
   } catch {
     return getStaticColors();
   }
@@ -1200,8 +1220,11 @@ export async function getColors(): Promise<CatalogOption[]> {
  */
 export async function getProvinces(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/provinces');
-    return response.data;
+    const response = await apiClient.get<unknown[]>('/api/catalog/provinces');
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticProvinces();
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticProvinces();
   } catch {
     return getStaticProvinces();
   }
@@ -1400,7 +1423,9 @@ function getStaticFuelTypes(): CatalogOption[] {
     { value: 'diesel', label: 'Diésel' },
     { value: 'hybrid', label: 'Híbrido' },
     { value: 'electric', label: 'Eléctrico' },
-    { value: 'lpg', label: 'GLP' },
+    { value: 'plugin_hybrid', label: 'Híbrido Enchufable' },
+    { value: 'lpg', label: 'GLP / Gas' },
+    { value: 'flex_fuel', label: 'Flex Fuel' },
   ];
 }
 
@@ -1409,6 +1434,7 @@ function getStaticTransmissions(): CatalogOption[] {
     { value: 'automatic', label: 'Automática' },
     { value: 'manual', label: 'Manual' },
     { value: 'cvt', label: 'CVT' },
+    { value: 'dct', label: 'Doble Embrague (DCT)' },
     { value: 'semi-automatic', label: 'Semi-automática' },
   ];
 }

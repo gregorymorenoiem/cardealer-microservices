@@ -110,90 +110,107 @@ const DRAFT_KEY_PREFIX = 'okla_draft_vehicle_';
 
 // ============================================================
 // VIN Value Normalizers
-// Maps raw NHTSA / backend strings → catalog option keys
+// Maps backend VIN decode strings → catalog option keys.
+//
+// The backend MapBodyStyle / MapFuelType / MapTransmission functions now return
+// lowercase catalog-aligned keys (e.g. "suv", "gasoline", "automatic").
+// These normalizers handle both the current lowercase output AND the legacy
+// PascalCase output ("SUV", "Gasoline", "Automatic") for backwards compatibility,
+// as well as raw NHTSA strings in case they ever reach the frontend directly.
 // ============================================================
 
 /**
- * Normalize body style from VIN decode to catalog option values.
- * NHTSA returns verbose strings like "Sport Utility Vehicle (SUV)".
+ * Normalize body style → catalog option value.
+ * Backend now returns lowercase catalog keys; this handles legacy PascalCase + raw NHTSA.
  */
 function normalizeBodyStyle(raw: string): string {
   const s = raw.toLowerCase().trim();
   if (
-    s.includes('sport utility') ||
     s === 'suv' ||
+    s.includes('sport utility') ||
     s === 'crossover utility vehicle' ||
     s === 'cuv'
   )
     return 'suv';
-  if (s === 'sedan' || s === 'saloon' || s.includes('4dr sedan') || s.includes('sedan/saloon'))
-    return 'sedan';
   if (
-    s.includes('pickup') ||
+    s === 'pickup' ||
     s === 'truck' ||
+    s.includes('pickup') ||
     s.includes('regular cab') ||
     s.includes('crew cab') ||
     s.includes('extended cab')
   )
     return 'pickup';
-  if (s === 'hatchback' || s.includes('3dr hatchback') || s.includes('5dr hatchback'))
-    return 'hatchback';
+  if (s === 'minivan' || s.includes('minivan') || s === 'passenger van') return 'minivan';
+  if (s === 'van' || s === 'cargo van') return 'van';
   if (s === 'coupe' || s === 'coupé' || s.includes('2dr coupe')) return 'coupe';
-  if (s.includes('minivan') || s === 'passenger van') return 'minivan';
-  if (s === 'van' || s === 'cargo van') return 'minivan';
-  if (s === 'crossover') return 'crossover';
-  if (s.includes('wagon') || s === 'estate') return 'wagon';
   if (s === 'convertible' || s === 'cabriolet' || s === 'roadster') return 'convertible';
-  return s; // lowercase fallback
+  if (s === 'hatchback' || s.includes('hatchback')) return 'hatchback';
+  if (s === 'crossover') return 'crossover';
+  if (s === 'wagon' || s.includes('wagon') || s === 'estate') return 'wagon';
+  if (s === 'sedan' || s === 'saloon' || s.includes('sedan')) return 'sedan';
+  return s; // already a catalog key or unknown
 }
 
 /**
- * Normalize fuel type from VIN decode to catalog option values.
- * NHTSA returns values like "Gasoline", "Regular Unleaded", "Flex Fuel".
+ * Normalize fuel type → catalog option value.
+ * Backend now returns lowercase catalog keys; handles legacy PascalCase + raw NHTSA.
  */
 function normalizeFuelType(raw: string): string {
   const s = raw.toLowerCase().trim();
+  // Plugin hybrid BEFORE generic hybrid check
   if (
-    s.includes('gasoline') ||
-    s === 'gas' ||
-    s.includes('unleaded') ||
-    s === 'petrol' ||
-    s.includes('flex fuel') ||
-    s === 'e85'
-  )
-    return 'gasoline';
-  if (s.includes('diesel')) return 'diesel';
-  if (
-    s.includes('plug-in hybrid') ||
+    s === 'plugin_hybrid' ||
+    s === 'pluginhybrid' ||
+    s === 'plug-in hybrid' ||
     s === 'phev' ||
-    s.includes('hybrid') ||
-    s === 'hev'
+    s.includes('plug')
   )
-    return 'hybrid';
-  if (s === 'electric' || s === 'bev' || s === 'ev' || s.includes('battery electric'))
+    return 'plugin_hybrid';
+  if (s === 'gasoline' || s.includes('gasoline') || s.includes('unleaded') || s === 'petrol' || s === 'e85')
+    return 'gasoline';
+  if (s === 'flex_fuel' || s === 'flexfuel' || s.includes('flex fuel') || s.includes('flex-fuel'))
+    return 'flex_fuel';
+  if (s === 'diesel' || s.includes('diesel')) return 'diesel';
+  if (s === 'hybrid' || s.includes('hybrid') || s === 'hev') return 'hybrid';
+  if (s === 'electric' || s === 'bev' || s === 'ev' || s.includes('battery electric') || s.includes('electric'))
     return 'electric';
-  if (s === 'lpg' || s === 'propane' || s === 'cng' || s.includes('natural gas')) return 'lpg';
+  if (s === 'lpg' || s === 'gas' || s === 'propane' || s === 'cng' || s.includes('natural gas') || s === 'naturalgas' || s === 'hydrogen')
+    return 'lpg';
   return s;
 }
 
 /**
- * Normalize transmission from VIN decode to catalog option values.
- * NHTSA returns values like "6-Speed Automatic", "Manual", "CVT".
+ * Normalize transmission → catalog option value.
+ * Backend now returns lowercase catalog keys; handles legacy PascalCase + raw NHTSA.
+ * Catalog keys: automatic | manual | cvt | dct | semi-automatic
  */
 function normalizeTransmission(raw: string): string {
   const s = raw.toLowerCase().trim();
-  if (s.includes('cvt') || s.includes('continuously variable')) return 'cvt';
+  if (s === 'cvt' || s.includes('cvt') || s.includes('continuously variable')) return 'cvt';
+  // DCT / Dual Clutch — check BEFORE generic "automatic"
   if (
+    s === 'dct' ||
+    s === 'dualclutch' ||
+    s === 'dual-clutch' ||
     s.includes('dual clutch') ||
-    s.includes('dct') ||
     s.includes('dsg') ||
+    s.includes('dct')
+  )
+    return 'dct';
+  // Semi-automatic / Automated Manual
+  if (
+    s === 'semi-automatic' ||
+    s === 'semi_automatic' ||
+    s === 'automated' ||
     s.includes('automated manual') ||
-    s.includes('semi-auto')
+    s.includes('semi-auto') ||
+    s.includes('semi_auto')
   )
     return 'semi-automatic';
-  // Must check CVT & dual-clutch BEFORE generic "automatic"
-  if (s.includes('automatic') || s.includes('auto') || /^a\d/.test(s)) return 'automatic';
-  if (s.includes('manual') || /^m\d/.test(s)) return 'manual';
+  if (s === 'manual' || s.includes('manual') || /^m\d/.test(s)) return 'manual';
+  if (s === 'automatic' || s.includes('automatic') || s.includes('auto') || /^a\d/.test(s))
+    return 'automatic';
   return s;
 }
 

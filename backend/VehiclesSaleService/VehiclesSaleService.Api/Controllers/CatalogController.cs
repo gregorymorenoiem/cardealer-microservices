@@ -830,6 +830,12 @@ public class CatalogController : ControllerBase
 
     private static string MapTransmissionSpanish(string t) => t switch
     {
+        "automatic" => "automática",
+        "manual" => "manual",
+        "cvt" => "CVT",
+        "dct" => "doble embrague (DCT)",
+        "semi-automatic" => "semi-automática",
+        // Legacy PascalCase keys (backwards compat)
         "Automatic" => "automática",
         "Manual" => "manual",
         "CVT" => "CVT",
@@ -849,6 +855,14 @@ public class CatalogController : ControllerBase
 
     private static string MapFuelTypeSpanish(string f) => f switch
     {
+        "gasoline" => "gasolina",
+        "diesel" => "diésel",
+        "hybrid" => "híbrido",
+        "electric" => "eléctrico",
+        "plugin_hybrid" => "híbrido enchufable",
+        "flex_fuel" => "flex fuel",
+        "lpg" => "GLP / gas",
+        // Legacy PascalCase keys (backwards compat)
         "Gasoline" => "gasolina",
         "Diesel" => "diésel",
         "Hybrid" => "híbrido",
@@ -870,33 +884,33 @@ public class CatalogController : ControllerBase
 
     private static string MapFuelType(string? nhtsaFuelType)
     {
-        if (string.IsNullOrEmpty(nhtsaFuelType)) return "Gasoline";
+        if (string.IsNullOrEmpty(nhtsaFuelType)) return "gasoline";
         
         return nhtsaFuelType.ToLowerInvariant() switch
         {
-            // Check plug-in hybrid first (before electric/hybrid checks)
-            var f when f.Contains("plug") || f.Contains("phev") => "PlugInHybrid",
-            var f when f.Contains("diesel") => "Diesel",
-            var f when f.Contains("hybrid") => "Hybrid",
-            var f when f.Contains("electric") => "Electric",
-            var f when f.Contains("flex") => "FlexFuel",
-            var f when f.Contains("hydrogen") => "Hydrogen",
-            var f when f.Contains("natural gas") || f.Contains("cng") => "NaturalGas",
-            _ => "Gasoline"
+            // Check plug-in hybrid first (before generic hybrid check)
+            var f when f.Contains("plug") || f.Contains("phev") => "plugin_hybrid",
+            var f when f.Contains("diesel") => "diesel",
+            var f when f.Contains("hybrid") => "hybrid",
+            var f when f.Contains("electric") => "electric",
+            var f when f.Contains("flex") => "flex_fuel",
+            var f when f.Contains("hydrogen") => "lpg",
+            var f when f.Contains("natural gas") || f.Contains("cng") || f.Contains("lpg") || f.Contains("propane") => "lpg",
+            _ => "gasoline"
         };
     }
 
     private static string MapTransmission(string? nhtsaTransmission)
     {
-        if (string.IsNullOrEmpty(nhtsaTransmission)) return "Automatic";
+        if (string.IsNullOrEmpty(nhtsaTransmission)) return "automatic";
         
         return nhtsaTransmission.ToLowerInvariant() switch
         {
-            var t when t.Contains("cvt") => "CVT",
-            var t when t.Contains("dual") || t.Contains("dct") => "DualClutch",
-            var t when t.Contains("automated") => "Automated",
-            var t when t.Contains("manual") => "Manual",
-            _ => "Automatic"
+            var t when t.Contains("cvt") || t.Contains("continuously variable") => "cvt",
+            var t when t.Contains("dual") || t.Contains("dct") || t.Contains("dsg") => "dct",
+            var t when t.Contains("automated") || t.Contains("semi-auto") || t.Contains("semi_auto") => "semi-automatic",
+            var t when t.Contains("manual") => "manual",
+            _ => "automatic"
         };
     }
 
@@ -904,9 +918,11 @@ public class CatalogController : ControllerBase
     {
         if (string.IsNullOrEmpty(nhtsaDriveType)) return "FWD";
         
+        // Drive type is displayed as a text field in the frontend, so we keep
+        // human-readable short forms (FWD, RWD, AWD, 4WD) instead of catalog keys.
         return nhtsaDriveType.ToLowerInvariant() switch
         {
-            var d when d.Contains("4x4") || d.Contains("4wd") || d.Contains("four") => "FourWD",
+            var d when d.Contains("4x4") || d.Contains("4wd") || d.Contains("four") => "4WD",
             var d when d.Contains("awd") || d.Contains("all") => "AWD",
             var d when d.Contains("rwd") || d.Contains("rear") => "RWD",
             _ => "FWD"
@@ -933,6 +949,18 @@ public class CatalogController : ControllerBase
     /// <summary>Parses the mapped body-style string back to the domain enum (nullable).</summary>
     private static BodyStyle? ParseBodyStyleEnum(string bodyStyleStr) => bodyStyleStr switch
     {
+        // New lowercase catalog keys
+        "suv"         => BodyStyle.SUV,
+        "pickup"      => BodyStyle.Pickup,
+        "minivan"     => BodyStyle.Minivan,
+        "van"         => BodyStyle.Van,
+        "coupe"       => BodyStyle.Coupe,
+        "convertible" => BodyStyle.Convertible,
+        "hatchback"   => BodyStyle.Hatchback,
+        "wagon"       => BodyStyle.Wagon,
+        "crossover"   => BodyStyle.Crossover,
+        "sedan"       => BodyStyle.Sedan,
+        // Legacy PascalCase keys (backwards compat)
         "SUV"         => BodyStyle.SUV,
         "Pickup"      => BodyStyle.Pickup,
         "Minivan"     => BodyStyle.Minivan,
@@ -948,20 +976,20 @@ public class CatalogController : ControllerBase
 
     private static string MapBodyStyle(string? nhtsaBodyClass)
     {
-        if (string.IsNullOrEmpty(nhtsaBodyClass)) return "Sedan";
+        if (string.IsNullOrEmpty(nhtsaBodyClass)) return "sedan";
         
         return nhtsaBodyClass.ToLowerInvariant() switch
         {
-            var b when b.Contains("suv") || b.Contains("sport utility") => "SUV",
-            var b when b.Contains("pickup") || b.Contains("truck") => "Pickup",
-            var b when b.Contains("van") && b.Contains("mini") => "Minivan",
-            var b when b.Contains("van") => "Van",
-            var b when b.Contains("coupe") => "Coupe",
-            var b when b.Contains("convertible") => "Convertible",
-            var b when b.Contains("hatchback") => "Hatchback",
-            var b when b.Contains("wagon") => "Wagon",
-            var b when b.Contains("crossover") => "Crossover",
-            _ => "Sedan"
+            var b when b.Contains("suv") || b.Contains("sport utility") || b.Contains("multipurpose") => "suv",
+            var b when b.Contains("pickup") || b.Contains("truck") => "pickup",
+            var b when b.Contains("van") && b.Contains("mini") => "minivan",
+            var b when b.Contains("van") => "van",
+            var b when b.Contains("coupe") => "coupe",
+            var b when b.Contains("convertible") || b.Contains("cabriolet") || b.Contains("roadster") => "convertible",
+            var b when b.Contains("hatchback") => "hatchback",
+            var b when b.Contains("wagon") || b.Contains("estate") => "wagon",
+            var b when b.Contains("crossover") => "crossover",
+            _ => "sedan"
         };
     }
 
@@ -1037,7 +1065,7 @@ public class CatalogController : ControllerBase
             new("hybrid", "Híbrido"),
             new("electric", "Eléctrico"),
             new("plugin_hybrid", "Híbrido Enchufable"),
-            new("gas", "Gas (GLP)"),
+            new("lpg", "GLP / Gas"),
             new("flex_fuel", "Flex Fuel"),
         };
         return Ok(fuelTypes);
@@ -1056,7 +1084,7 @@ public class CatalogController : ControllerBase
             new("manual", "Manual"),
             new("cvt", "CVT"),
             new("dct", "Doble Embrague (DCT)"),
-            new("semi_automatic", "Semi-automática"),
+            new("semi-automatic", "Semi-automática"),
         };
         return Ok(transmissions);
     }
@@ -1540,8 +1568,10 @@ public class NhtsaVinResult
 
 /// <summary>
 /// DTO genérico para opciones del catálogo (body-types, fuel-types, etc.)
+/// IMPORTANT: Property names must be "Value" and "Label" to match the frontend
+/// CatalogOption interface { value: string; label: string }.
 /// </summary>
-public record CatalogOptionDto(string Id, string Name);
+public record CatalogOptionDto(string Value, string Label);
 
 // ========================================
 // SMART VIN DECODE DTOs
