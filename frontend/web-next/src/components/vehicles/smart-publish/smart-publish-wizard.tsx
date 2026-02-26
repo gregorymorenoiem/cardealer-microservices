@@ -776,28 +776,13 @@ export function SmartPublishWizard({
               Guardar borrador
             </button>
 
-            {currentStep !== 'review' ? (
-              <button
-                onClick={goToNext}
-                className="flex items-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
-              >
-                Siguiente
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handlePublish}
-                disabled={createVehicle.isPending}
-                className="flex items-center rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {createVehicle.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="mr-2 h-4 w-4" />
-                )}
-                {mode === 'dealer' ? 'Publicar' : 'Publicar (RD$29)'}
-              </button>
-            )}
+            <button
+              onClick={goToNext}
+              className="flex items-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Siguiente
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </button>
           </div>
         </div>
       )}
