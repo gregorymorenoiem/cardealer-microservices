@@ -41,12 +41,12 @@ builder.Services.AddSingleton<IConnection>(sp => factory.CreateConnection());
 
 // Register MediatR
 builder.Services.AddMediatR(cfg =>
-
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(MessageBusService.Application.Behaviors.ValidationBehavior<,>));
 {
     cfg.RegisterServicesFromAssembly(typeof(MessageBusService.Application.Commands.PublishMessageCommand).Assembly);
 });
+
+// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(MessageBusService.Application.Behaviors.ValidationBehavior<,>));
 
 // Register Application Services
 builder.Services.AddScoped<IMessagePublisher, RabbitMQPublisher>();

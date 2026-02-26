@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    Global MSBuild properties applied to ALL projects under backend/
+    ================================================================
+    CS1998: "Async method lacks 'await' operators and will run synchronously"
+            Some methods are intentionally async (interface compliance, future use,
+            or override requirements) and should not break the CI build.
+    CS8618: Non-nullable field not initialized — suppressed for EF Core entities
+            where EF sets properties via reflection.
+  -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS1998;CS8618</NoWarn>
+  </PropertyGroup>
+</Project>

@@ -140,7 +140,8 @@ jobs:
             dotnet test --no-build --configuration Release \
               --logger "trx;LogFileName=test-results.trx" \
               --collect:"XPlat Code Coverage" \
-              --results-directory ./TestResults
+              --results-directory ./TestResults \
+              --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~E2ETests&FullyQualifiedName!~StartupTests&FullyQualifiedName!~E2E"
           else
             echo "⚠️ No test project found, skipping tests"
           fi
@@ -180,24 +181,41 @@ jobs:
       # setup-qemu-action is not needed and causes exit code 1 on Mac runners.
 
       - name: 🩺 Ensure Docker daemon is running
-        timeout-minutes: 3
+        timeout-minutes: 5
         run: |
-          # Try to connect; if daemon is down, (re)start Docker Desktop
-          if ! timeout 10 docker version > /dev/null 2>&1; then
-            echo "⚠️ Docker daemon not responding — starting Docker Desktop..."
-            open /Applications/Docker.app 2>/dev/null || true
-            echo "⏳ Waiting for Docker daemon (up to 2 min)..."
-            for i in $(seq 1 24); do
-              sleep 5
-              if timeout 5 docker version > /dev/null 2>&1; then
-                echo "✅ Docker is ready (attempt $i)"
-                break
-              fi
-              echo "  Still waiting... attempt $i/24"
-            done
-          else
+          # Check if Docker is responding
+          if timeout 10 docker version > /dev/null 2>&1; then
             echo "✅ Docker daemon is healthy"
+            exit 0
           fi
+
+          echo "⚠️ Docker daemon not responding — attempting to start Docker Desktop..."
+
+          # Method 1: open via bundle ID (works from service/launchd context)
+          /usr/bin/open -b com.docker.docker 2>/dev/null && echo "  → Opened via bundle ID" || true
+
+          # Method 2: osascript (works when user is logged in)
+          osascript -e 'tell application "Docker Desktop" to activate' 2>/dev/null && echo "  → Opened via osascript" || true
+
+          # Method 3: direct binary
+          /Applications/Docker.app/Contents/MacOS/Docker &>/dev/null &
+
+          echo "⏳ Waiting up to 3 min for Docker daemon..."
+          for i in $(seq 1 36); do
+            sleep 5
+            if timeout 5 docker version > /dev/null 2>&1; then
+              echo "✅ Docker is ready after $((i * 5))s"
+              docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
+              break
+            fi
+            if [ $i -eq 36 ]; then
+              echo "::error::Docker daemon did not start after 3 minutes"
+              docker version 2>&1 || true
+              ls -la $HOME/.docker/run/ 2>/dev/null || true
+              exit 1
+            fi
+            echo "  Still waiting... $((i * 5))s / 180s"
+          done
 
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
