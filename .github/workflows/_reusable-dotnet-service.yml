@@ -228,26 +228,6 @@ jobs:
             echo "  Waiting... $((i*5))s / 180s"
           done
 
-      - name: 🔧 Configure Docker for CI (no keychain)
-        run: |
-          # Create a fresh Docker config for this CI session.
-          # The 'docker-credential-desktop' binary on macOS accesses the keychain,
-          # which is locked in background/non-interactive CI runner sessions.
-          # Fix: inject a no-op stub ahead of the real binary in PATH and use
-          # a temp DOCKER_CONFIG that disables all credential stores.
-          CI_DOCKER_CONFIG=$(mktemp -d)
-          printf '{"auths":{},"credsStore":"","credHelpers":{}}\n' > "$CI_DOCKER_CONFIG/config.json"
-          echo "DOCKER_CONFIG=$CI_DOCKER_CONFIG" >> "$GITHUB_ENV"
-
-          # Stub docker-credential-desktop so it returns empty credentials instead
-          # of trying to access the locked macOS keychain.
-          CI_BIN=$(mktemp -d)
-          STUB="$CI_BIN/docker-credential-desktop"
-          printf '#!/bin/bash\n# CI stub: return empty credentials\nif [ "$1" = "get" ]; then echo '"'"'{"ServerURL":"","Username":"","Secret":""}'"'"'; fi\nexit 0\n' > "$STUB"
-          chmod +x "$STUB"
-          echo "PATH=$CI_BIN:$PATH" >> "$GITHUB_ENV"
-          echo "✅ CI Docker config + credential stub ready (no keychain access)"
-
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
