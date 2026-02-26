@@ -177,52 +177,55 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # macOS ARM64 runner: use Colima (headless Docker runtime) — no GUI session needed.
-      # Docker Desktop requires an Aqua GUI session and cannot be reliably started from
-      # a LaunchAgent background session. Colima runs as a CLI service via brew services.
+      # macOS ARM64 runner: Colima como Docker runtime headless.
+      # FIX: No depender de `docker context use` (propenso a race conditions con jobs paralelos
+      # que comparten el mismo runner). En su lugar, exportar DOCKER_HOST explícitamente
+      # apuntando al socket de Colima — esto es atómico, no toca ~/.docker/config.json.
 
       - name: 🩺 Ensure Docker daemon is running (Colima)
         timeout-minutes: 6
         run: |
           COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
 
-          # Switch to Colima context (headless, works from any session — no GUI needed)
-          if [ -x "$COLIMA_BIN" ]; then
-            docker context use colima 2>/dev/null || true
-          fi
+          # FIX: Apuntar DOCKER_HOST directamente al socket de Colima.
+          # Esto evita race conditions cuando múltiples jobs paralelos intentan
+          # cambiar el contexto global de Docker al mismo tiempo.
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
 
-          # Fast path: Docker already responding
+          # Fast path: Docker ya está respondiendo
           if timeout 10 docker version > /dev/null 2>&1; then
-            echo "✅ Docker daemon is healthy"
-            docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
+            echo "✅ Docker daemon is healthy (Colima already running)"
+            docker version --format '  Engine: {{.Server.Version}} | Host: {{.Client.Host}}'
             exit 0
           fi
 
-          echo "⚠️ Docker not responding. Starting Colima (no GUI required)..."
-
-          # Start Colima — CLI tool, works from any shell context (LaunchAgent, SSH, cron)
+          echo "⚠️ Docker not responding via Colima socket. Checking Colima status..."
           if [ -x "$COLIMA_BIN" ]; then
+            "$COLIMA_BIN" status 2>&1 || true
+            echo "▶️ Starting Colima..."
             "$COLIMA_BIN" start 2>&1 | head -30 || true
           else
-            echo "::warning::Colima not found at $COLIMA_BIN — install with: brew install colima"
-            # Fallback: try Docker Desktop (may fail in background session)
-            /usr/bin/open -b com.docker.docker 2>/dev/null || true
+            echo "::error::Colima not found at $COLIMA_BIN — instalar con: brew install colima"
+            exit 1
           fi
 
-          # Wait up to 5 minutes for Docker to be ready
-          for i in $(seq 1 60); do
+          # Esperar hasta 3 minutos para que Docker responda
+          for i in $(seq 1 36); do
             sleep 5
             if timeout 5 docker version > /dev/null 2>&1; then
               echo "✅ Docker ready after $((i*5))s"
-              docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
-              break
+              docker version --format '  Engine: {{.Server.Version}} | Host: {{.Client.Host}}'
+              exit 0
             fi
-            if [ $i -eq 60 ]; then
-              echo "::error::Docker daemon did not start after 5 minutes"
+            if [ $i -eq 36 ]; then
+              echo "::error::Docker daemon no respondió en 3 minutos"
               [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" status 2>&1 || true
+              echo "Socket existe: $(test -S "$COLIMA_SOCKET" && echo 'SÍ' || echo 'NO')"
               exit 1
             fi
-            echo "  Waiting... $((i*5))s / 300s"
+            echo "  Waiting... $((i*5))s / 180s"
           done
 
       - name: 🔧 Set up Docker Buildx
