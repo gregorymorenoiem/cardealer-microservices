@@ -167,15 +167,35 @@ function normalizeFuelType(raw: string): string {
     s.includes('plug')
   )
     return 'plugin_hybrid';
-  if (s === 'gasoline' || s.includes('gasoline') || s.includes('unleaded') || s === 'petrol' || s === 'e85')
+  if (
+    s === 'gasoline' ||
+    s.includes('gasoline') ||
+    s.includes('unleaded') ||
+    s === 'petrol' ||
+    s === 'e85'
+  )
     return 'gasoline';
   if (s === 'flex_fuel' || s === 'flexfuel' || s.includes('flex fuel') || s.includes('flex-fuel'))
     return 'flex_fuel';
   if (s === 'diesel' || s.includes('diesel')) return 'diesel';
   if (s === 'hybrid' || s.includes('hybrid') || s === 'hev') return 'hybrid';
-  if (s === 'electric' || s === 'bev' || s === 'ev' || s.includes('battery electric') || s.includes('electric'))
+  if (
+    s === 'electric' ||
+    s === 'bev' ||
+    s === 'ev' ||
+    s.includes('battery electric') ||
+    s.includes('electric')
+  )
     return 'electric';
-  if (s === 'lpg' || s === 'gas' || s === 'propane' || s === 'cng' || s.includes('natural gas') || s === 'naturalgas' || s === 'hydrogen')
+  if (
+    s === 'lpg' ||
+    s === 'gas' ||
+    s === 'propane' ||
+    s === 'cng' ||
+    s.includes('natural gas') ||
+    s === 'naturalgas' ||
+    s === 'hydrogen'
+  )
     return 'lpg';
   return s;
 }
@@ -736,8 +756,8 @@ export function SmartPublishWizard({
         )}
       </div>
 
-      {/* Navigation buttons (main steps only) */}
-      {isMainStep && mainStepIndex > 0 && (
+      {/* Navigation buttons (main steps only — hidden on review since ReviewStep has its own actions) */}
+      {isMainStep && mainStepIndex > 0 && currentStep !== 'review' && (
         <div className="mt-8 flex items-center justify-between border-t pt-6">
           <button
             onClick={goToPrev}

@@ -63,9 +63,7 @@ function toLevel(fc: FieldConfidence | null | undefined): ConfidenceLevel | null
   return 'low';
 }
 
-function computeOverallConfidence(
-  confidences: Record<string, FieldConfidence>
-): ConfidenceLevel {
+function computeOverallConfidence(confidences: Record<string, FieldConfidence>): ConfidenceLevel {
   const vals = Object.values(confidences);
   if (vals.length === 0) return 'medium';
   const avg = vals.reduce((sum, v) => sum + v.confidence, 0) / vals.length;
@@ -167,9 +165,7 @@ export function VinDecodeResults({ result, onContinue, onEditManual }: VinDecode
             <p className="mt-1 text-2xl font-bold text-gray-900">
               {result.year} {result.make} {result.model}
             </p>
-            {result.trim && (
-              <p className="text-sm text-gray-600">{result.trim}</p>
-            )}
+            {result.trim && <p className="text-sm text-gray-600">{result.trim}</p>}
           </div>
           <ConfidenceBadge level={overallConfidence} />
         </div>

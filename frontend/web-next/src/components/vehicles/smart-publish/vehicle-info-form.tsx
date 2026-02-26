@@ -14,6 +14,7 @@ import type { VehicleFormData } from './smart-publish-wizard';
 import { sanitizeText, sanitizeMileage, sanitizeYear } from '@/lib/security/sanitize';
 import { Check, Sparkles, MapPin, User } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
 
 // ============================================================
 // Static Data
@@ -519,24 +520,34 @@ export function VehicleInfoForm({
         </div>
       </section>
 
-      {/* ── Section: Location (read-only from seller profile) ── */}
+      {/* ── Section: Location ── */}
       <section>
         <h3 className="mb-4 text-sm font-semibold tracking-wider text-gray-500 uppercase">
           Ubicación
         </h3>
-        <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
-          <div>
-            <p className="text-sm font-medium text-emerald-800">
-              {[data.city, data.province].filter(Boolean).join(', ') || 'No configurada'}
-            </p>
-            <p className="mt-0.5 text-xs text-emerald-600">
-              Ubicación tomada de tu perfil de vendedor.{' '}
-              <a href="/cuenta/perfil" className="underline hover:text-emerald-800">
-                Editar perfil
-              </a>
+        {(data.province || data.city) && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
+            <p className="text-xs text-emerald-700">
+              Pre-llenado desde tu perfil de vendedor. Puedes cambiarlo para esta publicación.
             </p>
           </div>
+        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SelectField
+            label="Provincia"
+            value={data.province}
+            onChange={val => onChange({ province: val })}
+            options={RD_PROVINCES.map(p => ({ value: p, label: p }))}
+            placeholder="Seleccionar provincia..."
+            required
+          />
+          <TextField
+            label="Ciudad / Sector"
+            value={data.city}
+            onChange={val => onChange({ city: sanitizeText(val) })}
+            placeholder="Ej: Naco, Piantini..."
+          />
         </div>
       </section>
 
