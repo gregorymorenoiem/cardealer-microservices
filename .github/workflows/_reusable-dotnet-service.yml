@@ -197,7 +197,7 @@ jobs:
           # Fast path: Docker ya está respondiendo
           if docker version > /dev/null 2>&1; then
             echo "✅ Docker daemon is healthy (Colima already running)"
-            docker version --format '  Engine: {{.Server.Version}} | Host: {{.Client.Host}}'
+            docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
             exit 0
           fi
 
@@ -216,7 +216,7 @@ jobs:
             sleep 5
             if docker version > /dev/null 2>&1; then
               echo "✅ Docker ready after $((i*5))s"
-              docker version --format '  Engine: {{.Server.Version}} | Host: {{.Client.Host}}'
+              docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
               exit 0
             fi
             if [ $i -eq 36 ]; then
