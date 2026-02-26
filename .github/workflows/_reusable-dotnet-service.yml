@@ -228,6 +228,18 @@ jobs:
             echo "  Waiting... $((i*5))s / 180s"
           done
 
+      - name: 🔧 Configure Docker for CI (no keychain)
+        run: |
+          # Create a fresh Docker config for this CI session.
+          # The default 'desktop' credsStore requires macOS keychain access,
+          # which is unavailable in background/non-interactive runner sessions.
+          # Using a temp dir with an empty config lets Buildx and Login work
+          # without needing keychain access.
+          CI_DOCKER_CONFIG=$(mktemp -d)
+          echo "{}" > "$CI_DOCKER_CONFIG/config.json"
+          echo "DOCKER_CONFIG=$CI_DOCKER_CONFIG" >> "$GITHUB_ENV"
+          echo "✅ CI Docker config created at: $CI_DOCKER_CONFIG (no credsStore)"
+
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
