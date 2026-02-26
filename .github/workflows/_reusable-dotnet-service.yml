@@ -228,22 +228,22 @@ jobs:
             echo "  Waiting... $((i*5))s / 180s"
           done
 
-      - name: "🗑️ Remove Docker Desktop buildx symlink & fix credentials"
+      - name: "🗑️ Remove Docker Desktop buildx symlink & create CI Docker config"
         run: |
           # 1. Remove Docker Desktop buildx symlink so setup-buildx-action can
           #    install its binary as a regular file (symlink to Docker.app = EPERM).
           rm -f ~/.docker/cli-plugins/docker-buildx
 
-          # 2. Strip credsStore from docker config to prevent locked-keychain errors
-          #    in background CI sessions. Public images (moby/buildkit) are pulled
-          #    anonymously; GHCR login is handled later by docker/login-action.
-          DOCKER_CFG="$HOME/.docker/config.json"
-          if [ -f "$DOCKER_CFG" ]; then
-            jq 'del(.credsStore, .credHelpers)' "$DOCKER_CFG" > /tmp/docker_cfg_ci.json \
-              && mv /tmp/docker_cfg_ci.json "$DOCKER_CFG"
-            echo "docker config.json after cleanup: $(cat "$DOCKER_CFG")"
-          fi
-          echo "DOCKER_CONFIG=$HOME/.docker" >> "$GITHUB_ENV"
+          # 2. Create a clean CI-specific DOCKER_CONFIG directory (temp dir).
+          #    Has NO credsStore, so Docker never calls the macOS Keychain helper.
+          #    docker/login-action stores GHCR credentials in auths{} (plaintext
+          #    base64), which is correct for a CI ephemeral session.
+          CI_CFG=$(mktemp -d)
+          jq 'del(.credsStore, .credHelpers)' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{}}' > "$CI_CFG/config.json"
+          echo "CI DOCKER_CONFIG: $(cat "$CI_CFG/config.json")"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
 
       - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
         run: |
