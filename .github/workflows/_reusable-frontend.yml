@@ -158,43 +158,51 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🩺 Ensure Docker daemon is running
-        timeout-minutes: 5
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
         run: |
-          # Check if Docker is responding
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+
+          # Switch to Colima context (headless, works from any session — no GUI needed)
+          if [ -x "$COLIMA_BIN" ]; then
+            docker context use colima 2>/dev/null || true
+          fi
+
+          # Fast path: Docker already responding
           if timeout 10 docker version > /dev/null 2>&1; then
             echo "✅ Docker daemon is healthy"
+            docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
             exit 0
           fi
 
-          echo "⚠️ Docker daemon not responding — attempting to start Docker Desktop..."
+          echo "⚠️ Docker not responding. Starting Colima (no GUI required)..."
 
-          # Method 1: open via bundle ID (works from service/launchd context)
-          /usr/bin/open -b com.docker.docker 2>/dev/null && echo "  → Opened via bundle ID" || true
+          # Start Colima — CLI tool, works from any shell context (LaunchAgent, SSH, cron)
+          if [ -x "$COLIMA_BIN" ]; then
+            "$COLIMA_BIN" start 2>&1 | head -30 || true
+          else
+            echo "::warning::Colima not found at $COLIMA_BIN — install with: brew install colima"
+            /usr/bin/open -b com.docker.docker 2>/dev/null || true
+          fi
 
-          # Method 2: osascript (works when user is logged in)
-          osascript -e 'tell application "Docker Desktop" to activate' 2>/dev/null && echo "  → Opened via osascript" || true
-
-          # Method 3: direct binary
-          /Applications/Docker.app/Contents/MacOS/Docker &>/dev/null &
-
-          echo "⏳ Waiting up to 3 min for Docker daemon..."
-          for i in $(seq 1 36); do
+          # Wait up to 5 minutes for Docker to be ready
+          for i in $(seq 1 60); do
             sleep 5
             if timeout 5 docker version > /dev/null 2>&1; then
-              echo "✅ Docker is ready after $((i * 5))s"
+              echo "✅ Docker ready after $((i*5))s"
               docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
               break
             fi
-            if [ $i -eq 36 ]; then
-              echo "::error::Docker daemon did not start after 3 minutes"
+            if [ $i -eq 60 ]; then
+              echo "::error::Docker daemon did not start after 5 minutes"
+              [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" status 2>&1 || true
               exit 1
             fi
-            echo "  Still waiting... $((i * 5))s / 180s"
+            echo "  Waiting... $((i*5))s / 300s"
           done
 
       - name: 🔧 Set up Docker Buildx
-        # Docker Desktop on macOS ARM64 already bundles QEMU for linux/amd64 —
+        # Colima on macOS ARM64 supports linux/amd64 via Rosetta 2 (vz) or QEMU (binfmt_misc).
         # setup-qemu-action is not needed and causes exit code 1 on Mac runners.
         uses: docker/setup-buildx-action@v3
         with:
