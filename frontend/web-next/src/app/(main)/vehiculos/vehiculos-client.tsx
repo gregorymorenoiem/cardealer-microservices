@@ -53,6 +53,11 @@ import {
   MapPin,
   Bell,
   LogIn,
+  ShieldCheck,
+  Tag,
+  Car,
+  Phone,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,19 +110,33 @@ const QUICK_FILTERS = [
 // =============================================================================
 
 /**
- * AdSlotLeaderboard — Full-width inline ad (between result rows).
- * Renders a placeholder; in production this is replaced by Google AdSense
- * or OKLA's own ad network.
+ * PromoLeaderboard — Branded "Sell your car" conversion banner.
+ * Replaces the generic AdSense placeholder until ads are configured.
  */
 function AdSlotLeaderboard() {
   return (
     <div
-      className="border-border bg-muted/30 text-muted-foreground col-span-full my-2 flex h-[90px] items-center justify-center rounded-xl border border-dashed text-xs"
-      aria-label="Espacio publicitario"
-      data-ad-slot="leaderboard"
+      className="col-span-full my-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#00A870] to-[#00c882] shadow-md"
+      aria-label="Banner promocional"
     >
-      {/* Replace with <ins className="adsbygoogle" ... /> in production */}
-      <span className="opacity-50 select-none">Publicidad</span>
+      <div className="flex flex-col items-center justify-between gap-4 px-6 py-5 sm:flex-row">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20">
+            <Car className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-white">¿Tienes un vehículo para vender?</p>
+            <p className="text-sm text-white/80">Publica en minutos y llega a miles de compradores en RD</p>
+          </div>
+        </div>
+        <Link
+          href="/vender"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#00A870] shadow-sm transition-all hover:shadow-md hover:scale-105"
+        >
+          <Tag className="h-4 w-4" />
+          Publicar ahora
+        </Link>
+      </div>
     </div>
   );
 }
@@ -126,13 +145,31 @@ function AdSlotRectangle({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'border-border bg-muted/30 text-muted-foreground flex h-[250px] w-full items-center justify-center rounded-xl border border-dashed text-xs',
+        'overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 shadow-md',
         className
       )}
-      aria-label="Espacio publicitario"
-      data-ad-slot="rectangle"
+      aria-label="Panel de alertas"
     >
-      <span className="opacity-50 select-none">Publicidad</span>
+      <div className="flex flex-col items-center gap-3 p-5 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#00A870]/20">
+          <Bell className="h-6 w-6 text-[#00A870]" />
+        </div>
+        <div>
+          <p className="font-bold text-white">Crea una alerta</p>
+          <p className="mt-1 text-xs text-slate-400">Recibe notificaciones cuando aparezca un vehículo que te interese</p>
+        </div>
+        <Link
+          href="/cuenta/alertas"
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00A870] py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#008a5c]"
+        >
+          <Bell className="h-4 w-4" />
+          Activar alertas
+        </Link>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Sin spam · Cancela cuando quieras
+        </div>
+      </div>
     </div>
   );
 }
@@ -481,13 +518,40 @@ export default function VehiculosClient() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════
+          TRUST BAR: Social proof signals
+      ═══════════════════════════════════════════════════════ */}
+      <div className="border-border bg-card border-b">
+        <div className="mx-auto flex max-w-screen-xl items-center justify-center gap-6 overflow-x-auto px-4 py-2 sm:px-6">
+          <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#00A870]" />
+            <span>Vendedores verificados</span>
+          </div>
+          <span className="text-border">·</span>
+          <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <Star className="h-3.5 w-3.5 text-amber-500" />
+            <span>+2,400 vehículos activos</span>
+          </div>
+          <span className="text-border">·</span>
+          <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <Phone className="h-3.5 w-3.5 text-[#00A870]" />
+            <span>Contacto directo con el vendedor</span>
+          </div>
+          <span className="hidden text-border sm:inline">·</span>
+          <div className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+            <Bell className="h-3.5 w-3.5 text-[#00A870]" />
+            <span>Alertas de precio gratis</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════
           MAIN CONTENT: Sidebar + Results
       ═══════════════════════════════════════════════════════ */}
       <div className="mx-auto max-w-screen-xl px-4 py-5 sm:px-6">
         <div className="flex gap-6">
           {/* ─── LEFT SIDEBAR ─────────────────────────────────── */}
           <aside className="hidden w-[268px] flex-shrink-0 lg:block">
-            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border sticky top-[188px] max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto pr-1">
+            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border sticky top-[220px] max-h-[calc(100vh-230px)] space-y-4 overflow-y-auto pr-1">
               <VehicleFilters
                 filters={filters}
                 onChange={changes => setFilters({ ...changes, page: 1 })}
@@ -513,7 +577,7 @@ export default function VehiculosClient() {
                     <span className="bg-muted inline-block h-4 w-32 animate-pulse rounded" />
                   ) : (
                     <>
-                      <span className="text-foreground font-semibold">
+                      <span className="text-foreground font-bold">
                         {totalResults.toLocaleString()}
                       </span>{' '}
                       vehículos encontrados
@@ -761,6 +825,21 @@ export default function VehiculosClient() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* ═══════════════════════════════════════════════════════
+          FLOATING MOBILE BOTTOM CTA
+      ═══════════════════════════════════════════════════════ */}
+      <div className="fixed right-4 bottom-6 z-50 flex flex-col items-end gap-2 lg:hidden">
+        <button
+          type="button"
+          onClick={() => isAuthenticated ? setSaveModalOpen(true) : (window.location.href = '/login?redirect=/vehiculos')}
+          className="flex items-center gap-2 rounded-full bg-[#00A870] px-4 py-3 text-sm font-semibold text-white shadow-xl ring-2 ring-white/30 transition-all hover:bg-[#008a5c] hover:shadow-2xl active:scale-95"
+          aria-label="Guardar búsqueda y crear alerta"
+        >
+          <Bell className="h-4 w-4" />
+          <span>Guardar búsqueda</span>
+        </button>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════
           SAVE SEARCH MODAL
