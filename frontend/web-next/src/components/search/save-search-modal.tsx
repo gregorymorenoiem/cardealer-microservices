@@ -149,7 +149,7 @@ export function SaveSearchModal({
       province: filters.province,
       city: filters.city,
       drivetrain: filters.drivetrain,
-      sellerType: (filters.sellerType === 'particular' ? 'seller' : filters.sellerType) as 'dealer' | 'seller' | undefined,
+      sellerType: filters.sellerType as 'dealer' | 'seller' | undefined,
       dealRating: filters.dealRating,
     };
 

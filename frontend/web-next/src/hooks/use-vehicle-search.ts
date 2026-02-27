@@ -50,7 +50,7 @@ export interface VehicleSearchFilters {
   dealRating?: 'great' | 'good' | 'fair';
 
   // Seller type
-  sellerType?: 'dealer' | 'particular';
+  sellerType?: 'dealer' | 'seller';
 
   // Vehicle condition extras
   isCertified?: boolean;

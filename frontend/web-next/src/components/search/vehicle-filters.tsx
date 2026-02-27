@@ -262,12 +262,14 @@ export function VehicleFilters({
           </AccordionTrigger>
           <AccordionContent className="pb-4">
             <div className="flex gap-1.5">
-              {[
-                { v: undefined, label: 'Todos' },
-                { v: 'nuevo', label: 'Nuevo' },
-                { v: 'usado', label: 'Usado' },
-                { v: 'certificado', label: 'Certificado' },
-              ].map(opt => {
+              {(
+                [
+                  { v: undefined, label: 'Todos' },
+                  { v: 'nuevo', label: 'Nuevo' },
+                  { v: 'usado', label: 'Usado' },
+                  { v: 'certificado', label: 'Certificado' },
+                ] as { v: 'certificado' | 'nuevo' | 'usado' | undefined; label: string }[]
+              ).map(opt => {
                 const isActive = filters.condition === opt.v;
                 return (
                   <button
