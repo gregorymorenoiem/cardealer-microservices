@@ -196,9 +196,7 @@ export default function EditVehiclePage() {
           <CardContent className="py-12 text-center">
             <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
             <h2 className="mb-2 text-xl font-semibold">Error al cargar</h2>
-            <p className="text-muted-foreground mb-4">
-              {error || 'No se encontró el vehículo'}
-            </p>
+            <p className="text-muted-foreground mb-4">{error || 'No se encontró el vehículo'}</p>
             <Button asChild variant="outline">
               <Link href="/cuenta/mis-vehiculos">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -270,8 +268,8 @@ export default function EditVehiclePage() {
             <div>
               <p className="font-medium text-yellow-800">En revisión</p>
               <p className="text-yellow-700">
-                Tu vehículo está siendo revisado por nuestro equipo. Puedes editar los datos
-                pero los cambios se aplicarán después de la revisión.
+                Tu vehículo está siendo revisado por nuestro equipo. Puedes editar los datos pero
+                los cambios se aplicarán después de la revisión.
               </p>
             </div>
           </CardContent>
@@ -329,10 +327,7 @@ export default function EditVehiclePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="transmission">Transmisión</Label>
-              <Select
-                value={form.transmission}
-                onValueChange={v => updateForm('transmission', v)}
-              >
+              <Select value={form.transmission} onValueChange={v => updateForm('transmission', v)}>
                 <SelectTrigger id="transmission">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
@@ -347,10 +342,7 @@ export default function EditVehiclePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="fuelType">Combustible</Label>
-              <Select
-                value={form.fuelType}
-                onValueChange={v => updateForm('fuelType', v)}
-              >
+              <Select value={form.fuelType} onValueChange={v => updateForm('fuelType', v)}>
                 <SelectTrigger id="fuelType">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
@@ -365,10 +357,7 @@ export default function EditVehiclePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="bodyType">Tipo de carrocería</Label>
-              <Select
-                value={form.bodyType}
-                onValueChange={v => updateForm('bodyType', v)}
-              >
+              <Select value={form.bodyType} onValueChange={v => updateForm('bodyType', v)}>
                 <SelectTrigger id="bodyType">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
@@ -383,10 +372,7 @@ export default function EditVehiclePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="condition">Condición</Label>
-              <Select
-                value={form.condition}
-                onValueChange={v => updateForm('condition', v)}
-              >
+              <Select value={form.condition} onValueChange={v => updateForm('condition', v)}>
                 <SelectTrigger id="condition">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
@@ -434,10 +420,7 @@ export default function EditVehiclePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="currency">Moneda</Label>
-              <Select
-                value={form.currency}
-                onValueChange={v => updateForm('currency', v)}
-              >
+              <Select value={form.currency} onValueChange={v => updateForm('currency', v)}>
                 <SelectTrigger id="currency">
                   <SelectValue />
                 </SelectTrigger>
@@ -531,7 +514,7 @@ export default function EditVehiclePage() {
                     className="h-full w-full object-cover"
                   />
                   {idx === 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-0.5 text-center text-xs text-white">
+                    <div className="absolute right-0 bottom-0 left-0 bg-black/60 px-2 py-0.5 text-center text-xs text-white">
                       Principal
                     </div>
                   )}
@@ -550,11 +533,7 @@ export default function EditVehiclePage() {
         <Button variant="outline" asChild>
           <Link href="/cuenta/mis-vehiculos">Cancelar</Link>
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving || isSubmitting}
-          variant="outline"
-        >
+        <Button onClick={handleSave} disabled={isSaving || isSubmitting} variant="outline">
           {isSaving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -563,10 +542,7 @@ export default function EditVehiclePage() {
           Guardar Cambios
         </Button>
         {isRejected && (
-          <Button
-            onClick={handleResubmit}
-            disabled={isSaving || isSubmitting}
-          >
+          <Button onClick={handleResubmit} disabled={isSaving || isSubmitting}>
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (

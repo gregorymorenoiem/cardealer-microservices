@@ -97,6 +97,7 @@ export interface UserFilters {
 export interface AdminVehicle {
   id: string;
   title: string;
+  slug?: string;
   make: string;
   model: string;
   year: number;

@@ -162,9 +162,7 @@ export default function PromoteVehiclePage() {
           <CardContent className="py-12 text-center">
             <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
             <h2 className="mb-2 text-xl font-semibold">Error</h2>
-            <p className="text-muted-foreground mb-4">
-              {error || 'No se encontró el vehículo'}
-            </p>
+            <p className="text-muted-foreground mb-4">{error || 'No se encontró el vehículo'}</p>
             <Button asChild variant="outline">
               <Link href="/cuenta/mis-vehiculos">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -183,12 +181,10 @@ export default function PromoteVehiclePage() {
         <Card className="border-purple-200 bg-purple-50">
           <CardContent className="py-12 text-center">
             <Star className="mx-auto mb-4 h-12 w-12 fill-purple-500 text-purple-500" />
-            <h2 className="mb-2 text-xl font-semibold text-purple-800">
-              ¡Ya está destacado!
-            </h2>
+            <h2 className="mb-2 text-xl font-semibold text-purple-800">¡Ya está destacado!</h2>
             <p className="text-purple-700">
-              Tu {vehicle.year} {vehicle.make} {vehicle.model} ya aparece como destacado
-              en la plataforma.
+              Tu {vehicle.year} {vehicle.make} {vehicle.model} ya aparece como destacado en la
+              plataforma.
             </p>
             <Button asChild className="mt-6" variant="outline">
               <Link href="/cuenta/mis-vehiculos">
@@ -210,8 +206,8 @@ export default function PromoteVehiclePage() {
             <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
             <h2 className="mb-2 text-xl font-semibold">Vehículo no activo</h2>
             <p className="text-muted-foreground mb-4">
-              Solo puedes promocionar vehículos que estén activos y publicados.
-              Tu vehículo está en estado: <strong>{vehicle.status}</strong>
+              Solo puedes promocionar vehículos que estén activos y publicados. Tu vehículo está en
+              estado: <strong>{vehicle.status}</strong>
             </p>
             <Button asChild variant="outline">
               <Link href="/cuenta/mis-vehiculos">
@@ -315,9 +311,7 @@ export default function PromoteVehiclePage() {
               </div>
               <div>
                 <p className="font-medium">En el homepage</p>
-                <p className="text-muted-foreground text-sm">
-                  Aparece en la sección de destacados
-                </p>
+                <p className="text-muted-foreground text-sm">Aparece en la sección de destacados</p>
               </div>
             </div>
           </div>
@@ -347,10 +341,7 @@ export default function PromoteVehiclePage() {
                         : 'hover:border-muted-foreground/30 border-border'
                     }`}
                   >
-                    <RadioGroupItem
-                      value={plan.id}
-                      className="sr-only"
-                    />
+                    <RadioGroupItem value={plan.id} className="sr-only" />
                     {plan.popular && (
                       <Badge className="absolute -top-2.5 right-4 bg-purple-600 text-white">
                         Más popular
@@ -424,8 +415,8 @@ export default function PromoteVehiclePage() {
             </Button>
           </div>
           <p className="text-muted-foreground mt-3 text-xs">
-            Pago seguro procesado por Azul (Banco Popular). Aceptamos Visa, Mastercard y
-            American Express.
+            Pago seguro procesado por Azul (Banco Popular). Aceptamos Visa, Mastercard y American
+            Express.
           </p>
         </CardContent>
       </Card>
