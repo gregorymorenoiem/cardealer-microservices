@@ -292,10 +292,7 @@ const initialFormData: VehicleFormData = {
  * – Keeps only images that have a real server URL (already uploaded).
  * – Preserves all other scalar/primitive fields unchanged.
  */
-function serializeForDraft(
-  data: VehicleFormData,
-  step: WizardStep,
-): Record<string, unknown> {
+function serializeForDraft(data: VehicleFormData, step: WizardStep): Record<string, unknown> {
   const serializableImages = data.images
     .filter(img => img.url && !img.url.startsWith('blob:') && !img.isUploading)
     .map(img => ({
@@ -385,10 +382,7 @@ export function SmartPublishWizard({
   useEffect(() => {
     if (currentStep !== 'method' && (formData.make || formData.vin)) {
       try {
-        localStorage.setItem(
-          draftKey,
-          JSON.stringify(serializeForDraft(formData, currentStep))
-        );
+        localStorage.setItem(draftKey, JSON.stringify(serializeForDraft(formData, currentStep)));
       } catch {
         /* ignore */
       }
