@@ -562,6 +562,11 @@ export async function searchVehicles(
   if (params.transmission) backendParams.Transmission = params.transmission;
   if (params.condition) backendParams.Condition = params.condition;
   if (params.province) backendParams.State = params.province;
+  if (params.city) backendParams.City = params.city;
+  if (params.drivetrain) backendParams.DriveType = params.drivetrain;
+  if (params.color) backendParams.ExteriorColor = params.color;
+  if (params.isCertified !== undefined) backendParams.IsCertified = params.isCertified;
+  if (params.hasCleanTitle !== undefined) backendParams.HasCleanTitle = params.hasCleanTitle;
   if (params.sortBy) {
     backendParams.SortBy = params.sortBy;
     backendParams.SortDescending = params.sortOrder === 'desc';

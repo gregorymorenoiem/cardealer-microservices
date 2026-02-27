@@ -98,7 +98,7 @@ export default function SavedSearchesPage() {
           searchParams.set(key, String(value));
         }
       });
-      window.location.href = `/buscar?${searchParams.toString()}`;
+      window.location.href = `/vehiculos?${searchParams.toString()}`;
     } catch {
       toast.error('Error al ejecutar búsqueda');
     }
@@ -164,7 +164,7 @@ export default function SavedSearchesPage() {
           <p className="text-muted-foreground">Accede rápidamente a tus filtros favoritos</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90">
-          <Link href="/buscar">
+          <Link href="/vehiculos">
             <Plus className="mr-2 h-4 w-4" />
             Nueva Búsqueda
           </Link>
@@ -316,7 +316,7 @@ export default function SavedSearchesPage() {
               Guarda tus búsquedas favoritas para acceder a ellas rápidamente
             </p>
             <Button asChild className="bg-primary hover:bg-primary/90">
-              <Link href="/buscar">
+              <Link href="/vehiculos">
                 <Search className="mr-2 h-4 w-4" />
                 Buscar Vehículos
               </Link>

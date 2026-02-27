@@ -58,10 +58,7 @@ export async function GET(request: NextRequest) {
   // Forward the user's auth token to the AlertService endpoints
   const authHeader = request.headers.get('authorization');
   if (!authHeader) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const headers: Record<string, string> = {
@@ -87,16 +84,11 @@ export async function GET(request: NextRequest) {
 
   // ── Parse price alerts ─────────────────────────────────────────────────────
   let priceAlerts: PriceAlertDto[] = [];
-  if (
-    priceAlertsResult.status === 'fulfilled' &&
-    priceAlertsResult.value.ok
-  ) {
+  if (priceAlertsResult.status === 'fulfilled' && priceAlertsResult.value.ok) {
     try {
       const raw = await priceAlertsResult.value.json();
       // AlertService returns a plain array; guard against wrapped shapes
-      priceAlerts = Array.isArray(raw)
-        ? raw
-        : (raw?.data ?? raw?.items ?? raw?.value ?? []);
+      priceAlerts = Array.isArray(raw) ? raw : (raw?.data ?? raw?.items ?? raw?.value ?? []);
     } catch {
       // ignore parse errors
     }
@@ -104,15 +96,10 @@ export async function GET(request: NextRequest) {
 
   // ── Parse saved searches ───────────────────────────────────────────────────
   let savedSearches: SavedSearchDto[] = [];
-  if (
-    savedSearchesResult.status === 'fulfilled' &&
-    savedSearchesResult.value.ok
-  ) {
+  if (savedSearchesResult.status === 'fulfilled' && savedSearchesResult.value.ok) {
     try {
       const raw = await savedSearchesResult.value.json();
-      savedSearches = Array.isArray(raw)
-        ? raw
-        : (raw?.data ?? raw?.items ?? raw?.value ?? []);
+      savedSearches = Array.isArray(raw) ? raw : (raw?.data ?? raw?.items ?? raw?.value ?? []);
     } catch {
       // ignore parse errors
     }

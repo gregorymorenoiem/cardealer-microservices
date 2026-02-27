@@ -52,6 +52,11 @@ export interface VehicleSearchFilters {
   // Seller type
   sellerType?: 'dealer' | 'particular';
 
+  // Vehicle condition extras
+  isCertified?: boolean;
+  hasCleanTitle?: boolean;
+  color?: string;
+
   // Features
   features?: string[];
 
@@ -208,6 +213,15 @@ function parseSearchParams(searchParams: URLSearchParams): VehicleSearchFilters 
   const sellerType = searchParams.get('seller_type');
   if (sellerType) filters.sellerType = sellerType as VehicleSearchFilters['sellerType'];
 
+  const isCertified = searchParams.get('is_certified');
+  if (isCertified) filters.isCertified = isCertified === 'true';
+
+  const hasCleanTitle = searchParams.get('has_clean_title');
+  if (hasCleanTitle) filters.hasCleanTitle = hasCleanTitle === 'true';
+
+  const color = searchParams.get('color');
+  if (color) filters.color = color;
+
   // Features (comma-separated)
   const features = searchParams.get('features');
   if (features) filters.features = features.split(',');
@@ -246,6 +260,9 @@ function filtersToSearchParams(filters: VehicleSearchFilters): URLSearchParams {
   if (filters.city) params.set('city', filters.city);
   if (filters.dealRating) params.set('deal_rating', filters.dealRating);
   if (filters.sellerType) params.set('seller_type', filters.sellerType);
+  if (filters.isCertified) params.set('is_certified', 'true');
+  if (filters.hasCleanTitle) params.set('has_clean_title', 'true');
+  if (filters.color) params.set('color', filters.color);
   if (filters.features?.length) params.set('features', filters.features.join(','));
   if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
   if (filters.limit && filters.limit !== 24) params.set('limit', filters.limit.toString());
@@ -272,6 +289,9 @@ function countActiveFilters(filters: VehicleSearchFilters): number {
   if (filters.city) count++;
   if (filters.dealRating) count++;
   if (filters.sellerType) count++;
+  if (filters.isCertified) count++;
+  if (filters.hasCleanTitle) count++;
+  if (filters.color) count++;
   if (filters.features?.length) count++;
 
   return count;
@@ -313,8 +333,14 @@ async function fetchVehicles(filters: VehicleSearchFilters): Promise<VehicleSear
     bodyType: filters.bodyType as VehicleSearchParams['bodyType'],
     transmission: filters.transmission,
     fuelType: filters.fuelType,
+    drivetrain: filters.drivetrain,
     condition: filters.condition,
     province: filters.province,
+    city: filters.city,
+    sellerType: filters.sellerType,
+    color: filters.color,
+    isCertified: filters.isCertified,
+    hasCleanTitle: filters.hasCleanTitle,
     page: filters.page || 1,
     pageSize: filters.limit || 24,
     sortBy: sort.sortBy,

@@ -325,6 +325,13 @@ export interface VehicleSearchParams extends SearchParams {
   fuelType?: string;
   condition?: string;
   province?: string;
+  city?: string;
+  drivetrain?: string;
+  color?: string;
+  isCertified?: boolean;
+  hasCleanTitle?: boolean;
+  sellerType?: 'dealer' | 'seller';
+  features?: string[];
   dealRating?: DealRating;
 }
 
