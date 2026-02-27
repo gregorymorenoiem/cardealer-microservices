@@ -122,7 +122,9 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
           {/* Monthly Payment Estimate */}
           <p className="text-muted-foreground mt-2 text-sm">
             Estimado:{' '}
-            <span className="font-medium">{formatCurrency(Math.round(vehicle.price / 60))}/mes</span>
+            <span className="font-medium">
+              {formatCurrency(Math.round(vehicle.price / 60))}/mes
+            </span>
             <span className="ml-1 text-xs">(60 meses)</span>
           </p>
         </div>
@@ -136,7 +138,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
             aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
             className={cn(
               'flex-1 gap-2 transition-colors',
-              isFavorite && 'border-rose-500 bg-rose-500 hover:bg-rose-600',
+              isFavorite && 'border-rose-500 bg-rose-500 text-white hover:bg-rose-600'
             )}
           >
             <Heart className={cn('h-5 w-5', isFavorite && 'fill-current')} />
