@@ -237,11 +237,7 @@ function RegistrationBanner({ vehicleSlug }: { vehicleSlug: string }) {
             Guarda favoritos • Alertas de precios • Chatea con vendedores
           </p>
         </div>
-        <Button
-          asChild
-          size="sm"
-          className="bg-white font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50"
-        >
+        <Button asChild variant="white" size="sm" className="font-semibold">
           <Link href={`/registro?redirect=/vehiculos/${vehicleSlug}`}>Crear cuenta gratis</Link>
         </Button>
       </div>
