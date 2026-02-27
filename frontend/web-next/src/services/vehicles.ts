@@ -989,6 +989,31 @@ export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
 // CREATE VEHICLE FUNCTION
 // ============================================================
 
+// ── Enum mappings: frontend/catalog values → backend enum names ──
+// The catalog API and static fallbacks may use lowercase/snake_case values
+// but the backend expects PascalCase enum names for deserialization.
+const CONDITION_TO_ENUM: Record<string, string> = {
+  new: 'New', 'like-new': 'CertifiedPreOwned', excellent: 'Used',
+  good: 'Used', fair: 'Used', used: 'Used', salvage: 'Salvage',
+  rebuilt: 'Rebuilt', certifiedpreowned: 'CertifiedPreOwned',
+};
+const FUEL_TYPE_TO_ENUM: Record<string, string> = {
+  gasoline: 'Gasoline', diesel: 'Diesel', hybrid: 'Hybrid',
+  electric: 'Electric', plugin_hybrid: 'PlugInHybrid',
+  pluginhybrid: 'PlugInHybrid', lpg: 'NaturalGas',
+  naturalgas: 'NaturalGas', flex_fuel: 'FlexFuel', flexfuel: 'FlexFuel',
+  hydrogen: 'Hydrogen',
+};
+const TRANSMISSION_TO_ENUM: Record<string, string> = {
+  automatic: 'Automatic', manual: 'Manual', cvt: 'CVT',
+  dct: 'DualClutch', dualclutch: 'DualClutch',
+  'semi-automatic': 'Automated', automated: 'Automated',
+};
+/** Resolve a frontend/catalog value to its backend enum name */
+function toEnum(value: string, map: Record<string, string>): string {
+  return map[value.toLowerCase()] ?? value;
+}
+
 /**
  * Create a new vehicle listing (creates as Draft).
  * Maps frontend field names to backend expected names.
@@ -1021,11 +1046,11 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
     trim: data.trim,
     mileage: data.mileage ?? 0,
     vin: data.vin,
-    // Enums — send as lowercase strings, backend accepts them case-insensitively
-    transmission: data.transmission,
-    fuelType: data.fuelType,
-    bodyType: data.bodyType, // backend alias for BodyStyle
-    condition: data.condition,
+    // Enums — map to PascalCase backend enum names
+    transmission: toEnum(data.transmission, TRANSMISSION_TO_ENUM),
+    fuelType: toEnum(data.fuelType, FUEL_TYPE_TO_ENUM),
+    bodyType: data.bodyType, // backend alias for BodyStyle (has its own mapper)
+    condition: toEnum(data.condition, CONDITION_TO_ENUM),
     // Pricing
     price: data.price,
     currency: data.currency ?? 'DOP',
@@ -1419,23 +1444,23 @@ function getStaticBodyTypes(): CatalogOption[] {
 
 function getStaticFuelTypes(): CatalogOption[] {
   return [
-    { value: 'gasoline', label: 'Gasolina' },
-    { value: 'diesel', label: 'Diésel' },
-    { value: 'hybrid', label: 'Híbrido' },
-    { value: 'electric', label: 'Eléctrico' },
-    { value: 'plugin_hybrid', label: 'Híbrido Enchufable' },
-    { value: 'lpg', label: 'GLP / Gas' },
-    { value: 'flex_fuel', label: 'Flex Fuel' },
+    { value: 'Gasoline', label: 'Gasolina' },
+    { value: 'Diesel', label: 'Diésel' },
+    { value: 'Hybrid', label: 'Híbrido' },
+    { value: 'Electric', label: 'Eléctrico' },
+    { value: 'PlugInHybrid', label: 'Híbrido Enchufable' },
+    { value: 'NaturalGas', label: 'GLP / Gas' },
+    { value: 'FlexFuel', label: 'Flex Fuel' },
   ];
 }
 
 function getStaticTransmissions(): CatalogOption[] {
   return [
-    { value: 'automatic', label: 'Automática' },
-    { value: 'manual', label: 'Manual' },
-    { value: 'cvt', label: 'CVT' },
-    { value: 'dct', label: 'Doble Embrague (DCT)' },
-    { value: 'semi-automatic', label: 'Semi-automática' },
+    { value: 'Automatic', label: 'Automática' },
+    { value: 'Manual', label: 'Manual' },
+    { value: 'CVT', label: 'CVT' },
+    { value: 'DualClutch', label: 'Doble Embrague (DCT)' },
+    { value: 'Automated', label: 'Semi-automática' },
   ];
 }
 

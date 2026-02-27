@@ -1060,13 +1060,13 @@ public class CatalogController : ControllerBase
     {
         var fuelTypes = new List<CatalogOptionDto>
         {
-            new("gasoline", "Gasolina"),
-            new("diesel", "Diésel"),
-            new("hybrid", "Híbrido"),
-            new("electric", "Eléctrico"),
-            new("plugin_hybrid", "Híbrido Enchufable"),
-            new("lpg", "GLP / Gas"),
-            new("flex_fuel", "Flex Fuel"),
+            new("Gasoline", "Gasolina"),
+            new("Diesel", "Diésel"),
+            new("Hybrid", "Híbrido"),
+            new("Electric", "Eléctrico"),
+            new("PlugInHybrid", "Híbrido Enchufable"),
+            new("NaturalGas", "GLP / Gas"),
+            new("FlexFuel", "Flex Fuel"),
         };
         return Ok(fuelTypes);
     }
@@ -1080,11 +1080,11 @@ public class CatalogController : ControllerBase
     {
         var transmissions = new List<CatalogOptionDto>
         {
-            new("automatic", "Automática"),
-            new("manual", "Manual"),
-            new("cvt", "CVT"),
-            new("dct", "Doble Embrague (DCT)"),
-            new("semi-automatic", "Semi-automática"),
+            new("Automatic", "Automática"),
+            new("Manual", "Manual"),
+            new("CVT", "CVT"),
+            new("DualClutch", "Doble Embrague (DCT)"),
+            new("Automated", "Semi-automática"),
         };
         return Ok(transmissions);
     }
@@ -1098,12 +1098,30 @@ public class CatalogController : ControllerBase
     {
         var driveTypes = new List<CatalogOptionDto>
         {
-            new("fwd", "Delantera (FWD)"),
-            new("rwd", "Trasera (RWD)"),
-            new("awd", "Total (AWD)"),
-            new("4wd", "4x4 (4WD)"),
+            new("FWD", "Delantera (FWD)"),
+            new("RWD", "Trasera (RWD)"),
+            new("AWD", "Total (AWD)"),
+            new("FourWD", "4x4 (4WD)"),
         };
         return Ok(driveTypes);
+    }
+
+    /// <summary>
+    /// Obtiene las condiciones de vehículo disponibles.
+    /// </summary>
+    [HttpGet("conditions")]
+    [ProducesResponseType(typeof(IEnumerable<CatalogOptionDto>), StatusCodes.Status200OK)]
+    public ActionResult<IEnumerable<CatalogOptionDto>> GetConditions()
+    {
+        var conditions = new List<CatalogOptionDto>
+        {
+            new("New", "Nuevo"),
+            new("CertifiedPreOwned", "Certificado Pre-Owned"),
+            new("Used", "Usado"),
+            new("Salvage", "Salvamento"),
+            new("Rebuilt", "Reconstruido"),
+        };
+        return Ok(conditions);
     }
 
     /// <summary>

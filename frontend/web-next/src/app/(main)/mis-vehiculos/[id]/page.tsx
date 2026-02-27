@@ -174,10 +174,11 @@ function EditVehicleError({ message, onRetry }: { message: string; onRetry: () =
 // =============================================================================
 
 const conditions = [
-  { value: 'new', label: 'Nuevo' },
-  { value: 'like-new', label: 'Usado - Excelente' },
-  { value: 'good', label: 'Usado - Bueno' },
-  { value: 'fair', label: 'Usado - Regular' },
+  { value: 'New', label: 'Nuevo' },
+  { value: 'CertifiedPreOwned', label: 'Certificado Pre-Owned' },
+  { value: 'Used', label: 'Usado' },
+  { value: 'Salvage', label: 'Salvamento' },
+  { value: 'Rebuilt', label: 'Reconstruido' },
 ];
 
 // =============================================================================

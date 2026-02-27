@@ -264,7 +264,7 @@ const initialFormData: VehicleFormData = {
   horsepower: 0,
   mileage: 0,
   mileageUnit: 'km',
-  condition: 'used',
+  condition: 'Used',
   exteriorColor: '',
   interiorColor: '',
   features: [],

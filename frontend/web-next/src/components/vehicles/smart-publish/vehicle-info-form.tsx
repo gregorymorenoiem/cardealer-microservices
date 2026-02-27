@@ -21,11 +21,11 @@ import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
 // ============================================================
 
 const CONDITIONS = [
-  { value: 'new', label: 'Nuevo', description: '0 km, sin uso previo' },
-  { value: 'like-new', label: 'Como Nuevo', description: 'Excelente estado, mínimo uso' },
-  { value: 'excellent', label: 'Excelente', description: 'Muy bien cuidado, sin detalles' },
-  { value: 'good', label: 'Bueno', description: 'Buen estado general, detalles menores' },
-  { value: 'fair', label: 'Regular', description: 'Funcional, necesita algunos arreglos' },
+  { value: 'New', label: 'Nuevo', description: '0 km, sin uso previo' },
+  { value: 'CertifiedPreOwned', label: 'Certificado', description: 'Certificado por dealer, garantía extendida' },
+  { value: 'Used', label: 'Usado', description: 'Usado en buen estado general' },
+  { value: 'Salvage', label: 'Salvamento', description: 'Daño significativo, necesita reparación' },
+  { value: 'Rebuilt', label: 'Reconstruido', description: 'Reparado después de salvamento' },
 ];
 
 const MILEAGE_UNITS = [
