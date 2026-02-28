@@ -21,7 +21,6 @@ import {
   type FeaturedListingItem,
 } from '@/components/homepage';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
-import { useBrands, useCategories } from '@/hooks/use-advertising';
 import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
 import {
   transformHomepageVehicleToVehicle,
@@ -96,13 +95,22 @@ const transformSectionVehicles = (section: HomepageSection | undefined): Feature
 interface HomepageClientProps {
   sections: HomepageSection[];
   fallbackVehicles?: Record<string, unknown>[];
+  /** Brands pre-fetched server-side (avoids client waterfall) */
+  initialBrands?: BrandConfig[];
+  /** Categories pre-fetched server-side (avoids client waterfall) */
+  initialCategories?: CategoryImageConfig[];
 }
 
 // =============================================
 // COMPONENT
 // =============================================
 
-export default function HomepageClient({ sections, fallbackVehicles = [] }: HomepageClientProps) {
+export default function HomepageClient({
+  sections,
+  fallbackVehicles = [],
+  initialBrands = [],
+  initialCategories = [],
+}: HomepageClientProps) {
   const getSection = (slug: string) => sections.find(s => s.slug === slug);
 
   const carousel = getSection('carousel');
@@ -113,13 +121,10 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
   const deportivos = getSection('deportivos');
   const lujo = getSection('lujo');
 
-  // Dynamic brands & categories from AdvertisingService
-  const { data: apiBrands } = useBrands();
-  const { data: apiCategories } = useCategories();
-
+  // Use server-prefetched data (no client waterfall — faster LCP)
   const dynamicBrands = useMemo(() => {
-    if (!apiBrands || apiBrands.length === 0) return undefined;
-    return apiBrands
+    if (!initialBrands || initialBrands.length === 0) return undefined;
+    return initialBrands
       .filter((b: BrandConfig) => b.isActive)
       .sort((a: BrandConfig, b: BrandConfig) => a.displayOrder - b.displayOrder)
       .map((b: BrandConfig) => ({
@@ -129,11 +134,11 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         logoUrl: b.logoUrl || undefined,
         vehicleCount: b.vehicleCount,
       }));
-  }, [apiBrands]);
+  }, [initialBrands]);
 
   const dynamicCategories = useMemo(() => {
-    if (!apiCategories || apiCategories.length === 0) return undefined;
-    return apiCategories
+    if (!initialCategories || initialCategories.length === 0) return undefined;
+    return initialCategories
       .filter((c: CategoryImageConfig) => c.isActive)
       .sort((a: CategoryImageConfig, b: CategoryImageConfig) => a.displayOrder - b.displayOrder)
       .map((c: CategoryImageConfig) => ({
@@ -146,7 +151,7 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         gradient: c.accentColor || 'from-blue-600 to-blue-800',
         trending: c.isTrending,
       }));
-  }, [apiCategories]);
+  }, [initialCategories]);
 
   const heroVehicles: Vehicle[] = useMemo(() => {
     const source = carousel?.vehicles.length ? carousel : destacados;

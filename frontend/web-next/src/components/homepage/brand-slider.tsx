@@ -83,6 +83,7 @@ function BrandCard({ brand }: { brand: Brand }) {
               fill
               sizes="160px"
               className="object-contain p-4 grayscale transition-all duration-300 group-hover:grayscale-0"
+              loading="lazy"
             />
           ) : (
             <BrandLogoPlaceholder name={brand.name} />
@@ -249,6 +250,7 @@ export function BrandGrid({
                   fill
                   sizes="80px"
                   className="object-contain grayscale transition-all duration-300 group-hover:grayscale-0"
+                  loading="lazy"
                 />
               ) : (
                 <BrandLogoPlaceholder name={brand.name} />
