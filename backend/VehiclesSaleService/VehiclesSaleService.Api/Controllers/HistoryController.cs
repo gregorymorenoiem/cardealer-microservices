@@ -57,10 +57,11 @@ public class HistoryController : ControllerBase
 
         // Get favorite vehicleIds for the user (to set isFavorite)
         var vehicleIds = historyItems.Select(h => h.VehicleId).ToHashSet();
-        var favoriteVehicleIds = await _db.Favorites
+        var favoriteVehicleIds = (await _db.Favorites
             .Where(f => f.UserId == userId && vehicleIds.Contains(f.VehicleId))
             .Select(f => f.VehicleId)
-            .ToHashSetAsync();
+            .ToListAsync())
+            .ToHashSet();
 
         var oldestDate = historyItems.Count > 0
             ? historyItems.Min(h => h.ViewedAt)
