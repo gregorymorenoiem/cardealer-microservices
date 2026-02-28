@@ -138,15 +138,6 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <meta httpEquiv="Permissions-Policy" content="camera=*, microphone=*" />
-        {/* ── Resource Hints: pre-warm DNS/TCP for key origins ── */}
-        {/* Primary image CDN (S3 buckets) */}
-        <link rel="preconnect" href="https://okla-images-2026.s3.us-east-2.amazonaws.com" />
-        <link rel="preconnect" href="https://okla-media.s3.us-east-1.amazonaws.com" />
-        <link rel="dns-prefetch" href="https://okla-media.s3.amazonaws.com" />
-        <link rel="dns-prefetch" href="https://picsum.photos" />
-        {/* Google Analytics */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <SiteJsonLd />
         <GoogleAnalytics />
       </head>

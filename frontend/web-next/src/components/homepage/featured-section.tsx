@@ -169,7 +169,8 @@ export default function FeaturedSection({
           {listings.map((item, index) => (
             <div
               key={item.id}
-              className="w-[280px] flex-shrink-0 snap-start sm:w-[300px]"
+              className="animate-slide-up w-[280px] flex-shrink-0 snap-start sm:w-[300px]"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <Link href={generateVehicleUrl(item)} className="group block">
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-md transition-shadow duration-300 hover:shadow-xl">
@@ -179,9 +180,8 @@ export default function FeaturedSection({
                       src={item.imageUrl || '/placeholder-car.jpg'}
                       alt={item.title}
                       fill
-                      sizes="(max-width: 640px) 280px, 300px"
+                      sizes="300px"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
                     />
                     {/* Category Badge */}
                     <div

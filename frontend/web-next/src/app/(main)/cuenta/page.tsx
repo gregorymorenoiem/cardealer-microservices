@@ -15,7 +15,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Car,
@@ -856,14 +855,7 @@ function FavoriteMiniCard({
       {/* Image */}
       <div className="bg-muted relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg">
         {v.imageUrl ? (
-          <Image
-            src={v.imageUrl}
-            alt={title}
-            fill
-            sizes="80px"
-            className="object-cover"
-            loading="lazy"
-          />
+          <img src={v.imageUrl} alt={title} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-2xl">🚗</div>
         )}
@@ -1033,14 +1025,11 @@ function VehicleListItem({ vehicle }: { vehicle: UserVehicleDto }) {
   return (
     <div className="border-border hover:border-border flex gap-4 rounded-lg border p-4 transition-colors">
       {/* Image */}
-      <div className="bg-muted relative h-18 w-24 flex-shrink-0 overflow-hidden rounded-lg">
-        <Image
+      <div className="bg-muted h-18 w-24 flex-shrink-0 overflow-hidden rounded-lg">
+        <img
           src={vehicle.imageUrl || '/images/vehicle-placeholder.jpg'}
           alt={vehicle.title}
-          fill
-          sizes="96px"
-          className="object-cover"
-          loading="lazy"
+          className="h-full w-full object-cover"
         />
       </div>
 

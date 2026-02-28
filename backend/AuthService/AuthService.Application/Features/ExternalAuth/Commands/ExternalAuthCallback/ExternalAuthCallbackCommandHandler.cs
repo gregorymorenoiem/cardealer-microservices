@@ -71,6 +71,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
             var (user, isNewUser) = await _externalAuthService.AuthenticateAsync(provider, idToken);
 
             // Generate tokens
+            var accessToken = _jwtGenerator.GenerateToken(user);
             var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
             var expiresAt = DateTime.UtcNow.AddMinutes(60);
 
@@ -83,7 +84,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
 
             await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
 
-            // Create user session for session management (before JWT so session ID can be embedded)
+            // Create user session for session management
             var userSession = new UserSession(
                 userId: user.Id,
                 refreshTokenId: refreshTokenEntity.Id.ToString(),
@@ -96,9 +97,6 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
             await _sessionRepository.AddAsync(userSession, cancellationToken);
             _logger.LogInformation("Created session {SessionId} for user {UserId} via {Provider}", 
                 userSession.Id, user.Id, request.Provider);
-
-            // Generate JWT AFTER session is known so SessionId claim is embedded
-            var accessToken = _jwtGenerator.GenerateToken(user, null, userSession.Id.ToString());
 
             _logger.LogInformation("External auth callback processed successfully for user {UserId} from IP {IpAddress}",
                 user.Id, _requestContext.IpAddress);

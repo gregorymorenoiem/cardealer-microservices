@@ -49,7 +49,8 @@ export function useReviewsForTarget(
   params: Omit<ReviewSearchParams, 'targetType' | 'targetId'> = {}
 ) {
   return useQuery({
-    queryKey: reviewKeys.target(targetType || '', targetId || ''),
+    // Include params in key so sort/filter changes trigger re-fetch
+    queryKey: [...reviewKeys.target(targetType || '', targetId || ''), params],
     queryFn: () => reviewService.getReviewsForTarget(targetType!, targetId!, params),
     enabled: !!targetType && !!targetId,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -187,25 +188,39 @@ export function useDeleteReview() {
 }
 
 /**
- * Respond to review mutation (for target owners)
+ * Respond to review mutation (for target owners — seller/dealer)
+ * AUDIT FIX: backend returns { message } not a Review; invalidate queries by sellerId
  */
 export function useRespondToReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ reviewId, content }: { reviewId: string; content: string }) =>
-      reviewService.respondToReview(reviewId, { content }),
-    onSuccess: updatedReview => {
-      queryClient.setQueryData(reviewKeys.detail(updatedReview.id), updatedReview);
-      queryClient.invalidateQueries({
-        queryKey: reviewKeys.target(updatedReview.targetType, updatedReview.targetId),
-      });
+    mutationFn: ({
+      reviewId,
+      content,
+      sellerId,
+    }: {
+      reviewId: string;
+      content: string;
+      sellerId?: string;
+    }) => reviewService.respondToReview(reviewId, { content }),
+    onSuccess: (_, variables) => {
+      // Invalidate the specific review
+      queryClient.invalidateQueries({ queryKey: reviewKeys.detail(variables.reviewId) });
+      // Invalidate all reviews for the seller if sellerId is provided
+      if (variables.sellerId) {
+        queryClient.invalidateQueries({
+          queryKey: reviewKeys.target('seller', variables.sellerId),
+        });
+      }
+      // Broadly invalidate review lists
+      queryClient.invalidateQueries({ queryKey: reviewKeys.lists() });
     },
   });
 }
-
 /**
  * Vote on review mutation
+ * AUDIT FIX: backend returns VoteResultDto not a Review; invalidate queries
  */
 export function useVoteReview() {
   const queryClient = useQueryClient();
@@ -213,8 +228,9 @@ export function useVoteReview() {
   return useMutation({
     mutationFn: ({ reviewId, vote }: { reviewId: string; vote: 'helpful' | 'notHelpful' }) =>
       reviewService.voteReview(reviewId, vote),
-    onSuccess: updatedReview => {
-      queryClient.setQueryData(reviewKeys.detail(updatedReview.id), updatedReview);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: reviewKeys.detail(variables.reviewId) });
+      queryClient.invalidateQueries({ queryKey: reviewKeys.lists() });
     },
   });
 }

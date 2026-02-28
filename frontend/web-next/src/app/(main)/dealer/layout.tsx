@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Menu,
   X,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -50,6 +51,7 @@ const mainLinks = [
   { href: '/dealer/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/dealer/citas', label: 'Citas', icon: Calendar },
   { href: '/dealer/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { href: '/dealer/resenas', label: 'Reseñas', icon: Star },
 ];
 
 const managementLinks = [

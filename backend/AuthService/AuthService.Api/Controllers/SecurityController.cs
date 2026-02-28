@@ -148,7 +148,7 @@ public class SecurityController : ControllerBase
                 ActiveSessions: sessionDtos,
                 RecentLogins: loginDtos,
                 HasPassword: hasPassword,
-                LinkedProviders: linkedProviders
+                LinkedProviders: linkedProviders.Count > 0 ? linkedProviders : null
             );
 
             return Ok(settings);

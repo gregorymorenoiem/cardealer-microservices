@@ -31,8 +31,8 @@ export interface EmailNotificationSettings {
 }
 
 export interface PushNotificationSettings {
-  messages: boolean;      // → push.newMessages
-  priceChanges: boolean;  // → push.priceChanges (favourites price drop)
+  messages: boolean; // → push.newMessages
+  priceChanges: boolean; // → push.priceChanges (favourites price drop)
   recommendations: boolean; // → push.recommendations (AI recs)
 }
 

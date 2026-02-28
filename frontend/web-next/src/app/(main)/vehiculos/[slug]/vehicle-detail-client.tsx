@@ -59,14 +59,6 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
             {/* Tabs - Description, Specs, Features */}
             <VehicleTabs vehicle={vehicle} />
-
-            {/* Reviews for the seller/dealer */}
-            <ReviewsSection
-              targetId={vehicle.sellerId}
-              targetType={vehicle.sellerType === 'dealer' ? 'dealer' : 'seller'}
-              vehicleId={vehicle.id}
-              vehicleTitle={title}
-            />
           </div>
 
           {/* Right column - Sticky sidebar */}
@@ -97,6 +89,16 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           >
             <SimilarVehicles vehicleId={vehicle.id} limit={4} />
           </React.Suspense>
+        </div>
+
+        {/* Reviews — secondary section, below the fold */}
+        <div className="border-border mt-10 border-t pt-8">
+          <ReviewsSection
+            targetId={vehicle.sellerId}
+            targetType={vehicle.sellerType === 'dealer' ? 'dealer' : 'seller'}
+            vehicleId={vehicle.id}
+            vehicleTitle={title}
+          />
         </div>
       </div>
     </div>

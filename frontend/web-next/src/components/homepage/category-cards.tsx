@@ -134,7 +134,6 @@ function SingleCategoryCard({ category, index }: { category: CategoryCard; index
                 isHovered ? 'scale-110' : 'scale-100'
               )}
               onError={() => setImageError(true)}
-              loading="lazy"
             />
           ) : (
             <div className={cn('absolute inset-0 bg-gradient-to-br', category.gradient)} />

@@ -26,6 +26,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import type { Vehicle } from '@/services/homepage-sections';
@@ -78,8 +79,18 @@ function CompactSearchBar() {
   const [condition, setCondition] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
+  const router = useRouter();
 
   const availableModels = make ? modelsByMake[make] || [] : [];
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (condition) params.set('condition', condition);
+    if (make) params.set('make', make);
+    if (model) params.set('model', model);
+    const qs = params.toString();
+    router.push(`/vehiculos${qs ? `?${qs}` : ''}`);
+  };
 
   return (
     <div className="bg-card/95 dark:bg-card/90 mx-auto w-full max-w-5xl rounded-2xl border border-white/20 p-2 shadow-2xl shadow-black/20 backdrop-blur-sm dark:border-white/10">
@@ -138,13 +149,13 @@ function CompactSearchBar() {
         </div>
 
         {/* Search Button */}
-        <Link
-          href={`/vehiculos?condition=${condition}&make=${make}&model=${model}`}
-          className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-12 items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl"
+        <button
+          onClick={handleSearch}
+          className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl"
         >
           <Search className="h-4 w-4" />
           <span>Buscar</span>
-        </Link>
+        </button>
       </div>
     </div>
   );
@@ -160,7 +171,7 @@ export function QuickFilters() {
       {QUICK_FILTERS.map(filter => (
         <Link
           key={filter}
-          href={`/vehiculos?bodyType=${filter}`}
+          href={`/vehiculos?body_type=${encodeURIComponent(filter)}`}
           className="border-border bg-muted/50 text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200"
         >
           {filter}
@@ -180,7 +191,7 @@ function QuickFiltersHero() {
       {QUICK_FILTERS.map(filter => (
         <Link
           key={filter}
-          href={`/vehiculos?bodyType=${filter}`}
+          href={`/vehiculos?body_type=${encodeURIComponent(filter)}`}
           className="hover:border-primary hover:bg-primary rounded-full border border-white/50 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:text-white"
         >
           {filter}

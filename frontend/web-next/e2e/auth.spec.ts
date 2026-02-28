@@ -96,11 +96,11 @@ test.describe('Authentication Flow', () => {
       await page.goto('/');
 
       // Look for login/register links in navbar
-      const loginLink = page.getByRole('link', { name: /iniciar sesión|login|entrar|ingresar/i }).first();
+      const loginLink = page.getByRole('link', { name: /iniciar sesión|login|entrar/i }).first();
       const registerLink = page
         .getByRole('link', { name: /registrarse|register|crear cuenta/i })
         .first();
-      const authButton = page.getByRole('button', { name: /iniciar sesión|login|ingresar/i }).first();
+      const authButton = page.getByRole('button', { name: /iniciar sesión|login/i }).first();
 
       const hasAuthLinks =
         (await loginLink.isVisible().catch(() => false)) ||

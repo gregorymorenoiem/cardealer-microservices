@@ -105,8 +105,9 @@ function FeaturedListingCard({
   };
 
   return (
-    <div className="border-border bg-card overflow-hidden rounded-xl border shadow-md transition-shadow duration-300 hover:shadow-xl">
-      <Link href={vehicleUrl} className="group block">
+    <div className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
+      <div className="border-border bg-card overflow-hidden rounded-xl border shadow-md transition-shadow duration-300 hover:shadow-xl">
+        <Link href={vehicleUrl} className="group block">
           {/* Image Container */}
           <div className="relative aspect-[4/3] overflow-hidden">
             <Image
@@ -195,5 +196,6 @@ function FeaturedListingCard({
           </div>
         </Link>
       </div>
+    </div>
   );
 }

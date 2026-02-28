@@ -5,6 +5,7 @@ using ReviewService.Application.Features.Reviews.Commands;
 using ReviewService.Application.Features.Reviews.Queries;
 using ReviewService.Application.DTOs;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace ReviewService.Api.Controllers;
 
@@ -554,6 +555,94 @@ public class ReviewsController : ControllerBase
 
     #endregion
 
+    #region Buyer Reviews & Moderation
+
+    /// <summary>
+    /// Obtener reviews escritas por un comprador (historial del comprador)
+    /// </summary>
+    /// <param name="buyerId">ID del comprador</param>
+    /// <param name="page">Número de página</param>
+    /// <param name="pageSize">Tamaño de página</param>
+    [HttpGet("buyer/{buyerId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(PagedReviewsDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<ActionResult<PagedReviewsDto>> GetBuyerReviews(
+        [FromRoute] Guid buyerId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                if (userId != buyerId && !User.IsInRole("Admin"))
+                {
+                    return Forbid("No tiene permiso para ver estas reviews");
+                }
+            }
+
+            var query = new GetBuyerReviewsQuery { BuyerId = buyerId, Page = page, PageSize = pageSize };
+            var result = await _mediator.Send(query);
+
+            if (result.IsSuccess)
+                return Ok(result.Value);
+
+            return BadRequest(result.Error);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting reviews for buyer {BuyerId}", buyerId);
+            return StatusCode(500, "Error interno del servidor");
+        }
+    }
+
+    /// <summary>
+    /// Reportar una review para moderación
+    /// </summary>
+    /// <param name="reviewId">ID de la review a reportar</param>
+    /// <param name="request">Razón del reporte</param>
+    [HttpPost("{reviewId:guid}/report")]
+    [Authorize]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult> ReportReview(
+        [FromRoute] Guid reviewId,
+        [FromBody] ReportReviewRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized("Token inválido");
+
+            var command = new ReportReviewCommand
+            {
+                ReviewId = reviewId,
+                ReportedByUserId = userId,
+                Reason = request.Reason
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result.IsSuccess)
+                return Ok(new { message = "Review reportada. Será revisada por nuestro equipo." });
+
+            return BadRequest(result.Error);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reporting review {ReviewId}", reviewId);
+            return StatusCode(500, "Error interno del servidor");
+        }
+    }
+
+    #endregion
+
     #region Sprint 15 - Solicitudes Automáticas de Review
 
     /// <summary>
@@ -682,3 +771,8 @@ public class ReviewsController : ControllerBase
 /// Request para respuesta de vendedor
 /// </summary>
 public record SellerResponseRequest(string ResponseText);
+
+/// <summary>
+/// Request para reportar una review
+/// </summary>
+public record ReportReviewRequest(string Reason);

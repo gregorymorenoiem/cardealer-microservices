@@ -9,19 +9,8 @@ const nextConfig: NextConfig = {
   // Output standalone for Docker deployment
   output: 'standalone',
 
-  // Enable gzip/brotli compression for all responses
-  compress: true,
-
-  // Power-user: skip bundling heavy server-only packages so they load faster
-  serverExternalPackages: [],
-
   // Image optimization configuration
   images: {
-    // Cache optimized images for 7 days (default is 60s which is too short)
-    minimumCacheTTL: 604800,
-    // Limit concurrent image optimizations to prevent memory spikes
-    dangerouslyAllowSVG: false,
-    contentDispositionType: 'inline',
     remotePatterns: [
       {
         protocol: 'https',
@@ -86,10 +75,9 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ['image/avif', 'image/webp'],
-    // Reduced breakpoints → fewer image variants → faster cache warm-up
-    deviceSizes: [640, 828, 1080, 1200, 1920],
-    imageSizes: [32, 64, 128, 256, 384],
-    qualities: [75, 85],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    qualities: [70, 75, 80, 85, 90],
   },
 
   // Enable experimental features

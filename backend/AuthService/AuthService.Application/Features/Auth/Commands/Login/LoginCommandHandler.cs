@@ -214,6 +214,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var jwtExpiresMinutes = await _securityConfig.GetJwtExpiresMinutesAsync(cancellationToken);
         var refreshTokenDays = await _securityConfig.GetRefreshTokenDaysAsync(cancellationToken);
 
+        var accessToken = _jwtGenerator.GenerateToken(user, jwtExpiresMinutes);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
 
         var expiresAt = DateTime.UtcNow.AddMinutes(jwtExpiresMinutes);
@@ -264,7 +265,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             _requestContext.IpAddress,
             cancellationToken);
 
-        string currentSessionId;
         if (existingSession != null)
         {
             // Reuse existing session - update with new refresh token
@@ -275,7 +275,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 existingSession.UpdateLocation(locationString, country, city);
             }
             await _sessionRepository.UpdateAsync(existingSession, cancellationToken);
-            currentSessionId = existingSession.Id.ToString();
             _logger.LogInformation("Renewed existing session {SessionId} for user {UserId}", existingSession.Id, user.Id);
         }
         else
@@ -298,7 +297,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             }
             
             await _sessionRepository.AddAsync(userSession, cancellationToken);
-            currentSessionId = userSession.Id.ToString();
             _logger.LogInformation("Created new session {SessionId} for user {UserId} from {Location}", 
                 userSession.Id, user.Id, locationString ?? "Unknown location");
 
@@ -322,11 +320,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 _logger.LogWarning(ex, "Failed to send new session notification to {Email}", user.Email);
             }
         }
-
-        // Generate JWT AFTER session is known so SessionId claim is embedded.
-        // This allows SecurityController.GetCurrentSessionId() to correctly mark
-        // the current session as isCurrent=true in the active-sessions list.
-        var accessToken = _jwtGenerator.GenerateToken(user, jwtExpiresMinutes, currentSessionId);
 
         user.ResetAccessFailedCount();
         await _userRepository.UpdateAsync(user, cancellationToken);

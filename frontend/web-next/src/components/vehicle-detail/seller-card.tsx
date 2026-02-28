@@ -11,11 +11,10 @@ import Link from 'next/link';
 import {
   Phone,
   MessageCircle,
-  Mail,
+  MessageSquare,
   MapPin,
   Star,
   Check,
-  Clock,
   Shield,
   User,
   Bot,
@@ -170,52 +169,65 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
       )}
 
       {/* Contact Buttons */}
-      <div className="mt-6 space-y-3">
-        {/* WhatsApp - Primary */}
+      <div className="mt-6 space-y-2.5">
+        {/* PRIMARY CTA: Internal live chat — highest priority */}
+        <Button
+          className="h-11 w-full gap-2 bg-[#00A870] text-base font-semibold text-white shadow-md hover:bg-[#008F60]"
+          asChild
+        >
+          <Link href={`/mensajes/nuevo?vehicleId=${vehicle.id}&sellerId=${sellerData.id}`}>
+            <MessageSquare className="h-5 w-5" />
+            Chat en vivo
+          </Link>
+        </Button>
+
+        {/* SECONDARY: WhatsApp */}
         <Button
           onClick={handleWhatsApp}
-          className="w-full gap-2 bg-[#25D366] text-white hover:bg-[#20BD5A]"
+          variant="outline"
+          className="w-full gap-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 hover:text-[#1aa650]"
         >
           <MessageCircle className="h-5 w-5" />
           WhatsApp
         </Button>
 
-        {/* Phone */}
+        {/* TERTIARY: Phone */}
         {showPhone ? (
-          <Button onClick={handleCall} variant="outline" className="w-full gap-2">
-            <Phone className="h-5 w-5" />
+          <Button
+            onClick={handleCall}
+            variant="ghost"
+            className="text-muted-foreground w-full gap-2 text-sm"
+          >
+            <Phone className="h-4 w-4" />
             {sellerData.phone}
           </Button>
         ) : (
-          <Button onClick={handleShowPhone} variant="outline" className="w-full gap-2">
-            <Phone className="h-5 w-5" />
+          <Button
+            onClick={handleShowPhone}
+            variant="ghost"
+            className="text-muted-foreground w-full gap-2 text-sm"
+          >
+            <Phone className="h-4 w-4" />
             Ver teléfono
           </Button>
         )}
 
-        {/* Message / Chat — context-aware */}
-        {isDealer ? (
+        {/* Dealer-specific extras */}
+        {isDealer && (
           <>
-            <Button variant="outline" className="w-full gap-2" asChild>
+            <Button variant="outline" className="w-full gap-2 text-sm" asChild>
               <Link href={`/dealers/${sellerData.id}?chat=open`}>
-                <Bot className="h-5 w-5" />
+                <Bot className="h-4 w-4" />
                 Chatear con Ana (IA)
               </Link>
             </Button>
-            <Button variant="outline" className="w-full gap-2" asChild>
-              <Link href={`/dealers/${sellerData.id}#reviews`}>
-                <CalendarDays className="h-5 w-5" />
+            <Button variant="outline" className="w-full gap-2 text-sm" asChild>
+              <Link href={`/dealers/${sellerData.id}#agendar`}>
+                <CalendarDays className="h-4 w-4" />
                 Agendar visita
               </Link>
             </Button>
           </>
-        ) : (
-          <Button variant="outline" className="w-full gap-2" asChild>
-            <Link href={`/mensajes/nuevo?vehicleId=${vehicle.id}`}>
-              <Mail className="h-5 w-5" />
-              Enviar mensaje
-            </Link>
-          </Button>
         )}
       </div>
 

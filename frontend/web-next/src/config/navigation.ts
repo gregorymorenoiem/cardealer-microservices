@@ -128,6 +128,7 @@ export const SELLER_NAVIGATION: NavSection[] = [
       { href: '/cuenta/mis-vehiculos', label: 'Mis Vehículos', icon: Car },
       { href: '/cuenta/estadisticas', label: 'Estadísticas', icon: BarChart3 },
       { href: '/cuenta/consultas', label: 'Consultas Recibidas', icon: MessageSquare },
+      { href: '/cuenta/resenas', label: 'Reseñas', icon: Star },
     ],
   },
   {
