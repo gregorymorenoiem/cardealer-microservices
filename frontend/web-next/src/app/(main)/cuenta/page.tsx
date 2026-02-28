@@ -47,6 +47,7 @@ import {
   Sparkles,
   MapPin,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useCanSell } from '@/hooks/use-kyc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,8 +68,43 @@ import { useAlertStats } from '@/hooks/use-alerts';
 // MAIN EXPORT — dispatches to the right dashboard by role
 // ============================================================
 
+function DashboardLoadingSkeleton() {
+  return (
+    <div className="animate-pulse space-y-6">
+      {/* Welcome header skeleton */}
+      <div className="rounded-2xl bg-muted h-32" />
+      {/* Metric cards skeleton */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-24 rounded-xl bg-muted" />
+        ))}
+      </div>
+      {/* List section skeleton */}
+      <div className="rounded-xl border bg-card p-4 space-y-3">
+        <div className="h-5 w-40 rounded bg-muted" />
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-12 rounded-lg bg-muted" />
+        ))}
+      </div>
+      {/* Quick actions skeleton */}
+      <div className="rounded-xl border bg-card p-4">
+        <div className="h-5 w-32 rounded bg-muted mb-3" />
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-14 rounded-xl bg-muted" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AccountDashboardPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <DashboardLoadingSkeleton />;
+  }
 
   if (!user) {
     return (
@@ -427,17 +463,13 @@ function SellerDashboard() {
   const { user } = useAuth();
   const { data: sellerProfile, isLoading: profileLoading } = useSellerByUserId(user?.id);
   const { data: sellerStats, isLoading: statsLoading } = useSellerStats(sellerProfile?.id);
-  const [recentVehicles, setRecentVehicles] = React.useState<UserVehicleDto[]>([]);
-  const [vehiclesLoading, setVehiclesLoading] = React.useState(true);
   const { canSell, isLoading: kycLoading } = useCanSell();
-
-  React.useEffect(() => {
-    userService
-      .getUserVehicles({ limit: 3, status: 'all' })
-      .then(r => setRecentVehicles(r.vehicles))
-      .catch(() => setRecentVehicles([]))
-      .finally(() => setVehiclesLoading(false));
-  }, []);
+  const { data: vehiclesData, isLoading: vehiclesLoading } = useQuery({
+    queryKey: ['user-vehicles-recent'],
+    queryFn: () => userService.getUserVehicles({ limit: 3, status: 'all' }),
+    staleTime: 60_000, // 1 minute — avoids re-fetch on every dashboard visit
+  });
+  const recentVehicles = vehiclesData?.vehicles ?? [];
 
   const isLoading = profileLoading || statsLoading;
 
