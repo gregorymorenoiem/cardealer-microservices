@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ReviewService.Domain.Base;
 using ReviewService.Domain.Interfaces;
 
