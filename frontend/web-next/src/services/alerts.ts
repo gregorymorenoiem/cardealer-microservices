@@ -218,25 +218,71 @@ export async function getVehiclePriceHistory(vehicleId: string): Promise<PriceHi
 /**
  * Get user's saved searches
  */
+// Map backend SavedSearchDto (searchCriteria string) → frontend SavedSearch (searchParams object)
+function mapBackendSavedSearch(item: Record<string, unknown>): SavedSearch {
+  let searchParams: VehicleSearchParams = {};
+  try {
+    const raw = (item.searchCriteria as string) || '{}';
+    searchParams = JSON.parse(raw) as VehicleSearchParams;
+  } catch {
+    // keep empty searchParams
+  }
+  const freqRaw = ((item.frequency as string) || 'daily').toLowerCase();
+  const validFreqs: NotifyFrequency[] = ['instant', 'daily', 'weekly', 'never'];
+  const notifyFrequency: NotifyFrequency = validFreqs.includes(freqRaw as NotifyFrequency)
+    ? (freqRaw as NotifyFrequency)
+    : 'daily';
+
+  return {
+    id: item.id as string,
+    userId: (item.userId as string) || '',
+    name: (item.name as string) || '',
+    searchParams,
+    notifyNewListings: (item.sendEmailNotifications as boolean) ?? true,
+    notifyFrequency,
+    matchCount: (item.matchCount as number) ?? 0,
+    newMatchCount: (item.newMatchCount as number) ?? 0,
+    lastMatchedAt: item.lastMatchedAt as string | undefined,
+    lastNotifiedAt: (item.lastNotificationSent as string | undefined) ?? (item.lastNotifiedAt as string | undefined),
+    isActive: (item.isActive as boolean) ?? true,
+    createdAt: item.createdAt as string,
+    updatedAt: item.updatedAt as string,
+  };
+}
+
 export async function getSavedSearches(
   params: { isActive?: boolean; page?: number; pageSize?: number } = {}
 ): Promise<PaginatedResponse<SavedSearch>> {
-  const response = await apiClient.get<{
-    items: SavedSearch[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      totalItems: number;
-      totalPages: number;
-    };
-  }>('/api/savedsearches', { params });
+  const response = await apiClient.get<
+    | Record<string, unknown>[]
+    | { items: Record<string, unknown>[]; pagination: { page: number; pageSize: number; totalItems: number; totalPages: number } }
+  >('/api/savedsearches', { params });
 
+  // Backend may return a plain array or a paginated object
+  if (Array.isArray(response.data)) {
+    const items = response.data.map(mapBackendSavedSearch);
+    return {
+      items,
+      pagination: {
+        page: 1,
+        pageSize: items.length || 10,
+        totalItems: items.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+
+  const paginatedData = response.data as { items: Record<string, unknown>[]; pagination: { page: number; pageSize: number; totalItems: number; totalPages: number } };
+  const items = (paginatedData.items || []).map(mapBackendSavedSearch);
+  const pagination = paginatedData.pagination || { page: 1, pageSize: items.length, totalItems: items.length, totalPages: 1 };
   return {
-    items: response.data.items,
+    items,
     pagination: {
-      ...response.data.pagination,
-      hasNextPage: response.data.pagination.page < response.data.pagination.totalPages,
-      hasPreviousPage: response.data.pagination.page > 1,
+      ...pagination,
+      hasNextPage: pagination.page < pagination.totalPages,
+      hasPreviousPage: pagination.page > 1,
     },
   };
 }
@@ -245,16 +291,27 @@ export async function getSavedSearches(
  * Get saved search by ID
  */
 export async function getSavedSearchById(id: string): Promise<SavedSearch> {
-  const response = await apiClient.get<SavedSearch>(`/api/savedsearches/${id}`);
-  return response.data;
+  const response = await apiClient.get<Record<string, unknown>>(`/api/savedsearches/${id}`);
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
  * Create a new saved search
+ * Maps frontend DTO → backend DTO:
+ *   searchParams (object) → searchCriteria (JSON string)
+ *   notifyNewListings     → sendEmailNotifications
+ *   notifyFrequency       → frequency (PascalCase)
  */
 export async function createSavedSearch(data: CreateSavedSearchRequest): Promise<SavedSearch> {
-  const response = await apiClient.post<SavedSearch>('/api/savedsearches', data);
-  return response.data;
+  const freq = data.notifyFrequency ?? 'daily';
+  const payload = {
+    name: data.name,
+    searchCriteria: JSON.stringify(data.searchParams || {}),
+    sendEmailNotifications: data.notifyNewListings ?? true,
+    frequency: freq.charAt(0).toUpperCase() + freq.slice(1), // 'daily' → 'Daily'
+  };
+  const response = await apiClient.post<Record<string, unknown>>('/api/savedsearches', payload);
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
@@ -264,8 +321,17 @@ export async function updateSavedSearch(
   id: string,
   data: UpdateSavedSearchRequest
 ): Promise<SavedSearch> {
-  const response = await apiClient.put<SavedSearch>(`/api/savedsearches/${id}`, data);
-  return response.data;
+  const payload: Record<string, unknown> = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.searchParams !== undefined) payload.searchCriteria = JSON.stringify(data.searchParams);
+  if (data.notifyNewListings !== undefined) payload.sendEmailNotifications = data.notifyNewListings;
+  if (data.notifyFrequency !== undefined) {
+    const freq = data.notifyFrequency;
+    payload.frequency = freq.charAt(0).toUpperCase() + freq.slice(1);
+  }
+  if (data.isActive !== undefined) payload.isActive = data.isActive;
+  const response = await apiClient.put<Record<string, unknown>>(`/api/savedsearches/${id}`, payload);
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
