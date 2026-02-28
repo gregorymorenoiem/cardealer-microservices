@@ -32,8 +32,9 @@ public class AuthServiceClient : IAuthServiceClient
         
         // In Docker, use service name; otherwise use localhost
         var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
-        _authServiceUrl = configuration["Services:AuthService"] 
-            ?? (isDevelopment ? "http://localhost:15001" : "http://authservice:80");
+        _authServiceUrl = configuration["ServiceUrls:AuthService"]
+            ?? configuration["Services:AuthService"] 
+            ?? (isDevelopment ? "http://localhost:15001" : "http://authservice:8080");
         
         _httpClient.BaseAddress = new Uri(_authServiceUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
