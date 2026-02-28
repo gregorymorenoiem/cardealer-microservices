@@ -308,7 +308,18 @@ builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
 
     // 9. Endpoints
     app.MapControllers();
-    app.MapHealthChecks("/health");
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => !check.Tags.Contains("external")
+    });
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready")
+    });
+    app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 
     Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
     app.Run();

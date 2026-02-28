@@ -173,7 +173,18 @@ builder.Services.AddHealthChecks();
 
     // 8. Endpoints
     app.MapControllers();
-    app.MapHealthChecks("/health");
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => !check.Tags.Contains("external")
+    });
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready")
+    });
+    app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 
     // Apply database migrations conditionally (disabled in production to avoid race conditions with HPA replicas)
     var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);
