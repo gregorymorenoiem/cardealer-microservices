@@ -88,7 +88,7 @@ function getPostLoginRedirect(user: User | null, redirectUrl: string): string {
       return '/cuenta';
     case 'dealer':
     case 'dealer_employee':
-      return '/cuenta';
+      return '/dealer/dashboard'; // Direct to dealer portal, no double-hop
     case 'admin':
     case 'platform_employee':
       return '/admin';

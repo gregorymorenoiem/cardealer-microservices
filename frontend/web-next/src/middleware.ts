@@ -460,9 +460,18 @@ export async function middleware(request: NextRequest) {
 
   // Check verification routes (accessible by guests AND authenticated with unverified email)
   if (verificationRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`))) {
-    // If authenticated with verified email, redirect to account (already verified)
+    // If authenticated with verified email, redirect to role-based portal (already verified)
     if (isAuthenticated && tokenPayload?.emailVerified !== false) {
-      return createRedirect(new URL(ACCOUNT_PATH, request.url), request);
+      const roles: string[] = Array.isArray(tokenPayload?.role)
+        ? (tokenPayload.role as string[]).map(r => r.toLowerCase())
+        : [((tokenPayload?.role as string) || '').toLowerCase()];
+      let destPath = ACCOUNT_PATH;
+      if (roles.includes('admin') || roles.includes('platform_employee')) {
+        destPath = '/admin';
+      } else if (roles.includes('dealer') || roles.includes('dealer_employee')) {
+        destPath = '/dealer/dashboard';
+      }
+      return createRedirect(new URL(destPath, request.url), request);
     }
     // Allow access for guests and unverified users
     const response = NextResponse.next();
@@ -472,8 +481,18 @@ export async function middleware(request: NextRequest) {
 
   // Check guest-only routes
   if (isGuestOnlyRoute(pathname)) {
-    if (isAuthenticated) {
-      return createRedirect(new URL(ACCOUNT_PATH, request.url), request);
+    if (isAuthenticated && tokenPayload) {
+      // Role-aware redirect: admins → /admin, dealers → /dealer/dashboard, others → /cuenta
+      const roles: string[] = Array.isArray(tokenPayload.role)
+        ? tokenPayload.role.map(r => r.toLowerCase())
+        : [tokenPayload.role.toLowerCase()];
+      let destPath = ACCOUNT_PATH;
+      if (roles.includes('admin') || roles.includes('platform_employee')) {
+        destPath = '/admin';
+      } else if (roles.includes('dealer') || roles.includes('dealer_employee')) {
+        destPath = '/dealer/dashboard';
+      }
+      return createRedirect(new URL(destPath, request.url), request);
     }
     const response = NextResponse.next();
     addSecurityHeaders(response);
