@@ -3216,9 +3216,7 @@ data:
           "UpstreamHttpMethod": ["GET"],
           "DownstreamPathTemplate": "/api/configurations/category/{category}",
           "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "configurationservice", "Port": 8080 }],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "RouteClaimsRequirement": { "role": "Compliance" }
+          "DownstreamHostAndPorts": [{ "Host": "configurationservice", "Port": 8080 }]
         },
         {
           "UpstreamPathTemplate": "/api/configurations/{everything}",
@@ -3614,6 +3612,54 @@ data:
           "DownstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/favorites",
+          "UpstreamHttpMethod": ["GET"],
+          "DownstreamPathTemplate": "/api/favorites",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/favorites/count",
+          "UpstreamHttpMethod": ["GET"],
+          "DownstreamPathTemplate": "/api/favorites/count",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/favorites/check/{vehicleId}",
+          "UpstreamHttpMethod": ["GET"],
+          "DownstreamPathTemplate": "/api/favorites/check/{vehicleId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
+          "UpstreamHttpMethod": ["POST"],
+          "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
+          "UpstreamHttpMethod": ["DELETE"],
+          "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
+          "UpstreamHttpMethod": ["PUT"],
+          "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
         }
       ],
       "GlobalConfiguration": {
