@@ -252,6 +252,7 @@ public class SavedSearchesController : ControllerBase
             {
                 SavedSearchId = search.Id,
                 UserId = search.UserId,
+                UserEmail = GetCurrentUserEmail(),
                 SearchName = search.Name,
                 SearchCriteria = search.SearchCriteria,
                 ActionType = actionType,
@@ -321,6 +322,13 @@ public class SavedSearchesController : ControllerBase
         }
 
         return userId;
+    }
+
+    private string? GetCurrentUserEmail()
+    {
+        return User.FindFirst(ClaimTypes.Email)?.Value
+            ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
+            ?? User.FindFirst("email")?.Value;
     }
 
     private static SavedSearchDto MapToDto(SavedSearch search)
