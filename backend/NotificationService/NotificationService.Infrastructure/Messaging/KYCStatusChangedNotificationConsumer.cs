@@ -205,8 +205,8 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
             _          => BuildGenericStatusEmail(kycEvent)
         };
 
-        // Try to send via async email service (fire-and-forget pattern like AuthService)
-        _ = SendEmailWithFallbackAsync(kycEvent.Email, subject, body, cancellationToken);
+        // Send email notification
+        await SendEmailWithFallbackAsync(kycEvent.Email, subject, body, cancellationToken);
 
         _logger.LogInformation(
             "KYC {Status} notification queued for {Email} for ProfileId={ProfileId}",
