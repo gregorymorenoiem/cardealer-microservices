@@ -300,15 +300,16 @@ export async function getSavedSearchById(id: string): Promise<SavedSearch> {
  * Maps frontend DTO → backend DTO:
  *   searchParams (object) → searchCriteria (JSON string)
  *   notifyNewListings     → sendEmailNotifications
- *   notifyFrequency       → frequency (PascalCase)
+ *   notifyFrequency       → frequency (numeric: 0=Instant,1=Daily,2=Weekly)
  */
 export async function createSavedSearch(data: CreateSavedSearchRequest): Promise<SavedSearch> {
+  const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
   const freq = data.notifyFrequency ?? 'daily';
   const payload = {
     name: data.name,
     searchCriteria: JSON.stringify(data.searchParams || {}),
     sendEmailNotifications: data.notifyNewListings ?? true,
-    frequency: freq.charAt(0).toUpperCase() + freq.slice(1), // 'daily' → 'Daily'
+    frequency: freqMap[freq] ?? 1,
   };
   const response = await apiClient.post<Record<string, unknown>>('/api/savedsearches', payload);
   return mapBackendSavedSearch(response.data);
@@ -326,8 +327,8 @@ export async function updateSavedSearch(
   if (data.searchParams !== undefined) payload.searchCriteria = JSON.stringify(data.searchParams);
   if (data.notifyNewListings !== undefined) payload.sendEmailNotifications = data.notifyNewListings;
   if (data.notifyFrequency !== undefined) {
-    const freq = data.notifyFrequency;
-    payload.frequency = freq.charAt(0).toUpperCase() + freq.slice(1);
+    const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
+    payload.frequency = freqMap[data.notifyFrequency] ?? 1;
   }
   if (data.isActive !== undefined) payload.isActive = data.isActive;
   const response = await apiClient.put<Record<string, unknown>>(`/api/savedsearches/${id}`, payload);
