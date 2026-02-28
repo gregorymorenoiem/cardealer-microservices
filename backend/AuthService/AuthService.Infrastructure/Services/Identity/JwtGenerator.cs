@@ -39,11 +39,17 @@ public class JwtGenerator : IJwtGenerator
 
     public string GenerateToken(ApplicationUser user)
     {
-        return GenerateToken(user, null);
+        return GenerateToken(user, null, null);
     }
 
     /// <inheritdoc />
     public string GenerateToken(ApplicationUser user, int? expiresMinutes)
+    {
+        return GenerateToken(user, expiresMinutes, null);
+    }
+
+    /// <inheritdoc />
+    public string GenerateToken(ApplicationUser user, int? expiresMinutes, string? sessionId)
     {
         var effectiveExpiration = expiresMinutes ?? _jwtSettings.ExpiresMinutes;
 
@@ -65,6 +71,13 @@ public class JwtGenerator : IJwtGenerator
             // User intent - what the user wants to do
             new Claim("userIntent", user.UserIntent.ToClaimValue()),
         };
+
+        // Embed session ID so SecurityController can mark the current session in the
+        // active-sessions list via User.FindFirst("SessionId")?.Value
+        if (!string.IsNullOrEmpty(sessionId))
+        {
+            claims.Add(new Claim("SessionId", sessionId));
+        }
         
         // Add role claims based on AccountType for [Authorize(Roles = "...")] compatibility
         // AccountType: Guest=0, Buyer=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5, Seller=6

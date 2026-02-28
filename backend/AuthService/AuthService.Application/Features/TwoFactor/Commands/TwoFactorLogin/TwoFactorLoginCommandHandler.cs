@@ -6,6 +6,7 @@ using AuthService.Domain.Interfaces.Services;
 using MediatR;
 using AuthService.Domain.Enums;
 using AuthService.Application.DTOs.TwoFactor;
+using Microsoft.Extensions.Logging;
 
 namespace AuthService.Application.Features.TwoFactor.Commands.TwoFactorLogin;
 
@@ -15,17 +16,23 @@ public class TwoFactorLoginCommandHandler : IRequestHandler<TwoFactorLoginComman
     private readonly IJwtGenerator _jwtGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ITwoFactorService _twoFactorService;
+    private readonly IUserSessionRepository _sessionRepository;
+    private readonly ILogger<TwoFactorLoginCommandHandler> _logger;
 
     public TwoFactorLoginCommandHandler(
         IUserRepository userRepository,
         IJwtGenerator jwtGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        ITwoFactorService twoFactorService)
+        ITwoFactorService twoFactorService,
+        IUserSessionRepository sessionRepository,
+        ILogger<TwoFactorLoginCommandHandler> logger)
     {
         _userRepository = userRepository;
         _jwtGenerator = jwtGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _twoFactorService = twoFactorService;
+        _sessionRepository = sessionRepository;
+        _logger = logger;
     }
 
     public async Task<TwoFactorLoginResponse> Handle(TwoFactorLoginCommand request, CancellationToken cancellationToken)
@@ -96,7 +103,6 @@ public class TwoFactorLoginCommandHandler : IRequestHandler<TwoFactorLoginComman
         }
 
         // Generar tokens finales
-        var accessToken = _jwtGenerator.GenerateToken(user);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
         var expiresAt = DateTime.UtcNow.AddMinutes(60);
 
@@ -108,6 +114,23 @@ public class TwoFactorLoginCommandHandler : IRequestHandler<TwoFactorLoginComman
         );
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
+
+        // Create/find session so the session ID can be embedded in the JWT
+        var userSession = new UserSession(
+            userId: user.Id,
+            refreshTokenId: refreshTokenEntity.Id.ToString(),
+            deviceInfo: "Unknown Device",
+            browser: "Unknown Browser",
+            operatingSystem: "Unknown OS",
+            ipAddress: "127.0.0.1",
+            expiresAt: DateTime.UtcNow.AddDays(7)
+        );
+        await _sessionRepository.AddAsync(userSession, cancellationToken);
+        _logger.LogInformation("Created session {SessionId} for user {UserId} after 2FA login",
+            userSession.Id, user.Id);
+
+        // Generate JWT with session ID embedded so SecurityController marks isCurrent correctly
+        var accessToken = _jwtGenerator.GenerateToken(user, null, userSession.Id.ToString());
         user.ResetAccessFailedCount();
         twoFactorAuth.ResetFailedAttempts();
         twoFactorAuth.MarkAsUsed();

@@ -7,6 +7,7 @@ using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces.Repositories;
 using AuthService.Domain.Interfaces.Services;
 using AuthService.Shared.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace AuthService.Tests.Unit.Handlers.TwoFactor;
 
@@ -20,6 +21,8 @@ public class TwoFactorLoginHandlerTests
     private readonly Mock<IJwtGenerator> _jwtGeneratorMock;
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<ITwoFactorService> _twoFactorServiceMock;
+    private readonly Mock<IUserSessionRepository> _sessionRepositoryMock;
+    private readonly Mock<ILogger<TwoFactorLoginCommandHandler>> _loggerMock;
     private readonly TwoFactorLoginCommandHandler _handler;
 
     public TwoFactorLoginHandlerTests()
@@ -28,12 +31,16 @@ public class TwoFactorLoginHandlerTests
         _jwtGeneratorMock = new Mock<IJwtGenerator>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _twoFactorServiceMock = new Mock<ITwoFactorService>();
+        _sessionRepositoryMock = new Mock<IUserSessionRepository>();
+        _loggerMock = new Mock<ILogger<TwoFactorLoginCommandHandler>>();
         
         _handler = new TwoFactorLoginCommandHandler(
             _userRepositoryMock.Object,
             _jwtGeneratorMock.Object,
             _refreshTokenRepositoryMock.Object,
-            _twoFactorServiceMock.Object);
+            _twoFactorServiceMock.Object,
+            _sessionRepositoryMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -53,7 +60,7 @@ public class TwoFactorLoginHandlerTests
             .ReturnsAsync(twoFactorAuth);
         _twoFactorServiceMock.Setup(x => x.VerifyAuthenticatorCode(twoFactorAuth.Secret, "123456"))
             .Returns(true);
-        _jwtGeneratorMock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>()))
+        _jwtGeneratorMock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>(), It.IsAny<int?>(), It.IsAny<string?>()))
             .Returns("access_token_123");
         _jwtGeneratorMock.Setup(x => x.GenerateRefreshToken())
             .Returns("refresh_token_123");
@@ -167,7 +174,7 @@ public class TwoFactorLoginHandlerTests
             .ReturnsAsync(twoFactorAuth);
         _twoFactorServiceMock.Setup(x => x.VerifyAuthenticatorCode(twoFactorAuth.Secret, "123456"))
             .Returns(true);
-        _jwtGeneratorMock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>()))
+        _jwtGeneratorMock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>(), It.IsAny<int?>(), It.IsAny<string?>()))
             .Returns("access_token");
         _jwtGeneratorMock.Setup(x => x.GenerateRefreshToken())
             .Returns("refresh_token");
