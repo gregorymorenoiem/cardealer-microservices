@@ -24,7 +24,13 @@
  *   PLAYWRIGHT_BASE_URL=https://okla.com.do pnpm exec playwright test e2e/alertas.spec.ts
  */
 
-import { test, expect, type APIRequestContext, type BrowserContext, type Page } from '@playwright/test';
+import {
+  test,
+  expect,
+  type APIRequestContext,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test';
 import { randomUUID } from 'crypto';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
@@ -64,25 +70,33 @@ async function login(request: APIRequestContext, email: string, password: string
 
 /** Set up a browser context authenticated as buyer */
 async function loginBuyerBrowser(context: BrowserContext): Promise<Page> {
-  const apiRequest = await context.request.post(`${BASE_URL}/api/auth/login`, {
+  // Retry once on 429 (rate limit hit when tests run in parallel)
+  let res = await context.request.post(`${BASE_URL}/api/auth/login`, {
     headers: { 'Content-Type': 'application/json' },
     data: { email: BUYER_EMAIL, password: BUYER_PASSWORD },
   });
-  expect(apiRequest.status(), 'Buyer login should succeed').toBe(200);
-  const body = await apiRequest.json();
+  if (res.status() === 429) {
+    await new Promise(r => setTimeout(r, 5000));
+    res = await context.request.post(`${BASE_URL}/api/auth/login`, {
+      headers: { 'Content-Type': 'application/json' },
+      data: { email: BUYER_EMAIL, password: BUYER_PASSWORD },
+    });
+  }
+  expect(res.status(), 'Buyer login should succeed').toBe(200);
+  const body = await res.json();
   const accessToken: string = body?.data?.accessToken ?? body?.data?.token ?? body?.token ?? '';
   expect(accessToken).toBeTruthy();
 
   const page = await context.newPage();
   await page.goto(BASE_URL);
-  await page.evaluate((token) => localStorage.setItem('auth_token', token), accessToken);
+  await page.evaluate(token => localStorage.setItem('auth_token', token), accessToken);
   return page;
 }
 
 // =============================================================================
 // SUITE
 // =============================================================================
-test.describe('Alertas de Precio — Full Data Flow', () => {
+test.describe.serial('Alertas de Precio — Full Data Flow', () => {
   test.setTimeout(60_000);
 
   // ── 01. Buyer login ─────────────────────────────────────────────────────────
