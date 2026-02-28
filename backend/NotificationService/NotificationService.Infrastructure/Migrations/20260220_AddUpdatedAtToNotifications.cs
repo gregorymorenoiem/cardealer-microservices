@@ -1,8 +1,9 @@
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace NotificationService.Infrastructure.Persistence.Migrations
+namespace NotificationService.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddUpdatedAtToNotifications : Migration

@@ -9,7 +9,7 @@ using NotificationService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace NotificationService.Infrastructure.Persistence.Migrations
+namespace NotificationService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260220_AddUpdatedAtToNotifications")]

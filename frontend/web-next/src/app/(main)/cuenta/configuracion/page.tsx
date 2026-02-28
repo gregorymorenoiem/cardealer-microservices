@@ -549,18 +549,18 @@ export default function SettingsPage() {
             icon={MessageCircle}
           />
           <NotificationToggle
-            label="Consultas sobre tus vehículos"
-            description="Cuando alguien esté interesado en tus publicaciones"
-            checked={notifications.push.inquiries}
-            onCheckedChange={v => updatePushNotification('inquiries', v)}
-            icon={Eye}
+            label="Cambios de precio en favoritos"
+            description="Cuando un vehículo guardado baje de precio"
+            checked={notifications.push.priceChanges}
+            onCheckedChange={v => updatePushNotification('priceChanges', v)}
+            icon={DollarSign}
           />
           <NotificationToggle
-            label="Alertas de precio"
-            description="Notificación cuando un favorito baje de precio"
-            checked={notifications.push.priceAlerts}
-            onCheckedChange={v => updatePushNotification('priceAlerts', v)}
-            icon={DollarSign}
+            label="Recomendaciones personalizadas"
+            description="Vehículos que podrían interesarte según tus búsquedas"
+            checked={notifications.push.recommendations}
+            onCheckedChange={v => updatePushNotification('recommendations', v)}
+            icon={Eye}
           />
         </CardContent>
       </Card>

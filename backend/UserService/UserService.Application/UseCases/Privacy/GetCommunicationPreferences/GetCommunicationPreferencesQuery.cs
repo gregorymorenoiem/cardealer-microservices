@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using UserService.Application.DTOs.Privacy;
+using UserService.Domain.Interfaces;
 
 namespace UserService.Application.UseCases.Privacy.GetCommunicationPreferences;
 
@@ -16,36 +17,43 @@ public record GetCommunicationPreferencesQuery(Guid UserId) : IRequest<Communica
 /// </summary>
 public class GetCommunicationPreferencesQueryHandler : IRequestHandler<GetCommunicationPreferencesQuery, CommunicationPreferencesDto>
 {
+    private readonly ICommunicationPreferenceRepository _repository;
+
+    public GetCommunicationPreferencesQueryHandler(ICommunicationPreferenceRepository repository)
+    {
+        _repository = repository;
+    }
+
     public async Task<CommunicationPreferencesDto> Handle(GetCommunicationPreferencesQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Buscar preferencias del usuario en DB
-        await Task.CompletedTask;
-        
+        var prefs = await _repository.GetByUserIdAsync(request.UserId);
+
+        // If no record yet, return sensible defaults (same as entity defaults)
         return new CommunicationPreferencesDto(
             Email: new EmailPreferencesDto(
-                ActivityNotifications: true,
-                ListingUpdates: true,
-                Newsletter: false,
-                Promotions: false,
-                PriceAlerts: true
+                ActivityNotifications: prefs?.EmailActivityNotifications ?? true,
+                ListingUpdates: prefs?.EmailListingUpdates ?? true,
+                Newsletter: prefs?.EmailNewsletter ?? false,
+                Promotions: prefs?.EmailPromotions ?? false,
+                PriceAlerts: prefs?.EmailPriceAlerts ?? true
             ),
             Sms: new SmsPreferencesDto(
-                VerificationCodes: true, // Siempre true
-                PriceAlerts: false,
-                Promotions: false
+                VerificationCodes: true, // Always true (mandatory)
+                PriceAlerts: prefs?.SmsPriceAlerts ?? false,
+                Promotions: prefs?.SmsPromotions ?? false
             ),
             Push: new PushPreferencesDto(
-                NewMessages: true,
-                PriceChanges: true,
-                Recommendations: false
+                NewMessages: prefs?.PushNewMessages ?? true,
+                PriceChanges: prefs?.PushPriceChanges ?? true,
+                Recommendations: prefs?.PushRecommendations ?? false
             ),
             Privacy: new PrivacyPreferencesDto(
-                AllowProfiling: true,
-                AllowThirdPartySharing: false,
-                AllowAnalytics: true,
-                AllowRetargeting: false
+                AllowProfiling: prefs?.AllowProfiling ?? true,
+                AllowThirdPartySharing: prefs?.AllowThirdPartySharing ?? false,
+                AllowAnalytics: prefs?.AllowAnalytics ?? true,
+                AllowRetargeting: prefs?.AllowRetargeting ?? false
             ),
-            LastUpdated: DateTime.UtcNow.AddDays(-30)
+            LastUpdated: prefs?.UpdatedAt ?? DateTime.UtcNow
         );
     }
 }

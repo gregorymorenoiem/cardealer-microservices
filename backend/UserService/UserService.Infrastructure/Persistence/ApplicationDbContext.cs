@@ -44,6 +44,7 @@ namespace UserService.Infrastructure.Persistence
 
         // Privacy (ARCO - Ley 172-13)
         public DbSet<PrivacyRequest> PrivacyRequests => Set<PrivacyRequest>();
+        public DbSet<CommunicationPreference> CommunicationPreferences => Set<CommunicationPreference>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
