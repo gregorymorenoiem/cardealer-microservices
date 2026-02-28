@@ -316,3 +316,4 @@ public record SyncHistoryItem
     public string VehicleId { get; init; } = string.Empty;
     public DateTime ViewedAt { get; init; }
 }
+
