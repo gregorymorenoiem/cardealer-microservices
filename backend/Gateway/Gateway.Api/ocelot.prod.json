@@ -5149,6 +5149,23 @@
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
       }
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/audit",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auditservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     }
   ],
   "GlobalConfiguration": {
