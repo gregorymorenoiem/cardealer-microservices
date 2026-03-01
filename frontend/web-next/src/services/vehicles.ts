@@ -969,6 +969,8 @@ export interface CreateVehicleRequest {
   sellerEmail?: string;
   sellerWhatsApp?: string;
   isNegotiable?: boolean;
+  /** The authenticated user's ID — links the listing to the seller's account */
+  sellerId?: string;
 }
 
 export interface CreateVehicleImage {
@@ -1089,7 +1091,8 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
     country: 'DO',
     // Images as objects
     imageObjects,
-    // Seller contact
+    // Seller identity + contact
+    sellerId: data.sellerId,
     sellerName: data.sellerName,
     sellerPhone: data.sellerPhone,
     sellerEmail: data.sellerEmail,

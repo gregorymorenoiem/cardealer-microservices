@@ -582,6 +582,8 @@ export function SmartPublishWizard({
       sellerEmail: formData.sellerEmail || undefined,
       sellerWhatsApp: formData.sellerWhatsApp || undefined,
       isNegotiable: formData.isNegotiable,
+      // Link vehicle to the authenticated user's account
+      sellerId: userId || user?.id || undefined,
     };
 
     try {

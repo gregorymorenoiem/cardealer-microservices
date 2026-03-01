@@ -38,7 +38,7 @@ public class VehiclesSaleServiceClient : IVehiclesSaleServiceClient
         try
         {
             var instance = await _serviceDiscovery.FindServiceInstanceAsync("VehiclesSaleService");
-            return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://vehiclessaleservice:80";
+            return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://vehiclessaleservice:8080";
         }
         catch (Exception ex)
         {

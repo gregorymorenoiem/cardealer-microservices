@@ -406,6 +406,18 @@ public class VehiclesController : ControllerBase
                 return BadRequest(new { message = "Category not found" });
         }
 
+        // Resolve sellerId: prefer explicit request value, otherwise use the authenticated user's ID
+        var resolvedSellerId = request.SellerId ?? Guid.Empty;
+        if (resolvedSellerId == Guid.Empty)
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                           ?? User.FindFirst("sub")?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var claimsUserId))
+            {
+                resolvedSellerId = claimsUserId;
+            }
+        }
+
         // Build title from make/model/year if not provided
         var title = string.IsNullOrWhiteSpace(request.Title)
             ? $"{request.Year} {request.Make} {request.Model}{(string.IsNullOrWhiteSpace(request.Trim) ? "" : " " + request.Trim)}"
@@ -461,7 +473,7 @@ public class VehiclesController : ControllerBase
             State = state,
             ZipCode = request.ZipCode,
             Country = request.Country ?? "DO",
-            SellerId = request.SellerId ?? Guid.Empty,
+            SellerId = resolvedSellerId,
             SellerName = request.SellerName ?? string.Empty,
             SellerPhone = request.SellerPhone,
             SellerEmail = request.SellerEmail,
