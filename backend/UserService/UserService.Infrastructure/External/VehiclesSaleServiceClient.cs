@@ -43,7 +43,7 @@ public class VehiclesSaleServiceClient : IVehiclesSaleServiceClient
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error resolving VehiclesSaleService from Consul, using fallback");
-            return "http://vehiclessaleservice:80";
+            return "http://vehiclessaleservice:8080";
         }
     }
 
