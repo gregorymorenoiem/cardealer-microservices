@@ -117,7 +117,12 @@ function SessionItem({
           )}
         </div>
         <p className="text-muted-foreground mt-0.5 text-sm">
-          {session.browser} en {session.os}
+          {session.deviceType === 'mobile'
+            ? 'Dispositivo móvil'
+            : session.deviceType === 'tablet'
+              ? 'Tablet'
+              : 'Computadora'}{' '}
+          {session.ipAddress && `• ${session.ipAddress}`}
         </p>
         <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           {session.location && (

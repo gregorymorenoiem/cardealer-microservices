@@ -12,6 +12,13 @@ public interface IJwtGenerator
     /// </summary>
     string GenerateToken(ApplicationUser user, int? expiresMinutes);
 
+    /// <summary>
+    /// Generate a JWT with a custom expiration and session ID.
+    /// The <paramref name="sessionId"/> is embedded as a "SessionId" claim so the
+    /// /api/auth/security/sessions endpoint can mark the current session as active.
+    /// </summary>
+    string GenerateToken(ApplicationUser user, int? expiresMinutes, string? sessionId);
+
     string GenerateRefreshToken();
     (string userId, string email)? ValidateToken(string token);
     string GenerateTempToken(string userId);
