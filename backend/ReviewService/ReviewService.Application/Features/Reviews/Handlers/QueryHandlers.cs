@@ -157,3 +157,90 @@ public class GetReviewByIdQueryHandler : IRequestHandler<GetReviewByIdQuery, Res
         return Result<ReviewDto>.Success(dto);
     }
 }
+
+// ============================================================
+// Admin query handlers
+// ============================================================
+
+/// <summary>
+/// Handler para GetAdminReviewsQuery
+/// </summary>
+public class GetAdminReviewsQueryHandler : IRequestHandler<GetAdminReviewsQuery, Result<AdminReviewListDto>>
+{
+    private readonly IReviewRepository _reviewRepository;
+
+    public GetAdminReviewsQueryHandler(IReviewRepository reviewRepository)
+    {
+        _reviewRepository = reviewRepository;
+    }
+
+    public async Task<Result<AdminReviewListDto>> Handle(GetAdminReviewsQuery request, CancellationToken cancellationToken)
+    {
+        var (reviews, totalCount) = await _reviewRepository.GetAdminReviewsAsync(
+            request.Page,
+            request.PageSize,
+            request.Search,
+            request.Status);
+
+        var items = reviews.Select(r => MapToAdminDto(r));
+
+        return Result<AdminReviewListDto>.Success(new AdminReviewListDto
+        {
+            Items = items,
+            Total = totalCount
+        });
+    }
+
+    internal static AdminReviewDto MapToAdminDto(ReviewService.Domain.Entities.Review r)
+    {
+        string status;
+        if (r.IsApproved && !r.IsFlagged)
+            status = "approved";
+        else if (!r.IsApproved && r.ModeratedById == null)
+            status = "pending";
+        else
+            status = "rejected";
+
+        return new AdminReviewDto
+        {
+            Id          = r.Id.ToString(),
+            AuthorName  = r.BuyerName,
+            AuthorAvatar = r.BuyerPhotoUrl,
+            TargetName  = r.SellerId.ToString(),
+            TargetType  = "seller",
+            Rating      = r.Rating,
+            Title       = r.Title,
+            Comment     = r.Content,
+            CreatedAt   = r.CreatedAt.ToString("O"),
+            Status      = status,
+            Reports     = Array.Empty<string>()
+        };
+    }
+}
+
+/// <summary>
+/// Handler para GetAdminReviewStatsQuery
+/// </summary>
+public class GetAdminReviewStatsQueryHandler : IRequestHandler<GetAdminReviewStatsQuery, Result<AdminReviewStatsDto>>
+{
+    private readonly IReviewRepository _reviewRepository;
+
+    public GetAdminReviewStatsQueryHandler(IReviewRepository reviewRepository)
+    {
+        _reviewRepository = reviewRepository;
+    }
+
+    public async Task<Result<AdminReviewStatsDto>> Handle(GetAdminReviewStatsQuery request, CancellationToken cancellationToken)
+    {
+        var stats = await _reviewRepository.GetAdminStatsAsync();
+
+        return Result<AdminReviewStatsDto>.Success(new AdminReviewStatsDto
+        {
+            TotalReviews    = stats.TotalReviews,
+            PendingReviews  = stats.PendingReviews,
+            ApprovedReviews = stats.ApprovedReviews,
+            AverageRating   = stats.AverageRating,
+            ReportedReviews = stats.FlaggedReviews
+        });
+    }
+}

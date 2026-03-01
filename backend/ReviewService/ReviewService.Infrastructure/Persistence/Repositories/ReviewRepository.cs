@@ -198,4 +198,101 @@ public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
             .Distinct()
             .ToListAsync(cancellationToken);
     }
+
+    // =========================================================
+    // Admin methods
+    // =========================================================
+
+    /// <summary>
+    /// Obtener todas las reviews con paginación y filtros (admin)
+    /// </summary>
+    public async Task<(IEnumerable<Review> Reviews, int TotalCount)> GetAdminReviewsAsync(
+        int page = 1,
+        int pageSize = 20,
+        string? search = null,
+        string? statusFilter = null)
+    {
+        var query = _context.Reviews.Include(r => r.Response).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.ToLower();
+            query = query.Where(r =>
+                r.BuyerName.ToLower().Contains(term) ||
+                r.Title.ToLower().Contains(term) ||
+                r.Content.ToLower().Contains(term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(statusFilter))
+        {
+            query = statusFilter switch
+            {
+                "approved"  => query.Where(r => r.IsApproved && !r.IsFlagged),
+                "pending"   => query.Where(r => !r.IsApproved && r.ModeratedById == null),
+                "rejected"  => query.Where(r => !r.IsApproved && r.ModeratedById != null),
+                "reported"  => query.Where(r => r.IsFlagged),
+                _           => query
+            };
+        }
+
+        var totalCount = await query.CountAsync();
+        var reviews = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (reviews, totalCount);
+    }
+
+    /// <summary>
+    /// Obtener reviews reportadas/flagged (admin)
+    /// </summary>
+    public async Task<IEnumerable<Review>> GetFlaggedReviewsAsync(int limit = 100)
+    {
+        return await _context.Reviews
+            .Include(r => r.Response)
+            .Where(r => r.IsFlagged)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Obtener estadísticas globales de reviews (admin)
+    /// </summary>
+    public async Task<AdminReviewStats> GetAdminStatsAsync()
+    {
+        var total     = await _context.Reviews.CountAsync();
+        var approved  = await _context.Reviews.CountAsync(r => r.IsApproved && !r.IsFlagged);
+        var pending   = await _context.Reviews.CountAsync(r => !r.IsApproved && r.ModeratedById == null);
+        var rejected  = await _context.Reviews.CountAsync(r => !r.IsApproved && r.ModeratedById != null);
+        var flagged   = await _context.Reviews.CountAsync(r => r.IsFlagged);
+        var avgRating = total > 0
+            ? (decimal)await _context.Reviews.AverageAsync(r => (double)r.Rating)
+            : 0m;
+
+        return new AdminReviewStats
+        {
+            TotalReviews    = total,
+            ApprovedReviews = approved,
+            PendingReviews  = pending,
+            RejectedReviews = rejected,
+            FlaggedReviews  = flagged,
+            AverageRating   = Math.Round(avgRating, 2)
+        };
+    }
+
+    /// <summary>
+    /// Eliminar una review sin validación de propiedad (solo admin)
+    /// </summary>
+    public async Task AdminDeleteAsync(Guid reviewId)
+    {
+        var review = await _context.Reviews.FindAsync(reviewId);
+        if (review != null)
+        {
+            _context.Reviews.Remove(review);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

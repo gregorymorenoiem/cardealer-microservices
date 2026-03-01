@@ -765,6 +765,132 @@ public class ReviewsController : ControllerBase
     }
 
     #endregion
+
+    #region Admin endpoints
+
+    /// <summary>
+    /// Obtener todas las reviews con paginación y filtros (admin)
+    /// </summary>
+    [HttpGet("admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [ProducesResponseType(typeof(AdminReviewListDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<ActionResult<AdminReviewListDto>> GetAdminReviews(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null)
+    {
+        try
+        {
+            var query = new GetAdminReviewsQuery { Page = page, PageSize = pageSize, Search = search, Status = status };
+            var result = await _mediator.Send(query);
+            if (result.IsSuccess)
+                return Ok(result.Value);
+            return BadRequest(result.Error);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting admin reviews");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Obtener reviews reportadas/flagged (admin)
+    /// </summary>
+    [HttpGet("admin/reported")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [ProducesResponseType(typeof(List<ReportedAdminReviewDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<ActionResult<List<ReportedAdminReviewDto>>> GetReportedReviews()
+    {
+        try
+        {
+            var query = new GetAdminReviewsQuery { Page = 1, PageSize = 200, Status = "reported" };
+            var result = await _mediator.Send(query);
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
+
+            var reported = result.Value!.Items.Select(r => new ReportedAdminReviewDto
+            {
+                Id           = r.Id,
+                AuthorName   = r.AuthorName,
+                AuthorAvatar = r.AuthorAvatar,
+                TargetName   = r.TargetName,
+                TargetType   = r.TargetType,
+                Rating       = r.Rating,
+                Title        = r.Title,
+                Comment      = r.Comment,
+                CreatedAt    = r.CreatedAt,
+                Status       = r.Status,
+                Reports      = r.Reports,
+                ReportCount  = 1,
+                ReportReasons = Array.Empty<string>(),
+                LastReportedAt = r.CreatedAt
+            }).ToList();
+
+            return Ok(reported);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting reported reviews");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Obtener estadísticas globales de reviews (admin)
+    /// </summary>
+    [HttpGet("admin/stats")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [ProducesResponseType(typeof(AdminReviewStatsDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<ActionResult<AdminReviewStatsDto>> GetAdminReviewStats()
+    {
+        try
+        {
+            var result = await _mediator.Send(new GetAdminReviewStatsQuery());
+            if (result.IsSuccess)
+                return Ok(result.Value);
+            return BadRequest(result.Error);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting admin review stats");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Eliminar una review sin validación de propiedad (admin)
+    /// </summary>
+    [HttpDelete("admin/{reviewId:guid}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult> AdminDeleteReview([FromRoute] Guid reviewId)
+    {
+        try
+        {
+            var result = await _mediator.Send(new AdminDeleteReviewCommand { ReviewId = reviewId });
+            if (result.IsSuccess)
+                return Ok(new { message = "Review eliminada exitosamente" });
+            return NotFound(new { message = result.Error });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting review {ReviewId} (admin)", reviewId);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    #endregion
 }
 
 /// <summary>

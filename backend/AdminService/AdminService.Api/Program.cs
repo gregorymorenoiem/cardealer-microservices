@@ -265,6 +265,15 @@ builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddStandardResilience(configuration);
 
+// Review Service Client (for admin review management → ReviewService)
+builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client =>
+{
+    var baseAddress = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:8080";
+    client.BaseAddress = new Uri(baseAddress);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(configuration);
+
     var app = builder.Build();
 
     // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============

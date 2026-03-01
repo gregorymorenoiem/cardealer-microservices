@@ -56,6 +56,47 @@ public interface IReviewRepository : IRepository<Review, Guid>
     /// Obtener lista de vendedores que tienen reviews
     /// </summary>
     Task<List<Guid>> GetSellersWithReviewsAsync(CancellationToken cancellationToken = default);
+
+    // =========================================================
+    // Admin methods
+    // =========================================================
+
+    /// <summary>
+    /// Obtener todas las reviews con paginación y filtros (admin)
+    /// </summary>
+    Task<(IEnumerable<Review> Reviews, int TotalCount)> GetAdminReviewsAsync(
+        int page = 1,
+        int pageSize = 20,
+        string? search = null,
+        string? statusFilter = null);
+
+    /// <summary>
+    /// Obtener reviews reportadas/flagged (admin)
+    /// </summary>
+    Task<IEnumerable<Review>> GetFlaggedReviewsAsync(int limit = 100);
+
+    /// <summary>
+    /// Obtener estadísticas globales de reviews (admin)
+    /// </summary>
+    Task<AdminReviewStats> GetAdminStatsAsync();
+
+    /// <summary>
+    /// Eliminar una review sin validación de propiedad (solo admin)
+    /// </summary>
+    Task AdminDeleteAsync(Guid reviewId);
+}
+
+/// <summary>
+/// Estadísticas globales de reviews para el panel de admin
+/// </summary>
+public class AdminReviewStats
+{
+    public int TotalReviews { get; set; }
+    public int ApprovedReviews { get; set; }
+    public int PendingReviews { get; set; }
+    public int RejectedReviews { get; set; }
+    public int FlaggedReviews { get; set; }
+    public decimal AverageRating { get; set; }
 }
 
 /// <summary>
