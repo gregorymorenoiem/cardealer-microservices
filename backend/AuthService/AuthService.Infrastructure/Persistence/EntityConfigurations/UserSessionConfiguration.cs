@@ -48,9 +48,16 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
         builder.Property(s => s.RevokedReason)
             .HasMaxLength(256);
 
+        builder.Property(s => s.DeviceFingerprint)
+            .HasMaxLength(16);
+
         builder.HasIndex(s => s.UserId);
         builder.HasIndex(s => s.RefreshTokenId);
         builder.HasIndex(s => new { s.UserId, s.IsRevoked });
+        // Index for fast fingerprint-based session deduplication on login
+        builder.HasIndex(s => new { s.UserId, s.DeviceFingerprint, s.IsRevoked })
+            .HasDatabaseName("IX_UserSessions_UserId_DeviceFingerprint");
+
 
         builder.HasOne(s => s.User)
             .WithMany()

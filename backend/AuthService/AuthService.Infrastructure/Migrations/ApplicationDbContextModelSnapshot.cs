@@ -442,6 +442,10 @@ namespace AuthService.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeviceFingerprint")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
                     b.Property<string>("DeviceInfo")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -494,6 +498,9 @@ namespace AuthService.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("UserId", "IsRevoked");
+
+                    b.HasIndex("UserId", "DeviceFingerprint", "IsRevoked")
+                        .HasDatabaseName("IX_UserSessions_UserId_DeviceFingerprint");
 
                     b.ToTable("UserSessions", (string)null);
                 });

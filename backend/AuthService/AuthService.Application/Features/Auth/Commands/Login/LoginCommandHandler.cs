@@ -234,6 +234,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var deviceInfo = ParseDeviceInfo(userAgent);
         var browser = ParseBrowser(userAgent);
         var operatingSystem = ParseOperatingSystem(userAgent);
+        var deviceFingerprint = UserSession.ComputeFingerprint(browser, operatingSystem, deviceInfo);
 
         // Get geolocation from IP address
         string? locationString = null;
@@ -257,18 +258,17 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             _logger.LogWarning(ex, "Failed to get geolocation for IP {IpAddress}", _requestContext.IpAddress);
         }
 
-        // Check if there's an existing active session for the same device/browser/IP
+        // Check if there's an existing active session for the same device fingerprint
+        // (Browser + OS + DeviceType hash — IP excluded to handle dynamic IPs, VPNs, k8s pod rotation)
         var existingSession = await _sessionRepository.GetActiveSessionByDeviceAsync(
             user.Id,
-            deviceInfo,
-            browser,
-            _requestContext.IpAddress,
+            deviceFingerprint,
             cancellationToken);
 
         if (existingSession != null)
         {
-            // Reuse existing session - update with new refresh token
-            existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt);
+            // Reuse existing session — update with new refresh token and latest IP
+            existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt, _requestContext.IpAddress);
             // Update location if we got one
             if (!string.IsNullOrEmpty(locationString))
             {
