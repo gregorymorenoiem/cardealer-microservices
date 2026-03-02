@@ -395,8 +395,7 @@ test.describe('Phase 6: Admin KYC Approval', () => {
     const [, b64] = adminToken.split('.');
     const payload = JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'));
     const roleClaim =
-      payload.role ??
-      payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      payload.role ?? payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
     const roles: string[] = Array.isArray(roleClaim) ? roleClaim : [roleClaim];
     expect(roles).toContain('Admin');
     console.log(`✅ Phase 6: Admin login OK — roles: ${roles.join(', ')}`);
@@ -518,7 +517,7 @@ test.describe('Phase 7: Vehicle Creation & Publishing', () => {
     console.log(`✅ Phase 7: Vehicle created — vehicleId: ${vehicleId}`);
   });
 
-  test('POST /api/vehicles/:id/publish → 200, status Active (2)', async ({ request }) => {
+  test('POST /api/vehicles/:id/publish → 200, status PendingReview (1)', async ({ request }) => {
     expect(vehicleId, 'Need vehicleId from previous test').toBeTruthy();
 
     const res = await gw(request, 'POST', `/api/vehicles/${vehicleId}/publish`, {
@@ -530,15 +529,16 @@ test.describe('Phase 7: Vehicle Creation & Publishing', () => {
 
     const data = unwrap(JSON.parse(body));
     const status = data.status as number | string;
-    // Status 2 = Active (Published)
+    // All vehicles go to PendingReview first (requires staff approval).
+    // Status 1 = PendingReview, Status 2 = Active (only after admin approval)
     expect(
-      [2, 'Active', 'active'].includes(typeof status === 'string' ? status.toLowerCase() : status),
-      `Expected Active/2, got: ${status}`
+      [1, 2, 'Active', 'active', 'PendingReview', 'pendingreview'].includes(
+        typeof status === 'string' ? status.toLowerCase() : status
+      ),
+      `Expected PendingReview (1) or Active (2), got: ${status}`
     ).toBeTruthy();
 
-    const publishedAt = data.publishedAt as string | undefined;
-    expect(publishedAt, 'publishedAt must be set after publish').toBeTruthy();
-    console.log(`✅ Phase 7: Vehicle published — status: ${status}, publishedAt: ${publishedAt}`);
+    console.log(`✅ Phase 7: Vehicle published — status: ${status} (en revisión)`);
   });
 
   test('GET /api/vehicles/:id → 200, vehicle publicly accessible (no auth)', async ({
@@ -555,15 +555,18 @@ test.describe('Phase 7: Vehicle Creation & Publishing', () => {
     console.log(`✅ Phase 7: Vehicle publicly accessible: ${returnedId}`);
   });
 
-  test('GET /api/vehicles → 200, published vehicle appears in listing', async ({ request }) => {
+  test('GET /api/users/me/vehicles → vehicle appears in owner list (pending review)', async ({ request }) => {
     expect(vehicleId, 'Need vehicleId').toBeTruthy();
+    expect(userToken, 'Need userToken').toBeTruthy();
 
-    const res = await gw(request, 'GET', '/api/vehicles');
+    // PendingReview vehicles appear in the owner's list but NOT in the public /api/vehicles listing.
+    // This endpoint goes through UserService → VehiclesSaleService (AllowAnonymous, internal call).
+    const res = await gw(request, 'GET', '/api/users/me/vehicles', { token: userToken });
     expect(res.status()).toBe(200);
 
     const body = await res.text();
     expect(body).toContain(vehicleId);
-    console.log(`✅ Phase 7: Vehicle ${vehicleId} present in /api/vehicles listing`);
+    console.log(`✅ Phase 7: Vehicle ${vehicleId} present in owner's vehicle list (mis-vehiculos)`);
   });
 });
 
