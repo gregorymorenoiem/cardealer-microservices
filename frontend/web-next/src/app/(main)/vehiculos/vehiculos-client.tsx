@@ -73,7 +73,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
-import { SearchAgentWidget } from '@/components/search/SearchAgentWidget';
+import { aiSearch, aiFiltersToSearchParams } from '@/services/search-agent';
 import { useVehicleSearch } from '@/hooks/use-vehicle-search';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
@@ -228,6 +228,14 @@ export default function VehiculosClient() {
   const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
   const [saveModalOpen, setSaveModalOpen] = React.useState(false);
+  const [searchInput, setSearchInput] = React.useState('');
+  const [isAiSearching, setIsAiSearching] = React.useState(false);
+  const [aiSearchInfo, setAiSearchInfo] = React.useState<{
+    query: string;
+    confidence: number;
+    latencyMs: number;
+    wasCached: boolean;
+  } | null>(null);
 
   // Core search hook — handles URL sync, debounce, React Query
   const {
@@ -375,6 +383,59 @@ export default function VehiculosClient() {
     toggleFavorite(vehicleId).catch(() => {});
   };
 
+  // AI-powered natural language search handler
+  const handleAiSearch = React.useCallback(
+    async (query: string) => {
+      if (!query.trim() || isAiSearching) return;
+
+      setIsAiSearching(true);
+      setAiSearchInfo(null);
+
+      try {
+        const result = await aiSearch({ query: query.trim() });
+        const ai = result.aiFilters;
+
+        if (!result.isAiSearchEnabled) {
+          // AI disabled — fall back to text search
+          setFilters({ query: query.trim(), page: 1 });
+          return;
+        }
+
+        if (ai.confianza === 0) {
+          // Low confidence — fall back to text search
+          setFilters({ query: query.trim(), page: 1 });
+          return;
+        }
+
+        // Apply AI-generated filters
+        if (ai.filtros_exactos) {
+          const mapped = aiFiltersToSearchParams(ai.filtros_exactos);
+          setFilters({ ...mapped, page: 1 } as Parameters<typeof setFilters>[0]);
+        }
+
+        setAiSearchInfo({
+          query: ai.query_reformulada ?? query.trim(),
+          confidence: ai.confianza,
+          latencyMs: result.latencyMs,
+          wasCached: result.wasCached,
+        });
+      } catch {
+        // On AI error, fall back to regular text search
+        setFilters({ query: query.trim(), page: 1 });
+      } finally {
+        setIsAiSearching(false);
+      }
+    },
+    [isAiSearching, setFilters]
+  );
+
+  // Sync searchInput with filters.query from URL
+  React.useEffect(() => {
+    if (!isAiSearching) {
+      setSearchInput(filters.query ?? '');
+    }
+  }, [filters.query, isAiSearching]);
+
   // Render accumulated vehicles with ad slots every 6 items
   const renderResults = () => {
     if (!allVehicles.length) return null;
@@ -426,27 +487,48 @@ export default function VehiculosClient() {
         <div className="mx-auto max-w-screen-xl px-4 py-3 sm:px-6">
           {/* Row 1: Search bar + controls */}
           <div className="flex items-center gap-3">
-            {/* Search */}
-            <div className="relative min-w-0 flex-1">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            {/* Search — AI-powered natural language search */}
+            <form
+              className="relative min-w-0 flex-1"
+              onSubmit={e => {
+                e.preventDefault();
+                if (searchInput.trim()) {
+                  handleAiSearch(searchInput);
+                }
+              }}
+            >
+              {isAiSearching ? (
+                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse text-purple-500" />
+              ) : (
+                <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              )}
               <Input
                 type="search"
                 placeholder="Busca por marca, modelo, año, color..."
-                value={filters.query ?? ''}
-                onChange={e => setFilters({ query: e.target.value || undefined, page: 1 })}
-                className="h-10 pr-4 pl-9 text-sm"
-                aria-label="Buscar vehículos"
+                value={searchInput}
+                onChange={e => {
+                  setSearchInput(e.target.value);
+                  // Clear AI info when user edits
+                  if (aiSearchInfo) setAiSearchInfo(null);
+                }}
+                className={cn('h-10 pr-10 pl-9 text-sm', isAiSearching && 'ring-2 ring-purple-300')}
+                aria-label="Buscar vehículos con IA"
+                disabled={isAiSearching}
               />
-              {filters.query && (
+              {searchInput && (
                 <button
                   type="button"
-                  onClick={() => setFilters({ query: undefined })}
+                  onClick={() => {
+                    setSearchInput('');
+                    setAiSearchInfo(null);
+                    clearFilters();
+                  }}
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
-            </div>
+            </form>
 
             {/* Sort */}
             <Select
@@ -536,6 +618,38 @@ export default function VehiculosClient() {
               <span>Alertas gratis</span>
             </div>
           </div>
+
+          {/* AI search info banner */}
+          {aiSearchInfo && (
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-purple-50 px-3 py-1.5 dark:bg-purple-950/30">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-purple-500" />
+              <span className="truncate text-xs text-purple-700 dark:text-purple-300">
+                IA interpretó: <strong>&ldquo;{aiSearchInfo.query}&rdquo;</strong>
+              </span>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-600 dark:bg-purple-900 dark:text-purple-300">
+                  {Math.round(aiSearchInfo.confidence * 100)}% confianza
+                </span>
+                <span className="text-[10px] text-purple-400">{aiSearchInfo.latencyMs}ms</span>
+                {aiSearchInfo.wasCached && (
+                  <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] text-green-600">
+                    caché
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiSearchInfo(null);
+                    clearFilters();
+                    setSearchInput('');
+                  }}
+                  className="ml-1 text-purple-400 hover:text-purple-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -848,15 +962,6 @@ export default function VehiculosClient() {
         onOpenChange={setSaveModalOpen}
         filters={filters}
         totalResults={totalResults}
-      />
-
-      {/* ═══════════════════════════════════════════════════════
-          SEARCH AGENT — AI Search Chat Widget
-      ═══════════════════════════════════════════════════════ */}
-      <SearchAgentWidget
-        onFiltersApplied={aiFilters => {
-          setFilters({ ...aiFilters, page: 1 } as Parameters<typeof setFilters>[0]);
-        }}
       />
     </div>
   );
