@@ -2843,7 +2843,7 @@ metadata:
     app: inventorymanagementservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: inventorymanagementservice
