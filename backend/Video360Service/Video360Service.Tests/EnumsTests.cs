@@ -10,13 +10,14 @@ public class EnumsTests
     public void Video360Provider_ShouldHaveAllExpectedValues()
     {
         // Assert
-        Enum.GetValues<Video360Provider>().Should().HaveCount(5);
+        Enum.GetValues<Video360Provider>().Should().HaveCount(6);
         
         Video360Provider.FfmpegApi.Should().BeDefined();
         Video360Provider.ApyHub.Should().BeDefined();
         Video360Provider.Cloudinary.Should().BeDefined();
         Video360Provider.Imgix.Should().BeDefined();
         Video360Provider.Shotstack.Should().BeDefined();
+        Video360Provider.Local.Should().BeDefined();
     }
 
     [Fact]
