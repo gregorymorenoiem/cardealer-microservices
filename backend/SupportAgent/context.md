@@ -30,3 +30,4 @@ SupportAgent is the chatbot de soporte y orientación de OKLA Marketplace. Uses 
 - ❌ Does NOT search inventory/listings (that's SearchAgent)
 - ❌ Does NOT process payments or modify accounts
 - ❌ Does NOT access private user data
+
