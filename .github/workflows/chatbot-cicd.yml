@@ -381,7 +381,8 @@ jobs:
 
       - name: � Install eval dependencies
         run: |
-          pip3 install requests tqdm
+          python3 -m venv /tmp/okla-eval-venv
+          /tmp/okla-eval-venv/bin/pip install --quiet requests tqdm
 
       - name: 🔍 Validate model-registry.json
         run: |
@@ -523,7 +524,7 @@ jobs:
           echo "🔍 Running smoke tests..."
 
           # Install smoke test dependencies
-          pip3 install requests > /dev/null 2>&1
+          python3 -m venv /tmp/okla-smoke-venv && /tmp/okla-smoke-venv/bin/pip install --quiet requests > /dev/null 2>&1
 
           # Check if LLM Server is running (may be scaled to 0 for GPU cost savings)
           LLM_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
@@ -548,7 +549,7 @@ jobs:
 
           # Run smoke test in quick mode (health checks only for CI speed)
           # shellcheck disable=SC2086
-          python backend/ChatbotService/LlmServer/smoke_test.py \
+          /tmp/okla-smoke-venv/bin/python backend/ChatbotService/LlmServer/smoke_test.py \
             --llm-url http://localhost:8000 \
             --chatbot-url http://localhost:8080 \
             --quick \
