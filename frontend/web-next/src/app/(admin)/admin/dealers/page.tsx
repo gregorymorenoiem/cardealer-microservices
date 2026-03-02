@@ -202,12 +202,13 @@ export default function AdminDealersPage() {
           <h1 className="text-foreground text-3xl font-bold">Dealers</h1>
           <p className="text-muted-foreground">Gestiona los dealers de la plataforma</p>
         </div>
-        <Link href="/admin/dealers/pendientes">
-          <Button variant="outline">
-            <Clock className="mr-2 h-4 w-4" />
-            Pendientes ({stats?.pending || 0})
-          </Button>
-        </Link>
+        <Button
+          variant="outline"
+          onClick={() => handleFilterChange('status', 'pending')}
+        >
+          <Clock className="mr-2 h-4 w-4" />
+          Pendientes ({stats?.pending || 0})
+        </Button>
       </div>
 
       {/* Stats */}

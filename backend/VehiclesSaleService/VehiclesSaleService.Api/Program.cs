@@ -266,6 +266,15 @@ builder.Services.AddHttpClient("AlertService", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// DealerManagementService client for dealer KYC verification checks (used by Publish endpoint)
+builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient, VehiclesSaleService.Infrastructure.External.DealerVerificationClient>(client =>
+{
+    var dealerServiceUrl = builder.Configuration["ServiceUrls:DealerManagementService"] ?? "http://dealermanagementservice:8080";
+    client.BaseAddress = new Uri(dealerServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 var app = builder.Build();
 
 // ============================================================================

@@ -128,6 +128,8 @@ interface ApiErrorResponse {
   code: string;
   message: string;
   errors?: Array<{ field?: string; message: string }>;
+  requiresKyc?: boolean;
+  redirectUrl?: string;
 }
 
 function transformError(error: AxiosError): ApiErrorResponse {
@@ -146,6 +148,8 @@ function transformError(error: AxiosError): ApiErrorResponse {
       code,
       message,
       errors: data.errors as ApiErrorResponse['errors'],
+      requiresKyc: data.requiresKyc as boolean | undefined,
+      redirectUrl: data.redirectUrl as string | undefined,
     };
   }
 

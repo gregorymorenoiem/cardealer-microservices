@@ -165,7 +165,7 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
             },
             PendingItems = new List<PendingItemSummaryDto>
             {
-                new() { Type = "Dealers", Count = stats.PendingDealers, Priority = "High", Link = "/admin/dealers/pending" },
+                new() { Type = "Dealers", Count = stats.PendingDealers, Priority = "High", Link = "/admin/dealers?status=pending" },
                 new() { Type = "Listings", Count = stats.PendingListings, Priority = "Normal", Link = "/admin/moderation" },
                 new() { Type = "Tickets", Count = stats.OpenTickets, Priority = "Normal", Link = "/admin/support" }
             },

@@ -115,6 +115,7 @@ namespace UserService.Application.DTOs
 
     /// <summary>
     /// Vehicle DTO for user's vehicles listing
+    /// Field names match the frontend TypeScript interface (camelCase via JSON serialization)
     /// </summary>
     public class UserVehicleDto
     {
@@ -124,16 +125,21 @@ namespace UserService.Application.DTOs
         public decimal Price { get; set; }
         public string Currency { get; set; } = "DOP";
         public string Status { get; set; } = string.Empty;
-        public string? MainImageUrl { get; set; }
+        // Frontend expects "imageUrl" not "mainImageUrl"
+        public string? ImageUrl { get; set; }
         public int Year { get; set; }
         public string Make { get; set; } = string.Empty;
         public string Model { get; set; } = string.Empty;
         public int Mileage { get; set; }
         public string? Transmission { get; set; }
         public string? FuelType { get; set; }
-        public int Views { get; set; }
-        public int Favorites { get; set; }
+        // Frontend expects "viewCount" not "views"
+        public int ViewCount { get; set; }
+        // Frontend expects "inquiryCount" not "favorites"
+        public int InquiryCount { get; set; }
+        public bool IsFeatured { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
     }
 
     /// <summary>

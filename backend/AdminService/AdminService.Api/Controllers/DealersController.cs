@@ -139,6 +139,37 @@ public class DealersController : ControllerBase
         await _mediator.Send(new DeleteDealerCommand(id));
         return NoContent();
     }
+
+    /// <summary>
+    /// Create a minimal dealer profile in DealerManagementService for an existing user
+    /// who registered with AccountType=Dealer but never completed their profile.
+    /// Useful for fixing orphaned dealer accounts where UserService has them as Dealer
+    /// type but DealerManagementService has no profile for them.
+    /// </summary>
+    [HttpPost("create-profile")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [ProducesResponseType(typeof(AdminDealerDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<AdminDealerDto>> CreateDealerProfile(
+        [FromBody] CreateDealerProfileRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        _logger.LogInformation(
+            "Creating dealer profile for user {UserId} ({Email})", request.UserId, request.Email);
+
+        var result = await _mediator.Send(new CreateDealerProfileForUserCommand(
+            request.UserId,
+            request.BusinessName,
+            request.Email,
+            request.Phone));
+
+        if (result == null)
+            return BadRequest(new { Error = "Could not create dealer profile. Check that the user exists and has no existing profile." });
+
+        return Created($"/api/admin/dealers/{result.Id}", result);
+    }
 }
 
 // ============================================================================
@@ -148,4 +179,12 @@ public class DealersController : ControllerBase
 public class SuspendDealerRequest
 {
     public string Reason { get; set; } = string.Empty;
+}
+
+public class CreateDealerProfileRequest
+{
+    public Guid UserId { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
 }

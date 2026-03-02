@@ -23,6 +23,7 @@ public class VehiclesController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IConfigurationServiceClient _configClient;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly VehiclesSaleService.Application.Interfaces.IDealerVerificationClient _dealerVerificationClient;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
@@ -31,7 +32,8 @@ public class VehiclesController : ControllerBase
         ILogger<VehiclesController> logger,
         ApplicationDbContext context,
         IConfigurationServiceClient configClient,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        VehiclesSaleService.Application.Interfaces.IDealerVerificationClient dealerVerificationClient)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
@@ -40,6 +42,7 @@ public class VehiclesController : ControllerBase
         _context = context;
         _configClient = configClient;
         _httpClientFactory = httpClientFactory;
+        _dealerVerificationClient = dealerVerificationClient;
     }
 
     /// <summary>
@@ -696,6 +699,25 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // --- Dealer KYC gate ---
+        // Dealers must complete KYC verification before publishing any listing.
+        if (vehicle.SellerType == SellerType.Dealer)
+        {
+            var isVerified = await _dealerVerificationClient.IsDealerVerifiedAsync(vehicle.SellerId);
+            if (!isVerified)
+            {
+                _logger.LogWarning(
+                    "Dealer {SellerId} attempted to publish vehicle {VehicleId} without KYC verification",
+                    vehicle.SellerId, id);
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "Debes completar la verificación KYC antes de publicar vehículos.",
+                    requiresKyc = true,
+                    redirectUrl = "/cuenta/verificacion"
+                });
+            }
+        }
+
         // Validate status - only Draft, Archived, or Rejected can be submitted for review
         if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived && vehicle.Status != VehicleStatus.Rejected)
         {
@@ -980,6 +1002,91 @@ public class VehiclesController : ControllerBase
                 imageCount = v.Images.Count,
                 submittedAt = v.SubmittedForReviewAt,
                 rejectionCount = v.RejectionCount,
+                city = v.City,
+                state = v.State
+            }),
+            totalCount,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        });
+    }
+
+    /// <summary>
+    /// Admin search: returns vehicles of ANY status (not just Active).
+    /// Used by AdminService to populate the "Todos" tab in the admin panel.
+    /// </summary>
+    [HttpGet("admin/search")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AdminSearch(
+        [FromQuery] string? search,
+        [FromQuery] string? status,
+        [FromQuery] string? sellerId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var query = _context.Vehicles
+            .Include(v => v.Images)
+            .Where(v => !v.IsDeleted);
+
+        // Optional status filter
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (Enum.TryParse<VehicleStatus>(status, ignoreCase: true, out var parsedStatus))
+                query = query.Where(v => v.Status == parsedStatus);
+        }
+
+        // Optional seller filter
+        if (!string.IsNullOrWhiteSpace(sellerId) && Guid.TryParse(sellerId, out var sellerGuid))
+            query = query.Where(v => v.SellerId == sellerGuid);
+
+        // Optional text search
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.ToLower();
+            query = query.Where(v =>
+                v.Title.ToLower().Contains(term) ||
+                v.Make.ToLower().Contains(term) ||
+                v.Model.ToLower().Contains(term) ||
+                (v.SellerName != null && v.SellerName.ToLower().Contains(term)));
+        }
+
+        query = query.OrderByDescending(v => v.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var vehicles = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            vehicles = vehicles.Select(v => new
+            {
+                id = v.Id,
+                title = v.Title,
+                slug = GenerateSlug(v),
+                make = v.Make,
+                model = v.Model,
+                year = v.Year,
+                price = v.Price,
+                currency = v.Currency,
+                status = v.Status.ToString(),
+                isFeatured = v.IsFeatured,
+                sellerId = v.SellerId,
+                sellerName = v.SellerName,
+                sellerType = v.SellerType.ToString(),
+                viewCount = v.ViewCount,
+                leadCount = v.InquiryCount,
+                images = v.Images.OrderBy(i => i.SortOrder).Select(i => new
+                {
+                    url = i.Url,
+                    isPrimary = i.IsPrimary
+                }),
+                createdAt = v.CreatedAt,
+                publishedAt = v.PublishedAt,
+                rejectionReason = v.RejectionReason,
+                submittedAt = v.SubmittedForReviewAt,
                 city = v.City,
                 state = v.State
             }),

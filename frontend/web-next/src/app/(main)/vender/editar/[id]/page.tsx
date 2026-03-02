@@ -165,7 +165,13 @@ export default function EditVehiclePage() {
       await vehicleService.publish(vehicleId);
       toast.success('Vehículo enviado a revisión nuevamente');
       router.push('/cuenta/mis-vehiculos');
-    } catch {
+    } catch (error: unknown) {
+      const err = error as { message?: string; code?: string; requiresKyc?: boolean; redirectUrl?: string };
+      if (err.requiresKyc || err.code === 'HTTP_403') {
+        toast.error(err.message || 'Debes verificar tu identidad antes de publicar.');
+        router.push(err.redirectUrl || '/cuenta/verificacion');
+        return;
+      }
       toast.error('Error al re-enviar el vehículo a revisión');
     } finally {
       setIsSubmitting(false);

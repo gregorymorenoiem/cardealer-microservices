@@ -69,7 +69,7 @@ namespace AdminService.Infrastructure.External
         {
             try
             {
-                // Build query string - VehiclesSaleService uses different param names
+                // Build query string for admin search endpoint (returns ALL statuses, not just Active)
                 var queryParams = new List<string>
                 {
                     $"Page={filters.Page}",
@@ -77,17 +77,21 @@ namespace AdminService.Infrastructure.External
                 };
 
                 if (!string.IsNullOrWhiteSpace(filters.Search))
-                    queryParams.Add($"Search={Uri.EscapeDataString(filters.Search)}");
+                    queryParams.Add($"search={Uri.EscapeDataString(filters.Search)}");
 
-                var url = $"/api/vehicles?{string.Join("&", queryParams)}";
+                // Pass status filter directly to the server (admin endpoint supports it)
+                if (!string.IsNullOrWhiteSpace(filters.Status))
+                    queryParams.Add($"status={Uri.EscapeDataString(filters.Status)}");
 
-                _logger.LogDebug("Searching vehicles: {Url}", url);
+                var url = $"/api/vehicles/admin/search?{string.Join("&", queryParams)}";
+
+                _logger.LogDebug("Admin searching vehicles: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url, ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("VehiclesSaleService search returned {StatusCode}", response.StatusCode);
+                    _logger.LogWarning("VehiclesSaleService admin search returned {StatusCode}", response.StatusCode);
                     return new VehicleSearchResponse
                     {
                         Vehicles = new List<VehicleDto>(),
@@ -113,20 +117,12 @@ namespace AdminService.Infrastructure.External
                     };
                 }
 
-                // Map raw vehicles to our DTOs and apply admin-specific filters
+                // Map raw vehicles to our DTOs
                 var vehicles = (rawResult.Vehicles ?? new List<RawVehicle>())
                     .Select(MapToVehicleDto)
                     .ToList();
 
-                // Apply admin-specific filters (status, sellerType, featured) client-side
-                // since VehiclesSaleService search only filters Active vehicles by default
-                if (!string.IsNullOrWhiteSpace(filters.Status))
-                {
-                    vehicles = vehicles.Where(v =>
-                        string.Equals(v.StatusName, filters.Status, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
-                }
-
+                // Apply client-side sellerType and featured filters (not supported by admin/search endpoint)
                 if (!string.IsNullOrWhiteSpace(filters.SellerType))
                 {
                     vehicles = vehicles.Where(v =>
@@ -219,10 +215,10 @@ namespace AdminService.Infrastructure.External
                 // VehiclesSaleService has no admin stats endpoint, so we aggregate here
                 var stats = new VehicleStatsResponse();
 
-                // Use a large page size to get all vehicles in one call
+                // Use admin search endpoint (returns ALL statuses) with a large page size to compute stats client-side
                 const int batchSize = 500;
                 var response = await _httpClient.GetAsync(
-                    $"/api/vehicles?Page=1&PageSize={batchSize}", ct);
+                    $"/api/vehicles/admin/search?Page=1&PageSize={batchSize}", ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -253,7 +249,7 @@ namespace AdminService.Infrastructure.External
                     for (var page = 2; page <= Math.Min(totalPages, 10); page++)
                     {
                         var pageResponse = await _httpClient.GetAsync(
-                            $"/api/vehicles?Page={page}&PageSize={batchSize}", ct);
+                            $"/api/vehicles/admin/search?Page={page}&PageSize={batchSize}", ct);
                         if (!pageResponse.IsSuccessStatusCode) break;
 
                         var pageContent = await pageResponse.Content.ReadAsStringAsync(ct);
@@ -345,6 +341,111 @@ namespace AdminService.Infrastructure.External
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error unpublishing vehicle {VehicleId}", vehicleId);
+                return false;
+            }
+        }
+
+        public async Task<ModerationQueueResponse?> GetModerationQueueAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+        {
+            try
+            {
+                var url = $"/api/vehicles/moderation/queue?page={page}&pageSize={pageSize}";
+                _logger.LogDebug("Fetching moderation queue from VehiclesSaleService: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("VehiclesSaleService moderation queue returned {StatusCode}", response.StatusCode);
+                    return new ModerationQueueResponse { Vehicles = new List<ModerationVehicleDto>(), TotalCount = 0, Page = page, PageSize = pageSize, TotalPages = 0 };
+                }
+
+                var content = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogDebug("Moderation queue raw response: {Content}", content.Length > 500 ? content[..500] : content);
+
+                var raw = JsonSerializer.Deserialize<RawModerationQueueResult>(content, JsonOptions);
+                if (raw == null)
+                    return new ModerationQueueResponse { Vehicles = new List<ModerationVehicleDto>(), TotalCount = 0, Page = page, PageSize = pageSize, TotalPages = 0 };
+
+                var vehicles = (raw.Vehicles ?? new List<RawModerationVehicle>()).Select(v => new ModerationVehicleDto
+                {
+                    Id = v.Id,
+                    Title = v.Title ?? $"{v.Year} {v.Make} {v.Model}",
+                    Slug = v.Slug ?? v.Id.ToString(),
+                    Make = v.Make ?? string.Empty,
+                    Model = v.Model ?? string.Empty,
+                    Year = v.Year,
+                    Price = v.Price,
+                    Currency = v.Currency ?? "DOP",
+                    Condition = v.Condition ?? "Used",
+                    SellerName = v.SellerName ?? "Unknown",
+                    SellerType = v.SellerType ?? "seller",
+                    ImageUrl = v.ImageUrl,
+                    ImageCount = v.ImageCount,
+                    SubmittedAt = v.SubmittedAt,
+                    RejectionCount = v.RejectionCount,
+                    City = v.City,
+                    State = v.State
+                }).ToList();
+
+                return new ModerationQueueResponse
+                {
+                    Vehicles = vehicles,
+                    TotalCount = raw.TotalCount,
+                    Page = raw.Page,
+                    PageSize = raw.PageSize,
+                    TotalPages = raw.TotalPages
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching moderation queue from VehiclesSaleService");
+                return new ModerationQueueResponse { Vehicles = new List<ModerationVehicleDto>(), TotalCount = 0, Page = page, PageSize = pageSize, TotalPages = 0 };
+            }
+        }
+
+        public async Task<bool> ApproveVehicleAsync(Guid vehicleId, string reviewerId, string? notes = null, CancellationToken ct = default)
+        {
+            try
+            {
+                var body = JsonSerializer.Serialize(new { moderatorId = reviewerId, notes }, JsonOptions);
+                var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"/api/vehicles/{vehicleId}/approve", content, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("Failed to approve vehicle {VehicleId}: {StatusCode} - {Error}", vehicleId, response.StatusCode, error);
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving vehicle {VehicleId}", vehicleId);
+                return false;
+            }
+        }
+
+        public async Task<bool> RejectVehicleAsync(Guid vehicleId, string reviewerId, string reason, string? notes = null, CancellationToken ct = default)
+        {
+            try
+            {
+                var body = JsonSerializer.Serialize(new { moderatorId = reviewerId, reason, notes }, JsonOptions);
+                var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"/api/vehicles/{vehicleId}/reject", content, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("Failed to reject vehicle {VehicleId}: {StatusCode} - {Error}", vehicleId, response.StatusCode, error);
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting vehicle {VehicleId}", vehicleId);
                 return false;
             }
         }
@@ -494,6 +595,38 @@ namespace AdminService.Infrastructure.External
         {
             public string? Url { get; set; }
             public bool IsPrimary { get; set; }
+        }
+
+        // ── Moderation raw DTOs ─────────────────────────────────────
+
+        private class RawModerationQueueResult
+        {
+            public List<RawModerationVehicle>? Vehicles { get; set; }
+            public int TotalCount { get; set; }
+            public int Page { get; set; }
+            public int PageSize { get; set; }
+            public int TotalPages { get; set; }
+        }
+
+        private class RawModerationVehicle
+        {
+            public Guid Id { get; set; }
+            public string? Title { get; set; }
+            public string? Slug { get; set; }
+            public string? Make { get; set; }
+            public string? Model { get; set; }
+            public int Year { get; set; }
+            public decimal Price { get; set; }
+            public string? Currency { get; set; }
+            public string? Condition { get; set; }
+            public string? SellerName { get; set; }
+            public string? SellerType { get; set; }
+            public string? ImageUrl { get; set; }
+            public int ImageCount { get; set; }
+            public DateTime? SubmittedAt { get; set; }
+            public int RejectionCount { get; set; }
+            public string? City { get; set; }
+            public string? State { get; set; }
         }
     }
 }

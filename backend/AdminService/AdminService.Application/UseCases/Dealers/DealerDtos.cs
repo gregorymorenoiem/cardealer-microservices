@@ -89,3 +89,14 @@ public record SuspendDealerCommand(Guid DealerId, string Reason) : IRequest<Unit
 public record ReactivateDealerCommand(Guid DealerId) : IRequest<Unit>;
 
 public record DeleteDealerCommand(Guid DealerId) : IRequest<Unit>;
+
+/// <summary>
+/// Command to create a dealer profile in DealerManagementService for a user 
+/// who registered as AccountType=Dealer but never completed their profile setup.
+/// </summary>
+public record CreateDealerProfileForUserCommand(
+    Guid UserId,
+    string BusinessName,
+    string Email,
+    string Phone
+) : IRequest<AdminDealerDto?>;

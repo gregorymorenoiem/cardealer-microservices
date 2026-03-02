@@ -178,7 +178,7 @@ public class GetDashboardPendingQueryHandler : IRequestHandler<GetDashboardPendi
                 Title = "Dealers pendientes de verificación",
                 Count = dealerStats.Pending,
                 Priority = dealerStats.Pending > 5 ? "high" : "medium",
-                Href = "/admin/dealers/pending"
+                Href = "/admin/dealers?status=pending"
             });
         }
 

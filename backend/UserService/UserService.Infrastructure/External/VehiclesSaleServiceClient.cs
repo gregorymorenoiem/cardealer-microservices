@@ -96,7 +96,8 @@ public class VehiclesSaleServiceClient : IVehiclesSaleServiceClient
                     Slug = v.Slug ?? v.Id.ToString(),
                     Price = v.Price,
                     Currency = v.Currency ?? "DOP",
-                    Status = v.Status ?? "Active",
+                    // Normalize VehiclesSaleService enum names to lowercase frontend values
+                    Status = NormalizeStatus(v.Status),
                     MainImageUrl = v.MainImageUrl,
                     Year = v.Year,
                     Make = v.Make ?? string.Empty,
@@ -123,6 +124,23 @@ public class VehiclesSaleServiceClient : IVehiclesSaleServiceClient
             return new SellerListingsResult { Page = page, PageSize = pageSize };
         }
     }
+
+    /// <summary>
+    /// Maps VehiclesSaleService enum names ("PendingReview", "Active", etc.)
+    /// to frontend-expected lowercase values ("pending", "active", etc.)
+    /// </summary>
+    private static string NormalizeStatus(string? raw) => raw?.ToLowerInvariant() switch
+    {
+        "pendingreview" => "pending",
+        "pending"       => "pending",
+        "active"        => "active",
+        "rejected"      => "rejected",
+        "sold"          => "sold",
+        "archived"      => "paused",
+        "draft"         => "draft",
+        "reserved"      => "sold",
+        _               => "pending"
+    };
 
     /// <summary>
     /// Obtiene las estadísticas de listados de un vendedor
