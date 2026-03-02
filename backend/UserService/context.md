@@ -495,3 +495,4 @@ spec:
 **Fecha:** Enero 7, 2026  
 **Versión:** 1.0.0  
 **Estado:** Producción estable en DOKS
+
