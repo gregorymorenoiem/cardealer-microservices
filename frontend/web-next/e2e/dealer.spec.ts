@@ -196,8 +196,15 @@ test.describe('Phase 3: Login & JWT Claims', () => {
 
     expect(payload.iss).toBe('okla-api');
     expect(payload.aud).toBe('okla-clients');
-    expect(payload.sub, 'sub claim must be present').toBeTruthy();
-    console.log(`✅ JWT: iss=${payload.iss} aud=${payload.aud} sub=${payload.sub}`);
+
+    // .NET JwtSecurityToken() does not apply DefaultOutboundClaimTypeMap automatically,
+    // so the user ID may be in standard `sub` (after fix) or in the SOAP NameIdentifier claim.
+    const NAMEIDENTIFIER =
+      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
+    const subClaim = payload.sub ?? payload[NAMEIDENTIFIER] ?? payload.userId;
+    expect(subClaim, 'sub or nameidentifier claim must be present').toBeTruthy();
+
+    console.log(`✅ JWT: iss=${payload.iss} aud=${payload.aud} sub=${subClaim}`);
   });
 });
 

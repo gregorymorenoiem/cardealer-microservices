@@ -58,6 +58,9 @@ public class JwtGenerator : IJwtGenerator
         // must NOT be in JWT — they are exposed via /api/auth/me instead.
         var claims = new List<Claim>
         {
+            // Standard JWT subject claim (RFC 7519 §4.1.2)
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            // .NET identity claims — kept for middleware compatibility (ClaimTypes.NameIdentifier)
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
             new Claim(ClaimTypes.Name, user.UserName ?? ""),
