@@ -136,3 +136,5 @@ public static class CsrfMiddlewareExtensions
         return builder.UseMiddleware<CsrfValidationMiddleware>();
     }
 }
+
+// trigger rebuild Mon Mar  2 15:38:01 AST 2026
