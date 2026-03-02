@@ -5,11 +5,15 @@ using VehiclesSaleService.Application.Interfaces;
 namespace VehiclesSaleService.Infrastructure.External;
 
 /// <summary>
-/// HTTP client that queries DealerManagementService to verify a dealer's KYC status.
+/// Checks a user's KYC verification status via KYCService.
+/// Consistent with the frontend's useCanSell hook which also checks KYCService.
 /// Used before allowing a dealer to publish a vehicle listing.
 /// </summary>
 public class DealerVerificationClient : IDealerVerificationClient
 {
+    // KYCStatus.Approved = 5  (from KYCService.Domain.Entities.KYCEntities.cs)
+    private const int KycStatusApproved = 5;
+
     private readonly HttpClient _httpClient;
     private readonly ILogger<DealerVerificationClient> _logger;
 
@@ -24,41 +28,56 @@ public class DealerVerificationClient : IDealerVerificationClient
     {
         try
         {
+            // GET /api/KYCProfiles/user/{userId}  — returns the user's KYC profile
             var response = await _httpClient.GetAsync(
-                $"/api/dealers/user/{userId}",
+                $"/api/KYCProfiles/user/{userId}",
                 cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("No KYC profile found for dealer userId {UserId}", userId);
+                return false;
+            }
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "DealerManagementService returned {StatusCode} for userId {UserId}",
+                    "KYCService returned {StatusCode} for userId {UserId}",
                     response.StatusCode, userId);
                 return false;
             }
 
-            var dealer = await response.Content.ReadFromJsonAsync<DealerProfileDto>(
+            var profile = await response.Content.ReadFromJsonAsync<KycProfileDto>(
                 cancellationToken: cancellationToken);
 
-            if (dealer is null)
+            if (profile is null)
                 return false;
 
-            // VerificationStatus == "Verified" (string from DealerManagementService)
-            return string.Equals(dealer.VerificationStatus, "Verified",
-                StringComparison.OrdinalIgnoreCase);
+            // Approved = 5 (integer) or "Approved" / "approved" (string representation)
+            var isApproved = profile.Status == KycStatusApproved
+                || string.Equals(profile.StatusName, "Approved", StringComparison.OrdinalIgnoreCase);
+
+            _logger.LogDebug(
+                "KYC status for dealer {UserId}: {Status} — IsApproved={IsApproved}",
+                userId, profile.Status, isApproved);
+
+            return isApproved;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
-                "Failed to check dealer verification for userId {UserId}. Defaulting to NOT verified.",
+                "Failed to check KYC status for dealer userId {UserId}. Defaulting to NOT verified.",
                 userId);
-            // Fail-closed: treat as unverified if service is unavailable
+            // Fail-closed: treat as unverified if KYCService is unavailable
             return false;
         }
     }
 
-    private record DealerProfileDto(
+    // Minimal DTO for KYCService /api/KYCProfiles/user/{userId} response.
+    // Status is an integer enum; StatusName may be present as the string representation.
+    private record KycProfileDto(
         Guid Id,
         Guid UserId,
-        string BusinessName,
-        string VerificationStatus);
+        int Status,
+        string? StatusName);
 }

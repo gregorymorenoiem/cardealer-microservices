@@ -266,11 +266,12 @@ builder.Services.AddHttpClient("AlertService", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-// DealerManagementService client for dealer KYC verification checks (used by Publish endpoint)
+// KYCService client for dealer KYC verification checks (used by Publish endpoint).
+// Consistent with frontend useCanSell hook which also checks KYCService.
 builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient, VehiclesSaleService.Infrastructure.External.DealerVerificationClient>(client =>
 {
-    var dealerServiceUrl = builder.Configuration["ServiceUrls:DealerManagementService"] ?? "http://dealermanagementservice:8080";
-    client.BaseAddress = new Uri(dealerServiceUrl);
+    var kycServiceUrl = builder.Configuration["ServiceUrls:KYCService"] ?? "http://kycservice:8080";
+    client.BaseAddress = new Uri(kycServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
