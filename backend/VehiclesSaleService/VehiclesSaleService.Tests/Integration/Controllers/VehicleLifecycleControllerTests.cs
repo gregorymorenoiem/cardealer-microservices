@@ -28,6 +28,7 @@ public class VehicleLifecycleControllerTests : IDisposable
     private readonly Mock<ILogger<VehiclesController>> _loggerMock;
     private readonly Mock<IConfigurationServiceClient> _configClientMock;
     private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
+    private readonly Mock<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient> _dealerVerificationClientMock;
 
     public VehicleLifecycleControllerTests()
     {
@@ -48,6 +49,7 @@ public class VehicleLifecycleControllerTests : IDisposable
         _loggerMock = new Mock<ILogger<VehiclesController>>();
         _configClientMock = new Mock<IConfigurationServiceClient>();
         _httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        _dealerVerificationClientMock = new Mock<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient>();
 
         // Return the default value for any config key so validation uses production-safe defaults
         _configClientMock
@@ -60,6 +62,11 @@ public class VehicleLifecycleControllerTests : IDisposable
             .Setup(c => c.GetValueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string key, string defaultValue, CancellationToken _) => defaultValue);
 
+        // Default: dealers are verified (tests that don't test KYC shouldn't fail due to this)
+        _dealerVerificationClientMock
+            .Setup(c => c.IsDealerVerifiedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         _controller = new VehiclesController(
             _vehicleRepositoryMock.Object,
             _categoryRepositoryMock.Object,
@@ -67,7 +74,8 @@ public class VehicleLifecycleControllerTests : IDisposable
             _loggerMock.Object,
             _context,
             _configClientMock.Object,
-            _httpClientFactoryMock.Object
+            _httpClientFactoryMock.Object,
+            _dealerVerificationClientMock.Object
         );
     }
 
