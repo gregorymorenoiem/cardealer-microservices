@@ -1393,156 +1393,16 @@ spec:
 
 ---
 # =============================================================================
-# CHATBOT SERVICE — Chatbot IA "Ana" + WhatsApp
+# CHATBOT SERVICE — MOVED to k8s/chatbotservice.yaml (dedicated manifest)
 # =============================================================================
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: chatbotservice
-  namespace: okla
-  labels:
-    app: chatbotservice
-    tier: backend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: chatbotservice
-  template:
-    metadata:
-      labels:
-        app: chatbotservice
-    spec:
-      serviceAccountName: okla-backend
-      automountServiceAccountToken: false
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app: chatbotservice
-      imagePullSecrets:
-        - name: registry-credentials
-      containers:
-        - name: chatbotservice
-          image: ghcr.io/gregorymorenoiem/chatbotservice:latest
-          ports:
-            - containerPort: 8080
-          env:
-            - name: ASPNETCORE_URLS
-              value: "http://+:8080"
-            # Set Docker env so EnsureCreated runs to create DB tables
-            - name: ASPNETCORE_ENVIRONMENT
-              value: "Docker"
-            # ChatbotService reads Redis__ConnectionString, not Redis__Connection
-            - name: Redis__ConnectionString
-              valueFrom:
-                secretKeyRef:
-                  name: redis-secrets
-                  key: Redis__Connection
-            # ═══════════════════════════════════════════════════════
-            # LLM Provider — HuggingFace Inference Endpoints
-            # Chat completions: tu modelo fine-tuned hosteado en HF
-            # ═══════════════════════════════════════════════════════
-            - name: LlmService__ServerUrl
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__ServerUrl
-            - name: LlmService__ApiKey
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__ApiKey
-            - name: LlmService__ModelId
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__ModelId
-            - name: LlmService__CompletionsPath
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__CompletionsPath
-            # ═══════════════════════════════════════════════════════
-            # Embedding Provider — HuggingFace Inference API (gratis)
-            # Embeddings para búsqueda vectorial RAG
-            # ═══════════════════════════════════════════════════════
-            - name: Embedding__ServerUrl
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__ServerUrl
-            - name: Embedding__ApiKey
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__ApiKey
-            - name: Embedding__EmbeddingsPath
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__EmbeddingsPath
-            - name: Embedding__Provider
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__Provider
-          envFrom:
-            - configMapRef:
-                name: global-config
-            - secretRef:
-                name: chatbotservice-db-secret
-            - secretRef:
-                name: jwt-secrets
-            - secretRef:
-                name: redis-secrets
-            - secretRef:
-                name: rabbitmq-secrets
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-          # ChatbotService only maps /health (not /health/live or /health/ready)
-          # Use tcpSocket for startup/liveness, /health for readiness
-          startupProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            failureThreshold: 24
-          livenessProbe:
-            tcpSocket:
-              port: 8080
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-      volumes:
-        - name: tmp
-          emptyDir: {}
+# DO NOT define chatbotservice Deployment here.
+# The authoritative manifest is k8s/chatbotservice.yaml which includes:
+#   - ChatbotService Deployment + Service
+#   - LLM Server Deployment + Service
+#   - ChatbotService-specific ConfigMap
+# Duplicating the Deployment here causes strategic-merge-patch conflicts
+# (env[].value + env[].valueFrom on the same key) during kubectl apply.
+# =============================================================================
 
 ---
 # =============================================================================
@@ -4204,7 +4064,6 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-
 
 ---
 # ==========================================================

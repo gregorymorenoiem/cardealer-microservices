@@ -165,15 +165,72 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
 
-      - name: 🔐 Login to GHCR
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏗️ Build & Push ChatbotService
         if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
@@ -182,11 +239,18 @@ jobs:
           context: ./backend
           file: backend/ChatbotService/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
+          platforms: linux/amd64
+          network: host
           tags: |
             ${{ env.CHATBOT_IMAGE }}:${{ needs.detect-changes.outputs.version }}
             ${{ env.CHATBOT_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache-chatbotservice
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-chatbotservice,mode=max
+
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-chatbotservice
+          mv /tmp/.buildx-cache-new-chatbotservice /tmp/.buildx-cache-chatbotservice 2>/dev/null || true
 
       - name: 🔒 Trivy Scan ChatbotService
         if: needs.detect-changes.outputs.chatbotservice == 'true'
@@ -206,15 +270,72 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
 
-      - name: 🔐 Login to GHCR
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏗️ Build & Push LLM Server
         uses: docker/build-push-action@v5
@@ -222,11 +343,18 @@ jobs:
           context: ./backend/ChatbotService/LlmServer
           file: backend/ChatbotService/LlmServer/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
+          platforms: linux/amd64
+          network: host
           tags: |
             ${{ env.LLM_IMAGE }}:${{ needs.detect-changes.outputs.version }}
             ${{ env.LLM_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache-llm-server
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-llm-server,mode=max
+
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-llm-server
+          mv /tmp/.buildx-cache-new-llm-server /tmp/.buildx-cache-llm-server 2>/dev/null || true
 
       - name: 🔒 Trivy Scan LLM Server
         uses: aquasecurity/trivy-action@master
