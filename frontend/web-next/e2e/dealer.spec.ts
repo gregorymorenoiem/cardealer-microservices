@@ -199,8 +199,7 @@ test.describe('Phase 3: Login & JWT Claims', () => {
 
     // .NET JwtSecurityToken() does not apply DefaultOutboundClaimTypeMap automatically,
     // so the user ID may be in standard `sub` (after fix) or in the SOAP NameIdentifier claim.
-    const NAMEIDENTIFIER =
-      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
+    const NAMEIDENTIFIER = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
     const subClaim = payload.sub ?? payload[NAMEIDENTIFIER] ?? payload.userId;
     expect(subClaim, 'sub or nameidentifier claim must be present').toBeTruthy();
 
@@ -216,12 +215,25 @@ test.describe('Phase 4: Dealer Profile', () => {
     expect(userToken, 'Need valid userToken from Phase 3').toBeTruthy();
     expect(userId, 'Need userId from Phase 1/3').toBeTruthy();
 
+    if (USING_SEEDED) {
+      // Pre-seeded account — skip creation and use the existing dealer profile
+      const meRes = await gw(request, 'GET', '/api/dealers/me', { token: userToken });
+      expect(meRes.status(), 'GET /api/dealers/me must return 200 for pre-seeded account').toBe(
+        200
+      );
+      const getData = unwrap((await meRes.json()) as Record<string, unknown>);
+      dealerId = (getData.id ?? getData.dealerId ?? '') as string;
+      expect(dealerId, 'dealerId must exist for pre-seeded account').toBeTruthy();
+      console.log(`ℹ️  Phase 4: Using existing dealer — dealerId: ${dealerId}`);
+      return;
+    }
+
     const res = await gw(request, 'POST', '/api/dealers', {
       token: userToken,
       body: {
         userId,
         businessName: `E2E Auto ${RUN_ID}`,
-        rnc: '101234567',
+        rnc: `10${RUN_ID.slice(-7).padStart(7, '0')}`,
         legalName: `E2E Auto Legal ${RUN_ID}`,
         type: 'Independent',
         email: TEST_EMAIL,
@@ -233,19 +245,7 @@ test.describe('Phase 4: Dealer Profile', () => {
     });
 
     const body = await res.text();
-    // 201 = created | 409 = dealer already exists for this user (pre-seeded mode)
-    expect([201, 409], `dealer create: ${body}`).toContain(res.status());
-
-    if (res.status() === 409) {
-      // Dealer already exists — look up via /api/dealers/me
-      const meRes = await gw(request, 'GET', '/api/dealers/me', { token: userToken });
-      expect(meRes.status(), 'GET /api/dealers/me must return 200 when dealer exists').toBe(200);
-      const getData = unwrap((await meRes.json()) as Record<string, unknown>);
-      dealerId = (getData.id ?? getData.dealerId ?? '') as string;
-      expect(dealerId, 'dealerId must be resolvable from existing dealer').toBeTruthy();
-      console.log(`ℹ️  Phase 4: Dealer already exists — dealerId: ${dealerId}`);
-      return;
-    }
+    expect(res.status(), `dealer create: ${body}`).toBe(201);
 
     const data = unwrap(JSON.parse(body));
     dealerId = (data.id ?? data.dealerId ?? '') as string;
