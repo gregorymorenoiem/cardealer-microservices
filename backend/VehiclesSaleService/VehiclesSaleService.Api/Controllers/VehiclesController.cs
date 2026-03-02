@@ -229,9 +229,11 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Get vehicles by seller (user)
+    /// Get vehicles by seller (user).
+    /// AllowAnonymous: called pod-to-pod by UserService (no Bearer token).
     /// </summary>
     [HttpGet("seller/{sellerId:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<SellerVehiclesResponse>> GetBySeller(
         Guid sellerId,
         [FromQuery] int page = 1,
@@ -294,6 +296,7 @@ public class VehiclesController : ControllerBase
     /// Get seller vehicle statistics
     /// </summary>
     [HttpGet("seller/{sellerId:guid}/stats")]
+    [AllowAnonymous]
     public async Task<ActionResult<SellerVehicleStats>> GetSellerStats(Guid sellerId)
     {
         var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
@@ -409,16 +412,26 @@ public class VehiclesController : ControllerBase
                 return BadRequest(new { message = "Category not found" });
         }
 
-        // Resolve sellerId: prefer explicit request value, otherwise use the authenticated user's ID
-        var resolvedSellerId = request.SellerId ?? Guid.Empty;
+        // Resolve sellerId: always prefer the authenticated user's ID from JWT (security: prevent
+        // the frontend from impersonating another seller). Fall back to request body only when the
+        // endpoint is called without a JWT (e.g. seeding / tests).
+        var resolvedSellerId = Guid.Empty;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var claimsUserId))
+        {
+            resolvedSellerId = claimsUserId;
+        }
+        else if (request.SellerId.HasValue && request.SellerId.Value != Guid.Empty)
+        {
+            // Fallback: unauthenticated callers (seeding/admin import) may supply sellerId explicitly
+            resolvedSellerId = request.SellerId.Value;
+            _logger.LogWarning("Create vehicle called without valid JWT; using request.SellerId {SellerId}", resolvedSellerId);
+        }
+
         if (resolvedSellerId == Guid.Empty)
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                           ?? User.FindFirst("sub")?.Value;
-            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var claimsUserId))
-            {
-                resolvedSellerId = claimsUserId;
-            }
+            _logger.LogWarning("Create vehicle: could not resolve SellerId from JWT or request — vehicle will have empty SellerId");
         }
 
         // Build title from make/model/year if not provided
@@ -967,8 +980,10 @@ public class VehiclesController : ControllerBase
     /// <summary>
     /// Get vehicles pending review (moderation queue).
     /// Returns only PendingReview vehicles, ordered by submission date (oldest first).
+    /// AllowAnonymous: called pod-to-pod by AdminService (no Bearer token).
     /// </summary>
     [HttpGet("moderation/queue")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetModerationQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -1017,6 +1032,7 @@ public class VehiclesController : ControllerBase
     /// Used by AdminService to populate the "Todos" tab in the admin panel.
     /// </summary>
     [HttpGet("admin/search")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> AdminSearch(
         [FromQuery] string? search,

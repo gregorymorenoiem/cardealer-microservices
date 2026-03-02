@@ -287,7 +287,9 @@ test.describe('Phase 5: KYC Submission', () => {
       const data = unwrap((await res.json()) as Record<string, unknown>);
       console.log(`✅ Phase 5: KYC draft → ${res.status()} — draftId: ${data.id ?? 'N/A'}`);
     } else {
-      console.log(`ℹ️  Phase 5: KYC draft → ${res.status()} (smoke check — proceeding to full KYC create)`);
+      console.log(
+        `ℹ️  Phase 5: KYC draft → ${res.status()} (smoke check — proceeding to full KYC create)`
+      );
     }
   });
 
@@ -389,10 +391,13 @@ test.describe('Phase 6: Admin KYC Approval', () => {
     adminToken = (data.token ?? data.accessToken ?? '') as string;
     expect(adminToken, 'Admin JWT must be present').toBeTruthy();
 
-    // Validate roles
+    // Validate roles — JWT uses full SOAP URL claim key for roles, not short 'role'
     const [, b64] = adminToken.split('.');
     const payload = JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'));
-    const roles: string[] = Array.isArray(payload.role) ? payload.role : [payload.role];
+    const roleClaim =
+      payload.role ??
+      payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    const roles: string[] = Array.isArray(roleClaim) ? roleClaim : [roleClaim];
     expect(roles).toContain('Admin');
     console.log(`✅ Phase 6: Admin login OK — roles: ${roles.join(', ')}`);
   });
