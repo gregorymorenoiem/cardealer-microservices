@@ -29,9 +29,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   const searchParams = useSearchParams();
 
   // Open chat if ?chat=open query param is present or user clicks "Chat en vivo"
-  const [chatOpen, setChatOpen] = React.useState(
-    searchParams.get('chat') === 'open'
-  );
+  const [chatOpen, setChatOpen] = React.useState(searchParams.get('chat') === 'open');
 
   const handleOpenChat = React.useCallback(() => {
     setChatOpen(true);
@@ -115,11 +113,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
       </div>
 
       {/* ChatbotService Widget — Vehicle-specific AI chat */}
-      <VehicleChatWidget
-        vehicle={vehicle}
-        isOpenInitial={chatOpen}
-        onOpenChange={setChatOpen}
-      />
+      <VehicleChatWidget vehicle={vehicle} isOpenInitial={chatOpen} onOpenChange={setChatOpen} />
     </div>
   );
 }

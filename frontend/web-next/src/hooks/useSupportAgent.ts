@@ -70,9 +70,7 @@ const WELCOME_MESSAGE: SupportChatMessage = {
 // Hook
 // =============================================================================
 
-export function useSupportAgent(
-  options: UseSupportAgentOptions = {}
-): UseSupportAgentReturn {
+export function useSupportAgent(options: UseSupportAgentOptions = {}): UseSupportAgentReturn {
   const { autoWelcome = true } = options;
 
   const [messages, setMessages] = useState<SupportChatMessage[]>([]);
@@ -119,12 +117,8 @@ export function useSupportAgent(
       if (savedSid) setSessionId(savedSid);
 
       if (savedMsgs) {
-        const parsed = JSON.parse(savedMsgs) as Array<
-          SupportChatMessage & { timestamp: string }
-        >;
-        setMessages(
-          parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) }))
-        );
+        const parsed = JSON.parse(savedMsgs) as Array<SupportChatMessage & { timestamp: string }>;
+        setMessages(parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
       } else if (autoWelcome) {
         setMessages([WELCOME_MESSAGE]);
       }
@@ -187,9 +181,7 @@ export function useSupportAgent(
           return updated;
         });
 
-        setError(
-          err instanceof Error ? err.message : 'Error enviando mensaje'
-        );
+        setError(err instanceof Error ? err.message : 'Error enviando mensaje');
       } finally {
         setIsLoading(false);
       }

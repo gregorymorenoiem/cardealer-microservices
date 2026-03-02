@@ -12,14 +12,7 @@ import { useSupportAgent } from '@/hooks/useSupportAgent';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
 import { BotMessageContent } from './BotMessageContent';
-import {
-  X,
-  RotateCcw,
-  Minus,
-  Headphones,
-  AlertCircle,
-  WifiOff,
-} from 'lucide-react';
+import { X, RotateCcw, Minus, Headphones, AlertCircle, WifiOff } from 'lucide-react';
 import type { SupportChatMessage } from '@/services/support-agent';
 
 // =============================================================================
@@ -155,7 +148,7 @@ export function SupportAgentWidget() {
                 <Headphones className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold leading-tight">Soporte OKLA</h3>
+                <h3 className="text-sm leading-tight font-semibold">Soporte OKLA</h3>
                 <div className="flex items-center gap-1.5">
                   <span className="inline-block h-2 w-2 rounded-full bg-green-300" />
                   <span className="text-[11px] text-white/80">En línea</span>

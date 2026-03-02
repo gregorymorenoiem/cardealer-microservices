@@ -155,7 +155,7 @@ export default function AiSearchBar({
             {lastResult.latencyMs}ms
           </Badge>
           {lastResult.aiFilters.nivel_filtros_activo > 1 && (
-            <Badge variant="destructive" className="text-xs">
+            <Badge variant="danger" className="text-xs">
               Filtros relajados (nivel {lastResult.aiFilters.nivel_filtros_activo})
             </Badge>
           )}

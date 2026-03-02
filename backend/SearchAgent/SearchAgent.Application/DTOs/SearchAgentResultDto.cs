@@ -1,3 +1,5 @@
+using SearchAgent.Domain.Models;
+
 namespace SearchAgent.Application.DTOs;
 
 /// <summary>

@@ -10,25 +10,10 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  Sparkles,
-  X,
-  RotateCcw,
-  Minus,
-  AlertCircle,
-  Search,
-  Bot,
-  ArrowRight,
-  Loader2,
-} from 'lucide-react';
+import { Sparkles, X, RotateCcw, Minus, AlertCircle, Loader2 } from 'lucide-react';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { BotMessageContent } from '@/components/chat/BotMessageContent';
-import {
-  aiSearch,
-  aiFiltersToSearchParams,
-  type SearchAgentResult,
-  type SearchAgentAiResponse,
-} from '@/services/search-agent';
+import { aiSearch, aiFiltersToSearchParams, type SearchAgentResult } from '@/services/search-agent';
 
 // =============================================================================
 // Types
@@ -129,7 +114,8 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
             ...prev.filter(m => !m.isLoading),
             {
               id: `search-bot-${Date.now()}`,
-              content: '⚠️ La búsqueda con IA no está disponible en este momento. Usa los filtros manuales.',
+              content:
+                '⚠️ La búsqueda con IA no está disponible en este momento. Usa los filtros manuales.',
               isFromBot: true,
               timestamp: new Date(),
               isError: true,
@@ -147,11 +133,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
               content: ai.mensaje_usuario!,
               isFromBot: true,
               timestamp: new Date(),
-              suggestions: [
-                'Toyota Corolla 2020',
-                'SUV familiar',
-                'Carro económico',
-              ],
+              suggestions: ['Toyota Corolla 2020', 'SUV familiar', 'Carro económico'],
             },
           ]);
           return;
@@ -180,17 +162,11 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
           if (f.marca) filterParts.push(`Marca: **${f.marca}**`);
           if (f.modelo) filterParts.push(`Modelo: **${f.modelo}**`);
           if (f.anio_desde || f.anio_hasta) {
-            filterParts.push(
-              `Año: **${f.anio_desde || '?'}–${f.anio_hasta || '?'}**`
-            );
+            filterParts.push(`Año: **${f.anio_desde || '?'}–${f.anio_hasta || '?'}**`);
           }
           if (f.precio_min || f.precio_max) {
-            const min = f.precio_min
-              ? `RD$${(f.precio_min / 1000).toFixed(0)}K`
-              : '?';
-            const max = f.precio_max
-              ? `RD$${(f.precio_max / 1000).toFixed(0)}K`
-              : '?';
+            const min = f.precio_min ? `RD$${(f.precio_min / 1000).toFixed(0)}K` : '?';
+            const max = f.precio_max ? `RD$${(f.precio_max / 1000).toFixed(0)}K` : '?';
             filterParts.push(`Precio: **${min}–${max}**`);
           }
           if (f.transmision) filterParts.push(`Transmisión: **${f.transmision}**`);
@@ -224,15 +200,11 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
             relaxationLevel: ai.nivel_filtros_activo,
             queryReformulated: ai.query_reformulada ?? undefined,
           },
-          suggestions: [
-            'Mostrar más baratos',
-            'Solo automáticos',
-            'Con menos kilometraje',
-          ],
+          suggestions: ['Mostrar más baratos', 'Solo automáticos', 'Con menos kilometraje'],
         };
 
         setMessages(prev => [...prev.filter(m => !m.isLoading), botMsg]);
-      } catch (err) {
+      } catch {
         setMessages(prev => [
           ...prev.filter(m => !m.isLoading),
           {
@@ -293,7 +265,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold leading-tight">Búsqueda IA</h3>
+                <h3 className="text-sm leading-tight font-semibold">Búsqueda IA</h3>
                 <span className="text-[11px] text-white/80">
                   Encuentra vehículos con lenguaje natural
                 </span>

@@ -5,6 +5,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SearchAgent.Application.DTOs;
+using SearchAgent.Domain.Models;
 using SearchAgent.Domain.Entities;
 using SearchAgent.Domain.Interfaces;
 
@@ -173,7 +174,7 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
 
     private static string BuildSystemPrompt(SearchAgentConfig config)
     {
-        return $"""
+        return $$"""
             Eres SearchAgent, el motor de búsqueda inteligente de OKLA Marketplace,
             la plataforma líder de compraventa de vehículos en la República Dominicana.
 
@@ -185,18 +186,18 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             IDIOMA: Español dominicano (acepta coloquialismos locales como "guagua"=SUV/van, "yipeta"=SUV, "pasola"=motocicleta, "carro"=automóvil, "motor"=motocicleta).
 
             REGLA ABSOLUTA #1 — SIEMPRE RANGO:
-            Genera filtros que garanticen al menos {config.MinResultsPerPage} resultados. Si los filtros
-            exactos producen < {config.MinResultsPerPage}, genera también filtros_relajados más amplios.
+            Genera filtros que garanticen al menos {{config.MinResultsPerPage}} resultados. Si los filtros
+            exactos producen < {{config.MinResultsPerPage}}, genera también filtros_relajados más amplios.
             Nunca generes filtros que resulten en 0 o 1 vehículo.
-            Los filtros_relajados amplían: precio ±{config.PriceRelaxPercent}%, año ±{config.YearRelaxRange}, modelo=null.
+            Los filtros_relajados amplían: precio ±{{config.PriceRelaxPercent}}%, año ±{{config.YearRelaxRange}}, modelo=null.
 
             REGLA ABSOLUTA #2 — PATROCINADOS CON AFINIDAD:
             Incluye siempre en el JSON el objeto 'patrocinados_config' con los
             parámetros de afinidad para que el motor de ads inyecte listados
-            relevantes. Umbral mínimo de afinidad: {config.SponsoredAffinityThreshold}.
+            relevantes. Umbral mínimo de afinidad: {{config.SponsoredAffinityThreshold}}.
 
             REGLA ABSOLUTA #3 — TRANSPARENCIA:
-            Los patrocinados se etiquetan como '{config.SponsoredLabel}'. Nunca se presentan como orgánicos.
+            Los patrocinados se etiquetan como '{{config.SponsoredLabel}}'. Nunca se presentan como orgánicos.
 
             CORRECCIONES ORTOGRÁFICAS COMUNES:
             - "hundai" → "Hyundai"
@@ -221,12 +222,12 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             CONDICIONES: nuevo, usado
 
             RESPONDE ÚNICAMENTE con un objeto JSON válido siguiendo este esquema exacto:
-            {{
-              "filtros_exactos": {{ "marca": str|null, "modelo": str|null, "anio_desde": int|null, "anio_hasta": int|null, "precio_min": num|null, "precio_max": num|null, "moneda": "DOP"|"USD", "tipo_vehiculo": str|null, "transmision": str|null, "combustible": str|null, "condicion": str|null, "kilometraje_max": int|null }},
-              "filtros_relajados": {{ ... mismo esquema, con valores ampliados }},
-              "resultado_minimo_garantizado": {config.MinResultsPerPage},
-              "nivel_filtros_activo": 1-{config.MaxRelaxationLevel},
-              "patrocinados_config": {{ "umbral_afinidad": float, "tipo_vehiculo_afinidad": [str], "marcas_afinidad": [str], "precio_rango_afinidad": {{ "min": num, "max": num, "moneda": str }}, "anio_rango_afinidad": {{ "desde": int, "hasta": int }}, "max_porcentaje_resultados": {config.MaxSponsoredPercentage}, "posiciones_fijas": [{config.SponsoredPositions}], "etiqueta": "{config.SponsoredLabel}" }},
+            {
+              "filtros_exactos": { "marca": str|null, "modelo": str|null, "anio_desde": int|null, "anio_hasta": int|null, "precio_min": num|null, "precio_max": num|null, "moneda": "DOP"|"USD", "tipo_vehiculo": str|null, "transmision": str|null, "combustible": str|null, "condicion": str|null, "kilometraje_max": int|null },
+              "filtros_relajados": { ... mismo esquema, con valores ampliados },
+              "resultado_minimo_garantizado": {{config.MinResultsPerPage}},
+              "nivel_filtros_activo": 1-{{config.MaxRelaxationLevel}},
+              "patrocinados_config": { "umbral_afinidad": float, "tipo_vehiculo_afinidad": [str], "marcas_afinidad": [str], "precio_rango_afinidad": { "min": num, "max": num, "moneda": str }, "anio_rango_afinidad": { "desde": int, "hasta": int }, "max_porcentaje_resultados": {{config.MaxSponsoredPercentage}}, "posiciones_fijas": [{{config.SponsoredPositions}}], "etiqueta": "{{config.SponsoredLabel}}" },
               "ordenar_por": "relevancia"|"precio_asc"|"precio_desc"|"anio_desc"|"okla_score",
               "dealer_verificado": bool|null,
               "confianza": float (0.0-1.0),
@@ -234,7 +235,7 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
               "advertencias": [str],
               "mensaje_relajamiento": str|null,
               "mensaje_usuario": str|null (solo para consultas fuera de contexto)
-            }}
+            }
 
             Para consultas fuera de contexto (no relacionadas con vehículos):
             - filtros_exactos: null, filtros_relajados: null, patrocinados_config: null

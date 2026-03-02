@@ -6,6 +6,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
-    <ProjectReference Include="../SearchAgent.Application/SearchAgent.Application.csproj" />
   </ItemGroup>
 </Project>

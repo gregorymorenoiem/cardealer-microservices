@@ -117,10 +117,10 @@ export default function SearchAgentConfigPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {status && (
-            <Badge variant={status.isEnabled ? 'default' : 'destructive'}>
+          {mergedConfig && (
+            <Badge variant={mergedConfig.isEnabled ? 'default' : 'secondary'}>
               <Activity className="mr-1 h-3 w-3" />
-              {status.isEnabled ? 'Activo' : 'Inactivo'}
+              {mergedConfig.isEnabled ? 'Activo' : 'Inactivo'}
             </Badge>
           )}
           <Button
@@ -200,8 +200,8 @@ export default function SearchAgentConfigPage() {
                     type="number"
                     min={1}
                     max={50}
-                    value={mergedConfig.minResults ?? 8}
-                    onChange={e => updateField('minResults', parseInt(e.target.value))}
+                    value={mergedConfig.minResultsPerPage ?? 8}
+                    onChange={e => updateField('minResultsPerPage', parseInt(e.target.value))}
                   />
                   <p className="text-muted-foreground text-xs">
                     Siempre devolver al menos esta cantidad (Regla #1)
@@ -213,8 +213,8 @@ export default function SearchAgentConfigPage() {
                     type="number"
                     min={1}
                     max={100}
-                    value={mergedConfig.maxResults ?? 50}
-                    onChange={e => updateField('maxResults', parseInt(e.target.value))}
+                    value={mergedConfig.maxResultsPerPage ?? 50}
+                    onChange={e => updateField('maxResultsPerPage', parseInt(e.target.value))}
                   />
                 </div>
               </div>
@@ -229,8 +229,8 @@ export default function SearchAgentConfigPage() {
                   <div className="flex items-center gap-2">
                     <Gauge className="h-5 w-5 text-blue-500" />
                     <div>
-                      <p className="text-muted-foreground text-sm">Queries totales</p>
-                      <p className="text-2xl font-bold">{status.totalQueries ?? 0}</p>
+                      <p className="text-muted-foreground text-sm">Estado</p>
+                      <p className="text-2xl font-bold capitalize">{status.status}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -240,8 +240,8 @@ export default function SearchAgentConfigPage() {
                   <div className="flex items-center gap-2">
                     <Activity className="h-5 w-5 text-green-500" />
                     <div>
-                      <p className="text-muted-foreground text-sm">Cache Hit Rate</p>
-                      <p className="text-2xl font-bold">{status.cacheHitRate ?? '0'}%</p>
+                      <p className="text-muted-foreground text-sm">Versión</p>
+                      <p className="text-2xl font-bold">{status.version}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -251,8 +251,8 @@ export default function SearchAgentConfigPage() {
                   <div className="flex items-center gap-2">
                     <Gauge className="h-5 w-5 text-amber-500" />
                     <div>
-                      <p className="text-muted-foreground text-sm">Latencia p95</p>
-                      <p className="text-2xl font-bold">{status.p95LatencyMs ?? '—'}ms</p>
+                      <p className="text-muted-foreground text-sm">Última comprobación</p>
+                      <p className="text-sm font-medium">{new Date(status.timestamp).toLocaleTimeString()}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -274,8 +274,8 @@ export default function SearchAgentConfigPage() {
               <div className="space-y-2">
                 <Label>Modelo</Label>
                 <Input
-                  value={mergedConfig.modelName ?? 'claude-haiku-4-5-20251001'}
-                  onChange={e => updateField('modelName', e.target.value)}
+                  value={mergedConfig.model ?? 'claude-haiku-4-5-20251001'}
+                  onChange={e => updateField('model', e.target.value)}
                 />
                 <p className="text-muted-foreground text-xs">
                   Identificador del modelo Anthropic (claude-haiku-4-5-20251001)
@@ -325,7 +325,7 @@ export default function SearchAgentConfigPage() {
                 rows={12}
                 placeholder="Dejar vacío para usar el system prompt por defecto construido desde la configuración..."
                 value={mergedConfig.systemPromptOverride ?? ''}
-                onChange={e => updateField('systemPromptOverride', e.target.value || undefined)}
+                onChange={e => updateField('systemPromptOverride', e.target.value || null)}
                 className="font-mono text-sm"
               />
               <p className="text-muted-foreground mt-2 text-xs">
@@ -354,8 +354,8 @@ export default function SearchAgentConfigPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={mergedConfig.enableAutoRelaxation ?? true}
-                  onCheckedChange={v => updateField('enableAutoRelaxation', v)}
+                  checked={(mergedConfig.maxRelaxationLevel ?? 5) > 0}
+                  onCheckedChange={v => updateField('maxRelaxationLevel', v ? 5 : 0)}
                 />
               </div>
 
@@ -363,37 +363,25 @@ export default function SearchAgentConfigPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Precio ±% (Nivel 2)</Label>
+                  <Label>Precio ±% (Relajación)</Label>
                   <Input
                     type="number"
                     min={5}
                     max={100}
-                    value={mergedConfig.relaxationPricePercentLevel2 ?? 25}
+                    value={mergedConfig.priceRelaxPercent ?? 25}
                     onChange={e =>
-                      updateField('relaxationPricePercentLevel2', parseInt(e.target.value))
+                      updateField('priceRelaxPercent', parseInt(e.target.value))
                     }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Precio ±% (Nivel 3)</Label>
-                  <Input
-                    type="number"
-                    min={10}
-                    max={200}
-                    value={mergedConfig.relaxationPricePercentLevel3 ?? 50}
-                    onChange={e =>
-                      updateField('relaxationPricePercentLevel3', parseInt(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Año ± (Nivel 2)</Label>
+                  <Label>Año ± (Relajación)</Label>
                   <Input
                     type="number"
                     min={1}
                     max={10}
-                    value={mergedConfig.relaxationYearRange ?? 2}
-                    onChange={e => updateField('relaxationYearRange', parseInt(e.target.value))}
+                    value={mergedConfig.yearRelaxRange ?? 2}
+                    onChange={e => updateField('yearRelaxRange', parseInt(e.target.value))}
                   />
                 </div>
               </div>
@@ -416,8 +404,8 @@ export default function SearchAgentConfigPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={mergedConfig.enableSponsoredResults ?? true}
-                  onCheckedChange={v => updateField('enableSponsoredResults', v)}
+                  checked={(mergedConfig.maxSponsoredPercentage ?? 0.25) > 0}
+                  onCheckedChange={v => updateField('maxSponsoredPercentage', v ? 0.25 : 0)}
                 />
               </div>
 
@@ -427,16 +415,16 @@ export default function SearchAgentConfigPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>
-                      Afinidad mínima: {(mergedConfig.sponsoredMinAffinity ?? 0.45).toFixed(2)}
+                      Afinidad mínima: {(mergedConfig.sponsoredAffinityThreshold ?? 0.45).toFixed(2)}
                     </Label>
-                    <Badge variant="outline">{mergedConfig.sponsoredMinAffinity ?? 0.45}</Badge>
+                    <Badge variant="outline">{mergedConfig.sponsoredAffinityThreshold ?? 0.45}</Badge>
                   </div>
                   <Slider
                     min={0}
                     max={1}
                     step={0.05}
-                    value={[mergedConfig.sponsoredMinAffinity ?? 0.45]}
-                    onValueChange={([v]) => updateField('sponsoredMinAffinity', v)}
+                    value={[mergedConfig.sponsoredAffinityThreshold ?? 0.45]}
+                    onValueChange={([v]) => updateField('sponsoredAffinityThreshold', v)}
                   />
                   <p className="text-muted-foreground text-xs">
                     Solo insertar patrocinados con afinidad ≥ este valor
@@ -445,18 +433,18 @@ export default function SearchAgentConfigPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>
-                      Máximo % patrocinados: {(mergedConfig.sponsoredMaxPercentage ?? 0.25) * 100}%
+                      Máximo % patrocinados: {(mergedConfig.maxSponsoredPercentage ?? 0.25) * 100}%
                     </Label>
                     <Badge variant="outline">
-                      {((mergedConfig.sponsoredMaxPercentage ?? 0.25) * 100).toFixed(0)}%
+                      {((mergedConfig.maxSponsoredPercentage ?? 0.25) * 100).toFixed(0)}%
                     </Badge>
                   </div>
                   <Slider
                     min={0.05}
                     max={0.5}
                     step={0.05}
-                    value={[mergedConfig.sponsoredMaxPercentage ?? 0.25]}
-                    onValueChange={([v]) => updateField('sponsoredMaxPercentage', v)}
+                    value={[mergedConfig.maxSponsoredPercentage ?? 0.25]}
+                    onValueChange={([v]) => updateField('maxSponsoredPercentage', v)}
                   />
                 </div>
               </div>
@@ -494,8 +482,8 @@ export default function SearchAgentConfigPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={mergedConfig.cacheEnabled ?? true}
-                  onCheckedChange={v => updateField('cacheEnabled', v)}
+                  checked={mergedConfig.enableCache ?? true}
+                  onCheckedChange={v => updateField('enableCache', v)}
                 />
               </div>
 
@@ -506,8 +494,8 @@ export default function SearchAgentConfigPage() {
                     type="number"
                     min={1}
                     max={1440}
-                    value={mergedConfig.cacheTtlMinutes ?? 60}
-                    onChange={e => updateField('cacheTtlMinutes', parseInt(e.target.value))}
+                    value={Math.round((mergedConfig.cacheTtlSeconds ?? 3600) / 60)}
+                    onChange={e => updateField('cacheTtlSeconds', parseInt(e.target.value) * 60)}
                   />
                 </div>
               </div>
@@ -522,37 +510,33 @@ export default function SearchAgentConfigPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base">A/B Testing habilitado</Label>
-                  <p className="text-muted-foreground text-sm">
-                    Enviar solo un porcentaje del tráfico al SearchAgent
-                  </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base">Tráfico IA</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Porcentaje del tráfico que usa búsqueda IA
+                    </p>
+                  </div>
                 </div>
-                <Switch
-                  checked={mergedConfig.abTestEnabled ?? false}
-                  onCheckedChange={v => updateField('abTestEnabled', v)}
-                />
-              </div>
 
-              {mergedConfig.abTestEnabled && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Tráfico IA: {mergedConfig.abTestPercentage ?? 50}%</Label>
-                    <Badge variant="outline">{mergedConfig.abTestPercentage ?? 50}%</Badge>
+                    <Label>Tráfico IA: {mergedConfig.aiSearchTrafficPercent ?? 100}%</Label>
+                    <Badge variant="outline">{mergedConfig.aiSearchTrafficPercent ?? 100}%</Badge>
                   </div>
                   <Slider
                     min={1}
                     max={100}
                     step={1}
-                    value={[mergedConfig.abTestPercentage ?? 50]}
-                    onValueChange={([v]) => updateField('abTestPercentage', v)}
+                    value={[mergedConfig.aiSearchTrafficPercent ?? 100]}
+                    onValueChange={([v]) => updateField('aiSearchTrafficPercent', v)}
                   />
                   <p className="text-muted-foreground text-xs">
                     El resto usará búsqueda tradicional para comparación de métricas
                   </p>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
@@ -569,18 +553,8 @@ export default function SearchAgentConfigPage() {
                     type="number"
                     min={1}
                     max={100}
-                    value={mergedConfig.rateLimitPerMinute ?? 30}
-                    onChange={e => updateField('rateLimitPerMinute', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Máx. requests por hora (por IP)</Label>
-                  <Input
-                    type="number"
-                    min={10}
-                    max={1000}
-                    value={mergedConfig.rateLimitPerHour ?? 300}
-                    onChange={e => updateField('rateLimitPerHour', parseInt(e.target.value))}
+                    value={mergedConfig.maxQueriesPerMinutePerIp ?? 60}
+                    onChange={e => updateField('maxQueriesPerMinutePerIp', parseInt(e.target.value))}
                   />
                 </div>
               </div>

@@ -138,7 +138,7 @@ jobs:
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
           # --- Per-service DB secrets ---
-          SERVICES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice chatbotservice kycservice auditservice idempotencyservice contactservice adminservice dealermanagementservice reviewservice"
+          SERVICES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice chatbotservice kycservice auditservice idempotencyservice contactservice adminservice dealermanagementservice reviewservice searchagent supportagent"
 
           for SVC in $SERVICES; do
             kubectl create secret generic ${SVC}-db-secret \
@@ -205,6 +205,11 @@ jobs:
             --from-literal=whatsapp-verify-token="${{ secrets.WHATSAPP_VERIFY_TOKEN }}" \
             --from-literal=whatsapp-access-token="${{ secrets.WHATSAPP_ACCESS_TOKEN }}" \
             --from-literal=whatsapp-phone-number-id="${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}" \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
+
+          # --- Claude / Anthropic API key (SupportAgent, SearchAgent, ChatbotService) ---
+          kubectl create secret generic claude-api-secret \
+            --from-literal=CLAUDE_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
           echo "✅ All secrets created from GitHub Secrets (no hardcoded values)"

@@ -15,13 +15,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -116,7 +110,9 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
   if (
     step === 'processing' &&
     jobStatus &&
-    (jobStatus.status === 'Completed' || jobStatus.status === 'Failed' || jobStatus.status === 'Cancelled')
+    (jobStatus.status === 'Completed' ||
+      jobStatus.status === 'Failed' ||
+      jobStatus.status === 'Cancelled')
   ) {
     if (jobStatus.status === 'Completed') {
       setStep('done');
@@ -136,7 +132,9 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
     }
     const sizeMb = f.size / (1024 * 1024);
     if (sizeMb > MAX_FILE_SIZE_MB) {
-      toast.error(`El video es demasiado grande (${sizeMb.toFixed(0)} MB). Máximo ${MAX_FILE_SIZE_MB} MB.`);
+      toast.error(
+        `El video es demasiado grande (${sizeMb.toFixed(0)} MB). Máximo ${MAX_FILE_SIZE_MB} MB.`
+      );
       return false;
     }
     setFile(f);
@@ -201,7 +199,7 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Video className="h-5 w-5 text-primary" />
+            <Video className="text-primary h-5 w-5" />
             Vista 360° — Subir Video
           </CardTitle>
           <CardDescription>
@@ -212,7 +210,10 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
         <CardContent className="space-y-4">
           {/* Drop zone */}
           <div
-            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={e => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
@@ -220,8 +221,8 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
               isDragging
                 ? 'border-primary bg-primary/5'
                 : file
-                ? 'border-green-500 bg-green-500/5'
-                : 'border-border bg-muted/30 hover:border-primary hover:bg-primary/5'
+                  ? 'border-green-500 bg-green-500/5'
+                  : 'border-border bg-muted/30 hover:border-primary hover:bg-primary/5'
             }`}
           >
             {file ? (
@@ -234,7 +235,10 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={e => { e.stopPropagation(); setFile(null); }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setFile(null);
+                  }}
                   className="mt-2"
                 >
                   Cambiar video
@@ -260,9 +264,9 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
           />
 
           {/* Tips */}
-          <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-1">
+          <div className="bg-muted/50 space-y-1 rounded-lg p-4 text-sm">
             <p className="font-medium">💡 Tips para un mejor resultado:</p>
-            <ul className="text-muted-foreground list-disc list-inside space-y-0.5">
+            <ul className="text-muted-foreground list-inside list-disc space-y-0.5">
               <li>Gira 360° lentamente alrededor del vehículo</li>
               <li>Fondo liso (pared, piso limpio) mejora la remoción automática</li>
               <li>Buena iluminación (luz natural o de estudio)</li>
@@ -276,10 +280,7 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
                 Cancelar
               </Button>
             )}
-            <Button
-              disabled={!file}
-              onClick={() => setStep('configure')}
-            >
+            <Button disabled={!file} onClick={() => setStep('configure')}>
               Siguiente
             </Button>
           </div>
@@ -295,12 +296,10 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Layers className="h-5 w-5 text-primary" />
+            <Layers className="text-primary h-5 w-5" />
             Configurar Extracción
           </CardTitle>
-          <CardDescription>
-            Ajusta cómo se extraerán los frames del video.
-          </CardDescription>
+          <CardDescription>Ajusta cómo se extraerán los frames del video.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -332,7 +331,9 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
               <label className="mb-1.5 block text-sm font-medium">Formato de imagen</label>
               <Select
                 value={config.imageFormat}
-                onValueChange={v => setConfig(c => ({ ...c, imageFormat: v as ProcessingConfig['imageFormat'] }))}
+                onValueChange={v =>
+                  setConfig(c => ({ ...c, imageFormat: v as ProcessingConfig['imageFormat'] }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -350,7 +351,9 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
               <label className="mb-1.5 block text-sm font-medium">Calidad</label>
               <Select
                 value={config.quality}
-                onValueChange={v => setConfig(c => ({ ...c, quality: v as ProcessingConfig['quality'] }))}
+                onValueChange={v =>
+                  setConfig(c => ({ ...c, quality: v as ProcessingConfig['quality'] }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -395,17 +398,17 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
     const isUploading = uploadProgress < 100;
     const processingStatus = jobStatus?.status ?? 'Pending';
     const processingProgress = isUploading
-      ? Math.round(uploadProgress * 0.3)  // upload = first 30% of total bar
-      : STATUS_PROGRESS[processingStatus as Vehicle360Status] ?? 30;
+      ? Math.round(uploadProgress * 0.3) // upload = first 30% of total bar
+      : (STATUS_PROGRESS[processingStatus as Vehicle360Status] ?? 30);
     const statusLabel = isUploading
       ? `Subiendo video… ${uploadProgress}%`
-      : STATUS_LABEL[processingStatus as Vehicle360Status] ?? 'Procesando…';
+      : (STATUS_LABEL[processingStatus as Vehicle360Status] ?? 'Procesando…');
 
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <Loader2 className="text-primary h-5 w-5 animate-spin" />
             Procesando Vista 360°
           </CardTitle>
           <CardDescription>
@@ -425,13 +428,27 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {(
               [
-                { label: 'Video recibido', doneStatuses: ['Uploading', 'Processing', 'Downloading', 'Completed'], activeStatus: 'Uploading' },
-                { label: 'Extrayendo frames', doneStatuses: ['Processing', 'Downloading', 'Completed'], activeStatus: 'Processing' },
-                { label: 'Descargando', doneStatuses: ['Downloading', 'Completed'], activeStatus: 'Downloading' },
+                {
+                  label: 'Video recibido',
+                  doneStatuses: ['Uploading', 'Processing', 'Downloading', 'Completed'],
+                  activeStatus: 'Uploading',
+                },
+                {
+                  label: 'Extrayendo frames',
+                  doneStatuses: ['Processing', 'Downloading', 'Completed'],
+                  activeStatus: 'Processing',
+                },
+                {
+                  label: 'Descargando',
+                  doneStatuses: ['Downloading', 'Completed'],
+                  activeStatus: 'Downloading',
+                },
                 { label: 'Completado', doneStatuses: ['Completed'], activeStatus: 'Completed' },
               ] as const
             ).map(stage => {
-              const isDone = !isUploading && (stage.doneStatuses as readonly string[]).includes(processingStatus);
+              const isDone =
+                !isUploading &&
+                (stage.doneStatuses as readonly string[]).includes(processingStatus);
               const isActive = !isUploading && stage.activeStatus === processingStatus;
               return (
                 <div
@@ -440,8 +457,8 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
                     isDone
                       ? 'border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400'
                       : isActive
-                      ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-border bg-muted/30 text-muted-foreground'
+                        ? 'border-primary/50 bg-primary/10 text-primary'
+                        : 'border-border bg-muted/30 text-muted-foreground'
                   }`}
                 >
                   {isDone ? '✓ ' : isActive ? '⏳ ' : '○ '}
@@ -533,7 +550,7 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
+        <CardTitle className="text-destructive flex items-center gap-2">
           <XCircle className="h-5 w-5" />
           Error en el procesamiento
         </CardTitle>

@@ -4,8 +4,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SearchAgent.Application.DTOs;
 using SearchAgent.Domain.Interfaces;
+using SearchAgent.Domain.Models;
 
 namespace SearchAgent.Infrastructure.Services;
 

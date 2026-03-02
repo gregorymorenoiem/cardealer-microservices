@@ -1,6 +1,6 @@
-namespace SearchAgent.Domain.Interfaces;
+using SearchAgent.Domain.Models;
 
-using SearchAgent.Application.DTOs;
+namespace SearchAgent.Domain.Interfaces;
 
 /// <summary>
 /// Interface for the Claude AI service that processes natural language vehicle queries.

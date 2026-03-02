@@ -11,11 +11,7 @@
 import { useRef, useEffect } from 'react';
 import { useChatbot } from '@/hooks/useChatbot';
 import { ChatPanel } from '@/components/chat/ChatPanel';
-import {
-  MessageSquare,
-  X,
-  Bot,
-} from 'lucide-react';
+import { X, Bot } from 'lucide-react';
 import type { Vehicle } from '@/types';
 
 interface VehicleChatWidgetProps {
@@ -64,9 +60,10 @@ export function VehicleChatWidget({
     if (chat.isConnected && !sentContextRef.current && chat.messages.length <= 1) {
       sentContextRef.current = true;
       const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-      const price = vehicle.currency === 'USD'
-        ? `US$${vehicle.price.toLocaleString()}`
-        : `RD$${vehicle.price.toLocaleString()}`;
+      const price =
+        vehicle.currency === 'USD'
+          ? `US$${vehicle.price.toLocaleString()}`
+          : `RD$${vehicle.price.toLocaleString()}`;
       // Auto-send vehicle context
       chat.sendMessage(
         `Estoy viendo el ${vehicleTitle} (${price}). Quiero más información sobre este vehículo.`
@@ -91,9 +88,7 @@ export function VehicleChatWidget({
         ) : (
           <>
             <Bot className="h-5 w-5 text-white" />
-            <span className="text-sm font-semibold text-white max-sm:hidden">
-              Chat IA
-            </span>
+            <span className="text-sm font-semibold text-white max-sm:hidden">Chat IA</span>
             <span className="absolute inset-0 animate-ping rounded-full bg-blue-500 opacity-20" />
           </>
         )}

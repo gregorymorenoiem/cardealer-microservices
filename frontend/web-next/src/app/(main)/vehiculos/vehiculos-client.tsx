@@ -824,7 +824,7 @@ export default function VehiculosClient() {
       {/* ═══════════════════════════════════════════════════════
           FLOATING MOBILE BOTTOM CTA
       ═══════════════════════════════════════════════════════ */}
-      <div className="fixed right-4 bottom-6 z-50 flex flex-col items-end gap-2 lg:hidden">
+      <div className="fixed bottom-6 left-4 z-50 flex flex-col items-start gap-2 lg:hidden">
         <button
           type="button"
           onClick={() =>
@@ -854,7 +854,7 @@ export default function VehiculosClient() {
           SEARCH AGENT — AI Search Chat Widget
       ═══════════════════════════════════════════════════════ */}
       <SearchAgentWidget
-        onFiltersApplied={(aiFilters) => {
+        onFiltersApplied={aiFilters => {
           setFilters({ ...aiFilters, page: 1 } as Parameters<typeof setFilters>[0]);
         }}
       />

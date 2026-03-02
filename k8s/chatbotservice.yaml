@@ -119,6 +119,14 @@ spec:
                 secretKeyRef:
                   name: okla-secrets
                   key: whatsapp-phone-number-id
+            # ═══════════════════════════════════════════════════════
+            # LLM Provider — Claude (Anthropic) API
+            # ═══════════════════════════════════════════════════════
+            - name: LlmService__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: CLAUDE_API_KEY
           resources:
             requests:
               cpu: "100m"

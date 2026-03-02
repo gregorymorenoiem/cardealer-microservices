@@ -40,8 +40,7 @@ export function MainLayoutShell({ children }: { children: React.ReactNode }) {
 
   // Vehicle detail pages use ChatbotService widget, search page uses SearchAgent widget
   // Don't render the global SupportAgent on these pages to avoid chatbot conflicts
-  const isVehicleDetailPage =
-    pathname.startsWith('/vehiculos/') && pathname !== '/vehiculos';
+  const isVehicleDetailPage = pathname.startsWith('/vehiculos/') && pathname !== '/vehiculos';
   const isVehicleSearchPage = pathname === '/vehiculos';
   const hideSupportWidget = isVehicleDetailPage || isVehicleSearchPage;
 
