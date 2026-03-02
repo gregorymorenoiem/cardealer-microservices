@@ -86,6 +86,8 @@ jobs:
       advertisingservice: ${{ steps.filter.outputs.advertisingservice }}
       # Search Agent (AI search)
       searchagent: ${{ steps.filter.outputs.searchagent }}
+      # Support Agent (AI support)
+      supportagent: ${{ steps.filter.outputs.supportagent }}
       # Recommendation Agent (AI recommendations)
       recoagent: ${{ steps.filter.outputs.recoagent }}
       # Chatbot (MLOps pipeline)
@@ -251,6 +253,10 @@ jobs:
             searchagent:
               - 'backend/SearchAgent/**'
               - 'backend/_Shared/**'
+            # Support Agent (AI support)
+            supportagent:
+              - 'backend/SupportAgent/**'
+              - 'backend/_Shared/**'
             # Recommendation Agent (AI recommendations)
             recoagent:
               - 'backend/RecoAgent/**'
@@ -330,6 +336,7 @@ jobs:
           echo "| DataProtectionService | ${{ steps.filter.outputs.dataprotectionservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdvertisingService | ${{ steps.filter.outputs.advertisingservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| SearchAgent | ${{ steps.filter.outputs.searchagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SupportAgent | ${{ steps.filter.outputs.supportagent }} |" >> $GITHUB_STEP_SUMMARY
           echo "| RecoAgent | ${{ steps.filter.outputs.recoagent }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
@@ -853,6 +860,17 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
+  supportagent:
+    name: 🤝 SupportAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.supportagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: supportagent
+      service-path: backend/SupportAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
   # ============================================
   # CHATBOT (MLOps — dedicated pipeline)
   # ============================================
@@ -955,6 +973,8 @@ jobs:
       - advertisingservice
       # Search Agent
       - searchagent
+      # Support Agent
+      - supportagent
       # Recommendation Agent
       - recoagent
       # Chatbot + Gateway + Frontend
@@ -1079,6 +1099,8 @@ jobs:
       - advertisingservice
       # Search Agent
       - searchagent
+      # Support Agent
+      - supportagent
       # Recommendation Agent
       - recoagent
       # Chatbot + Gateway + Frontend
@@ -1139,6 +1161,7 @@ jobs:
           echo "| DataProtectionService | ${{ needs.dataprotectionservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdvertisingService | ${{ needs.advertisingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| SearchAgent | ${{ needs.searchagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SupportAgent | ${{ needs.supportagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| RecoAgent | ${{ needs.recoagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
