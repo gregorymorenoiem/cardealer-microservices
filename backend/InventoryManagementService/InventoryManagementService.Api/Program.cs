@@ -86,6 +86,13 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// Auto-create tables from model (no migration files exist)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
+
 // Configure the HTTP request pipeline
 // OWASP Security Headers
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
