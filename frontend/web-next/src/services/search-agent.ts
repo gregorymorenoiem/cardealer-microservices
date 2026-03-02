@@ -2,6 +2,7 @@ import apiClient from '@/lib/api-client';
 
 // ============================================================
 // SearchAgent Service — AI-powered vehicle search via Claude
+// v2.1 — production ready, natural language search
 // ============================================================
 
 /**
