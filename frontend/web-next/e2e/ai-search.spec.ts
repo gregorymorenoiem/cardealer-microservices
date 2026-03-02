@@ -63,16 +63,9 @@ test.describe('AI-Powered Search — Live Integration', () => {
     }
   });
 
-  // This test only passes after the changes are deployed to the target environment.
-  // Skip on production until the next deploy propagates the removal.
   test('should NOT have the floating AI chat bubble (SearchAgentWidget removed)', async ({
     page,
-    baseURL,
   }) => {
-    test.skip(
-      !baseURL?.includes('localhost'),
-      'Floating bubble removal not yet deployed to this environment'
-    );
     await page.waitForTimeout(2000);
     const floatingBubble = page.locator('button[aria-label="Buscar con IA"]');
     await expect(floatingBubble).toHaveCount(0);
