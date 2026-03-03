@@ -70,15 +70,19 @@ async function getFeaturedVehiclesFallback() {
 // =============================================
 
 export default async function HomePage() {
-  const sections = await getHomepageSections();
+  // Fetch sections and fallback in parallel to avoid waterfall
+  const [sections, fallbackVehicles] = await Promise.all([
+    getHomepageSections(),
+    getFeaturedVehiclesFallback(),
+  ]);
 
-  // When curated sections have no vehicles, fallback to featured vehicles API
+  // Only use fallback when curated sections have no vehicles
   const hasVehicles = sections.some(s => s.vehicles.length > 0);
-  const fallbackVehicles = hasVehicles ? [] : await getFeaturedVehiclesFallback();
+  const usedFallback = hasVehicles ? [] : fallbackVehicles;
 
   return (
     <Suspense fallback={<LoadingSection />}>
-      <HomepageClient sections={sections} fallbackVehicles={fallbackVehicles} />
+      <HomepageClient sections={sections} fallbackVehicles={usedFallback} />
     </Suspense>
   );
 }

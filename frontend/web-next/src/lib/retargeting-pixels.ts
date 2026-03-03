@@ -45,64 +45,77 @@ let initialized = false;
 /**
  * Initialize all retargeting pixels.
  * Call this once when the app loads (in TrackingProvider or layout).
+ * Pixels are deferred via requestIdleCallback to avoid blocking INP.
  */
 export function initRetargetingPixels(): void {
   if (typeof window === 'undefined' || initialized) return;
   initialized = true;
 
-  // --- Facebook Pixel ---
+  // Defer pixel initialization to avoid blocking interactivity
+  const deferInit = (fn: () => void) => {
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(fn);
+    } else {
+      setTimeout(fn, 3000);
+    }
+  };
+
+  // --- Facebook Pixel (deferred) ---
   if (FB_PIXEL_ID) {
-    /* eslint-disable */
-    (function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
-      if (f.fbq) return;
-      n = f.fbq = function () {
-        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-      };
-      if (!f._fbq) f._fbq = n;
-      n.push = n;
-      n.loaded = !0;
-      n.version = '2.0';
-      n.queue = [];
-      t = b.createElement(e) as HTMLScriptElement;
-      t.async = !0;
-      t.src = v;
-      s = b.getElementsByTagName(e)[0];
-      s?.parentNode?.insertBefore(t, s);
-    })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    /* eslint-enable */
+    deferInit(() => {
+      /* eslint-disable */
+      (function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = '2.0';
+        n.queue = [];
+        t = b.createElement(e) as HTMLScriptElement;
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s?.parentNode?.insertBefore(t, s);
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      /* eslint-enable */
 
-    window.fbq?.('init', FB_PIXEL_ID);
-    window.fbq?.('track', 'PageView');
+      window.fbq?.('init', FB_PIXEL_ID);
+      window.fbq?.('track', 'PageView');
+    });
   }
 
-  // --- Google Analytics 4 + Google Ads ---
-  if (GA_MEASUREMENT_ID || GOOGLE_ADS_ID) {
-    const gtagId = GA_MEASUREMENT_ID || GOOGLE_ADS_ID;
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${gtagId}`;
-    document.head.appendChild(script);
-
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function () {
-      // eslint-disable-next-line prefer-rest-params
-      window.dataLayer?.push(arguments);
+  // --- Google Ads (reuse existing gtag from GoogleAnalytics component) ---
+  // NOTE: GA4 gtag.js is already loaded by GoogleAnalytics component in layout.
+  // We only need to configure Google Ads here — do NOT load gtag.js again.
+  if (GOOGLE_ADS_ID) {
+    // Wait for gtag to be available (loaded by GoogleAnalytics component)
+    const configureGoogleAds = () => {
+      if (typeof window.gtag === 'function') {
+        window.gtag('config', GOOGLE_ADS_ID);
+      } else {
+        // gtag not yet loaded — set up dataLayer and wait
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          // eslint-disable-next-line prefer-rest-params
+          window.dataLayer?.push(arguments);
+        };
+        window.gtag('config', GOOGLE_ADS_ID);
+      }
     };
-    window.gtag('js', new Date());
-
-    if (GA_MEASUREMENT_ID) {
-      window.gtag('config', GA_MEASUREMENT_ID, {
-        send_page_view: true,
-        cookie_flags: 'SameSite=None;Secure',
-      });
-    }
-    if (GOOGLE_ADS_ID) {
-      window.gtag('config', GOOGLE_ADS_ID);
+    // Defer to avoid blocking main thread
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(configureGoogleAds);
+    } else {
+      setTimeout(configureGoogleAds, 2000);
     }
   }
 
-  // --- TikTok Pixel ---
+  // --- TikTok Pixel (deferred) ---
   if (TIKTOK_PIXEL_ID) {
+    deferInit(() => {
     /* eslint-disable */
     (function (w: any, d: any, t: any) {
       w.TiktokAnalyticsObject = t;
@@ -157,6 +170,7 @@ export function initRetargetingPixels(): void {
       ttq.page();
     })(window, document, 'ttq');
     /* eslint-enable */
+    });
   }
 }
 

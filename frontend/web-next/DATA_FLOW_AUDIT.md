@@ -8,13 +8,13 @@
 
 ## Executive Summary
 
-| Data Flow | Status | Severity |
-|-----------|--------|----------|
-| 1. OKLA Score | ⚠️ Partially Connected | **HIGH** — VIN History (D1, 25% of score) always scores default because no VinAudit integration exists |
-| 2. Advertising | ⚠️ Dual-path (Backend + Demo Fallback) | **MEDIUM** — All sponsored slots fall back to hardcoded demo data when backend is unavailable |
-| 3. Analytics/Tracking | 🔴 In-memory only | **CRITICAL** — All tracked events live in a Node.js `Map`, lost on every server restart/redeploy |
-| 4. Auth Token Flow | ✅ Solid | **LOW** — Well-implemented HttpOnly cookie flow with proper refresh logic |
-| 5. Broken Links/Dead Ends | ⚠️ Multiple found | **MEDIUM** — Several demo data fallbacks silently replace real data without UI indication |
+| Data Flow                 | Status                                 | Severity                                                                                               |
+| ------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 1. OKLA Score             | ⚠️ Partially Connected                 | **HIGH** — VIN History (D1, 25% of score) always scores default because no VinAudit integration exists |
+| 2. Advertising            | ⚠️ Dual-path (Backend + Demo Fallback) | **MEDIUM** — All sponsored slots fall back to hardcoded demo data when backend is unavailable          |
+| 3. Analytics/Tracking     | 🔴 In-memory only                      | **CRITICAL** — All tracked events live in a Node.js `Map`, lost on every server restart/redeploy       |
+| 4. Auth Token Flow        | ✅ Solid                               | **LOW** — Well-implemented HttpOnly cookie flow with proper refresh logic                              |
+| 5. Broken Links/Dead Ends | ⚠️ Multiple found                      | **MEDIUM** — Several demo data fallbacks silently replace real data without UI indication              |
 
 ---
 
@@ -70,15 +70,15 @@ User enters VIN
 
 ### 1.3 Data That Actually Works
 
-| Dimension | Weight | Data Source | Status |
-|-----------|--------|-------------|--------|
-| D1 VIN History | 25% | VinAudit (not integrated) | ❌ Always default 100pts |
-| D2 Mechanical | 20% | NHTSA vPIC VIN decode | ✅ Real data |
-| D3 Mileage | 18% | Seller declaration | ⚠️ No verification (no history) |
-| D4 Price vs Market | 17% | MarketCheck (not integrated) | ❌ Always neutral |
-| D5 Safety & Recalls | 10% | NHTSA APIs | ✅ Real data |
-| D6 Depreciation | 6% | From VIN decode year | ✅ Real data |
-| D7 Seller Reputation | 4% | Not passed from backend | ❌ Always default |
+| Dimension            | Weight | Data Source                  | Status                          |
+| -------------------- | ------ | ---------------------------- | ------------------------------- |
+| D1 VIN History       | 25%    | VinAudit (not integrated)    | ❌ Always default 100pts        |
+| D2 Mechanical        | 20%    | NHTSA vPIC VIN decode        | ✅ Real data                    |
+| D3 Mileage           | 18%    | Seller declaration           | ⚠️ No verification (no history) |
+| D4 Price vs Market   | 17%    | MarketCheck (not integrated) | ❌ Always neutral               |
+| D5 Safety & Recalls  | 10%    | NHTSA APIs                   | ✅ Real data                    |
+| D6 Depreciation      | 6%     | From VIN decode year         | ✅ Real data                    |
+| D7 Seller Reputation | 4%     | Not passed from backend      | ❌ Always default               |
 
 **Conclusion:** Only **34% of score weight** uses real external data (D2+D5+D6). The remaining **66%** is default/neutral values.
 
@@ -109,8 +109,8 @@ Impression/Click Tracking:
     → recordImpression() service → apiClient.post('/api/advertising/tracking/impression')
       → BFF route (src/app/api/advertising/tracking/route.ts)
         → Gateway → AdvertisingService
-  
-  Ad clicked → useRecordClick()  
+
+  Ad clicked → useRecordClick()
     → recordClick() service → apiClient.post('/api/advertising/tracking/click')
       → Same BFF route → Gateway → AdvertisingService
 ```
@@ -139,7 +139,7 @@ Impression/Click Tracking:
 
 #### 🟡 WARNING — `ad-engine.ts` GSP auction algorithm runs only client-side
 
-- **File:** [ad-engine.ts](src/lib/ad-engine.ts#L237-L290) 
+- **File:** [ad-engine.ts](src/lib/ad-engine.ts#L237-L290)
 - **Problem:** `runGspAuction()`, `calculatePurchaseIntentScore()`, `calculatePacingRate()` etc. are sophisticated algorithms but are **never called** by any BFF route or component. The `generateSponsoredVehiclesForSlot()` demo function skips the auction entirely.
 - **Impact:** All the ad-engine science (quality scores, second-price auctions, frequency capping, IVT detection) is dead code in the frontend.
 
@@ -184,7 +184,7 @@ Page loads
 
 - **File:** [track/route.ts](src/app/api/analytics/track/route.ts#L17-L18)
 - **Problem:** `eventStore` and `sessionStore` are plain `Map<>` objects in the Node.js process. Every deployment, restart, or scale event **wipes all data**.
-- **Impact:** 
+- **Impact:**
   - Lead scoring has no persistence — the leads dashboard shows demo data most of the time
   - Session tracking is meaningless across deployments
   - The `MAX_VISITORS = 10_000` cap means data is also lost under high traffic
@@ -201,7 +201,7 @@ Page loads
 - **File:** [leads/route.ts](src/app/api/analytics/leads/route.ts#L26-L74)
 - **Problem:** The leads endpoint has THREE fallback paths to `generateDemoLeads()`:
   1. If `trackRes` fails → demo leads
-  2. If real leads array is empty → demo leads  
+  2. If real leads array is empty → demo leads
   3. If any error → demo leads
 - **Impact:** Admin dashboard always shows fake leads (María Rodríguez, Carlos Pérez, etc.) because the in-memory store is typically empty.
 
@@ -281,23 +281,23 @@ Route protection:
 
 ### 5.1 API Routes Returning Demo/Mock Data
 
-| Route | When Demo | Indicator | Component Checks? |
-|-------|-----------|-----------|-------------------|
-| `/api/advertising/sponsored` | Backend unavailable | `meta.source: 'demo'` | ❌ No |
-| `/api/advertising/live-dashboard` | Backend unavailable | `source: 'demo'` in response | ❌ No |
-| `/api/advertising/targeted` | Backend unavailable | `source: 'demo'` in response | ❌ No |
-| `/api/advertising/advertiser-report` | Backend unavailable | `source: 'demo'` in response | ❌ No |
-| `/api/analytics/leads` | Always (empty in-memory store) | `source: 'demo'` in response | ❌ No |
+| Route                                | When Demo                      | Indicator                    | Component Checks? |
+| ------------------------------------ | ------------------------------ | ---------------------------- | ----------------- |
+| `/api/advertising/sponsored`         | Backend unavailable            | `meta.source: 'demo'`        | ❌ No             |
+| `/api/advertising/live-dashboard`    | Backend unavailable            | `source: 'demo'` in response | ❌ No             |
+| `/api/advertising/targeted`          | Backend unavailable            | `source: 'demo'` in response | ❌ No             |
+| `/api/advertising/advertiser-report` | Backend unavailable            | `source: 'demo'` in response | ❌ No             |
+| `/api/analytics/leads`               | Always (empty in-memory store) | `source: 'demo'` in response | ❌ No             |
 
 **Impact:** Components display demo data indistinguishable from real data. Admins and dealers see fake metrics.
 
 ### 5.2 Non-Existent Endpoints Called
 
-| Caller | Endpoint | Exists? |
-|--------|----------|---------|
-| `forwardToBackend()` in track/route.ts | `${API_URL}/api/analytics/events` | ❌ No gateway route |
-| Demo SponsoredVehicle objects | `/api/ads/click?id=sp-001` | ❌ No route handler |
-| `services/advertising.ts` L97-101 | `/api/advertising/tracking/impression` (via apiClient) | ⚠️ Uses apiClient but BFF expects direct call |
+| Caller                                 | Endpoint                                               | Exists?                                       |
+| -------------------------------------- | ------------------------------------------------------ | --------------------------------------------- |
+| `forwardToBackend()` in track/route.ts | `${API_URL}/api/analytics/events`                      | ❌ No gateway route                           |
+| Demo SponsoredVehicle objects          | `/api/ads/click?id=sp-001`                             | ❌ No route handler                           |
+| `services/advertising.ts` L97-101      | `/api/advertising/tracking/impression` (via apiClient) | ⚠️ Uses apiClient but BFF expects direct call |
 
 ### 5.3 Data Transformations That Could Fail Silently
 
@@ -309,13 +309,13 @@ Route protection:
 
 ### 5.4 Missing Error Boundaries
 
-| Component/Hook | Error Handling | Risk |
-|---|---|---|
-| `useCalculateScore()` | Throws Error — no fallback UI | Score page would show React error |
-| `useHomepageRotation()` | Returns `null` — graceful | ✅ Good |
-| `TrackingProvider` | No-op on error — silent | ✅ Acceptable for tracking |
-| `useRecordImpression()` / `useRecordClick()` | No onError handler | Silent data loss |
-| `flushEvents()` in TrackingProvider | `.catch(() => {})` | Silent — acceptable |
+| Component/Hook                               | Error Handling                | Risk                              |
+| -------------------------------------------- | ----------------------------- | --------------------------------- |
+| `useCalculateScore()`                        | Throws Error — no fallback UI | Score page would show React error |
+| `useHomepageRotation()`                      | Returns `null` — graceful     | ✅ Good                           |
+| `TrackingProvider`                           | No-op on error — silent       | ✅ Acceptable for tracking        |
+| `useRecordImpression()` / `useRecordClick()` | No onError handler            | Silent data loss                  |
+| `flushEvents()` in TrackingProvider          | `.catch(() => {})`            | Silent — acceptable               |
 
 ---
 
@@ -323,35 +323,36 @@ Route protection:
 
 ### Priority 1 — CRITICAL (Data Loss / Misleading Data)
 
-| # | Issue | Fix | Files |
-|---|-------|-----|-------|
-| 1 | Analytics events lost on restart | Implement Redis-backed event store or forward to a real backend analytics service (PostHog, Mixpanel, or custom) | `src/app/api/analytics/track/route.ts` |
-| 2 | VIN History (D1, 25%) always defaults | Integrate VinAudit API in `/api/score/calculate` or create a `/api/score/history` route | `src/app/api/score/calculate/route.ts` |
-| 3 | Demo data served without UI indication | Add a `[DEMO]` badge or banner when `source === 'demo'` in API responses | All consuming components |
+| #   | Issue                                  | Fix                                                                                                              | Files                                  |
+| --- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 1   | Analytics events lost on restart       | Implement Redis-backed event store or forward to a real backend analytics service (PostHog, Mixpanel, or custom) | `src/app/api/analytics/track/route.ts` |
+| 2   | VIN History (D1, 25%) always defaults  | Integrate VinAudit API in `/api/score/calculate` or create a `/api/score/history` route                          | `src/app/api/score/calculate/route.ts` |
+| 3   | Demo data served without UI indication | Add a `[DEMO]` badge or banner when `source === 'demo'` in API responses                                         | All consuming components               |
 
 ### Priority 2 — HIGH (Incorrect Calculations / Silent Failures)
 
-| # | Issue | Fix | Files |
-|---|-------|-----|-------|
-| 4 | Market price data (D4, 17%) always neutral | Integrate pricing API or pass market data from VehiclesSaleService | `src/app/api/score/calculate/route.ts` |
-| 5 | BFF routes forward empty Authorization header | Read `okla_access_token` from cookies and forward as `Authorization: Bearer <token>` | `src/app/api/advertising/campaigns/route.ts`, `reports/route.ts`, `live-dashboard/route.ts` |
-| 6 | Demo click tracking URLs point to `/api/ads/click` (doesn't exist) | Either create the route or use the existing `/api/advertising/tracking` route | `src/lib/ad-engine.ts:580` |
-| 7 | Exchange rate hardcoded at 58.5 | Fetch from BCRD API or cache externally | `src/app/api/score/calculate/route.ts:80` |
+| #   | Issue                                                              | Fix                                                                                  | Files                                                                                       |
+| --- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| 4   | Market price data (D4, 17%) always neutral                         | Integrate pricing API or pass market data from VehiclesSaleService                   | `src/app/api/score/calculate/route.ts`                                                      |
+| 5   | BFF routes forward empty Authorization header                      | Read `okla_access_token` from cookies and forward as `Authorization: Bearer <token>` | `src/app/api/advertising/campaigns/route.ts`, `reports/route.ts`, `live-dashboard/route.ts` |
+| 6   | Demo click tracking URLs point to `/api/ads/click` (doesn't exist) | Either create the route or use the existing `/api/advertising/tracking` route        | `src/lib/ad-engine.ts:580`                                                                  |
+| 7   | Exchange rate hardcoded at 58.5                                    | Fetch from BCRD API or cache externally                                              | `src/app/api/score/calculate/route.ts:80`                                                   |
 
 ### Priority 3 — MEDIUM (Code Quality / Dead Code)
 
-| # | Issue | Fix | Files |
-|---|-------|-----|-------|
-| 8 | GSP auction engine is dead code in frontend | Move to backend AdvertisingService or wire up in sponsored route | `src/lib/ad-engine.ts` |
-| 9 | Legacy localStorage token code | Remove after migration period | `src/lib/api-client.ts:39-46` |
-| 10 | No analytics backend service | Create an AnalyticsService or integrate PostHog/Mixpanel | Gateway ocelot config |
-| 11 | Retargeting pixels fire empty with no env vars configured | Add validation or remove calls when IDs are empty | `src/lib/retargeting-pixels.ts` |
+| #   | Issue                                                     | Fix                                                              | Files                           |
+| --- | --------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------- |
+| 8   | GSP auction engine is dead code in frontend               | Move to backend AdvertisingService or wire up in sponsored route | `src/lib/ad-engine.ts`          |
+| 9   | Legacy localStorage token code                            | Remove after migration period                                    | `src/lib/api-client.ts:39-46`   |
+| 10  | No analytics backend service                              | Create an AnalyticsService or integrate PostHog/Mixpanel         | Gateway ocelot config           |
+| 11  | Retargeting pixels fire empty with no env vars configured | Add validation or remove calls when IDs are empty                | `src/lib/retargeting-pixels.ts` |
 
 ---
 
 ## 7. Data Flow Diagrams Summary
 
 ### What's Connected (Real Data) ✅
+
 ```
 VIN Input → NHTSA vPIC (decode) → Score Engine D2, D5, D6 → ScoreReport UI
 Auth Form → Server Action → Gateway → AuthService → HttpOnly Cookies → All API calls
@@ -359,19 +360,21 @@ Campaign CRUD → BFF → Gateway → AdvertisingService
 ```
 
 ### What's Disconnected (Dead Ends) ❌
+
 ```
 TrackingProvider → /api/analytics/track → IN-MEMORY MAP → ☠️ (lost on restart)
                                         → forwardToBackend → ☠️ (no analytics endpoint)
-Ad Engine (GSP, PIS, IVT) → ☠️ (never called)  
+Ad Engine (GSP, PIS, IVT) → ☠️ (never called)
 VIN History (VinAudit) → ☠️ (not integrated)
 Market Price (MarketCheck) → ☠️ (not integrated)
 Lead Scoring → reads empty in-memory store → falls back to demo data
 ```
 
 ### What's Half-Working (Demo Fallback) ⚠️
+
 ```
 Sponsored Ads → try backend → fail → DEMO hardcoded vehicles
-Live Dashboard → try backend → fail → DEMO random metrics  
+Live Dashboard → try backend → fail → DEMO random metrics
 Lead Predictions → try in-memory → empty → DEMO fake leads
 Advertiser Reports → try backend → fail → DEMO fake report
 ```

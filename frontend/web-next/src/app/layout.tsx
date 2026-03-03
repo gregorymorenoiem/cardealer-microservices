@@ -139,7 +139,6 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <meta httpEquiv="Permissions-Policy" content="camera=*, microphone=*" />
         <SiteJsonLd />
-        <GoogleAnalytics />
       </head>
       <body
         className="bg-background text-foreground min-h-screen antialiased"
@@ -158,6 +157,7 @@ export default function RootLayout({
             />
           </PWAComponents>
         </Providers>
+        <GoogleAnalytics />
       </body>
     </html>
   );

@@ -3,27 +3,16 @@
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Footer } from '@/components/layout/footer';
-import { SupportAgentWidget } from '@/components/chat/SupportAgentWidget';
+import { Navbar } from '@/components/layout/navbar';
 
-// Lazy-load Navbar — it's a heavy component (1000+ lines, icons, popovers, auth state)
-// Skeleton is shown immediately while the full Navbar loads
-const Navbar = dynamic(
-  () => import('@/components/layout/navbar').then(mod => ({ default: mod.Navbar })),
-  {
-    ssr: true,
-    loading: () => (
-      <header className="bg-background sticky top-0 z-50 h-16 w-full border-b lg:h-18">
-        <nav className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#00A870] to-[#009663]">
-              <span className="text-xl font-bold text-white">O</span>
-            </div>
-            <span className="text-foreground text-2xl font-bold tracking-tight">OKLA</span>
-          </div>
-        </nav>
-      </header>
-    ),
-  }
+// Lazy-load SupportAgentWidget — non-critical, heavy component (LLM, WebSocket, chat UI)
+// Deferring this improves INP since it's not needed immediately
+const SupportAgentWidget = dynamic(
+  () =>
+    import('@/components/chat/SupportAgentWidget').then(mod => ({
+      default: mod.SupportAgentWidget,
+    })),
+  { ssr: false }
 );
 
 /**
