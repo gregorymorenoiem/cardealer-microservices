@@ -267,6 +267,21 @@ const nextConfig: NextConfig = {
       process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
 
     return {
+      // beforeFiles rewrites run BEFORE filesystem routes (API route handlers).
+      // We use this to rewrite dynamic advertising paths to static BFF routes
+      // that can be handled by our API route handlers (which have fallback data).
+      beforeFiles: [
+        // /api/advertising/rotation/FeaturedSpot → /api/advertising/rotation?section=FeaturedSpot
+        {
+          source: '/api/advertising/rotation/:section',
+          destination: '/api/advertising/rotation?section=:section',
+        },
+        // /api/advertising/rotation/config/:section → /api/advertising/rotation?section=:section&subpath=config
+        {
+          source: '/api/advertising/rotation/config/:section',
+          destination: '/api/advertising/rotation?section=:section&subpath=config',
+        },
+      ],
       afterFiles: [
         {
           source: '/api/:path*',

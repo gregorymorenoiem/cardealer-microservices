@@ -1,29 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * GET /api/advertising/rotation/[...path]
- * BFF catch-all route for ad rotation endpoints (FeaturedSpot, PremiumSpot, etc.)
- * Proxies to backend AdvertisingService with demo data fallback.
+ * GET /api/advertising/rotation
+ * BFF route for ad rotation endpoints.
+ * Expects query param: ?section=FeaturedSpot (or PremiumSpot, etc.)
+ * Also handles direct path: /api/advertising/rotation?section=FeaturedSpot
  *
- * Handles:
- *   /api/advertising/rotation/FeaturedSpot
- *   /api/advertising/rotation/PremiumSpot
- *   /api/advertising/rotation/config/:section
- *   /api/advertising/rotation/refresh
+ * The frontend advertising service calls /api/advertising/rotation/:section
+ * but Next.js afterFiles rewrites catch dynamic segments before API routes.
+ * The middleware rewrites /api/advertising/rotation/:section to
+ * /api/advertising/rotation?section=:section to hit this static route.
  */
 
 const API_URL =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const section = path.join('/');
+export async function GET(request: NextRequest) {
+  const section = request.nextUrl.searchParams.get('section') || 'FeaturedSpot';
+  const subpath = request.nextUrl.searchParams.get('subpath') || '';
+  const fullPath = subpath ? `${section}/${subpath}` : section;
 
   try {
-    const backendUrl = `${API_URL}/api/advertising/rotation/${section}${request.nextUrl.search}`;
+    const backendUrl = `${API_URL}/api/advertising/rotation/${fullPath}`;
     const res = await fetch(backendUrl, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 300 },
@@ -37,7 +35,7 @@ export async function GET(
     // Backend unavailable — fall through to demo data
   }
 
-  // Fallback: return demo rotation data for known sections
+  // Fallback: return demo rotation data
   const demoItems = getDemoRotationItems(section);
   return NextResponse.json({
     success: true,
@@ -50,17 +48,14 @@ export async function GET(
   });
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const section = path.join('/');
+export async function POST(request: NextRequest) {
+  const section = request.nextUrl.searchParams.get('section') || '';
+  const subpath = request.nextUrl.searchParams.get('subpath') || '';
+  const fullPath = subpath ? `${section}/${subpath}` : section;
 
   try {
     const body = await request.json().catch(() => null);
-    const backendUrl = `${API_URL}/api/advertising/rotation/${section}${request.nextUrl.search}`;
-    const res = await fetch(backendUrl, {
+    const res = await fetch(`${API_URL}/api/advertising/rotation/${fullPath}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
@@ -77,17 +72,14 @@ export async function POST(
   return NextResponse.json({ success: true, refreshed: false, source: 'demo' });
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const section = path.join('/');
+export async function PUT(request: NextRequest) {
+  const section = request.nextUrl.searchParams.get('section') || '';
+  const subpath = request.nextUrl.searchParams.get('subpath') || '';
+  const fullPath = subpath ? `${section}/${subpath}` : section;
 
   try {
     const body = await request.json();
-    const backendUrl = `${API_URL}/api/advertising/rotation/${section}${request.nextUrl.search}`;
-    const res = await fetch(backendUrl, {
+    const res = await fetch(`${API_URL}/api/advertising/rotation/${fullPath}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
