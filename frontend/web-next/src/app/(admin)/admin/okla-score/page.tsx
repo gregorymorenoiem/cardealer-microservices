@@ -206,7 +206,7 @@ export default function AdminOklaScorePage() {
   // Feature toggles for current phase
   const [customToggles, setCustomToggles] = useState<Record<string, boolean>>({});
 
-  const currentPhase = PHASES.find((p) => p.id === activePhase)!;
+  const currentPhase = PHASES.find(p => p.id === activePhase)!;
 
   const handlePhaseSelect = (phaseId: number) => {
     if (phaseId === activePhase) return;
@@ -227,13 +227,13 @@ export default function AdminOklaScorePage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
+        <h1 className="flex items-center gap-3 text-3xl font-bold">
           <ShieldCheck className="h-8 w-8 text-emerald-600" />
           OKLA Score™ — Configuración
         </h1>
-        <p className="mt-2 text-muted-foreground">
-          Selecciona la etapa de implementación del OKLA Score. Cada fase activa
-          nuevas capacidades, APIs y dimensiones de evaluación.
+        <p className="text-muted-foreground mt-2">
+          Selecciona la etapa de implementación del OKLA Score. Cada fase activa nuevas capacidades,
+          APIs y dimensiones de evaluación.
         </p>
       </div>
 
@@ -248,17 +248,17 @@ export default function AdminOklaScorePage() {
             <div key={phase.id} className="flex items-center">
               <button
                 onClick={() => handlePhaseSelect(phase.id)}
-                className={`
-                  flex items-center gap-3 rounded-xl border-2 px-5 py-4 transition-all
-                  ${isActive
+                className={`flex items-center gap-3 rounded-xl border-2 px-5 py-4 transition-all ${
+                  isActive
                     ? `${phase.borderColor} ${phase.bgColor} shadow-md ring-2 ring-offset-2 ring-${phase.color.replace('text-', '')}`
                     : isPast
                       ? 'border-gray-200 bg-gray-50 opacity-60'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
+                } `}
               >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isActive ? phase.bgColor : 'bg-gray-100'}`}>
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${isActive ? phase.bgColor : 'bg-gray-100'}`}
+                >
                   {isPast ? (
                     <CheckCircle className="h-5 w-5 text-emerald-500" />
                   ) : (
@@ -266,8 +266,10 @@ export default function AdminOklaScorePage() {
                   )}
                 </div>
                 <div className="text-left">
-                  <p className={`text-sm font-bold ${isActive ? phase.color : ''}`}>Fase {phase.id}</p>
-                  <p className="text-xs text-muted-foreground">{phase.name}</p>
+                  <p className={`text-sm font-bold ${isActive ? phase.color : ''}`}>
+                    Fase {phase.id}
+                  </p>
+                  <p className="text-muted-foreground text-xs">{phase.name}</p>
                 </div>
               </button>
               {idx < PHASES.length - 1 && (
@@ -283,12 +285,12 @@ export default function AdminOklaScorePage() {
         <Card className="border-amber-300 bg-amber-50">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
               <div className="flex-1">
                 <p className="font-semibold text-amber-800">
                   ¿Cambiar a {PHASES[pendingPhase - 1].nameEs}?
                 </p>
-                <p className="text-sm text-amber-700 mt-1">
+                <p className="mt-1 text-sm text-amber-700">
                   {pendingPhase > activePhase
                     ? 'Esto activará nuevas funcionalidades y puede requerir configuración de APIs adicionales.'
                     : 'Esto desactivará funcionalidades. Los datos de scoring existentes no se perderán.'}
@@ -310,7 +312,7 @@ export default function AdminOklaScorePage() {
       {/* Active Phase Detail */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main: Features */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           <Card className={`${currentPhase.borderColor} border-2`}>
             <CardHeader className={currentPhase.bgColor}>
               <div className="flex items-center gap-3">
@@ -324,14 +326,14 @@ export default function AdminOklaScorePage() {
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground mb-6">{currentPhase.description}</p>
+              <p className="text-muted-foreground mb-6 text-sm">{currentPhase.description}</p>
 
-              <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <h4 className="mb-3 flex items-center gap-2 font-semibold">
                 <Settings className="h-4 w-4" />
                 Funcionalidades
               </h4>
               <div className="space-y-3">
-                {currentPhase.features.map((feature) => {
+                {currentPhase.features.map(feature => {
                   const toggleKey = `${activePhase}-${feature.label}`;
                   const isEnabled = customToggles[toggleKey] ?? feature.enabled;
 
@@ -346,14 +348,16 @@ export default function AdminOklaScorePage() {
                         ) : (
                           <Circle className="h-4 w-4 text-gray-300" />
                         )}
-                        <span className={`text-sm ${isEnabled ? 'font-medium' : 'text-muted-foreground'}`}>
+                        <span
+                          className={`text-sm ${isEnabled ? 'font-medium' : 'text-muted-foreground'}`}
+                        >
                           {feature.label}
                         </span>
                       </div>
                       <Switch
                         checked={isEnabled}
-                        onCheckedChange={(checked) =>
-                          setCustomToggles((prev) => ({ ...prev, [toggleKey]: checked }))
+                        onCheckedChange={checked =>
+                          setCustomToggles(prev => ({ ...prev, [toggleKey]: checked }))
                         }
                       />
                     </div>
@@ -366,15 +370,17 @@ export default function AdminOklaScorePage() {
           {/* Dimensions Active */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <BarChart3 className="h-4 w-4" />
                 Dimensiones Activas
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'].map((dim) => {
-                  const isActive = currentPhase.dimensions.includes(dim) || currentPhase.dimensions.includes(`${dim} (básico)`);
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'].map(dim => {
+                  const isActive =
+                    currentPhase.dimensions.includes(dim) ||
+                    currentPhase.dimensions.includes(`${dim} (básico)`);
                   const isBasic = currentPhase.dimensions.includes(`${dim} (básico)`);
                   const labels: Record<string, string> = {
                     D1: 'Historial VIN',
@@ -404,9 +410,9 @@ export default function AdminOklaScorePage() {
                           : 'border-gray-100 bg-gray-50 opacity-40'
                       }`}
                     >
-                      <p className="text-xs font-mono text-muted-foreground">{dim}</p>
+                      <p className="text-muted-foreground font-mono text-xs">{dim}</p>
                       <p className="text-sm font-semibold">{labels[dim]}</p>
-                      <p className="text-xs text-muted-foreground">{weights[dim]}</p>
+                      <p className="text-muted-foreground text-xs">{weights[dim]}</p>
                       {isBasic && (
                         <Badge variant="outline" className="mt-1 text-[10px]">
                           Básico
@@ -425,13 +431,13 @@ export default function AdminOklaScorePage() {
           {/* APIs */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Globe className="h-4 w-4" />
                 APIs Integradas
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {currentPhase.apis.map((api) => (
+              {currentPhase.apis.map(api => (
                 <div
                   key={api.name}
                   className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
@@ -462,14 +468,14 @@ export default function AdminOklaScorePage() {
           {/* Cost Estimate */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Database className="h-4 w-4" />
                 Costo Estimado
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-emerald-600">{currentPhase.estimatedCost}</p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Costo mensual estimado para APIs de pago
               </p>
             </CardContent>
@@ -478,13 +484,13 @@ export default function AdminOklaScorePage() {
           {/* Phase Comparison */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Star className="h-4 w-4" />
                 Resumen por Fase
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {PHASES.map((phase) => {
+              {PHASES.map(phase => {
                 const Icon = phase.icon;
                 const isActive = phase.id === activePhase;
                 return (
@@ -499,13 +505,12 @@ export default function AdminOklaScorePage() {
                       <p className={`text-sm ${isActive ? 'font-bold' + ' ' + phase.color : ''}`}>
                         Fase {phase.id}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {phase.dimensions.length} dims · {phase.apis.filter((a) => a.enabled).length} APIs
+                      <p className="text-muted-foreground text-[10px]">
+                        {phase.dimensions.length} dims · {phase.apis.filter(a => a.enabled).length}{' '}
+                        APIs
                       </p>
                     </div>
-                    {isActive && (
-                      <Badge className="bg-emerald-600 text-[10px]">ACTIVA</Badge>
-                    )}
+                    {isActive && <Badge className="bg-emerald-600 text-[10px]">ACTIVA</Badge>}
                   </div>
                 );
               })}

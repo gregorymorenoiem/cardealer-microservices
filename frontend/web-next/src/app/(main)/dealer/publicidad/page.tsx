@@ -240,6 +240,16 @@ function DealerPublicidadContent() {
           <TabsTrigger value="overview">Resumen</TabsTrigger>
         </TabsList>
 
+        {/* Quick links */}
+        <div className="mt-4 mb-2 flex gap-2">
+          <Link href="/dealer/publicidad/estadisticas">
+            <Button variant="outline" size="sm">📊 Estadísticas Detalladas</Button>
+          </Link>
+          <Link href="/dealer/publicidad/roi">
+            <Button variant="outline" size="sm">💰 Calculadora ROI</Button>
+          </Link>
+        </div>
+
         <TabsContent value="campaigns" className="mt-6">
           {/* Filter buttons */}
           <div className="mb-4 flex flex-wrap gap-2">

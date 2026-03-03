@@ -31,6 +31,7 @@ import {
 } from '@/services/advertising';
 import type {
   AdPlacementType,
+  AdvertiserReport,
   CampaignStatus,
   CreateCampaignRequest,
   UpdateCategoryRequest,
@@ -74,6 +75,8 @@ export const advertisingKeys = {
     [...advertisingKeys.reports(), 'platform', daysBack] as const,
   ownerReport: (ownerId: string, ownerType: string, daysBack: number) =>
     [...advertisingKeys.reports(), 'owner', ownerId, ownerType, daysBack] as const,
+  advertiserReport: (ownerId: string, period: string) =>
+    [...advertisingKeys.reports(), 'advertiser', ownerId, period] as const,
 
   // Pricing
   pricing: (type: AdPlacementType) => [...advertisingKeys.all, 'pricing', type] as const,
@@ -284,6 +287,29 @@ export function useOwnerReport(
     queryFn: () => getOwnerReport(ownerId, ownerType, daysBack),
     enabled: !!ownerId,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Fetch the enhanced advertiser report (with CPC, CPM, CPL, budget utilization,
+ * period comparison, and per-campaign breakdown) from the BFF route.
+ */
+export function useAdvertiserReport(
+  ownerId: string,
+  period: '7d' | '30d' | '90d' = '7d'
+) {
+  return useQuery<AdvertiserReport>({
+    queryKey: advertisingKeys.advertiserReport(ownerId, period),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/advertising/advertiser-report?ownerId=${ownerId}&period=${period}`
+      );
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? 'Error loading report');
+      return data.data as AdvertiserReport;
+    },
+    enabled: !!ownerId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

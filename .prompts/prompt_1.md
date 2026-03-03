@@ -1,4 +1,5 @@
-Ahora quiero que por UI de configuraracion uno pueda seleccionar la etapa correspondiente de implementacion del OKLA Score
+Ahora te tengo una nueva tarea. Yo necesito guardar todos los datos necesarios de los usuarios tanto logueados como no logueados y identificarlo por equipos, para lo que no tienen cuenta y pero tambien lo que tienen cuenta necesito saber de que equipo se estan conectando. Y quiero que levantes todos los datos necesarios para que me hagas un algoritmo para predecir cuales son los leads de compradores, que tiene alta condu
+
 Y luego haz el ci/cd y monitorealo hasta que todo el codigo llegue a produccion y luego haz las pruebas de e2e.
 
 Y no me utilices este comando, "grep "YA TERMINASTE" /Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/.prompts/prompt_1.md && echo "FOUND" || echo "NOT_FOUND_iter9"", siempre tiene que analizar el "".prompts/prompt-1.md"" para ver si hay algo nuevo.

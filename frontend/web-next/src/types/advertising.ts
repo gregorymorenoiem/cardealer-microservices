@@ -218,3 +218,67 @@ export interface RecordClickRequest {
   clickerIp?: string;
   destinationUrl?: string;
 }
+
+// --- Enhanced Advertiser Report (for email/export) ---
+
+export interface AdvertiserReport {
+  ownerId: string;
+  ownerType: string;
+  ownerName: string;
+  period: ReportPeriod;
+  summary: AdvertiserReportSummary;
+  campaigns: CampaignReportDetail[];
+  generatedAt: string;
+}
+
+export interface ReportPeriod {
+  from: string;
+  to: string;
+  label: string; // "Últimos 7 días", "Último mes", etc.
+}
+
+export interface AdvertiserReportSummary {
+  totalCampaigns: number;
+  activeCampaigns: number;
+  completedCampaigns: number;
+  totalImpressions: number;
+  totalClicks: number;
+  overallCtr: number;
+  totalSpent: number;
+  totalBudget: number;
+  budgetUtilization: number;   // % of budget used
+  costPerClick: number;        // totalSpent / totalClicks
+  costPerMil: number;          // (totalSpent / totalImpressions) * 1000
+  estimatedLeads: number;
+  costPerLead: number;
+  dailyTrend: DailyDataPoint[];
+  impressionsChange: number;   // vs previous period %
+  clicksChange: number;
+  ctrChange: number;
+  spendChange: number;
+}
+
+export interface CampaignReportDetail {
+  campaignId: string;
+  vehicleId: string;
+  vehicleTitle: string;
+  vehicleImage?: string;
+  placementType: AdPlacementType;
+  pricingModel: CampaignPricingModel;
+  status: CampaignStatus;
+  startDate: string;
+  endDate: string;
+  totalBudget: number;
+  spent: number;
+  remainingBudget: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  costPerClick: number;
+  costPerMil: number;
+  qualityScore: number;
+  dailyData: DailyDataPoint[];
+  topPerformanceDay?: string;
+  avgDailyImpressions: number;
+  avgDailyClicks: number;
+}
