@@ -361,7 +361,6 @@ export function VenderPricing() {
         </CardContent>
       </Card>
     </div>
-  </section>
   );
 }
 
