@@ -17,6 +17,13 @@ import {
   getAnonymousId,
   getUtmParams,
 } from '@/lib/device-fingerprint';
+import {
+  initRetargetingPixels,
+  trackPageView as pixelPageView,
+  trackVehicleView as pixelVehicleView,
+  trackVehicleSearch as pixelVehicleSearch,
+  identifyUser,
+} from '@/lib/retargeting-pixels';
 import type { TrackingEventType, DeviceInfo, TrackEventRequest } from '@/types/analytics';
 
 // =============================================================================
@@ -66,6 +73,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     anonymousIdRef.current = getAnonymousId();
     deviceInfoRef.current = getDeviceInfo();
 
+    // Initialize retargeting pixels (Facebook, Google, TikTok)
+    initRetargetingPixels();
+
     // Track session start
     enqueueEvent('session_start', {
       landingPage: window.location.pathname,
@@ -100,10 +110,26 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       });
     }
 
+    // Forward page view to retargeting pixels (Facebook, Google, TikTok)
+    pixelPageView(pathname);
+
     lastPageRef.current = pathname;
     pageStartRef.current = Date.now();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+
+  // Identify user for retargeting pixels when auth state changes
+  useEffect(() => {
+    if (user?.id) {
+      identifyUser({
+        email: user.email || undefined,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        phone: user.phone || undefined,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Periodic flush
   useEffect(() => {
@@ -147,6 +173,27 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     };
 
     eventQueueRef.current.push(event);
+
+    // Forward relevant events to retargeting pixels
+    if (eventType === 'vehicle_viewed' && properties.vehicleId) {
+      pixelVehicleView({
+        vehicleId: String(properties.vehicleId),
+        title: String(properties.title || properties.make || 'Vehículo'),
+        make: String(properties.make || ''),
+        model: String(properties.model || ''),
+        year: Number(properties.year || 0),
+        price: Number(properties.price || 0),
+        condition: String(properties.condition || ''),
+      });
+    } else if (eventType === 'search_performed' && properties.query) {
+      pixelVehicleSearch({
+        query: String(properties.query),
+        make: String(properties.make || ''),
+        priceMin: Number(properties.priceMin || 0),
+        priceMax: Number(properties.priceMax || 0),
+        resultsCount: Number(properties.resultsCount || 0),
+      });
+    }
 
     // Auto-flush if batch is full
     if (eventQueueRef.current.length >= MAX_BATCH_SIZE) {

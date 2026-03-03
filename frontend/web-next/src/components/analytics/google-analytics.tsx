@@ -20,11 +20,7 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 // Declare gtag on window
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'set' | 'js',
-      targetId: string | Date,
-      params?: Record<string, unknown>
-    ) => void;
+    gtag: (...args: unknown[]) => void;
     dataLayer: unknown[];
   }
 }
