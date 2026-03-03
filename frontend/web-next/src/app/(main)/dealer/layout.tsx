@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Menu,
   Star,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -47,6 +48,7 @@ const mainLinks = [
   { href: '/dealer', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dealer/inventario', label: 'Inventario', icon: Car },
   { href: '/dealer/leads', label: 'Leads', icon: Users },
+  { href: '/dealer/publicidad', label: 'Publicidad', icon: Megaphone },
   { href: '/dealer/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/dealer/citas', label: 'Citas', icon: Calendar },
   { href: '/dealer/mensajes', label: 'Mensajes', icon: MessageSquare },

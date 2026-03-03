@@ -560,7 +560,7 @@ export function generateSponsoredVehiclesForSlot(
       auctionPosition: 1,
       actualCpc: 142,
       impressionToken: `imp-${Date.now()}-001`,
-      clickTrackingUrl: '/api/ads/click?id=sp-001',
+      clickTrackingUrl: '/api/advertising/tracking?action=click&id=sp-001',
     },
     {
       id: 'sp-002',
@@ -588,7 +588,7 @@ export function generateSponsoredVehiclesForSlot(
       auctionPosition: 2,
       actualCpc: 98,
       impressionToken: `imp-${Date.now()}-002`,
-      clickTrackingUrl: '/api/ads/click?id=sp-002',
+      clickTrackingUrl: '/api/advertising/tracking?action=click&id=sp-002',
     },
     {
       id: 'sp-003',
@@ -616,7 +616,7 @@ export function generateSponsoredVehiclesForSlot(
       auctionPosition: 3,
       actualCpc: 85,
       impressionToken: `imp-${Date.now()}-003`,
-      clickTrackingUrl: '/api/ads/click?id=sp-003',
+      clickTrackingUrl: '/api/advertising/tracking?action=click&id=sp-003',
     },
     {
       id: 'sp-004',
@@ -644,7 +644,7 @@ export function generateSponsoredVehiclesForSlot(
       auctionPosition: 4,
       actualCpc: 155,
       impressionToken: `imp-${Date.now()}-004`,
-      clickTrackingUrl: '/api/ads/click?id=sp-004',
+      clickTrackingUrl: '/api/advertising/tracking?action=click&id=sp-004',
     },
     {
       id: 'sp-005',
@@ -672,7 +672,7 @@ export function generateSponsoredVehiclesForSlot(
       auctionPosition: 5,
       actualCpc: 92,
       impressionToken: `imp-${Date.now()}-005`,
-      clickTrackingUrl: '/api/ads/click?id=sp-005',
+      clickTrackingUrl: '/api/advertising/tracking?action=click&id=sp-005',
     },
     {
       id: 'sp-006',
@@ -700,7 +700,7 @@ export function generateSponsoredVehiclesForSlot(
       auctionPosition: 6,
       actualCpc: 210,
       impressionToken: `imp-${Date.now()}-006`,
-      clickTrackingUrl: '/api/ads/click?id=sp-006',
+      clickTrackingUrl: '/api/advertising/tracking?action=click&id=sp-006',
     },
   ];
 
