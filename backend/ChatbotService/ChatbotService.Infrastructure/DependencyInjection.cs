@@ -134,7 +134,7 @@ public static class DependencyInjection
         .AddPolicyHandler(GetRetryPolicy());
 
         // R17 (MLOps): Redis response cache for LLM inference
-        services.AddSingleton<LlmResponseCacheService>(sp =>
+        services.AddSingleton<ILlmResponseCacheService, LlmResponseCacheService>(sp =>
         {
             var cache = sp.GetRequiredService<IDistributedCache>();
             var logger = sp.GetRequiredService<ILogger<LlmResponseCacheService>>();

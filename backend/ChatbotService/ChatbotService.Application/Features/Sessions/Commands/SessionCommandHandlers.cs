@@ -5,7 +5,6 @@ using ChatbotService.Domain.Enums;
 using ChatbotService.Domain.Interfaces;
 using ChatbotService.Application.DTOs;
 using ChatbotService.Application.Services;
-using ChatbotService.Infrastructure.Services;
 
 namespace ChatbotService.Application.Features.Sessions.Commands;
 
@@ -141,7 +140,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
     private readonly IQuickResponseRepository _quickResponseRepository;
     private readonly IChatModeStrategyFactory _strategyFactory;
     private readonly ILlmService _llmService;
-    private readonly LlmResponseCacheService _cacheService;
+    private readonly ILlmResponseCacheService _cacheService;
     private readonly ILogger<SendMessageCommandHandler> _logger;
 
     public SendMessageCommandHandler(
@@ -151,7 +150,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         IQuickResponseRepository quickResponseRepository,
         IChatModeStrategyFactory strategyFactory,
         ILlmService llmService,
-        LlmResponseCacheService cacheService,
+        ILlmResponseCacheService cacheService,
         ILogger<SendMessageCommandHandler> logger)
     {
         _sessionRepository = sessionRepository;

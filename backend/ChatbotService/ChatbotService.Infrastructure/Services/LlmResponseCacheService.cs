@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using ChatbotService.Domain.Interfaces;
 
 namespace ChatbotService.Infrastructure.Services;
 
@@ -18,7 +19,7 @@ namespace ChatbotService.Infrastructure.Services;
 /// - Repeated queries within a session
 /// - High-traffic periods with similar queries
 /// </summary>
-public class LlmResponseCacheService
+public class LlmResponseCacheService : ILlmResponseCacheService
 {
     private readonly IDistributedCache _cache;
     private readonly ILogger<LlmResponseCacheService> _logger;
@@ -57,7 +58,7 @@ public class LlmResponseCacheService
     /// Try to get a cached response for the given query.
     /// Returns null if no cache hit.
     /// </summary>
-    public async Task<CachedLlmResponse?> GetAsync(string query, string? systemPrompt = null, CancellationToken ct = default)
+    public async Task<CachedLlmResponseDto?> GetAsync(string query, string? systemPrompt = null, CancellationToken ct = default)
     {
         if (!_enabled || string.IsNullOrWhiteSpace(query) || query.Length < MIN_QUERY_LENGTH)
             return null;
@@ -69,7 +70,7 @@ public class LlmResponseCacheService
             var cached = await _cache.GetStringAsync(key, ct);
             if (cached != null)
             {
-                var response = JsonSerializer.Deserialize<CachedLlmResponse>(cached);
+                var response = JsonSerializer.Deserialize<CachedLlmResponseDto>(cached);
                 if (response != null)
                 {
                     _logger.LogInformation("Cache HIT for query: '{Query}' (key: {Key})", 
@@ -115,7 +116,7 @@ public class LlmResponseCacheService
             return;
 
         var key = BuildCacheKey(query, systemPrompt);
-        var cached = new CachedLlmResponse
+        var cached = new CachedLlmResponseDto
         {
             Response = response,
             Intent = intent,
@@ -168,16 +169,4 @@ public class LlmResponseCacheService
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         return $"llm:cache:{Convert.ToHexString(hash)[..16].ToLower()}";
     }
-}
-
-/// <summary>
-/// Cached LLM response DTO.
-/// </summary>
-public class CachedLlmResponse
-{
-    public string Response { get; set; } = string.Empty;
-    public string? Intent { get; set; }
-    public float Confidence { get; set; }
-    public DateTime CachedAt { get; set; }
-    public bool FromCache { get; set; }
 }
