@@ -53,3 +53,5 @@ ENTRYPOINT ["dotnet", "AdvertisingService.Api.dll"]
 # CI trigger: GHCR package created, retry push 1772574680
 
 # CI trigger: retry after GHCR package init 1772575802
+
+# CI trigger: package deleted & recreating linked 1772577708
