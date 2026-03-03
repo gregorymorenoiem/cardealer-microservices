@@ -306,6 +306,12 @@ jobs:
           push: ${{ inputs.run-docker-push }}
           platforms: linux/amd64
           network: host
+          # FIX: Disable provenance & SBOM attestations to prevent 403 Forbidden
+          # errors when pushing to GHCR. build-push-action v5 enables provenance
+          # by default, which pushes OCI attestation blobs that GHCR can reject
+          # with 403 on the initial HEAD blob-existence check.
+          provenance: false
+          sbom: false
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
