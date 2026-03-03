@@ -360,7 +360,7 @@ export function maskPhone(phone: string): string {
   return maskSensitiveData(digits, { showFirst: 0, showLast: 4 });
 }
 
-export default {
+const authUtils = {
   validatePassword,
   validateEmail,
   generateSecureToken,
@@ -374,3 +374,5 @@ export default {
   maskEmail,
   maskPhone,
 };
+
+export default authUtils;

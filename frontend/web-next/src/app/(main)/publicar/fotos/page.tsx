@@ -76,7 +76,7 @@ export default function PublicarFotosPage() {
       setPhotos(
         vehicle.images.map((img: { url?: string; category?: string; isPrimary?: boolean }, index: number) => ({
           id: `existing-${index}`,
-          url: img.url,
+          url: img.url ?? '',
           category: img.category || 'general',
           isPrimary: img.isPrimary || index === 0,
         }))

@@ -1025,7 +1025,6 @@ function LeadStatusBadge({ status }: { status: string }) {
 }
 
 /** QuickAction: large tile (BuyerDashboard) */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _QuickAction({
   href,
   icon: Icon,
@@ -1071,9 +1070,8 @@ function VehicleListItem({ vehicle }: { vehicle: UserVehicleDto }) {
   };
 
   const config = statusConfig[vehicle.status] || statusConfig.pending;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const daysUntilExpiry = Math.ceil(
-    (new Date(vehicle.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    (new Date(vehicle.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24) // eslint-disable-line react-hooks/purity
   );
   const isExpiringSoon = daysUntilExpiry <= 7 && daysUntilExpiry > 0 && vehicle.status === 'active';
 
@@ -1081,7 +1079,6 @@ function VehicleListItem({ vehicle }: { vehicle: UserVehicleDto }) {
     <div className="border-border hover:border-border flex gap-4 rounded-lg border p-4 transition-colors">
       {/* Image */}
       <div className="bg-muted relative h-18 w-24 flex-shrink-0 overflow-hidden rounded-lg">
-        {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
         <Image
           src={vehicle.imageUrl || '/images/vehicle-placeholder.jpg'}
           alt={vehicle.title}

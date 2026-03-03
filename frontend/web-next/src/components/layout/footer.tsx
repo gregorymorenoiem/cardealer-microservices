@@ -46,13 +46,6 @@ const footerLinks = {
   },
 };
 
-const socialLinks = [
-  { href: 'https://facebook.com/okla', icon: Facebook, label: 'Facebook' },
-  { href: 'https://instagram.com/okla', icon: Instagram, label: 'Instagram' },
-  { href: 'https://twitter.com/okla', icon: Twitter, label: 'Twitter' },
-  { href: 'https://youtube.com/okla', icon: Youtube, label: 'YouTube' },
-];
-
 export function Footer() {
   const config = useSiteConfig();
   const currentYear = new Date().getFullYear();

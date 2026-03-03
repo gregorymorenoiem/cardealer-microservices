@@ -91,7 +91,7 @@ apiClient.interceptors.response.use(
           { withCredentials: true }
         );
 
-        const { accessToken } = response.data?.data || response.data || {};
+        const { accessToken: _accessToken } = response.data?.data || response.data || {};
 
         // Legacy cleanup: if there was a localStorage token, remove it
         if (typeof window !== 'undefined') {

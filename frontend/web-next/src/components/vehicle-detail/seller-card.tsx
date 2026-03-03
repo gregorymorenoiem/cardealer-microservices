@@ -57,7 +57,7 @@ interface VehicleWithSeller extends Vehicle {
   };
 }
 
-export function SellerCard({ vehicle, className, onChatClick }: SellerCardProps) {
+export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: SellerCardProps) {
   const [showPhone, setShowPhone] = React.useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const { isAuthenticated } = useAuth();

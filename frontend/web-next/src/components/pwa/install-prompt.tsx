@@ -43,6 +43,7 @@ export function InstallPrompt({
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     if (isStandalone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInstalled(true);
       return;
     }
@@ -152,11 +153,11 @@ export function InstallPrompt({
   // iOS-specific prompt (since iOS doesn't support beforeinstallprompt)
   if (isIOS) {
     return (
-      <div className="animate-slide-up fixed right-0 bottom-0 left-0 z-50 border-t border-border bg-white p-4 shadow-lg">
+      <div className="animate-slide-up border-border fixed right-0 bottom-0 left-0 z-50 border-t bg-white p-4 shadow-lg">
         <div className="mx-auto max-w-lg">
           <button
             onClick={handleDismiss}
-            className="absolute top-2 right-2 p-2 text-muted-foreground hover:text-muted-foreground"
+            className="text-muted-foreground hover:text-muted-foreground absolute top-2 right-2 p-2"
             aria-label="Cerrar"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,11 +175,11 @@ export function InstallPrompt({
               <span className="text-xl font-bold text-white">O</span>
             </div>
             <div className="flex-1">
-              <h3 className="mb-1 font-semibold text-foreground">Instala OKLA</h3>
-              <p className="mb-3 text-sm text-muted-foreground">
+              <h3 className="text-foreground mb-1 font-semibold">Instala OKLA</h3>
+              <p className="text-muted-foreground mb-3 text-sm">
                 Instala la app para acceso rápido y notificaciones de tus búsquedas.
               </p>
-              <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+              <div className="bg-muted/50 text-muted-foreground flex items-center gap-2 rounded-lg p-3 text-sm">
                 <span>Toca</span>
                 <svg className="h-6 w-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
@@ -195,11 +196,11 @@ export function InstallPrompt({
 
   // Standard install prompt for Android/Desktop
   return (
-    <div className="animate-slide-up fixed right-0 bottom-0 left-0 z-50 border-t border-border bg-white p-4 shadow-lg">
+    <div className="animate-slide-up border-border fixed right-0 bottom-0 left-0 z-50 border-t bg-white p-4 shadow-lg">
       <div className="mx-auto max-w-lg">
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-2 text-muted-foreground transition-colors hover:text-muted-foreground"
+          className="text-muted-foreground hover:text-muted-foreground absolute top-2 right-2 p-2 transition-colors"
           aria-label="Cerrar"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,8 +222,8 @@ export function InstallPrompt({
 
           {/* Text */}
           <div className="min-w-0 flex-1">
-            <h3 className="mb-0.5 font-semibold text-foreground">¿Instalar OKLA?</h3>
-            <p className="truncate text-sm text-muted-foreground">
+            <h3 className="text-foreground mb-0.5 font-semibold">¿Instalar OKLA?</h3>
+            <p className="text-muted-foreground truncate text-sm">
               Acceso rápido desde tu pantalla de inicio
             </p>
           </div>
@@ -239,7 +240,7 @@ export function InstallPrompt({
         </div>
 
         {/* Features */}
-        <div className="mt-3 flex items-center justify-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="border-border text-muted-foreground mt-3 flex items-center justify-center gap-4 border-t pt-3 text-xs">
           <span className="flex items-center gap-1">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

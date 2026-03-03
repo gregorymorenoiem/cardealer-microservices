@@ -617,6 +617,7 @@ export function SmartPublishWizard({
       }
       toast.error(err.message || 'Error al publicar el vehículo');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, createVehicle, publishVehicle, draftKey, router]);
 
   const handleSaveDraft = useCallback(() => {

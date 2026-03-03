@@ -81,6 +81,7 @@ export function RoutePrefetcher({
     // Remove current page from prefetch list
     routes.delete(pathname);
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRoutesToPrefetch(Array.from(routes));
   }, [pathname, isAuthenticated, prefetchAuthRoutes, additionalRoutes]);
 

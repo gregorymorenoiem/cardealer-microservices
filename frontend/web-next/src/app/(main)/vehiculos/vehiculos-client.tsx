@@ -78,7 +78,7 @@ import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
 import { useAuth } from '@/hooks/use-auth';
 import { useSponsoredSearch } from '@/hooks/use-ads';
-import { SponsoredVehicleCard, SponsoredBadge, SidebarAdUnit } from '@/components/advertising/native-ads';
+import { SponsoredVehicleCard, SidebarAdUnit } from '@/components/advertising/native-ads';
 import type { VehicleCardData } from '@/types';
 import type { SponsoredVehicle } from '@/types/ads';
 
@@ -265,7 +265,7 @@ export default function VehiculosClient() {
   const { topSponsored, inlineSponsored } = useSponsoredSearch(filters.query);
 
   // Derived
-  const vehicles = results?.vehicles ?? [];
+  const vehicles = React.useMemo(() => results?.vehicles ?? [], [results]);
   const totalResults = results?.total ?? 0;
   const currentPage = filters.page ?? 1;
   const totalPages = results?.totalPages ?? 1;

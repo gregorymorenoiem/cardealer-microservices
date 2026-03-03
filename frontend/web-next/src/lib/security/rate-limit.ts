@@ -252,9 +252,11 @@ export const rateLimitPresets = {
   upload: { maxRequests: 5, windowMs: 600_000, cooldownMs: 30_000 },
 } as const;
 
-export default {
+const rateLimitUtils = {
   useRateLimit,
   createDebouncedRateLimiter,
   createThrottledRateLimiter,
   rateLimitPresets,
 };
+
+export default rateLimitUtils;

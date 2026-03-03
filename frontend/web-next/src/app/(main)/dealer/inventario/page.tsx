@@ -163,7 +163,7 @@ export default function InventoryPage() {
       await deleteVehicle.mutateAsync(vehicleId);
       toast.success('Vehículo eliminado correctamente');
       refetch();
-    } catch (_error) {
+    } catch {
       toast.error('No se pudo eliminar el vehículo');
     }
   };
@@ -182,7 +182,7 @@ export default function InventoryPage() {
       });
       toast.success(`Vehículo ${newStatus === 'active' ? 'activado' : 'pausado'}`);
       refetch();
-    } catch (_error) {
+    } catch {
       toast.error('No se pudo actualizar el estado del vehículo');
     }
   };

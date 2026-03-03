@@ -47,7 +47,6 @@ import {
   useAdminReviewStats,
   useApproveReview,
   useRejectReview,
-  useDeleteReviewAdmin,
 } from '@/hooks/use-admin-extended';
 import type { AdminReview } from '@/services/admin-extended';
 

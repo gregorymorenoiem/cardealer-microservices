@@ -352,7 +352,7 @@ function Pagination({
         Anterior
       </Button>
 
-      {pages.map((pageItem, idx) => {
+      {pages.map((pageItem, _idx) => {
         if (typeof pageItem === 'string') {
           return (
             <span key={pageItem} className="px-2 text-muted-foreground">

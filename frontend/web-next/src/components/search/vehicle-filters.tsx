@@ -165,8 +165,8 @@ function PriceInput({
 export function VehicleFilters({
   filters,
   onChange,
-  onClear,
-  activeCount,
+  onClear: _onClear,
+  activeCount: _activeCount,
   makeCatalog = [],
   modelCatalog = [],
   facets,

@@ -168,11 +168,10 @@ function DealerPricingContent() {
   const createPriceAnalysis = useCreatePriceAnalysis();
 
   // Derived data
-  const vehicles = vehiclesData?.items || [];
+  const vehicles = React.useMemo(() => vehiclesData?.items || [], [vehiclesData]);
   const isLoading = dealerLoading || vehiclesLoading;
 
   // Filter vehicles by search
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const filteredVehicles = React.useMemo(() => {
     if (!searchQuery) return vehicles;
     const query = searchQuery.toLowerCase();
@@ -185,7 +184,6 @@ function DealerPricingContent() {
   }, [vehicles, searchQuery]);
 
   // Calculate stats
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const stats = React.useMemo(() => {
     if (vehicles.length === 0) {
       return { avgPrice: 0, totalVehicles: 0, needsAdjustment: 0, potentialGain: 0 };
@@ -193,9 +191,8 @@ function DealerPricingContent() {
 
     const avgPrice = vehicles.reduce((sum, v) => sum + v.price, 0) / vehicles.length;
     const needsAdjustment = vehicles.filter(v => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       const daysListed = v.createdAt
-        ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+        ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / (1000 * 60 * 60 * 24)) // eslint-disable-line react-hooks/purity
         : 0;
       return daysListed > 30;
     }).length;
@@ -217,7 +214,7 @@ function DealerPricingContent() {
     }
 
     const daysListed = vehicle.createdAt
-      ? Math.ceil((Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+      ? Math.ceil((Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24)) // eslint-disable-line react-hooks/purity
       : 0;
 
     setSelectedVehicleId(vehicleId);
@@ -405,7 +402,7 @@ function DealerPricingContent() {
             const recommendation = getRecommendationType(vehicle.price, suggestedPrice);
             const daysListed = vehicle.createdAt
               ? Math.ceil(
-                  (Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+                  (Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24) // eslint-disable-line react-hooks/purity
                 )
               : 0;
             const isAnalyzing = createPriceAnalysis.isPending && selectedVehicleId === vehicle.id;

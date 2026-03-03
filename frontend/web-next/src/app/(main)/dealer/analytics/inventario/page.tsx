@@ -34,11 +34,9 @@ function InventoryAnalyticsContent() {
   const { data: dealer } = useCurrentDealer();
   const { data: vehiclesData, isLoading } = useVehiclesByDealer(dealer?.id || '');
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const vehicles = vehiclesData?.items || [];
+  const vehicles = React.useMemo(() => vehiclesData?.items || [], [vehiclesData]);
 
   // Compute inventory stats from real data
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const inventoryStats = React.useMemo(() => {
     const total = vehicles.length;
     const active = vehicles.filter(v => v.status === 'active').length;
@@ -51,8 +49,10 @@ function InventoryAnalyticsContent() {
         ? Math.round(
             vehicles.reduce((sum, v) => {
               const days = v.createdAt
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-                ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+                ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
+                : 0;
+              return sum + days;
+            }, 0) / total
           )
         : 0;
 
@@ -60,7 +60,6 @@ function InventoryAnalyticsContent() {
   }, [vehicles]);
 
   // Top performers: sorted by viewCount desc
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const topPerformers = React.useMemo(() => {
     return [...vehicles]
       .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
@@ -71,20 +70,19 @@ function InventoryAnalyticsContent() {
         views: v.viewCount || 0,
         leads: 0,
         daysActive: v.createdAt
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
           : 0,
       }));
   }, [vehicles]);
 
   // Underperformers: 30+ days with < 30 views
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const underperformers = React.useMemo(() => {
     return vehicles
       .filter(v => {
         const days = v.createdAt
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
+          : 0;
+        return days >= 30 && (v.viewCount || 0) < 30;
       })
       .sort((a, b) => (a.viewCount || 0) - (b.viewCount || 0))
       .slice(0, 5)
@@ -94,14 +92,12 @@ function InventoryAnalyticsContent() {
         views: v.viewCount || 0,
         leads: 0,
         daysActive: v.createdAt
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
           : 0,
       }));
   }, [vehicles]);
 
   // Category distribution by make (bodyType not available in VehicleCardData)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const categoryDistribution = React.useMemo(() => {
     const counts: Record<string, number> = {};
     vehicles.forEach(v => {

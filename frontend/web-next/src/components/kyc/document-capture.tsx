@@ -197,7 +197,7 @@ export function DocumentCapture({
   };
 
   // Check if camera permission is available (Permissions API)
-  const checkCameraPermission = React.useCallback(async (): Promise<
+  const _checkCameraPermission = React.useCallback(async (): Promise<
     'granted' | 'denied' | 'prompt' | 'unknown'
   > => {
     try {
@@ -292,7 +292,7 @@ export function DocumentCapture({
 
       onError?.('Camera access denied');
     }
-  }, [onError, checkCameraPermission]);
+  }, [onError]);
 
   // Handle camera errors from Webcam component
   const handleCameraError = React.useCallback(

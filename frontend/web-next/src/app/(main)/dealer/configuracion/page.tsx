@@ -112,9 +112,8 @@ export default function DealerSettingsPage() {
   // Sync settings when loaded
   useEffect(() => {
     if (settings) {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotifications(settings.notifications);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       setSessionTimeout(settings.security.sessionTimeoutMinutes);
     }
   }, [settings]);
@@ -124,6 +123,7 @@ export default function DealerSettingsPage() {
     if (settings) {
       const notifChanged = JSON.stringify(notifications) !== JSON.stringify(settings.notifications);
       const securityChanged = sessionTimeout !== settings.security.sessionTimeoutMinutes;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasChanges(notifChanged || securityChanged);
     }
   }, [notifications, sessionTimeout, settings]);

@@ -150,8 +150,8 @@ function VehicleCard({
               {/* Expiration warning */}
               {vehicle.status === 'active' && vehicle.expiresAt && (
                 <div className="mt-2">
-                  {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
-                  {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
+                  {/* eslint-disable-next-line react-hooks/purity */}
+              {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
                     <div className="flex items-center gap-1 text-sm text-yellow-700">
                       <AlertCircle className="h-4 w-4" />
                       Expira el {new Date(vehicle.expiresAt).toLocaleDateString('es-DO')}
@@ -284,10 +284,8 @@ export default function MyVehiclesPage() {
     queryFn: () => userService.getUserVehicles(),
     staleTime: 60_000,
   });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const vehicles = data?.vehicles ?? [];
+  const vehicles = React.useMemo(() => data?.vehicles ?? [], [data]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const filteredVehicles = React.useMemo(() => {
     return vehicles.filter(vehicle => {
       // Status filter
@@ -305,7 +303,6 @@ export default function MyVehiclesPage() {
     });
   }, [vehicles, selectedStatus, searchQuery]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const statusCounts = React.useMemo(() => {
     const counts: Record<string, number> = { all: vehicles.length };
     vehicles.forEach(v => {

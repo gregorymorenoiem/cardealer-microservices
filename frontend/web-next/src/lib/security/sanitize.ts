@@ -299,7 +299,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   return result as T;
 }
 
-export default {
+const sanitizeUtils = {
   escapeHtml,
   stripHtml,
   sanitizeUrl,
@@ -317,3 +317,5 @@ export default {
   sanitizeText,
   sanitizeObject,
 };
+
+export default sanitizeUtils;

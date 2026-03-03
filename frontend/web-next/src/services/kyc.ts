@@ -545,7 +545,7 @@ export async function deleteKYCDocument(documentId: string): Promise<void> {
  */
 export async function submitKYCForReview(profileId: string): Promise<KYCProfile> {
   // ── Server Action: submission processed server-side ──
-  const accessToken = authTokens.getAccessToken();
+  const _accessToken = authTokens.getAccessToken();
   const result = await serverSubmitKYCForReview(profileId);
 
   if (!result.success || !result.data) {
@@ -564,7 +564,7 @@ export async function processIdentityVerification(request: {
   livenessData?: LivenessData;
 }): Promise<{ success: boolean; matchScore: number; passed: boolean }> {
   // ── Server Action: biometric verification server-side, scores invisible to browser ──
-  const accessToken = authTokens.getAccessToken();
+  const _accessToken = authTokens.getAccessToken();
 
   const formData = new FormData();
   formData.append('profileId', request.profileId);

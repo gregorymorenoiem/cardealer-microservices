@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
 
     try {
       await authService.forgotPassword(email);
-    } catch (_err) {
+    } catch {
     } finally {
       setIsLoading(false);
     }

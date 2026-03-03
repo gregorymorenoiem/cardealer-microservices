@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useVoteReview } from '@/hooks/use-reviews';
+import Image from 'next/image';
 import type { Review } from '@/services/reviews';
 
 interface ReviewCardProps {
@@ -52,9 +53,11 @@ export function ReviewCard({ review, className }: ReviewCardProps) {
         {/* Avatar */}
         <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold">
           {review.reviewerAvatarUrl ? (
-            <img
+            <Image
               src={review.reviewerAvatarUrl}
               alt={review.reviewerName}
+              width={40}
+              height={40}
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (

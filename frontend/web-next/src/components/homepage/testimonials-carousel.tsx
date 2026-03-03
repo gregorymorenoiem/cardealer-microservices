@@ -157,7 +157,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         <StarRating rating={testimonial.rating} />
 
         {/* Testimonial Text */}
-        <p className="text-card-foreground mt-4 text-lg leading-relaxed">"{testimonial.content}"</p>
+        <p className="text-card-foreground mt-4 text-lg leading-relaxed">&ldquo;{testimonial.content}&rdquo;</p>
 
         {/* Vehicle Purchased */}
         {testimonial.vehiclePurchased && (

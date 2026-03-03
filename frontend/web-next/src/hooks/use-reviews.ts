@@ -198,7 +198,7 @@ export function useRespondToReview() {
     mutationFn: ({
       reviewId,
       content,
-      sellerId,
+      sellerId: _sellerId,
     }: {
       reviewId: string;
       content: string;

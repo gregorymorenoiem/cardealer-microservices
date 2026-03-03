@@ -183,6 +183,10 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
     );
   }, [sedanes, suvs, camionetas, deportivos, destacados, lujo]);
 
+  // Stable impression token for the dealer banner
+  // eslint-disable-next-line react-hooks/purity
+  const bannerImpressionToken = useMemo(() => `banner-dealer-cta-${Date.now()}`, []);
+
   return (
     <>
       {/* Hero Section - Compact with vehicles visible immediately */}
@@ -282,7 +286,7 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
                 ctaText="Conocer más"
                 ctaUrl="/dealers"
                 backgroundGradient="from-emerald-600 to-teal-700"
-                impressionToken={`banner-dealer-cta-${Date.now()}`}
+                impressionToken={bannerImpressionToken}
               />
             </div>
           )}

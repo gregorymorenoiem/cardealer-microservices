@@ -231,7 +231,7 @@ export default function EditVehiclePage() {
   // Initialize form data when vehicle loads
   useEffect(() => {
     if (vehicle) {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         make: vehicle.make || '',
         model: vehicle.model || '',

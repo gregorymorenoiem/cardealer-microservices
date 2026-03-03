@@ -81,7 +81,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   const {
     dealerId,
     autoStart = false,
-    maxRetries = 2,
+    maxRetries: _maxRetries = 2,
     onLeadGenerated,
     onTransfer,
     onLimitReached,
@@ -302,7 +302,6 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
       sessionToken,
       isLoading,
       isLimitReached,
-      maxRetries,
       onLeadGenerated,
       onLimitReached,
       saveMessages,

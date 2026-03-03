@@ -25,8 +25,6 @@ import {
 import {
   useSupportTickets,
   useTicketStats,
-  useReplySupportTicket,
-  useUpdateTicketStatus,
 } from '@/hooks/use-admin-extended';
 import type { SupportTicket } from '@/services/admin-extended';
 
