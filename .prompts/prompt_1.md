@@ -1,4 +1,4 @@
-Bien hecho. Ahora implementame los planes de suscripcion para vendedor individual y dealer.
+Bien hecho. Ahora implementame las UI con los planes de suscripcion para vendedor individual y dealer en las distintas vistas. Implementame en todos los usuarios seller, y dealer con las funcionales de cada plan de suscripcion.
 
 Luego haz las pruebas end to end en produccion despues que se aplique el ci/cd de todas las funcionales que has hecho para probar que funcionan, pero antes de esto tienes que monitoriar el procesos completo de ci/cd, hasta que todos los cambios enten en produccion y luegos haces las pruebas e2e donde pureba todas las funcionalidades que has hecho.
 

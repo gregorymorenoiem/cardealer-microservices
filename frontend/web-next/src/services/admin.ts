@@ -343,7 +343,7 @@ export async function getDealerStats(): Promise<{
   pending: number;
   suspended: number;
   totalMrr: number;
-  byPlan: { starter: number; pro: number; enterprise: number };
+  byPlan: { libre: number; visible: number; pro: number; elite: number };
 }> {
   const response = await apiClient.get('/api/admin/dealers/stats');
   return response.data;
