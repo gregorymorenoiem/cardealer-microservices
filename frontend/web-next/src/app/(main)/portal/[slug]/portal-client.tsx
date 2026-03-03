@@ -115,35 +115,20 @@ function DealerChatbot({ dealerName, dealerId }: { dealerName: string; dealerId:
     setIsTyping(true);
 
     try {
-      const res = await fetch('/api/chatbot/message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userMsg,
-          dealerId,
-          context: 'dealer_portal',
-        }),
+      // Use apiClient for proper auth/CSRF handling
+      const { default: { post } } = await import('@/lib/api-client').then(m => ({ default: m.apiClient }));
+      const res = await post('/api/chatbot/message', {
+        message: userMsg,
+        dealerId,
+        context: 'dealer_portal',
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'bot',
-            text:
-              data.response || data.data?.response || 'Lo siento, no pude procesar tu pregunta.',
-          },
-        ]);
-      } else {
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'bot',
-            text: 'Lo siento, hubo un error. Intenta de nuevo o contáctanos directamente.',
-          },
-        ]);
-      }
+      const data = res.data;
+      const responseText = data?.data?.response || data?.response || 'Lo siento, no pude procesar tu pregunta.';
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', text: responseText },
+      ]);
     } catch {
       setMessages(prev => [
         ...prev,

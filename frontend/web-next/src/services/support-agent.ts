@@ -72,28 +72,30 @@ export interface SupportChatMessage {
 export async function sendSupportMessage(
   request: SupportMessageRequest
 ): Promise<SupportMessageResponse> {
-  const response = await apiClient.post<SupportMessageResponse>('/api/support/message', request, {
+  const response = await apiClient.post('/api/support/message', request, {
     timeout: 15_000,
   });
-  return response.data;
+  // Backend wraps in ApiResponse<T> → { success, data: { sessionId, response, ... } }
+  const body = response.data;
+  return body?.data ?? body;
 }
 
 /**
  * Get session history
  */
 export async function getSupportSessionHistory(sessionId: string): Promise<SupportSessionHistory> {
-  const response = await apiClient.get<SupportSessionHistory>(
-    `/api/support/session/${encodeURIComponent(sessionId)}`
-  );
-  return response.data;
+  const response = await apiClient.get(`/api/support/session/${encodeURIComponent(sessionId)}`);
+  const body = response.data;
+  return body?.data ?? body;
 }
 
 /**
  * Check SupportAgent health
  */
 export async function getSupportAgentStatus(): Promise<SupportAgentStatus> {
-  const response = await apiClient.get<SupportAgentStatus>('/api/support/status');
-  return response.data;
+  const response = await apiClient.get('/api/support/status');
+  const body = response.data;
+  return body?.data ?? body;
 }
 
 // =============================================================================

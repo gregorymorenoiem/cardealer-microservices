@@ -34,6 +34,10 @@ OKLA Dealer Account
 Username: nmateo@okla.com.do
 Pass: Dealer2026!@#
 
+Ahora tambien corrigeme esto para que funcione este microservicios, "The AdvertisingService Docker image can't be pushed to GHCR due to a 403 Forbidden — this is a first-time package creation permission issue. The image was built successfully but the push to the container registry was denied. This typically requires going to the GitHub repository settings → Actions → General → Workflow permissions and ensuring "Read and write permissions" is enabled, or the package needs to be created first.
+
+Let me update the todo and try to scale the AdvertisingService deployment (the image might already exist from a previous version):"
+
 Despues que tengas todos listo haz commit and push, y monitorea el ci/de y prueba que funcione correctamente.
 
 Y no me utilices este comando, "grep "YA TERMINASTE" /Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/.prompts/prompt_1.md && echo "FOUND" || echo "NOT_FOUND_iter9"", siempre tiene que analizar el "".prompts/prompt-1.md"" para ver si hay algo nuevo.
