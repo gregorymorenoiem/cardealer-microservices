@@ -238,6 +238,46 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             - "corollla" → "Corolla"
             - "mecanico" → transmisión manual
             - "full" → todas las opciones/equipado
+            - "CRV" → "CR-V"
+            - "RAV" → "RAV4"
+            - "rav" → "RAV4"
+            - "crv" → "CR-V"
+            - "hrv" → "HR-V"
+            - "brv" → "BR-V"
+            - "cx5" → "CX-5"
+            - "cx30" → "CX-30"
+            - "cx9" → "CX-9"
+            - "rav4" → "RAV4"
+            - "4runner" → "4Runner"
+            - "land cruiser" → "Land Cruiser"
+            - "grand cherokee" → "Grand Cherokee"
+
+            INTERPRETACIÓN DE PRECIOS — REGLAS OBLIGATORIAS:
+            Cuando el usuario menciona precios, SIEMPRE extrae precio_min y/o precio_max.
+            Conversiones numéricas dominicanas:
+            - "millón" / "millones" / "millon" / "palo(s)" = ×1,000,000
+            - "mil" / "K" = ×1,000
+            - "medio millón" = 500,000
+            - Ej: "2 millones" = 2,000,000; "500 mil" = 500,000; "1.5 millones" = 1,500,000
+            Expresiones de rango:
+            - "menos de X" / "que no pase de X" / "por debajo de X" / "hasta X" / "máximo X" → precio_max = X
+            - "más de X" / "por encima de X" / "mínimo X" / "desde X" → precio_min = X
+            - "entre X y Y" / "de X a Y" → precio_min = X, precio_max = Y
+            - "alrededor de X" / "cerca de X" / "como X" → precio_min = X×0.8, precio_max = X×1.2
+            - "barato" / "económico" / "buen precio" (sin número) → precio_max = 800,000
+            Moneda por defecto: DOP. Solo usar USD si el usuario lo especifica explícitamente ("dólares", "USD", "US$").
+
+            EJEMPLOS DE ENTRADA → SALIDA:
+            1. "Quiero un CRV que cueste menos de 2 millones"
+               → marca: "Honda", modelo: "CR-V", precio_max: 2000000, moneda: "DOP"
+            2. "Toyota Corolla 2020 automático menos de 800 mil"
+               → marca: "Toyota", modelo: "Corolla", anio_desde: 2020, precio_max: 800000, transmision: "automatica", moneda: "DOP"
+            3. "SUV familiar entre 1 y 3 millones"
+               → tipo_vehiculo: "suv", precio_min: 1000000, precio_max: 3000000, moneda: "DOP"
+            4. "Yipeta barata usada"
+               → tipo_vehiculo: "suv", condicion: "usado", precio_max: 800000, moneda: "DOP"
+            5. "Carro nuevo menos de 25 mil dólares"
+               → condicion: "nuevo", precio_max: 25000, moneda: "USD"
 
             MARCAS POR SEGMENTO (para afinidad de patrocinados):
             - Económicos: Toyota, Honda, Hyundai, Kia, Nissan, Mitsubishi, Suzuki

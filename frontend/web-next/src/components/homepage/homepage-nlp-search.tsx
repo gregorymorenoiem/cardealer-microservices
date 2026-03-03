@@ -18,7 +18,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Sparkles, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { aiSearch, aiFiltersToSearchParams } from '@/services/search-agent';
+import { aiSearch, aiFiltersToUrlParams } from '@/services/search-agent';
 
 // ============================================================
 // SUGGESTION CHIPS — Common Dominican searches
@@ -62,8 +62,8 @@ export function HomepageNlpSearch({ className }: HomepageNlpSearchProps) {
         const result = await aiSearch({ query: q });
 
         if (result.aiFilters?.filtros_exactos) {
-          // Convert AI filters to URL search params
-          const params = aiFiltersToSearchParams(result.aiFilters.filtros_exactos);
+          // Convert AI filters to URL-compatible search params (snake_case)
+          const params = aiFiltersToUrlParams(result.aiFilters.filtros_exactos);
 
           // Build query string
           const searchParams = new URLSearchParams();

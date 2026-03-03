@@ -147,8 +147,9 @@ export async function updateSearchAgentConfig(
 }
 
 /**
- * Convert AI filters to the VehicleSearchParams format used by useVehicleSearch hook.
- * This bridges the AI response to the existing filter-based search.
+ * Convert AI filters to the VehicleSearchFilters format used by useVehicleSearch hook.
+ * Keys match VehicleSearchFilters interface (camelCase).
+ * For URL params, use aiFiltersToUrlParams() which outputs snake_case keys.
  */
 export function aiFiltersToSearchParams(
   filters: SearchFilters
@@ -156,17 +157,47 @@ export function aiFiltersToSearchParams(
   return {
     make: filters.marca ?? undefined,
     model: filters.modelo ?? undefined,
-    minYear: filters.anio_desde ?? undefined,
-    maxYear: filters.anio_hasta ?? undefined,
-    minPrice: filters.precio_min ?? undefined,
-    maxPrice: filters.precio_max ?? undefined,
+    yearMin: filters.anio_desde ?? undefined,
+    yearMax: filters.anio_hasta ?? undefined,
+    priceMin: filters.precio_min ?? undefined,
+    priceMax: filters.precio_max ?? undefined,
     currency: filters.moneda ?? undefined,
     bodyType: filters.tipo_vehiculo ?? undefined,
     transmission: filters.transmision ?? undefined,
     fuelType: filters.combustible ?? undefined,
     condition: filters.condicion ?? undefined,
-    maxMileage: filters.kilometraje_max ?? undefined,
+    mileageMax: filters.kilometraje_max ?? undefined,
   };
+}
+
+/**
+ * Mapping from VehicleSearchFilters camelCase keys to URL snake_case param names.
+ * Used by the homepage redirect path where filters are serialized into the URL.
+ */
+const CAMEL_TO_URL_PARAM: Record<string, string> = {
+  yearMin: 'year_min',
+  yearMax: 'year_max',
+  priceMin: 'price_min',
+  priceMax: 'price_max',
+  mileageMax: 'mileage_max',
+  bodyType: 'body_type',
+  fuelType: 'fuel_type',
+};
+
+/**
+ * Convert AI filters directly to URL search param entries (snake_case keys).
+ * Used by the homepage NLP search to build the redirect URL.
+ */
+export function aiFiltersToUrlParams(
+  filters: SearchFilters
+): Record<string, string | number | undefined> {
+  const camelParams = aiFiltersToSearchParams(filters);
+  const urlParams: Record<string, string | number | undefined> = {};
+  for (const [key, value] of Object.entries(camelParams)) {
+    const urlKey = CAMEL_TO_URL_PARAM[key] || key;
+    urlParams[urlKey] = value;
+  }
+  return urlParams;
 }
 
 // Default export as a service object
@@ -176,6 +207,7 @@ const searchAgentService = {
   getSearchAgentConfig,
   updateSearchAgentConfig,
   aiFiltersToSearchParams,
+  aiFiltersToUrlParams,
 };
 
 export default searchAgentService;
