@@ -23,6 +23,7 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IChatModeStrategyFactory> _strategyFactory;
     private readonly Mock<IChatModeStrategy> _mockStrategy;
     private readonly Mock<ILlmService> _llmService;
+    private readonly Mock<ILlmResponseCacheService> _cacheService;
     private readonly Mock<ILogger<SendMessageCommandHandler>> _logger;
     private readonly SendMessageCommandHandler _handler;
 
@@ -35,6 +36,7 @@ public class SendMessageCommandHandlerTests
         _strategyFactory = new Mock<IChatModeStrategyFactory>();
         _mockStrategy = new Mock<IChatModeStrategy>();
         _llmService = new Mock<ILlmService>();
+        _cacheService = new Mock<ILlmResponseCacheService>();
         _logger = new Mock<ILogger<SendMessageCommandHandler>>();
 
         // Default strategy setup: return a grounded response
@@ -55,6 +57,7 @@ public class SendMessageCommandHandlerTests
             _quickResponseRepo.Object,
             _strategyFactory.Object,
             _llmService.Object,
+            _cacheService.Object,
             _logger.Object);
     }
 
