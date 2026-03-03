@@ -44,9 +44,14 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
     const description = `Compra ${vehicle.year} ${vehicle.make} ${vehicle.model} en ${vehicle.location.city}. ${formatCurrency(vehicle.price)}. ${vehicle.mileage?.toLocaleString() || 0} km. ${vehicle.condition === 'new' ? 'Nuevo' : 'Usado'}.`;
     const imageUrl = vehicle.images?.[0]?.url;
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do';
+
     return {
       title,
       description,
+      alternates: {
+        canonical: `${siteUrl}/vehiculos/${slug}`,
+      },
       openGraph: {
         title,
         description,

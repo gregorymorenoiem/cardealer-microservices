@@ -116,60 +116,60 @@ export function initRetargetingPixels(): void {
   // --- TikTok Pixel (deferred) ---
   if (TIKTOK_PIXEL_ID) {
     deferInit(() => {
-    /* eslint-disable */
-    (function (w: any, d: any, t: any) {
-      w.TiktokAnalyticsObject = t;
-      const ttq = (w[t] = w[t] || []) as any;
-      ttq.methods = [
-        'page',
-        'track',
-        'identify',
-        'instances',
-        'debug',
-        'on',
-        'off',
-        'once',
-        'ready',
-        'alias',
-        'group',
-        'enableCookie',
-        'disableCookie',
-      ];
-      ttq.setAndDefer = function (t: any, e: any) {
-        t[e] = function () {
-          t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+      /* eslint-disable */
+      (function (w: any, d: any, t: any) {
+        w.TiktokAnalyticsObject = t;
+        const ttq = (w[t] = w[t] || []) as any;
+        ttq.methods = [
+          'page',
+          'track',
+          'identify',
+          'instances',
+          'debug',
+          'on',
+          'off',
+          'once',
+          'ready',
+          'alias',
+          'group',
+          'enableCookie',
+          'disableCookie',
+        ];
+        ttq.setAndDefer = function (t: any, e: any) {
+          t[e] = function () {
+            t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+          };
         };
-      };
-      for (let i = 0; i < ttq.methods.length; i++) {
-        ttq.setAndDefer(ttq, ttq.methods[i]);
-      }
-      ttq.instance = function (t: any) {
-        const e = ttq._i[t] || [];
-        for (let n = 0; n < ttq.methods.length; n++) {
-          ttq.setAndDefer(e, ttq.methods[n]);
+        for (let i = 0; i < ttq.methods.length; i++) {
+          ttq.setAndDefer(ttq, ttq.methods[i]);
         }
-        return e;
-      };
-      ttq.load = function (e: any, n?: any) {
-        const i = 'https://analytics.tiktok.com/i18n/pixel/events.js';
-        ttq._i = ttq._i || {};
-        ttq._i[e] = [];
-        ttq._i[e]._u = i;
-        ttq._t = ttq._t || {};
-        ttq._t[e] = +new Date();
-        ttq._o = ttq._o || {};
-        ttq._o[e] = n || {};
-        const o = d.createElement('script') as HTMLScriptElement;
-        o.type = 'text/javascript';
-        o.async = true;
-        o.src = i + '?sdkid=' + e + '&lib=' + t;
-        const a = d.getElementsByTagName('script')[0];
-        a?.parentNode?.insertBefore(o, a);
-      };
-      ttq.load(TIKTOK_PIXEL_ID);
-      ttq.page();
-    })(window, document, 'ttq');
-    /* eslint-enable */
+        ttq.instance = function (t: any) {
+          const e = ttq._i[t] || [];
+          for (let n = 0; n < ttq.methods.length; n++) {
+            ttq.setAndDefer(e, ttq.methods[n]);
+          }
+          return e;
+        };
+        ttq.load = function (e: any, n?: any) {
+          const i = 'https://analytics.tiktok.com/i18n/pixel/events.js';
+          ttq._i = ttq._i || {};
+          ttq._i[e] = [];
+          ttq._i[e]._u = i;
+          ttq._t = ttq._t || {};
+          ttq._t[e] = +new Date();
+          ttq._o = ttq._o || {};
+          ttq._o[e] = n || {};
+          const o = d.createElement('script') as HTMLScriptElement;
+          o.type = 'text/javascript';
+          o.async = true;
+          o.src = i + '?sdkid=' + e + '&lib=' + t;
+          const a = d.getElementsByTagName('script')[0];
+          a?.parentNode?.insertBefore(o, a);
+        };
+        ttq.load(TIKTOK_PIXEL_ID);
+        ttq.page();
+      })(window, document, 'ttq');
+      /* eslint-enable */
     });
   }
 }

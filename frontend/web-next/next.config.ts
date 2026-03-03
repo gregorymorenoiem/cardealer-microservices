@@ -98,10 +98,7 @@ const nextConfig: NextConfig = {
 
   // Compiler options — keep console.error and console.warn in production for debugging
   compiler: {
-    removeConsole:
-      process.env.NODE_ENV === 'production'
-        ? { exclude: ['error', 'warn'] }
-        : false,
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
 
   // Headers for security and caching

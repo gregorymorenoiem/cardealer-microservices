@@ -24,6 +24,7 @@ export default function robots(): MetadataRoute.Robots {
           '/settings/',
           '/mensajes/',
           '/favoritos/',
+          '/cuenta/',
 
           // Auth pages
           '/login',
