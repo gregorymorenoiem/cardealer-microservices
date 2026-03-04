@@ -73,6 +73,7 @@ import {
 import { cn } from '@/lib/utils';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
+import { toast } from 'sonner';
 import { aiSearch, aiFiltersToSearchParams } from '@/services/search-agent';
 import { useVehicleSearch } from '@/hooks/use-vehicle-search';
 import { useFavorites } from '@/hooks/use-favorites';
@@ -533,14 +534,21 @@ export default function VehiculosClient() {
         const ai = result.aiFilters;
 
         if (!result.isAiSearchEnabled) {
-          // AI disabled — fall back to text search
-          setFilters({ query: query.trim(), page: 1 });
+          // AI disabled — clear filters and show all vehicles (no raw NL chip)
+          clearFilters();
+          setSearchInput(query.trim());
+          toast.info('La búsqueda inteligente no está disponible en este momento.');
           return;
         }
 
         if (ai.confianza === 0) {
-          // Low confidence — fall back to text search
-          setFilters({ query: query.trim(), page: 1 });
+          // Claude temporarily overloaded (529) → mensajeUsuario is set → don't pollute filters
+          // Genuine low-confidence → also don't use raw NL text as a filter chip
+          if (ai.mensajeUsuario) {
+            toast.warning(ai.mensajeUsuario);
+          }
+          clearFilters();
+          setSearchInput(query.trim());
           return;
         }
 
@@ -563,13 +571,15 @@ export default function VehiculosClient() {
           wasCached: result.wasCached,
         });
       } catch {
-        // On AI error, fall back to regular text search
-        setFilters({ query: query.trim(), page: 1 });
+        // On AI error, don't pollute filters with raw NL text — show a toast instead
+        clearFilters();
+        setSearchInput(query.trim());
+        toast.error('Error al procesar la búsqueda inteligente. Intenta de nuevo.');
       } finally {
         setIsAiSearching(false);
       }
     },
-    [isAiSearching, setFilters]
+    [isAiSearching, setFilters, clearFilters]
   );
 
   // Auto-trigger AI search when landing from homepage NLP search.

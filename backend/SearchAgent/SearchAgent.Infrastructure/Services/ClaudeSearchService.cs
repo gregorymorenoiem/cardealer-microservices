@@ -82,7 +82,31 @@ public class ClaudeSearchService : IClaudeSearchService
 
         if (!response.IsSuccessStatusCode)
         {
+            var statusCode = (int)response.StatusCode;
             var errorBody = await response.Content.ReadAsStringAsync(ct);
+
+            // Transient errors: 429 Rate-Limited, 529 Overloaded (Anthropic-specific)
+            // Return a zero-confidence response so callers can degrade gracefully
+            // without propagating a 500 to the client.
+            if (statusCode is 429 or 529)
+            {
+                _logger.LogWarning(
+                    "Claude API temporarily unavailable ({StatusCode}). Returning zero-confidence fallback for query: {Query}",
+                    statusCode, userQuery);
+
+                return new SearchAgentResponse
+                {
+                    FiltrosExactos = null,
+                    FiltrosRelajados = null,
+                    Confianza = 0.0f,
+                    ResultadoMinimoGarantizado = 0,
+                    NivelFiltrosActivo = 0,
+                    Advertencias = ["Servicio de IA temporalmente no disponible."],
+                    MensajeUsuario = "La búsqueda inteligente está temporalmente ocupada. Por favor intenta de nuevo en unos segundos.",
+                    QueryReformulada = userQuery,
+                };
+            }
+
             _logger.LogError("Claude API error {StatusCode}: {Error}", response.StatusCode, errorBody);
             throw new HttpRequestException($"Claude API returned {response.StatusCode}: {errorBody}");
         }
