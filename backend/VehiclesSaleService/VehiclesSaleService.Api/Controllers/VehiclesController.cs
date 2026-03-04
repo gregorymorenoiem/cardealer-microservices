@@ -96,6 +96,10 @@ public class VehiclesController : ControllerBase
             ZipCode = request.ZipCode,
             IsCertified = request.IsCertified,
             HasCleanTitle = request.HasCleanTitle,
+            MinSeats = request.MinSeats,
+            Cylinders = request.Cylinders,
+            InteriorColor = request.InteriorColor,
+            Features = request.Features?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
             Skip = Math.Max(0, (request.Page - 1)) * request.PageSize,  // Handle page=0 as page=1
             Take = request.PageSize,
             SortBy = request.SortBy ?? "CreatedAt",
@@ -1398,6 +1402,17 @@ public record VehicleSearchRequest
     public string? ZipCode { get; init; }
     public bool? IsCertified { get; init; }
     public bool? HasCleanTitle { get; init; }
+
+    // Extended DR-market filters
+    /// <summary>Minimum number of seats (5 = family SUV, 7 = 7-seater)</summary>
+    public int? MinSeats { get; init; }
+    /// <summary>Cylinders (3, 4, 6, 8)</summary>
+    public int? Cylinders { get; init; }
+    /// <summary>Interior color</summary>
+    public string? InteriorColor { get; init; }
+    /// <summary>Comma-separated list of required features (A/C, GPS, Sunroof...)</summary>
+    public string? Features { get; init; }
+
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
     public string? SortBy { get; init; }

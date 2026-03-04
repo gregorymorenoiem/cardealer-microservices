@@ -63,6 +63,7 @@ const fuelTypeOptions = [
   { value: 'gasolina', label: 'Gasolina' },
   { value: 'diesel', label: 'Diésel' },
   { value: 'hibrido', label: 'Híbrido' },
+  { value: 'pluginhybrid', label: 'Híbrido Enchufable (PHEV)' },
   { value: 'electrico', label: 'Eléctrico' },
   { value: 'glp', label: 'GLP / Gas' },
 ];
@@ -78,6 +79,52 @@ const drivetrainOptions = [
   { value: 'rwd', label: 'RWD (Trasera)' },
   { value: 'awd', label: 'AWD / 4x4' },
   { value: '4wd', label: '4WD (Off-road)' },
+];
+
+// Seats options — DR families commonly need 5, 7, or 8 seaters
+const seatsOptions = [
+  { value: 2, label: '2 pasajeros' },
+  { value: 4, label: '4 pasajeros' },
+  { value: 5, label: '5 pasajeros' },
+  { value: 7, label: '7 pasajeros' },
+  { value: 8, label: '8+ pasajeros' },
+];
+
+// Cylinder options — “4 cilindros” / “6 cilindros” are the top DR search terms
+const cylinderOptions = [
+  { value: 3, label: '3 cil.' },
+  { value: 4, label: '4 cil.' },
+  { value: 6, label: '6 cil.' },
+  { value: 8, label: '8 cil.' },
+];
+
+// Interior color swatches
+const interiorColorOptions = [
+  { value: 'negro', label: 'Negro', hex: '#1C1C1C' },
+  { value: 'gris', label: 'Gris', hex: '#9E9E9E' },
+  { value: 'beige', label: 'Beige', hex: '#F5F0E1' },
+  { value: 'marron', label: 'Marrón', hex: '#6D4C41' },
+  { value: 'crema', label: 'Crema', hex: '#FFFDE7' },
+  { value: 'rojo', label: 'Rojo', hex: '#B71C1C' },
+];
+
+// Key features / equipment — most searched in Dominican Republic
+const featuresOptions = [
+  { value: 'ac', label: 'A/C (Aire acondicionado)' },
+  { value: 'gps', label: 'GPS / Navegación' },
+  { value: 'sunroof', label: 'Techo solar' },
+  { value: 'panoramic', label: 'Techo panorámico' },
+  { value: 'backup_camera', label: 'Cámara de retroceso' },
+  { value: 'camera_360', label: 'Cámara 360°' },
+  { value: 'apple_carplay', label: 'Apple CarPlay' },
+  { value: 'android_auto', label: 'Android Auto' },
+  { value: 'leather_seats', label: 'Asientos de cuero' },
+  { value: 'heated_seats', label: 'Asientos calefaccionados' },
+  { value: 'blind_spot', label: 'Alerta punto ciego' },
+  { value: 'adaptive_cruise', label: 'Cruise control adaptativo' },
+  { value: 'keyless_entry', label: 'Entrada sin llave' },
+  { value: 'remote_start', label: 'Encendido remoto' },
+  { value: 'alloy_wheels', label: 'Aros de aleación' },
 ];
 
 const colorOptions = [
@@ -239,6 +286,10 @@ export function VehicleFilters({
     filters.isCertified,
     filters.hasCleanTitle,
     filters.dealRating,
+    filters.seats,
+    filters.cylinders,
+    filters.interiorColor,
+    filters.features?.length ? filters.features : undefined,
   ].filter(Boolean).length;
 
   return (
@@ -710,6 +761,120 @@ export function VehicleFilters({
                     />
                     <span className={cn('inline-block h-2 w-2 rounded-full', r.color)} />
                     <span className="flex-1">{r.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Seats — DR families frequently search for 5, 7, 8-seaters */}
+            <div>
+              <SectionLabel>Capacidad de pasajeros</SectionLabel>
+              <div className="flex flex-wrap gap-1.5">
+                {seatsOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        seats: filters.seats === opt.value ? undefined : opt.value,
+                      })
+                    }
+                    className={cn(
+                      'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
+                      filters.seats === opt.value
+                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
+                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Cylinders — "4 cilindros" / "6 cilindros" is a top search in DR */}
+            <div>
+              <SectionLabel>Cilindros del motor</SectionLabel>
+              <div className="flex gap-1.5">
+                {cylinderOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        cylinders: filters.cylinders === opt.value ? undefined : opt.value,
+                      })
+                    }
+                    className={cn(
+                      'flex-1 rounded-lg border py-1.5 text-xs font-medium transition-all',
+                      filters.cylinders === opt.value
+                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
+                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Interior Color */}
+            <div>
+              <SectionLabel>Color interior</SectionLabel>
+              <div className="flex flex-wrap gap-2">
+                {interiorColorOptions.map(c => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    title={c.label}
+                    onClick={() =>
+                      onChange({
+                        interiorColor:
+                          filters.interiorColor === c.value ? undefined : c.value,
+                      })
+                    }
+                    className={cn(
+                      'h-7 w-7 rounded-full border-2 transition-all',
+                      c.value === 'crema' ? 'border-gray-300' : 'border-transparent',
+                      filters.interiorColor === c.value &&
+                        'border-[#00A870] ring-2 ring-[#00A870] ring-offset-1'
+                    )}
+                    style={{ backgroundColor: c.hex }}
+                    aria-label={c.label}
+                    aria-pressed={filters.interiorColor === c.value}
+                  />
+                ))}
+              </div>
+              {filters.interiorColor && (
+                <p className="mt-1 text-xs text-[#00A870] capitalize">{filters.interiorColor}</p>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Features / Equipamiento — A/C, GPS, Sunroof critical for DR buyers */}
+            <div>
+              <SectionLabel>Equipamiento</SectionLabel>
+              <div className="space-y-1.5">
+                {featuresOptions.map(opt => (
+                  <label key={opt.value} className="flex cursor-pointer items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={filters.features?.includes(opt.value) ?? false}
+                      onCheckedChange={c => {
+                        const current = filters.features ?? [];
+                        const next = c
+                          ? [...current, opt.value]
+                          : current.filter(f => f !== opt.value);
+                        onChange({ features: next.length ? next : undefined });
+                      }}
+                    />
+                    <span>{opt.label}</span>
                   </label>
                 ))}
               </div>

@@ -185,9 +185,7 @@ function ConfigurableBannerCard({ banner }: { banner: ConfigurableBanner }) {
           )}
           <div>
             <p className="text-lg font-bold text-white">{banner.title}</p>
-            {banner.subtitle && (
-              <p className="text-sm text-white/80">{banner.subtitle}</p>
-            )}
+            {banner.subtitle && <p className="text-sm text-white/80">{banner.subtitle}</p>}
           </div>
         </div>
         {banner.ctaText && (
@@ -249,7 +247,7 @@ function AdSlotLeaderboard() {
   if (isLoading) {
     return (
       <div
-        className="col-span-full my-3 h-[88px] animate-pulse rounded-2xl bg-muted"
+        className="bg-muted col-span-full my-3 h-[88px] animate-pulse rounded-2xl"
         aria-hidden="true"
       />
     );
@@ -257,11 +255,7 @@ function AdSlotLeaderboard() {
 
   const activeBanner = banners?.[0]; // Show first active banner (rotate in future)
 
-  return activeBanner ? (
-    <ConfigurableBannerCard banner={activeBanner} />
-  ) : (
-    <OklaPromoLeaderboard />
-  );
+  return activeBanner ? <ConfigurableBannerCard banner={activeBanner} /> : <OklaPromoLeaderboard />;
 }
 
 function AdSlotRectangle({ className }: { className?: string }) {
@@ -503,6 +497,15 @@ export default function VehiculosClient() {
               ? 'Buen precio'
               : 'Precio justo',
       });
+    // Extended DR-market filters
+    if (filters.seats) chips.push({ key: 'seats', label: `${filters.seats}+ pasajeros` });
+    if (filters.cylinders) chips.push({ key: 'cylinders', label: `${filters.cylinders} cil.` });
+    if (filters.interiorColor)
+      chips.push({ key: 'interiorColor', label: `Interior: ${filters.interiorColor}` });
+    if (filters.features?.length)
+      filters.features.forEach(f =>
+        chips.push({ key: `feature-${f}`, label: f.replace(/_/g, ' ') })
+      );
     return chips;
   }, [filters]);
 
@@ -511,6 +514,10 @@ export default function VehiculosClient() {
       setFilters({ yearMin: undefined, yearMax: undefined });
     } else if (key === 'price') {
       setFilters({ priceMin: undefined, priceMax: undefined });
+    } else if (key.startsWith('feature-')) {
+      const featureToRemove = key.replace('feature-', '');
+      const updated = (filters.features ?? []).filter(f => f !== featureToRemove);
+      setFilters({ features: updated.length ? updated : undefined });
     } else {
       clearFilter(key as keyof typeof filters);
     }

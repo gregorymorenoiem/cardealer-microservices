@@ -567,6 +567,11 @@ export async function searchVehicles(
   if (params.color) backendParams.ExteriorColor = params.color;
   if (params.isCertified !== undefined) backendParams.IsCertified = params.isCertified;
   if (params.hasCleanTitle !== undefined) backendParams.HasCleanTitle = params.hasCleanTitle;
+  // Extended DR-market filters
+  if (params.seats) backendParams.MinSeats = params.seats;
+  if (params.cylinders) backendParams.Cylinders = params.cylinders;
+  if (params.interiorColor) backendParams.InteriorColor = params.interiorColor;
+  if (params.features?.length) backendParams.Features = params.features.join(',');
   if (params.sortBy) {
     backendParams.SortBy = params.sortBy;
     backendParams.SortDescending = params.sortOrder === 'desc';

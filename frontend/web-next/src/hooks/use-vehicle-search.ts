@@ -60,6 +60,11 @@ export interface VehicleSearchFilters {
   // Features
   features?: string[];
 
+  // Extended DR-market filters
+  seats?: number;       // min seats
+  cylinders?: number;   // engine cylinders (3, 4, 6, 8)
+  interiorColor?: string;
+
   // Pagination
   page?: number;
   limit?: number;
@@ -226,6 +231,16 @@ function parseSearchParams(searchParams: URLSearchParams): VehicleSearchFilters 
   const features = searchParams.get('features');
   if (features) filters.features = features.split(',');
 
+  // Extended DR-market filters
+  const seats = searchParams.get('seats');
+  if (seats) filters.seats = parseInt(seats, 10);
+
+  const cylinders = searchParams.get('cylinders');
+  if (cylinders) filters.cylinders = parseInt(cylinders, 10);
+
+  const interiorColor = searchParams.get('interior_color');
+  if (interiorColor) filters.interiorColor = interiorColor;
+
   // Pagination
   const page = searchParams.get('page');
   if (page) filters.page = parseInt(page, 10);
@@ -264,6 +279,10 @@ function filtersToSearchParams(filters: VehicleSearchFilters): URLSearchParams {
   if (filters.hasCleanTitle) params.set('has_clean_title', 'true');
   if (filters.color) params.set('color', filters.color);
   if (filters.features?.length) params.set('features', filters.features.join(','));
+  // Extended DR-market filters
+  if (filters.seats) params.set('seats', filters.seats.toString());
+  if (filters.cylinders) params.set('cylinders', filters.cylinders.toString());
+  if (filters.interiorColor) params.set('interior_color', filters.interiorColor);
   if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
   if (filters.limit && filters.limit !== 24) params.set('limit', filters.limit.toString());
   if (filters.sortBy && filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
@@ -293,6 +312,10 @@ function countActiveFilters(filters: VehicleSearchFilters): number {
   if (filters.hasCleanTitle) count++;
   if (filters.color) count++;
   if (filters.features?.length) count++;
+  // Extended DR-market filters
+  if (filters.seats) count++;
+  if (filters.cylinders) count++;
+  if (filters.interiorColor) count++;
 
   return count;
 }
@@ -341,6 +364,11 @@ async function fetchVehicles(filters: VehicleSearchFilters): Promise<VehicleSear
     color: filters.color,
     isCertified: filters.isCertified,
     hasCleanTitle: filters.hasCleanTitle,
+    features: filters.features,
+    // Extended DR-market filters
+    seats: filters.seats,
+    cylinders: filters.cylinders,
+    interiorColor: filters.interiorColor,
     page: filters.page || 1,
     pageSize: filters.limit || 24,
     sortBy: sort.sortBy,

@@ -101,6 +101,23 @@ const BodyTypeIcon = ({ type }: { type: string }) => {
           <circle cx="47" cy="24" r="4" />
         </svg>
       );
+    case 'crossover':
+      return (
+        <svg {...commonProps} className={strokeClass}>
+          <path d="M4 24 H60 M8 24 Q8 14 16 10 L28 8 L44 9 Q52 11 56 16 V24" />
+          <circle cx="17" cy="24" r="4" />
+          <circle cx="47" cy="24" r="4" />
+        </svg>
+      );
+    case 'sportscar':
+      return (
+        <svg {...commonProps} className={strokeClass}>
+          <path d="M4 24 H60 M8 24 Q14 22 22 14 L32 10 L46 11 Q54 16 56 24" />
+          <path d="M22 14 L22 18" />
+          <circle cx="17" cy="24" r="4" />
+          <circle cx="47" cy="24" r="4" />
+        </svg>
+      );
     default:
       return (
         <svg {...commonProps} className={strokeClass}>
@@ -115,9 +132,11 @@ const BodyTypeIcon = ({ type }: { type: string }) => {
 export const BODY_TYPES: BodyTypeOption[] = [
   { value: 'sedan', label: 'Sedán', icon: <BodyTypeIcon type="sedan" /> },
   { value: 'suv', label: 'SUV', icon: <BodyTypeIcon type="suv" /> },
+  { value: 'crossover', label: 'Crossover', icon: <BodyTypeIcon type="crossover" /> },
   { value: 'pickup', label: 'Pickup', icon: <BodyTypeIcon type="pickup" /> },
   { value: 'hatchback', label: 'Hatchback', icon: <BodyTypeIcon type="hatchback" /> },
   { value: 'coupe', label: 'Coupé', icon: <BodyTypeIcon type="coupe" /> },
+  { value: 'sportscar', label: 'Deportivo', icon: <BodyTypeIcon type="sportscar" /> },
   { value: 'convertible', label: 'Convertible', icon: <BodyTypeIcon type="convertible" /> },
   { value: 'van', label: 'Van', icon: <BodyTypeIcon type="van" /> },
   { value: 'minivan', label: 'Minivan', icon: <BodyTypeIcon type="minivan" /> },
