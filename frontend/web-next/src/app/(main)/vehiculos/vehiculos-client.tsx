@@ -326,15 +326,22 @@ function SponsoredRowGrid({ vehicles }: { vehicles: SponsoredVehicle[] }) {
   if (!vehicles.length) return null;
   const show = vehicles.slice(0, 3);
   return (
-    <div className="col-span-full my-1">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-muted-foreground text-xs">Vehículos patrocinados</span>
-        <SponsoredBadge tier="sponsored" />
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {show.map(v => (
-          <SponsoredVehicleCard key={v.id} vehicle={v} />
-        ))}
+    <div className="col-span-full my-2">
+      {/* Green-bordered banner container — makes sponsored row visually distinct */}
+      <div className="overflow-hidden rounded-xl border-2 border-emerald-400 bg-emerald-50/60 p-4 dark:border-emerald-700 dark:bg-emerald-900/10">
+        {/* Header row */}
+        <div className="mb-3 flex items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:ring-emerald-700">
+            ⭐ Vehículos Patrocinados
+          </span>
+          <SponsoredBadge tier="sponsored" />
+        </div>
+        {/* Vehicle cards */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {show.map(v => (
+            <SponsoredVehicleCard key={v.id} vehicle={v} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -651,9 +658,7 @@ export default function VehiculosClient() {
 
     // Top sponsored row (first page only)
     if (topSponsored.length > 0 && currentPage === 1) {
-      items.push(
-        <SponsoredRowGrid key="sp-top" vehicles={topSponsored.slice(0, 3)} />
-      );
+      items.push(<SponsoredRowGrid key="sp-top" vehicles={topSponsored.slice(0, 3)} />);
     }
 
     // Rotating pool of inline sponsored vehicles (cycles if needed)

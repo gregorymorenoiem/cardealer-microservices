@@ -192,7 +192,7 @@ export default function FeaturedVehicles({
           </h2>
           <Link href={viewAllHref}>
             <Button variant="outline" className={`group ${accentColor.border}`}>
-              Ver todos →
+              Ver todos
               <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
