@@ -74,7 +74,11 @@ const modelsByMake: Record<string, string[]> = {
   Chevrolet: ['Silverado', 'Equinox', 'Tahoe', 'Traverse', 'Malibu', 'Camaro', 'Colorado'],
 };
 
-// =============================================================================\n// NATURAL LANGUAGE HERO SEARCH BAR (replaces filter dropdowns)\n// =============================================================================\n\nfunction NaturalLanguageHeroSearch() {
+// =============================================================================
+// NATURAL LANGUAGE HERO SEARCH BAR (replaces filter dropdowns)
+// =============================================================================
+
+function NaturalLanguageHeroSearch() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
