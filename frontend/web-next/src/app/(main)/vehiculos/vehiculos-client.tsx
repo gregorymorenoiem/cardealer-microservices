@@ -542,10 +542,10 @@ export default function VehiculosClient() {
         }
 
         if (ai.confianza === 0) {
-          // Claude temporarily overloaded (529) → mensajeUsuario is set → don't pollute filters
+          // Claude temporarily overloaded (529) → mensaje_usuario is set → don't pollute filters
           // Genuine low-confidence → also don't use raw NL text as a filter chip
-          if (ai.mensajeUsuario) {
-            toast.warning(ai.mensajeUsuario);
+          if (ai.mensaje_usuario) {
+            toast.warning(ai.mensaje_usuario);
           }
           clearFilters();
           setSearchInput(query.trim());
