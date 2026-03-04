@@ -32,11 +32,8 @@ import {
   Bot,
   Sparkles,
   Calendar,
-  Clock,
   CalendarCheck,
-  ChevronRight,
   X,
-  Phone,
 } from 'lucide-react';
 import { useChatbot } from '@/hooks/useChatbot';
 import { BotMessageContent } from '@/components/chat/BotMessageContent';
@@ -182,11 +179,7 @@ function AppointmentScheduler({
   onSchedule: (message: string) => void;
   onClose: () => void;
 }) {
-  const [step, setStep] = React.useState<'date' | 'time' | 'contact'>('date');
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
-  const [name, setName] = React.useState('');
-  const [phone, setPhone] = React.useState('');
 
   // Next 14 days, excluding Sundays
   const availableDates = React.useMemo(() => {
@@ -200,24 +193,21 @@ function AppointmentScheduler({
     return dates;
   }, []);
 
-  const timeSlots = ['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM'];
-
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const monthNames = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+    'Ene',
+    'Feb',
+    'Mar',
+    'Abr',
+    'May',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dic',
   ];
-
-  const handleConfirm = () => {
-    if (!selectedDate || !selectedTime || !name.trim() || !phone.trim()) return;
-    const dateStr = `${dayNames[selectedDate.getDay()]} ${selectedDate.getDate()} de ${monthNames[selectedDate.getMonth()]}`;
-    onSchedule(
-      `Quisiera agendar una cita para ver el vehículo. Mi nombre es ${name.trim()}, mi teléfono es ${phone.trim()}. ` +
-        `Prefiero el ${dateStr} a las ${selectedTime}. ¿Está disponible esa fecha?`
-    );
-  };
-
-  const stepLabel = step === 'date' ? '1/3 Día' : step === 'time' ? '2/3 Hora' : '3/3 Tus datos';
 
   return (
     <div className="mx-3 mb-3 rounded-2xl border border-[#00A870]/20 bg-white p-4 shadow-lg ring-1 ring-[#00A870]/10">
@@ -229,7 +219,7 @@ function AppointmentScheduler({
           </div>
           <div>
             <h4 className="text-sm font-semibold text-gray-800">Agendar cita con {dealerName}</h4>
-            <p className="text-xs text-gray-400">{stepLabel}</p>
+            <p className="text-xs text-gray-400">Selecciona un día disponible</p>
           </div>
         </div>
         <button
@@ -241,141 +231,35 @@ function AppointmentScheduler({
         </button>
       </div>
 
-      {/* Progress bar */}
-      <div className="mb-4 flex gap-1">
-        {(['date', 'time', 'contact'] as const).map((s, i) => (
-          <div
-            key={s}
+      {/* Date grid */}
+      <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
+        <Calendar className="h-4 w-4" />
+        ¿Qué día te gustaría visitarnos?
+      </p>
+      <div className="grid grid-cols-4 gap-1.5">
+        {availableDates.map(d => (
+          <button
+            key={d.toISOString()}
+            onClick={() => {
+              setSelectedDate(d);
+              const dateStr = `${dayNames[d.getDay()]} ${d.getDate()} de ${monthNames[d.getMonth()]}`;
+              onSchedule(
+                `Quisiera agendar una cita para ver el vehículo el ${dateStr}. ¿Qué horarios tienen disponibles?`
+              );
+            }}
             className={cn(
-              'h-1 flex-1 rounded-full transition-all',
-              (step === 'date' && i === 0) ||
-              (step === 'time' && i <= 1) ||
-              step === 'contact'
-                ? 'bg-[#00A870]'
-                : 'bg-gray-100'
+              'flex flex-col items-center rounded-xl border px-2 py-2 text-xs transition-all hover:border-[#00A870] hover:bg-[#00A870]/5',
+              selectedDate?.toDateString() === d.toDateString()
+                ? 'border-[#00A870] bg-[#00A870]/10 font-semibold text-[#00A870]'
+                : 'border-gray-100 text-gray-700'
             )}
-          />
+          >
+            <span className="text-gray-400">{dayNames[d.getDay()]}</span>
+            <span className="text-base font-bold">{d.getDate()}</span>
+            <span className="text-gray-400">{monthNames[d.getMonth()]}</span>
+          </button>
         ))}
       </div>
-
-      {/* Step 1: Date */}
-      {step === 'date' && (
-        <>
-          <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
-            <Calendar className="h-4 w-4" />
-            Selecciona un día disponible:
-          </p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {availableDates.map(d => (
-              <button
-                key={d.toISOString()}
-                onClick={() => {
-                  setSelectedDate(d);
-                  setStep('time');
-                }}
-                className={cn(
-                  'flex flex-col items-center rounded-xl border px-2 py-2 text-xs transition-all hover:border-[#00A870] hover:bg-[#00A870]/5',
-                  selectedDate?.toDateString() === d.toDateString()
-                    ? 'border-[#00A870] bg-[#00A870]/10 font-semibold text-[#00A870]'
-                    : 'border-gray-100 text-gray-700'
-                )}
-              >
-                <span className="text-gray-400">{dayNames[d.getDay()]}</span>
-                <span className="text-base font-bold">{d.getDate()}</span>
-                <span className="text-gray-400">{monthNames[d.getMonth()]}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Step 2: Time */}
-      {step === 'time' && selectedDate && (
-        <>
-          <button
-            onClick={() => setStep('date')}
-            className="mb-2 flex items-center gap-1 text-xs text-[#00A870] hover:underline"
-          >
-            <ChevronRight className="h-3 w-3 rotate-180" />
-            Cambiar día
-          </button>
-          <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
-            <Clock className="h-4 w-4" />
-            {dayNames[selectedDate.getDay()]} {selectedDate.getDate()} de{' '}
-            {monthNames[selectedDate.getMonth()]} — ¿A qué hora?
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {timeSlots.map(t => (
-              <button
-                key={t}
-                onClick={() => {
-                  setSelectedTime(t);
-                  setStep('contact');
-                }}
-                className={cn(
-                  'rounded-xl border px-4 py-2.5 text-sm font-medium transition-all hover:border-[#00A870] hover:bg-[#00A870]/5',
-                  selectedTime === t
-                    ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                    : 'border-gray-100 text-gray-700'
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Step 3: Contact info */}
-      {step === 'contact' && selectedDate && selectedTime && (
-        <>
-          <button
-            onClick={() => setStep('time')}
-            className="mb-3 flex items-center gap-1 text-xs text-[#00A870] hover:underline"
-          >
-            <ChevronRight className="h-3 w-3 rotate-180" />
-            Cambiar hora
-          </button>
-          <div className="mb-3 rounded-xl bg-[#00A870]/5 px-3 py-2 text-xs text-gray-600">
-            <span className="font-medium text-[#00A870]">📅</span>{' '}
-            {dayNames[selectedDate.getDay()]} {selectedDate.getDate()} de{' '}
-            {monthNames[selectedDate.getMonth()]} · {selectedTime}
-          </div>
-          <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
-            <User className="h-4 w-4" />
-            Tus datos de contacto:
-          </p>
-          <div className="space-y-2">
-            <div className="relative">
-              <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Tu nombre completo"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 py-2.5 pr-4 pl-9 text-sm text-gray-800 placeholder-gray-400 outline-none transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
-              />
-            </div>
-            <div className="relative">
-              <Phone className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="tel"
-                placeholder="Tu número de teléfono"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 py-2.5 pr-4 pl-9 text-sm text-gray-800 placeholder-gray-400 outline-none transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
-              />
-            </div>
-          </div>
-          <button
-            onClick={handleConfirm}
-            disabled={!name.trim() || !phone.trim()}
-            className="mt-3 w-full rounded-xl bg-gradient-to-r from-[#00A870] to-emerald-600 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            ✅ Confirmar cita
-          </button>
-        </>
-      )}
     </div>
   );
 }
@@ -392,7 +276,6 @@ function EmptyState() {
         <div className="to-primary/20 absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-[#00A870]/20 blur-xl" />
         <div className="to-primary/80 relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] shadow-lg shadow-[#00A870]/25">
           <Inbox className="h-12 w-12 text-white" />
-
         </div>
       </div>
       <h3 className="text-foreground mb-2 text-xl font-bold">¡Tu bandeja está lista!</h3>
@@ -575,6 +458,8 @@ function DealerBotPanel({
   const botEndRef = React.useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = React.useState('');
   const [showAppointmentScheduler, setShowAppointmentScheduler] = React.useState(false);
+  // Track which bot message last triggered the scheduler, so we don't re-show after dismiss
+  const [lastSchedulerMsgId, setLastSchedulerMsgId] = React.useState<string | null>(null);
 
   // ── Human-feel typing: delay revealing bot responses ──────────
   // Track which bot message IDs have been revealed to the user.
@@ -621,10 +506,25 @@ function DealerBotPanel({
     botEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messagesToShow, showTypingIndicator]);
 
+  // Auto-show appointment date picker when bot's last message mentions scheduling
+  React.useEffect(() => {
+    const lastBotMsg = [...chat.messages]
+      .reverse()
+      .find(m => m.isFromBot && !m.isLoading && !m.isError);
+    if (!lastBotMsg || lastBotMsg.id === lastSchedulerMsgId) return;
+    const text = lastBotMsg.content.toLowerCase();
+    const keywords = ['agendar', 'cita', 'visita', 'disponib', 'coordinar'];
+    if (keywords.some(kw => text.includes(kw))) {
+      setLastSchedulerMsgId(lastBotMsg.id);
+      setShowAppointmentScheduler(true);
+    }
+  }, [chat.messages]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSend = () => {
     const text = inputValue.trim();
     if (!text || chat.isLoading) return;
     setInputValue('');
+    setShowAppointmentScheduler(false);
     chat.sendMessage(text);
   };
 
@@ -861,18 +761,6 @@ function DealerBotPanel({
               )}
             </Button>
           </div>
-        )}
-        {/* Appointment CTA */}
-        {chat.isConnected && !chat.isLimitReached && (
-          <button
-            onClick={() => setShowAppointmentScheduler(prev => !prev)}
-            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#00A870]/30 bg-[#00A870]/5 py-1.5 text-xs font-medium text-[#00A870] transition-colors hover:border-[#00A870]/60 hover:bg-[#00A870]/10"
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            {showAppointmentScheduler
-              ? 'Cancelar cita'
-              : '\uD83D\uDCC5 Agendar cita para ver el vehículo'}
-          </button>
         )}
         {!chat.isLimitReached &&
           chat.remainingInteractions > 0 &&
