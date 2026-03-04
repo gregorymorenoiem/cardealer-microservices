@@ -118,9 +118,13 @@ function AdSlotLeaderboard() {
   return (
     <div
       className="col-span-full my-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#00A870] to-[#00c882] shadow-md"
-      aria-label="Banner promocional"
+      aria-label="Banner publicitario"
     >
-      <div className="flex flex-col items-center justify-between gap-4 px-6 py-5 sm:flex-row">
+      {/* Advertising disclosure \u2014 Ley 358-05 compliance */}
+      <div className="flex justify-end px-4 pt-2">
+        <span className="text-[10px] font-medium text-white/60">Publicidad</span>
+      </div>
+      <div className="flex flex-col items-center justify-between gap-4 px-6 pb-5 sm:flex-row">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20">
             <Car className="h-6 w-6 text-white" />

@@ -42,12 +42,12 @@ export function SponsoredBadge({ tier, className, size = 'sm' }: SponsoredBadgeP
       className: 'bg-slate-100/90 text-slate-600 border-slate-200/60',
     },
     featured: {
-      label: 'Destacado',
+      label: 'Anuncio Destacado',
       icon: Sparkles,
       className: 'bg-amber-50/90 text-amber-700 border-amber-200/60',
     },
     premium: {
-      label: 'Premium',
+      label: 'Anuncio Premium',
       icon: Sparkles,
       className:
         'bg-gradient-to-r from-violet-50/90 to-purple-50/90 text-purple-700 border-purple-200/60',
@@ -60,6 +60,8 @@ export function SponsoredBadge({ tier, className, size = 'sm' }: SponsoredBadgeP
 
   return (
     <span
+      title="Contenido publicitario pagado por anunciantes"
+      aria-label="Publicidad pagada"
       className={cn(
         'inline-flex items-center gap-1 rounded-full border font-medium backdrop-blur-sm',
         isSmall ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs',
@@ -615,6 +617,18 @@ export function NativeBannerAd({
         <div className="absolute top-0 right-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5" />
         <div className="absolute bottom-0 left-1/2 h-48 w-48 translate-y-1/2 rounded-full bg-white/5" />
 
+        {/* Sponsor disclosure — visible per Ley 358-05 */}
+        <div className="absolute top-3 right-3">
+          <span
+            title="Contenido publicitario pagado por anunciantes"
+            aria-label="Publicidad pagada"
+            className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-black/20 px-2 py-0.5 text-[11px] font-medium text-white/80 backdrop-blur-sm"
+          >
+            <TrendingUp className="h-2.5 w-2.5" />
+            Publicidad
+          </span>
+        </div>
+
         <div className="relative z-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h3 className="text-xl font-bold text-white sm:text-2xl">{title}</h3>
@@ -626,11 +640,6 @@ export function NativeBannerAd({
           >
             {ctaText}
           </Link>
-        </div>
-
-        {/* Subtle sponsor indicator */}
-        <div className="absolute right-3 bottom-2">
-          <span className="text-[9px] font-medium text-white/40">Patrocinado</span>
         </div>
       </div>
     </div>
