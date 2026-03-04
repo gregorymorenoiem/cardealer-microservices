@@ -22,6 +22,7 @@ import {
 } from '@/components/homepage';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { SponsoredSection, NativeBannerAd } from '@/components/advertising/native-ads';
+import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { useBrands, useCategories } from '@/hooks/use-advertising';
 import { useHomepageAds } from '@/hooks/use-ads';
 import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
@@ -231,20 +232,20 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         )}
       </SectionContainer>
 
-      {/* Trusted Brands & Dealer Sponsors Slider */}
-      <section className="bg-card py-8">
+      {/* Dealer Promotional Section — paid sponsorship grid */}
+      <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
+
+      {/* Car Brands Slider — "Las marcas más populares" */}
+      <section className="bg-muted/30 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-muted-foreground mb-4 text-center text-xs font-semibold tracking-widest uppercase">
-            {dealerSponsors && dealerSponsors.length > 0
-              ? 'Dealers Destacados & Marcas Populares'
-              : 'Las marcas más buscadas en República Dominicana'}
+            Las marcas más buscadas en República Dominicana
           </h2>
           <BrandSlider
             brands={dynamicBrands}
-            dealerSponsors={dealerSponsors}
             autoScroll
             scrollSpeed={40}
-            showDealerSponsors
+            showDealerSponsors={false}
           />
         </div>
       </section>
