@@ -165,9 +165,15 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
             filterParts.push(`Año: **${f.anio_desde || '?'}–${f.anio_hasta || '?'}**`);
           }
           if (f.precio_min || f.precio_max) {
-            const min = f.precio_min ? `RD$${(f.precio_min / 1000).toFixed(0)}K` : '?';
-            const max = f.precio_max ? `RD$${(f.precio_max / 1000).toFixed(0)}K` : '?';
-            filterParts.push(`Precio: **${min}–${max}**`);
+            const fmtPrice = (v: number) =>
+              v >= 1_000_000
+                ? `RD$${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M`
+                : `RD$${(v / 1_000).toFixed(0)}K`;
+            const min = f.precio_min ? fmtPrice(f.precio_min) : null;
+            const max = f.precio_max ? fmtPrice(f.precio_max) : null;
+            if (min && max) filterParts.push(`Precio: **${min} – ${max}**`);
+            else if (max) filterParts.push(`Precio: **hasta ${max}**`);
+            else if (min) filterParts.push(`Precio: **desde ${min}**`);
           }
           if (f.transmision) filterParts.push(`Transmisión: **${f.transmision}**`);
           if (f.combustible) filterParts.push(`Combustible: **${f.combustible}**`);

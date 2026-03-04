@@ -178,7 +178,16 @@ export function VehicleFilters({
   ]);
   const [mileageMax, setMileageMax] = React.useState(filters.mileageMax ?? 300_000);
 
+  // Ref to distinguish external filter changes (AI, URL params) from user slider interactions.
+  // Prevents a redundant onChange call when the parent already applied the filter.
+  const isExternalUpdate = React.useRef(false);
+
+  // Propagate slider position → parent (skip when the change came from the parent itself)
   React.useEffect(() => {
+    if (isExternalUpdate.current) {
+      isExternalUpdate.current = false;
+      return;
+    }
     const t = setTimeout(() => {
       onChange({
         priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
@@ -197,9 +206,12 @@ export function VehicleFilters({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mileageMax]);
 
+  // Sync local slider state when filters change externally (AI search, clear filters, URL params).
+  // FIX: previously only reset when filters were cleared; now syncs on any external change.
   React.useEffect(() => {
-    if (!filters.priceMin && !filters.priceMax) setPriceRange([0, 10_000_000]);
-    if (!filters.mileageMax) setMileageMax(300_000);
+    isExternalUpdate.current = true;
+    setPriceRange([filters.priceMin ?? 0, filters.priceMax ?? 10_000_000]);
+    setMileageMax(filters.mileageMax ?? 300_000);
   }, [filters.priceMin, filters.priceMax, filters.mileageMax]);
 
   const makes = facets?.makes?.length
