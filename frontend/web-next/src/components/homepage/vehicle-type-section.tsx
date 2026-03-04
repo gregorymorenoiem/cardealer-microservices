@@ -15,7 +15,7 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Car } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -149,6 +149,23 @@ const accentClasses: Record<string, { badge: string; price: string; viewAll: str
   },
 };
 
+// Gradient bg + icon color for empty placeholder circles (dealer-card style)
+const accentIconClasses: Record<string, { bg: string; icon: string }> = {
+  blue: { bg: 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30', icon: 'text-blue-500 dark:text-blue-400' },
+  sky: { bg: 'bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-900/30 dark:to-sky-800/30', icon: 'text-sky-500 dark:text-sky-400' },
+  emerald: { bg: 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30', icon: 'text-emerald-600 dark:text-emerald-400' },
+  violet: { bg: 'bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30', icon: 'text-violet-600 dark:text-violet-400' },
+  amber: { bg: 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30', icon: 'text-amber-600 dark:text-amber-400' },
+  orange: { bg: 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30', icon: 'text-orange-600 dark:text-orange-400' },
+  rose: { bg: 'bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30', icon: 'text-rose-600 dark:text-rose-400' },
+  pink: { bg: 'bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30', icon: 'text-pink-600 dark:text-pink-400' },
+  slate: { bg: 'bg-gradient-to-br from-slate-100 to-gray-100 dark:from-slate-800/50 dark:to-gray-800/50', icon: 'text-slate-500 dark:text-slate-400' },
+  yellow: { bg: 'bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30', icon: 'text-yellow-600 dark:text-yellow-400' },
+  teal: { bg: 'bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/30 dark:to-emerald-900/30', icon: 'text-teal-600 dark:text-teal-400' },
+  indigo: { bg: 'bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30', icon: 'text-indigo-600 dark:text-indigo-400' },
+  purple: { bg: 'bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30', icon: 'text-purple-600 dark:text-purple-400' },
+};
+
 // ─────────────────────────────────────────────
 // Card Component
 // ─────────────────────────────────────────────
@@ -225,11 +242,23 @@ function SkeletonCard() {
   );
 }
 
-function EmptyVehicleCard() {
+function EmptyVehicleCard({
+  icon,
+  accentColor = 'blue',
+}: {
+  icon?: ReactNode;
+  accentColor?: string;
+}) {
+  const iconClasses = accentIconClasses[accentColor] || accentIconClasses.blue;
   return (
     <Card className="flex h-full flex-col overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
       <div className="flex aspect-[4/3] items-center justify-center bg-slate-50 dark:bg-slate-800/30">
-        <span className="text-5xl opacity-20">🚗</span>
+        <div className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-300 ${iconClasses.bg}`}>
+          {/* Use section icon, forcing size via !important so it overrides the source className */}
+          <span className={`[&_svg]:!h-8 [&_svg]:!w-8 ${iconClasses.icon}`}>
+            {icon ?? <Car className="h-8 w-8" />}
+          </span>
+        </div>
       </div>
       <CardContent className="flex-1 p-4">
         <div className="bg-muted h-4 w-3/4 rounded" />
@@ -275,6 +304,9 @@ export default function VehicleTypeSection({
 
   const vehicles = data?.vehicles?.slice(0, maxItems) ?? [];
 
+  // Empty slots to complete the last row (4-col desktop grid)
+  const fillCount = (4 - (vehicles.length % 4)) % 4;
+
   // Loading skeleton
   if (isLoading) {
     return (
@@ -319,7 +351,7 @@ export default function VehicleTypeSection({
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <EmptyVehicleCard key={i} />
+              <EmptyVehicleCard key={i} icon={icon} accentColor={accentColor} />
             ))}
           </div>
         </div>
@@ -354,6 +386,10 @@ export default function VehicleTypeSection({
           {vehicles.map(vehicle => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} accentColor={accentColor} />
           ))}
+          {fillCount > 0 &&
+            Array.from({ length: fillCount }).map((_, i) => (
+              <EmptyVehicleCard key={`fill-${i}`} icon={icon} accentColor={accentColor} />
+            ))}
         </div>
       </div>
     </section>

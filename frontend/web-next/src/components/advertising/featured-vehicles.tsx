@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Megaphone } from 'lucide-react';
+import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -111,6 +111,7 @@ function FeaturedVehicleCard({
 // Placeholder card shown when no paid vehicles are active for this placement
 function EmptyFeaturedSlot({ placementType }: { placementType: 'FeaturedSpot' | 'PremiumSpot' }) {
   const href = placementType === 'PremiumSpot' ? '/dealers' : '/vender/publicidad';
+  const isPremium = placementType === 'PremiumSpot';
   return (
     <Link href={href} className="group block h-full">
       <Card className="flex h-full flex-col overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 transition-all hover:border-emerald-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/20">
@@ -118,9 +119,20 @@ function EmptyFeaturedSlot({ placementType }: { placementType: 'FeaturedSpot' | 
           className="flex items-center justify-center bg-slate-50 dark:bg-slate-800/30"
           style={{ aspectRatio: '4/3' }}
         >
-          <div className="text-center">
-            <span className="text-5xl opacity-20">🚗</span>
-            <p className="mt-2 text-xs font-medium text-slate-400">Espacio disponible</p>
+          <div
+            className={`flex h-20 w-20 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 ${
+              isPremium
+                ? 'bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30'
+                : 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30'
+            }`}
+          >
+            <Car
+              className={`h-10 w-10 ${
+                isPremium
+                  ? 'text-purple-400 dark:text-purple-300'
+                  : 'text-amber-400 dark:text-amber-300'
+              }`}
+            />
           </div>
         </div>
         <CardContent className="flex-1 p-4">
@@ -208,6 +220,9 @@ export default function FeaturedVehicles({
     .filter(v => v.title && v.imageUrl && v.price)
     .slice(0, maxItems);
 
+  // Slots to fill to complete the last row
+  const fillCount = vehicles.length > 0 ? (columns - (vehicles.length % columns)) % columns : 0;
+
   // When no paid vehicles are active — show placeholder slots so the section is always visible
   if (!vehicles.length) {
     return (
@@ -276,6 +291,10 @@ export default function FeaturedVehicles({
               placementType={placementType}
             />
           ))}
+          {fillCount > 0 &&
+            Array.from({ length: fillCount }).map((_, i) => (
+              <EmptyFeaturedSlot key={`fill-${i}`} placementType={placementType} />
+            ))}
         </div>
       </div>
     </section>
