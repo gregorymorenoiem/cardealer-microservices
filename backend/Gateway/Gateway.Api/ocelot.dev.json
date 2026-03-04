@@ -2254,7 +2254,20 @@
         "TimeoutValue": 30000
       }
     },
-
+    {
+      "UpstreamPathTemplate": "/api/content/banners",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/content/banners",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/content/banners/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "DownstreamPathTemplate": "/api/content/banners/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 80 }]
+    },
     {
       "UpstreamPathTemplate": "/api/admin/health",
       "UpstreamHttpMethod": ["GET"],

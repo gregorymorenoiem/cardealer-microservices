@@ -3,14 +3,46 @@ namespace AdminService.Application.UseCases.Content;
 public record Banner(
     string Id,
     string Title,
+    string? Subtitle,
+    string Image,
+    string? MobileImage,
+    string Link,
+    string? CtaText,
+    string Placement,
+    string Status,
+    string StartDate,
+    string EndDate,
+    int Views,
+    int Clicks,
+    int DisplayOrder
+);
+
+public record CreateBannerRequest(
+    string Title,
     string Image,
     string Link,
     string Placement,
     string Status,
     string StartDate,
     string EndDate,
-    int Views,
-    int Clicks
+    string? Subtitle = null,
+    string? MobileImage = null,
+    string? CtaText = null,
+    int DisplayOrder = 0
+);
+
+public record UpdateBannerRequest(
+    string Title,
+    string Image,
+    string Link,
+    string Placement,
+    string Status,
+    string StartDate,
+    string EndDate,
+    string? Subtitle = null,
+    string? MobileImage = null,
+    string? CtaText = null,
+    int DisplayOrder = 0
 );
 
 public record StaticPage(
@@ -40,3 +72,4 @@ public record ContentOverviewResponse(
     List<BlogPost> BlogPosts,
     string TotalViews
 );
+

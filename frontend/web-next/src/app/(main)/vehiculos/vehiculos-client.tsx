@@ -37,6 +37,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import {
   Search,
   SlidersHorizontal,
@@ -107,20 +108,109 @@ const QUICK_FILTERS = [
 ];
 
 // =============================================================================
+// BANNER TYPES + HOOK
+// =============================================================================
+
+interface ConfigurableBanner {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  image: string;
+  link: string;
+  ctaText?: string | null;
+  placement: string;
+  status: string;
+}
+
+function useSearchLeaderboardBanners() {
+  return useQuery<ConfigurableBanner[]>({
+    queryKey: ['banners', 'search_leaderboard'],
+    queryFn: async () => {
+      const res = await fetch('/api/banners?placement=search_leaderboard');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 60_000, // 1 minute
+    refetchOnWindowFocus: false,
+  });
+}
+
+// =============================================================================
 // AD SLOT COMPONENTS
 // =============================================================================
 
 /**
- * PromoLeaderboard — Branded "Sell your car" conversion banner.
- * Replaces the generic AdSense placeholder until ads are configured.
+ * ConfigurableBannerCard — renders a single admin-managed banner with legal disclosure.
+ * Falls back to OKLA self-promo when no configurable banners are available.
  */
-function AdSlotLeaderboard() {
+function ConfigurableBannerCard({ banner }: { banner: ConfigurableBanner }) {
+  const handleClick = React.useCallback(() => {
+    // Fire-and-forget analytics
+    fetch(`/api/banners/${banner.id}/click`, { method: 'POST' }).catch(() => {});
+  }, [banner.id]);
+
+  // Track view on mount
+  React.useEffect(() => {
+    fetch(`/api/banners/${banner.id}/view`, { method: 'POST' }).catch(() => {});
+  }, [banner.id]);
+
+  return (
+    <Link
+      href={banner.link ?? '/'}
+      onClick={handleClick}
+      className="col-span-full my-3 block overflow-hidden rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 shadow-md transition-all hover:shadow-lg hover:brightness-105"
+      aria-label={`Publicidad: ${banner.title}`}
+      target={banner.link?.startsWith('http') ? '_blank' : undefined}
+      rel={banner.link?.startsWith('http') ? 'noopener noreferrer sponsored' : undefined}
+    >
+      {/* Legal disclosure — Ley 358-05 */}
+      <div className="flex justify-end px-4 pt-2">
+        <span className="text-[10px] font-medium text-white/60">Publicidad</span>
+      </div>
+      <div className="flex flex-col items-center justify-between gap-4 px-6 pb-5 sm:flex-row">
+        <div className="flex items-center gap-4">
+          {banner.image ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={banner.image}
+              alt=""
+              aria-hidden="true"
+              className="h-12 w-12 shrink-0 rounded-xl object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <Tag className="h-6 w-6 text-white/70" />
+            </div>
+          )}
+          <div>
+            <p className="text-lg font-bold text-white">{banner.title}</p>
+            {banner.subtitle && (
+              <p className="text-sm text-white/80">{banner.subtitle}</p>
+            )}
+          </div>
+        </div>
+        {banner.ctaText && (
+          <span className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-800 shadow-sm">
+            {banner.ctaText}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * OklaPromoLeaderboard — OKLA-owned "Sell your car" conversion banner.
+ * Shown when no active configurable banners exist for search_leaderboard.
+ */
+function OklaPromoLeaderboard() {
   return (
     <div
       className="col-span-full my-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#00A870] to-[#00c882] shadow-md"
       aria-label="Banner publicitario"
     >
-      {/* Advertising disclosure \u2014 Ley 358-05 compliance */}
+      {/* Advertising disclosure — Ley 358-05 compliance */}
       <div className="flex justify-end px-4 pt-2">
         <span className="text-[10px] font-medium text-white/60">Publicidad</span>
       </div>
@@ -145,6 +235,32 @@ function AdSlotLeaderboard() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/**
+ * AdSlotLeaderboard — fetches configurable banners from admin portal.
+ * Falls back to OKLA self-promo when no active banners are configured.
+ */
+function AdSlotLeaderboard() {
+  const { data: banners, isLoading } = useSearchLeaderboardBanners();
+
+  // While loading, render placeholder to avoid layout shift
+  if (isLoading) {
+    return (
+      <div
+        className="col-span-full my-3 h-[88px] animate-pulse rounded-2xl bg-muted"
+        aria-hidden="true"
+      />
+    );
+  }
+
+  const activeBanner = banners?.[0]; // Show first active banner (rotate in future)
+
+  return activeBanner ? (
+    <ConfigurableBannerCard banner={activeBanner} />
+  ) : (
+    <OklaPromoLeaderboard />
   );
 }
 

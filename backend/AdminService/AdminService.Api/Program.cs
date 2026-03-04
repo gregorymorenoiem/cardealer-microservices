@@ -172,6 +172,9 @@ builder.Services.AddScoped<IAdminActionLogRepository, EfAdminActionLogRepository
 builder.Services.AddScoped<IModerationRepository, EfModerationRepository>();
 builder.Services.AddScoped<IPlatformEmployeeRepository, EfPlatformEmployeeRepository>();
 builder.Services.AddScoped<IAdminUserRepository, EfAdminUserRepository>();
+// Banner repository — singleton so in-memory data survives across requests in the same pod
+builder.Services.AddSingleton<AdminService.Domain.Interfaces.IBannerRepository,
+    AdminService.Infrastructure.Persistence.InMemoryBannerRepository>();
 
 // Reports Service Client (for admin content moderation reports → ReportsService)
 builder.Services.AddHttpClient<IReportsServiceClient, ReportsServiceClient>(client =>
