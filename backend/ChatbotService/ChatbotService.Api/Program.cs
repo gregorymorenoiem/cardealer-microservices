@@ -165,6 +165,22 @@ if (builder.Configuration.GetValue<bool>("Maintenance:EnableAutomatedTasks"))
     builder.Services.AddHostedService<MaintenanceWorkerService>();
 }
 
+// Redis Distributed Cache — required by LlmResponseCacheService (IDistributedCache)
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "redis:6379";
+try
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = "ChatbotService:";
+    });
+}
+catch
+{
+    // Fallback to in-memory distributed cache if Redis is not available
+    builder.Services.AddDistributedMemoryCache();
+}
+
 // Health checks
 builder.Services.AddHealthChecks()
     .AddNpgSql(
