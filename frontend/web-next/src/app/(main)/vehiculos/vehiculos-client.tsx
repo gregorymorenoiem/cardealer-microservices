@@ -80,7 +80,11 @@ import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
 import { useAuth } from '@/hooks/use-auth';
 import { useSponsoredSearch } from '@/hooks/use-ads';
-import { SponsoredVehicleCard, SidebarAdUnit } from '@/components/advertising/native-ads';
+import {
+  SponsoredVehicleCard,
+  SidebarAdUnit,
+  SponsoredBadge,
+} from '@/components/advertising/native-ads';
 import type { VehicleCardData } from '@/types';
 import type { SponsoredVehicle } from '@/types/ads';
 
@@ -238,7 +242,7 @@ function OklaPromoLeaderboard() {
 
 /**
  * AdSlotLeaderboard — fetches configurable banners from admin portal.
- * Falls back to OKLA self-promo when no active banners are configured.
+ * Returns null when no active banners (removed seller self-promo: this page is for buyers).
  */
 function AdSlotLeaderboard() {
   const { data: banners, isLoading } = useSearchLeaderboardBanners();
@@ -255,7 +259,8 @@ function AdSlotLeaderboard() {
 
   const activeBanner = banners?.[0]; // Show first active banner (rotate in future)
 
-  return activeBanner ? <ConfigurableBannerCard banner={activeBanner} /> : <OklaPromoLeaderboard />;
+  // No fallback — this page is for buyers, not sellers
+  return activeBanner ? <ConfigurableBannerCard banner={activeBanner} /> : null;
 }
 
 function AdSlotRectangle({ className }: { className?: string }) {
@@ -309,6 +314,28 @@ function VehiclesGridSkeleton({ viewMode }: { viewMode: 'grid' | 'list' }) {
       {Array.from({ length: 9 }).map((_, i) => (
         <VehicleCardSkeleton key={i} variant={viewMode === 'list' ? 'horizontal' : 'default'} />
       ))}
+    </div>
+  );
+}
+
+// =============================================================================
+// SPONSORED ROW — Full-width row of 3 ad vehicles inserted every 2 grid rows
+// =============================================================================
+
+function SponsoredRowGrid({ vehicles }: { vehicles: SponsoredVehicle[] }) {
+  if (!vehicles.length) return null;
+  const show = vehicles.slice(0, 3);
+  return (
+    <div className="col-span-full my-1">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-muted-foreground text-xs">Vehículos patrocinados</span>
+        <SponsoredBadge tier="sponsored" />
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {show.map(v => (
+          <SponsoredVehicleCard key={v.id} vehicle={v} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -611,32 +638,28 @@ export default function VehiculosClient() {
                 onFavoriteClick={handleFavoriteToggle}
                 priority={i < 3}
               />
+              {/* Every 6 list items: configurable banner (no seller promo fallback) */}
               {(i + 1) % 6 === 0 && <AdSlotLeaderboard />}
-              {/* Inline sponsored every 10 items */}
-              {(i + 1) % 10 === 0 &&
-                inlineSponsored[Math.floor(i / 10) % inlineSponsored.length] && (
-                  <SponsoredVehicleCard
-                    vehicle={inlineSponsored[Math.floor(i / 10) % inlineSponsored.length]}
-                    variant="horizontal"
-                  />
-                )}
             </React.Fragment>
           ))}
         </>
       );
     }
 
-    // Grid: insert sponsored results + leaderboard
+    // Grid: top sponsored row + organic results with a sponsored row every 6 items
     const items: React.ReactNode[] = [];
 
-    // Top sponsored results (positions 1-3, only on first page)
+    // Top sponsored row (first page only)
     if (topSponsored.length > 0 && currentPage === 1) {
-      topSponsored.slice(0, 3).forEach((sv: SponsoredVehicle) => {
-        items.push(<SponsoredVehicleCard key={`sp-top-${sv.id}`} vehicle={sv} priority />);
-      });
+      items.push(
+        <SponsoredRowGrid key="sp-top" vehicles={topSponsored.slice(0, 3)} />
+      );
     }
 
-    let inlineSponsoredIdx = 0;
+    // Rotating pool of inline sponsored vehicles (cycles if needed)
+    let sponsoredPool = [...inlineSponsored];
+    let sponsoredOffset = 0;
+
     allVehicles.forEach((vehicle: VehicleCardData, i: number) => {
       items.push(
         <VehicleCard
@@ -647,18 +670,20 @@ export default function VehiculosClient() {
           priority={i < 3}
         />
       );
+      // Every 6 organic items (≈ 2 rows in 3-col grid): insert sponsored row
       if ((i + 1) % 6 === 0) {
+        // Cycle through sponsored pool so rows don't repeat if pool < total rows
+        const rowVehicles = sponsoredPool.slice(sponsoredOffset, sponsoredOffset + 3);
+        if (rowVehicles.length === 0 && sponsoredPool.length > 0) {
+          sponsoredOffset = 0; // reset to start of pool
+        }
+        const finalRow = sponsoredPool.slice(sponsoredOffset, sponsoredOffset + 3);
+        if (finalRow.length > 0) {
+          items.push(<SponsoredRowGrid key={`sp-row-${i}`} vehicles={finalRow} />);
+          sponsoredOffset += 3;
+        }
+        // Also show configurable admin banner if available
         items.push(<AdSlotLeaderboard key={`ad-${i}`} />);
-      }
-      // Insert inline sponsored every 8 organic results
-      if ((i + 1) % 8 === 0 && inlineSponsoredIdx < inlineSponsored.length) {
-        items.push(
-          <SponsoredVehicleCard
-            key={`sp-inline-${inlineSponsored[inlineSponsoredIdx].id}`}
-            vehicle={inlineSponsored[inlineSponsoredIdx]}
-          />
-        );
-        inlineSponsoredIdx++;
       }
     });
     return items;
@@ -885,9 +910,9 @@ export default function VehiculosClient() {
                 {/* Sidebar ad slot */}
                 <AdSlotRectangle className="mt-4" />
 
-                {/* Sidebar sponsored vehicles */}
+                {/* Sidebar sponsored vehicles — show ALL with Patrocinado label */}
                 {inlineSponsored.length > 0 && (
-                  <SidebarAdUnit vehicles={inlineSponsored.slice(0, 2)} className="mt-4" />
+                  <SidebarAdUnit vehicles={inlineSponsored} className="mt-4" />
                 )}
               </div>
             </div>
