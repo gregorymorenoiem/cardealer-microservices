@@ -11,70 +11,16 @@ import { useMemo } from 'react';
 import { HeroCompact, BrandSlider, WhyChooseUs, CTASection } from '@/components/homepage';
 import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
+import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { useBrands } from '@/hooks/use-advertising';
 import type { BrandConfig } from '@/types/advertising';
-import {
-  transformHomepageVehicleToVehicle,
-  type HomepageSection,
-  type Vehicle,
-} from '@/services/homepage-sections';
-
-// =============================================
-// TRANSFORM HELPERS
-// =============================================
-
-/**
- * Transform a raw vehicle DTO (from /api/vehicles/featured) to the Vehicle
- * format expected by homepage components.
- */
-const transformFeaturedDtoToVehicle = (dto: Record<string, unknown>): Vehicle => {
-  const images = dto.images as Array<Record<string, unknown>> | undefined;
-  const firstImage = images?.sort((a, b) => {
-    const aOrder = (a.sortOrder as number) ?? (a.order as number) ?? 99;
-    const bOrder = (b.sortOrder as number) ?? (b.order as number) ?? 99;
-    return aOrder - bOrder;
-  })[0];
-  const imageUrl = (firstImage?.url as string) || '/placeholder-car.jpg';
-
-  return {
-    id: dto.id as string,
-    make: dto.make as string,
-    model: dto.model as string,
-    year: dto.year as number,
-    price: dto.price as number,
-    mileage: dto.mileage as number,
-    fuelType: String(dto.fuelType ?? ''),
-    transmission: String(dto.transmission ?? ''),
-    exteriorColor: String(dto.exteriorColor ?? ''),
-    bodyStyle: String(dto.bodyType ?? dto.bodyStyle ?? ''),
-    images: images?.map(i => i.url as string).filter(Boolean) || [imageUrl],
-    condition: 'Used',
-    location: [dto.city, dto.province || dto.state].filter(Boolean).join(', ') || 'Santo Domingo',
-    tier: (dto.isFeatured ? 'featured' : 'basic') as Vehicle['tier'],
-    featuredBadge: dto.isFeatured ? 'destacado' : undefined,
-  };
-};
-
-// =============================================
-// PROPS
-// =============================================
-
-interface HomepageClientProps {
-  sections: HomepageSection[];
-  fallbackVehicles?: Record<string, unknown>[];
-}
 
 // =============================================
 // COMPONENT
 // =============================================
 
-export default function HomepageClient({ sections, fallbackVehicles = [] }: HomepageClientProps) {
-  const getSection = (slug: string) => sections.find(s => s.slug === slug);
-
-  const carousel = getSection('carousel');
-  const destacados = getSection('destacados');
-
+export default function HomepageClient() {
   // Dynamic brands from AdvertisingService
   const { data: apiBrands } = useBrands();
 
@@ -116,22 +62,13 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
       }));
   }, [apiBrands]);
 
-  const heroVehicles: Vehicle[] = useMemo(() => {
-    const source = carousel?.vehicles.length ? carousel : destacados;
-    if (source && source.vehicles.length > 0) {
-      return source.vehicles.map(transformHomepageVehicleToVehicle);
-    }
-    // Fallback: use featured vehicles from the vehicles API
-    if (fallbackVehicles.length > 0) {
-      return fallbackVehicles.slice(0, 5).map(transformFeaturedDtoToVehicle);
-    }
-    return [];
-  }, [carousel, destacados, fallbackVehicles]);
+  // Stable impression token for the dealer banner
+  const bannerImpressionToken = 'banner-dealer-cta-homepage';
 
   return (
     <>
       {/* ── 1. HERO — NL search + vehicle photos ─────────────────────────── */}
-      <HeroCompact vehicles={heroVehicles} isLoading={false} />
+      <HeroCompact />
 
       {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
@@ -182,6 +119,18 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         viewAllHref="/vehiculos?bodyType=sedan"
         accentColor="emerald"
       />
+
+      {/* Dealer CTA banner between type sections */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <NativeBannerAd
+          title="¿Eres dealer? Llega a más compradores"
+          subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
+          ctaText="Conocer más"
+          ctaUrl="/dealers"
+          backgroundGradient="from-emerald-600 to-teal-700"
+          impressionToken={bannerImpressionToken}
+        />
+      </div>
 
       {/* 8. Camionetas / Pickups */}
       <VehicleTypeSection
