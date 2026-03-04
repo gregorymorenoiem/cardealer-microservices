@@ -15,7 +15,7 @@ import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { useBrands } from '@/hooks/use-advertising';
 import type { BrandConfig } from '@/types/advertising';
-import { Car, Truck, Gauge, Leaf, Zap } from 'lucide-react';
+import { Bus, Car, Gauge, Leaf, Truck, Wind, Zap } from 'lucide-react';
 
 // =============================================
 // COMPONENT
@@ -60,10 +60,15 @@ export default function HomepageClient() {
       {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
       {/* 2. ⭐ Vehículos Destacados — espacio pagado FeaturedSpot */}
-      <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={8} />
+      <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={6} />
 
-      {/* 3. 💎 Vehículos Premium — espacio pagado PremiumSpot */}
-      <FeaturedVehicles title="💎 Vehículos Premium" placementType="PremiumSpot" maxItems={8} />
+      {/* 3. 💎 Vehículos Premium — espacio pagado PremiumSpot (sección más grande = precio más alto) */}
+      <FeaturedVehicles
+        title="💎 Vehículos Premium"
+        placementType="PremiumSpot"
+        maxItems={12}
+        columns={4}
+      />
 
       {/* 4. Dealers Patrocinados — espacios pagados por dealers */}
       <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
@@ -82,6 +87,16 @@ export default function HomepageClient() {
         accentColor="blue"
       />
 
+      {/* Crossovers */}
+      <VehicleTypeSection
+        filterValue="Crossover"
+        title="Crossovers"
+        subtitle="Versatilidad urbana con actitud todo terreno"
+        icon={<Car className="inline-block h-6 w-6" />}
+        viewAllHref="/vehiculos?bodyType=crossover"
+        accentColor="sky"
+      />
+
       {/* 7. Sedanes */}
       <VehicleTypeSection
         filterValue="Sedan"
@@ -90,6 +105,16 @@ export default function HomepageClient() {
         icon={<Car className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?bodyType=sedan"
         accentColor="emerald"
+      />
+
+      {/* Hatchbacks */}
+      <VehicleTypeSection
+        filterValue="Hatchback"
+        title="Hatchbacks"
+        subtitle="Agilidad y practicidad en cada viaje"
+        icon={<Car className="inline-block h-6 w-6" />}
+        viewAllHref="/vehiculos?bodyType=hatchback"
+        accentColor="violet"
       />
 
       {/* Dealer CTA banner between type sections */}
@@ -114,14 +139,54 @@ export default function HomepageClient() {
         accentColor="amber"
       />
 
-      {/* 9. Deportivos — Coupe */}
+      {/* 9. Coupés */}
       <VehicleTypeSection
         filterValue="Coupe"
-        title="Deportivos"
-        subtitle="Rendimiento y estilo en cada curva"
+        title="Coupés"
+        subtitle="Diseño elegante y líneas aerodinámicas"
         icon={<Gauge className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?bodyType=coupe"
         accentColor="rose"
+      />
+
+      {/* Deportivos */}
+      <VehicleTypeSection
+        filterValue="Sport"
+        title="Deportivos"
+        subtitle="Rendimiento y adrenalina en cada curva"
+        icon={<Gauge className="inline-block h-6 w-6" />}
+        viewAllHref="/vehiculos?bodyType=sport"
+        accentColor="orange"
+      />
+
+      {/* Convertibles */}
+      <VehicleTypeSection
+        filterValue="Convertible"
+        title="Convertibles"
+        subtitle="Libertad a cielo abierto en cada trayecto"
+        icon={<Wind className="inline-block h-6 w-6" />}
+        viewAllHref="/vehiculos?bodyType=convertible"
+        accentColor="pink"
+      />
+
+      {/* Vans */}
+      <VehicleTypeSection
+        filterValue="Van"
+        title="Vans"
+        subtitle="Capacidad y espacio para toda la familia"
+        icon={<Bus className="inline-block h-6 w-6" />}
+        viewAllHref="/vehiculos?bodyType=van"
+        accentColor="slate"
+      />
+
+      {/* Minivans */}
+      <VehicleTypeSection
+        filterValue="Minivan"
+        title="Minivans"
+        subtitle="El equilibrio perfecto entre comodidad y espacio"
+        icon={<Bus className="inline-block h-6 w-6" />}
+        viewAllHref="/vehiculos?bodyType=minivan"
+        accentColor="yellow"
       />
 
       {/* 10. Híbridos — filter by fuelType */}

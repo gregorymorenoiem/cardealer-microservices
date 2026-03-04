@@ -112,12 +112,15 @@ interface FeaturedVehiclesProps {
   title?: string;
   placementType?: 'FeaturedSpot' | 'PremiumSpot';
   maxItems?: number;
+  /** Number of columns in the grid. 4 = bigger/premium section; 3 = standard. */
+  columns?: 3 | 4;
 }
 
 export default function FeaturedVehicles({
   title = 'Vehículos Destacados',
   placementType = 'FeaturedSpot',
   maxItems = 6,
+  columns = 3,
 }: FeaturedVehiclesProps) {
   const { data: rotation, isLoading } = useHomepageRotation(placementType);
 
@@ -129,6 +132,11 @@ export default function FeaturedVehicles({
   const viewAllHref =
     placementType === 'PremiumSpot' ? '/vehiculos?sortBy=price_desc' : '/vehiculos?sortBy=newest';
 
+  const gridClass =
+    columns === 4
+      ? 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'
+      : 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3';
+
   if (isLoading) {
     return (
       <section className="py-8">
@@ -136,8 +144,7 @@ export default function FeaturedVehicles({
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold">{title}</h2>
           </div>
-          {/* 3-col grid for bigger cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={gridClass}>
             {Array.from({ length: maxItems }).map((_, i) => (
               <Card key={i} className="animate-pulse overflow-hidden border-0 shadow-md">
                 <div className="bg-muted" style={{ aspectRatio: '4/3' }} />
@@ -176,8 +183,7 @@ export default function FeaturedVehicles({
             </Button>
           </Link>
         </div>
-        {/* 3-col grid: cards bigger than the 4-col VehicleTypeSection grids */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={gridClass}>
           {vehicles.map(vehicle => (
             <FeaturedVehicleCard
               key={vehicle.vehicleId}

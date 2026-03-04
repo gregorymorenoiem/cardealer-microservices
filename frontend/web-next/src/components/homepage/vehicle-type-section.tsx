@@ -122,6 +122,31 @@ const accentClasses: Record<string, { badge: string; price: string; viewAll: str
     price: 'text-indigo-600',
     viewAll: 'border-indigo-500 text-indigo-600 hover:bg-indigo-50',
   },
+  sky: {
+    badge: 'bg-sky-500',
+    price: 'text-sky-600',
+    viewAll: 'border-sky-500 text-sky-600 hover:bg-sky-50',
+  },
+  violet: {
+    badge: 'bg-violet-500',
+    price: 'text-violet-600',
+    viewAll: 'border-violet-500 text-violet-600 hover:bg-violet-50',
+  },
+  pink: {
+    badge: 'bg-pink-500',
+    price: 'text-pink-600',
+    viewAll: 'border-pink-500 text-pink-600 hover:bg-pink-50',
+  },
+  slate: {
+    badge: 'bg-slate-500',
+    price: 'text-slate-600',
+    viewAll: 'border-slate-500 text-slate-600 hover:bg-slate-50',
+  },
+  yellow: {
+    badge: 'bg-yellow-500',
+    price: 'text-yellow-600',
+    viewAll: 'border-yellow-500 text-yellow-600 hover:bg-yellow-50',
+  },
 };
 
 // ─────────────────────────────────────────────
