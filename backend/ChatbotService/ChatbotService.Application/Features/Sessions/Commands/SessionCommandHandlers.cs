@@ -30,10 +30,19 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
 
     public async Task<StartSessionResponse> Handle(StartSessionCommand request, CancellationToken ct)
     {
-        // Obtener configuración del chatbot
-        var config = request.DealerId.HasValue
-            ? await _configRepository.GetByDealerIdAsync(request.DealerId.Value, ct)
-            : await _configRepository.GetDefaultAsync(ct);
+        // Obtener configuración del chatbot.
+        // Si hay un dealerId, busca config específica del dealer.
+        // Si no se encuentra (dealer no configurado), cae en la config global/default.
+        ChatbotConfiguration? config = null;
+        if (request.DealerId.HasValue)
+        {
+            config = await _configRepository.GetByDealerIdAsync(request.DealerId.Value, ct)
+                  ?? await _configRepository.GetDefaultAsync(ct);
+        }
+        else
+        {
+            config = await _configRepository.GetDefaultAsync(ct);
+        }
 
         if (config == null)
         {

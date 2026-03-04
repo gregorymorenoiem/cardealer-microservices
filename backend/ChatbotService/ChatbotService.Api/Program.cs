@@ -224,14 +224,14 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
     }
 });
 
-// Apply migrations or create database on startup (development/docker)
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
+// Apply migrations and seed on startup (all environments).
+// The seeder is idempotent: it checks AnyAsync() before inserting.
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
     try
     {
-        // Try migrations first; if none exist, fall back to EnsureCreated
+        // Always apply pending EF migrations
         var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
         if (pendingMigrations.Any())
         {
@@ -240,11 +240,12 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         }
         else
         {
+            // In case the schema was never created (new empty DB)
             await dbContext.Database.EnsureCreatedAsync();
-            Log.Information("Database schema created via EnsureCreated");
+            Log.Information("Database schema verified via EnsureCreated");
         }
 
-        // Seed test data (only if DB is empty)
+        // Seed default configurations (idempotent)
         await ChatbotDataSeeder.SeedAsync(dbContext);
         Log.Information("Database seed check completed");
     }
@@ -255,8 +256,7 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         {
             await dbContext.Database.EnsureCreatedAsync();
             Log.Information("Database schema created via EnsureCreated (fallback)");
-            
-            // Seed test data (only if DB is empty)
+
             await ChatbotDataSeeder.SeedAsync(dbContext);
             Log.Information("Database seed check completed (fallback path)");
         }

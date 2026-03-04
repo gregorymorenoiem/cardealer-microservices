@@ -12,6 +12,7 @@ namespace ChatbotService.Api.Services;
 public static class ChatbotDataSeeder
 {
     // Fixed IDs for reproducibility
+    private static readonly Guid DefaultConfigId = Guid.Parse("00000000-0000-0000-0000-000000000001");
     private static readonly Guid Dealer1ConfigId = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
     private static readonly Guid Dealer2ConfigId = Guid.Parse("b2c3d4e5-f6a7-8901-bcde-f12345678901");
     private static readonly Guid Dealer1Id = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -44,6 +45,39 @@ public static class ChatbotDataSeeder
     {
         return new List<ChatbotConfiguration>
         {
+            // ── DEFAULT / GLOBAL — Fallback for any dealer without a specific config ──
+            new ChatbotConfiguration
+            {
+                Id = DefaultConfigId,
+                DealerId = null, // null = global default, used when no dealer-specific config found
+                Name = "OKLA Bot Global",
+                IsActive = true,
+                Plan = ChatbotPlan.Standard,
+                FreeInteractionsPerMonth = 10000,
+                CostPerInteraction = 0.05m,
+                MaxInteractionsPerSession = 30,
+                MaxInteractionsPerUserPerDay = 100,
+                MaxInteractionsPerUserPerMonth = 1000,
+                MaxGlobalInteractionsPerDay = 50000,
+                MaxGlobalInteractionsPerMonth = 1000000,
+                BotName = "OKLA Bot",
+                BotAvatarUrl = string.Empty,
+                WelcomeMessage = "¡Hola! 👋 Soy el asistente virtual del dealer. Estoy aquí para ayudarte a encontrar el vehículo perfecto en República Dominicana. ¿En qué te puedo ayudar hoy?",
+                OfflineMessage = "Estamos fuera de horario. Te atenderemos en el próximo horario laboral.",
+                LimitReachedMessage = "Has alcanzado el límite de interacciones. ¿Te gustaría que un asesor te contacte directamente?",
+                EnableWebChat = true,
+                EnableAutoInventorySync = false,
+                EnableAutoReports = false,
+                EnableAutoLearning = false,
+                EnableHealthMonitoring = false,
+                TimeZone = "America/Santo_Domingo",
+                LlmProjectId = "okla-claude",
+                LlmModelId = "claude-sonnet-4-5",
+                LanguageCode = "es",
+                SystemPromptText = SystemPromptDefault,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            },
             // ── Dealer 1: Auto Dominicana Premium — Formal, premium ──
             new ChatbotConfiguration
             {
@@ -346,6 +380,50 @@ public static class ChatbotDataSeeder
     // ═══════════════════════════════════════════════════════════════
     // System Prompts per Dealer
     // ═══════════════════════════════════════════════════════════════
+
+    private const string SystemPromptDefault =
+"""
+Eres el asistente virtual de un dealer verificado en OKLA Marketplace (República Dominicana).
+
+TU PERSONALIDAD:
+Eres un asesor de ventas profesional, cálido y honesto. Hablas en español dominicano neutro.
+Eres conciso y directo (2-4 oraciones). Usas emojis moderadamente.
+Entiendes modismos dominicanos: "yipeta" (SUV), "pela'o" (barato), "chivo" (buena oferta).
+
+TU FUNCIÓN PRINCIPAL:
+- Responde preguntas sobre vehículos disponibles en el inventario del dealer.
+- Si el usuario muestra interés de compra, invítalo a agendar una visita o llamada.
+- Si el usuario pide hablar con una persona, indícale que un asesor lo contactará.
+
+LIMITACIONES:
+- Solo habla de vehículos del INVENTARIO DISPONIBLE.
+- NUNCA inventes precios, especificaciones ni datos.
+- NUNCA hables mal de otros dealers.
+
+FORMATO DE RESPUESTA (OBLIGATORIO — responde SIEMPRE en este JSON):
+{
+  "response": "Tu respuesta visible al usuario aquí",
+  "intent": "nombre_del_intent",
+  "confidence": 0.90,
+  "is_fallback": false,
+  "intent_score": 3,
+  "clasificacion": "curioso",
+  "modulo_activo": "qa",
+  "vehiculo_interes_id": null,
+  "handoff_activado": false,
+  "razon_handoff": null,
+  "temas_consulta": [],
+  "cita_propuesta": null,
+  "lead_signals": {
+    "mentionedBudget": false,
+    "requestedTestDrive": false,
+    "askedFinancing": false,
+    "providedContactInfo": false
+  },
+  "suggested_action": null,
+  "quick_replies": ["Ver inventario", "Preguntar precio", "Hablar con asesor"]
+}
+""";
 
     private const string SystemPromptDealer1 = """
 Eres DealerChatAgent (Ana), el asistente de ventas de Auto Dominicana Premium, un concesionario de vehículos premium verificado en OKLA Marketplace (República Dominicana).
