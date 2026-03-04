@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -108,6 +108,32 @@ function FeaturedVehicleCard({
   );
 }
 
+// Placeholder card shown when no paid vehicles are active for this placement
+function EmptyFeaturedSlot({ placementType }: { placementType: 'FeaturedSpot' | 'PremiumSpot' }) {
+  const href = placementType === 'PremiumSpot' ? '/dealers' : '/vender/publicidad';
+  return (
+    <Link href={href} className="group block h-full">
+      <Card className="flex h-full flex-col overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 transition-all hover:border-emerald-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/20">
+        <div
+          className="flex items-center justify-center bg-slate-50 dark:bg-slate-800/30"
+          style={{ aspectRatio: '4/3' }}
+        >
+          <div className="text-center">
+            <span className="text-5xl opacity-20">🚗</span>
+            <p className="mt-2 text-xs font-medium text-slate-400">Espacio disponible</p>
+          </div>
+        </div>
+        <CardContent className="flex-1 p-4">
+          <p className="text-sm font-semibold text-slate-400 transition-colors group-hover:text-emerald-600">
+            Sé el primero aquí
+          </p>
+          <p className="mt-0.5 text-xs text-slate-300">Destaca tu vehículo →</p>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
 interface FeaturedVehiclesProps {
   title?: string;
   placementType?: 'FeaturedSpot' | 'PremiumSpot';
@@ -137,12 +163,28 @@ export default function FeaturedVehicles({
       ? 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'
       : 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3';
 
+  // Complies with Ley 358-05 — must disclose paid/sponsored content
+  const sponsoredBadgeClass =
+    placementType === 'PremiumSpot'
+      ? 'mt-1.5 inline-flex items-center gap-1 rounded-full border border-purple-200/60 bg-purple-50/90 px-2.5 py-0.5 text-[11px] font-medium text-purple-700 dark:border-purple-800/60 dark:bg-purple-900/20 dark:text-purple-400'
+      : 'mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200/60 bg-amber-50/90 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-400';
+
   if (isLoading) {
     return (
       <section className="py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">{title}</h2>
+            <div>
+              <h2 className="text-2xl font-bold">{title}</h2>
+              <span
+                title="Contenido publicitario pagado por anunciantes"
+                aria-label="Espacio publicitario patrocinado"
+                className={sponsoredBadgeClass}
+              >
+                <Megaphone className="h-2.5 w-2.5" />
+                Espacio Patrocinado
+              </span>
+            </div>
           </div>
           <div className={gridClass}>
             {Array.from({ length: maxItems }).map((_, i) => (
@@ -166,16 +208,59 @@ export default function FeaturedVehicles({
     .filter(v => v.title && v.imageUrl && v.price)
     .slice(0, maxItems);
 
-  // Hide the entire section if there are no real vehicles
-  if (!vehicles.length) return null;
+  // When no paid vehicles are active — show placeholder slots so the section is always visible
+  if (!vehicles.length) {
+    return (
+      <section className="py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
+                {title}
+              </h2>
+              <span
+                title="Contenido publicitario pagado por anunciantes"
+                aria-label="Espacio publicitario patrocinado"
+                className={sponsoredBadgeClass}
+              >
+                <Megaphone className="h-2.5 w-2.5" />
+                Espacio Patrocinado
+              </span>
+            </div>
+            <Link href={viewAllHref}>
+              <Button variant="outline" className={`group ${accentColor.border}`}>
+                Ver todos
+                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
+          <div className={gridClass}>
+            {Array.from({ length: maxItems }).map((_, i) => (
+              <EmptyFeaturedSlot key={i} placementType={placementType} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
-            {title}
-          </h2>
+          <div>
+            <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
+              {title}
+            </h2>
+            <span
+              title="Contenido publicitario pagado por anunciantes"
+              aria-label="Espacio publicitario patrocinado"
+              className={sponsoredBadgeClass}
+            >
+              <Megaphone className="h-2.5 w-2.5" />
+              Espacio Patrocinado
+            </span>
+          </div>
           <Link href={viewAllHref}>
             <Button variant="outline" className={`group ${accentColor.border}`}>
               Ver todos

@@ -170,9 +170,9 @@ function VehicleCard({
   const location = [vehicle.city, vehicle.state].filter(Boolean).join(', ') || 'R.D.';
 
   return (
-    <Link href={buildVehicleSlug(vehicle)} className="group block">
-      <Card className="overflow-hidden border-0 shadow-md transition-shadow hover:shadow-xl">
-        <div className="bg-muted relative aspect-[16/10]">
+    <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
+      <Card className="flex h-full flex-col overflow-hidden border-0 shadow-md transition-shadow hover:shadow-xl">
+        <div className="bg-muted relative aspect-[4/3]">
           <Image
             src={primaryImage}
             alt={vehicle.title || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
@@ -215,11 +215,26 @@ function VehicleCard({
 function SkeletonCard() {
   return (
     <Card className="animate-pulse overflow-hidden border-0 shadow-md">
-      <div className="bg-muted aspect-[16/10]" />
+      <div className="bg-muted aspect-[4/3]" />
       <CardContent className="space-y-2 p-4">
         <div className="bg-muted h-4 w-3/4 rounded" />
         <div className="bg-muted h-5 w-1/2 rounded" />
         <div className="bg-muted h-3 w-2/3 rounded" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyVehicleCard() {
+  return (
+    <Card className="flex h-full flex-col overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
+      <div className="flex aspect-[4/3] items-center justify-center bg-slate-50 dark:bg-slate-800/30">
+        <span className="text-5xl opacity-20">🚗</span>
+      </div>
+      <CardContent className="flex-1 p-4">
+        <div className="bg-muted h-4 w-3/4 rounded" />
+        <div className="bg-muted mt-2 h-5 w-1/2 rounded" />
+        <div className="bg-muted mt-2 h-3 w-2/3 rounded" />
       </CardContent>
     </Card>
   );
@@ -271,7 +286,7 @@ export default function VehicleTypeSection({
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: maxItems }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
@@ -280,8 +295,37 @@ export default function VehicleTypeSection({
     );
   }
 
-  // Don't render empty sections
-  if (!vehicles.length) return null;
+  // Render empty placeholder cards when no vehicles are available for this type
+  if (!vehicles.length) {
+    return (
+      <section className="py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
+                {icon && <span className="mr-2">{icon}</span>}
+                {title}
+              </h2>
+              {subtitle && (
+                <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{subtitle}</p>
+              )}
+            </div>
+            <Link href={viewAllHref}>
+              <Button variant="outline" className={`group ${colors.viewAll}`}>
+                Ver todos
+                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <EmptyVehicleCard key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8">
