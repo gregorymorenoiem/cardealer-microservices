@@ -11,7 +11,6 @@ import { useMemo } from 'react';
 import { HeroCompact, BrandSlider, WhyChooseUs, CTASection } from '@/components/homepage';
 import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
-import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { useBrands } from '@/hooks/use-advertising';
 import type { BrandConfig } from '@/types/advertising';
@@ -129,9 +128,6 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
     return [];
   }, [carousel, destacados, fallbackVehicles]);
 
-  // Stable impression token for the dealer banner (constant — same for all sessions)
-  const bannerImpressionToken = 'banner-dealer-cta-homepage';
-
   return (
     <>
       {/* ── 1. HERO — NL search + vehicle photos ─────────────────────────── */}
@@ -188,18 +184,6 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         viewAllHref="/vehiculos?bodyType=sedan"
         accentColor="emerald"
       />
-
-      {/* Dealer CTA banner between type sections */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <NativeBannerAd
-          title="¿Eres dealer? Llega a más compradores"
-          subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
-          ctaText="Conocer más"
-          ctaUrl="/dealers"
-          backgroundGradient="from-emerald-600 to-teal-700"
-          impressionToken={bannerImpressionToken}
-        />
-      </div>
 
       {/* 8. Camionetas / Pickups */}
       <VehicleTypeSection
