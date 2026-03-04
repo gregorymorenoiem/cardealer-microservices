@@ -22,7 +22,6 @@ import {
 } from '@/components/homepage';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { SponsoredSection, NativeBannerAd } from '@/components/advertising/native-ads';
-import { HomepageNlpSearch } from '@/components/homepage/homepage-nlp-search';
 import { useBrands, useCategories } from '@/hooks/use-advertising';
 import { useHomepageAds } from '@/hooks/use-ads';
 import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
@@ -218,13 +217,6 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
     <>
       {/* Hero Section - Compact with vehicles visible immediately */}
       <HeroCompact vehicles={heroVehicles} isLoading={false} />
-
-      {/* AI-Powered NLP Search Bar */}
-      <section className="relative z-20 -mt-8 pb-4">
-        <div className="mx-auto max-w-4xl px-4">
-          <HomepageNlpSearch />
-        </div>
-      </section>
 
       {/* Featured Vehicles Grid - IMMEDIATE after hero */}
       <SectionContainer

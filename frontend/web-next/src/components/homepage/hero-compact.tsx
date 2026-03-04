@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import {
   Search,
   ChevronDown,
@@ -24,12 +24,15 @@ import {
   Heart,
   Gauge,
   MapPin,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import type { Vehicle } from '@/services/homepage-sections';
+import { aiSearch, aiFiltersToUrlParams } from '@/services/search-agent';
 
 // =============================================================================
 // TYPES
@@ -72,7 +75,151 @@ const modelsByMake: Record<string, string[]> = {
 };
 
 // =============================================================================
-// COMPACT SEARCH BAR
+// NATURAL LANGUAGE HERO SEARCH BAR (replaces filter dropdowns)
+// =============================================================================
+
+const NL_SUGGESTION_CHIPS = [
+  { label: '🚗 Toyota', query: 'Toyota Corolla' },
+  { label: '🏔️ SUV Familiar', query: 'SUV familiar buen precio' },
+  { label: '💰 Hasta 500K', query: 'Carro usado menos de 500 mil' },
+  { label: '⚡ Híbrido', query: 'Vehículo híbrido' },
+  { label: '🛻 Camioneta', query: 'Camioneta pickup' },
+];
+
+function NaturalLanguageHeroSearch() {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleSearch = useCallback(
+    async (searchQuery?: string) => {
+      const q = (searchQuery ?? query).trim();
+      if (!q) return;
+
+      setIsSearching(true);
+      try {
+        const result = await aiSearch({ query: q });
+        if (result.aiFilters?.filtros_exactos) {
+          const params = aiFiltersToUrlParams(result.aiFilters.filtros_exactos);
+          const searchParams = new URLSearchParams();
+          searchParams.set('q', q);
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              searchParams.set(key, String(value));
+            }
+          });
+          if (result.aiFilters.ordenar_por) {
+            searchParams.set('sortBy', result.aiFilters.ordenar_por);
+          }
+          router.push(`/vehiculos?${searchParams.toString()}`);
+        } else {
+          router.push(`/vehiculos?q=${encodeURIComponent(q)}`);
+        }
+      } catch {
+        router.push(`/vehiculos?q=${encodeURIComponent(q)}`);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [query, router]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSearch();
+      }
+    },
+    [handleSearch]
+  );
+
+  return (
+    <div className="w-full">
+      {/* Main Container — same style as the old CompactSearchBar */}
+      <div
+        className={cn(
+          'bg-card/95 dark:bg-card/90 mx-auto w-full max-w-5xl rounded-2xl border p-2 shadow-2xl shadow-black/20 backdrop-blur-sm transition-all duration-300',
+          isFocused
+            ? 'border-primary shadow-primary/20'
+            : 'border-white/20 dark:border-white/10'
+        )}
+      >
+        <div className="flex flex-col gap-2 md:flex-row">
+          {/* Sparkle icon + text input */}
+          <div className="border-border bg-muted relative flex flex-1 items-center gap-3 rounded-xl border px-4">
+            <Sparkles
+              className={cn(
+                'h-5 w-5 shrink-0 transition-colors',
+                isFocused ? 'text-primary' : 'text-muted-foreground'
+              )}
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder='Busca tu vehículo ideal... ej: "SUV Toyota menos de 1 millón"'
+              className="text-foreground placeholder:text-muted-foreground h-12 flex-1 bg-transparent text-sm font-medium focus:outline-none"
+              disabled={isSearching}
+              autoComplete="off"
+            />
+          </div>
+
+          {/* Search Button — identical style to old filter search button */}
+          <button
+            onClick={() => handleSearch()}
+            disabled={isSearching}
+            className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSearching ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Buscando...</span>
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                <span>Buscar</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* AI subtitle */}
+      <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-white/70">
+        <Sparkles className="h-3 w-3" />
+        <span>Búsqueda con IA — escribe lo que quieras en español</span>
+      </div>
+
+      {/* Suggestion chips */}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+        {NL_SUGGESTION_CHIPS.map(chip => (
+          <button
+            key={chip.label}
+            onClick={() => {
+              setQuery(chip.query);
+              handleSearch(chip.query);
+            }}
+            disabled={isSearching}
+            className="hover:border-primary/50 hover:bg-primary rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:text-white"
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// COMPACT SEARCH BAR (kept for reference, no longer used in hero)
 // =============================================================================
 
 function CompactSearchBar() {
@@ -593,12 +740,12 @@ export function HeroCompact({ vehicles = [], isLoading = false, className }: Her
             </p>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar — Natural Language */}
           <div
             className="animate-slide-up mb-6 w-full max-w-4xl"
             style={{ animationDelay: '300ms' }}
           >
-            <CompactSearchBar />
+            <NaturalLanguageHeroSearch />
           </div>
 
           {/* Quick Filters */}
