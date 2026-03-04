@@ -100,6 +100,9 @@ public class GenerateRecommendationsQueryHandler : IRequestHandler<GenerateRecom
             // 8. Enforce business rules post-processing
             EnforceBusinessRules(aiResponse, config);
 
+            // 8b. Anti-hallucination guardrail: strip any vehiculo_ids not present in candidates
+            ValidateAndFilterCandidateIds(aiResponse, request.Request.Candidatos);
+
             // 9. Cache the response
             var responseJson = JsonSerializer.Serialize(aiResponse);
             await _cacheService.SetCachedResponseAsync(cacheKey, responseJson, cacheTtl, ct);
@@ -279,6 +282,21 @@ public class GenerateRecommendationsQueryHandler : IRequestHandler<GenerateRecom
             - Nivel 2: 3-10 vistas → filtrado por contenido básico
             - Nivel 3: >10 vistas o 1 favorito → motor completo
 
+            CAMPOS DE CANDIDATOS (referencia para interpretación correcta):
+            - id: identificador único del vehículo en OKLA — copia este valor EXACTO en vehiculo_id
+            - okla_score: score de calidad 0-100 (fotos, descripción, precio competitivo)
+            - ad_active: true = este dealer paga para aparecer como patrocinado (aplica regla #2)
+            - dealer_verificado: true = identidad del vendedor verificada por OKLA
+            - fotos_count: número de fotos del listado (más fotos = mejor calidad)
+            - ubicacion: provincia/ciudad en República Dominicana
+
+            ⛔ ANTI-ALUCINACIÓN (CRÍTICO — INCUMPLIR ESTO ES UN ERROR GRAVE):
+            1. NUNCA inventes vehiculo_ids. Usa SOLAMENTE los valores exactos del campo "id" de los candidatos.
+            2. Si tienes menos de 8 candidatos, incluye TODOS los disponibles y no inventes más.
+            3. NO repitas el mismo vehiculo_id en múltiples recomendaciones.
+            4. Si "candidatos" está vacío, devuelve "recomendaciones": [] y cold_start_nivel: 0.
+            5. Cada vehiculo_id en tu respuesta DEBE existir literalmente en la lista de candidatos.
+
             RESPONDE ÚNICAMENTE con un objeto JSON válido siguiendo este esquema:
             {
               "recomendaciones": [
@@ -309,7 +327,7 @@ public class GenerateRecommendationsQueryHandler : IRequestHandler<GenerateRecom
               "proxima_actualizacion": "ISO datetime"
             }
 
-            Sin texto adicional. Solo JSON. NUNCA inventes IDs de vehículos — usa SOLO los IDs de los candidatos proporcionados.
+            Sin texto adicional. Solo JSON válido. Sin markdown.
             """;
     }
 
@@ -364,5 +382,41 @@ public class GenerateRecommendationsQueryHandler : IRequestHandler<GenerateRecom
             ConfianzaRecomendaciones = 0.1f,
             ProximaActualizacion = DateTime.UtcNow.AddHours(4)
         };
+    }
+
+    /// <summary>
+    /// Removes recommendations whose vehiculo_id does not exist in the provided candidates.
+    /// This is the primary anti-hallucination guardrail — AI must ONLY reference provided IDs.
+    /// </summary>
+    private void ValidateAndFilterCandidateIds(
+        RecoAgentResponse response,
+        List<VehicleCandidate> candidates)
+    {
+        if (candidates.Count == 0)
+            return; // Cold start level 0/1: no candidates expected
+
+        var validIds = new HashSet<string>(
+            candidates.Select(c => c.Id),
+            StringComparer.OrdinalIgnoreCase);
+
+        var before = response.Recomendaciones.Count;
+
+        response.Recomendaciones = response.Recomendaciones
+            .Where(r => !string.IsNullOrEmpty(r.VehiculoId) && validIds.Contains(r.VehiculoId))
+            .ToList();
+
+        var removed = before - response.Recomendaciones.Count;
+        if (removed > 0)
+        {
+            _logger.LogWarning(
+                "RecoAgent anti-hallucination: removed {Count} recommendation(s) with IDs not in "
+                + "candidate list. Confidence reduced from {OldConf:F2} to {NewConf:F2}",
+                removed,
+                response.ConfianzaRecomendaciones,
+                response.ConfianzaRecomendaciones * 0.5f);
+
+            response.ConfianzaRecomendaciones =
+                (float)Math.Round(response.ConfianzaRecomendaciones * 0.5f, 2);
+        }
     }
 }

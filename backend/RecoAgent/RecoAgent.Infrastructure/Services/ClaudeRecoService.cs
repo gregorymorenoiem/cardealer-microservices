@@ -43,7 +43,10 @@ public class ClaudeRecoService : IClaudeRecoService
             Model = "claude-sonnet-4-5-20251022",
             MaxTokens = maxTokens,
             Temperature = temperature,
-            System = systemPrompt,
+            System =
+            [
+                new { type = "text", text = systemPrompt, cache_control = new { type = "ephemeral" } }
+            ],
             Messages =
             [
                 new ClaudeMessage { Role = "user", Content = userProfileJson }
@@ -64,6 +67,7 @@ public class ClaudeRecoService : IClaudeRecoService
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
         request.Headers.Add("x-api-key", _apiKey);
         request.Headers.Add("anthropic-version", "2023-06-01");
+        request.Headers.Add("anthropic-beta", "prompt-caching-2024-07-31");
         request.Content = content;
 
         _logger.LogDebug("Sending recommendation request to Claude Sonnet 4.5");
@@ -102,6 +106,16 @@ public class ClaudeRecoService : IClaudeRecoService
                 .Trim();
         }
 
+        if (claudeResponse?.Usage != null)
+        {
+            _logger.LogInformation(
+                "RecoAgent tokens: input={Input}, output={Output}, cache_creation={CC}, cache_read={CR}",
+                claudeResponse.Usage.InputTokens,
+                claudeResponse.Usage.OutputTokens,
+                claudeResponse.Usage.CacheCreationInputTokens,
+                claudeResponse.Usage.CacheReadInputTokens);
+        }
+
         _logger.LogInformation("Claude Sonnet 4.5 returned recommendation response");
         return jsonText;
     }
@@ -121,7 +135,7 @@ internal class ClaudeRequest
     public float Temperature { get; set; } = 0.5f;
 
     [JsonPropertyName("system")]
-    public string System { get; set; } = string.Empty;
+    public List<object> System { get; set; } = [];
 
     [JsonPropertyName("messages")]
     public List<ClaudeMessage> Messages { get; set; } = [];
@@ -176,6 +190,12 @@ internal class ClaudeUsage
 
     [JsonPropertyName("output_tokens")]
     public int OutputTokens { get; set; }
+
+    [JsonPropertyName("cache_creation_input_tokens")]
+    public int CacheCreationInputTokens { get; set; }
+
+    [JsonPropertyName("cache_read_input_tokens")]
+    public int CacheReadInputTokens { get; set; }
 }
 
 #endregion
