@@ -10,25 +10,19 @@
 import { useMemo } from 'react';
 import {
   HeroCompact,
-  FeaturedListingGrid,
-  FeaturedSection,
-  SectionContainer,
-  CategoryCards,
   BrandSlider,
   WhyChooseUs,
   CTASection,
-  SkeletonGrid,
-  type FeaturedListingItem,
 } from '@/components/homepage';
+import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
-import { useBrands, useCategories } from '@/hooks/use-advertising';
-import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
+import { useBrands } from '@/hooks/use-advertising';
+import type { BrandConfig } from '@/types/advertising';
 import {
   transformHomepageVehicleToVehicle,
   type HomepageSection,
-  type HomepageVehicle,
   type Vehicle,
 } from '@/services/homepage-sections';
 
@@ -68,29 +62,6 @@ const transformFeaturedDtoToVehicle = (dto: Record<string, unknown>): Vehicle =>
   };
 };
 
-const transformToFeaturedListing = (
-  v: HomepageVehicle,
-  categoryName: string
-): FeaturedListingItem => ({
-  id: v.id,
-  title: `${v.year} ${v.make} ${v.model}`,
-  price: v.price,
-  mileage: v.mileage,
-  location: 'Santo Domingo, RD',
-  imageUrl: v.imageUrl || (v.imageUrls.length > 0 ? v.imageUrls[0] : '/placeholder-car.jpg'),
-  category: categoryName,
-  year: v.year,
-  make: v.make,
-  model: v.model,
-  fuelType: v.fuelType,
-  transmission: v.transmission,
-});
-
-const transformSectionVehicles = (section: HomepageSection | undefined): FeaturedListingItem[] => {
-  if (!section || section.vehicles.length === 0) return [];
-  return section.vehicles.map(v => transformToFeaturedListing(v, section.name));
-};
-
 // =============================================
 // PROPS
 // =============================================
@@ -109,22 +80,12 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
 
   const carousel = getSection('carousel');
   const destacados = getSection('destacados');
-  const sedanes = getSection('sedanes');
-  const suvs = getSection('suvs');
-  const camionetas = getSection('camionetas');
-  const deportivos = getSection('deportivos');
-  const lujo = getSection('lujo');
-  const hibridos = getSection('hibridos');
-  const electricos = getSection('electricos');
 
-  // Dynamic brands & categories from AdvertisingService
+  // Dynamic brands from AdvertisingService
   const { data: apiBrands } = useBrands();
-  const { data: apiCategories } = useCategories();
 
   // Sponsored dealers for brand slider
   const dealerSponsors = useMemo(() => {
-    // Pull dealer sponsors from the rotation/campaigns (dealers who pay for brand visibility)
-    // This uses the existing advertising system — dealers with active campaigns appear here
     if (!apiBrands || apiBrands.length === 0) return undefined;
     return apiBrands
       .filter(
@@ -161,23 +122,6 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
       }));
   }, [apiBrands]);
 
-  const dynamicCategories = useMemo(() => {
-    if (!apiCategories || apiCategories.length === 0) return undefined;
-    return apiCategories
-      .filter((c: CategoryImageConfig) => c.isActive)
-      .sort((a: CategoryImageConfig, b: CategoryImageConfig) => a.displayOrder - b.displayOrder)
-      .map((c: CategoryImageConfig) => ({
-        id: c.id,
-        name: c.displayName,
-        slug: c.categoryKey.toLowerCase(),
-        description: c.description,
-        vehicleCount: 0,
-        imageUrl: c.imageUrl,
-        gradient: c.accentColor || 'from-blue-600 to-blue-800',
-        trending: c.isTrending,
-      }));
-  }, [apiCategories]);
-
   const heroVehicles: Vehicle[] = useMemo(() => {
     const source = carousel?.vehicles.length ? carousel : destacados;
     if (source && source.vehicles.length > 0) {
@@ -190,57 +134,26 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
     return [];
   }, [carousel, destacados, fallbackVehicles]);
 
-  const gridVehicles: Vehicle[] = useMemo(() => {
-    const source = destacados?.vehicles.length ? destacados : carousel;
-    if (source && source.vehicles.length > 0) {
-      return source.vehicles.map(transformHomepageVehicleToVehicle);
-    }
-    // Fallback: use featured vehicles from the vehicles API
-    if (fallbackVehicles.length > 0) {
-      return fallbackVehicles.map(transformFeaturedDtoToVehicle);
-    }
-    return [];
-  }, [destacados, carousel, fallbackVehicles]);
-
-  const categorySections = useMemo(() => {
-    // Vehicle-type sections in order: SUV, Sedan, Camioneta, Deportivo, Híbrido, Eléctrico, Lujo
-    // Excludes 'destacados' — already shown in the FeaturedVehicles (FeaturedSpot) above
-    return [suvs, sedanes, camionetas, deportivos, hibridos, electricos, lujo].filter(
-      (section): section is HomepageSection => !!section && section.vehicles.length > 0
-    );
-  }, [suvs, sedanes, camionetas, deportivos, hibridos, electricos, lujo]);
-
-  // Stable impression token for the dealer banner
-  // eslint-disable-next-line react-hooks/purity
-  const bannerImpressionToken = useMemo(() => `banner-dealer-cta-${Date.now()}`, []);
+  // Stable impression token for the dealer banner (constant — same for all sessions)
+  const bannerImpressionToken = 'banner-dealer-cta-homepage';
 
   return (
     <>
-      {/* 1. HERO — NL search + vehicle photos */}
+      {/* ── 1. HERO — NL search + vehicle photos ─────────────────────────── */}
       <HeroCompact vehicles={heroVehicles} isLoading={false} />
 
-      {/* ── SECCIONES DE FOTOS GRANDES (primeras) ──────────────────────────── */}
+      {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
-      {/* 2. LARGE: Vehículos Destacados — espacio pagado (FeaturedSpot) */}
+      {/* 2. ⭐ Vehículos Destacados — espacio pagado FeaturedSpot */}
       <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={8} />
 
-      {/* 3. LARGE: Grid de Vehículos — catálogo CMS con fotos grandes */}
-      <SectionContainer
-        title="Más Vehículos en Venta"
-        subtitle="Explora nuestra selección de vehículos cuidadosamente verificados"
-        background="gradient"
-      >
-        {gridVehicles.length > 0 ? (
-          <FeaturedListingGrid vehicles={gridVehicles} maxItems={9} />
-        ) : (
-          <SkeletonGrid count={6} columns={3} />
-        )}
-      </SectionContainer>
+      {/* 3. 💎 Vehículos Premium — espacio pagado PremiumSpot */}
+      <FeaturedVehicles title="💎 Vehículos Premium" placementType="PremiumSpot" maxItems={8} />
 
-      {/* 4. PAID: Dealers patrocinados — espacios pagados por dealers */}
+      {/* 4. Dealers Patrocinados — espacios pagados por dealers */}
       <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
 
-      {/* 5. BRANDS: Marcas más buscadas en República Dominicana */}
+      {/* 5. Marcas más buscadas en República Dominicana */}
       <section className="bg-muted/30 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-muted-foreground mb-4 text-center text-xs font-semibold tracking-widest uppercase">
@@ -255,51 +168,85 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         </div>
       </section>
 
-      {/* ── SECCIONES POR TIPO DE VEHÍCULO (al final, tamaño Destacados) ──── */}
+      {/* ── SECCIONES POR TIPO DE VEHÍCULO ──────────────────────────────── */}
+      {/* Same card size as ⭐ Destacados — 4-column large-photo grid.      */}
+      {/* Each section fetches live data from the vehicles API by type.     */}
 
-      {/* 6-12. Vehicle-type sections — compact horizontal scroll, same size as Destacados */}
-      {categorySections.map((section, index) => (
-        <div key={section.slug}>
-          <FeaturedSection
-            title={section.name}
-            subtitle={section.subtitle}
-            listings={transformSectionVehicles(section)}
-            viewAllHref={section.viewAllHref}
-            accentColor={section.accentColor}
-          />
-          {/* Dealer banner between 2nd and 3rd type section */}
-          {index === 1 && (
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-              <NativeBannerAd
-                title="¿Eres dealer? Llega a más compradores"
-                subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
-                ctaText="Conocer más"
-                ctaUrl="/dealers"
-                backgroundGradient="from-emerald-600 to-teal-700"
-                impressionToken={bannerImpressionToken}
-              />
-            </div>
-          )}
-        </div>
-      ))}
+      {/* 6. SUVs */}
+      <VehicleTypeSection
+        filterValue="SUV"
+        title="SUVs"
+        subtitle="Los más solicitados en República Dominicana"
+        icon="🚙"
+        viewAllHref="/vehiculos?bodyType=suv"
+        accentColor="blue"
+      />
 
-      {/* Browse by Category — quick-nav visual grid */}
-      <section className="bg-muted/50 dark:bg-muted/20 py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center">
-            <span className="bg-primary/10 text-primary mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide">
-              Explora por Categoría
-            </span>
-            <h2 className="text-foreground mb-3 text-2xl leading-tight font-bold tracking-tight lg:text-3xl">
-              Encuentra el tipo de vehículo perfecto
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-xl text-base leading-relaxed">
-              Desde SUVs familiares hasta eléctricos de última generación.
-            </p>
-          </div>
-          <CategoryCards categories={dynamicCategories} />
-        </div>
-      </section>
+      {/* 7. Sedanes */}
+      <VehicleTypeSection
+        filterValue="Sedan"
+        title="Sedanes"
+        subtitle="Comodidad y eficiencia para el día a día"
+        icon="🚗"
+        viewAllHref="/vehiculos?bodyType=sedan"
+        accentColor="emerald"
+      />
+
+      {/* Dealer CTA banner between type sections */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <NativeBannerAd
+          title="¿Eres dealer? Llega a más compradores"
+          subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
+          ctaText="Conocer más"
+          ctaUrl="/dealers"
+          backgroundGradient="from-emerald-600 to-teal-700"
+          impressionToken={bannerImpressionToken}
+        />
+      </div>
+
+      {/* 8. Camionetas / Pickups */}
+      <VehicleTypeSection
+        filterValue="Pickup"
+        title="Camionetas"
+        subtitle="Potencia y versatilidad para trabajo y aventura"
+        icon="🛻"
+        viewAllHref="/vehiculos?bodyType=pickup"
+        accentColor="amber"
+      />
+
+      {/* 9. Deportivos — Coupe */}
+      <VehicleTypeSection
+        filterValue="Coupe"
+        title="Deportivos"
+        subtitle="Rendimiento y estilo en cada curva"
+        icon="🏎️"
+        viewAllHref="/vehiculos?bodyType=coupe"
+        accentColor="rose"
+      />
+
+      {/* 10. Híbridos — filter by fuelType */}
+      <VehicleTypeSection
+        filterType="fuelType"
+        filterValue="Hybrid"
+        title="Híbridos"
+        subtitle="Mayor eficiencia, menor impacto ambiental"
+        icon="🌿"
+        viewAllHref="/vehiculos?fuelType=hibrido"
+        accentColor="teal"
+      />
+
+      {/* 11. Eléctricos — filter by fuelType */}
+      <VehicleTypeSection
+        filterType="fuelType"
+        filterValue="Electric"
+        title="Eléctricos"
+        subtitle="El futuro de la movilidad ya está aquí"
+        icon="⚡"
+        viewAllHref="/vehiculos?fuelType=electrico"
+        accentColor="indigo"
+      />
+
+      {/* ── FINAL ──────────────────────────────────────────────────────────── */}
 
       {/* Why Choose OKLA */}
       <WhyChooseUs variant="grid" />
