@@ -72,8 +72,10 @@ export interface SupportChatMessage {
 export async function sendSupportMessage(
   request: SupportMessageRequest
 ): Promise<SupportMessageResponse> {
+  // Claude Haiku can take 10-12s on cold start (7k token system prompt).
+  // 30s gives enough buffer even after Gateway + Next.js proxy overhead.
   const response = await apiClient.post('/api/support/message', request, {
-    timeout: 15_000,
+    timeout: 30_000,
   });
   // Backend wraps in ApiResponse<T> → { success, data: { sessionId, response, ... } }
   const body = response.data;

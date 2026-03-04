@@ -21,10 +21,9 @@ import {
   type FeaturedListingItem,
 } from '@/components/homepage';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
-import { SponsoredSection, NativeBannerAd } from '@/components/advertising/native-ads';
+import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { useBrands, useCategories } from '@/hooks/use-advertising';
-import { useHomepageAds } from '@/hooks/use-ads';
 import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
 import {
   transformHomepageVehicleToVehicle,
@@ -115,13 +114,12 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
   const camionetas = getSection('camionetas');
   const deportivos = getSection('deportivos');
   const lujo = getSection('lujo');
+  const hibridos = getSection('hibridos');
+  const electricos = getSection('electricos');
 
   // Dynamic brands & categories from AdvertisingService
   const { data: apiBrands } = useBrands();
   const { data: apiCategories } = useCategories();
-
-  // Sponsored vehicles for native ad slots
-  const { gridSponsored, recommendedSponsored, categorySponsored } = useHomepageAds();
 
   // Sponsored dealers for brand slider
   const dealerSponsors = useMemo(() => {
@@ -205,10 +203,12 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
   }, [destacados, carousel, fallbackVehicles]);
 
   const categorySections = useMemo(() => {
-    return [sedanes, suvs, camionetas, deportivos, destacados, lujo].filter(
+    // Vehicle-type sections in order: SUV, Sedan, Camioneta, Deportivo, Híbrido, Eléctrico, Lujo
+    // Excludes 'destacados' — already shown in the FeaturedVehicles (FeaturedSpot) above
+    return [suvs, sedanes, camionetas, deportivos, hibridos, electricos, lujo].filter(
       (section): section is HomepageSection => !!section && section.vehicles.length > 0
     );
-  }, [sedanes, suvs, camionetas, deportivos, destacados, lujo]);
+  }, [suvs, sedanes, camionetas, deportivos, hibridos, electricos, lujo]);
 
   // Stable impression token for the dealer banner
   // eslint-disable-next-line react-hooks/purity
@@ -216,13 +216,18 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
 
   return (
     <>
-      {/* Hero Section - Compact with vehicles visible immediately */}
+      {/* 1. HERO — NL search + vehicle photos */}
       <HeroCompact vehicles={heroVehicles} isLoading={false} />
 
-      {/* Featured Vehicles Grid - IMMEDIATE after hero */}
+      {/* ── SECCIONES DE FOTOS GRANDES (primeras) ──────────────────────────── */}
+
+      {/* 2. LARGE: Vehículos Destacados — espacio pagado (FeaturedSpot) */}
+      <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={8} />
+
+      {/* 3. LARGE: Grid de Vehículos — catálogo CMS con fotos grandes */}
       <SectionContainer
-        title="Más Vehículos"
-        subtitle="Explora nuestra selección premium de vehículos cuidadosamente verificados"
+        title="Más Vehículos en Venta"
+        subtitle="Explora nuestra selección de vehículos cuidadosamente verificados"
         background="gradient"
       >
         {gridVehicles.length > 0 ? (
@@ -232,10 +237,10 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         )}
       </SectionContainer>
 
-      {/* Dealer Promotional Section — paid sponsorship grid */}
+      {/* 4. PAID: Dealers patrocinados — espacios pagados por dealers */}
       <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
 
-      {/* Car Brands Slider — "Las marcas más populares" */}
+      {/* 5. BRANDS: Marcas más buscadas en República Dominicana */}
       <section className="bg-muted/30 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-muted-foreground mb-4 text-center text-xs font-semibold tracking-widest uppercase">
@@ -250,47 +255,10 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         </div>
       </section>
 
-      {/* Sponsored: Recomendados para Ti — Native ad section */}
-      {recommendedSponsored.length > 0 && (
-        <section className="bg-gradient-to-b from-slate-50 to-white py-12 lg:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SponsoredSection
-              title="Recomendados para Ti"
-              subtitle="Vehículos seleccionados basados en las tendencias del mercado"
-              vehicles={recommendedSponsored}
-              variant="grid"
-              columns={3}
-            />
-          </div>
-        </section>
-      )}
+      {/* ── SECCIONES POR TIPO DE VEHÍCULO (al final, tamaño Destacados) ──── */}
 
-      {/* Featured Sponsored Vehicles */}
-      <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={8} />
-
-      {/* Premium Sponsored Vehicles */}
-      <FeaturedVehicles title="💎 Vehículos Premium" placementType="PremiumSpot" maxItems={4} />
-
-      {/* Browse by Category */}
-      <section className="bg-muted/50 dark:bg-muted/20 py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center">
-            <span className="bg-primary/10 text-primary mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide">
-              Explora por Categoría
-            </span>
-            <h2 className="text-foreground mb-3 text-2xl leading-tight font-bold tracking-tight lg:text-3xl">
-              Encuentra el tipo de vehículo perfecto
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-xl text-base leading-relaxed">
-              Desde SUVs familiares hasta deportivos de alto rendimiento.
-            </p>
-          </div>
-          <CategoryCards categories={dynamicCategories} />
-        </div>
-      </section>
-
-      {/* Dynamic Category Sections */}
-      {categorySections.slice(0, 4).map((section, index) => (
+      {/* 6-12. Vehicle-type sections — compact horizontal scroll, same size as Destacados */}
+      {categorySections.map((section, index) => (
         <div key={section.slug}>
           <FeaturedSection
             title={section.name}
@@ -299,20 +267,7 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
             viewAllHref={section.viewAllHref}
             accentColor={section.accentColor}
           />
-          {/* Insert sponsored scroll between 1st and 2nd category */}
-          {index === 0 && categorySponsored.length > 0 && (
-            <section className="bg-white py-10">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <SponsoredSection
-                  title="Oportunidades del Día"
-                  subtitle="Ofertas de dealers verificados que podrían interesarte"
-                  vehicles={categorySponsored}
-                  variant="scroll"
-                />
-              </div>
-            </section>
-          )}
-          {/* Insert native banner ad after 2nd category */}
+          {/* Dealer banner between 2nd and 3rd type section */}
           {index === 1 && (
             <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
               <NativeBannerAd
@@ -328,21 +283,23 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         </div>
       ))}
 
-      {/* Sponsored: Grid before Why Choose — Last ad placement */}
-      {gridSponsored.length > 0 && (
-        <section className="bg-gradient-to-b from-white to-slate-50 py-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SponsoredSection
-              title="También te pueden interesar"
-              subtitle="Vehículos populares en tu zona"
-              vehicles={gridSponsored}
-              variant="grid"
-              columns={3}
-              cardVariant="default"
-            />
+      {/* Browse by Category — quick-nav visual grid */}
+      <section className="bg-muted/50 dark:bg-muted/20 py-12 lg:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 text-center">
+            <span className="bg-primary/10 text-primary mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide">
+              Explora por Categoría
+            </span>
+            <h2 className="text-foreground mb-3 text-2xl leading-tight font-bold tracking-tight lg:text-3xl">
+              Encuentra el tipo de vehículo perfecto
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-xl text-base leading-relaxed">
+              Desde SUVs familiares hasta eléctricos de última generación.
+            </p>
           </div>
-        </section>
-      )}
+          <CategoryCards categories={dynamicCategories} />
+        </div>
+      </section>
 
       {/* Why Choose OKLA */}
       <WhyChooseUs variant="grid" />

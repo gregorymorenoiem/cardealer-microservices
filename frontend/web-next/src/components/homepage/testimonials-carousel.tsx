@@ -43,7 +43,7 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
   {
     id: '1',
     name: 'María González',
-    role: 'Compradora Verificada',
+    role: 'Compradora',
     content:
       'Encontré mi Toyota RAV4 en perfectas condiciones y a un precio increíble. El proceso fue súper fácil y el vendedor muy profesional. ¡100% recomendado!',
     rating: 5,
@@ -55,7 +55,7 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
     name: 'Carlos Rodríguez',
     role: 'Vendedor Dealer',
     content:
-      'Como dealer, OKLA me ha ayudado a aumentar mis ventas en un 40%. La plataforma es intuitiva y el soporte es excelente. Mis clientes confían más cuando ven el badge de verificado.',
+      'Como dealer, OKLA me ha ayudado a aumentar mis ventas considerablemente. La plataforma es intuitiva y el soporte es excelente. Mis clientes confían más cuando ven el badge de verificado.',
     rating: 5,
     location: 'Santiago',
   },
@@ -72,7 +72,7 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
   {
     id: '4',
     name: 'Roberto Peña',
-    role: 'Comprador Verificado',
+    role: 'Comprador',
     content:
       'La función de comparación me ayudó a tomar una decisión informada. Pude ver lado a lado tres opciones y elegir la mejor para mi presupuesto.',
     rating: 4,
@@ -157,7 +157,9 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         <StarRating rating={testimonial.rating} />
 
         {/* Testimonial Text */}
-        <p className="text-card-foreground mt-4 text-lg leading-relaxed">&ldquo;{testimonial.content}&rdquo;</p>
+        <p className="text-card-foreground mt-4 text-lg leading-relaxed">
+          &ldquo;{testimonial.content}&rdquo;
+        </p>
 
         {/* Vehicle Purchased */}
         {testimonial.vehiclePurchased && (
@@ -258,6 +260,12 @@ export function TestimonialsCarousel({
           />
         ))}
       </div>
+
+      {/* Legal disclaimer */}
+      <p className="text-muted-foreground/60 mt-6 text-center text-xs">
+        * Testimonios de usuarios reales de la plataforma. Los resultados pueden variar según el
+        vehículo, precio y condiciones del mercado.
+      </p>
     </div>
   );
 }

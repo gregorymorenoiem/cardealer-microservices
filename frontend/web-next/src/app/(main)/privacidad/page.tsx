@@ -130,7 +130,10 @@ export default function PrivacidadPage() {
               </ul>
 
               <h2>5. Sus Derechos</h2>
-              <p>Usted tiene derecho a:</p>
+              <p>
+                De conformidad con la <strong>Ley No. 172-13</strong> sobre Protección de Datos de
+                Carácter Personal de la República Dominicana, usted tiene derecho a:
+              </p>
               <ul>
                 <li>
                   <strong>Acceso:</strong> obtener una copia de sus datos personales
@@ -154,7 +157,12 @@ export default function PrivacidadPage() {
               </ul>
               <p>
                 Para ejercer estos derechos, contáctenos en{' '}
-                <a href="mailto:privacidad@okla.com.do">privacidad@okla.com.do</a>
+                <a href="mailto:privacidad@okla.com.do">privacidad@okla.com.do</a>. Si considera
+                que sus derechos no han sido atendidos, puede presentar una queja ante el{' '}
+                <strong>Instituto Nacional de Protección de los Derechos del Consumidor
+                (Pro Consumidor)</strong> o ante <strong>INDOTEL</strong> (Instituto Dominicano de
+                las Telecomunicaciones), autoridad competente en materia de protección de datos en
+                la República Dominicana.
               </p>
 
               <h2>6. Cookies y Tecnologías Similares</h2>

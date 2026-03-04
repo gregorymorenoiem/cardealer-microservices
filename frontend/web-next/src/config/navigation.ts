@@ -36,6 +36,7 @@ import {
   Store,
   Flag,
   LayoutDashboard,
+  LayoutGrid,
   ScrollText,
   Wrench,
   Brain,
@@ -222,6 +223,7 @@ export const ADMIN_MAIN_NAVIGATION: NavItem[] = [
 export const ADMIN_MANAGEMENT_NAVIGATION: NavItem[] = [
   { href: '/admin/facturacion', label: 'Facturación', icon: CreditCard },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/secciones', label: 'Secciones Homepage', icon: LayoutGrid },
   { href: '/admin/contenido', label: 'Contenido', icon: FileText },
   { href: '/admin/mensajes', label: 'Mensajes', icon: MessageSquare },
   { href: '/admin/planes', label: 'Planes de Suscripción', icon: Package },

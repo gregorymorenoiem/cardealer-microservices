@@ -24,23 +24,23 @@ export const metadata = {
 
 export default function TerminosPage() {
   return (
-    <div className="min-h-screen bg-muted/50 py-12">
+    <div className="bg-muted/50 min-h-screen py-12">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-4xl">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Términos y Condiciones</h1>
-            <p className="mt-2 text-muted-foreground">Última actualización: Enero 2026</p>
+            <h1 className="text-foreground text-3xl font-bold">Términos y Condiciones</h1>
+            <p className="text-muted-foreground mt-2">Última actualización: Enero 2026</p>
           </div>
 
           {/* Content */}
-          <div className="rounded-lg bg-card p-8 shadow-sm">
+          <div className="bg-card rounded-lg p-8 shadow-sm">
             <div className="prose prose-gray max-w-none">
               <h2>1. Aceptación de los Términos</h2>
               <p>
-                Al acceder y utilizar la plataforma OKLA (en adelante, &ldquo;la Plataforma&rdquo;), usted
-                acepta estar sujeto a estos Términos y Condiciones de Uso. Si no está de acuerdo con
-                alguna parte de estos términos, no podrá acceder al servicio.
+                Al acceder y utilizar la plataforma OKLA (en adelante, &ldquo;la Plataforma&rdquo;),
+                usted acepta estar sujeto a estos Términos y Condiciones de Uso. Si no está de
+                acuerdo con alguna parte de estos términos, no podrá acceder al servicio.
               </p>
 
               <h2>2. Descripción del Servicio</h2>
@@ -152,7 +152,37 @@ export default function TerminosPage() {
                 Dominicana, sin tener en cuenta sus disposiciones sobre conflictos de leyes.
               </p>
 
-              <h2>14. Contacto</h2>
+              <h2>14. Protección al Consumidor (Ley 358-05)</h2>
+              <p>
+                En cumplimiento con la Ley No. 358-05 sobre Protección de los Derechos del
+                Consumidor o Usuario de la República Dominicana, los usuarios de OKLA tienen derecho
+                a:
+              </p>
+              <ul>
+                <li>Recibir información clara, veraz y oportuna sobre los servicios ofrecidos</li>
+                <li>
+                  Presentar reclamaciones ante el Instituto Nacional de Protección de los Derechos
+                  del Consumidor (<strong>Pro Consumidor</strong>) en caso de disputas no resueltas
+                  directamente con OKLA
+                </li>
+                <li>Ser protegidos contra publicidad engañosa o prácticas comerciales desleales</li>
+                <li>
+                  La limitación de responsabilidad establecida en la Sección 8 de estos Términos no
+                  restringe ni sustituye los derechos que la Ley 358-05 otorga a los consumidores
+                </li>
+              </ul>
+              <p>
+                Para contactar a Pro Consumidor: <strong>Tel. 809-567-7755</strong> o visitar{' '}
+                <a
+                  href="https://www.proconsumidor.gob.do"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  www.proconsumidor.gob.do
+                </a>
+              </p>
+
+              <h2>15. Contacto</h2>
               <p>Si tiene preguntas sobre estos Términos y Condiciones, contáctenos en:</p>
               <ul>
                 <li>
@@ -164,7 +194,7 @@ export default function TerminosPage() {
           </div>
 
           {/* Footer Links */}
-          <div className="mt-8 flex justify-center gap-6 text-sm text-muted-foreground">
+          <div className="text-muted-foreground mt-8 flex justify-center gap-6 text-sm">
             <Link href="/privacidad" className="hover:text-[#00A870]">
               Política de Privacidad
             </Link>
