@@ -35,39 +35,39 @@ export function VehicleTabs({ vehicle, className }: VehicleTabsProps) {
       )}
     >
       <Tabs defaultValue="description" className="w-full">
-        <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
+        <TabsList className="border-border scrollbar-hide flex h-auto w-full justify-start overflow-x-auto rounded-none border-b bg-transparent p-0">
           <TabsTrigger
             value="description"
-            className="rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none"
+            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
           >
             Descripción
           </TabsTrigger>
           <TabsTrigger
             value="specs"
-            className="rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none"
+            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
           >
             Especificaciones
           </TabsTrigger>
           <TabsTrigger
             value="features"
-            className="rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none"
+            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
           >
             Características
           </TabsTrigger>
         </TabsList>
 
         {/* Description Tab */}
-        <TabsContent value="description" className="m-0 p-6">
+        <TabsContent value="description" className="m-0 p-4 sm:p-6">
           <DescriptionTab vehicle={vehicle} />
         </TabsContent>
 
         {/* Specifications Tab */}
-        <TabsContent value="specs" className="m-0 p-6">
+        <TabsContent value="specs" className="m-0 p-4 sm:p-6">
           <SpecificationsTab vehicle={vehicle} />
         </TabsContent>
 
         {/* Features Tab */}
-        <TabsContent value="features" className="m-0 p-6">
+        <TabsContent value="features" className="m-0 p-4 sm:p-6">
           <FeaturesTab vehicle={vehicle} />
         </TabsContent>
       </Tabs>

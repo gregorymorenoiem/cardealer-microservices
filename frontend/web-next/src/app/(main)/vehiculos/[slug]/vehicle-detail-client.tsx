@@ -28,15 +28,15 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Breadcrumbs */}
-      <div className="border-border sticky top-0 z-20 border-b bg-white/95 backdrop-blur-sm dark:bg-slate-900/95">
+      <div className="border-border sticky top-16 z-20 border-b bg-white/95 backdrop-blur-sm lg:top-[72px] dark:bg-slate-900/95">
         <div className="mx-auto max-w-screen-xl px-4 py-2.5 sm:px-6">
           <Breadcrumbs items={[{ label: 'Vehículos', href: '/vehiculos' }, { label: title }]} />
         </div>
       </div>
 
       {/* Main content */}
-      <div className="mx-auto max-w-screen-xl px-4 py-5 sm:px-6 lg:py-6">
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <div className="mx-auto max-w-screen-xl px-3 py-4 sm:px-6 lg:py-6">
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-[1fr_320px]">
           {/* Left column - Gallery and Details */}
           <div className="space-y-4 lg:col-span-1">
             {/* Gallery */}
@@ -63,7 +63,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
           {/* Right column - Sticky sidebar */}
           <div className="hidden lg:block">
-            <div className="sticky top-[53px] space-y-4">
+            <div className="sticky top-[112px] space-y-4 lg:top-[120px]">
               {/* Header with price */}
               <VehicleHeader vehicle={vehicle} />
 

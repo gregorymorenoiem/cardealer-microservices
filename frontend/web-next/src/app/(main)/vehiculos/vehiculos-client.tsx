@@ -675,7 +675,7 @@ export default function VehiculosClient() {
       {/* ═══════════════════════════════════════════════════════
           STICKY HEADER: Search bar + Body type quick filters
       ═══════════════════════════════════════════════════════ */}
-      <div className="border-border sticky top-0 z-30 border-b bg-white shadow-sm dark:bg-slate-900">
+      <div className="border-border sticky top-16 z-30 border-b bg-white shadow-sm lg:top-[72px] dark:bg-slate-900">
         <div className="mx-auto max-w-screen-xl px-4 py-3 sm:px-6">
           {/* Row 1: Search bar + controls */}
           <div className="flex items-center gap-3">
@@ -855,7 +855,7 @@ export default function VehiculosClient() {
         <div className="flex gap-5">
           {/* ─── LEFT SIDEBAR ─────────────────────────────────── */}
           <aside className="hidden w-[272px] flex-shrink-0 lg:block">
-            <div className="border-border sticky top-[165px] rounded-2xl border bg-white shadow-sm dark:bg-slate-900">
+            <div className="border-border sticky top-[232px] rounded-2xl border bg-white shadow-sm dark:bg-slate-900">
               {/* Sidebar header */}
               <div className="border-border flex items-center justify-between border-b px-4 py-3">
                 <div className="flex items-center gap-2">
@@ -1138,7 +1138,7 @@ export default function VehiculosClient() {
       {/* ═══════════════════════════════════════════════════════
           FLOATING MOBILE BOTTOM CTA
       ═══════════════════════════════════════════════════════ */}
-      <div className="fixed bottom-6 left-4 z-50 flex flex-col items-start gap-2 lg:hidden">
+      <div className="pb-safe fixed bottom-6 left-4 z-40 flex flex-col items-start gap-2 lg:hidden">
         <button
           type="button"
           onClick={() =>

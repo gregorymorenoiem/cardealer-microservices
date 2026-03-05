@@ -383,7 +383,7 @@ export function HeroCompact({ className }: HeroCompactProps) {
       {/* Hero Section - Full Screen with Background Image */}
       <div
         suppressHydrationWarning
-        className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-gray-900"
+        className="relative h-[calc(100svh-4rem)] w-full overflow-hidden bg-gray-900"
       >
         {/* Background Image */}
         <div className="absolute inset-0">
@@ -409,12 +409,12 @@ export function HeroCompact({ className }: HeroCompactProps) {
         <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
           {/* Headline */}
           <div className="animate-slide-down mb-8 text-center">
-            <h1 className="mb-4 text-4xl leading-[1.1] font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            <h1 className="mb-4 text-3xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
               Tu próximo vehículo
               <br />
               está en <span className="text-primary">OKLA</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-white/80 sm:text-xl md:text-2xl">
+            <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg md:text-xl lg:text-2xl">
               Encuentra, compara y compra con total confianza en República Dominicana.
             </p>
           </div>
@@ -440,7 +440,7 @@ export function HeroCompact({ className }: HeroCompactProps) {
 
         {/* Scroll Hint */}
         <div
-          className="animate-fade-in absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center text-white/70"
+          className="animate-fade-in absolute bottom-8 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center text-white/70 sm:flex"
           style={{ animationDelay: '1500ms' }}
         >
           <span className="mb-2 text-sm font-medium">Explora vehículos destacados</span>

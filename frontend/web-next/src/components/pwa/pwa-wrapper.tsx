@@ -20,10 +20,8 @@ export function PWAComponents({ children }: PWAComponentsProps) {
     <ServiceWorkerProvider showUpdateNotification>
       {children}
       <InstallPrompt
-        delay={60000} // Show after 1 minute
-        mobileOnly={false}
+        delay={60000}
         onInstall={() => {
-          console.log('[PWA] App installed');
           // Track install event with analytics
           if (typeof window !== 'undefined' && 'gtag' in window) {
             (window as unknown as { gtag: (...args: unknown[]) => void }).gtag(
@@ -35,9 +33,6 @@ export function PWAComponents({ children }: PWAComponentsProps) {
               }
             );
           }
-        }}
-        onDismiss={() => {
-          console.log('[PWA] Install prompt dismissed');
         }}
       />
     </ServiceWorkerProvider>

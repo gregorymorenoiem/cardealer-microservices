@@ -67,12 +67,12 @@ export function VehicleCard({
       <Link
         href={vehicleUrl}
         className={cn(
-          'group border-border bg-card flex gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md',
+          'group border-border bg-card flex flex-col gap-3 rounded-xl border p-3 shadow-sm transition-all hover:shadow-md sm:flex-row sm:gap-4 sm:p-4',
           className
         )}
       >
         {/* Image */}
-        <div className="relative h-32 w-48 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
+        <div className="relative h-48 w-full shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 sm:h-32 sm:w-48 dark:from-slate-800 dark:to-slate-700">
           {!imageError && vehicle.imageUrl ? (
             <Image
               src={vehicle.imageUrl}
@@ -333,7 +333,7 @@ export function VehicleCard({
             )}
           </div>
 
-          {/* CTA Button — shown on hover, always on mobile */}
+          {/* CTA Button — always visible on mobile, shown on hover for desktop */}
           <button
             onClick={e => {
               e.preventDefault();
@@ -341,9 +341,8 @@ export function VehicleCard({
               window.location.href = vehicleUrl;
             }}
             className={cn(
-              'mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#00A870] py-2 text-sm font-semibold text-white transition-all duration-200',
-              'opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
-              'max-sm:opacity-100'
+              'mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#00A870] py-2.5 text-sm font-semibold text-white transition-all duration-200',
+              'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
             )}
             aria-label="Ver detalles y contactar vendedor"
           >

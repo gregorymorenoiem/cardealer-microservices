@@ -1,6 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { X, Zap, Bell, Wifi } from 'lucide-react';
+
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -8,102 +13,112 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 interface InstallPromptProps {
-  /** Delay in milliseconds before showing the prompt */
+  /** Delay in ms before showing the prompt (default: 60s) */
   delay?: number;
-  /** Whether to show only on mobile devices */
-  mobileOnly?: boolean;
   /** Callback when user installs the app */
   onInstall?: () => void;
   /** Callback when user dismisses the prompt */
   onDismiss?: () => void;
 }
 
+// ─────────────────────────────────────────────
+// localStorage Keys
+// ─────────────────────────────────────────────
+
+const LS_DISMISSED = 'okla-pwa-install-dismissed';
+const LS_INSTALLED = 'okla-pwa-installed';
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+
+function checkIsStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+function checkIsIOS(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
+}
+
+function wasDismissedOrInstalled(): boolean {
+  try {
+    return (
+      localStorage.getItem(LS_DISMISSED) === 'true' || localStorage.getItem(LS_INSTALLED) === 'true'
+    );
+  } catch {
+    return true; // If localStorage is unavailable, don't show
+  }
+}
+
+// ─────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────
+
 /**
- * PWA Install Prompt Component
+ * PWA Install Prompt
  *
- * Shows a banner prompting users to install the app on their device.
- * Handles the beforeinstallprompt event and manages install state.
+ * Shows a polished install banner:
+ * - Bottom sheet on mobile, floating toast on desktop
+ * - Spanish text matching OKLA brand
+ * - Handles `beforeinstallprompt` (Chrome/Edge/Samsung)
+ * - Shows manual instructions for iOS/Safari
+ * - NEVER shows again once user dismisses OR installs
+ * - Smooth slide-up animation with mobile-first design
  */
-export function InstallPrompt({
-  delay = 30000, // 30 seconds default delay
-  mobileOnly = false,
-  onInstall,
-  onDismiss,
-}: InstallPromptProps) {
+export function InstallPrompt({ delay = 60000, onInstall, onDismiss }: InstallPromptProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
-  // Check if already installed
   useEffect(() => {
-    // Check if running as standalone (already installed)
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    // Skip if already installed or previously dismissed
+    if (checkIsStandalone() || wasDismissedOrInstalled()) return;
 
-    if (isStandalone) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsInstalled(true);
-      return;
-    }
+    const iosDevice = checkIsIOS();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsIOS(iosDevice);
 
-    // Check if user has dismissed the prompt before
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed) {
-      const dismissedDate = new Date(dismissed);
-      const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
-      // Show again after 7 days
-      if (daysSinceDismissed < 7) {
-        return;
-      }
-    }
-
-    // Check if iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    setIsIOS(isIOSDevice);
-
-    // Check if mobile only
-    if (mobileOnly && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      return;
-    }
-
-    // Listen for beforeinstallprompt event
+    // Chrome/Edge/Samsung: listen for beforeinstallprompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-
-      // Show prompt after delay
-      setTimeout(() => {
-        setShowPrompt(true);
-      }, delay);
+      setTimeout(() => setShowPrompt(true), delay);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // Listen for app installed event
+    // Track installation
     const handleAppInstalled = () => {
-      setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
-      localStorage.setItem('pwa-installed', 'true');
+      localStorage.setItem(LS_INSTALLED, 'true');
       onInstall?.();
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // For iOS, show custom prompt after delay
-    if (isIOSDevice && !isStandalone) {
-      setTimeout(() => {
-        setShowPrompt(true);
-      }, delay);
+    // iOS/Safari: show manual instructions after delay
+    if (iosDevice) {
+      const timer = setTimeout(() => setShowPrompt(true), delay);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+        window.removeEventListener('appinstalled', handleAppInstalled);
+      };
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [delay, mobileOnly, onInstall]);
+  }, [delay, onInstall]);
+
+  // ── Handlers ──────────────────────────────
 
   const handleInstallClick = useCallback(async () => {
     if (!deferredPrompt) return;
@@ -113,15 +128,13 @@ export function InstallPrompt({
       const { outcome } = await deferredPrompt.userChoice;
 
       if (outcome === 'accepted') {
-        console.log('[PWA] User accepted the install prompt');
-        setIsInstalled(true);
+        localStorage.setItem(LS_INSTALLED, 'true');
         onInstall?.();
       } else {
-        console.log('[PWA] User dismissed the install prompt');
         onDismiss?.();
       }
-    } catch (error) {
-      console.error('[PWA] Error showing install prompt:', error);
+    } catch {
+      // Prompt may have been consumed already
     }
 
     setDeferredPrompt(null);
@@ -130,151 +143,148 @@ export function InstallPrompt({
 
   const handleDismiss = useCallback(() => {
     setShowPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', new Date().toISOString());
+    localStorage.setItem(LS_DISMISSED, 'true');
     onDismiss?.();
   }, [onDismiss]);
 
-  // Don't render if installed or no prompt to show
-  // Also don't render if not iOS and no deferredPrompt (browser doesn't support install)
-  if (isInstalled || !showPrompt) {
-    return null;
-  }
+  // ── Guard: don't render if nothing to show ─
 
-  // Debug logging
-  console.log('[PWA] Rendering install prompt:', { isIOS, hasDeferredPrompt: !!deferredPrompt });
+  if (!showPrompt) return null;
+  // Non-iOS: only show if browser supports install (we have a deferred prompt)
+  if (!isIOS && !deferredPrompt) return null;
 
-  // For non-iOS browsers, only show if we have a valid deferredPrompt
-  // This prevents showing the prompt on browsers that don't support PWA install
-  if (!isIOS && !deferredPrompt) {
-    console.log('[PWA] Not showing prompt - no deferredPrompt and not iOS');
-    return null;
-  }
+  // ── iOS: manual instructions ──────────────
 
-  // iOS-specific prompt (since iOS doesn't support beforeinstallprompt)
   if (isIOS) {
     return (
-      <div className="animate-slide-up border-border fixed right-0 bottom-0 left-0 z-50 border-t bg-white p-4 shadow-lg">
-        <div className="mx-auto max-w-lg">
-          <button
-            onClick={handleDismiss}
-            className="text-muted-foreground hover:text-muted-foreground absolute top-2 right-2 p-2"
-            aria-label="Cerrar"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+      <div
+        className="animate-slide-up fixed right-0 bottom-0 left-0 z-50 border-t border-slate-200 bg-white p-4 shadow-2xl md:right-4 md:bottom-4 md:left-auto md:w-[380px] md:rounded-2xl md:border dark:border-slate-700 dark:bg-slate-900"
+        role="dialog"
+        aria-label="Instalar aplicación OKLA"
+      >
+        <button
+          onClick={handleDismiss}
+          className="absolute top-3 right-3 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+          aria-label="Cerrar"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-green-600">
-              <span className="text-xl font-bold text-white">O</span>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-foreground mb-1 font-semibold">Instala OKLA</h3>
-              <p className="text-muted-foreground mb-3 text-sm">
-                Instala la app para acceso rápido y notificaciones de tus búsquedas.
-              </p>
-              <div className="bg-muted/50 text-muted-foreground flex items-center gap-2 rounded-lg p-3 text-sm">
-                <span>Toca</span>
-                <svg className="h-6 w-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                </svg>
-                <span>y luego</span>
-                <span className="font-medium">&quot;Añadir a inicio&quot;</span>
-              </div>
+        <div className="flex items-start gap-3">
+          {/* App icon */}
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg">
+            <span className="text-xl font-bold text-white">O</span>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Instala OKLA</h3>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+              Instala la app en tu dispositivo para una mejor experiencia.
+            </p>
+
+            {/* iOS instructions with proper share icon */}
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span>Toca</span>
+              {/* iOS Share icon (square with arrow up) */}
+              <svg
+                className="h-5 w-5 flex-shrink-0 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              <span>
+                y luego <strong>&quot;Añadir a inicio&quot;</strong>
+              </span>
             </div>
           </div>
         </div>
+
+        {/* Dismiss link */}
+        <button
+          onClick={handleDismiss}
+          className="mt-3 block w-full text-center text-xs text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+        >
+          Ahora no
+        </button>
       </div>
     );
   }
 
-  // Standard install prompt for Android/Desktop
+  // ── Standard install prompt (Android / Desktop) ─
+
   return (
-    <div className="animate-slide-up border-border fixed right-0 bottom-0 left-0 z-50 border-t bg-white p-4 shadow-lg">
+    <div
+      className="animate-slide-up fixed right-0 bottom-0 left-0 z-50 border-t border-slate-200 bg-white p-4 shadow-2xl md:right-4 md:bottom-4 md:left-auto md:w-[400px] md:rounded-2xl md:border dark:border-slate-700 dark:bg-slate-900"
+      role="dialog"
+      aria-label="Instalar aplicación OKLA"
+    >
       <div className="mx-auto max-w-lg">
+        {/* Close */}
         <button
           onClick={handleDismiss}
-          className="text-muted-foreground hover:text-muted-foreground absolute top-2 right-2 p-2 transition-colors"
+          className="absolute top-3 right-3 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
           aria-label="Cerrar"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="h-5 w-5" />
         </button>
 
-        {/* Main content - Logo, Text, and Install Button */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Logo */}
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#00A870] shadow-lg sm:h-14 sm:w-14">
+        {/* Main content */}
+        <div className="flex items-center gap-3">
+          {/* App icon */}
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg sm:h-14 sm:w-14">
             <span className="text-xl font-bold text-white sm:text-2xl">O</span>
           </div>
 
           {/* Text */}
           <div className="min-w-0 flex-1">
-            <h3 className="text-foreground mb-0.5 font-semibold">¿Instalar OKLA?</h3>
-            <p className="text-muted-foreground truncate text-sm">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Instala OKLA en tu dispositivo
+            </h3>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
               Acceso rápido desde tu pantalla de inicio
             </p>
           </div>
 
-          {/* Install Button - Always visible */}
+          {/* Install button */}
           <button
             onClick={handleInstallClick}
             type="button"
-            className="flex-shrink-0 rounded-lg bg-[#00A870] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#009663] hover:shadow-lg sm:px-5 sm:py-2.5 sm:text-base"
-            style={{ color: 'white', backgroundColor: '#00A870' }}
+            className="flex-shrink-0 rounded-xl bg-[#00A870] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#009663] hover:shadow-lg active:scale-95"
           >
-            <span className="text-white">Instalar</span>
+            Instalar
           </button>
         </div>
 
-        {/* Features */}
-        <div className="border-border text-muted-foreground mt-3 flex items-center justify-center gap-4 border-t pt-3 text-xs">
+        {/* Features micro-bar */}
+        <div className="mt-3 flex items-center justify-center gap-4 border-t border-slate-100 pt-3 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
           <span className="flex items-center gap-1">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+            <Zap className="h-3.5 w-3.5" />
             Carga rápida
           </span>
           <span className="flex items-center gap-1">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
+            <Bell className="h-3.5 w-3.5" />
             Notificaciones
           </span>
           <span className="flex items-center gap-1">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a5 5 0 01-7.071-7.072"
-              />
-            </svg>
+            <Wifi className="h-3.5 w-3.5" />
             Offline
           </span>
         </div>
+
+        {/* Dismiss link */}
+        <button
+          onClick={handleDismiss}
+          className="mt-2 block w-full text-center text-xs text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+        >
+          Ahora no
+        </button>
       </div>
     </div>
   );

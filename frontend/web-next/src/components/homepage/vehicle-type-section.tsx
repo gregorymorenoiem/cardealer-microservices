@@ -358,7 +358,7 @@ export default function VehicleTypeSection({
               {icon} {title}
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: maxItems }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -375,22 +375,29 @@ export default function VehicleTypeSection({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
+              <h2 className="text-foreground text-xl leading-tight font-bold tracking-tight sm:text-2xl">
                 {icon && <span className="mr-2">{icon}</span>}
                 {title}
               </h2>
               {subtitle && (
-                <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{subtitle}</p>
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-sm">
+                  {subtitle}
+                </p>
               )}
             </div>
             <Link href={viewAllHref}>
-              <Button variant="outline" className={`group ${colors.viewAll}`}>
-                Ver todos
+              <Button
+                variant="outline"
+                size="sm"
+                className={`group text-xs sm:text-sm ${colors.viewAll}`}
+              >
+                <span className="hidden sm:inline">Ver todos</span>
+                <span className="sm:hidden">Ver</span>
                 <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <EmptyVehicleCard key={i} icon={icon} accentColor={accentColor} />
             ))}
@@ -406,24 +413,31 @@ export default function VehicleTypeSection({
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
+            <h2 className="text-foreground text-xl leading-tight font-bold tracking-tight sm:text-2xl">
               {icon && <span className="mr-2">{icon}</span>}
               {title}
             </h2>
             {subtitle && (
-              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{subtitle}</p>
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-sm">
+                {subtitle}
+              </p>
             )}
           </div>
           <Link href={viewAllHref}>
-            <Button variant="outline" className={`group ${colors.viewAll}`}>
-              Ver todos
+            <Button
+              variant="outline"
+              size="sm"
+              className={`group text-xs sm:text-sm ${colors.viewAll}`}
+            >
+              <span className="hidden sm:inline">Ver todos</span>
+              <span className="sm:hidden">Ver</span>
               <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
         </div>
 
         {/* Grid — same card size as FeaturedVehicles */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {vehicles.map(vehicle => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} accentColor={accentColor} />
           ))}

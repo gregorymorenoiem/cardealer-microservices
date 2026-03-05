@@ -71,7 +71,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Right side - Auth form */}
-      <div className="bg-muted/50 flex flex-1 items-center justify-center p-6 sm:p-12">
+      <div className="bg-muted/50 flex flex-1 items-center justify-center px-4 py-8 sm:p-12">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="mb-8 text-center lg:hidden">

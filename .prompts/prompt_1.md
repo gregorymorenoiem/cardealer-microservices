@@ -1,4 +1,4 @@
-Y los microservicios ya se combinaron para que en esos que van utilizar en la infractructura tenga toda la funcionalidad.
+Tengo nuevas tareas.
 
 TAmbien haz una auditoria profunda de todo el frontend y haz un refactory para que el codigo este lo mas profesional posible y lo mas optimizado posible y que sea mobile first y que sea completamente responsive (PC con monitores de distintas ttamanos, laptos con pantalla de distintos tamanos, tables de distintos tamnos, celulares con pantalla de distintos tamanos) y para que el usuario mobiel tenga una mejor esperiencia de usuario, que sea SPA y que le salga al usuario quiere instalarlo en su celular que lo haga y despues que lo instales que no le salga mas este mensaje.
 

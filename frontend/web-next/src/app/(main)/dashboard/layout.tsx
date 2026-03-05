@@ -89,7 +89,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       <header className="border-border bg-card sticky top-0 z-40 border-b">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
               <span className="text-lg font-bold text-white">O</span>
             </div>
             <span className="text-foreground text-xl font-bold">OKLA</span>
@@ -183,8 +183,36 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="border-border bg-card/95 pb-safe fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-sm lg:hidden">
+        <div className="flex items-center justify-around py-1">
+          {[
+            { href: '/dashboard', label: 'Inicio', icon: Home },
+            { href: '/cuenta/favoritos', label: 'Favoritos', icon: Heart },
+            { href: '/cuenta/alertas', label: 'Alertas', icon: Bell },
+            { href: '/cuenta/mis-vehiculos', label: 'Vehículos', icon: Car },
+            { href: '/cuenta/perfil', label: 'Perfil', icon: User },
+          ].map(link => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[10px] transition-colors',
+                  isActivePath(link.href) ? 'text-primary font-medium' : 'text-muted-foreground'
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
