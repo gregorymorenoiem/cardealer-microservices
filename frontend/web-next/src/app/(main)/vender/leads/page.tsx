@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 interface Lead {
   id: string;
@@ -72,7 +73,7 @@ interface LeadStats {
   lost: number;
 }
 
-export default function SellerLeadsPage() {
+function SellerLeadsContent() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats>({
     total: 0,
@@ -513,5 +514,13 @@ export default function SellerLeadsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function SellerLeadsPage() {
+  return (
+    <PlanGate feature="leadManagement">
+      <SellerLeadsContent />
+    </PlanGate>
   );
 }

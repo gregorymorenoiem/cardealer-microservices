@@ -17,6 +17,43 @@ namespace AdminService.Infrastructure.External
         Task<bool> DeleteVehicleAsync(Guid vehicleId, CancellationToken ct = default);
         Task<bool> PublishVehicleAsync(Guid vehicleId, CancellationToken ct = default);
         Task<bool> UnpublishVehicleAsync(Guid vehicleId, CancellationToken ct = default);
+
+        // Moderation
+        Task<ModerationQueueResponse?> GetModerationQueueAsync(int page = 1, int pageSize = 20, CancellationToken ct = default);
+        Task<bool> ApproveVehicleAsync(Guid vehicleId, string reviewerId, string? notes = null, CancellationToken ct = default);
+        Task<bool> RejectVehicleAsync(Guid vehicleId, string reviewerId, string reason, string? notes = null, CancellationToken ct = default);
+    }
+
+    // ── Moderation DTOs ─────────────────────────────────────────────
+
+    public class ModerationQueueResponse
+    {
+        public List<ModerationVehicleDto> Vehicles { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
+    }
+
+    public class ModerationVehicleDto
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Make { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public int Year { get; set; }
+        public decimal Price { get; set; }
+        public string Currency { get; set; } = "DOP";
+        public string Condition { get; set; } = string.Empty;
+        public string SellerName { get; set; } = string.Empty;
+        public string SellerType { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+        public int ImageCount { get; set; }
+        public DateTime? SubmittedAt { get; set; }
+        public int RejectionCount { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
     }
 
     // ── Request / Response DTOs ──────────────────────────────────────

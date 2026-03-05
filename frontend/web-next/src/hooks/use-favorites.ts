@@ -54,7 +54,7 @@ export interface UseFavoritesReturn {
 // =============================================================================
 
 export function useFavorites(): UseFavoritesReturn {
-  const { user, isAuthenticated } = useAuth();
+  const { user: _user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   // Local state for unauthenticated users

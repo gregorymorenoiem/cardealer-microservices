@@ -71,6 +71,12 @@ namespace UserService.Application.UseCases.Users.UpdateProfile
             if (request.Province != null)
                 user.Province = request.Province.Trim();
 
+            if (!string.IsNullOrWhiteSpace(request.PreferredLocale))
+                user.PreferredLocale = request.PreferredLocale.Trim();
+
+            if (!string.IsNullOrWhiteSpace(request.PreferredCurrency))
+                user.PreferredCurrency = request.PreferredCurrency.Trim();
+
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
@@ -107,8 +113,8 @@ namespace UserService.Application.UseCases.Users.UpdateProfile
                 MemberSince = user.CreatedAt,
                 LastActive = user.LastLoginAt,
                 Badges = new List<UserBadgeDto>(),
-                PreferredLocale = "es-DO",
-                PreferredCurrency = "DOP",
+                PreferredLocale = user.PreferredLocale ?? "es-DO",
+                PreferredCurrency = user.PreferredCurrency ?? "DOP",
                 IsActive = user.IsActive,
                 EmailConfirmed = user.EmailConfirmed,
                 CreatedAt = user.CreatedAt,

@@ -12,9 +12,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { path, secret } = body;
 
-    // Verify secret token
+    // Verify secret token — REQUIRED in all environments
     const expectedSecret = process.env.REVALIDATION_SECRET;
-    if (expectedSecret && secret !== expectedSecret) {
+    if (!expectedSecret) {
+      console.error('[Revalidate] REVALIDATION_SECRET not configured — rejecting request');
+      return NextResponse.json({ error: 'Revalidation not configured' }, { status: 503 });
+    }
+    if (secret !== expectedSecret) {
       return NextResponse.json({ error: 'Invalid secret token' }, { status: 401 });
     }
 
@@ -29,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 }

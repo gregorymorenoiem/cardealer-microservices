@@ -10,9 +10,8 @@
 # CLUSTER INFO (Feb 2026):
 # Current cluster: 2× s-4vcpu-8gb nodes (~12GB allocatable, autoscale to 3).
 # Pool name: okla-pool-upgraded
-# 14 core services run with replicas: 1.
+# 16 core services run with replicas: 1.
 # 28 services without Docker images are set to replicas: 0.
-# 2 services (adminservice, contactservice) disabled due to startup bugs.
 # To enable services after building images:
 #   kubectl scale deployment/<name> --replicas=1 -n okla
 # =============================================================================
@@ -1310,7 +1309,7 @@ metadata:
     app: adminservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: crashes on startup
+  replicas: 1
   selector:
     matchLabels:
       app: adminservice
@@ -1394,156 +1393,16 @@ spec:
 
 ---
 # =============================================================================
-# CHATBOT SERVICE — Chatbot IA "Ana" + WhatsApp
+# CHATBOT SERVICE — MOVED to k8s/chatbotservice.yaml (dedicated manifest)
 # =============================================================================
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: chatbotservice
-  namespace: okla
-  labels:
-    app: chatbotservice
-    tier: backend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: chatbotservice
-  template:
-    metadata:
-      labels:
-        app: chatbotservice
-    spec:
-      serviceAccountName: okla-backend
-      automountServiceAccountToken: false
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app: chatbotservice
-      imagePullSecrets:
-        - name: registry-credentials
-      containers:
-        - name: chatbotservice
-          image: ghcr.io/gregorymorenoiem/chatbotservice:latest
-          ports:
-            - containerPort: 8080
-          env:
-            - name: ASPNETCORE_URLS
-              value: "http://+:8080"
-            # Set Docker env so EnsureCreated runs to create DB tables
-            - name: ASPNETCORE_ENVIRONMENT
-              value: "Docker"
-            # ChatbotService reads Redis__ConnectionString, not Redis__Connection
-            - name: Redis__ConnectionString
-              valueFrom:
-                secretKeyRef:
-                  name: redis-secrets
-                  key: Redis__Connection
-            # ═══════════════════════════════════════════════════════
-            # LLM Provider — HuggingFace Inference Endpoints
-            # Chat completions: tu modelo fine-tuned hosteado en HF
-            # ═══════════════════════════════════════════════════════
-            - name: LlmService__ServerUrl
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__ServerUrl
-            - name: LlmService__ApiKey
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__ApiKey
-            - name: LlmService__ModelId
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__ModelId
-            - name: LlmService__CompletionsPath
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: LlmService__CompletionsPath
-            # ═══════════════════════════════════════════════════════
-            # Embedding Provider — HuggingFace Inference API (gratis)
-            # Embeddings para búsqueda vectorial RAG
-            # ═══════════════════════════════════════════════════════
-            - name: Embedding__ServerUrl
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__ServerUrl
-            - name: Embedding__ApiKey
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__ApiKey
-            - name: Embedding__EmbeddingsPath
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__EmbeddingsPath
-            - name: Embedding__Provider
-              valueFrom:
-                secretKeyRef:
-                  name: chatbot-llm-secrets
-                  key: Embedding__Provider
-          envFrom:
-            - configMapRef:
-                name: global-config
-            - secretRef:
-                name: chatbotservice-db-secret
-            - secretRef:
-                name: jwt-secrets
-            - secretRef:
-                name: redis-secrets
-            - secretRef:
-                name: rabbitmq-secrets
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-          # ChatbotService only maps /health (not /health/live or /health/ready)
-          # Use tcpSocket for startup/liveness, /health for readiness
-          startupProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            failureThreshold: 24
-          livenessProbe:
-            tcpSocket:
-              port: 8080
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-      volumes:
-        - name: tmp
-          emptyDir: {}
+# DO NOT define chatbotservice Deployment here.
+# The authoritative manifest is k8s/chatbotservice.yaml which includes:
+#   - ChatbotService Deployment + Service
+#   - LLM Server Deployment + Service
+#   - ChatbotService-specific ConfigMap
+# Duplicating the Deployment here causes strategic-merge-patch conflicts
+# (env[].value + env[].valueFrom on the same key) during kubectl apply.
+# =============================================================================
 
 ---
 # =============================================================================
@@ -1749,7 +1608,7 @@ metadata:
     app: alertservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: alertservice
@@ -1819,7 +1678,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -2319,7 +2178,7 @@ metadata:
     app: configurationservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: configurationservice
@@ -2389,7 +2248,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -2414,7 +2273,7 @@ metadata:
     app: contactservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: contactservice
@@ -2984,7 +2843,7 @@ metadata:
     app: inventorymanagementservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: inventorymanagementservice
@@ -3054,7 +2913,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -3174,7 +3033,7 @@ metadata:
     app: maintenanceservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: maintenanceservice
@@ -4029,7 +3888,7 @@ metadata:
     app: staffservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: staffservice
@@ -4099,7 +3958,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -4206,6 +4065,109 @@ spec:
         - name: tmp
           emptyDir: {}
 
+---
+# ==========================================================
+# VIDEO 360 SERVICE (single microservice: FFmpeg + bg removal)
+# ==========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video360service
+  namespace: okla
+  labels:
+    app: video360service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video360service
+  template:
+    metadata:
+      labels:
+        app: video360service
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: video360service
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: video360service
+          image: ghcr.io/gregorymorenoiem/video360service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: REMOVEBG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: video360service-secrets
+                  key: REMOVEBG_API_KEY
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: video360service-db-secret
+                optional: true
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: s3-secrets
+                optional: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi
 ---
 # =============================================================================
 # VEHICLE INTELLIGENCE SERVICE
@@ -4373,6 +4335,206 @@ spec:
           startupProbe:
             httpGet:
               path: /health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# SEARCH AGENT (AI-powered vehicle search with Claude Haiku 4.5)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: searchagent
+  namespace: okla
+  labels:
+    app: searchagent
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: searchagent
+  template:
+    metadata:
+      labels:
+        app: searchagent
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: searchagent
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: searchagent
+          image: ghcr.io/gregorymorenoiem/searchagent:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: Claude__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: CLAUDE_API_KEY
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: searchagent-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# SUPPORT AGENT (AI Support & Buyer Protection with Claude Haiku 4.5)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supportagent
+  namespace: okla
+  labels:
+    app: supportagent
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supportagent
+  template:
+    metadata:
+      labels:
+        app: supportagent
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: supportagent
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: supportagent
+          image: ghcr.io/gregorymorenoiem/supportagent:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: Claude__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: CLAUDE_API_KEY
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: supportagent-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5

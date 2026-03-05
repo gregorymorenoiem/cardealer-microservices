@@ -47,7 +47,6 @@ import {
   ChevronRight,
   Eye,
   CheckCircle,
-  XCircle,
   Clock,
   Star,
   Car,
@@ -58,7 +57,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -112,12 +110,14 @@ const getStatusBadge = (status: string) => {
 
 const getPlanBadge = (plan: string) => {
   switch (plan) {
-    case 'enterprise':
-      return <Badge className="bg-purple-100 text-purple-700">Enterprise</Badge>;
+    case 'elite':
+      return <Badge className="bg-amber-100 text-amber-700">ÉLITE</Badge>;
     case 'pro':
-      return <Badge className="bg-blue-100 text-blue-700">Pro</Badge>;
-    case 'starter':
-      return <Badge className="bg-muted text-foreground">Starter</Badge>;
+      return <Badge className="bg-purple-100 text-purple-700">PRO</Badge>;
+    case 'visible':
+      return <Badge className="bg-blue-100 text-blue-700">VISIBLE</Badge>;
+    case 'libre':
+      return <Badge className="bg-muted text-foreground">LIBRE</Badge>;
     default:
       return <Badge variant="outline">{plan}</Badge>;
   }
@@ -202,12 +202,10 @@ export default function AdminDealersPage() {
           <h1 className="text-foreground text-3xl font-bold">Dealers</h1>
           <p className="text-muted-foreground">Gestiona los dealers de la plataforma</p>
         </div>
-        <Link href="/admin/dealers/pendientes">
-          <Button variant="outline">
-            <Clock className="mr-2 h-4 w-4" />
-            Pendientes ({stats?.pending || 0})
-          </Button>
-        </Link>
+        <Button variant="outline" onClick={() => handleFilterChange('status', 'pending')}>
+          <Clock className="mr-2 h-4 w-4" />
+          Pendientes ({stats?.pending || 0})
+        </Button>
       </div>
 
       {/* Stats */}
@@ -228,8 +226,8 @@ export default function AdminDealersPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <CheckCircle className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-xl font-bold">{stats?.active || 0}</p>
@@ -258,8 +256,8 @@ export default function AdminDealersPage() {
                 <Car className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-xl font-bold">{stats?.byPlan?.enterprise || 0}</p>
-                <p className="text-muted-foreground text-xs">Enterprise</p>
+                <p className="text-xl font-bold">{stats?.byPlan?.elite || 0}</p>
+                <p className="text-muted-foreground text-xs">ÉLITE</p>
               </div>
             </div>
           </CardContent>
@@ -318,9 +316,10 @@ export default function AdminDealersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="starter">Starter</SelectItem>
-                <SelectItem value="pro">Pro</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
+                <SelectItem value="libre">LIBRE</SelectItem>
+                <SelectItem value="visible">VISIBLE</SelectItem>
+                <SelectItem value="pro">PRO</SelectItem>
+                <SelectItem value="elite">ÉLITE</SelectItem>
               </SelectContent>
             </Select>
             <Select

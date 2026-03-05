@@ -28,4 +28,15 @@ public interface IDealerService
     Task ReactivateDealerAsync(Guid dealerId, CancellationToken cancellationToken = default);
 
     Task DeleteDealerAsync(Guid dealerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a minimal dealer profile in DealerManagementService for an existing user
+    /// who registered with AccountType=Dealer but never completed their dealer profile.
+    /// </summary>
+    Task<AdminDealerDto?> CreateDealerProfileForUserAsync(
+        Guid userId,
+        string businessName,
+        string email,
+        string phone,
+        CancellationToken cancellationToken = default);
 }

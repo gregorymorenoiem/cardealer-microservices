@@ -122,11 +122,20 @@ public class UserRegisteredEventConsumer : BackgroundService
         // Verificar si el usuario es dealer por metadata
         var isDealer = false;
         if (@event.Metadata != null && 
-            @event.Metadata.TryGetValue("AccountType", out var accountTypeStr) &&
-            int.TryParse(accountTypeStr, out var accountType))
+            @event.Metadata.TryGetValue("AccountType", out var accountTypeStr))
         {
-            isDealer = accountType == 1; // 1 = Dealer
-            _logger.LogInformation("✓ AccountType encontrado: {AccountType}, Es Dealer: {IsDealer}", accountType, isDealer);
+            // AccountType.Dealer = 2 in the platform enum.
+            // Support both integer string ("2") and name string ("Dealer"/"dealer").
+            if (int.TryParse(accountTypeStr, out var accountType))
+            {
+                isDealer = accountType == 2; // 2 = Dealer (NOT 1 which is Buyer)
+            }
+            else
+            {
+                isDealer = accountTypeStr.Equals("Dealer", StringComparison.OrdinalIgnoreCase)
+                        || accountTypeStr.Equals("dealer", StringComparison.OrdinalIgnoreCase);
+            }
+            _logger.LogInformation("✓ AccountType encontrado: {AccountType}, Es Dealer: {IsDealer}", accountTypeStr, isDealer);
         }
         else
         {

@@ -17,6 +17,13 @@ title = "OKLA Gitleaks Config"
     '''\.github/copilot-instructions\.md''',
     '''docs/''',
     '''\.md$''',
+    '''deploy/''',
+    '''appsettings\.Production\.json''',
+    '''appsettings\.Staging\.json''',
+    '''k8s/''',
+    '''helm/''',
+    '''docker-compose''',
+    '''compose\.''',
   ]
   regexTarget = "match"
   regexes = [

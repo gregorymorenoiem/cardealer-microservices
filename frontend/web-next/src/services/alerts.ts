@@ -127,22 +127,39 @@ export interface AlertStats {
 export async function getPriceAlerts(
   params: { isActive?: boolean; page?: number; pageSize?: number } = {}
 ): Promise<PaginatedResponse<PriceAlert>> {
-  const response = await apiClient.get<{
-    items: PriceAlert[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      totalItems: number;
-      totalPages: number;
+  const response = await apiClient.get('/api/pricealerts', { params });
+  const data = response.data as Record<string, unknown>;
+
+  // Handle both flat array and paginated response
+  if (Array.isArray(data)) {
+    const items = data as PriceAlert[];
+    return {
+      items,
+      pagination: {
+        page: 1,
+        pageSize: items.length || 10,
+        totalItems: items.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
     };
-  }>('/api/pricealerts', { params });
+  }
+
+  const items = (data.items as PriceAlert[]) || [];
+  const pagination = (data.pagination as {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  }) || { page: 1, pageSize: items.length, totalItems: items.length, totalPages: 1 };
 
   return {
-    items: response.data.items,
+    items,
     pagination: {
-      ...response.data.pagination,
-      hasNextPage: response.data.pagination.page < response.data.pagination.totalPages,
-      hasPreviousPage: response.data.pagination.page > 1,
+      ...pagination,
+      hasNextPage: pagination.page < pagination.totalPages,
+      hasPreviousPage: pagination.page > 1,
     },
   };
 }
@@ -194,10 +211,14 @@ export async function deletePriceAlert(id: string): Promise<void> {
 }
 
 /**
- * Toggle price alert active status
+ * Toggle price alert active status.
+ * Calls /activate or /deactivate based on the current isActive state.
+ * (Backend has no /toggle endpoint.)
  */
-export async function togglePriceAlert(id: string): Promise<PriceAlert> {
-  const response = await apiClient.post<PriceAlert>(`/api/pricealerts/${id}/toggle`);
+export async function togglePriceAlert(id: string, isActive: boolean): Promise<PriceAlert> {
+  // isActive = current state → call opposite endpoint
+  const endpoint = isActive ? 'deactivate' : 'activate';
+  const response = await apiClient.post<PriceAlert>(`/api/pricealerts/${id}/${endpoint}`);
   return response.data;
 }
 
@@ -218,25 +239,84 @@ export async function getVehiclePriceHistory(vehicleId: string): Promise<PriceHi
 /**
  * Get user's saved searches
  */
+// Map backend SavedSearchDto (searchCriteria string) → frontend SavedSearch (searchParams object)
+function mapBackendSavedSearch(item: Record<string, unknown>): SavedSearch {
+  let searchParams: VehicleSearchParams = {};
+  try {
+    const raw = (item.searchCriteria as string) || '{}';
+    searchParams = JSON.parse(raw) as VehicleSearchParams;
+  } catch {
+    // keep empty searchParams
+  }
+  const freqRaw = ((item.frequency as string) || 'daily').toLowerCase();
+  const validFreqs: NotifyFrequency[] = ['instant', 'daily', 'weekly', 'never'];
+  const notifyFrequency: NotifyFrequency = validFreqs.includes(freqRaw as NotifyFrequency)
+    ? (freqRaw as NotifyFrequency)
+    : 'daily';
+
+  return {
+    id: item.id as string,
+    userId: (item.userId as string) || '',
+    name: (item.name as string) || '',
+    searchParams,
+    notifyNewListings: (item.sendEmailNotifications as boolean) ?? true,
+    notifyFrequency,
+    matchCount: (item.matchCount as number) ?? 0,
+    newMatchCount: (item.newMatchCount as number) ?? 0,
+    lastMatchedAt: item.lastMatchedAt as string | undefined,
+    lastNotifiedAt:
+      (item.lastNotificationSent as string | undefined) ??
+      (item.lastNotifiedAt as string | undefined),
+    isActive: (item.isActive as boolean) ?? true,
+    createdAt: item.createdAt as string,
+    updatedAt: item.updatedAt as string,
+  };
+}
+
 export async function getSavedSearches(
   params: { isActive?: boolean; page?: number; pageSize?: number } = {}
 ): Promise<PaginatedResponse<SavedSearch>> {
-  const response = await apiClient.get<{
-    items: SavedSearch[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      totalItems: number;
-      totalPages: number;
-    };
-  }>('/api/savedsearches', { params });
+  const response = await apiClient.get<
+    | Record<string, unknown>[]
+    | {
+        items: Record<string, unknown>[];
+        pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
+      }
+  >('/api/savedsearches', { params });
 
+  // Backend may return a plain array or a paginated object
+  if (Array.isArray(response.data)) {
+    const items = response.data.map(mapBackendSavedSearch);
+    return {
+      items,
+      pagination: {
+        page: 1,
+        pageSize: items.length || 10,
+        totalItems: items.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+
+  const paginatedData = response.data as {
+    items: Record<string, unknown>[];
+    pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
+  };
+  const items = (paginatedData.items || []).map(mapBackendSavedSearch);
+  const pagination = paginatedData.pagination || {
+    page: 1,
+    pageSize: items.length,
+    totalItems: items.length,
+    totalPages: 1,
+  };
   return {
-    items: response.data.items,
+    items,
     pagination: {
-      ...response.data.pagination,
-      hasNextPage: response.data.pagination.page < response.data.pagination.totalPages,
-      hasPreviousPage: response.data.pagination.page > 1,
+      ...pagination,
+      hasNextPage: pagination.page < pagination.totalPages,
+      hasPreviousPage: pagination.page > 1,
     },
   };
 }
@@ -245,16 +325,28 @@ export async function getSavedSearches(
  * Get saved search by ID
  */
 export async function getSavedSearchById(id: string): Promise<SavedSearch> {
-  const response = await apiClient.get<SavedSearch>(`/api/savedsearches/${id}`);
-  return response.data;
+  const response = await apiClient.get<Record<string, unknown>>(`/api/savedsearches/${id}`);
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
  * Create a new saved search
+ * Maps frontend DTO → backend DTO:
+ *   searchParams (object) → searchCriteria (JSON string)
+ *   notifyNewListings     → sendEmailNotifications
+ *   notifyFrequency       → frequency (numeric: 0=Instant,1=Daily,2=Weekly)
  */
 export async function createSavedSearch(data: CreateSavedSearchRequest): Promise<SavedSearch> {
-  const response = await apiClient.post<SavedSearch>('/api/savedsearches', data);
-  return response.data;
+  const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
+  const freq = data.notifyFrequency ?? 'daily';
+  const payload = {
+    name: data.name,
+    searchCriteria: JSON.stringify(data.searchParams || {}),
+    sendEmailNotifications: data.notifyNewListings ?? true,
+    frequency: freqMap[freq] ?? 1,
+  };
+  const response = await apiClient.post<Record<string, unknown>>('/api/savedsearches', payload);
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
@@ -264,8 +356,20 @@ export async function updateSavedSearch(
   id: string,
   data: UpdateSavedSearchRequest
 ): Promise<SavedSearch> {
-  const response = await apiClient.put<SavedSearch>(`/api/savedsearches/${id}`, data);
-  return response.data;
+  const payload: Record<string, unknown> = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.searchParams !== undefined) payload.searchCriteria = JSON.stringify(data.searchParams);
+  if (data.notifyNewListings !== undefined) payload.sendEmailNotifications = data.notifyNewListings;
+  if (data.notifyFrequency !== undefined) {
+    const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
+    payload.frequency = freqMap[data.notifyFrequency] ?? 1;
+  }
+  if (data.isActive !== undefined) payload.isActive = data.isActive;
+  const response = await apiClient.put<Record<string, unknown>>(
+    `/api/savedsearches/${id}`,
+    payload
+  );
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
@@ -276,11 +380,23 @@ export async function deleteSavedSearch(id: string): Promise<void> {
 }
 
 /**
- * Toggle saved search active status
+ * Toggle saved search notification status.
+ * Calls PUT /api/savedsearches/{id}/notifications with flipped sendEmailNotifications.
+ * (Backend has no /toggle endpoint — activate/deactivate control isActive, not notifications.)
  */
-export async function toggleSavedSearch(id: string): Promise<SavedSearch> {
-  const response = await apiClient.post<SavedSearch>(`/api/savedsearches/${id}/toggle`);
-  return response.data;
+export async function toggleSavedSearch(
+  id: string,
+  currentState: { notifyNewListings: boolean; notifyFrequency: NotifyFrequency }
+): Promise<SavedSearch> {
+  const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
+  const response = await apiClient.put<Record<string, unknown>>(
+    `/api/savedsearches/${id}/notifications`,
+    {
+      sendEmailNotifications: !currentState.notifyNewListings,
+      frequency: freqMap[currentState.notifyFrequency] ?? 1,
+    }
+  );
+  return mapBackendSavedSearch(response.data);
 }
 
 /**
@@ -318,27 +434,13 @@ export async function markMatchesAsSeen(id: string): Promise<void> {
 }
 
 /**
- * Run saved search (get current results)
+ * Run saved search — no-op: the backend has no /run endpoint.
+ * Navigation to /vehiculos with the saved search params is handled
+ * directly in the UI (busquedas/page.tsx handleRunSearch).
  */
-export async function runSavedSearch(id: string): Promise<PaginatedResponse<SavedSearchMatch>> {
-  const response = await apiClient.post<{
-    items: SavedSearchMatch[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      totalItems: number;
-      totalPages: number;
-    };
-  }>(`/api/savedsearches/${id}/run`);
-
-  return {
-    items: response.data.items,
-    pagination: {
-      ...response.data.pagination,
-      hasNextPage: response.data.pagination.page < response.data.pagination.totalPages,
-      hasPreviousPage: response.data.pagination.page > 1,
-    },
-  };
+ 
+export async function runSavedSearch(_id: string): Promise<void> {
+  return Promise.resolve();
 }
 
 // ============================================================
@@ -349,8 +451,20 @@ export async function runSavedSearch(id: string): Promise<PaginatedResponse<Save
  * Get alert statistics for the user
  */
 export async function getAlertStats(): Promise<AlertStats> {
-  const response = await apiClient.get<AlertStats>('/api/alerts/stats');
-  return response.data;
+  try {
+    const response = await apiClient.get<AlertStats>('/api/pricealerts/stats');
+    return response.data;
+  } catch {
+    // Fallback: return zeros if stats endpoint not available
+    return {
+      totalPriceAlerts: 0,
+      activePriceAlerts: 0,
+      priceDropsThisMonth: 0,
+      totalSavedSearches: 0,
+      activeSavedSearches: 0,
+      newMatchesThisWeek: 0,
+    };
+  }
 }
 
 // ============================================================

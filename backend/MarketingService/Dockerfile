@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -8,8 +9,14 @@ RUN apk add --no-cache wget
 # Create secrets directory
 RUN mkdir -p /run/secrets
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["MarketingService/MarketingService.Api/MarketingService.Api.csproj", "MarketingService/MarketingService.Api/"]
 COPY ["MarketingService/MarketingService.Application/MarketingService.Application.csproj", "MarketingService/MarketingService.Application/"]
 COPY ["MarketingService/MarketingService.Domain/MarketingService.Domain.csproj", "MarketingService/MarketingService.Domain/"]
@@ -22,7 +29,7 @@ WORKDIR "/src/MarketingService/MarketingService.Api"
 RUN dotnet build "MarketingService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "MarketingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MarketingService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

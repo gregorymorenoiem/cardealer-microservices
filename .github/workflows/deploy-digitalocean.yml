@@ -25,13 +25,13 @@ on:
         default: "all"
         type: string
 
-  # Trigger automático después de CI exitoso
+  # Trigger automático después de CI exitoso en main
   workflow_run:
     workflows: ["🚀 Smart CI/CD"]
     types:
       - completed
     branches:
-      - development # push a development → deploy automático a staging K8s
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -90,17 +90,16 @@ jobs:
   deploy:
     name: 🚀 Deploy to ${{ needs.prepare.outputs.environment }}
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     environment: ${{ needs.prepare.outputs.environment }}
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: 🔐 Configure Kubernetes
         run: |
@@ -139,7 +138,7 @@ jobs:
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
           # --- Per-service DB secrets ---
-          SERVICES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice chatbotservice kycservice auditservice idempotencyservice contactservice adminservice dealermanagementservice reviewservice"
+          SERVICES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice chatbotservice kycservice auditservice idempotencyservice contactservice adminservice dealermanagementservice reviewservice searchagent supportagent"
 
           for SVC in $SERVICES; do
             kubectl create secret generic ${SVC}-db-secret \
@@ -208,19 +207,32 @@ jobs:
             --from-literal=whatsapp-phone-number-id="${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}" \
             -n okla --dry-run=client -o yaml | kubectl apply -f -
 
+          # --- Claude / Anthropic API key (SupportAgent, SearchAgent, ChatbotService) ---
+          kubectl create secret generic claude-api-secret \
+            --from-literal=CLAUDE_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+            -n okla --dry-run=client -o yaml | kubectl apply -f -
+
           echo "✅ All secrets created from GitHub Secrets (no hardcoded values)"
 
       - name: ⚙️ Apply ConfigMaps
         run: |
           kubectl apply -f k8s/configmaps.yaml
 
-      - name: 🗄️ Deploy Infrastructure (PostgreSQL + Redis + RabbitMQ)
+      - name: �️ Remove in-cluster PostgreSQL (DO Managed DB is used instead)
         run: |
-          echo "🗄️ Deploying consolidated infrastructure..."
-          kubectl apply -f k8s/infrastructure.yaml
+          # Production uses DO Managed PostgreSQL — remove the in-cluster postgres-0
+          # --ignore-not-found=true ensures idempotency (safe to run multiple times)
+          kubectl delete statefulset postgres -n okla --ignore-not-found=true
+          kubectl delete service postgres -n okla --ignore-not-found=true
+          kubectl delete configmap postgres-init-script -n okla --ignore-not-found=true
+          # Delete PVC only if StatefulSet no longer exists (data already on DO Managed DB)
+          kubectl delete pvc data-postgres-0 -n okla --ignore-not-found=true
+          echo "✅ In-cluster PostgreSQL removed — using DO Managed DB"
 
-          echo "⏳ Waiting for PostgreSQL to be ready..."
-          kubectl rollout status statefulset/postgres -n okla --timeout=180s || true
+      - name: 🗄️ Deploy Infrastructure (Redis + RabbitMQ)
+        run: |
+          echo "🗄️ Deploying infrastructure (Redis + RabbitMQ)..."
+          kubectl apply -f k8s/infrastructure.yaml
 
           echo "⏳ Waiting for Redis to be ready..."
           kubectl rollout status deployment/redis -n okla --timeout=60s || true
@@ -228,9 +240,8 @@ jobs:
           echo "⏳ Waiting for RabbitMQ to be ready..."
           kubectl rollout status deployment/rabbitmq -n okla --timeout=120s || true
 
-          # Wait for databases to be fully initialized
           echo "⏳ Waiting for infrastructure initialization..."
-          sleep 30
+          sleep 10
 
       - name: Deploy services
         run: |
@@ -241,6 +252,13 @@ jobs:
 
           # Deploy ChatbotService + LLM Server (separate manifest)
           echo "🤖 Applying ChatbotService + LLM Server..."
+          # Fix: remove value-based env vars that conflict with valueFrom in the YAML.
+          # This can happen when env vars were previously set via `kubectl set env`
+          # (storing raw `value:`) but the manifest now uses `valueFrom: secretKeyRef`.
+          # Kubernetes 3-way merge would otherwise combine both fields → validation error.
+          kubectl set env deployment/chatbotservice \
+            LlmService__ApiKey- \
+            -n okla 2>/dev/null || true
           kubectl apply -f k8s/chatbotservice.yaml
 
           # Restart deployments to pick up new secrets
@@ -294,7 +312,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: 🔔 Notify on Slack
-        if: always()
+        if: always() && env.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -355,16 +373,15 @@ jobs:
   # ============================================
   rollback:
     name: ⏪ Rollback
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     if: failure() && github.event_name == 'workflow_dispatch'
     needs: [prepare, deploy]
     environment: ${{ needs.prepare.outputs.environment }}
 
     steps:
-      - name: 🔧 Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: 🔐 Configure Kubernetes
         run: |

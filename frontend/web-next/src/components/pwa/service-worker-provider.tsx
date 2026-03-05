@@ -50,6 +50,7 @@ export function useServiceWorker(config: ServiceWorkerConfig = {}): UseServiceWo
       setIsOffline(!navigator.onLine);
     };
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOffline(!navigator.onLine);
 
     window.addEventListener('online', updateOnlineStatus);
@@ -201,6 +202,7 @@ export function ServiceWorkerProvider({
 
   useEffect(() => {
     if (hasUpdate && showUpdateNotification) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowNotification(true);
     }
   }, [hasUpdate, showUpdateNotification]);

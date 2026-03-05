@@ -7,6 +7,7 @@ namespace VehiclesSaleService.Api.Controllers;
 /// <summary>
 /// Controller para el catálogo maestro de vehículos.
 /// Proporciona datos para auto-completar formularios de publicación.
+/// Endpoints: makes (by slug/UUID/name), models (by slug/UUID/name), VIN decode.
 /// 
 /// Flujo de uso:
 /// 1. GET /catalog/makes - Lista de marcas
@@ -111,10 +112,12 @@ public class CatalogController : ControllerBase
     // ========================================
 
     /// <summary>
-    /// Obtiene todos los modelos de una marca.
+    /// Obtiene todos los modelos de una marca por slug, UUID o nombre.
     /// </summary>
     /// <remarks>
-    /// Ejemplo: GET /api/catalog/makes/toyota/models
+    /// Ejemplo: GET /api/catalog/makes/toyota/models           (slug)
+    /// Ejemplo: GET /api/catalog/makes/HONDA/models            (name, case-insensitive)
+    /// Ejemplo: GET /api/catalog/makes/{uuid}/models           (UUID from VIN decode)
     /// Retorna: Camry, Corolla, RAV4, Tacoma, etc.
     /// </remarks>
     [HttpGet("makes/{makeSlug}/models")]
@@ -122,11 +125,38 @@ public class CatalogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<ModelDto>>> GetModelsByMake(string makeSlug)
     {
-        var make = await _catalogRepository.GetMakeBySlugAsync(makeSlug);
+        VehicleMake? make = null;
+
+        // 1. Try UUID (from VIN decode catalogMakeId)
+        if (Guid.TryParse(makeSlug, out var makeGuid))
+        {
+            make = await _catalogRepository.GetMakeByIdAsync(makeGuid);
+        }
+
+        // 2. Try exact slug (e.g. "toyota")
+        if (make == null)
+        {
+            make = await _catalogRepository.GetMakeBySlugAsync(makeSlug);
+        }
+
+        // 3. Try lowercase slug (e.g. "HONDA" → "honda")
+        if (make == null && makeSlug != makeSlug.ToLowerInvariant())
+        {
+            make = await _catalogRepository.GetMakeBySlugAsync(makeSlug.ToLowerInvariant());
+        }
+
+        // 4. Try by name (case-insensitive search, e.g. "HONDA" → "Honda")
+        if (make == null)
+        {
+            var searchResults = await _catalogRepository.SearchMakesAsync(makeSlug);
+            make = searchResults.FirstOrDefault(m =>
+                m.Name.Equals(makeSlug, StringComparison.OrdinalIgnoreCase));
+        }
+
         if (make == null)
             return NotFound(new { message = $"Make '{makeSlug}' not found" });
 
-        var models = await _catalogRepository.GetModelsByMakeSlugAsync(makeSlug);
+        var models = await _catalogRepository.GetModelsByMakeIdAsync(make.Id);
         var dtos = models.Select(m => new ModelDto
         {
             Id = m.Id,
@@ -507,7 +537,7 @@ public class CatalogController : ControllerBase
             var modelName = nhtsaResult.Model ?? string.Empty;
             var trimName = nhtsaResult.Trim;
 
-            // 5. Match against local catalog (fuzzy match)
+            // 5. Match against local catalog (fuzzy match) — auto-inserts make/model when not found
             Guid? catalogMakeId = null;
             Guid? catalogModelId = null;
             Guid? catalogTrimId = null;
@@ -521,41 +551,66 @@ public class CatalogController : ControllerBase
                     m.Name.Contains(makeName, StringComparison.OrdinalIgnoreCase) ||
                     makeName.Contains(m.Name, StringComparison.OrdinalIgnoreCase));
 
-                if (matchedMake != null)
+                // Auto-create the make if not found in catalog
+                if (matchedMake == null)
                 {
-                    catalogMakeId = matchedMake.Id;
-                    hasCatalogMatch = true;
-
-                    if (!string.IsNullOrWhiteSpace(modelName))
+                    _logger.LogInformation("VIN {VIN}: Make '{Make}' not found in catalog — auto-adding", vin, makeName);
+                    matchedMake = await _catalogRepository.UpsertMakeAsync(new VehicleMake
                     {
-                        var models = await _catalogRepository.GetModelsByMakeIdAsync(matchedMake.Id);
-                        var matchedModel = models.FirstOrDefault(m =>
-                            m.Name.Equals(modelName, StringComparison.OrdinalIgnoreCase) ||
-                            m.Name.Contains(modelName, StringComparison.OrdinalIgnoreCase) ||
-                            modelName.Contains(m.Name, StringComparison.OrdinalIgnoreCase));
+                        Name = makeName,
+                        Slug = ToSlug(makeName),
+                        Country = nhtsaResult.PlantCountry,
+                        IsActive = true,
+                        IsPopular = false
+                    });
+                }
 
-                        if (matchedModel != null)
+                catalogMakeId = matchedMake.Id;
+                hasCatalogMatch = true;
+
+                if (!string.IsNullOrWhiteSpace(modelName))
+                {
+                    var models = await _catalogRepository.GetModelsByMakeIdAsync(matchedMake.Id);
+                    var matchedModel = models.FirstOrDefault(m =>
+                        m.Name.Equals(modelName, StringComparison.OrdinalIgnoreCase) ||
+                        m.Name.Contains(modelName, StringComparison.OrdinalIgnoreCase) ||
+                        modelName.Contains(m.Name, StringComparison.OrdinalIgnoreCase));
+
+                    // Auto-create the model if not found under this make
+                    if (matchedModel == null)
+                    {
+                        _logger.LogInformation("VIN {VIN}: Model '{Model}' not found for make '{Make}' — auto-adding", vin, modelName, makeName);
+                        matchedModel = await _catalogRepository.UpsertModelAsync(new VehicleModel
                         {
-                            catalogModelId = matchedModel.Id;
+                            MakeId = matchedMake.Id,
+                            Name = modelName,
+                            Slug = ToSlug(modelName),
+                            VehicleType = ParseVehicleTypeEnum(vehicleType),
+                            DefaultBodyStyle = ParseBodyStyleEnum(bodyStyle),
+                            StartYear = year > 0 ? year : null,
+                            IsActive = true,
+                            IsPopular = false
+                        });
+                    }
 
-                            if (year > 0)
-                            {
-                                var trims = await _catalogRepository.GetTrimsByModelAndYearAsync(matchedModel.Id, year);
-                                var matchedTrim = trims.FirstOrDefault(t =>
-                                    !string.IsNullOrWhiteSpace(trimName) &&
-                                    (t.Name.Equals(trimName, StringComparison.OrdinalIgnoreCase) ||
-                                     t.Name.Contains(trimName, StringComparison.OrdinalIgnoreCase)));
+                    catalogModelId = matchedModel.Id;
 
-                                if (matchedTrim != null)
-                                {
-                                    catalogTrimId = matchedTrim.Id;
-                                    // Enrich with trim specs if NHTSA data was incomplete
-                                    if (horsepower == 0 && matchedTrim.Horsepower.HasValue)
-                                        horsepower = matchedTrim.Horsepower.Value;
-                                    if (string.IsNullOrEmpty(engineSize) && !string.IsNullOrEmpty(matchedTrim.EngineSize))
-                                        engineSize = matchedTrim.EngineSize;
-                                }
-                            }
+                    if (year > 0)
+                    {
+                        var trims = await _catalogRepository.GetTrimsByModelAndYearAsync(matchedModel.Id, year);
+                        var matchedTrim = trims.FirstOrDefault(t =>
+                            !string.IsNullOrWhiteSpace(trimName) &&
+                            (t.Name.Equals(trimName, StringComparison.OrdinalIgnoreCase) ||
+                             t.Name.Contains(trimName, StringComparison.OrdinalIgnoreCase)));
+
+                        if (matchedTrim != null)
+                        {
+                            catalogTrimId = matchedTrim.Id;
+                            // Enrich with trim specs if NHTSA data was incomplete
+                            if (horsepower == 0 && matchedTrim.Horsepower.HasValue)
+                                horsepower = matchedTrim.Horsepower.Value;
+                            if (string.IsNullOrEmpty(engineSize) && !string.IsNullOrEmpty(matchedTrim.EngineSize))
+                                engineSize = matchedTrim.EngineSize;
                         }
                     }
                 }
@@ -775,6 +830,12 @@ public class CatalogController : ControllerBase
 
     private static string MapTransmissionSpanish(string t) => t switch
     {
+        "automatic" => "automática",
+        "manual" => "manual",
+        "cvt" => "CVT",
+        "dct" => "doble embrague (DCT)",
+        "semi-automatic" => "semi-automática",
+        // Legacy PascalCase keys (backwards compat)
         "Automatic" => "automática",
         "Manual" => "manual",
         "CVT" => "CVT",
@@ -794,6 +855,14 @@ public class CatalogController : ControllerBase
 
     private static string MapFuelTypeSpanish(string f) => f switch
     {
+        "gasoline" => "gasolina",
+        "diesel" => "diésel",
+        "hybrid" => "híbrido",
+        "electric" => "eléctrico",
+        "plugin_hybrid" => "híbrido enchufable",
+        "flex_fuel" => "flex fuel",
+        "lpg" => "GLP / gas",
+        // Legacy PascalCase keys (backwards compat)
         "Gasoline" => "gasolina",
         "Diesel" => "diésel",
         "Hybrid" => "híbrido",
@@ -815,33 +884,33 @@ public class CatalogController : ControllerBase
 
     private static string MapFuelType(string? nhtsaFuelType)
     {
-        if (string.IsNullOrEmpty(nhtsaFuelType)) return "Gasoline";
+        if (string.IsNullOrEmpty(nhtsaFuelType)) return "gasoline";
         
         return nhtsaFuelType.ToLowerInvariant() switch
         {
-            // Check plug-in hybrid first (before electric/hybrid checks)
-            var f when f.Contains("plug") || f.Contains("phev") => "PlugInHybrid",
-            var f when f.Contains("diesel") => "Diesel",
-            var f when f.Contains("hybrid") => "Hybrid",
-            var f when f.Contains("electric") => "Electric",
-            var f when f.Contains("flex") => "FlexFuel",
-            var f when f.Contains("hydrogen") => "Hydrogen",
-            var f when f.Contains("natural gas") || f.Contains("cng") => "NaturalGas",
-            _ => "Gasoline"
+            // Check plug-in hybrid first (before generic hybrid check)
+            var f when f.Contains("plug") || f.Contains("phev") => "plugin_hybrid",
+            var f when f.Contains("diesel") => "diesel",
+            var f when f.Contains("hybrid") => "hybrid",
+            var f when f.Contains("electric") => "electric",
+            var f when f.Contains("flex") => "flex_fuel",
+            var f when f.Contains("hydrogen") => "lpg",
+            var f when f.Contains("natural gas") || f.Contains("cng") || f.Contains("lpg") || f.Contains("propane") => "lpg",
+            _ => "gasoline"
         };
     }
 
     private static string MapTransmission(string? nhtsaTransmission)
     {
-        if (string.IsNullOrEmpty(nhtsaTransmission)) return "Automatic";
+        if (string.IsNullOrEmpty(nhtsaTransmission)) return "automatic";
         
         return nhtsaTransmission.ToLowerInvariant() switch
         {
-            var t when t.Contains("cvt") => "CVT",
-            var t when t.Contains("dual") || t.Contains("dct") => "DualClutch",
-            var t when t.Contains("automated") => "Automated",
-            var t when t.Contains("manual") => "Manual",
-            _ => "Automatic"
+            var t when t.Contains("cvt") || t.Contains("continuously variable") => "cvt",
+            var t when t.Contains("dual") || t.Contains("dct") || t.Contains("dsg") => "dct",
+            var t when t.Contains("automated") || t.Contains("semi-auto") || t.Contains("semi_auto") => "semi-automatic",
+            var t when t.Contains("manual") => "manual",
+            _ => "automatic"
         };
     }
 
@@ -849,31 +918,78 @@ public class CatalogController : ControllerBase
     {
         if (string.IsNullOrEmpty(nhtsaDriveType)) return "FWD";
         
+        // Drive type is displayed as a text field in the frontend, so we keep
+        // human-readable short forms (FWD, RWD, AWD, 4WD) instead of catalog keys.
         return nhtsaDriveType.ToLowerInvariant() switch
         {
-            var d when d.Contains("4x4") || d.Contains("4wd") || d.Contains("four") => "FourWD",
+            var d when d.Contains("4x4") || d.Contains("4wd") || d.Contains("four") => "4WD",
             var d when d.Contains("awd") || d.Contains("all") => "AWD",
             var d when d.Contains("rwd") || d.Contains("rear") => "RWD",
             _ => "FWD"
         };
     }
 
+    /// <summary>Converts a display name to a URL-friendly slug.</summary>
+    private static string ToSlug(string name)
+        => System.Text.RegularExpressions.Regex
+            .Replace(name.ToLowerInvariant().Trim(), @"[^a-z0-9]+", "-")
+            .Trim('-');
+
+    /// <summary>Parses the mapped vehicle-type string back to the domain enum.</summary>
+    private static VehicleType ParseVehicleTypeEnum(string vehicleTypeStr) => vehicleTypeStr switch
+    {
+        "Truck"      => VehicleType.Truck,
+        "SUV"        => VehicleType.SUV,
+        "Van"        => VehicleType.Van,
+        "Motorcycle" => VehicleType.Motorcycle,
+        "Commercial" => VehicleType.Commercial,
+        _            => VehicleType.Car
+    };
+
+    /// <summary>Parses the mapped body-style string back to the domain enum (nullable).</summary>
+    private static BodyStyle? ParseBodyStyleEnum(string bodyStyleStr) => bodyStyleStr switch
+    {
+        // New lowercase catalog keys
+        "suv"         => BodyStyle.SUV,
+        "pickup"      => BodyStyle.Pickup,
+        "minivan"     => BodyStyle.Minivan,
+        "van"         => BodyStyle.Van,
+        "coupe"       => BodyStyle.Coupe,
+        "convertible" => BodyStyle.Convertible,
+        "hatchback"   => BodyStyle.Hatchback,
+        "wagon"       => BodyStyle.Wagon,
+        "crossover"   => BodyStyle.Crossover,
+        "sedan"       => BodyStyle.Sedan,
+        // Legacy PascalCase keys (backwards compat)
+        "SUV"         => BodyStyle.SUV,
+        "Pickup"      => BodyStyle.Pickup,
+        "Minivan"     => BodyStyle.Minivan,
+        "Van"         => BodyStyle.Van,
+        "Coupe"       => BodyStyle.Coupe,
+        "Convertible" => BodyStyle.Convertible,
+        "Hatchback"   => BodyStyle.Hatchback,
+        "Wagon"       => BodyStyle.Wagon,
+        "Crossover"   => BodyStyle.Crossover,
+        "Sedan"       => BodyStyle.Sedan,
+        _             => null
+    };
+
     private static string MapBodyStyle(string? nhtsaBodyClass)
     {
-        if (string.IsNullOrEmpty(nhtsaBodyClass)) return "Sedan";
+        if (string.IsNullOrEmpty(nhtsaBodyClass)) return "sedan";
         
         return nhtsaBodyClass.ToLowerInvariant() switch
         {
-            var b when b.Contains("suv") || b.Contains("sport utility") => "SUV",
-            var b when b.Contains("pickup") || b.Contains("truck") => "Pickup",
-            var b when b.Contains("van") && b.Contains("mini") => "Minivan",
-            var b when b.Contains("van") => "Van",
-            var b when b.Contains("coupe") => "Coupe",
-            var b when b.Contains("convertible") => "Convertible",
-            var b when b.Contains("hatchback") => "Hatchback",
-            var b when b.Contains("wagon") => "Wagon",
-            var b when b.Contains("crossover") => "Crossover",
-            _ => "Sedan"
+            var b when b.Contains("suv") || b.Contains("sport utility") || b.Contains("multipurpose") => "suv",
+            var b when b.Contains("pickup") || b.Contains("truck") => "pickup",
+            var b when b.Contains("van") && b.Contains("mini") => "minivan",
+            var b when b.Contains("van") => "van",
+            var b when b.Contains("coupe") => "coupe",
+            var b when b.Contains("convertible") || b.Contains("cabriolet") || b.Contains("roadster") => "convertible",
+            var b when b.Contains("hatchback") => "hatchback",
+            var b when b.Contains("wagon") || b.Contains("estate") => "wagon",
+            var b when b.Contains("crossover") => "crossover",
+            _ => "sedan"
         };
     }
 
@@ -944,13 +1060,13 @@ public class CatalogController : ControllerBase
     {
         var fuelTypes = new List<CatalogOptionDto>
         {
-            new("gasoline", "Gasolina"),
-            new("diesel", "Diésel"),
-            new("hybrid", "Híbrido"),
-            new("electric", "Eléctrico"),
-            new("plugin_hybrid", "Híbrido Enchufable"),
-            new("gas", "Gas (GLP)"),
-            new("flex_fuel", "Flex Fuel"),
+            new("Gasoline", "Gasolina"),
+            new("Diesel", "Diésel"),
+            new("Hybrid", "Híbrido"),
+            new("Electric", "Eléctrico"),
+            new("PlugInHybrid", "Híbrido Enchufable"),
+            new("NaturalGas", "GLP / Gas"),
+            new("FlexFuel", "Flex Fuel"),
         };
         return Ok(fuelTypes);
     }
@@ -964,11 +1080,11 @@ public class CatalogController : ControllerBase
     {
         var transmissions = new List<CatalogOptionDto>
         {
-            new("automatic", "Automática"),
-            new("manual", "Manual"),
-            new("cvt", "CVT"),
-            new("dct", "Doble Embrague (DCT)"),
-            new("semi_automatic", "Semi-automática"),
+            new("Automatic", "Automática"),
+            new("Manual", "Manual"),
+            new("CVT", "CVT"),
+            new("DualClutch", "Doble Embrague (DCT)"),
+            new("Automated", "Semi-automática"),
         };
         return Ok(transmissions);
     }
@@ -982,12 +1098,30 @@ public class CatalogController : ControllerBase
     {
         var driveTypes = new List<CatalogOptionDto>
         {
-            new("fwd", "Delantera (FWD)"),
-            new("rwd", "Trasera (RWD)"),
-            new("awd", "Total (AWD)"),
-            new("4wd", "4x4 (4WD)"),
+            new("FWD", "Delantera (FWD)"),
+            new("RWD", "Trasera (RWD)"),
+            new("AWD", "Total (AWD)"),
+            new("FourWD", "4x4 (4WD)"),
         };
         return Ok(driveTypes);
+    }
+
+    /// <summary>
+    /// Obtiene las condiciones de vehículo disponibles.
+    /// </summary>
+    [HttpGet("conditions")]
+    [ProducesResponseType(typeof(IEnumerable<CatalogOptionDto>), StatusCodes.Status200OK)]
+    public ActionResult<IEnumerable<CatalogOptionDto>> GetConditions()
+    {
+        var conditions = new List<CatalogOptionDto>
+        {
+            new("New", "Nuevo"),
+            new("CertifiedPreOwned", "Certificado Pre-Owned"),
+            new("Used", "Usado"),
+            new("Salvage", "Salvamento"),
+            new("Rebuilt", "Reconstruido"),
+        };
+        return Ok(conditions);
     }
 
     /// <summary>
@@ -1452,8 +1586,10 @@ public class NhtsaVinResult
 
 /// <summary>
 /// DTO genérico para opciones del catálogo (body-types, fuel-types, etc.)
+/// IMPORTANT: Property names must be "Value" and "Label" to match the frontend
+/// CatalogOption interface { value: string; label: string }.
 /// </summary>
-public record CatalogOptionDto(string Id, string Name);
+public record CatalogOptionDto(string Value, string Label);
 
 // ========================================
 // SMART VIN DECODE DTOs

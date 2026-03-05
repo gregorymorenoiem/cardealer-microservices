@@ -11,6 +11,7 @@ using CarDealer.Shared.MultiTenancy;
 using CarDealer.Shared.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using VehicleDriveType = VehiclesSaleService.Domain.Entities.DriveType;
+using System.Net.Http;
 
 namespace VehiclesSaleService.Tests.Integration.Controllers;
 
@@ -26,6 +27,8 @@ public class VehicleLifecycleControllerTests : IDisposable
     private readonly Mock<IEventPublisher> _eventPublisherMock;
     private readonly Mock<ILogger<VehiclesController>> _loggerMock;
     private readonly Mock<IConfigurationServiceClient> _configClientMock;
+    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
+    private readonly Mock<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient> _dealerVerificationClientMock;
 
     public VehicleLifecycleControllerTests()
     {
@@ -45,6 +48,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         _eventPublisherMock = new Mock<IEventPublisher>();
         _loggerMock = new Mock<ILogger<VehiclesController>>();
         _configClientMock = new Mock<IConfigurationServiceClient>();
+        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        _dealerVerificationClientMock = new Mock<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient>();
 
         // Return the default value for any config key so validation uses production-safe defaults
         _configClientMock
@@ -57,13 +62,20 @@ public class VehicleLifecycleControllerTests : IDisposable
             .Setup(c => c.GetValueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string key, string defaultValue, CancellationToken _) => defaultValue);
 
+        // Default: dealers are verified (tests that don't test KYC shouldn't fail due to this)
+        _dealerVerificationClientMock
+            .Setup(c => c.IsDealerVerifiedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         _controller = new VehiclesController(
             _vehicleRepositoryMock.Object,
             _categoryRepositoryMock.Object,
             _eventPublisherMock.Object,
             _loggerMock.Object,
             _context,
-            _configClientMock.Object
+            _configClientMock.Object,
+            _httpClientFactoryMock.Object,
+            _dealerVerificationClientMock.Object
         );
     }
 
@@ -89,7 +101,7 @@ public class VehicleLifecycleControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task Publish_DraftVehicle_WithValidData_PublishesSuccessfully()
+    public async Task Publish_DraftVehicle_WithValidData_SetsPendingReview()
     {
         // Arrange
         var vehicleId = Guid.NewGuid();
@@ -104,8 +116,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         result.Result.Should().BeOfType<OkObjectResult>();
         var response = ((OkObjectResult)result.Result!).Value as PublishVehicleResponse;
         response.Should().NotBeNull();
-        response!.Status.Should().Be(VehicleStatus.Active);
-        response.Message.Should().Contain("published successfully");
+        response!.Status.Should().Be(VehicleStatus.PendingReview);
+        response.Message.Should().Contain("revisión");
     }
 
     [Fact]
@@ -157,6 +169,121 @@ public class VehicleLifecycleControllerTests : IDisposable
 
         // Assert
         result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Publish_RejectedVehicle_ResubmitsToPendingReview()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.Rejected);
+        vehicle.RejectionReason = "Previous issue";
+        vehicle.RejectionCount = 1;
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Publish(vehicleId, null);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var response = ((OkObjectResult)result.Result!).Value as PublishVehicleResponse;
+        response.Should().NotBeNull();
+        response!.Status.Should().Be(VehicleStatus.PendingReview);
+    }
+
+    #endregion
+
+    #region Approve / Reject Tests
+
+    [Fact]
+    public async Task Approve_PendingVehicle_SetsActive()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.PendingReview);
+        vehicle.SubmittedForReviewAt = DateTime.UtcNow.AddHours(-1);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        var request = new ApproveVehicleRequest 
+        { 
+            ModeratorId = Guid.NewGuid(),
+            Notes = "Looks good"
+        };
+
+        // Act
+        var result = await _controller.Approve(vehicleId, request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var updatedVehicle = await _context.Vehicles.FindAsync(vehicleId);
+        updatedVehicle!.Status.Should().Be(VehicleStatus.Active);
+        updatedVehicle.ApprovedAt.Should().NotBeNull();
+        updatedVehicle.PublishedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Approve_NonPendingVehicle_ReturnsBadRequest()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.Draft);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Approve(vehicleId, null);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Reject_PendingVehicle_SetsRejectedWithReason()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.PendingReview);
+        vehicle.SubmittedForReviewAt = DateTime.UtcNow.AddHours(-1);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        var request = new RejectVehicleRequest 
+        { 
+            ModeratorId = Guid.NewGuid(),
+            Reason = "Photos are blurry",
+            Notes = "Please retake photos"
+        };
+
+        // Act
+        var result = await _controller.Reject(vehicleId, request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var updatedVehicle = await _context.Vehicles.FindAsync(vehicleId);
+        updatedVehicle!.Status.Should().Be(VehicleStatus.Rejected);
+        updatedVehicle.RejectionReason.Should().Be("Photos are blurry");
+        updatedVehicle.RejectedAt.Should().NotBeNull();
+        updatedVehicle.RejectionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Reject_WithoutReason_ReturnsBadRequest()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.PendingReview);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        var request = new RejectVehicleRequest { Reason = "" };
+
+        // Act
+        var result = await _controller.Reject(vehicleId, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     #endregion

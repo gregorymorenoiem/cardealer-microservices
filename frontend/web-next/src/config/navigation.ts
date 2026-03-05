@@ -36,9 +36,10 @@ import {
   Store,
   Flag,
   LayoutDashboard,
+  LayoutGrid,
   ScrollText,
   Wrench,
-  CalendarDays,
+  Brain,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -128,6 +129,7 @@ export const SELLER_NAVIGATION: NavSection[] = [
       { href: '/cuenta/mis-vehiculos', label: 'Mis Vehículos', icon: Car },
       { href: '/cuenta/estadisticas', label: 'Estadísticas', icon: BarChart3 },
       { href: '/cuenta/consultas', label: 'Consultas Recibidas', icon: MessageSquare },
+      { href: '/cuenta/resenas', label: 'Reseñas', icon: Star },
     ],
   },
   {
@@ -221,14 +223,18 @@ export const ADMIN_MAIN_NAVIGATION: NavItem[] = [
 export const ADMIN_MANAGEMENT_NAVIGATION: NavItem[] = [
   { href: '/admin/facturacion', label: 'Facturación', icon: CreditCard },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/secciones', label: 'Secciones Homepage', icon: LayoutGrid },
   { href: '/admin/contenido', label: 'Contenido', icon: FileText },
   { href: '/admin/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { href: '/admin/planes', label: 'Planes de Suscripción', icon: Package },
+  { href: '/admin/espacios-publicitarios', label: 'Espacios Publicitarios', icon: Megaphone },
 ];
 
 export const ADMIN_SYSTEM_NAVIGATION: NavItem[] = [
   { href: '/admin/equipo', label: 'Equipo', icon: UsersRound },
   { href: '/admin/roles', label: 'Roles y Permisos', icon: Shield },
   { href: '/admin/configuracion', label: 'Configuración', icon: Settings },
+  { href: '/admin/search-agent', label: 'SearchAgent IA', icon: Brain },
   { href: '/admin/logs', label: 'Logs del Sistema', icon: ScrollText },
   { href: '/admin/mantenimiento', label: 'Mantenimiento', icon: Wrench },
 ];
@@ -283,6 +289,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
       { href: '/admin/mantenimiento', label: 'Mantenimiento', icon: Settings },
       { href: '/admin/logs', label: 'Logs', icon: FileText },
       { href: '/admin/configuracion', label: 'Configuración', icon: Settings },
+      { href: '/admin/search-agent', label: 'SearchAgent IA', icon: Brain },
     ],
   },
   {

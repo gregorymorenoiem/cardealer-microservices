@@ -4,8 +4,55 @@ import type { SmartVinDecodeResult, FieldConfidence } from '@/services/vehicles'
 import { Check, AlertTriangle, ChevronRight, Edit, Info } from 'lucide-react';
 
 // ============================================================
-// Helpers
+// Display formatters
+// The backend now returns catalog-aligned lowercase keys (e.g. "suv", "gasoline").
+// These helpers map them back to human-readable labels for display.
 // ============================================================
+
+const BODY_STYLE_LABELS: Record<string, string> = {
+  sedan: 'Sedán',
+  suv: 'SUV',
+  pickup: 'Pickup',
+  hatchback: 'Hatchback',
+  coupe: 'Coupé',
+  convertible: 'Convertible',
+  van: 'Van',
+  minivan: 'Minivan',
+  wagon: 'Wagon',
+  crossover: 'Crossover',
+  truck: 'Camión',
+};
+
+const FUEL_TYPE_LABELS: Record<string, string> = {
+  gasoline: 'Gasolina',
+  diesel: 'Diésel',
+  hybrid: 'Híbrido',
+  electric: 'Eléctrico',
+  plugin_hybrid: 'Híbrido Enchufable',
+  flex_fuel: 'Flex Fuel',
+  lpg: 'GLP / Gas',
+};
+
+const TRANSMISSION_LABELS: Record<string, string> = {
+  automatic: 'Automática',
+  manual: 'Manual',
+  cvt: 'CVT',
+  dct: 'Doble Embrague (DCT)',
+  'semi-automatic': 'Semi-automática',
+};
+
+function formatFieldValue(field: string, value: string): string {
+  switch (field) {
+    case 'Carrocería':
+      return BODY_STYLE_LABELS[value.toLowerCase()] ?? value;
+    case 'Combustible':
+      return FUEL_TYPE_LABELS[value.toLowerCase()] ?? value;
+    case 'Transmisión':
+      return TRANSMISSION_LABELS[value.toLowerCase()] ?? value;
+    default:
+      return value;
+  }
+}
 
 type ConfidenceLevel = 'high' | 'medium' | 'low';
 
@@ -16,9 +63,7 @@ function toLevel(fc: FieldConfidence | null | undefined): ConfidenceLevel | null
   return 'low';
 }
 
-function computeOverallConfidence(
-  confidences: Record<string, FieldConfidence>
-): ConfidenceLevel {
+function computeOverallConfidence(confidences: Record<string, FieldConfidence>): ConfidenceLevel {
   const vals = Object.values(confidences);
   if (vals.length === 0) return 'medium';
   const avg = vals.reduce((sum, v) => sum + v.confidence, 0) / vals.length;
@@ -120,9 +165,7 @@ export function VinDecodeResults({ result, onContinue, onEditManual }: VinDecode
             <p className="mt-1 text-2xl font-bold text-gray-900">
               {result.year} {result.make} {result.model}
             </p>
-            {result.trim && (
-              <p className="text-sm text-gray-600">{result.trim}</p>
-            )}
+            {result.trim && <p className="text-sm text-gray-600">{result.trim}</p>}
           </div>
           <ConfidenceBadge level={overallConfidence} />
         </div>
@@ -151,7 +194,9 @@ export function VinDecodeResults({ result, onContinue, onEditManual }: VinDecode
             <div key={field.label} className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-gray-500">{field.label}</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-900">{field.value}</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {formatFieldValue(field.label, field.value!)}
+                </span>
                 {field.confidence && <ConfidenceBadge level={field.confidence} />}
               </div>
             </div>

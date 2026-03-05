@@ -154,3 +154,35 @@ public interface IReportingService
     /// </summary>
     Task<object> GetUsageTrendsAsync(Guid configurationId, int days = 30, CancellationToken ct = default);
 }
+
+/// <summary>
+/// Servicio de cache para respuestas LLM.
+/// Evita llamadas redundantes al modelo para preguntas FAQ idénticas.
+/// </summary>
+public interface ILlmResponseCacheService
+{
+    /// <summary>
+    /// Intenta obtener una respuesta cacheada para la consulta dada.
+    /// Retorna null si no hay cache hit.
+    /// </summary>
+    Task<CachedLlmResponseDto?> GetAsync(string query, string? systemPrompt = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Cachea una respuesta del LLM. Solo cachea respuestas no-fallback, alta confianza,
+    /// para intents cacheables.
+    /// </summary>
+    Task SetAsync(string query, string response, string? intent, float confidence, bool isFallback,
+        string? systemPrompt = null, TimeSpan? ttl = null, CancellationToken ct = default);
+}
+
+/// <summary>
+/// DTO para respuestas LLM cacheadas.
+/// </summary>
+public class CachedLlmResponseDto
+{
+    public string Response { get; set; } = string.Empty;
+    public string? Intent { get; set; }
+    public float Confidence { get; set; }
+    public DateTime CachedAt { get; set; }
+    public bool FromCache { get; set; }
+}

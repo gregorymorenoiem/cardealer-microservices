@@ -101,7 +101,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Cars",
                             Slug = "cars",
                             SortOrder = 1,
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6300)
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
@@ -115,7 +115,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Trucks",
                             Slug = "trucks",
                             SortOrder = 2,
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6300)
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
@@ -129,7 +129,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "SUVs & Crossovers",
                             Slug = "suvs-crossovers",
                             SortOrder = 3,
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6300)
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
@@ -143,7 +143,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Motorcycles",
                             Slug = "motorcycles",
                             SortOrder = 4,
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6310)
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
@@ -157,7 +157,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Boats & Watercraft",
                             Slug = "boats-watercraft",
                             SortOrder = 5,
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6310)
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
@@ -171,7 +171,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "RVs & Campers",
                             Slug = "rvs-campers",
                             SortOrder = 6,
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6310)
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(8410)
                         });
                 });
 
@@ -300,7 +300,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Carousel Principal",
                             Slug = "carousel",
                             Subtitle = "Los mejores vehículos del momento",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6880),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9060),
                             ViewAllHref = "/vehicles"
                         },
                         new
@@ -317,7 +317,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Sedanes",
                             Slug = "sedanes",
                             Subtitle = "Elegancia y confort para tu día a día",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6890),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9070),
                             ViewAllHref = "/vehicles?bodyStyle=Sedan"
                         },
                         new
@@ -334,7 +334,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "SUVs",
                             Slug = "suvs",
                             Subtitle = "Espacio, potencia y versatilidad",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6890),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9070),
                             ViewAllHref = "/vehicles?bodyStyle=SUV"
                         },
                         new
@@ -351,7 +351,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Camionetas",
                             Slug = "camionetas",
                             Subtitle = "Potencia y capacidad para cualquier trabajo",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6890),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9070),
                             ViewAllHref = "/vehicles?bodyStyle=Pickup"
                         },
                         new
@@ -368,7 +368,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Deportivos",
                             Slug = "deportivos",
                             Subtitle = "Velocidad y adrenalina en cada curva",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6900),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9070),
                             ViewAllHref = "/vehicles?bodyStyle=SportsCar"
                         },
                         new
@@ -385,7 +385,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Destacados",
                             Slug = "destacados",
                             Subtitle = "Selección exclusiva de nuestros mejores anuncios",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6900),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9070),
                             ViewAllHref = "/vehicles?featured=true"
                         },
                         new
@@ -402,7 +402,7 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                             Name = "Lujo",
                             Slug = "lujo",
                             Subtitle = "Exclusividad y prestigio",
-                            UpdatedAt = new DateTime(2026, 2, 23, 8, 3, 32, 833, DateTimeKind.Utc).AddTicks(6900),
+                            UpdatedAt = new DateTime(2026, 2, 27, 3, 31, 35, 207, DateTimeKind.Utc).AddTicks(9070),
                             ViewAllHref = "/vehicles?minPrice=80000"
                         });
                 });
@@ -559,6 +559,12 @@ namespace VehiclesSaleService.Infrastructure.Migrations
 
                     b.Property<bool>("AccidentHistory")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("BodyStyle")
                         .IsRequired()
@@ -728,6 +734,9 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                     b.Property<Guid?>("ModelId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ModerationNotes")
+                        .HasColumnType("text");
+
                     b.Property<int?>("MpgCity")
                         .HasColumnType("integer");
 
@@ -752,6 +761,18 @@ namespace VehiclesSaleService.Infrastructure.Migrations
 
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RejectedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("RejectionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
 
                     b.Property<int>("Seats")
                         .HasColumnType("integer");
@@ -813,6 +834,9 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                     b.Property<string>("StockNumber")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("SubmittedForReviewAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1222,6 +1246,17 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("VehiclesSaleService.Domain.Entities.Favorite", b =>
+                {
+                    b.HasOne("VehiclesSaleService.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("VehiclesSaleService.Domain.Entities.VehicleViewHistory", b =>
                 {
                     b.HasOne("VehiclesSaleService.Domain.Entities.Vehicle", "Vehicle")
                         .WithMany()

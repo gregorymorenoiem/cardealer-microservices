@@ -80,11 +80,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Health Checks
+// Health Checks — DB check is tagged 'external' so it is excluded from /health
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<InventoryDbContext>("database");
+    .AddDbContextCheck<InventoryDbContext>("database", tags: new[] { "ready", "external" });
 
 var app = builder.Build();
+
+// Auto-create tables from model (no migration files exist)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 // Configure the HTTP request pipeline
 // OWASP Security Headers
@@ -104,7 +111,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check endpoint
-app.MapHealthChecks("/health");
+// Health check endpoint — exclude external checks (DB, storage) per project standards
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.Run();

@@ -397,6 +397,8 @@ export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle
           ? { latitude: raw.latitude as number, longitude: raw.longitude as number }
           : undefined,
     },
+    rejectionReason: raw.rejectionReason as string | undefined,
+    vin: raw.vin as string | undefined,
     createdAt: raw.createdAt as string,
     updatedAt: raw.updatedAt as string,
     publishedAt: raw.publishedAt as string | undefined,
@@ -560,6 +562,16 @@ export async function searchVehicles(
   if (params.transmission) backendParams.Transmission = params.transmission;
   if (params.condition) backendParams.Condition = params.condition;
   if (params.province) backendParams.State = params.province;
+  if (params.city) backendParams.City = params.city;
+  if (params.drivetrain) backendParams.DriveType = params.drivetrain;
+  if (params.color) backendParams.ExteriorColor = params.color;
+  if (params.isCertified !== undefined) backendParams.IsCertified = params.isCertified;
+  if (params.hasCleanTitle !== undefined) backendParams.HasCleanTitle = params.hasCleanTitle;
+  // Extended DR-market filters
+  if (params.seats) backendParams.MinSeats = params.seats;
+  if (params.cylinders) backendParams.Cylinders = params.cylinders;
+  if (params.interiorColor) backendParams.InteriorColor = params.interiorColor;
+  if (params.features?.length) backendParams.Features = params.features.join(',');
   if (params.sortBy) {
     backendParams.SortBy = params.sortBy;
     backendParams.SortDescending = params.sortOrder === 'desc';
@@ -962,6 +974,8 @@ export interface CreateVehicleRequest {
   sellerEmail?: string;
   sellerWhatsApp?: string;
   isNegotiable?: boolean;
+  /** The authenticated user's ID — links the listing to the seller's account */
+  sellerId?: string;
 }
 
 export interface CreateVehicleImage {
@@ -988,6 +1002,47 @@ export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
 // ============================================================
 // CREATE VEHICLE FUNCTION
 // ============================================================
+
+// ── Enum mappings: frontend/catalog values → backend enum names ──
+// The catalog API and static fallbacks may use lowercase/snake_case values
+// but the backend expects PascalCase enum names for deserialization.
+const CONDITION_TO_ENUM: Record<string, string> = {
+  new: 'New',
+  'like-new': 'CertifiedPreOwned',
+  excellent: 'Used',
+  good: 'Used',
+  fair: 'Used',
+  used: 'Used',
+  salvage: 'Salvage',
+  rebuilt: 'Rebuilt',
+  certifiedpreowned: 'CertifiedPreOwned',
+};
+const FUEL_TYPE_TO_ENUM: Record<string, string> = {
+  gasoline: 'Gasoline',
+  diesel: 'Diesel',
+  hybrid: 'Hybrid',
+  electric: 'Electric',
+  plugin_hybrid: 'PlugInHybrid',
+  pluginhybrid: 'PlugInHybrid',
+  lpg: 'NaturalGas',
+  naturalgas: 'NaturalGas',
+  flex_fuel: 'FlexFuel',
+  flexfuel: 'FlexFuel',
+  hydrogen: 'Hydrogen',
+};
+const TRANSMISSION_TO_ENUM: Record<string, string> = {
+  automatic: 'Automatic',
+  manual: 'Manual',
+  cvt: 'CVT',
+  dct: 'DualClutch',
+  dualclutch: 'DualClutch',
+  'semi-automatic': 'Automated',
+  automated: 'Automated',
+};
+/** Resolve a frontend/catalog value to its backend enum name */
+function toEnum(value: string, map: Record<string, string>): string {
+  return map[value.toLowerCase()] ?? value;
+}
 
 /**
  * Create a new vehicle listing (creates as Draft).
@@ -1021,11 +1076,11 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
     trim: data.trim,
     mileage: data.mileage ?? 0,
     vin: data.vin,
-    // Enums — send as lowercase strings, backend accepts them case-insensitively
-    transmission: data.transmission,
-    fuelType: data.fuelType,
-    bodyType: data.bodyType, // backend alias for BodyStyle
-    condition: data.condition,
+    // Enums — map to PascalCase backend enum names
+    transmission: toEnum(data.transmission, TRANSMISSION_TO_ENUM),
+    fuelType: toEnum(data.fuelType, FUEL_TYPE_TO_ENUM),
+    bodyType: data.bodyType, // backend alias for BodyStyle (has its own mapper)
+    condition: toEnum(data.condition, CONDITION_TO_ENUM),
     // Pricing
     price: data.price,
     currency: data.currency ?? 'DOP',
@@ -1041,7 +1096,8 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
     country: 'DO',
     // Images as objects
     imageObjects,
-    // Seller contact
+    // Seller identity + contact
+    sellerId: data.sellerId,
     sellerName: data.sellerName,
     sellerPhone: data.sellerPhone,
     sellerEmail: data.sellerEmail,
@@ -1056,8 +1112,9 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
 }
 
 /**
- * Publish a vehicle (change status from Draft → Active).
+ * Publish a vehicle (change status from Draft → PendingReview).
  * Must be called after createVehicle once all required fields are filled.
+ * The vehicle will be reviewed by staff before becoming visible.
  */
 export async function publishVehicle(id: string): Promise<CreateVehicleResponse> {
   const response = await apiClient.post<CreateVehicleResponse>(`/api/vehicles/${id}/publish`);
@@ -1065,10 +1122,29 @@ export async function publishVehicle(id: string): Promise<CreateVehicleResponse>
 }
 
 /**
+ * Unpublish/pause a vehicle (Active → Archived)
+ */
+export async function unpublishVehicle(id: string, reason?: string): Promise<void> {
+  await apiClient.post(`/api/vehicles/${id}/unpublish`, { reason });
+}
+
+/**
+ * Mark a vehicle as sold
+ */
+export async function markVehicleSold(id: string, soldPrice?: number): Promise<void> {
+  await apiClient.post(`/api/vehicles/${id}/sold`, { soldPrice });
+}
+
+/**
  * Update an existing vehicle
  */
 export async function updateVehicle(id: string, data: UpdateVehicleRequest): Promise<Vehicle> {
-  const response = await apiClient.put<VehicleDto>(`/api/vehicles/${id}`, data);
+  // Apply same enum mappings as createVehicle for backend compatibility
+  const mapped: Record<string, unknown> = { ...data };
+  if (data.fuelType) mapped.fuelType = toEnum(data.fuelType, FUEL_TYPE_TO_ENUM);
+  if (data.transmission) mapped.transmission = toEnum(data.transmission, TRANSMISSION_TO_ENUM);
+  if (data.condition) mapped.condition = toEnum(data.condition, CONDITION_TO_ENUM);
+  const response = await apiClient.put<VehicleDto>(`/api/vehicles/${id}`, mapped);
   return transformVehicle(response.data);
 }
 
@@ -1104,6 +1180,21 @@ export interface CatalogOption {
   label: string;
 }
 
+/**
+ * Normalize a raw catalog item from the API to { value, label }.
+ *
+ * The backend CatalogOptionDto previously used { id, name } property names.
+ * It was corrected to { value, label }, but this helper provides a safety net
+ * for cached responses or any future schema drift.
+ */
+function normalizeCatalogOption(item: unknown): CatalogOption {
+  const obj = item as Record<string, unknown>;
+  return {
+    value: ((obj.value ?? obj.id ?? '') as string).toLowerCase(),
+    label: (obj.label ?? obj.name ?? '') as string,
+  };
+}
+
 // ============================================================
 // CATALOG FUNCTIONS
 // ============================================================
@@ -1114,7 +1205,10 @@ export interface CatalogOption {
 export async function getMakes(): Promise<VehicleMake[]> {
   try {
     const response = await apiClient.get<VehicleMake[]>('/api/catalog/makes');
-    return response.data;
+    const data = response.data;
+    // Fallback if API returns empty array (catalog not seeded yet)
+    if (!Array.isArray(data) || data.length === 0) return getStaticMakes();
+    return data;
   } catch {
     // Fallback to static list if API fails
     return getStaticMakes();
@@ -1127,10 +1221,12 @@ export async function getMakes(): Promise<VehicleMake[]> {
 export async function getModelsByMake(makeId: string): Promise<VehicleModel[]> {
   try {
     const response = await apiClient.get<VehicleModel[]>(`/api/catalog/makes/${makeId}/models`);
-    return response.data;
+    const data = response.data;
+    // Fallback if API returns empty array (catalog not seeded yet)
+    if (!Array.isArray(data) || data.length === 0) return getStaticModelsByMake(makeId);
+    return data;
   } catch {
-    // Fallback to empty list
-    return [];
+    return getStaticModelsByMake(makeId);
   }
 }
 
@@ -1139,8 +1235,12 @@ export async function getModelsByMake(makeId: string): Promise<VehicleModel[]> {
  */
 export async function getBodyTypes(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/body-types');
-    return response.data;
+    const response = await apiClient.get<unknown[]>('/api/catalog/body-types');
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticBodyTypes();
+    // Normalize: handle both { value, label } and legacy { id, name } formats
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticBodyTypes();
   } catch {
     return getStaticBodyTypes();
   }
@@ -1151,8 +1251,11 @@ export async function getBodyTypes(): Promise<CatalogOption[]> {
  */
 export async function getFuelTypes(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/fuel-types');
-    return response.data;
+    const response = await apiClient.get<unknown[]>('/api/catalog/fuel-types');
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticFuelTypes();
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticFuelTypes();
   } catch {
     return getStaticFuelTypes();
   }
@@ -1163,8 +1266,11 @@ export async function getFuelTypes(): Promise<CatalogOption[]> {
  */
 export async function getTransmissions(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/transmissions');
-    return response.data;
+    const response = await apiClient.get<unknown[]>('/api/catalog/transmissions');
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticTransmissions();
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticTransmissions();
   } catch {
     return getStaticTransmissions();
   }
@@ -1175,8 +1281,11 @@ export async function getTransmissions(): Promise<CatalogOption[]> {
  */
 export async function getColors(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/colors');
-    return response.data;
+    const response = await apiClient.get<unknown[]>('/api/catalog/colors');
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticColors();
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticColors();
   } catch {
     return getStaticColors();
   }
@@ -1187,8 +1296,11 @@ export async function getColors(): Promise<CatalogOption[]> {
  */
 export async function getProvinces(): Promise<CatalogOption[]> {
   try {
-    const response = await apiClient.get<CatalogOption[]>('/api/catalog/provinces');
-    return response.data;
+    const response = await apiClient.get<unknown[]>('/api/catalog/provinces');
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) return getStaticProvinces();
+    const normalized = data.map(normalizeCatalogOption).filter(o => !!o.value);
+    return normalized.length > 0 ? normalized : getStaticProvinces();
   } catch {
     return getStaticProvinces();
   }
@@ -1209,6 +1321,135 @@ export async function getFeatures(): Promise<Record<string, string[]>> {
 // ============================================================
 // STATIC FALLBACK DATA
 // ============================================================
+
+const STATIC_MODELS_BY_MAKE: Record<string, string[]> = {
+  toyota: [
+    'Corolla',
+    'Camry',
+    'RAV4',
+    'Hilux',
+    'Fortuner',
+    'Land Cruiser',
+    'Prado',
+    'Yaris',
+    'C-HR',
+    'Highlander',
+    'Tacoma',
+    'Tundra',
+    '4Runner',
+    'Sequoia',
+  ],
+  honda: [
+    'Civic',
+    'Accord',
+    'CR-V',
+    'HR-V',
+    'Pilot',
+    'Odyssey',
+    'Passport',
+    'Ridgeline',
+    'Fit',
+    'Jazz',
+  ],
+  hyundai: [
+    'Elantra',
+    'Sonata',
+    'Tucson',
+    'Santa Fe',
+    'Accent',
+    'Kona',
+    'Palisade',
+    'Creta',
+    'Ioniq 5',
+    'Genesis G80',
+  ],
+  nissan: [
+    'Sentra',
+    'Altima',
+    'Maxima',
+    'Pathfinder',
+    'Frontier',
+    'Titan',
+    'Rogue',
+    'Murano',
+    'Armada',
+    'X-Trail',
+    'Kicks',
+    'Versa',
+  ],
+  kia: [
+    'Rio',
+    'Forte',
+    'Stinger',
+    'Sportage',
+    'Sorento',
+    'Telluride',
+    'Seltos',
+    'Soul',
+    'Carnival',
+    'Stonic',
+  ],
+  mazda: ['Mazda3', 'Mazda6', 'CX-3', 'CX-5', 'CX-9', 'CX-30', 'MX-5 Miata', 'BT-50'],
+  ford: [
+    'Mustang',
+    'F-150',
+    'Explorer',
+    'Escape',
+    'Bronco',
+    'Edge',
+    'Expedition',
+    'EcoSport',
+    'Ranger',
+    'Maverick',
+  ],
+  chevrolet: [
+    'Spark',
+    'Cruze',
+    'Malibu',
+    'Camaro',
+    'Silverado',
+    'Colorado',
+    'Equinox',
+    'Blazer',
+    'Traverse',
+    'Tahoe',
+    'Suburban',
+    'Trailblazer',
+  ],
+  bmw: ['Serie 3', 'Serie 5', 'Serie 7', 'X1', 'X3', 'X5', 'X7', 'M3', 'M5'],
+  'mercedes-benz': ['Clase C', 'Clase E', 'Clase S', 'GLA', 'GLC', 'GLE', 'GLS', 'CLA', 'AMG GT'],
+  audi: ['A3', 'A4', 'A6', 'A8', 'Q3', 'Q5', 'Q7', 'TT', 'R8'],
+  volkswagen: ['Jetta', 'Passat', 'Golf', 'Tiguan', 'Atlas', 'Taos', 'Polo', 'T-Cross'],
+  lexus: ['IS', 'ES', 'GS', 'LS', 'NX', 'RX', 'GX', 'LX'],
+  jeep: ['Wrangler', 'Cherokee', 'Grand Cherokee', 'Compass', 'Renegade', 'Gladiator', 'Commander'],
+  mitsubishi: ['Lancer', 'Galant', 'Eclipse Cross', 'Outlander', 'ASX', 'L200', 'Montero'],
+  suzuki: ['Swift', 'Vitara', 'S-Cross', 'Grand Vitara', 'Jimny', 'Ertiga'],
+  subaru: ['Impreza', 'Legacy', 'Outback', 'Forester', 'Crosstrek', 'WRX', 'BRZ'],
+  dodge: ['Charger', 'Challenger', 'Durango', 'Ram 1500', 'Journey', 'Dart'],
+};
+
+function getStaticModelsByMake(makeId: string): VehicleModel[] {
+  // makeId can be "make-1", "Toyota", "toyota", etc.
+  const normalizedKey = makeId
+    .toLowerCase()
+    .replace(/^make-\d+$/, '') // strip "make-N" IDs
+    .replace(/\s+/g, '-');
+
+  // Try direct match first, then partial match
+  const models =
+    STATIC_MODELS_BY_MAKE[normalizedKey] ??
+    Object.entries(STATIC_MODELS_BY_MAKE).find(
+      ([key]) => key.includes(normalizedKey) || normalizedKey.includes(key)
+    )?.[1] ??
+    [];
+
+  return models.map((name, i) => ({
+    id: `model-${normalizedKey}-${i + 1}`,
+    name,
+    slug: name.toLowerCase().replace(/\s+/g, '-'),
+    makeId,
+  }));
+}
 
 function getStaticMakes(): VehicleMake[] {
   const makes = [
@@ -1258,7 +1499,9 @@ function getStaticFuelTypes(): CatalogOption[] {
     { value: 'diesel', label: 'Diésel' },
     { value: 'hybrid', label: 'Híbrido' },
     { value: 'electric', label: 'Eléctrico' },
-    { value: 'lpg', label: 'GLP' },
+    { value: 'pluginhybrid', label: 'Híbrido Enchufable' },
+    { value: 'naturalgas', label: 'GLP / Gas' },
+    { value: 'flexfuel', label: 'Flex Fuel' },
   ];
 }
 
@@ -1267,7 +1510,8 @@ function getStaticTransmissions(): CatalogOption[] {
     { value: 'automatic', label: 'Automática' },
     { value: 'manual', label: 'Manual' },
     { value: 'cvt', label: 'CVT' },
-    { value: 'semi-automatic', label: 'Semi-automática' },
+    { value: 'dualclutch', label: 'Doble Embrague (DCT)' },
+    { value: 'automated', label: 'Semi-automática' },
   ];
 }
 
@@ -1359,6 +1603,8 @@ export const vehicleService = {
   // Write operations
   create: createVehicle,
   publish: publishVehicle,
+  unpublish: unpublishVehicle,
+  markSold: markVehicleSold,
   update: updateVehicle,
   delete: deleteVehicle,
 

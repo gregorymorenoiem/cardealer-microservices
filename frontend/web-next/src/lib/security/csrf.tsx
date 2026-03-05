@@ -94,6 +94,7 @@ export function useCsrfToken() {
   const [token, setToken] = useState<string>('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToken(getCsrfToken());
   }, []);
 
@@ -167,7 +168,7 @@ export function validateDoubleSubmit(
   return result === 0;
 }
 
-export default {
+const csrfUtils = {
   getCsrfToken,
   refreshCsrfToken,
   getCsrfHeaders,
@@ -178,3 +179,5 @@ export default {
   validateDoubleSubmit,
   CSRF_HEADER_NAME,
 };
+
+export default csrfUtils;

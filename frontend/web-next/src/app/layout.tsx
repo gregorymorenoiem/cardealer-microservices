@@ -44,10 +44,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do'),
   alternates: {
     canonical: '/',
-    languages: {
-      'es-DO': '/es-DO',
-      'en-US': '/en-US',
-    },
   },
   openGraph: {
     type: 'website',
@@ -59,7 +55,7 @@ export const metadata: Metadata = {
       'Encuentra el vehículo perfecto o vende el tuyo en OKLA. El marketplace de autos más grande de República Dominicana.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'OKLA - Marketplace de Vehículos',
@@ -70,7 +66,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'OKLA - Marketplace de Vehículos',
     description: 'El marketplace de autos #1 de República Dominicana',
-    images: ['/og-image.jpg'],
+    images: ['/opengraph-image'],
     creator: '@okla',
   },
   robots: {
@@ -138,8 +134,12 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <meta httpEquiv="Permissions-Policy" content="camera=*, microphone=*" />
+        {/* Preconnect to image CDN for faster LCP */}
+        <link rel="preconnect" href="https://okla-images-2026.s3.us-east-2.amazonaws.com" />
+        <link rel="dns-prefetch" href="https://okla-images-2026.s3.us-east-2.amazonaws.com" />
+        <link rel="preconnect" href="https://cdn.okla.com.do" />
+        <link rel="dns-prefetch" href="https://cdn.okla.com.do" />
         <SiteJsonLd />
-        <GoogleAnalytics />
       </head>
       <body
         className="bg-background text-foreground min-h-screen antialiased"
@@ -158,6 +158,7 @@ export default function RootLayout({
             />
           </PWAComponents>
         </Providers>
+        <GoogleAnalytics />
       </body>
     </html>
   );

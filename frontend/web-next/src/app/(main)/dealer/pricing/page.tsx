@@ -8,7 +8,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -28,16 +28,9 @@ import {
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { useDemandByCategory, useCreatePriceAnalysis } from '@/hooks/use-vehicle-intelligence';
-import {
-  formatPrice,
-  getRecommendationType,
-  getRecommendationColor,
-  getRecommendationLabel,
-  getDemandColor,
-  getDemandLabel,
-  getTrendIcon,
-} from '@/services/vehicle-intelligence';
+import { formatPrice, getRecommendationType } from '@/services/vehicle-intelligence';
 import { toast } from 'sonner';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // ============================================================================
 // Skeleton Components
@@ -151,7 +144,7 @@ function calculateSuggestedPrice(vehicle: { price: number; createdAt?: string })
 // Main Component
 // ============================================================================
 
-export default function DealerPricingPage() {
+function DealerPricingContent() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedVehicleId, setSelectedVehicleId] = React.useState<string | null>(null);
 
@@ -172,7 +165,7 @@ export default function DealerPricingPage() {
   const createPriceAnalysis = useCreatePriceAnalysis();
 
   // Derived data
-  const vehicles = vehiclesData?.items || [];
+  const vehicles = React.useMemo(() => vehiclesData?.items || [], [vehiclesData]);
   const isLoading = dealerLoading || vehiclesLoading;
 
   // Filter vehicles by search
@@ -196,7 +189,7 @@ export default function DealerPricingPage() {
     const avgPrice = vehicles.reduce((sum, v) => sum + v.price, 0) / vehicles.length;
     const needsAdjustment = vehicles.filter(v => {
       const daysListed = v.createdAt
-        ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+        ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / (1000 * 60 * 60 * 24)) // eslint-disable-line react-hooks/purity
         : 0;
       return daysListed > 30;
     }).length;
@@ -218,7 +211,7 @@ export default function DealerPricingPage() {
     }
 
     const daysListed = vehicle.createdAt
-      ? Math.ceil((Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+      ? Math.ceil((Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24)) // eslint-disable-line react-hooks/purity
       : 0;
 
     setSelectedVehicleId(vehicleId);
@@ -272,8 +265,8 @@ export default function DealerPricingPage() {
   if (!dealer) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="mb-4 h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium text-muted-foreground">
+        <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
+        <p className="text-muted-foreground text-lg font-medium">
           Necesitas una cuenta de dealer para acceder a esta función
         </p>
       </div>
@@ -299,12 +292,12 @@ export default function DealerPricingPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <DollarSign className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <DollarSign className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{formatPrice(stats.avgPrice)}</p>
-                <p className="text-sm text-muted-foreground">Precio Promedio</p>
+                <p className="text-muted-foreground text-sm">Precio Promedio</p>
               </div>
             </div>
           </CardContent>
@@ -317,7 +310,7 @@ export default function DealerPricingPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalVehicles}</p>
-                <p className="text-sm text-muted-foreground">Vehículos Activos</p>
+                <p className="text-muted-foreground text-sm">Vehículos Activos</p>
               </div>
             </div>
           </CardContent>
@@ -330,7 +323,7 @@ export default function DealerPricingPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.needsAdjustment}</p>
-                <p className="text-sm text-muted-foreground">Requieren Ajuste</p>
+                <p className="text-muted-foreground text-sm">Requieren Ajuste</p>
               </div>
             </div>
           </CardContent>
@@ -343,7 +336,7 @@ export default function DealerPricingPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">+{(stats.potentialGain * 100).toFixed(0)}%</p>
-                <p className="text-sm text-muted-foreground">Potencial Ganancia</p>
+                <p className="text-muted-foreground text-sm">Potencial Ganancia</p>
               </div>
             </div>
           </CardContent>
@@ -371,7 +364,7 @@ export default function DealerPricingPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
           placeholder="Buscar en tu inventario..."
           className="pl-10"
@@ -385,8 +378,8 @@ export default function DealerPricingPage() {
         {filteredVehicles.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Car className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium text-muted-foreground">
+              <Car className="text-muted-foreground mb-4 h-12 w-12" />
+              <p className="text-muted-foreground text-lg font-medium">
                 {searchQuery
                   ? 'No se encontraron vehículos'
                   : 'No tienes vehículos en tu inventario'}
@@ -406,7 +399,7 @@ export default function DealerPricingPage() {
             const recommendation = getRecommendationType(vehicle.price, suggestedPrice);
             const daysListed = vehicle.createdAt
               ? Math.ceil(
-                  (Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+                  (Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24) // eslint-disable-line react-hooks/purity
                 )
               : 0;
             const isAnalyzing = createPriceAnalysis.isPending && selectedVehicleId === vehicle.id;
@@ -423,11 +416,11 @@ export default function DealerPricingPage() {
 
                       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
                         <div>
-                          <p className="text-sm text-muted-foreground">Tu Precio</p>
+                          <p className="text-muted-foreground text-sm">Tu Precio</p>
                           <p className="text-xl font-bold">{formatPrice(vehicle.price)}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Precio Sugerido</p>
+                          <p className="text-muted-foreground text-sm">Precio Sugerido</p>
                           <p
                             className={`text-xl font-bold ${
                               recommendation === 'reduce'
@@ -441,13 +434,13 @@ export default function DealerPricingPage() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Promedio Mercado</p>
-                          <p className="text-xl font-bold text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">Promedio Mercado</p>
+                          <p className="text-muted-foreground text-xl font-bold">
                             {formatPrice(marketAvg)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Diferencia</p>
+                          <p className="text-muted-foreground text-sm">Diferencia</p>
                           <p
                             className={`text-xl font-bold ${
                               vehicle.price > suggestedPrice
@@ -463,7 +456,7 @@ export default function DealerPricingPage() {
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground lg:gap-6">
+                      <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-4 text-sm lg:gap-6">
                         <span>{daysListed} días publicado</span>
                         <span>{vehicle.viewCount || 0} vistas</span>
                         <span>{vehicle.transmission || 'N/A'}</span>
@@ -508,8 +501,8 @@ export default function DealerPricingPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="mb-1 text-sm text-muted-foreground">Tendencia SUVs</p>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-muted-foreground mb-1 text-sm">Tendencia SUVs</p>
               <div className="flex items-center gap-2">
                 {(() => {
                   const suvDemand = demandData?.find(d => d.category.toLowerCase() === 'suv');
@@ -517,11 +510,11 @@ export default function DealerPricingPage() {
                     return (
                       <>
                         {suvDemand.trend === 'up' ? (
-                          <TrendingUp className="h-5 w-5 text-primary" />
+                          <TrendingUp className="text-primary h-5 w-5" />
                         ) : suvDemand.trend === 'down' ? (
                           <TrendingDown className="h-5 w-5 text-red-600" />
                         ) : (
-                          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                          <BarChart3 className="text-muted-foreground h-5 w-5" />
                         )}
                         <span className="font-semibold">Demanda: {suvDemand.demandScore}/100</span>
                       </>
@@ -529,24 +522,32 @@ export default function DealerPricingPage() {
                   }
                   return (
                     <>
-                      <TrendingUp className="h-5 w-5 text-primary" />
+                      <TrendingUp className="text-primary h-5 w-5" />
                       <span className="font-semibold">+5.2% este mes</span>
                     </>
                   );
                 })()}
               </div>
             </div>
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="mb-1 text-sm text-muted-foreground">Mejor día para publicar</p>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-muted-foreground mb-1 text-sm">Mejor día para publicar</p>
               <p className="font-semibold">Domingo 6-8 PM</p>
             </div>
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="mb-1 text-sm text-muted-foreground">Precio promedio zona</p>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-muted-foreground mb-1 text-sm">Precio promedio zona</p>
               <p className="font-semibold">{formatPrice(stats.avgPrice || 1350000)}</p>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function DealerPricingPage() {
+  return (
+    <PlanGate feature="marketPriceAnalysis">
+      <DealerPricingContent />
+    </PlanGate>
   );
 }

@@ -22,6 +22,7 @@ import {
   useCampaignReport,
 } from '@/hooks/use-advertising';
 import type { AdCampaignSummary, CampaignStatus } from '@/types/advertising';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // =============================================================================
 // HELPERS
@@ -201,7 +202,7 @@ function CampaignReportPanel({ campaignId }: { campaignId: string }) {
 // MAIN PAGE
 // =============================================================================
 
-export default function DealerPublicidadPage() {
+function DealerPublicidadContent() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -238,6 +239,25 @@ export default function DealerPublicidadPage() {
           <TabsTrigger value="campaigns">Mis Campañas</TabsTrigger>
           <TabsTrigger value="overview">Resumen</TabsTrigger>
         </TabsList>
+
+        {/* Quick links */}
+        <div className="mt-4 mb-2 flex gap-2">
+          <Link href="/dealer/publicidad/en-vivo">
+            <Button variant="outline" size="sm">
+              🟢 Dashboard en Vivo
+            </Button>
+          </Link>
+          <Link href="/dealer/publicidad/estadisticas">
+            <Button variant="outline" size="sm">
+              📊 Estadísticas Detalladas
+            </Button>
+          </Link>
+          <Link href="/dealer/publicidad/roi">
+            <Button variant="outline" size="sm">
+              💰 Calculadora ROI
+            </Button>
+          </Link>
+        </div>
 
         <TabsContent value="campaigns" className="mt-6">
           {/* Filter buttons */}
@@ -354,5 +374,13 @@ export default function DealerPublicidadPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function DealerPublicidadPage() {
+  return (
+    <PlanGate feature="featuredListings">
+      <DealerPublicidadContent />
+    </PlanGate>
   );
 }

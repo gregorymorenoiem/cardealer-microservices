@@ -9,7 +9,8 @@ namespace Gateway.Api.Middleware;
 /// Server-side CSRF validation middleware (Double Submit Cookie pattern).
 /// Validates that the X-CSRF-Token header matches the csrf_token cookie
 /// for all state-changing HTTP methods (POST, PUT, PATCH, DELETE).
-/// 
+/// AI Agent paths (/api/search-agent/, /api/support/, /api/reco-agent/) are exempt
+/// because they use JWT Bearer auth (no browser cookies).
 /// OWASP Reference: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
 /// </summary>
 public class CsrfValidationMiddleware
@@ -41,6 +42,27 @@ public class CsrfValidationMiddleware
         "/api/chat/message",
         "/api/chat/end",
         "/api/chat/transfer",
+        // AI Agent APIs: JWT-authenticated only — CSRF redundant (no browser cookies involved)
+        "/api/search-agent/",
+        "/api/support/",
+        "/api/reco-agent/",
+        // Admin homepage management: JWT-authenticated admin-only operations
+        "/api/homepagesections",
+        "/api/admin/",
+        // Vehicles: Feature toggle and management (JWT-protected)
+        "/api/vehicles/",
+        // Advertising: Campaign and catalog management (JWT-protected)
+        "/api/advertising/",
+        // Billing & OKLA Coins: JWT-authenticated dealer operations
+        "/api/dealer-billing/",
+        "/api/okla-coins/",
+        "/api/billing/",
+        // Contact, Appointments, Reviews: JWT-authenticated user operations
+        "/api/contactrequests",
+        "/api/contactmessages",
+        "/api/appointments",
+        "/api/timeslots",
+        "/api/reviews",
         "/swagger",
         "/metrics",
     };
@@ -132,3 +154,5 @@ public static class CsrfMiddlewareExtensions
         return builder.UseMiddleware<CsrfValidationMiddleware>();
     }
 }
+
+// trigger rebuild Mon Mar  2 15:38:01 AST 2026

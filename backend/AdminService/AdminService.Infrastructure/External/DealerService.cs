@@ -258,6 +258,82 @@ public class DealerService : IDealerService
         }
     }
 
+    public async Task<AdminDealerDto?> CreateDealerProfileForUserAsync(
+        Guid userId,
+        string businessName,
+        string email,
+        string phone,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Check if dealer profile already exists for this user
+            var checkUrl = $"api/dealers/user/{userId}";
+            var checkResponse = await _httpClient.GetAsync(checkUrl, cancellationToken);
+            if (checkResponse.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Dealer profile already exists for user {UserId}", userId);
+                var existingDto = await checkResponse.Content.ReadFromJsonAsync<DealerMgmtDto>(JsonOptions, cancellationToken);
+                return existingDto != null ? MapToDealerDto(existingDto) : null;
+            }
+
+            // Generate a temporary RNC using the user ID prefix
+            var tempRnc = $"TEMP-{userId.ToString().Substring(0, 8).ToUpper()}";
+
+            var payload = new
+            {
+                UserId = userId,
+                BusinessName = businessName,
+                RNC = tempRnc,
+                LegalName = businessName,
+                TradeName = (string?)null,
+                Type = "Independent",
+                Email = email,
+                Phone = phone,
+                MobilePhone = phone,
+                Website = (string?)null,
+                Address = "Pendiente de completar",
+                City = "Pendiente",
+                Province = "Pendiente",
+                ZipCode = (string?)null,
+                Description = (string?)null,
+                EstablishedDate = (DateTime?)null,
+                EmployeeCount = (int?)null
+            };
+
+            var url = "api/dealers";
+            _logger.LogInformation(
+                "Creating dealer profile for user {UserId} (BusinessName={BusinessName})", userId, businessName);
+
+            var response = await _httpClient.PostAsJsonAsync(url, payload, cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var created = await response.Content.ReadFromJsonAsync<DealerMgmtDto>(JsonOptions, cancellationToken);
+                if (created != null)
+                {
+                    _logger.LogInformation(
+                        "Created dealer profile {DealerId} for user {UserId}", created.Id, userId);
+                    return MapToDealerDto(created);
+                }
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogWarning(
+                    "Failed to create dealer profile for user {UserId}: {StatusCode} - {Body}",
+                    userId, response.StatusCode, body);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating dealer profile for user {UserId}", userId);
+            return null;
+        }
+    }
+
     // =========================================================================
     // COMPUTE STATS FROM LIST (fallback when /statistics returns partial data)
     // =========================================================================

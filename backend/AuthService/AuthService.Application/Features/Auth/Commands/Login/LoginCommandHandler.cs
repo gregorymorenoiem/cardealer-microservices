@@ -214,7 +214,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var jwtExpiresMinutes = await _securityConfig.GetJwtExpiresMinutesAsync(cancellationToken);
         var refreshTokenDays = await _securityConfig.GetRefreshTokenDaysAsync(cancellationToken);
 
-        var accessToken = _jwtGenerator.GenerateToken(user, jwtExpiresMinutes);
         var refreshTokenValue = _jwtGenerator.GenerateRefreshToken();
 
         var expiresAt = DateTime.UtcNow.AddMinutes(jwtExpiresMinutes);
@@ -234,6 +233,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var deviceInfo = ParseDeviceInfo(userAgent);
         var browser = ParseBrowser(userAgent);
         var operatingSystem = ParseOperatingSystem(userAgent);
+        var deviceFingerprint = UserSession.ComputeFingerprint(browser, operatingSystem, deviceInfo);
 
         // Get geolocation from IP address
         string? locationString = null;
@@ -257,18 +257,22 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             _logger.LogWarning(ex, "Failed to get geolocation for IP {IpAddress}", _requestContext.IpAddress);
         }
 
-        // Check if there's an existing active session for the same device/browser/IP
+        // Check if there's an existing active session for the same device fingerprint
+        // (Browser + OS + DeviceType hash — IP excluded to handle dynamic IPs, VPNs, k8s pod rotation)
         var existingSession = await _sessionRepository.GetActiveSessionByDeviceAsync(
             user.Id,
-            deviceInfo,
-            browser,
-            _requestContext.IpAddress,
+            deviceFingerprint,
             cancellationToken);
+
+        // Pre-determine session ID BEFORE generating the JWT so it can be embedded as a claim.
+        // This allows /api/auth/security/sessions to correctly mark isCurrent = true.
+        Guid sessionId;
 
         if (existingSession != null)
         {
-            // Reuse existing session - update with new refresh token
-            existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt);
+            sessionId = existingSession.Id;
+            // Reuse existing session — update with new refresh token and latest IP
+            existingSession.RenewSession(refreshTokenEntity.Id.ToString(), sessionExpiresAt, _requestContext.IpAddress);
             // Update location if we got one
             if (!string.IsNullOrEmpty(locationString))
             {
@@ -289,6 +293,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 ipAddress: _requestContext.IpAddress,
                 expiresAt: sessionExpiresAt
             );
+            sessionId = userSession.Id;
             
             // Set location if available
             if (!string.IsNullOrEmpty(locationString))
@@ -320,6 +325,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 _logger.LogWarning(ex, "Failed to send new session notification to {Email}", user.Email);
             }
         }
+
+        // Generate JWT AFTER session ID is determined so it can be embedded as "SessionId" claim.
+        // This allows /api/auth/security/sessions to mark isCurrent = true for the active session.
+        var accessToken = _jwtGenerator.GenerateToken(user, jwtExpiresMinutes, sessionId.ToString());
 
         user.ResetAccessFailedCount();
         await _userRepository.UpdateAsync(user, cancellationToken);

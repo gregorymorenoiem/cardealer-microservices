@@ -26,6 +26,9 @@ const buttonVariants = cva(
           'text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring',
         // Link - Text only
         link: 'text-primary underline-offset-4 hover:underline focus-visible:ring-primary',
+        // White - For buttons on dark or colored backgrounds (banners, hero sections, etc.)
+        white:
+          'bg-white text-gray-900 shadow-sm hover:bg-gray-50 active:bg-gray-100 focus-visible:ring-white',
       },
       size: {
         default: 'h-10 px-4 py-2',

@@ -341,7 +341,14 @@ export default function SellerRegistrationPage() {
           setSellerProfileId(result.sellerProfileId);
         } catch (err: unknown) {
           // Enhanced error handling for conversion failures
-          const error = err as any;
+          const error = err as {
+            message?: string;
+            response?: { status: number; config?: { url?: string }; data?: { detail?: string } };
+            status?: number;
+            code?: string;
+            requiresKyc?: boolean;
+            redirectUrl?: string;
+          };
 
           // Check for 401 Unauthorized (auth token issue)
           if (error?.response?.status === 401 || error?.status === 401) {
@@ -355,7 +362,7 @@ export default function SellerRegistrationPage() {
 
           // Check for 404 (endpoint not found)
           if (error?.response?.status === 404 || error?.status === 404) {
-            console.error('🚫 Endpoint not found - status 404. URL:', error?.config?.url);
+            console.error('🚫 Endpoint not found - status 404. URL:', error?.response?.config?.url);
             setGlobalError(
               'El servicio de conversión no está disponible temporalmente. Por favor, intenta en unos momentos.'
             );

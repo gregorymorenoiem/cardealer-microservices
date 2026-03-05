@@ -34,6 +34,31 @@ namespace AdminService.Infrastructure.External
             { 6, "rejected" }
         };
 
+        // Reverse map: VehiclesSaleService string status → int code
+        private static readonly Dictionary<string, int> StatusNameToCode = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "draft",        0 },
+            { "pendingreview", 1 },
+            { "pending",      1 },
+            { "active",       2 },
+            { "reserved",     3 },
+            { "sold",         4 },
+            { "archived",     5 },
+            { "rejected",     6 }
+        };
+
+        // String status names used by VehiclesSaleService in query params
+        private static readonly Dictionary<int, string> StatusCodeToApiName = new()
+        {
+            { 0, "Draft" },
+            { 1, "PendingReview" },
+            { 2, "Active" },
+            { 3, "Reserved" },
+            { 4, "Sold" },
+            { 5, "Archived" },
+            { 6, "Rejected" }
+        };
+
         public VehicleServiceClient(HttpClient httpClient, ILogger<VehicleServiceClient> logger)
         {
             _httpClient = httpClient;
@@ -44,7 +69,7 @@ namespace AdminService.Infrastructure.External
         {
             try
             {
-                // Build query string - VehiclesSaleService uses different param names
+                // Build query string for admin search endpoint (returns ALL statuses, not just Active)
                 var queryParams = new List<string>
                 {
                     $"Page={filters.Page}",
@@ -52,17 +77,21 @@ namespace AdminService.Infrastructure.External
                 };
 
                 if (!string.IsNullOrWhiteSpace(filters.Search))
-                    queryParams.Add($"Search={Uri.EscapeDataString(filters.Search)}");
+                    queryParams.Add($"search={Uri.EscapeDataString(filters.Search)}");
 
-                var url = $"/api/vehicles?{string.Join("&", queryParams)}";
+                // Pass status filter directly to the server (admin endpoint supports it)
+                if (!string.IsNullOrWhiteSpace(filters.Status))
+                    queryParams.Add($"status={Uri.EscapeDataString(filters.Status)}");
 
-                _logger.LogDebug("Searching vehicles: {Url}", url);
+                var url = $"/api/vehicles/admin/search?{string.Join("&", queryParams)}";
+
+                _logger.LogDebug("Admin searching vehicles: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url, ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("VehiclesSaleService search returned {StatusCode}", response.StatusCode);
+                    _logger.LogWarning("VehiclesSaleService admin search returned {StatusCode}", response.StatusCode);
                     return new VehicleSearchResponse
                     {
                         Vehicles = new List<VehicleDto>(),
@@ -88,20 +117,12 @@ namespace AdminService.Infrastructure.External
                     };
                 }
 
-                // Map raw vehicles to our DTOs and apply admin-specific filters
+                // Map raw vehicles to our DTOs
                 var vehicles = (rawResult.Vehicles ?? new List<RawVehicle>())
                     .Select(MapToVehicleDto)
                     .ToList();
 
-                // Apply admin-specific filters (status, sellerType, featured) client-side
-                // since VehiclesSaleService search only filters Active vehicles by default
-                if (!string.IsNullOrWhiteSpace(filters.Status))
-                {
-                    vehicles = vehicles.Where(v =>
-                        string.Equals(v.StatusName, filters.Status, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
-                }
-
+                // Apply client-side sellerType and featured filters (not supported by admin/search endpoint)
                 if (!string.IsNullOrWhiteSpace(filters.SellerType))
                 {
                     vehicles = vehicles.Where(v =>
@@ -190,32 +211,57 @@ namespace AdminService.Infrastructure.External
         {
             try
             {
-                // Fetch all vehicles to compute stats (no status filter = all statuses)
-                // We do multiple small requests to get counts per status
+                // Fetch all vehicles in a single call (large page) to compute stats client-side
+                // VehiclesSaleService has no admin stats endpoint, so we aggregate here
                 var stats = new VehicleStatsResponse();
 
-                // Get total count by fetching page 1 with pageSize 1
-                var allResult = await FetchVehiclesCount(null, ct);
-                stats.Total = allResult;
+                // Use admin search endpoint (returns ALL statuses) with a large page size to compute stats client-side
+                const int batchSize = 500;
+                var response = await _httpClient.GetAsync(
+                    $"/api/vehicles/admin/search?Page=1&PageSize={batchSize}", ct);
 
-                // Get active count
-                var activeResult = await FetchVehiclesByStatus(2, ct); // Active = 2
-                stats.Active = activeResult;
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("VehiclesSaleService stats fetch returned {StatusCode}",
+                        response.StatusCode);
+                    return stats;
+                }
 
-                // Get pending count
-                var pendingResult = await FetchVehiclesByStatus(1, ct); // PendingReview = 1
-                stats.Pending = pendingResult;
+                var content = await response.Content.ReadAsStringAsync(ct);
+                var rawResult = JsonSerializer.Deserialize<RawVehicleSearchResult>(content, JsonOptions);
 
-                // Get rejected count
-                var rejectedResult = await FetchVehiclesByStatus(6, ct); // Rejected = 6
-                stats.Rejected = rejectedResult;
+                if (rawResult == null) return stats;
 
-                // Featured count - we'll get from the search
-                var featuredResult = await FetchFeaturedCount(ct);
-                stats.Featured = featuredResult;
+                stats.Total = rawResult.TotalCount;
 
-                // WithReports - not available directly, default to 0
-                stats.WithReports = 0;
+                // Count by status from the returned vehicles
+                var vehicles = rawResult.Vehicles ?? new List<RawVehicle>();
+                stats.Active   = vehicles.Count(v => string.Equals(v.Status, "Active",       StringComparison.OrdinalIgnoreCase));
+                stats.Pending  = vehicles.Count(v => string.Equals(v.Status, "PendingReview", StringComparison.OrdinalIgnoreCase));
+                stats.Rejected = vehicles.Count(v => string.Equals(v.Status, "Rejected",      StringComparison.OrdinalIgnoreCase));
+                stats.Featured = vehicles.Count(v => v.IsFeatured);
+                stats.WithReports = 0;  // Not available from VehiclesSaleService
+
+                // If total exceeds batch, fetch remaining pages to get full counts
+                if (rawResult.TotalCount > batchSize)
+                {
+                    var totalPages = (int)Math.Ceiling((double)rawResult.TotalCount / batchSize);
+                    for (var page = 2; page <= Math.Min(totalPages, 10); page++)
+                    {
+                        var pageResponse = await _httpClient.GetAsync(
+                            $"/api/vehicles/admin/search?Page={page}&PageSize={batchSize}", ct);
+                        if (!pageResponse.IsSuccessStatusCode) break;
+
+                        var pageContent = await pageResponse.Content.ReadAsStringAsync(ct);
+                        var pageResult = JsonSerializer.Deserialize<RawVehicleSearchResult>(pageContent, JsonOptions);
+                        if (pageResult?.Vehicles == null) break;
+
+                        stats.Active   += pageResult.Vehicles.Count(v => string.Equals(v.Status, "Active",       StringComparison.OrdinalIgnoreCase));
+                        stats.Pending  += pageResult.Vehicles.Count(v => string.Equals(v.Status, "PendingReview", StringComparison.OrdinalIgnoreCase));
+                        stats.Rejected += pageResult.Vehicles.Count(v => string.Equals(v.Status, "Rejected",      StringComparison.OrdinalIgnoreCase));
+                        stats.Featured += pageResult.Vehicles.Count(v => v.IsFeatured);
+                    }
+                }
 
                 return stats;
             }
@@ -299,6 +345,111 @@ namespace AdminService.Infrastructure.External
             }
         }
 
+        public async Task<ModerationQueueResponse?> GetModerationQueueAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+        {
+            try
+            {
+                var url = $"/api/vehicles/moderation/queue?page={page}&pageSize={pageSize}";
+                _logger.LogDebug("Fetching moderation queue from VehiclesSaleService: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("VehiclesSaleService moderation queue returned {StatusCode}", response.StatusCode);
+                    return new ModerationQueueResponse { Vehicles = new List<ModerationVehicleDto>(), TotalCount = 0, Page = page, PageSize = pageSize, TotalPages = 0 };
+                }
+
+                var content = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogDebug("Moderation queue raw response: {Content}", content.Length > 500 ? content[..500] : content);
+
+                var raw = JsonSerializer.Deserialize<RawModerationQueueResult>(content, JsonOptions);
+                if (raw == null)
+                    return new ModerationQueueResponse { Vehicles = new List<ModerationVehicleDto>(), TotalCount = 0, Page = page, PageSize = pageSize, TotalPages = 0 };
+
+                var vehicles = (raw.Vehicles ?? new List<RawModerationVehicle>()).Select(v => new ModerationVehicleDto
+                {
+                    Id = v.Id,
+                    Title = v.Title ?? $"{v.Year} {v.Make} {v.Model}",
+                    Slug = v.Slug ?? v.Id.ToString(),
+                    Make = v.Make ?? string.Empty,
+                    Model = v.Model ?? string.Empty,
+                    Year = v.Year,
+                    Price = v.Price,
+                    Currency = v.Currency ?? "DOP",
+                    Condition = v.Condition ?? "Used",
+                    SellerName = v.SellerName ?? "Unknown",
+                    SellerType = v.SellerType ?? "seller",
+                    ImageUrl = v.ImageUrl,
+                    ImageCount = v.ImageCount,
+                    SubmittedAt = v.SubmittedAt,
+                    RejectionCount = v.RejectionCount,
+                    City = v.City,
+                    State = v.State
+                }).ToList();
+
+                return new ModerationQueueResponse
+                {
+                    Vehicles = vehicles,
+                    TotalCount = raw.TotalCount,
+                    Page = raw.Page,
+                    PageSize = raw.PageSize,
+                    TotalPages = raw.TotalPages
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching moderation queue from VehiclesSaleService");
+                return new ModerationQueueResponse { Vehicles = new List<ModerationVehicleDto>(), TotalCount = 0, Page = page, PageSize = pageSize, TotalPages = 0 };
+            }
+        }
+
+        public async Task<bool> ApproveVehicleAsync(Guid vehicleId, string reviewerId, string? notes = null, CancellationToken ct = default)
+        {
+            try
+            {
+                var body = JsonSerializer.Serialize(new { moderatorId = reviewerId, notes }, JsonOptions);
+                var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"/api/vehicles/{vehicleId}/approve", content, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("Failed to approve vehicle {VehicleId}: {StatusCode} - {Error}", vehicleId, response.StatusCode, error);
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving vehicle {VehicleId}", vehicleId);
+                return false;
+            }
+        }
+
+        public async Task<bool> RejectVehicleAsync(Guid vehicleId, string reviewerId, string reason, string? notes = null, CancellationToken ct = default)
+        {
+            try
+            {
+                var body = JsonSerializer.Serialize(new { moderatorId = reviewerId, reason, notes }, JsonOptions);
+                var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"/api/vehicles/{vehicleId}/reject", content, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("Failed to reject vehicle {VehicleId}: {StatusCode} - {Error}", vehicleId, response.StatusCode, error);
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting vehicle {VehicleId}", vehicleId);
+                return false;
+            }
+        }
+
         // ── Private helpers ─────────────────────────────────────────
 
         private async Task<int> FetchVehiclesCount(int? status, CancellationToken ct)
@@ -319,27 +470,20 @@ namespace AdminService.Infrastructure.External
             }
         }
 
-        private async Task<int> FetchVehiclesByStatus(int status, CancellationToken ct)
+        private async Task<int> FetchVehiclesByStatus(string statusName, CancellationToken ct)
         {
             try
             {
-                // Query VehiclesSaleService with status filter to get count
-                var url = $"/api/vehicles?Page=1&PageSize=1&Status={status}";
-                var response = await _httpClient.GetAsync(url, ct);
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogWarning("Failed to fetch vehicles by status {Status}: {StatusCode}",
-                        status, response.StatusCode);
-                    return 0;
-                }
-
-                var content = await response.Content.ReadAsStringAsync(ct);
-                var result = JsonSerializer.Deserialize<RawVehicleSearchResult>(content, JsonOptions);
-                return result?.TotalCount ?? 0;
+                // The general search endpoint doesn't support status filtering,
+                // so we fetch all vehicles and count client-side
+                // This is called with small page sizes just to get TotalCount per status
+                // NOTE: This won't give per-status counts from the public API.
+                // We return 0 as a safe fallback; stats are computed in GetVehicleStatsAsync
+                return 0;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching vehicle count for status {Status}", status);
+                _logger.LogError(ex, "Error fetching vehicle count for status {Status}", statusName);
                 return 0;
             }
         }
@@ -363,8 +507,8 @@ namespace AdminService.Infrastructure.External
 
         private static VehicleDto MapToVehicleDto(RawVehicle raw)
         {
-            var statusInt = raw.Status;
-            var statusName = StatusMap.GetValueOrDefault(statusInt, "unknown");
+            var statusInt = StatusNameToCode.GetValueOrDefault(raw.Status ?? string.Empty, 0);
+            var statusName = StatusMap.GetValueOrDefault(statusInt, (raw.Status ?? "unknown").ToLower());
 
             // Determine primary image
             var primaryImage = raw.Images?
@@ -400,15 +544,16 @@ namespace AdminService.Infrastructure.External
             };
         }
 
-        private static string MapSellerType(int sellerType)
+        private static string MapSellerType(string? sellerType)
         {
-            return sellerType switch
+            return sellerType?.ToLowerInvariant() switch
             {
-                0 => "individual",
-                1 => "dealer",
-                2 => "franchise",
-                3 => "wholesale",
-                _ => "individual"
+                "individual" => "individual",
+                "seller"     => "individual",
+                "dealer"     => "dealer",
+                "franchise"  => "franchise",
+                "wholesale"  => "wholesale",
+                _            => sellerType?.ToLowerInvariant() ?? "individual"
             };
         }
 
@@ -432,11 +577,11 @@ namespace AdminService.Infrastructure.External
             public int Year { get; set; }
             public decimal Price { get; set; }
             public string? Currency { get; set; }
-            public int Status { get; set; }
+            public string? Status { get; set; }   // VehiclesSaleService returns string enum, e.g. "Active", "PendingReview"
             public Guid? SellerId { get; set; }
             public string? SellerName { get; set; }
             public string? SellerEmail { get; set; }
-            public int SellerType { get; set; }
+            public string? SellerType { get; set; }  // VehiclesSaleService returns string enum, e.g. "Seller", "Dealer"
             public int ViewCount { get; set; }
             public int LeadCount { get; set; }
             public bool IsFeatured { get; set; }
@@ -450,6 +595,38 @@ namespace AdminService.Infrastructure.External
         {
             public string? Url { get; set; }
             public bool IsPrimary { get; set; }
+        }
+
+        // ── Moderation raw DTOs ─────────────────────────────────────
+
+        private class RawModerationQueueResult
+        {
+            public List<RawModerationVehicle>? Vehicles { get; set; }
+            public int TotalCount { get; set; }
+            public int Page { get; set; }
+            public int PageSize { get; set; }
+            public int TotalPages { get; set; }
+        }
+
+        private class RawModerationVehicle
+        {
+            public Guid Id { get; set; }
+            public string? Title { get; set; }
+            public string? Slug { get; set; }
+            public string? Make { get; set; }
+            public string? Model { get; set; }
+            public int Year { get; set; }
+            public decimal Price { get; set; }
+            public string? Currency { get; set; }
+            public string? Condition { get; set; }
+            public string? SellerName { get; set; }
+            public string? SellerType { get; set; }
+            public string? ImageUrl { get; set; }
+            public int ImageCount { get; set; }
+            public DateTime? SubmittedAt { get; set; }
+            public int RejectionCount { get; set; }
+            public string? City { get; set; }
+            public string? State { get; set; }
         }
     }
 }

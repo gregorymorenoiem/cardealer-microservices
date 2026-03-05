@@ -257,6 +257,25 @@ builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IError
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// AlertService client for price change notifications
+builder.Services.AddHttpClient("AlertService", client =>
+{
+    var alertServiceUrl = builder.Configuration["ServiceUrls:AlertService"] ?? "http://alertservice:8080";
+    client.BaseAddress = new Uri(alertServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// KYCService client for dealer KYC verification checks (used by Publish endpoint).
+// Consistent with frontend useCanSell hook which also checks KYCService.
+builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient, VehiclesSaleService.Infrastructure.External.DealerVerificationClient>(client =>
+{
+    var kycServiceUrl = builder.Configuration["ServiceUrls:KYCService"] ?? "http://kycservice:8080";
+    client.BaseAddress = new Uri(kycServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 var app = builder.Build();
 
 // ============================================================================
@@ -296,10 +315,14 @@ app.MapHealthChecks("/health");
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
         await dbContext.Database.MigrateAsync();
         Console.WriteLine("✅ Database migration completed successfully");
+
+        // Seed catalog data (makes, models) if empty
+        await VehiclesSaleService.Infrastructure.Persistence.CatalogDataSeeder.SeedAsync(dbContext, startupLogger);
     }
     catch (Exception ex)
     {
@@ -316,3 +339,4 @@ Console.WriteLine($"📦 Environment: {app.Environment.EnvironmentName}");
 Console.WriteLine($"🗄️  Database: {connectionString}");
 
 app.Run();
+// build trigger 1772031539

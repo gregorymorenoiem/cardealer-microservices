@@ -31,9 +31,9 @@ export interface EmailNotificationSettings {
 }
 
 export interface PushNotificationSettings {
-  messages: boolean;
-  inquiries: boolean;
-  priceAlerts: boolean;
+  messages: boolean; // → push.newMessages
+  priceChanges: boolean; // → push.priceChanges (favourites price drop)
+  recommendations: boolean; // → push.recommendations (AI recs)
 }
 
 export interface NotificationSettings {
@@ -107,8 +107,8 @@ const DEFAULT_NOTIFICATIONS: NotificationSettings = {
   },
   push: {
     messages: true,
-    inquiries: true,
-    priceAlerts: false,
+    priceChanges: true,
+    recommendations: false,
   },
 };
 
@@ -255,8 +255,8 @@ function transformBackendToFrontend(
     },
     push: {
       messages: backend.push.newMessages,
-      inquiries: backend.push.priceChanges,
-      priceAlerts: backend.push.recommendations,
+      priceChanges: backend.push.priceChanges,
+      recommendations: backend.push.recommendations,
     },
   };
 }
@@ -274,8 +274,8 @@ function transformFrontendToBackend(
     emailNewsletter: frontend.email.newListings,
     emailPromotions: frontend.email.marketing,
     pushNewMessages: frontend.push.messages,
-    pushPriceChanges: frontend.push.inquiries,
-    pushRecommendations: frontend.push.priceAlerts,
+    pushPriceChanges: frontend.push.priceChanges,
+    pushRecommendations: frontend.push.recommendations,
   };
 }
 

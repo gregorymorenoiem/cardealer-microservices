@@ -184,16 +184,16 @@ public class VinDecodeControllerTests
     #region Fuel Type Mapping Tests
 
     [Theory]
-    [InlineData("Gasoline", "Gasoline")]
-    [InlineData("Diesel", "Diesel")]
-    [InlineData("Electric", "Electric")]
-    [InlineData("Hybrid", "Hybrid")]
-    [InlineData("Plug-in Hybrid Electric (PHEV)", "PlugInHybrid")]
-    [InlineData("Flex Fuel", "FlexFuel")]
-    [InlineData("Hydrogen", "Hydrogen")]
-    [InlineData("Compressed Natural Gas (CNG)", "NaturalGas")]
-    [InlineData(null, "Gasoline")]
-    [InlineData("", "Gasoline")]
+    [InlineData("Gasoline", "gasoline")]
+    [InlineData("Diesel", "diesel")]
+    [InlineData("Electric", "electric")]
+    [InlineData("Hybrid", "hybrid")]
+    [InlineData("Plug-in Hybrid Electric (PHEV)", "plugin_hybrid")]
+    [InlineData("Flex Fuel", "flex_fuel")]
+    [InlineData("Hydrogen", "lpg")]
+    [InlineData("Compressed Natural Gas (CNG)", "lpg")]
+    [InlineData(null, "gasoline")]
+    [InlineData("", "gasoline")]
     public void MapFuelType_ReturnsCorrectMapping(string? input, string expected)
     {
         // Use reflection to test private method
@@ -210,12 +210,12 @@ public class VinDecodeControllerTests
     #region Transmission Mapping Tests
 
     [Theory]
-    [InlineData("Automatic", "Automatic")]
-    [InlineData("Manual", "Manual")]
-    [InlineData("CVT", "CVT")]
-    [InlineData("Dual Clutch Transmission (DCT)", "DualClutch")]
-    [InlineData("Automated Manual", "Automated")]
-    [InlineData(null, "Automatic")]
+    [InlineData("Automatic", "automatic")]
+    [InlineData("Manual", "manual")]
+    [InlineData("CVT", "cvt")]
+    [InlineData("Dual Clutch Transmission (DCT)", "dct")]
+    [InlineData("Automated Manual", "semi-automatic")]
+    [InlineData(null, "automatic")]
     public void MapTransmission_ReturnsCorrectMapping(string? input, string expected)
     {
         var method = typeof(CatalogController).GetMethod("MapTransmission", 
@@ -234,8 +234,8 @@ public class VinDecodeControllerTests
     [InlineData("Front-Wheel Drive", "FWD")]
     [InlineData("Rear-Wheel Drive", "RWD")]
     [InlineData("All-Wheel Drive", "AWD")]
-    [InlineData("4x4", "FourWD")]
-    [InlineData("4WD/4-Wheel Drive/4x4", "FourWD")]
+    [InlineData("4x4", "4WD")]
+    [InlineData("4WD/4-Wheel Drive/4x4", "4WD")]
     [InlineData(null, "FWD")]
     public void MapDriveType_ReturnsCorrectMapping(string? input, string expected)
     {
@@ -252,17 +252,17 @@ public class VinDecodeControllerTests
     #region Body Style Mapping Tests
 
     [Theory]
-    [InlineData("Sedan", "Sedan")]
-    [InlineData("Sport Utility Vehicle (SUV)", "SUV")]
-    [InlineData("Pickup", "Pickup")]
-    [InlineData("Minivan", "Minivan")]
-    [InlineData("Van", "Van")]
-    [InlineData("Coupe", "Coupe")]
-    [InlineData("Convertible", "Convertible")]
-    [InlineData("Hatchback", "Hatchback")]
-    [InlineData("Station Wagon", "Wagon")]
-    [InlineData("Crossover", "Crossover")]
-    [InlineData(null, "Sedan")]
+    [InlineData("Sedan", "sedan")]
+    [InlineData("Sport Utility Vehicle (SUV)", "suv")]
+    [InlineData("Pickup", "pickup")]
+    [InlineData("Minivan", "minivan")]
+    [InlineData("Van", "van")]
+    [InlineData("Coupe", "coupe")]
+    [InlineData("Convertible", "convertible")]
+    [InlineData("Hatchback", "hatchback")]
+    [InlineData("Station Wagon", "wagon")]
+    [InlineData("Crossover", "crossover")]
+    [InlineData(null, "sedan")]
     public void MapBodyStyle_ReturnsCorrectMapping(string? input, string expected)
     {
         var method = typeof(CatalogController).GetMethod("MapBodyStyle", 
@@ -297,3 +297,20 @@ public class VinDecodeControllerTests
 
     #endregion
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

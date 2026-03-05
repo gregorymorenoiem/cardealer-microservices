@@ -14,23 +14,30 @@ import type { VehicleFormData } from './smart-publish-wizard';
 import { sanitizeText, sanitizeMileage, sanitizeYear } from '@/lib/security/sanitize';
 import { Check, Sparkles, MapPin, User } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
 
 // ============================================================
 // Static Data
 // ============================================================
 
 const CONDITIONS = [
-  { value: 'new', label: 'Nuevo', description: '0 km, sin uso previo' },
-  { value: 'like-new', label: 'Como Nuevo', description: 'Excelente estado, mínimo uso' },
-  { value: 'excellent', label: 'Excelente', description: 'Muy bien cuidado, sin detalles' },
-  { value: 'good', label: 'Bueno', description: 'Buen estado general, detalles menores' },
-  { value: 'fair', label: 'Regular', description: 'Funcional, necesita algunos arreglos' },
+  { value: 'New', label: 'Nuevo', description: '0 km, sin uso previo' },
+  {
+    value: 'CertifiedPreOwned',
+    label: 'Certificado',
+    description: 'Certificado por dealer, garantía extendida',
+  },
+  { value: 'Used', label: 'Usado', description: 'Usado en buen estado general' },
+  { value: 'Salvage', label: 'Salvamento', description: 'Daño significativo, necesita reparación' },
+  { value: 'Rebuilt', label: 'Reconstruido', description: 'Reparado después de salvamento' },
 ];
 
 const MILEAGE_UNITS = [
   { value: 'km', label: 'Kilómetros' },
   { value: 'mi', label: 'Millas' },
 ];
+
+const DOORS_OPTIONS = [2, 3, 4, 5, 6].map(n => ({ value: n.toString(), label: `${n} puertas` }));
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1900 + 2 }, (_, i) => CURRENT_YEAR + 1 - i);
@@ -149,7 +156,26 @@ export function VehicleInfoForm({
 
   // Catalog data
   const { data: makes = [], isLoading: makesLoading } = useMakes();
-  const { data: models = [], isLoading: modelsLoading } = useModelsByMake(data.makeId || data.make);
+
+  // Resolve the slug for the models query:
+  // The backend models endpoint accepts the make's slug (e.g. "honda"), UUID, or name.
+  // Prefer slug > UUID > name to maximize compatibility with all pod versions.
+  const makeQueryKey = useMemo(() => {
+    if (!data.makeId && !data.make) return '';
+    if (data.makeId) {
+      // Try to resolve slug from catalog list first (most reliable)
+      const catalogMake = (makes as Array<{ id?: string; name: string; slug?: string }>).find(
+        m => m.id === data.makeId
+      );
+      if (catalogMake?.slug) return catalogMake.slug;
+      // Fall back to UUID (works with updated backend)
+      return data.makeId;
+    }
+    // Manual entry: use lowercase name as slug fallback
+    return data.make.toLowerCase().replace(/\s+/g, '-');
+  }, [data.makeId, data.make, makes]);
+
+  const { data: models = [], isLoading: modelsLoading } = useModelsByMake(makeQueryKey);
   const { data: bodyTypes = [], isLoading: bodyLoading } = useBodyTypes();
   const { data: fuelTypes = [], isLoading: fuelLoading } = useFuelTypes();
   const { data: transmissions = [], isLoading: transLoading } = useTransmissions();
@@ -377,6 +403,30 @@ export function VehicleInfoForm({
               />
             </div>
           </div>
+          <TextField
+            label="Cilindros"
+            value={data.cylinders || ''}
+            onChange={val => onChange({ cylinders: parseInt(val) || 0 })}
+            type="number"
+            placeholder="Ej: 4"
+            isAutoFilled={isAuto('cylinders')}
+          />
+          <TextField
+            label="Caballos de fuerza"
+            value={data.horsepower || ''}
+            onChange={val => onChange({ horsepower: parseInt(val) || 0 })}
+            type="number"
+            placeholder="Ej: 192"
+            isAutoFilled={isAuto('horsepower')}
+          />
+          <SelectField
+            label="Puertas"
+            value={data.doors?.toString() || ''}
+            onChange={val => onChange({ doors: parseInt(val) || 0 })}
+            options={DOORS_OPTIONS}
+            placeholder="Seleccionar..."
+            isAutoFilled={isAuto('doors')}
+          />
         </div>
       </section>
 
@@ -474,24 +524,34 @@ export function VehicleInfoForm({
         </div>
       </section>
 
-      {/* ── Section: Location (read-only from seller profile) ── */}
+      {/* ── Section: Location ── */}
       <section>
         <h3 className="mb-4 text-sm font-semibold tracking-wider text-gray-500 uppercase">
           Ubicación
         </h3>
-        <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
-          <div>
-            <p className="text-sm font-medium text-emerald-800">
-              {[data.city, data.province].filter(Boolean).join(', ') || 'No configurada'}
-            </p>
-            <p className="mt-0.5 text-xs text-emerald-600">
-              Ubicación tomada de tu perfil de vendedor.{' '}
-              <a href="/cuenta/perfil" className="underline hover:text-emerald-800">
-                Editar perfil
-              </a>
+        {(data.province || data.city) && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
+            <p className="text-xs text-emerald-700">
+              Pre-llenado desde tu perfil de vendedor. Puedes cambiarlo para esta publicación.
             </p>
           </div>
+        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SelectField
+            label="Provincia"
+            value={data.province}
+            onChange={val => onChange({ province: val })}
+            options={RD_PROVINCES.map(p => ({ value: p, label: p }))}
+            placeholder="Seleccionar provincia..."
+            required
+          />
+          <TextField
+            label="Ciudad / Sector"
+            value={data.city}
+            onChange={val => onChange({ city: sanitizeText(val) })}
+            placeholder="Ej: Naco, Piantini..."
+          />
         </div>
       </section>
 

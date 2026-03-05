@@ -76,7 +76,7 @@ function getOptimizedSrc(src: string): string {
 /**
  * Generate responsive sizes string based on usage
  */
-function getResponsiveSizes(width?: number | string): string {
+function getResponsiveSizes(_width?: number | string): string {
   // Default responsive sizes for vehicle cards
   return '(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw';
 }

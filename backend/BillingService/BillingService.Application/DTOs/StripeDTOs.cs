@@ -242,7 +242,7 @@ public static class StripePriceMapping
     {
         { SubscriptionPlan.Free, (0m, 0m) },
         { SubscriptionPlan.Basic, (29m, 290m) },        // ~17% descuento anual
-        { SubscriptionPlan.Professional, (79m, 790m) }, // ~17% descuento anual
+        { SubscriptionPlan.Professional, (89m, 890m) }, // ~17% descuento anual
         { SubscriptionPlan.Enterprise, (199m, 1990m) }  // ~17% descuento anual
     };
 

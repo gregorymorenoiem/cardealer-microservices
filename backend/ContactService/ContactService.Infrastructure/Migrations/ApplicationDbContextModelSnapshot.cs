@@ -116,6 +116,27 @@ namespace ContactService.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("Open");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -124,7 +145,7 @@ namespace ContactService.Infrastructure.Migrations
                     b.Property<string>("TenantId")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("VehicleId")
+                    b.Property<Guid?>("VehicleId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");

@@ -71,6 +71,7 @@ jobs:
       leadscoringservice: ${{ steps.filter.outputs.leadscoringservice }}
       backgroundremovalservice: ${{ steps.filter.outputs.backgroundremovalservice }}
       vehicle360processingservice: ${{ steps.filter.outputs.vehicle360processingservice }}
+      video360service: ${{ steps.filter.outputs.video360service }}
       # Infrastructure services
       cacheservice: ${{ steps.filter.outputs.cacheservice }}
       messagebusservice: ${{ steps.filter.outputs.messagebusservice }}
@@ -84,6 +85,12 @@ jobs:
       dataprotectionservice: ${{ steps.filter.outputs.dataprotectionservice }}
       # Advertising
       advertisingservice: ${{ steps.filter.outputs.advertisingservice }}
+      # Search Agent (AI search)
+      searchagent: ${{ steps.filter.outputs.searchagent }}
+      # Support Agent (AI support)
+      supportagent: ${{ steps.filter.outputs.supportagent }}
+      # Recommendation Agent (AI recommendations)
+      recoagent: ${{ steps.filter.outputs.recoagent }}
       # Chatbot (MLOps pipeline)
       chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
       llm-server: ${{ steps.filter.outputs.llm-server }}
@@ -210,6 +217,9 @@ jobs:
             vehicle360processingservice:
               - 'backend/Vehicle360ProcessingService/**'
               - 'backend/_Shared/**'
+            video360service:
+              - 'backend/Video360Service/**'
+              - 'backend/_Shared/**'
             # Infrastructure services
             cacheservice:
               - 'backend/CacheService/**'
@@ -242,6 +252,18 @@ jobs:
             # Advertising
             advertisingservice:
               - 'backend/AdvertisingService/**'
+              - 'backend/_Shared/**'
+            # Search Agent (AI search)
+            searchagent:
+              - 'backend/SearchAgent/**'
+              - 'backend/_Shared/**'
+            # Support Agent (AI support)
+            supportagent:
+              - 'backend/SupportAgent/**'
+              - 'backend/_Shared/**'
+            # Recommendation Agent (AI recommendations)
+            recoagent:
+              - 'backend/RecoAgent/**'
               - 'backend/_Shared/**'
             # Chatbot
             chatbotservice:
@@ -307,6 +329,7 @@ jobs:
           echo "| LeadScoringService | ${{ steps.filter.outputs.leadscoringservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| BackgroundRemovalService | ${{ steps.filter.outputs.backgroundremovalservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vehicle360ProcessingService | ${{ steps.filter.outputs.vehicle360processingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Video360Service | ${{ steps.filter.outputs.video360service }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CacheService | ${{ steps.filter.outputs.cacheservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| MessageBusService | ${{ steps.filter.outputs.messagebusservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ConfigurationService | ${{ steps.filter.outputs.configurationservice }} |" >> $GITHUB_STEP_SUMMARY
@@ -317,6 +340,9 @@ jobs:
           echo "| IntegrationService | ${{ steps.filter.outputs.integrationservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| DataProtectionService | ${{ steps.filter.outputs.dataprotectionservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdvertisingService | ${{ steps.filter.outputs.advertisingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SearchAgent | ${{ steps.filter.outputs.searchagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SupportAgent | ${{ steps.filter.outputs.supportagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecoAgent | ${{ steps.filter.outputs.recoagent }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
@@ -691,6 +717,17 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
+  video360service:
+    name: 🎬 Video360Service
+    needs: detect-changes
+    if: needs.detect-changes.outputs.video360service == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: video360service
+      service-path: backend/Video360Service
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
   # ============================================
   # INFRASTRUCTURE SERVICES
   # ============================================
@@ -814,6 +851,43 @@ jobs:
     secrets: inherit
 
   # ============================================
+  # SEARCH AGENT (AI-powered search)
+  # ============================================
+
+  searchagent:
+    name: 🔍 SearchAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.searchagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: searchagent
+      service-path: backend/SearchAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  recoagent:
+    name: 🎯 RecoAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.recoagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: recoagent
+      service-path: backend/RecoAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  supportagent:
+    name: 🤝 SupportAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.supportagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: supportagent
+      service-path: backend/SupportAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
   # CHATBOT (MLOps — dedicated pipeline)
   # ============================================
 
@@ -900,6 +974,7 @@ jobs:
       - leadscoringservice
       - backgroundremovalservice
       - vehicle360processingservice
+      - video360service
       # Infrastructure
       - cacheservice
       - messagebusservice
@@ -913,6 +988,12 @@ jobs:
       - dataprotectionservice
       # Advertising
       - advertisingservice
+      # Search Agent
+      - searchagent
+      # Support Agent
+      - supportagent
+      # Recommendation Agent
+      - recoagent
       # Chatbot + Gateway + Frontend
       - chatbotservice
       - gateway
@@ -1020,6 +1101,7 @@ jobs:
       - leadscoringservice
       - backgroundremovalservice
       - vehicle360processingservice
+      - video360service
       # Infrastructure
       - cacheservice
       - messagebusservice
@@ -1033,6 +1115,12 @@ jobs:
       - dataprotectionservice
       # Advertising
       - advertisingservice
+      # Search Agent
+      - searchagent
+      # Support Agent
+      - supportagent
+      # Recommendation Agent
+      - recoagent
       # Chatbot + Gateway + Frontend
       - chatbotservice
       - gateway
@@ -1080,6 +1168,7 @@ jobs:
           echo "| LeadScoringService | ${{ needs.leadscoringservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| BackgroundRemovalService | ${{ needs.backgroundremovalservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vehicle360ProcessingService | ${{ needs.vehicle360processingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Video360Service | ${{ needs.video360service.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CacheService | ${{ needs.cacheservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| MessageBusService | ${{ needs.messagebusservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ConfigurationService | ${{ needs.configurationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
@@ -1090,6 +1179,9 @@ jobs:
           echo "| IntegrationService | ${{ needs.integrationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| DataProtectionService | ${{ needs.dataprotectionservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdvertisingService | ${{ needs.advertisingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SearchAgent | ${{ needs.searchagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SupportAgent | ${{ needs.supportagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecoAgent | ${{ needs.recoagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

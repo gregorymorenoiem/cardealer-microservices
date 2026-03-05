@@ -1,5 +1,12 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# syntax=docker/dockerfile:1
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 
 COPY ["AdvertisingService/AdvertisingService.Api/AdvertisingService.Api.csproj", "AdvertisingService/AdvertisingService.Api/"]
 COPY ["AdvertisingService/AdvertisingService.Application/AdvertisingService.Application.csproj", "AdvertisingService/AdvertisingService.Application/"]
@@ -18,7 +25,7 @@ COPY . .
 WORKDIR "/src/AdvertisingService/AdvertisingService.Api"
 
 FROM build AS publish
-RUN dotnet publish "AdvertisingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AdvertisingService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
@@ -39,3 +46,12 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "AdvertisingService.Api.dll"]
+
+# CI build trigger - rebuild docker image
+
+
+# CI trigger: GHCR package created, retry push 1772574680
+
+# CI trigger: retry after GHCR package init 1772575802
+
+# CI trigger: package deleted & recreating linked 1772577708

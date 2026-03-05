@@ -19,13 +19,13 @@ public interface IUserSessionRepository
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Gets an existing active session for the same user, device, browser, and IP address.
-    /// Used to prevent duplicate sessions for the same device/browser combination.
+    /// Gets an existing active session matching the device fingerprint for a user.
+    /// The fingerprint is derived from Browser + OS + DeviceType (NOT IP address),
+    /// so the same browser/OS combination from any IP reuses the same session
+    /// instead of creating duplicates (handles dynamic IPs, VPNs, k8s pod rotation).
     /// </summary>
     Task<UserSession?> GetActiveSessionByDeviceAsync(
         string userId,
-        string deviceInfo,
-        string browser,
-        string ipAddress,
+        string deviceFingerprint,
         CancellationToken cancellationToken = default);
 }

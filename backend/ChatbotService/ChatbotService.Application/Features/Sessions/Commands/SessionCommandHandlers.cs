@@ -30,10 +30,19 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
 
     public async Task<StartSessionResponse> Handle(StartSessionCommand request, CancellationToken ct)
     {
-        // Obtener configuración del chatbot
-        var config = request.DealerId.HasValue
-            ? await _configRepository.GetByDealerIdAsync(request.DealerId.Value, ct)
-            : await _configRepository.GetDefaultAsync(ct);
+        // Obtener configuración del chatbot.
+        // Si hay un dealerId, busca config específica del dealer.
+        // Si no se encuentra (dealer no configurado), cae en la config global/default.
+        ChatbotConfiguration? config = null;
+        if (request.DealerId.HasValue)
+        {
+            config = await _configRepository.GetByDealerIdAsync(request.DealerId.Value, ct)
+                  ?? await _configRepository.GetDefaultAsync(ct);
+        }
+        else
+        {
+            config = await _configRepository.GetDefaultAsync(ct);
+        }
 
         if (config == null)
         {
@@ -95,7 +104,12 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             SessionId = session.Id,
             SessionToken = session.SessionToken,
             WelcomeMessage = welcomeMessage,
-            BotName = config.BotName,
+            // When using the default/global fallback config (DealerId == null but request has a real dealerId),
+            // return an empty BotName so the frontend can show its per-dealer fallback:
+            //   displayName = chat.botName || `Asistente de ${dealerName}`
+            BotName = (request.DealerId.HasValue && config.DealerId == null)
+                ? ""
+                : (config.BotName ?? ""),
             BotAvatarUrl = config.BotAvatarUrl,
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
             RemainingInteractions = config.MaxInteractionsPerSession,
@@ -140,6 +154,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
     private readonly IQuickResponseRepository _quickResponseRepository;
     private readonly IChatModeStrategyFactory _strategyFactory;
     private readonly ILlmService _llmService;
+    private readonly ILlmResponseCacheService _cacheService;
     private readonly ILogger<SendMessageCommandHandler> _logger;
 
     public SendMessageCommandHandler(
@@ -149,6 +164,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         IQuickResponseRepository quickResponseRepository,
         IChatModeStrategyFactory strategyFactory,
         ILlmService llmService,
+        ILlmResponseCacheService cacheService,
         ILogger<SendMessageCommandHandler> logger)
     {
         _sessionRepository = sessionRepository;
@@ -157,6 +173,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         _quickResponseRepository = quickResponseRepository;
         _strategyFactory = strategyFactory;
         _llmService = llmService;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -258,6 +275,27 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
 
         var messageForLlm = piiResult.SanitizedMessage;
 
+        // ── 5b. SEGURIDAD: Content moderation (pre-LLM) ──────────────
+        var inputModeration = ContentModerationFilter.ModerateUserMessage(messageForLlm);
+        if (!inputModeration.IsSafe)
+        {
+            _logger.LogWarning(
+                "Content moderation BLOCKED user input. Category={Category}, Reason={Reason}, Session={SessionId}",
+                inputModeration.Category, inputModeration.Reason, session.Id);
+
+            return new ChatbotResponse
+            {
+                MessageId = Guid.NewGuid(),
+                Response = inputModeration.SuggestedAction
+                    ?? "No puedo procesar ese tipo de mensaje. ¿Hay algo relacionado con el vehículo en lo que pueda ayudarte? 😊",
+                IsFallback = false,
+                IntentName = "content_moderation",
+                ConfidenceScore = 1.0m,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
+        }
+
         // ── 6. Quick Response match (bypass LLM, sin costo) ──────────
         var quickResponse = await _quickResponseRepository.FindMatchingAsync(
             config.Id, request.Message, ct);
@@ -268,6 +306,12 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         decimal confidenceScore = 0;
         bool isFallback = false;
         bool consumedInteraction = false;
+        
+        // DealerChatAgent intent scoring fields
+        int intentScore = 1;
+        string clasificacion = "curioso";
+        string moduloActivo = "qa";
+        bool handoffActivado = false;
 
         if (quickResponse != null)
         {
@@ -288,6 +332,22 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 "Using {Mode} strategy for session {SessionId}, prompt length: {Length}",
                 session.ChatMode, session.Id, systemPrompt.Length);
 
+            // ── 7b. CACHE CHECK: Avoid redundant LLM calls ───────────
+            var cachedResponse = await _cacheService.GetAsync(messageForLlm, systemPrompt, ct);
+            if (cachedResponse != null)
+            {
+                botResponse = cachedResponse.Response;
+                intentName = cachedResponse.Intent;
+                confidenceScore = (decimal)cachedResponse.Confidence;
+                isFallback = false;
+                consumedInteraction = false; // Cache hits don't consume interactions
+
+                _logger.LogInformation(
+                    "Cache HIT for session {SessionId}, saved LLM call. Intent: {Intent}",
+                    session.Id, intentName);
+            }
+            else
+            {
             // ── 8. Llamar al LLM ─────────────────────────────────────
             var llmResult = await _llmService.GenerateResponseAsync(
                 session.SessionToken,
@@ -304,6 +364,11 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             isFallback = llmResult.IsFallback;
             consumedInteraction = true;
 
+            // ── 9b. CACHE SET: Store response for future hits ─────────
+            _ = _cacheService.SetAsync(
+                messageForLlm, botResponse, intentName,
+                llmResult.ConfidenceScore, isFallback, systemPrompt, ct: ct);
+
             // ── 10. Grounding validation (anti-hallucination) ─────────
             var groundingResult = await strategy.ValidateResponseGroundingAsync(
                 session, botResponse, ct);
@@ -314,6 +379,40 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                     session.Id, string.Join(", ", groundingResult.UngroundedClaims));
                 botResponse = groundingResult.SanitizedResponse;
             }
+
+            // ── 10b. SEGURIDAD: Content moderation on bot output ──────
+            var outputModeration = ContentModerationFilter.ModerateBotResponse(botResponse);
+            if (!outputModeration.IsSafe)
+            {
+                _logger.LogWarning(
+                    "Bot output moderated. Category={Category}, Reason={Reason}, Session={SessionId}",
+                    outputModeration.Category, outputModeration.Reason, session.Id);
+                botResponse = outputModeration.SuggestedAction
+                    ?? "¿Hay algo más sobre el vehículo en lo que pueda ayudarte?";
+            }
+
+            // ── 10c. DealerChatAgent: capture intent scoring fields ───
+            intentScore = llmResult.IntentScore;
+            clasificacion = llmResult.Clasificacion;
+            moduloActivo = llmResult.ModuloActivo;
+            handoffActivado = llmResult.HandoffActivado;
+
+            // ── 10d. Auto-trigger handoff if Claude activated it ──────
+            if (llmResult.HandoffActivado && session.IsBotActive)
+            {
+                session.HandoffStatus = HandoffStatus.PendingHuman;
+                session.HandoffReason = llmResult.RazonHandoff ?? "Solicitado por el usuario";
+                _logger.LogInformation(
+                    "DealerChatAgent triggered handoff in session {SessionId}: {Reason}",
+                    session.Id, session.HandoffReason);
+            }
+
+            _logger.LogInformation(
+                "DealerChatAgent response — Session: {SessionId}, IntentScore: {Score}, " +
+                "Clasificacion: {Clasificacion}, Modulo: {Modulo}, Handoff: {Handoff}",
+                session.Id, llmResult.IntentScore, llmResult.Clasificacion,
+                llmResult.ModuloActivo, llmResult.HandoffActivado);
+            } // end of cache-miss else block
 
             // ── 11. Incrementar contadores ────────────────────────────
             session.InteractionCount++;
@@ -348,7 +447,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             ConfidenceScore = confidenceScore,
             IsFromBot = true,
             ConsumedInteraction = consumedInteraction,
-            InteractionCost = consumedInteraction ? 0.002m : 0m,
+            InteractionCost = consumedInteraction ? 0.003m : 0m, // Claude Sonnet cost per interaction
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds,
             CreatedAt = DateTime.UtcNow
         };
@@ -369,6 +468,10 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             ConfidenceScore = confidenceScore,
             IsFallback = isFallback,
             ChatMode = session.ChatMode.ToString(),
+            IntentScore = intentScore,
+            Clasificacion = clasificacion,
+            ModuloActivo = moduloActivo,
+            HandoffActivado = handoffActivado,
             RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
         };

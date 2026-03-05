@@ -133,6 +133,10 @@ interface BackendActiveSession {
   CreatedAt?: string;
   isCurrent?: boolean;
   IsCurrent?: boolean;
+  isExpiringSoon?: boolean;
+  IsExpiringSoon?: boolean;
+  expiresAt?: string;
+  ExpiresAt?: string;
 }
 
 // Backend LinkedProviderDto structure
@@ -500,6 +504,7 @@ function transformBackendSession(session: BackendActiveSession): Session {
   // Get values supporting both casings
   const device = session.device ?? session.Device ?? '';
   const browser = session.browser ?? session.Browser ?? '';
+  const operatingSystem = session.operatingSystem ?? session.OperatingSystem ?? '';
   const location = session.location ?? session.Location ?? '';
   const ipAddress = session.ipAddress ?? session.IpAddress ?? '';
   const lastActive = session.lastActive ?? session.lastActiveAt ?? session.LastActiveAt ?? '';
@@ -507,7 +512,7 @@ function transformBackendSession(session: BackendActiveSession): Session {
   const isCurrent = session.isCurrent ?? session.IsCurrent ?? false;
   const id = session.id ?? session.Id ?? '';
 
-  // Parse device type from device string
+  // Parse device type from device field ("Desktop", "Mobile", "Tablet")
   const deviceLower = device.toLowerCase();
   let deviceType: Session['deviceType'] = 'unknown';
   if (
@@ -518,21 +523,38 @@ function transformBackendSession(session: BackendActiveSession): Session {
     deviceType = 'mobile';
   } else if (deviceLower.includes('tablet') || deviceLower.includes('ipad')) {
     deviceType = 'tablet';
-  } else if (
-    deviceLower.includes('desktop') ||
-    deviceLower.includes('windows') ||
-    deviceLower.includes('mac') ||
-    deviceLower.includes('linux')
-  ) {
+  } else if (deviceLower.includes('desktop')) {
     deviceType = 'desktop';
+  }
+
+  // Resolve human-readable browser name (Spanish fallback for unknowns)
+  const browserDisplay =
+    browser && browser !== 'Unknown Browser' ? browser : 'Navegador desconocido';
+
+  // Resolve OS — prefer dedicated OperatingSystem field over device string
+  const osDisplay =
+    operatingSystem && operatingSystem !== 'Unknown OS'
+      ? operatingSystem
+      : extractOS(device) || 'Sistema desconocido';
+
+  // Build a meaningful device name: "Chrome en Windows 10/11" or "Navegador desconocido (Escritorio)"
+  let deviceName: string;
+  if (browserDisplay !== 'Navegador desconocido' && osDisplay !== 'Sistema desconocido') {
+    deviceName = `${browserDisplay} en ${osDisplay}`;
+  } else if (browserDisplay !== 'Navegador desconocido') {
+    deviceName = browserDisplay;
+  } else {
+    const deviceLabel =
+      deviceType === 'mobile' ? 'Móvil' : deviceType === 'tablet' ? 'Tablet' : 'Escritorio';
+    deviceName = `Dispositivo desconocido (${deviceLabel})`;
   }
 
   return {
     id,
-    deviceName: device || 'Dispositivo desconocido',
+    deviceName,
     deviceType,
-    browser: browser || 'Navegador desconocido',
-    os: extractOS(device),
+    browser: browserDisplay,
+    os: osDisplay,
     ipAddress,
     location: location || undefined,
     lastActiveAt: lastActive,

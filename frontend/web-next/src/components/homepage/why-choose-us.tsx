@@ -7,20 +7,7 @@
 
 'use client';
 
-import {
-  Shield,
-  Search,
-  TrendingUp,
-  MessageCircle,
-  Camera,
-  CreditCard,
-  Clock,
-  Users,
-  CheckCircle2,
-  Award,
-  Zap,
-  HeartHandshake,
-} from 'lucide-react';
+import { Shield, TrendingUp, MessageCircle, Camera, CreditCard, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useInView } from '@/hooks/use-in-view';
 import type { LucideIcon } from 'lucide-react';
@@ -51,8 +38,8 @@ const VALUE_PROPS: ValueProp[] = [
     icon: Shield,
     title: 'Vendedores Verificados',
     description:
-      'Todos nuestros dealers y vendedores pasan por un proceso de verificación riguroso. Tu seguridad es nuestra prioridad.',
-    highlight: '100% Verificados',
+      'Los dealers y vendedores activos en OKLA verifican su identidad y datos de contacto en nuestra plataforma. Tu seguridad es nuestra prioridad.',
+    highlight: 'Identidad Verificada',
     color: 'from-blue-500 to-blue-600',
   },
   {
@@ -81,10 +68,10 @@ const VALUE_PROPS: ValueProp[] = [
   },
   {
     icon: Clock,
-    title: 'Vende en 7 Días',
+    title: 'Vende Más Rápido',
     description:
-      'Nuestros usuarios venden sus vehículos en promedio en solo 7 días. El marketplace más activo de RD.',
-    highlight: '7 Días Promedio',
+      'Conectamos vendedores con compradores activos en el marketplace de vehículos más completo de República Dominicana. Los tiempos de venta varían según el vehículo y precio.',
+    highlight: 'Venta Ágil',
     color: 'from-pink-500 to-rose-600',
   },
   {

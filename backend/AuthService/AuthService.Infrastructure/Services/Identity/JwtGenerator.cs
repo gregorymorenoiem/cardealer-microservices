@@ -39,11 +39,17 @@ public class JwtGenerator : IJwtGenerator
 
     public string GenerateToken(ApplicationUser user)
     {
-        return GenerateToken(user, null);
+        return GenerateToken(user, null, null);
     }
 
     /// <inheritdoc />
     public string GenerateToken(ApplicationUser user, int? expiresMinutes)
+    {
+        return GenerateToken(user, expiresMinutes, null);
+    }
+
+    /// <inheritdoc />
+    public string GenerateToken(ApplicationUser user, int? expiresMinutes, string? sessionId)
     {
         var effectiveExpiration = expiresMinutes ?? _jwtSettings.ExpiresMinutes;
 
@@ -52,6 +58,9 @@ public class JwtGenerator : IJwtGenerator
         // must NOT be in JWT — they are exposed via /api/auth/me instead.
         var claims = new List<Claim>
         {
+            // Standard JWT subject claim (RFC 7519 §4.1.2)
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            // .NET identity claims — kept for middleware compatibility (ClaimTypes.NameIdentifier)
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email ?? ""),
             new Claim(ClaimTypes.Name, user.UserName ?? ""),
@@ -65,6 +74,12 @@ public class JwtGenerator : IJwtGenerator
             // User intent - what the user wants to do
             new Claim("userIntent", user.UserIntent.ToClaimValue()),
         };
+
+        // Embed session ID so /api/auth/security/sessions can mark isCurrent correctly
+        if (!string.IsNullOrEmpty(sessionId))
+        {
+            claims.Add(new Claim("SessionId", sessionId));
+        }
         
         // Add role claims based on AccountType for [Authorize(Roles = "...")] compatibility
         // AccountType: Guest=0, Buyer=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5, Seller=6

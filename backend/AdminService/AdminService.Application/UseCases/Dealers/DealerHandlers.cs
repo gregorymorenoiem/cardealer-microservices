@@ -163,3 +163,33 @@ public class DeleteDealerCommandHandler : IRequestHandler<DeleteDealerCommand, U
         return Unit.Value;
     }
 }
+
+/// <summary>
+/// Handler for creating a dealer profile for an existing user (AccountType=Dealer)
+/// who never completed their dealer profile setup.
+/// </summary>
+public class CreateDealerProfileForUserCommandHandler : IRequestHandler<CreateDealerProfileForUserCommand, AdminDealerDto?>
+{
+    private readonly IDealerService _dealerService;
+    private readonly ILogger<CreateDealerProfileForUserCommandHandler> _logger;
+
+    public CreateDealerProfileForUserCommandHandler(IDealerService dealerService, ILogger<CreateDealerProfileForUserCommandHandler> logger)
+    {
+        _dealerService = dealerService;
+        _logger = logger;
+    }
+
+    public async Task<AdminDealerDto?> Handle(CreateDealerProfileForUserCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Creating dealer profile for user {UserId} (BusinessName={BusinessName})",
+            request.UserId, request.BusinessName);
+
+        return await _dealerService.CreateDealerProfileForUserAsync(
+            request.UserId,
+            request.BusinessName,
+            request.Email,
+            request.Phone,
+            cancellationToken);
+    }
+}

@@ -1,53 +1,55 @@
+# syntax=docker/dockerfile:1
 # ============================================
-# OKLA Frontend - Next.js 14 Docker Image
+# OKLA Frontend - Next.js Production Docker Image
 # ============================================
-# Multi-stage build for optimized production image
+# Cross-compilation multi-stage build:
+#   deps + builder stages run NATIVELY on the host (ARM64 on macOS runners)
+#   runner stage targets linux/amd64 for Kubernetes (DOKS)
+# This avoids QEMU emulation for the heavy `next build` step,
+# preventing segfaults and cutting build time from 45min+ to ~5min.
+# ============================================
 
-# Stage 1: Dependencies
-FROM node:20-alpine AS deps
+# ── ARGs available before FROM ──
+ARG NODE_VERSION=20
+
+# ── Stage 1: Install dependencies (native platform) ──
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
-# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Stage 2: Builder
-FROM node:20-alpine AS builder
+# ── Stage 2: Build Next.js (native platform — NO QEMU) ──
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS builder
 WORKDIR /app
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Production: BFF pattern — browser uses relative URLs, Next.js rewrites to gateway
+# BFF pattern: browser uses relative URLs, Next.js rewrites to gateway
 ARG NEXT_PUBLIC_API_URL=
 ARG NEXT_PUBLIC_SITE_URL=https://okla.com.do
-# INTERNAL_API_URL used by rewrites() at build time to set the proxy destination
 ARG INTERNAL_API_URL=http://gateway:8080
 
-# Set as ENV so Next.js can read them during build
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV INTERNAL_API_URL=$INTERNAL_API_URL
 
-# Build the application
 RUN pnpm build
 
-# Stage 3: Runner (Production)
-FROM node:20-alpine AS runner
+# ── Stage 3: Production runner (target platform = linux/amd64 for K8s) ──
+# $TARGETPLATFORM is set automatically by Docker Buildx from --platform flag
+FROM --platform=$TARGETPLATFORM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

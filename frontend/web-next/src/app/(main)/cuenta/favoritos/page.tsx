@@ -21,8 +21,6 @@ import {
   Car,
   Loader2,
   Bell,
-  BellOff,
-  Filter,
   ArrowDownAZ,
   RefreshCw,
   AlertCircle,
@@ -105,7 +103,7 @@ function FavoritesError({ error, onRetry }: { error: Error | null; onRetry: () =
       <CardContent className="flex flex-col items-center py-12 text-center">
         <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
         <h3 className="mb-2 font-semibold">Error al cargar favoritos</h3>
-        <p className="mb-6 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mb-6 text-sm">
           {error?.message || 'No se pudieron cargar tus vehículos guardados'}
         </p>
         <Button onClick={onRetry}>
@@ -127,8 +125,8 @@ function EmptyState() {
       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-50">
         <Heart className="h-10 w-10 text-red-400" />
       </div>
-      <h3 className="mb-2 text-lg font-medium text-foreground">No tienes favoritos</h3>
-      <p className="mx-auto mb-8 max-w-sm text-muted-foreground">
+      <h3 className="text-foreground mb-2 text-lg font-medium">No tienes favoritos</h3>
+      <p className="text-muted-foreground mx-auto mb-8 max-w-sm">
         Guarda vehículos que te interesen haciendo clic en el corazón para encontrarlos fácilmente
         después.
       </p>
@@ -146,6 +144,29 @@ function EmptyState() {
 // FAVORITE CARD
 // =============================================================================
 
+function formatFavoritePrice(price: number) {
+  return new Intl.NumberFormat('es-DO', {
+    style: 'currency',
+    currency: 'DOP',
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+function formatMileage(km: number) {
+  return new Intl.NumberFormat('es-DO').format(km) + ' km';
+}
+
+function timeAgo(date: string) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return 'hace un momento';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `hace ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `hace ${days} días`;
+}
+
 interface FavoriteCardProps {
   favorite: FavoriteVehicle;
   onRemove: () => void;
@@ -156,29 +177,6 @@ interface FavoriteCardProps {
 function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: FavoriteCardProps) {
   const { vehicle } = favorite;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const formatMileage = (km: number) => {
-    return new Intl.NumberFormat('es-DO').format(km) + ' km';
-  };
-
-  const timeAgo = (date: string) => {
-    const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-    if (seconds < 60) return 'hace un momento';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `hace ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `hace ${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `hace ${days} días`;
-  };
-
   const isAvailable = vehicle.status === 'active';
 
   return (
@@ -187,13 +185,13 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
         {/* Image */}
         <Link
           href={`/vehiculos/${vehicle.slug}`}
-          className="relative h-40 w-full flex-shrink-0 bg-muted sm:h-auto sm:w-56"
+          className="bg-muted relative h-40 w-full flex-shrink-0 sm:h-auto sm:w-56"
         >
           {vehicle.imageUrl ? (
             <Image src={vehicle.imageUrl} alt={vehicle.title} fill className="object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <Car className="h-12 w-12 text-muted-foreground" />
+              <Car className="text-muted-foreground h-12 w-12" />
             </div>
           )}
           {!isAvailable && (
@@ -204,7 +202,7 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
             </div>
           )}
           {vehicle.priceChanged && vehicle.previousPrice && (
-            <Badge className="absolute top-2 left-2 bg-primary/100">Precio reducido</Badge>
+            <Badge className="bg-primary/100 absolute top-2 left-2">Precio reducido</Badge>
           )}
         </Link>
 
@@ -216,20 +214,22 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
                 href={`/vehiculos/${vehicle.slug}`}
                 className="hover:text-primary block transition-colors"
               >
-                <h3 className="truncate font-semibold text-foreground">{vehicle.title}</h3>
+                <h3 className="text-foreground truncate font-semibold">{vehicle.title}</h3>
               </Link>
 
               <div className="mt-1 flex items-center gap-2">
-                <p className="text-primary text-xl font-bold">{formatPrice(vehicle.price)}</p>
+                <p className="text-primary text-xl font-bold">
+                  {formatFavoritePrice(vehicle.price)}
+                </p>
                 {vehicle.previousPrice && vehicle.previousPrice > vehicle.price && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    {formatPrice(vehicle.previousPrice)}
+                  <span className="text-muted-foreground text-sm line-through">
+                    {formatFavoritePrice(vehicle.previousPrice)}
                   </span>
                 )}
               </div>
 
               {/* Features */}
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-3 text-sm">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   <span>{vehicle.year}</span>
@@ -243,16 +243,18 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
               </div>
 
               {/* Location */}
-              <div className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="text-muted-foreground mt-2 flex items-center gap-1 text-sm">
                 <MapPin className="h-4 w-4" />
                 <span>{vehicle.location}</span>
               </div>
 
               {/* Saved time & notifications */}
               <div className="mt-2 flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">Guardado {timeAgo(favorite.createdAt)}</p>
+                <p className="text-muted-foreground text-xs">
+                  Guardado {timeAgo(favorite.createdAt)}
+                </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {favorite.notifyOnPriceChange ? 'Notificaciones activas' : 'Sin notificaciones'}
                   </span>
                   <Switch
@@ -284,8 +286,8 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
                 <AlertDialogHeader>
                   <AlertDialogTitle>¿Eliminar de favoritos?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    "{vehicle.title}" será eliminado de tus favoritos. Puedes volver a agregarlo en
-                    cualquier momento.
+                    &ldquo;{vehicle.title}&rdquo; será eliminado de tus favoritos. Puedes volver a
+                    agregarlo en cualquier momento.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -409,7 +411,7 @@ export default function FavoritesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Favoritos</h1>
+          <h1 className="text-foreground text-2xl font-bold">Favoritos</h1>
           <p className="text-muted-foreground">
             {count} {count === 1 ? 'vehículo guardado' : 'vehículos guardados'}
           </p>
@@ -417,11 +419,11 @@ export default function FavoritesPage() {
 
         {/* Quick Stats */}
         <div className="flex gap-4 text-sm">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-1.5">
             <Bell className="h-4 w-4" />
             <span>{favorites.filter(f => f.notifyOnPriceChange).length} con alertas</span>
           </div>
-          <div className="flex items-center gap-1.5 text-primary">
+          <div className="text-primary flex items-center gap-1.5">
             <span>{favorites.filter(f => f.vehicle.priceChanged).length} con precio reducido</span>
           </div>
         </div>
@@ -430,7 +432,7 @@ export default function FavoritesPage() {
       {/* Filters & Search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
           <Input
             type="text"
             placeholder="Buscar en favoritos..."
@@ -470,7 +472,9 @@ export default function FavoritesPage() {
         </div>
       ) : (
         <div className="py-12 text-center">
-          <p className="text-muted-foreground">No se encontraron resultados para "{searchQuery}"</p>
+          <p className="text-muted-foreground">
+            No se encontraron resultados para &ldquo;{searchQuery}&rdquo;
+          </p>
           <Button variant="link" onClick={() => setSearchQuery('')} className="mt-2">
             Limpiar búsqueda
           </Button>

@@ -68,7 +68,7 @@ export function usePushNotifications(
     try {
       const permission = await Notification.requestPermission();
       return permission;
-    } catch (err) {
+    } catch {
       setError('Failed to request notification permission');
       return 'denied';
     }
@@ -103,7 +103,7 @@ export function usePushNotifications(
       const registration = await navigator.serviceWorker.ready;
 
       // Check if already subscribed
-      let existingSubscription = await registration.pushManager.getSubscription();
+      const existingSubscription = await registration.pushManager.getSubscription();
       if (existingSubscription) {
         setSubscription(existingSubscription);
         setIsLoading(false);
@@ -265,7 +265,7 @@ export function PushNotificationToggle({ className = '' }: PushNotificationToggl
         onClick={handleToggle}
         disabled={isLoading || (!isPermissionGranted && !isSubscribed)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSubscribed ? 'bg-green-600' : 'bg-muted'} ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} `}
-        aria-pressed={isSubscribed}
+        aria-checked={isSubscribed}
         role="switch"
       >
         <span

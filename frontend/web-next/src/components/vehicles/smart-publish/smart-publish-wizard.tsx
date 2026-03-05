@@ -10,6 +10,7 @@ import { PhotoUploadManager } from '@/components/vehicles/photos/photo-upload-ma
 import type { PhotoItem } from '@/components/vehicles/photos/photo-card';
 import { PricingStep } from './pricing-step';
 import { ReviewStep } from './review-step';
+import { View360Step } from './view360-step';
 import { CsvImportWizard } from './csv-import-wizard';
 import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
 import { useSellerByUserId } from '@/hooks/use-seller';
@@ -18,7 +19,7 @@ import type { SmartVinDecodeResult, CreateVehicleRequest } from '@/services/vehi
 import type { CsvVehicleRow } from './csv-import-wizard';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Save, Send, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 
 // ============================================================
 // Types
@@ -92,21 +93,149 @@ type WizardStep =
   | 'vin-results'
   | 'info'
   | 'photos'
+  | 'view360'
   | 'pricing'
   | 'review'
   | 'csv-import';
 
-const STEP_ORDER: WizardStep[] = ['method', 'info', 'photos', 'pricing', 'review'];
+const STEP_ORDER: WizardStep[] = ['method', 'info', 'photos', 'view360', 'pricing', 'review'];
 
 const STEP_LABELS: Record<string, string> = {
   method: 'Método',
   info: 'Información',
   photos: 'Fotos',
+  view360: 'Vista 360°',
   pricing: 'Precio',
   review: 'Revisión',
 };
 
 const DRAFT_KEY_PREFIX = 'okla_draft_vehicle_';
+
+// ============================================================
+// VIN Value Normalizers
+// Maps backend VIN decode strings → catalog option keys.
+//
+// The backend MapBodyStyle / MapFuelType / MapTransmission functions now return
+// lowercase catalog-aligned keys (e.g. "suv", "gasoline", "automatic").
+// These normalizers handle both the current lowercase output AND the legacy
+// PascalCase output ("SUV", "Gasoline", "Automatic") for backwards compatibility,
+// as well as raw NHTSA strings in case they ever reach the frontend directly.
+// ============================================================
+
+/**
+ * Normalize body style → catalog option value.
+ * Backend now returns lowercase catalog keys; this handles legacy PascalCase + raw NHTSA.
+ */
+function normalizeBodyStyle(raw: string): string {
+  const s = raw.toLowerCase().trim();
+  if (
+    s === 'suv' ||
+    s.includes('sport utility') ||
+    s === 'crossover utility vehicle' ||
+    s === 'cuv'
+  )
+    return 'suv';
+  if (
+    s === 'pickup' ||
+    s === 'truck' ||
+    s.includes('pickup') ||
+    s.includes('regular cab') ||
+    s.includes('crew cab') ||
+    s.includes('extended cab')
+  )
+    return 'pickup';
+  if (s === 'minivan' || s.includes('minivan') || s === 'passenger van') return 'minivan';
+  if (s === 'van' || s === 'cargo van') return 'van';
+  if (s === 'coupe' || s === 'coupé' || s.includes('2dr coupe')) return 'coupe';
+  if (s === 'convertible' || s === 'cabriolet' || s === 'roadster') return 'convertible';
+  if (s === 'hatchback' || s.includes('hatchback')) return 'hatchback';
+  if (s === 'crossover') return 'crossover';
+  if (s === 'wagon' || s.includes('wagon') || s === 'estate') return 'wagon';
+  if (s === 'sedan' || s === 'saloon' || s.includes('sedan')) return 'sedan';
+  return s; // already a catalog key or unknown
+}
+
+/**
+ * Normalize fuel type → catalog option value.
+ * Backend now returns lowercase catalog keys; handles legacy PascalCase + raw NHTSA.
+ */
+function normalizeFuelType(raw: string): string {
+  const s = raw.toLowerCase().trim();
+  // Plugin hybrid BEFORE generic hybrid check
+  if (
+    s === 'plugin_hybrid' ||
+    s === 'pluginhybrid' ||
+    s === 'plug-in hybrid' ||
+    s === 'phev' ||
+    s.includes('plug')
+  )
+    return 'plugin_hybrid';
+  if (
+    s === 'gasoline' ||
+    s.includes('gasoline') ||
+    s.includes('unleaded') ||
+    s === 'petrol' ||
+    s === 'e85'
+  )
+    return 'gasoline';
+  if (s === 'flex_fuel' || s === 'flexfuel' || s.includes('flex fuel') || s.includes('flex-fuel'))
+    return 'flex_fuel';
+  if (s === 'diesel' || s.includes('diesel')) return 'diesel';
+  if (s === 'hybrid' || s.includes('hybrid') || s === 'hev') return 'hybrid';
+  if (
+    s === 'electric' ||
+    s === 'bev' ||
+    s === 'ev' ||
+    s.includes('battery electric') ||
+    s.includes('electric')
+  )
+    return 'electric';
+  if (
+    s === 'lpg' ||
+    s === 'gas' ||
+    s === 'propane' ||
+    s === 'cng' ||
+    s.includes('natural gas') ||
+    s === 'naturalgas' ||
+    s === 'hydrogen'
+  )
+    return 'lpg';
+  return s;
+}
+
+/**
+ * Normalize transmission → catalog option value.
+ * Backend now returns lowercase catalog keys; handles legacy PascalCase + raw NHTSA.
+ * Catalog keys: automatic | manual | cvt | dct | semi-automatic
+ */
+function normalizeTransmission(raw: string): string {
+  const s = raw.toLowerCase().trim();
+  if (s === 'cvt' || s.includes('cvt') || s.includes('continuously variable')) return 'cvt';
+  // DCT / Dual Clutch — check BEFORE generic "automatic"
+  if (
+    s === 'dct' ||
+    s === 'dualclutch' ||
+    s === 'dual-clutch' ||
+    s.includes('dual clutch') ||
+    s.includes('dsg') ||
+    s.includes('dct')
+  )
+    return 'dct';
+  // Semi-automatic / Automated Manual
+  if (
+    s === 'semi-automatic' ||
+    s === 'semi_automatic' ||
+    s === 'automated' ||
+    s.includes('automated manual') ||
+    s.includes('semi-auto') ||
+    s.includes('semi_auto')
+  )
+    return 'semi-automatic';
+  if (s === 'manual' || s.includes('manual') || /^m\d/.test(s)) return 'manual';
+  if (s === 'automatic' || s.includes('automatic') || s.includes('auto') || /^a\d/.test(s))
+    return 'automatic';
+  return s;
+}
 
 // ============================================================
 // Component
@@ -138,7 +267,7 @@ const initialFormData: VehicleFormData = {
   horsepower: 0,
   mileage: 0,
   mileageUnit: 'km',
-  condition: 'used',
+  condition: 'Used',
   exteriorColor: '',
   interiorColor: '',
   features: [],
@@ -155,6 +284,35 @@ const initialFormData: VehicleFormData = {
   sellerEmail: '',
   sellerWhatsApp: '',
 };
+
+// ============================================================
+// Draft Serialization
+// ============================================================
+
+/**
+ * Prepare formData for JSON serialization into localStorage.
+ * – Strips non-serializable `File` objects and ephemeral blob/data URLs from images.
+ * – Keeps only images that have a real server URL (already uploaded).
+ * – Preserves all other scalar/primitive fields unchanged.
+ */
+function serializeForDraft(data: VehicleFormData, step: WizardStep): Record<string, unknown> {
+  const serializableImages = data.images
+    .filter(img => img.url && !img.url.startsWith('blob:') && !img.isUploading)
+    .map(img => ({
+      id: img.id,
+      url: img.url,
+      order: img.order,
+      isPrimary: img.isPrimary,
+    }));
+
+  // Spread all fields, override images with the serializable version
+  return {
+    ...data,
+    images: serializableImages,
+    _step: step,
+    _timestamp: Date.now(),
+  };
+}
 
 export function SmartPublishWizard({
   mode = 'individual',
@@ -227,10 +385,7 @@ export function SmartPublishWizard({
   useEffect(() => {
     if (currentStep !== 'method' && (formData.make || formData.vin)) {
       try {
-        localStorage.setItem(
-          draftKey,
-          JSON.stringify({ ...formData, _step: currentStep, _timestamp: Date.now() })
-        );
+        localStorage.setItem(draftKey, JSON.stringify(serializeForDraft(formData, currentStep)));
       } catch {
         /* ignore */
       }
@@ -244,6 +399,21 @@ export function SmartPublishWizard({
         const parsed = JSON.parse(saved);
         const { _step, _timestamp: _ts, ...data } = parsed;
         void _ts;
+
+        // Reconstruct UploadedImage objects from serialized draft data
+        if (Array.isArray(data.images)) {
+          data.images = data.images
+            .filter((img: Record<string, unknown>) => img.url && typeof img.url === 'string')
+            .map((img: Record<string, unknown>) => ({
+              id: (img.id as string) || crypto.randomUUID(),
+              url: img.url as string,
+              order: (img.order as number) ?? 0,
+              isPrimary: (img.isPrimary as boolean) ?? false,
+              isUploading: false,
+              progress: 100,
+            }));
+        }
+
         setFormData(prev => ({ ...prev, ...data }));
         setCurrentStep(_step || 'info');
       }
@@ -312,18 +482,18 @@ export function SmartPublishWizard({
           filled.add('vehicleType');
         }
         if (af.bodyStyle) {
-          // Normalize to lowercase to match catalog option values (e.g. "SUV" → "suv")
-          updates.bodyStyle = af.bodyStyle.toLowerCase();
+          // Normalize to catalog option value (e.g. "Sport Utility Vehicle" → "suv")
+          updates.bodyStyle = normalizeBodyStyle(af.bodyStyle);
           filled.add('bodyStyle');
         }
         if (af.fuelType) {
-          // Normalize to lowercase to match catalog option values (e.g. "Gasoline" → "gasoline")
-          updates.fuelType = af.fuelType.toLowerCase();
+          // Normalize to catalog option value (e.g. "Regular Unleaded" → "gasoline")
+          updates.fuelType = normalizeFuelType(af.fuelType);
           filled.add('fuelType');
         }
         if (af.transmission) {
-          // Normalize to lowercase to match catalog option values (e.g. "CVT" → "cvt")
-          updates.transmission = af.transmission.toLowerCase();
+          // Normalize to catalog option value (e.g. "6-Speed Automatic" → "automatic")
+          updates.transmission = normalizeTransmission(af.transmission);
           filled.add('transmission');
         }
         if (af.driveType) {
@@ -415,31 +585,54 @@ export function SmartPublishWizard({
       sellerEmail: formData.sellerEmail || undefined,
       sellerWhatsApp: formData.sellerWhatsApp || undefined,
       isNegotiable: formData.isNegotiable,
+      // Link vehicle to the authenticated user's account
+      sellerId: userId || user?.id || undefined,
     };
 
     try {
       // Step 1: Create vehicle as Draft
       const created = await createVehicle.mutateAsync(request);
 
-      // Step 2: Publish it (Draft → Active) so it appears in listings
+      // Step 2: Submit for review (Draft → PendingReview)
       await publishVehicle.mutateAsync(created.id);
 
       localStorage.removeItem(draftKey);
-      toast.success('¡Vehículo publicado exitosamente!');
-      router.push(`/vehiculos/${created.slug}`);
+      toast.success(
+        '¡Tu vehículo ha sido enviado a revisión! Te notificaremos cuando sea aprobado.',
+        {
+          duration: 6000,
+        }
+      );
+      // Redirect to seller's vehicles dashboard where they can see the status
+      router.push('/cuenta/mis-vehiculos');
     } catch (error: unknown) {
-      const err = error as { message?: string };
+      const err = error as {
+        message?: string;
+        code?: string;
+        requiresKyc?: boolean;
+        redirectUrl?: string;
+      };
+      // If dealer KYC is required, redirect to verification page
+      if (err.requiresKyc || err.code === 'HTTP_403') {
+        toast.error(err.message || 'Debes verificar tu identidad antes de publicar.');
+        router.push(err.redirectUrl || '/cuenta/verificacion');
+        return;
+      }
       toast.error(err.message || 'Error al publicar el vehículo');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, createVehicle, publishVehicle, draftKey, router]);
 
   const handleSaveDraft = useCallback(() => {
     try {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({ ...formData, _step: currentStep, _timestamp: Date.now() })
+      const draft = serializeForDraft(formData, currentStep);
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      const imgCount = (draft.images as unknown[]).length;
+      toast.success(
+        imgCount > 0
+          ? `Borrador guardado (${imgCount} foto${imgCount !== 1 ? 's' : ''})`
+          : 'Borrador guardado'
       );
-      toast.success('Borrador guardado');
     } catch {
       toast.error('Error al guardar borrador');
     }
@@ -599,6 +792,15 @@ export function SmartPublishWizard({
           />
         )}
 
+        {currentStep === 'view360' && (
+          <View360Step
+            vehicleId={formData.vin || undefined}
+            accountType={mode === 'dealer' ? 'dealer' : 'individual'}
+            onSkip={() => setCurrentStep('pricing')}
+            onComplete={() => setCurrentStep('pricing')}
+          />
+        )}
+
         {currentStep === 'pricing' && <PricingStep data={formData} onChange={updateFormData} />}
 
         {currentStep === 'review' && (
@@ -630,8 +832,8 @@ export function SmartPublishWizard({
         )}
       </div>
 
-      {/* Navigation buttons (main steps only) */}
-      {isMainStep && mainStepIndex > 0 && (
+      {/* Navigation buttons (main steps only — hidden on review since ReviewStep has its own actions) */}
+      {isMainStep && mainStepIndex > 0 && currentStep !== 'review' && (
         <div className="mt-8 flex items-center justify-between border-t pt-6">
           <button
             onClick={goToPrev}
@@ -650,28 +852,13 @@ export function SmartPublishWizard({
               Guardar borrador
             </button>
 
-            {currentStep !== 'review' ? (
-              <button
-                onClick={goToNext}
-                className="flex items-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
-              >
-                Siguiente
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handlePublish}
-                disabled={createVehicle.isPending}
-                className="flex items-center rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {createVehicle.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="mr-2 h-4 w-4" />
-                )}
-                {mode === 'dealer' ? 'Publicar' : 'Publicar (RD$29)'}
-              </button>
-            )}
+            <button
+              onClick={goToNext}
+              className="flex items-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Siguiente
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </button>
           </div>
         </div>
       )}

@@ -41,6 +41,17 @@ public class VehicleSearchParameters
     public string? ZipCode { get; set; }
     public bool? IsCertified { get; set; }
     public bool? HasCleanTitle { get; set; }
+
+    // Extended DR-market filters
+    /// <summary>Minimum passenger seats (e.g. 5 for family SUV, 7 for 7-seater)</summary>
+    public int? MinSeats { get; set; }
+    /// <summary>Number of cylinders (3, 4, 6, 8) — very common filter in DR market</summary>
+    public int? Cylinders { get; set; }
+    /// <summary>Interior color (negro, gris, beige, marrón, crema)</summary>
+    public string? InteriorColor { get; set; }
+    /// <summary>Vehicle features to filter on (A/C, GPS, Sunroof, etc.) — all must match</summary>
+    public List<string>? Features { get; set; }
+
     public int Skip { get; set; } = 0;
     public int Take { get; set; } = 20;
     public string SortBy { get; set; } = "CreatedAt";

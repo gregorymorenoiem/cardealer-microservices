@@ -11,7 +11,7 @@
  */
 
 import { getInternalApiUrl } from '@/lib/api-url';
-import { cookies } from 'next/headers';
+import { cookies, headers as nextHeaders } from 'next/headers';
 
 // =============================================================================
 // COOKIE CONSTANTS (must match backend AuthController.SetAuthCookies)
@@ -78,6 +78,9 @@ const API_URL = () => getInternalApiUrl();
 /**
  * Make an internal API call to the Gateway
  * All calls go through the internal network (http://gateway:8080)
+ * Forwards the real client IP and User-Agent so that AuthService can:
+ * - Store the correct IP in sessions (not the Next.js pod IP)
+ * - Parse the real browser/OS for session display and deduplication
  */
 async function internalFetch<T>(
   path: string,
@@ -95,6 +98,26 @@ async function internalFetch<T>(
     'Content-Type': 'application/json',
     ...extraHeaders,
   };
+
+  // Forward the real client IP and User-Agent from the incoming browser request.
+  // Without this, AuthService sees the Next.js pod IP (10.x.x.x) instead of the
+  // user's real IP, causing duplicate sessions and wrong device info.
+  try {
+    const incomingHeaders = await nextHeaders();
+    const clientIp = incomingHeaders.get('x-forwarded-for') || incomingHeaders.get('x-real-ip');
+    const userAgent = incomingHeaders.get('user-agent');
+
+    if (clientIp) {
+      // Preserve the full forwarded chain; take the first (real client) IP
+      headers['X-Forwarded-For'] = clientIp;
+    }
+    if (userAgent) {
+      headers['User-Agent'] = userAgent;
+    }
+  } catch {
+    // headers() can throw outside of request context (e.g. during build).
+    // Safe to ignore — login will still work, just without IP forwarding.
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

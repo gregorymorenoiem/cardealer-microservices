@@ -23,7 +23,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 
 const string ServiceName = "AdminService";
-const string ServiceVersion = "1.0.0";
+const string ServiceVersion = "1.0.1"; // fix: valid appsettings.Production.json
 
 try
 {
@@ -172,6 +172,9 @@ builder.Services.AddScoped<IAdminActionLogRepository, EfAdminActionLogRepository
 builder.Services.AddScoped<IModerationRepository, EfModerationRepository>();
 builder.Services.AddScoped<IPlatformEmployeeRepository, EfPlatformEmployeeRepository>();
 builder.Services.AddScoped<IAdminUserRepository, EfAdminUserRepository>();
+// Banner repository — singleton so in-memory data survives across requests in the same pod
+builder.Services.AddSingleton<AdminService.Domain.Interfaces.IBannerRepository,
+    AdminService.Infrastructure.Persistence.InMemoryBannerRepository>();
 
 // Reports Service Client (for admin content moderation reports → ReportsService)
 builder.Services.AddHttpClient<IReportsServiceClient, ReportsServiceClient>(client =>
@@ -265,6 +268,15 @@ builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddStandardResilience(configuration);
 
+// Review Service Client (for admin review management → ReviewService)
+builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client =>
+{
+    var baseAddress = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:8080";
+    client.BaseAddress = new Uri(baseAddress);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(configuration);
+
     var app = builder.Build();
 
     // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
@@ -308,7 +320,18 @@ builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
 
     // 9. Endpoints
     app.MapControllers();
-    app.MapHealthChecks("/health");
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => !check.Tags.Contains("external")
+    });
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready")
+    });
+    app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 
     Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
     app.Run();

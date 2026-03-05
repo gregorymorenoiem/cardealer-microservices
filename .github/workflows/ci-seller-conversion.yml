@@ -51,7 +51,7 @@ jobs:
   # ============================================
   build-and-test:
     name: 🔨 Build & Test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📥 Checkout code
@@ -101,7 +101,7 @@ jobs:
   # ============================================
   migration-check:
     name: 🗄️ Migration Check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: build-and-test
     if: github.event.inputs.run_migration == 'true' || github.ref == 'refs/heads/main'
 
@@ -143,7 +143,7 @@ jobs:
   # ============================================
   docker:
     name: 🐳 Docker Build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: build-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
@@ -151,15 +151,71 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
+
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
 
       - name: 🏗️ Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🐳 Build and Push
         uses: docker/build-push-action@v6
@@ -167,6 +223,7 @@ jobs:
           context: ./backend
           file: ./backend/UserService/Dockerfile
           push: true
+          platforms: linux/amd64
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}

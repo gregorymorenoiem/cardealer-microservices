@@ -11,9 +11,10 @@
 
 'use client';
 
+import Image from 'next/image';
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { LogOut, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
@@ -34,16 +35,25 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
 
 function AccountLayoutContent({ children }: AccountLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  // Redirect dealer accounts to their own portal.
-  // Sellers manage listings/account via /cuenta like buyers.
+  // Redirect accounts to their own portal:
+  // - Dealers → /dealer/dashboard (they have their own portal)
+  // - Admins at /cuenta root → /admin (profile/security sub-pages still accessible
+  //   via the admin panel header dropdown links like /cuenta/perfil)
   React.useEffect(() => {
     if (!user) return;
     if (user.accountType === 'dealer' || user.accountType === 'dealer_employee') {
       router.replace('/dealer/dashboard');
     }
-  }, [user, router]);
+    if (
+      (user.accountType === 'admin' || user.accountType === 'platform_employee') &&
+      pathname === '/cuenta'
+    ) {
+      router.replace('/admin');
+    }
+  }, [user, router, pathname]);
 
   // AuthGuard guarantees user is defined at this point
   if (!user) return null;
@@ -68,9 +78,11 @@ function AccountLayoutContent({ children }: AccountLayoutProps) {
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full">
                     {user.avatarUrl ? (
-                      <img
+                      <Image
                         src={user.avatarUrl}
                         alt=""
+                        width={48}
+                        height={48}
                         className="h-12 w-12 rounded-full object-cover"
                         onError={e => {
                           e.currentTarget.style.display = 'none';

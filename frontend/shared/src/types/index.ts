@@ -62,10 +62,100 @@ export enum PlatformRole {
  * Planes de suscripción para dealers
  */
 export enum DealerPlan {
-  FREE = 'free', // Plan gratuito inicial (3 listings, sin analytics)
-  BASIC = 'basic', // 5 listings, analytics básicos
-  PRO = 'pro', // 25 listings, analytics avanzados, bulk upload
-  ENTERPRISE = 'enterprise', // Ilimitado, API access, white label
+  LIBRE = 'libre', // Plan gratuito: listados ilimitados, stats básicas
+  VISIBLE = 'visible', // Visibilidad mejorada, badge verificado, stats avanzadas
+  PRO = 'pro', // ChatAgent, CRM, boosts, analytics avanzados
+  ELITE = 'elite', // Manager dedicado, API access, white label
+}
+
+/**
+ * Planes de suscripción para vendedores individuales
+ */
+export enum SellerPlan {
+  GRATIS = 'gratis', // 1 publicación, 10 fotos, 30 días
+  PREMIUM = 'premium', // 5 publicaciones, fotos ilimitadas, prioridad
+  PRO = 'pro', // 15 publicaciones, analytics, badge, WhatsApp
+}
+
+/**
+ * Features disponibles por plan de vendedor individual
+ */
+export interface SellerPlanFeatures {
+  maxListings: number; // Máximo de publicaciones activas
+  maxImages: number; // Imágenes por vehículo
+  listingDuration: number; // Duración en días (0 = permanente)
+  analyticsAccess: boolean; // Acceso a estadísticas detalladas
+  searchPriority: boolean; // Prioridad en resultados de búsqueda
+  verifiedBadge: boolean; // Badge de vendedor verificado
+  featuredListings: number; // Publicaciones destacadas permitidas/mes
+  whatsappContact: boolean; // Contacto por WhatsApp
+  detailedStats: boolean; // Estadísticas detalladas de vistas/clicks
+  boostAvailable: boolean; // Puede comprar boosts individuales
+  socialSharing: boolean; // Compartir en redes con preview optimizado
+  priceDropAlerts: boolean; // Alertas automáticas de baja de precio
+}
+
+/**
+ * Configuración de límites por plan de vendedor
+ */
+export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
+  [SellerPlan.GRATIS]: {
+    maxListings: 1,
+    maxImages: 10,
+    listingDuration: 30,
+    analyticsAccess: false,
+    searchPriority: false,
+    verifiedBadge: false,
+    featuredListings: 0,
+    whatsappContact: true,
+    detailedStats: false,
+    boostAvailable: false,
+    socialSharing: false,
+    priceDropAlerts: false,
+  },
+  [SellerPlan.PREMIUM]: {
+    maxListings: 5,
+    maxImages: 30,
+    listingDuration: 0, // Permanente mientras activa suscripción
+    analyticsAccess: true,
+    searchPriority: true,
+    verifiedBadge: true,
+    featuredListings: 2,
+    whatsappContact: true,
+    detailedStats: true,
+    boostAvailable: true,
+    socialSharing: true,
+    priceDropAlerts: false,
+  },
+  [SellerPlan.PRO]: {
+    maxListings: 15,
+    maxImages: 50,
+    listingDuration: 0, // Permanente
+    analyticsAccess: true,
+    searchPriority: true,
+    verifiedBadge: true,
+    featuredListings: 5,
+    whatsappContact: true,
+    detailedStats: true,
+    boostAvailable: true,
+    socialSharing: true,
+    priceDropAlerts: true,
+  },
+};
+
+/**
+ * Información de suscripción de vendedor individual
+ */
+export interface SellerSubscription {
+  plan: SellerPlan;
+  status: 'active' | 'canceled' | 'expired' | 'trial';
+  startDate: string;
+  endDate?: string;
+  features: SellerPlanFeatures;
+  usage: {
+    currentListings: number;
+    featuredUsed: number;
+  };
 }
 
 /**
@@ -189,9 +279,9 @@ export interface DealerPlanFeatures {
  * Configuración de límites por plan
  */
 export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
-  [DealerPlan.FREE]: {
-    maxListings: 3,
-    maxImages: 5,
+  [DealerPlan.LIBRE]: {
+    maxListings: 999999, // Ilimitado
+    maxImages: 10,
     analyticsAccess: false,
     marketPriceAnalysis: false,
     bulkUpload: false,
@@ -203,13 +293,13 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     prioritySupport: false,
     whatsappIntegration: false,
   },
-  [DealerPlan.BASIC]: {
-    maxListings: 50,
-    maxImages: 10,
+  [DealerPlan.VISIBLE]: {
+    maxListings: 999999, // Ilimitado
+    maxImages: 25,
     analyticsAccess: true,
     marketPriceAnalysis: false,
     bulkUpload: true,
-    featuredListings: 2,
+    featuredListings: 3,
     leadManagement: true,
     emailAutomation: false,
     customBranding: false,
@@ -218,8 +308,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     whatsappIntegration: false,
   },
   [DealerPlan.PRO]: {
-    maxListings: 200,
-    maxImages: 20,
+    maxListings: 999999, // Ilimitado
+    maxImages: 40,
     analyticsAccess: true,
     marketPriceAnalysis: true,
     bulkUpload: true,
@@ -231,7 +321,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     prioritySupport: true,
     whatsappIntegration: true,
   },
-  [DealerPlan.ENTERPRISE]: {
+  [DealerPlan.ELITE]: {
     maxListings: 999999, // Ilimitado
     maxImages: 50,
     analyticsAccess: true,

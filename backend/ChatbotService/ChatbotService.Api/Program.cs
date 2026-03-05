@@ -165,6 +165,22 @@ if (builder.Configuration.GetValue<bool>("Maintenance:EnableAutomatedTasks"))
     builder.Services.AddHostedService<MaintenanceWorkerService>();
 }
 
+// Redis Distributed Cache — required by LlmResponseCacheService (IDistributedCache)
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "redis:6379";
+try
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = "ChatbotService:";
+    });
+}
+catch
+{
+    // Fallback to in-memory distributed cache if Redis is not available
+    builder.Services.AddDistributedMemoryCache();
+}
+
 // Health checks
 builder.Services.AddHealthChecks()
     .AddNpgSql(
@@ -224,14 +240,14 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
     }
 });
 
-// Apply migrations or create database on startup (development/docker)
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
+// Apply migrations and seed on startup (all environments).
+// The seeder is idempotent: it checks AnyAsync() before inserting.
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
     try
     {
-        // Try migrations first; if none exist, fall back to EnsureCreated
+        // Always apply pending EF migrations
         var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
         if (pendingMigrations.Any())
         {
@@ -240,11 +256,18 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         }
         else
         {
+            // In case the schema was never created (new empty DB)
             await dbContext.Database.EnsureCreatedAsync();
-            Log.Information("Database schema created via EnsureCreated");
+            Log.Information("Database schema verified via EnsureCreated");
         }
 
-        // Seed test data (only if DB is empty)
+        // Idempotent column additions — safe for existing production databases
+        // (EnsureCreated does not alter existing tables; this handles schema evolution)
+        await dbContext.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE chatbot_configurations ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255)");
+        Log.Information("Schema evolution checks completed");
+
+        // Seed default configurations (idempotent)
         await ChatbotDataSeeder.SeedAsync(dbContext);
         Log.Information("Database seed check completed");
     }
@@ -255,8 +278,7 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         {
             await dbContext.Database.EnsureCreatedAsync();
             Log.Information("Database schema created via EnsureCreated (fallback)");
-            
-            // Seed test data (only if DB is empty)
+
             await ChatbotDataSeeder.SeedAsync(dbContext);
             Log.Information("Database seed check completed (fallback path)");
         }

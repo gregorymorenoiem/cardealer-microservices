@@ -206,6 +206,7 @@ builder.Services.AddScoped<IDealerModuleRepository, UserService.Infrastructure.P
 builder.Services.AddScoped<IModuleRepository, UserService.Infrastructure.Persistence.Repositories.ModuleRepository>();
 builder.Services.AddScoped<IUserOnboardingRepository, UserService.Infrastructure.Repositories.UserOnboardingRepository>();
 builder.Services.AddScoped<IPrivacyRequestRepository, UserService.Infrastructure.Persistence.PrivacyRequestRepository>();
+builder.Services.AddScoped<ICommunicationPreferenceRepository, UserService.Infrastructure.Persistence.CommunicationPreferenceRepository>();
 builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
 
 // Application Services - External clients

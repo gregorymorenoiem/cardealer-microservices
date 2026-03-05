@@ -40,7 +40,7 @@ export interface VehicleSearchFilters {
   transmission?: 'automatica' | 'manual' | 'cvt';
   fuelType?: 'gasolina' | 'diesel' | 'electrico' | 'hibrido' | 'glp';
   drivetrain?: 'fwd' | 'rwd' | 'awd' | '4wd';
-  condition?: 'nuevo' | 'usado' | 'certificado';
+  condition?: 'nuevo' | 'usado';
 
   // Location
   province?: string;
@@ -50,10 +50,20 @@ export interface VehicleSearchFilters {
   dealRating?: 'great' | 'good' | 'fair';
 
   // Seller type
-  sellerType?: 'dealer' | 'particular';
+  sellerType?: 'dealer' | 'seller';
+
+  // Vehicle condition extras
+  isCertified?: boolean;
+  hasCleanTitle?: boolean;
+  color?: string;
 
   // Features
   features?: string[];
+
+  // Extended DR-market filters
+  seats?: number; // min seats
+  cylinders?: number; // engine cylinders (3, 4, 6, 8)
+  interiorColor?: string;
 
   // Pagination
   page?: number;
@@ -208,9 +218,28 @@ function parseSearchParams(searchParams: URLSearchParams): VehicleSearchFilters 
   const sellerType = searchParams.get('seller_type');
   if (sellerType) filters.sellerType = sellerType as VehicleSearchFilters['sellerType'];
 
+  const isCertified = searchParams.get('is_certified');
+  if (isCertified) filters.isCertified = isCertified === 'true';
+
+  const hasCleanTitle = searchParams.get('has_clean_title');
+  if (hasCleanTitle) filters.hasCleanTitle = hasCleanTitle === 'true';
+
+  const color = searchParams.get('color');
+  if (color) filters.color = color;
+
   // Features (comma-separated)
   const features = searchParams.get('features');
   if (features) filters.features = features.split(',');
+
+  // Extended DR-market filters
+  const seats = searchParams.get('seats');
+  if (seats) filters.seats = parseInt(seats, 10);
+
+  const cylinders = searchParams.get('cylinders');
+  if (cylinders) filters.cylinders = parseInt(cylinders, 10);
+
+  const interiorColor = searchParams.get('interior_color');
+  if (interiorColor) filters.interiorColor = interiorColor;
 
   // Pagination
   const page = searchParams.get('page');
@@ -246,7 +275,14 @@ function filtersToSearchParams(filters: VehicleSearchFilters): URLSearchParams {
   if (filters.city) params.set('city', filters.city);
   if (filters.dealRating) params.set('deal_rating', filters.dealRating);
   if (filters.sellerType) params.set('seller_type', filters.sellerType);
+  if (filters.isCertified) params.set('is_certified', 'true');
+  if (filters.hasCleanTitle) params.set('has_clean_title', 'true');
+  if (filters.color) params.set('color', filters.color);
   if (filters.features?.length) params.set('features', filters.features.join(','));
+  // Extended DR-market filters
+  if (filters.seats) params.set('seats', filters.seats.toString());
+  if (filters.cylinders) params.set('cylinders', filters.cylinders.toString());
+  if (filters.interiorColor) params.set('interior_color', filters.interiorColor);
   if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
   if (filters.limit && filters.limit !== 24) params.set('limit', filters.limit.toString());
   if (filters.sortBy && filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
@@ -272,7 +308,14 @@ function countActiveFilters(filters: VehicleSearchFilters): number {
   if (filters.city) count++;
   if (filters.dealRating) count++;
   if (filters.sellerType) count++;
+  if (filters.isCertified) count++; // 'Con garantía del vendedor'
+  if (filters.hasCleanTitle) count++;
+  if (filters.color) count++;
   if (filters.features?.length) count++;
+  // Extended DR-market filters
+  if (filters.seats) count++;
+  if (filters.cylinders) count++;
+  if (filters.interiorColor) count++;
 
   return count;
 }
@@ -313,8 +356,19 @@ async function fetchVehicles(filters: VehicleSearchFilters): Promise<VehicleSear
     bodyType: filters.bodyType as VehicleSearchParams['bodyType'],
     transmission: filters.transmission,
     fuelType: filters.fuelType,
+    drivetrain: filters.drivetrain,
     condition: filters.condition,
     province: filters.province,
+    city: filters.city,
+    sellerType: filters.sellerType,
+    color: filters.color,
+    isCertified: filters.isCertified,
+    hasCleanTitle: filters.hasCleanTitle,
+    features: filters.features,
+    // Extended DR-market filters
+    seats: filters.seats,
+    cylinders: filters.cylinders,
+    interiorColor: filters.interiorColor,
     page: filters.page || 1,
     pageSize: filters.limit || 24,
     sortBy: sort.sortBy,

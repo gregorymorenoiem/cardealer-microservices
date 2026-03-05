@@ -13,30 +13,31 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import {
   Search,
   ChevronDown,
   Shield,
   CheckCircle2,
   Star,
-  ChevronRight,
   Heart,
   Gauge,
   MapPin,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import type { Vehicle } from '@/services/homepage-sections';
+import { aiSearch, aiFiltersToUrlParams } from '@/services/search-agent';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 interface HeroCompactProps {
-  vehicles?: Vehicle[];
-  isLoading?: boolean;
   className?: string;
 }
 
@@ -71,84 +72,122 @@ const modelsByMake: Record<string, string[]> = {
 };
 
 // =============================================================================
-// COMPACT SEARCH BAR
+// NATURAL LANGUAGE HERO SEARCH BAR (replaces filter dropdowns)
 // =============================================================================
 
-function CompactSearchBar() {
-  const [condition, setCondition] = useState('');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
+function NaturalLanguageHeroSearch() {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const availableModels = make ? modelsByMake[make] || [] : [];
+  const handleSearch = useCallback(
+    async (searchQuery?: string) => {
+      const q = (searchQuery ?? query).trim();
+      if (!q) return;
+
+      setIsSearching(true);
+      try {
+        const result = await aiSearch({ query: q });
+        if (result.aiFilters?.filtros_exactos) {
+          const params = aiFiltersToUrlParams(result.aiFilters.filtros_exactos);
+          const searchParams = new URLSearchParams();
+          // Store reformulated query for display ONLY — NOT as 'q' which would create
+          // an extra text-filter chip alongside the structured AI filters.
+          const displayQuery = result.aiFilters.query_reformulada ?? q;
+          searchParams.set('ai_query', displayQuery);
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              searchParams.set(key, String(value));
+            }
+          });
+          if (result.aiFilters.ordenar_por) {
+            searchParams.set('sortBy', result.aiFilters.ordenar_por);
+          }
+          router.push(`/vehiculos?${searchParams.toString()}`);
+        } else {
+          router.push(`/vehiculos?q=${encodeURIComponent(q)}`);
+        }
+      } catch {
+        router.push(`/vehiculos?q=${encodeURIComponent(q)}`);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [query, router]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSearch();
+      }
+    },
+    [handleSearch]
+  );
 
   return (
-    <div className="bg-card/95 dark:bg-card/90 mx-auto w-full max-w-5xl rounded-2xl border border-white/20 p-2 shadow-2xl shadow-black/20 backdrop-blur-sm dark:border-white/10">
-      <div className="flex flex-col gap-2 md:flex-row">
-        {/* Condition Select */}
-        <div className="relative flex-1">
-          <select
-            value={condition}
-            onChange={e => setCondition(e.target.value)}
-            className="border-border bg-muted text-foreground hover:border-muted-foreground/50 focus:border-primary focus:ring-primary/20 h-12 w-full cursor-pointer appearance-none rounded-xl border px-4 pr-10 text-sm font-medium transition-all focus:ring-2 focus:outline-none"
-          >
-            <option value="">Estado</option>
-            <option value="nuevo">Nuevo</option>
-            <option value="recien-importado">Recién Importado</option>
-            <option value="usado">Usado</option>
-          </select>
-          <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
-        </div>
+    <div className="w-full">
+      {/* Main Container — same style as the old CompactSearchBar */}
+      <div
+        className={cn(
+          'bg-card/95 dark:bg-card/90 mx-auto w-full max-w-5xl rounded-2xl border p-2 shadow-2xl shadow-black/20 backdrop-blur-sm transition-all duration-300',
+          isFocused ? 'border-primary shadow-primary/20' : 'border-white/20 dark:border-white/10'
+        )}
+      >
+        <div className="flex flex-col gap-2 md:flex-row">
+          {/* Sparkle icon + text input */}
+          <div className="border-border bg-muted relative flex flex-1 items-center gap-3 rounded-xl border px-4">
+            <Sparkles
+              className={cn(
+                'h-5 w-5 shrink-0 transition-colors',
+                isFocused ? 'text-primary' : 'text-muted-foreground'
+              )}
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder="Busca tu vehículo ideal"
+              className="text-foreground placeholder:text-muted-foreground h-12 flex-1 bg-transparent text-sm font-medium focus:outline-none"
+              disabled={isSearching}
+              autoComplete="off"
+            />
+          </div>
 
-        {/* Make Select */}
-        <div className="relative flex-1">
-          <select
-            value={make}
-            onChange={e => {
-              setMake(e.target.value);
-              setModel('');
-            }}
-            className="border-border bg-muted text-foreground hover:border-muted-foreground/50 focus:border-primary focus:ring-primary/20 h-12 w-full cursor-pointer appearance-none rounded-xl border px-4 pr-10 text-sm font-medium transition-all focus:ring-2 focus:outline-none"
+          {/* Search Button — identical style to old filter search button */}
+          <button
+            onClick={() => handleSearch()}
+            disabled={isSearching}
+            className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <option value="">Marca</option>
-            {POPULAR_MAKES.map(m => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+            {isSearching ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Buscando...</span>
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                <span>Buscar</span>
+              </>
+            )}
+          </button>
         </div>
-
-        {/* Model Select */}
-        <div className="relative flex-1">
-          <select
-            value={model}
-            onChange={e => setModel(e.target.value)}
-            disabled={!make}
-            className="border-border bg-muted text-foreground hover:border-muted-foreground/50 focus:border-primary focus:ring-primary/20 h-12 w-full cursor-pointer appearance-none rounded-xl border px-4 pr-10 text-sm font-medium transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">{make ? 'Modelo' : 'Selecciona marca'}</option>
-            {availableModels.map(m => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
-        </div>
-
-        {/* Search Button */}
-        <Link
-          href={`/vehiculos?condition=${condition}&make=${make}&model=${model}`}
-          className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-12 items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl"
-        >
-          <Search className="h-4 w-4" />
-          <span>Buscar</span>
-        </Link>
       </div>
     </div>
   );
 }
+
+// =============================================================================
+// COMPACT SEARCH BAR (kept for reference, no longer used in hero)
+// =============================================================================
 
 // =============================================================================
 // QUICK FILTERS (Theme-aware for light backgrounds)
@@ -160,7 +199,7 @@ export function QuickFilters() {
       {QUICK_FILTERS.map(filter => (
         <Link
           key={filter}
-          href={`/vehiculos?bodyType=${filter}`}
+          href={`/vehiculos?body_type=${encodeURIComponent(filter)}`}
           className="border-border bg-muted/50 text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200"
         >
           {filter}
@@ -180,7 +219,7 @@ function QuickFiltersHero() {
       {QUICK_FILTERS.map(filter => (
         <Link
           key={filter}
-          href={`/vehiculos?bodyType=${filter}`}
+          href={`/vehiculos?body_type=${encodeURIComponent(filter)}`}
           className="hover:border-primary hover:bg-primary rounded-full border border-white/50 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:text-white"
         >
           {filter}
@@ -243,7 +282,8 @@ export function VehicleCardCompact({ vehicle, index }: VehicleCardCompactProps) 
     const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
       .toLowerCase()
       .replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${vehicle.id}`;
+    const shortId = (vehicle.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${slug}-${shortId}`;
   }, [vehicle]);
 
   return (
@@ -300,7 +340,7 @@ export function VehicleCardCompact({ vehicle, index }: VehicleCardCompactProps) 
                   </span>
                 )}
                 {vehicle.tier === 'featured' && (
-                  <span className="rounded-full bg-gradient-to-r from-primary to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="from-primary rounded-full bg-gradient-to-r to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                     Destacado
                   </span>
                 )}
@@ -334,211 +374,10 @@ export function VehicleCardCompact({ vehicle, index }: VehicleCardCompactProps) 
 }
 
 // =============================================================================
-// VEHICLE CARD SKELETON (Theme-aware)
-// =============================================================================
-
-function VehicleCardSkeleton({ index }: { index: number }) {
-  return (
-    <div className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
-      <div className="border-border bg-card overflow-hidden rounded-xl border shadow-md">
-        {/* Image Skeleton */}
-        <div className="bg-muted relative aspect-[4/3] animate-pulse" />
-
-        {/* Content Skeleton */}
-        <div className="p-3">
-          <div className="bg-muted mb-2 h-4 w-3/4 animate-pulse rounded" />
-          <div className="bg-muted mb-3 h-6 w-1/2 animate-pulse rounded" />
-          <div className="flex gap-3">
-            <div className="bg-muted h-3 w-16 animate-pulse rounded" />
-            <div className="bg-muted h-3 w-12 animate-pulse rounded" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// FEATURED VEHICLES ROW (Theme-aware)
-// =============================================================================
-
-interface FeaturedVehiclesRowProps {
-  vehicles: Vehicle[];
-  maxItems?: number;
-  isLoading?: boolean;
-}
-
-function FeaturedVehiclesRow({
-  vehicles,
-  maxItems = 5,
-  isLoading = false,
-}: FeaturedVehiclesRowProps) {
-  const displayVehicles = vehicles.slice(0, maxItems);
-  const showSkeletons = isLoading || displayVehicles.length === 0;
-
-  return (
-    <div className="border-border/50 bg-muted/50 dark:bg-muted/20 border-t">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-semibold">
-              ⭐ Destacados
-            </span>
-            <TrustBadgesCompact />
-          </div>
-          <Link
-            href="/vehiculos"
-            className="text-primary hover:text-primary/80 flex items-center gap-1 text-sm font-medium transition-colors"
-          >
-            Ver todos
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {/* Vehicles Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {showSkeletons
-            ? Array.from({ length: maxItems }).map((_, index) => (
-                <VehicleCardSkeleton key={index} index={index} />
-              ))
-            : displayVehicles.map((vehicle, index) => (
-                <VehicleCardThemed key={vehicle.id} vehicle={vehicle} index={index} />
-              ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// TRUST BADGES COMPACT (Theme-aware)
-// =============================================================================
-
-function TrustBadgesCompact() {
-  return (
-    <div className="hidden items-center gap-4 md:flex">
-      {TRUST_BADGES.map(badge => (
-        <div key={badge.text} className="text-muted-foreground flex items-center gap-1">
-          <badge.icon className="text-primary h-3.5 w-3.5" />
-          <span className="text-xs font-medium">{badge.text}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// =============================================================================
-// VEHICLE CARD THEMED (Theme-aware)
-// =============================================================================
-
-interface VehicleCardThemedProps {
-  vehicle: Vehicle;
-  index: number;
-}
-
-function VehicleCardThemed({ vehicle, index }: VehicleCardThemedProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const vehicleUrl = useMemo(() => {
-    const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
-      .toLowerCase()
-      .replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${vehicle.id}`;
-  }, [vehicle]);
-
-  return (
-    <div className="animate-slide-up group" style={{ animationDelay: `${index * 50}ms` }}>
-      <Link href={vehicleUrl} className="block">
-        <div className="border-border bg-card overflow-hidden rounded-xl border shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-          {/* Image */}
-          <div className="relative aspect-[4/3] overflow-hidden">
-            <Image
-              src={vehicle.images[0] || '/placeholder-car.jpg'}
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              priority={index < 4}
-            />
-
-            {/* Favorite Button */}
-            <button
-              onClick={e => {
-                e.preventDefault();
-                setIsFavorite(!isFavorite);
-              }}
-              className="absolute top-2 left-2 rounded-full bg-white/90 p-1.5 shadow-md transition-colors hover:bg-white dark:bg-black/50 dark:hover:bg-black/70"
-              aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-            >
-              <Heart
-                size={16}
-                fill={isFavorite ? '#ef4444' : 'none'}
-                stroke={isFavorite ? '#ef4444' : '#6b7280'}
-              />
-            </button>
-
-            {/* Condition Badge */}
-            {vehicle.condition === 'New' && (
-              <div className="absolute bottom-2 left-2">
-                <span className="bg-primary rounded-full px-2 py-0.5 text-[10px] font-semibold text-white">
-                  Nuevo
-                </span>
-              </div>
-            )}
-
-            {/* Tier Badge */}
-            {vehicle.tier && vehicle.tier !== 'basic' && (
-              <div className="absolute top-2 right-2">
-                {vehicle.tier === 'enterprise' && (
-                  <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                    Top Dealer
-                  </span>
-                )}
-                {vehicle.tier === 'premium' && (
-                  <span className="rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                    Premium
-                  </span>
-                )}
-                {vehicle.tier === 'featured' && (
-                  <span className="rounded-full bg-gradient-to-r from-primary to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                    Destacado
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="p-3">
-            <h3 className="text-foreground group-hover:text-primary truncate text-sm font-bold transition-colors">
-              {vehicle.year} {vehicle.make} {vehicle.model}
-            </h3>
-            <p className="text-primary mt-0.5 text-lg font-bold">{formatCurrency(vehicle.price)}</p>
-
-            {/* Quick Details */}
-            <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1">
-                <Gauge size={12} />
-                {formatMileage(vehicle.mileage)}
-              </span>
-              <span className="flex items-center gap-1">
-                <MapPin size={12} />
-                {vehicle.location?.split(',')[0] || 'RD'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </div>
-  );
-}
-
-// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 
-export function HeroCompact({ vehicles = [], isLoading = false, className }: HeroCompactProps) {
+export function HeroCompact({ className }: HeroCompactProps) {
   return (
     <section className={cn('relative flex flex-col', className)}>
       {/* Hero Section - Full Screen with Background Image */}
@@ -580,12 +419,12 @@ export function HeroCompact({ vehicles = [], isLoading = false, className }: Her
             </p>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar — Natural Language */}
           <div
             className="animate-slide-up mb-6 w-full max-w-4xl"
             style={{ animationDelay: '300ms' }}
           >
-            <CompactSearchBar />
+            <NaturalLanguageHeroSearch />
           </div>
 
           {/* Quick Filters */}
@@ -610,9 +449,6 @@ export function HeroCompact({ vehicles = [], isLoading = false, className }: Her
           </div>
         </div>
       </div>
-
-      {/* Featured Vehicles Row - ALWAYS visible (with skeletons or real data) */}
-      <FeaturedVehiclesRow vehicles={vehicles} maxItems={5} isLoading={isLoading} />
     </section>
   );
 }

@@ -53,6 +53,9 @@ export interface Vehicle {
   isFeatured?: boolean;
   viewCount?: number;
   favoriteCount?: number;
+  rejectionReason?: string;
+  vin?: string;
+  oklaScore?: number;
 
   // Seller
   sellerId: string;
@@ -136,6 +139,7 @@ export interface VehicleCardData {
   monthlyPayment?: number;
   dealerName?: string;
   dealerRating?: number;
+  oklaScore?: number;
   // Status and metadata (for dealer inventory)
   status?: VehicleStatus;
   viewCount?: number;
@@ -269,7 +273,9 @@ export type VerificationStatus =
   | 'verified'
   | 'rejected';
 
-export type DealerPlan = 'none' | 'starter' | 'pro' | 'enterprise';
+export type DealerPlan = 'none' | 'libre' | 'visible' | 'pro' | 'elite';
+
+export type SellerPlan = 'gratis' | 'premium' | 'pro';
 
 // -----------------------------------------------------------------------------
 // API Types
@@ -323,7 +329,18 @@ export interface VehicleSearchParams extends SearchParams {
   fuelType?: string;
   condition?: string;
   province?: string;
+  city?: string;
+  drivetrain?: string;
+  color?: string;
+  isCertified?: boolean;
+  hasCleanTitle?: boolean;
+  sellerType?: 'dealer' | 'seller';
+  features?: string[];
   dealRating?: DealRating;
+  // Extended DR-market filters
+  seats?: number; // min seats
+  cylinders?: number; // engine cylinders
+  interiorColor?: string;
 }
 
 // -----------------------------------------------------------------------------

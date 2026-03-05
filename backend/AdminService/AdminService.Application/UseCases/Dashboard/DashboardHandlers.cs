@@ -1,25 +1,33 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using AdminService.Domain.Interfaces;
+using AdminService.Application.Interfaces;
 
 namespace AdminService.Application.UseCases.Dashboard;
 
 /// <summary>
-/// Handler for getting dashboard statistics
+/// Handler for getting dashboard statistics — aggregates from VehiclesSaleService,
+/// DealerManagementService, and UserService concurrently.
 /// </summary>
 public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQuery, DashboardStatsResponse>
 {
     private readonly IStatisticsRepository _statisticsRepository;
     private readonly IModerationRepository _moderationRepository;
+    private readonly IDealerService _dealerService;
+    private readonly IPlatformUserService _userService;
     private readonly ILogger<GetDashboardStatsQueryHandler> _logger;
 
     public GetDashboardStatsQueryHandler(
         IStatisticsRepository statisticsRepository,
         IModerationRepository moderationRepository,
+        IDealerService dealerService,
+        IPlatformUserService userService,
         ILogger<GetDashboardStatsQueryHandler> logger)
     {
         _statisticsRepository = statisticsRepository;
         _moderationRepository = moderationRepository;
+        _dealerService = dealerService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -27,26 +35,35 @@ public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQu
     {
         _logger.LogInformation("Fetching dashboard statistics");
 
-        var platformStats = await _statisticsRepository.GetPlatformStatsAsync();
-        var pendingReports = await _moderationRepository.GetPendingReportsAsync(100);
+        // Run all service calls in parallel for performance
+        var vehicleStatsTask = _statisticsRepository.GetPlatformStatsAsync();
+        var dealerStatsTask = _dealerService.GetDealerStatsAsync(cancellationToken);
+        var userStatsTask = _userService.GetUserStatsAsync(cancellationToken);
+        var pendingReportsTask = _moderationRepository.GetPendingReportsAsync(100);
 
-        // Map to frontend-compatible response
+        await Task.WhenAll(vehicleStatsTask, dealerStatsTask, userStatsTask, pendingReportsTask);
+
+        var platformStats = vehicleStatsTask.Result;
+        var dealerStats = dealerStatsTask.Result;
+        var userStats = userStatsTask.Result;
+        var pendingReports = pendingReportsTask.Result;
+
         return new DashboardStatsResponse
         {
-            TotalUsers = platformStats.TotalUsers,
+            TotalUsers = userStats.Total,
             TotalVehicles = platformStats.TotalListings,
             ActiveVehicles = platformStats.TotalListings - platformStats.PendingListings,
-            TotalDealers = platformStats.TotalDealers,
-            ActiveDealers = platformStats.ActiveDealers,
-            PendingApprovals = platformStats.PendingDealers,
+            TotalDealers = dealerStats.Total,
+            ActiveDealers = dealerStats.Active,
+            PendingApprovals = dealerStats.Pending,
             PendingVerifications = platformStats.PendingListings,
             TotalReports = pendingReports.Count(),
             OpenSupportTickets = platformStats.OpenTickets,
-            Mrr = platformStats.MonthlyRevenue,
-            MrrChange = 0, // TODO: Calculate from historical data
-            UsersChange = 0, // TODO: Calculate from historical data
-            VehiclesChange = 0, // TODO: Calculate from historical data
-            DealersChange = 0 // TODO: Calculate from historical data
+            Mrr = dealerStats.TotalMrr,
+            MrrChange = 0,
+            UsersChange = 0,
+            VehiclesChange = 0,
+            DealersChange = 0
         };
     }
 }
@@ -108,15 +125,18 @@ public class GetDashboardPendingQueryHandler : IRequestHandler<GetDashboardPendi
 {
     private readonly IStatisticsRepository _statisticsRepository;
     private readonly IModerationRepository _moderationRepository;
+    private readonly IDealerService _dealerService;
     private readonly ILogger<GetDashboardPendingQueryHandler> _logger;
 
     public GetDashboardPendingQueryHandler(
         IStatisticsRepository statisticsRepository,
         IModerationRepository moderationRepository,
+        IDealerService dealerService,
         ILogger<GetDashboardPendingQueryHandler> logger)
     {
         _statisticsRepository = statisticsRepository;
         _moderationRepository = moderationRepository;
+        _dealerService = dealerService;
         _logger = logger;
     }
 
@@ -124,8 +144,15 @@ public class GetDashboardPendingQueryHandler : IRequestHandler<GetDashboardPendi
     {
         _logger.LogInformation("Fetching dashboard pending actions");
 
-        var platformStats = await _statisticsRepository.GetPlatformStatsAsync();
-        var pendingReports = await _moderationRepository.GetPendingReportsAsync(100);
+        var vehicleStatsTask = _statisticsRepository.GetPlatformStatsAsync();
+        var dealerStatsTask = _dealerService.GetDealerStatsAsync(cancellationToken);
+        var pendingReportsTask = _moderationRepository.GetPendingReportsAsync(100);
+
+        await Task.WhenAll(vehicleStatsTask, dealerStatsTask, pendingReportsTask);
+
+        var platformStats = vehicleStatsTask.Result;
+        var dealerStats = dealerStatsTask.Result;
+        var pendingReports = pendingReportsTask.Result;
 
         var pendingActions = new List<DashboardPendingActionResponse>();
 
@@ -143,15 +170,15 @@ public class GetDashboardPendingQueryHandler : IRequestHandler<GetDashboardPendi
         }
 
         // Pending dealer verification
-        if (platformStats.PendingDealers > 0)
+        if (dealerStats.Pending > 0)
         {
             pendingActions.Add(new DashboardPendingActionResponse
             {
                 Type = "verification",
                 Title = "Dealers pendientes de verificación",
-                Count = platformStats.PendingDealers,
-                Priority = platformStats.PendingDealers > 5 ? "high" : "medium",
-                Href = "/admin/dealers/pending"
+                Count = dealerStats.Pending,
+                Priority = dealerStats.Pending > 5 ? "high" : "medium",
+                Href = "/admin/dealers?status=pending"
             });
         }
 

@@ -16,11 +16,7 @@ import {
   getDemandPrediction,
   type PriceSuggestionRequest,
   type CreatePriceAnalysisRequest,
-  type PriceSuggestion,
   type PriceAnalysis,
-  type CategoryDemand,
-  type MarketAnalysis,
-  type DemandPrediction,
 } from '@/services/vehicle-intelligence';
 
 // ============================================================================
@@ -163,7 +159,7 @@ export function useMarketAnalysisDashboard(filters?: {
  * Get all pricing intelligence for dealer inventory
  */
 export function useDealerPricingIntelligence(vehicleIds: string[]) {
-  const queries = vehicleIds.map(id => ({
+  const _queries = vehicleIds.map(id => ({
     queryKey: vehicleIntelligenceKeys.priceAnalysis(id),
     queryFn: () => getLatestPriceAnalysis(id),
     enabled: !!id,

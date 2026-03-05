@@ -8,10 +8,11 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Search,
-  Filter,
   MoreVertical,
   Eye,
   Edit,
@@ -20,7 +21,7 @@ import {
   Trash2,
   AlertCircle,
   Car,
-  Loader2,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,8 +35,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { userService, type UserVehicleDto } from '@/services/users';
+import { vehicleService } from '@/services/vehicles';
+import { toast } from 'sonner';
 
-type VehicleStatus = 'all' | 'active' | 'pending' | 'paused' | 'sold' | 'expired';
+type VehicleStatus = 'all' | 'active' | 'pending' | 'paused' | 'sold' | 'expired' | 'rejected';
 
 const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   active: { label: 'Activo', color: 'text-green-700', bgColor: 'bg-green-100' },
@@ -82,21 +85,37 @@ function VehicleCard({
         {/* Image */}
         <div className="bg-muted relative h-40 w-full flex-shrink-0 sm:h-auto sm:w-48">
           {vehicle.imageUrl ? (
-            <img
+            <Image
               src={vehicle.imageUrl}
               alt={vehicle.title}
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, 192px"
+              className="object-cover"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Car className="text-muted-foreground h-12 w-12" />
             </div>
           )}
-          {/* Status overlay for paused/expired */}
+          {/* Status overlay for paused/expired/pending/rejected */}
           {(vehicle.status === 'paused' || vehicle.status === 'expired') && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <span className="rounded bg-black/60 px-3 py-1 font-medium text-white">
                 {vehicle.status === 'paused' ? 'Pausado' : 'Expirado'}
+              </span>
+            </div>
+          )}
+          {vehicle.status === 'pending' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-yellow-900/30">
+              <span className="rounded bg-yellow-600/80 px-3 py-1 text-sm font-medium text-white">
+                En Revisión
+              </span>
+            </div>
+          )}
+          {vehicle.status === 'rejected' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-red-900/30">
+              <span className="rounded bg-red-600/80 px-3 py-1 text-sm font-medium text-white">
+                Rechazado
               </span>
             </div>
           )}
@@ -131,7 +150,8 @@ function VehicleCard({
               {/* Expiration warning */}
               {vehicle.status === 'active' && vehicle.expiresAt && (
                 <div className="mt-2">
-                  {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
+                  {/* eslint-disable-next-line react-hooks/purity */}
+              {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
                     <div className="flex items-center gap-1 text-sm text-yellow-700">
                       <AlertCircle className="h-4 w-4" />
                       Expira el {new Date(vehicle.expiresAt).toLocaleDateString('es-DO')}
@@ -162,16 +182,24 @@ function VehicleCard({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {vehicle.status === 'active' && !vehicle.isFeatured && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/vender/promover/${vehicle.id}`}>
+                      <Star className="mr-2 h-4 w-4" />
+                      Promocionar
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 {vehicle.status === 'active' && (
                   <DropdownMenuItem onClick={() => onPause(vehicle.id)}>
                     <Pause className="mr-2 h-4 w-4" />
                     Pausar
                   </DropdownMenuItem>
                 )}
-                {vehicle.status === 'paused' && (
+                {(vehicle.status === 'paused' || vehicle.status === 'rejected') && (
                   <DropdownMenuItem onClick={() => onActivate(vehicle.id)}>
                     <Play className="mr-2 h-4 w-4" />
-                    Activar
+                    {vehicle.status === 'rejected' ? 'Re-enviar a Revisión' : 'Reactivar'}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -217,6 +245,11 @@ function EmptyState({ status }: { status: VehicleStatus }) {
       title: 'No tienes publicaciones expiradas',
       description: 'Las publicaciones que expiren aparecerán aquí',
     },
+    rejected: {
+      title: 'No tienes vehículos rechazados',
+      description:
+        'Si algún anuncio es rechazado por el equipo de revisión, aparecerá aquí con los motivos',
+    },
   };
 
   const { title, description } = messages[status];
@@ -241,28 +274,18 @@ function EmptyState({ status }: { status: VehicleStatus }) {
 }
 
 export default function MyVehiclesPage() {
-  const [vehicles, setVehicles] = React.useState<UserVehicleDto[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = React.useState<VehicleStatus>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  // Load vehicles
-  React.useEffect(() => {
-    async function loadVehicles() {
-      try {
-        const data = await userService.getUserVehicles();
-        setVehicles(data.vehicles);
-      } catch {
-        // Error already handled in userService - silently use empty array
-        setVehicles([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadVehicles();
-  }, []);
+  // React Query — cached for 1 minute so re-visiting the page is instant
+  const { data, isLoading } = useQuery({
+    queryKey: ['user-vehicles'],
+    queryFn: () => userService.getUserVehicles(),
+    staleTime: 60_000,
+  });
+  const vehicles = React.useMemo(() => data?.vehicles ?? [], [data]);
 
-  // Filter vehicles
   const filteredVehicles = React.useMemo(() => {
     return vehicles.filter(vehicle => {
       // Status filter
@@ -280,7 +303,6 @@ export default function MyVehiclesPage() {
     });
   }, [vehicles, selectedStatus, searchQuery]);
 
-  // Status counts
   const statusCounts = React.useMemo(() => {
     const counts: Record<string, number> = { all: vehicles.length };
     vehicles.forEach(v => {
@@ -291,27 +313,65 @@ export default function MyVehiclesPage() {
 
   // Actions
   const handlePause = async (id: string) => {
-    // TODO: Implement pause
-    console.log('Pause vehicle:', id);
+    // Optimistic update
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.map(v => (v.id === id ? { ...v, status: 'paused' } : v)) ?? [],
+      })
+    );
+    try {
+      await vehicleService.unpublish(id, 'Pausado por el vendedor');
+      toast.success('Vehículo pausado');
+    } catch {
+      queryClient.invalidateQueries({ queryKey: ['user-vehicles'] });
+      toast.error('Error al pausar el vehículo');
+    }
   };
 
   const handleActivate = async (id: string) => {
-    // TODO: Implement activate
-    console.log('Activate vehicle:', id);
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.map(v => (v.id === id ? { ...v, status: 'pending' } : v)) ?? [],
+      })
+    );
+    try {
+      await vehicleService.publish(id);
+      toast.success('Vehículo enviado a revisión nuevamente');
+    } catch {
+      queryClient.invalidateQueries({ queryKey: ['user-vehicles'] });
+      toast.error('Error al reactivar el vehículo. Verifica que cumple los requisitos.');
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este vehículo? Esta acción no se puede deshacer.')) {
       return;
     }
-    // TODO: Implement delete
-    console.log('Delete vehicle:', id);
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.filter(v => v.id !== id) ?? [],
+      })
+    );
+    try {
+      await vehicleService.delete(id);
+      toast.success('Vehículo eliminado');
+    } catch {
+      queryClient.invalidateQueries({ queryKey: ['user-vehicles'] });
+      toast.error('Error al eliminar el vehículo');
+    }
   };
 
   const tabs: { value: VehicleStatus; label: string }[] = [
     { value: 'all', label: 'Todos' },
     { value: 'active', label: 'Activos' },
-    { value: 'pending', label: 'Pendientes' },
+    { value: 'pending', label: 'En Revisión' },
+    { value: 'rejected', label: 'Rechazados' },
     { value: 'paused', label: 'Pausados' },
     { value: 'sold', label: 'Vendidos' },
   ];
@@ -374,8 +434,23 @@ export default function MyVehiclesPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-card animate-pulse overflow-hidden rounded-xl border">
+              <div className="flex flex-col sm:flex-row">
+                <div className="bg-muted h-40 w-full flex-shrink-0 sm:w-48" />
+                <div className="flex-1 space-y-3 p-4">
+                  <div className="bg-muted h-4 w-20 rounded" />
+                  <div className="bg-muted h-5 w-3/4 rounded" />
+                  <div className="bg-muted h-6 w-32 rounded" />
+                  <div className="flex gap-4">
+                    <div className="bg-muted h-4 w-20 rounded" />
+                    <div className="bg-muted h-4 w-24 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredVehicles.length > 0 ? (
         <div className="space-y-4">

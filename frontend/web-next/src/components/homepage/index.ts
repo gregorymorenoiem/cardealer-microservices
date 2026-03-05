@@ -40,5 +40,9 @@ export { CTASection } from './cta-section';
 // Loading states
 export { LoadingSection, ErrorSection, SkeletonGrid } from './loading-states';
 
+// Vehicle type section (dynamic, fetches from vehicles API)
+export { default as VehicleTypeSection } from './vehicle-type-section';
+export type { VehicleTypeSectionConfig } from './vehicle-type-section';
+
 // Types
 export type { FeaturedListingItem } from './featured-section';

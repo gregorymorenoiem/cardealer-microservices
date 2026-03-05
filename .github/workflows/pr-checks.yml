@@ -31,7 +31,7 @@ jobs:
   # ============================================
   detect-changes:
     name: 🔍 Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -61,7 +61,7 @@ jobs:
     name: 🌐 Frontend Checks
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📥 Checkout
@@ -101,7 +101,7 @@ jobs:
     name: 🔧 Backend Checks
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📥 Checkout
@@ -175,7 +175,7 @@ jobs:
   # ============================================
   pr-quality:
     name: 📋 PR Quality
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📥 Checkout
@@ -212,7 +212,7 @@ jobs:
     name: 📊 PR Summary
     needs: [detect-changes, frontend-checks, backend-checks, pr-quality]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📊 Generate Summary

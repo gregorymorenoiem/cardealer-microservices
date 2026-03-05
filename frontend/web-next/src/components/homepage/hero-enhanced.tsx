@@ -11,9 +11,10 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, ChevronDown, Car, Shield, Star, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Search, ChevronDown, Shield, Star, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 // =============================================================================
@@ -87,6 +88,16 @@ function HeroSearchBar() {
   const [condition, setCondition] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
+  const router = useRouter();
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (condition) params.set('condition', condition);
+    if (make) params.set('make', make);
+    if (model) params.set('model', model);
+    const qs = params.toString();
+    router.push(`/vehiculos${qs ? `?${qs}` : ''}`);
+  };
 
   // Models depend on selected make
   const modelsByMake: Record<string, string[]> = {
@@ -161,13 +172,13 @@ function HeroSearchBar() {
           </div>
 
           {/* Search Button */}
-          <Link
-            href={`/vehiculos?condition=${condition}&make=${make}&model=${model}`}
-            className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-14 items-center justify-center gap-2 rounded-xl px-10 font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl"
+          <button
+            onClick={handleSearch}
+            className="bg-primary text-primary-foreground shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl px-10 font-semibold whitespace-nowrap shadow-lg transition-all duration-300 hover:shadow-xl"
           >
             <Search className="h-5 w-5" />
             <span>Buscar</span>
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -179,7 +190,7 @@ function HeroSearchBar() {
         {['SUV', 'Sedán', 'Camioneta', 'Deportivo', 'Híbrido', 'Eléctrico'].map(filter => (
           <Link
             key={filter}
-            href={`/vehiculos?bodyType=${filter}`}
+            href={`/vehiculos?body_type=${encodeURIComponent(filter)}`}
             className="hover:border-primary hover:bg-primary/90 hover:text-primary-foreground hover:shadow-primary/20 rounded-full border border-white/30 bg-white/15 px-5 py-2.5 text-sm font-semibold text-white shadow-sm backdrop-blur-md transition-all duration-200 hover:shadow-md"
           >
             {filter}

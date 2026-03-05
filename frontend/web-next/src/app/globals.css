@@ -267,19 +267,8 @@ small,
   background: var(--color-text-secondary);
 }
 
-/* Link styles */
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Image styles */
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Button reset - Using @layer to ensure Tailwind utilities have higher specificity */
+/* Button reset + Link/Image resets inside @layer base so that
+   Tailwind @layer utilities always wins (fixes text-gray-900 on <a> tags) */
 @layer base {
   /* Fix Tailwind v4 border color - by default 'border' doesn't include color */
   *,
@@ -300,6 +289,18 @@ img {
   textarea,
   select {
     font: inherit;
+  }
+
+  /* Link styles - inside @layer base so @layer utilities (text-*) can override */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Image styles */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }
 

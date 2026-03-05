@@ -94,6 +94,12 @@ namespace UserService.Domain.Entities
 
         /// <summary>Timestamp when KYC was approved and IsVerified was set to true.</summary>
         public DateTime? VerifiedAt { get; set; }
+
+        /// <summary>User's preferred locale (e.g., "es-DO", "en-US"). Affects UI language.</summary>
+        public string? PreferredLocale { get; set; } = "es-DO";
+
+        /// <summary>User's preferred currency (e.g., "DOP", "USD").</summary>
+        public string? PreferredCurrency { get; set; } = "DOP";
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

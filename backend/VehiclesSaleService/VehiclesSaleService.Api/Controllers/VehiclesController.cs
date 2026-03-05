@@ -22,6 +22,8 @@ public class VehiclesController : ControllerBase
     private readonly ILogger<VehiclesController> _logger;
     private readonly ApplicationDbContext _context;
     private readonly IConfigurationServiceClient _configClient;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly VehiclesSaleService.Application.Interfaces.IDealerVerificationClient _dealerVerificationClient;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
@@ -29,7 +31,9 @@ public class VehiclesController : ControllerBase
         IEventPublisher eventPublisher,
         ILogger<VehiclesController> logger,
         ApplicationDbContext context,
-        IConfigurationServiceClient configClient)
+        IConfigurationServiceClient configClient,
+        IHttpClientFactory httpClientFactory,
+        VehiclesSaleService.Application.Interfaces.IDealerVerificationClient dealerVerificationClient)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
@@ -37,6 +41,8 @@ public class VehiclesController : ControllerBase
         _logger = logger;
         _context = context;
         _configClient = configClient;
+        _httpClientFactory = httpClientFactory;
+        _dealerVerificationClient = dealerVerificationClient;
     }
 
     /// <summary>
@@ -90,6 +96,10 @@ public class VehiclesController : ControllerBase
             ZipCode = request.ZipCode,
             IsCertified = request.IsCertified,
             HasCleanTitle = request.HasCleanTitle,
+            MinSeats = request.MinSeats,
+            Cylinders = request.Cylinders,
+            InteriorColor = request.InteriorColor,
+            Features = request.Features?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
             Skip = Math.Max(0, (request.Page - 1)) * request.PageSize,  // Handle page=0 as page=1
             Take = request.PageSize,
             SortBy = request.SortBy ?? "CreatedAt",
@@ -223,9 +233,11 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Get vehicles by seller (user)
+    /// Get vehicles by seller (user).
+    /// AllowAnonymous: called pod-to-pod by UserService (no Bearer token).
     /// </summary>
     [HttpGet("seller/{sellerId:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<SellerVehiclesResponse>> GetBySeller(
         Guid sellerId,
         [FromQuery] int page = 1,
@@ -288,6 +300,7 @@ public class VehiclesController : ControllerBase
     /// Get seller vehicle statistics
     /// </summary>
     [HttpGet("seller/{sellerId:guid}/stats")]
+    [AllowAnonymous]
     public async Task<ActionResult<SellerVehicleStats>> GetSellerStats(Guid sellerId)
     {
         var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
@@ -403,6 +416,28 @@ public class VehiclesController : ControllerBase
                 return BadRequest(new { message = "Category not found" });
         }
 
+        // Resolve sellerId: always prefer the authenticated user's ID from JWT (security: prevent
+        // the frontend from impersonating another seller). Fall back to request body only when the
+        // endpoint is called without a JWT (e.g. seeding / tests).
+        var resolvedSellerId = Guid.Empty;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var claimsUserId))
+        {
+            resolvedSellerId = claimsUserId;
+        }
+        else if (request.SellerId.HasValue && request.SellerId.Value != Guid.Empty)
+        {
+            // Fallback: unauthenticated callers (seeding/admin import) may supply sellerId explicitly
+            resolvedSellerId = request.SellerId.Value;
+            _logger.LogWarning("Create vehicle called without valid JWT; using request.SellerId {SellerId}", resolvedSellerId);
+        }
+
+        if (resolvedSellerId == Guid.Empty)
+        {
+            _logger.LogWarning("Create vehicle: could not resolve SellerId from JWT or request — vehicle will have empty SellerId");
+        }
+
         // Build title from make/model/year if not provided
         var title = string.IsNullOrWhiteSpace(request.Title)
             ? $"{request.Year} {request.Make} {request.Model}{(string.IsNullOrWhiteSpace(request.Trim) ? "" : " " + request.Trim)}"
@@ -458,7 +493,7 @@ public class VehiclesController : ControllerBase
             State = state,
             ZipCode = request.ZipCode,
             Country = request.Country ?? "DO",
-            SellerId = request.SellerId ?? Guid.Empty,
+            SellerId = resolvedSellerId,
             SellerName = request.SellerName ?? string.Empty,
             SellerPhone = request.SellerPhone,
             SellerEmail = request.SellerEmail,
@@ -569,12 +604,15 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Track price change for alert notifications
+        var oldPrice = vehicle.Price;
+
         // Update only provided fields
         if (!string.IsNullOrEmpty(request.Title)) vehicle.Title = request.Title;
         if (request.Description != null) vehicle.Description = request.Description;
         if (request.Price.HasValue) vehicle.Price = request.Price.Value;
         if (!string.IsNullOrEmpty(request.Currency)) vehicle.Currency = request.Currency;
-        if (request.Status.HasValue) vehicle.Status = request.Status.Value;
+        // Status cannot be changed via Update — use /publish, /approve, /reject, /unpublish, /sold
         if (request.VehicleType.HasValue) vehicle.VehicleType = request.VehicleType.Value;
         if (request.BodyStyle.HasValue) vehicle.BodyStyle = request.BodyStyle.Value;
         if (request.FuelType.HasValue) vehicle.FuelType = request.FuelType.Value;
@@ -597,6 +635,39 @@ public class VehiclesController : ControllerBase
         await _vehicleRepository.UpdateAsync(vehicle);
 
         _logger.LogInformation("Vehicle updated: {VehicleId}", id);
+
+        // Notify AlertService if price changed
+        if (request.Price.HasValue && oldPrice != vehicle.Price)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var client = _httpClientFactory.CreateClient("AlertService");
+                    var slug = GenerateSlug(vehicle);
+                    var notification = new
+                    {
+                        vehicleId = vehicle.Id,
+                        vehicleTitle = vehicle.Title,
+                        vehicleSlug = slug,
+                        oldPrice,
+                        newPrice = vehicle.Price,
+                        currency = vehicle.Currency ?? "DOP",
+                        updatedBy = Guid.Empty
+                    };
+                    var response = await client.PostAsJsonAsync("/api/pricealerts/check-price", notification);
+                    _logger.LogInformation(
+                        "Price change notification sent for vehicle {VehicleId}: {OldPrice} → {NewPrice}, AlertService responded {StatusCode}",
+                        id, oldPrice, vehicle.Price, response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to notify AlertService about price change for vehicle {VehicleId}",
+                        id);
+                }
+            });
+        }
 
         return Ok(vehicle);
     }
@@ -645,11 +716,30 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
-        // Validate status - only Draft or Inactive can be published
-        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived)
+        // --- Dealer KYC gate ---
+        // Dealers must complete KYC verification before publishing any listing.
+        if (vehicle.SellerType == SellerType.Dealer)
+        {
+            var isVerified = await _dealerVerificationClient.IsDealerVerifiedAsync(vehicle.SellerId);
+            if (!isVerified)
+            {
+                _logger.LogWarning(
+                    "Dealer {SellerId} attempted to publish vehicle {VehicleId} without KYC verification",
+                    vehicle.SellerId, id);
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "Debes completar la verificación KYC antes de publicar vehículos.",
+                    requiresKyc = true,
+                    redirectUrl = "/cuenta/verificacion"
+                });
+            }
+        }
+
+        // Validate status - only Draft, Archived, or Rejected can be submitted for review
+        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived && vehicle.Status != VehicleStatus.Rejected)
         {
             return BadRequest(new { 
-                message = $"Vehicle cannot be published from status '{vehicle.Status}'. Only Draft or Archived vehicles can be published.",
+                message = $"Vehicle cannot be submitted from status '{vehicle.Status}'. Only Draft, Archived, or Rejected vehicles can be submitted for review.",
                 currentStatus = vehicle.Status.ToString()
             });
         }
@@ -697,17 +787,21 @@ public class VehiclesController : ControllerBase
             });
         }
 
-        // Update status and timestamps
-        vehicle.Status = VehicleStatus.Active;
-        vehicle.PublishedAt = DateTime.UtcNow;
+        // Update status → PendingReview (requires staff approval before visible)
+        vehicle.Status = VehicleStatus.PendingReview;
+        vehicle.SubmittedForReviewAt = DateTime.UtcNow;
         vehicle.UpdatedAt = DateTime.UtcNow;
+        // Clear any previous rejection data if re-submitting
+        vehicle.RejectedAt = null;
+        vehicle.RejectedBy = null;
+        vehicle.RejectionReason = null;
 
-        // Set expiration based on dynamic config
+        // Set expiration based on dynamic config (will apply once approved)
         var expiresAt = request?.ExpiresAt ?? DateTime.UtcNow.AddDays(listingExpirationDays);
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Vehicle published: {VehicleId} - {Title}, expires: {ExpiresAt}", id, vehicle.Title, expiresAt);
+        _logger.LogInformation("Vehicle submitted for review: {VehicleId} - {Title}", id, vehicle.Title);
 
         // Publish event
         try
@@ -721,21 +815,21 @@ public class VehiclesController : ControllerBase
                 Price = vehicle.Price,
                 VIN = vehicle.VIN ?? string.Empty,
                 CreatedBy = vehicle.SellerId,
-                CreatedAt = vehicle.PublishedAt.Value
+                CreatedAt = DateTime.UtcNow
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish VehiclePublishedEvent for {VehicleId}", id);
+            _logger.LogError(ex, "Failed to publish event for {VehicleId}", id);
         }
 
         return Ok(new PublishVehicleResponse
         {
             Id = vehicle.Id,
             Status = vehicle.Status,
-            PublishedAt = vehicle.PublishedAt.Value,
+            PublishedAt = null,
             ExpiresAt = expiresAt,
-            Message = $"Vehicle published successfully. It is now visible to buyers. Expires: {expiresAt:yyyy-MM-dd}"
+            Message = "Tu vehículo ha sido enviado a revisión. Nuestro equipo lo revisará en las próximas 24 horas y recibirás una notificación cuando sea aprobado."
         });
     }
 
@@ -776,6 +870,250 @@ public class VehiclesController : ControllerBase
             Status = vehicle.Status,
             UpdatedAt = vehicle.UpdatedAt,
             Message = "Vehicle unpublished successfully. It is no longer visible to buyers."
+        });
+    }
+
+    // ========================================
+    // MODERATION: APPROVE / REJECT (Staff only)
+    // ========================================
+
+    /// <summary>
+    /// Approve a vehicle listing (PendingReview -> Active).
+    /// Only staff/admin should call this endpoint.
+    /// </summary>
+    [HttpPost("{id:guid}/approve")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveVehicleRequest? request = null)
+    {
+        var vehicle = await _context.Vehicles
+            .Include(v => v.Images)
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        if (vehicle.Status != VehicleStatus.PendingReview)
+        {
+            return BadRequest(new
+            {
+                message = $"Only vehicles in PendingReview can be approved. Current status: '{vehicle.Status}'.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        // Load dynamic config for expiration
+        var listingExpirationDays = await _configClient.GetIntAsync("vehicles.listing_expiration_days", 90);
+
+        vehicle.Status = VehicleStatus.Active;
+        vehicle.PublishedAt = DateTime.UtcNow;
+        vehicle.ApprovedAt = DateTime.UtcNow;
+        vehicle.ApprovedBy = request?.ModeratorId;
+        vehicle.ModerationNotes = request?.Notes;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        var expiresAt = DateTime.UtcNow.AddDays(listingExpirationDays);
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle approved: {VehicleId} by moderator {ModeratorId}", id, request?.ModeratorId);
+
+        return Ok(new
+        {
+            id = vehicle.Id,
+            status = vehicle.Status.ToString(),
+            publishedAt = vehicle.PublishedAt,
+            expiresAt,
+            message = "Vehicle approved and now visible to buyers."
+        });
+    }
+
+    /// <summary>
+    /// Reject a vehicle listing (PendingReview -> Rejected).
+    /// Only staff/admin should call this endpoint.
+    /// </summary>
+    [HttpPost("{id:guid}/reject")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Reject(Guid id, [FromBody] RejectVehicleRequest request)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        if (vehicle.Status != VehicleStatus.PendingReview)
+        {
+            return BadRequest(new
+            {
+                message = $"Only vehicles in PendingReview can be rejected. Current status: '{vehicle.Status}'.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+            return BadRequest(new { message = "A rejection reason is required." });
+
+        vehicle.Status = VehicleStatus.Rejected;
+        vehicle.RejectedAt = DateTime.UtcNow;
+        vehicle.RejectedBy = request.ModeratorId;
+        vehicle.RejectionReason = request.Reason;
+        vehicle.ModerationNotes = request.Notes;
+        vehicle.RejectionCount++;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle rejected: {VehicleId} by moderator {ModeratorId}, reason: {Reason}",
+            id, request.ModeratorId, request.Reason);
+
+        return Ok(new
+        {
+            id = vehicle.Id,
+            status = vehicle.Status.ToString(),
+            rejectedAt = vehicle.RejectedAt,
+            reason = vehicle.RejectionReason,
+            rejectionCount = vehicle.RejectionCount,
+            message = "Vehicle rejected. Seller will be notified."
+        });
+    }
+
+    /// <summary>
+    /// Get vehicles pending review (moderation queue).
+    /// Returns only PendingReview vehicles, ordered by submission date (oldest first).
+    /// AllowAnonymous: called pod-to-pod by AdminService (no Bearer token).
+    /// </summary>
+    [HttpGet("moderation/queue")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetModerationQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var query = _context.Vehicles
+            .Include(v => v.Images)
+            .Where(v => !v.IsDeleted && v.Status == VehicleStatus.PendingReview)
+            .OrderBy(v => v.SubmittedForReviewAt ?? v.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var vehicles = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            vehicles = vehicles.Select(v => new
+            {
+                id = v.Id,
+                title = v.Title,
+                slug = GenerateSlug(v),
+                make = v.Make,
+                model = v.Model,
+                year = v.Year,
+                price = v.Price,
+                currency = v.Currency,
+                condition = v.Condition.ToString(),
+                sellerName = v.SellerName,
+                sellerType = v.SellerType.ToString(),
+                imageUrl = v.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
+                imageCount = v.Images.Count,
+                submittedAt = v.SubmittedForReviewAt,
+                rejectionCount = v.RejectionCount,
+                city = v.City,
+                state = v.State
+            }),
+            totalCount,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        });
+    }
+
+    /// <summary>
+    /// Admin search: returns vehicles of ANY status (not just Active).
+    /// Used by AdminService to populate the "Todos" tab in the admin panel.
+    /// </summary>
+    [HttpGet("admin/search")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AdminSearch(
+        [FromQuery] string? search,
+        [FromQuery] string? status,
+        [FromQuery] string? sellerId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var query = _context.Vehicles
+            .Include(v => v.Images)
+            .Where(v => !v.IsDeleted);
+
+        // Optional status filter
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (Enum.TryParse<VehicleStatus>(status, ignoreCase: true, out var parsedStatus))
+                query = query.Where(v => v.Status == parsedStatus);
+        }
+
+        // Optional seller filter
+        if (!string.IsNullOrWhiteSpace(sellerId) && Guid.TryParse(sellerId, out var sellerGuid))
+            query = query.Where(v => v.SellerId == sellerGuid);
+
+        // Optional text search
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.ToLower();
+            query = query.Where(v =>
+                v.Title.ToLower().Contains(term) ||
+                v.Make.ToLower().Contains(term) ||
+                v.Model.ToLower().Contains(term) ||
+                (v.SellerName != null && v.SellerName.ToLower().Contains(term)));
+        }
+
+        query = query.OrderByDescending(v => v.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var vehicles = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            vehicles = vehicles.Select(v => new
+            {
+                id = v.Id,
+                title = v.Title,
+                slug = GenerateSlug(v),
+                make = v.Make,
+                model = v.Model,
+                year = v.Year,
+                price = v.Price,
+                currency = v.Currency,
+                status = v.Status.ToString(),
+                isFeatured = v.IsFeatured,
+                sellerId = v.SellerId,
+                sellerName = v.SellerName,
+                sellerType = v.SellerType.ToString(),
+                viewCount = v.ViewCount,
+                leadCount = v.InquiryCount,
+                images = v.Images.OrderBy(i => i.SortOrder).Select(i => new
+                {
+                    url = i.Url,
+                    isPrimary = i.IsPrimary
+                }),
+                createdAt = v.CreatedAt,
+                publishedAt = v.PublishedAt,
+                rejectionReason = v.RejectionReason,
+                submittedAt = v.SubmittedForReviewAt,
+                city = v.City,
+                state = v.State
+            }),
+            totalCount,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
         });
     }
 
@@ -1064,6 +1402,17 @@ public record VehicleSearchRequest
     public string? ZipCode { get; init; }
     public bool? IsCertified { get; init; }
     public bool? HasCleanTitle { get; init; }
+
+    // Extended DR-market filters
+    /// <summary>Minimum number of seats (5 = family SUV, 7 = 7-seater)</summary>
+    public int? MinSeats { get; init; }
+    /// <summary>Cylinders (3, 4, 6, 8)</summary>
+    public int? Cylinders { get; init; }
+    /// <summary>Interior color</summary>
+    public string? InteriorColor { get; init; }
+    /// <summary>Comma-separated list of required features (A/C, GPS, Sunroof...)</summary>
+    public string? Features { get; init; }
+
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
     public string? SortBy { get; init; }
@@ -1238,7 +1587,7 @@ public record PublishVehicleResponse
 {
     public Guid Id { get; init; }
     public VehicleStatus Status { get; init; }
-    public DateTime PublishedAt { get; init; }
+    public DateTime? PublishedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public string Message { get; init; } = string.Empty;
 }
@@ -1368,6 +1717,23 @@ public record SellerVehicleStats
     public int PendingListings { get; init; }
     public int TotalViews { get; init; }
     public int TotalFavorites { get; init; }
+}
+
+// ========================================
+// Moderation DTOs
+// ========================================
+
+public record ApproveVehicleRequest
+{
+    public Guid? ModeratorId { get; init; }
+    public string? Notes { get; init; }
+}
+
+public record RejectVehicleRequest
+{
+    public Guid? ModeratorId { get; init; }
+    public string Reason { get; init; } = string.Empty;
+    public string? Notes { get; init; }
 }
 
 #endregion

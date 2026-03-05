@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -5,8 +6,14 @@ EXPOSE 8080
 # Install wget for healthcheck (Alpine uses apk)
 RUN apk add --no-cache wget
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["AppointmentService/AppointmentService.Api/AppointmentService.Api.csproj", "AppointmentService/AppointmentService.Api/"]
 COPY ["AppointmentService/AppointmentService.Application/AppointmentService.Application.csproj", "AppointmentService/AppointmentService.Application/"]
 COPY ["AppointmentService/AppointmentService.Domain/AppointmentService.Domain.csproj", "AppointmentService/AppointmentService.Domain/"]
@@ -19,7 +26,7 @@ WORKDIR "/src/AppointmentService/AppointmentService.Api"
 RUN dotnet build "AppointmentService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "AppointmentService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AppointmentService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

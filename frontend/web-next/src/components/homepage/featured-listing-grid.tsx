@@ -36,12 +36,13 @@ export default function FeaturedListingGrid({
 }: FeaturedListingGridProps) {
   const displayVehicles = maxItems ? vehicles.slice(0, maxItems) : vehicles;
 
-  // Generate vehicle URL
+  // Generate vehicle URL (mirrors backend GenerateSlug: {year}-{make}-{model}-{shortId8})
   const generateVehicleUrl = (vehicle: Vehicle) => {
     const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
       .toLowerCase()
       .replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${vehicle.id}`;
+    const shortId = (vehicle.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${slug}-${shortId}`;
   };
 
   return (
@@ -94,7 +95,7 @@ function FeaturedListingCard({
         );
       case 'featured':
         return (
-          <Badge className="border-0 bg-gradient-to-r from-primary to-teal-600 text-xs text-white">
+          <Badge className="from-primary border-0 bg-gradient-to-r to-teal-600 text-xs text-white">
             Destacado
           </Badge>
         );
@@ -150,7 +151,7 @@ function FeaturedListingCard({
             )}
             {vehicle.condition === 'Certified Pre-Owned' && (
               <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3">
-                <span className="rounded-full bg-primary px-2 py-1 text-xs font-semibold text-white sm:px-3">
+                <span className="bg-primary rounded-full px-2 py-1 text-xs font-semibold text-white sm:px-3">
                   Certificado
                 </span>
               </div>

@@ -229,3 +229,56 @@ public record PendingReviewRequestDto
     public int RemindersSent { get; init; }
     public DateTime? LastReminderSentAt { get; init; }
 }
+
+// ============================================================
+// Admin DTOs
+// ============================================================
+
+/// <summary>
+/// DTO de review para el panel de administración
+/// </summary>
+public record AdminReviewDto
+{
+    public string Id { get; init; } = string.Empty;
+    public string AuthorName { get; init; } = string.Empty;
+    public string? AuthorAvatar { get; init; }
+    public string TargetName { get; init; } = string.Empty;
+    public string TargetType { get; init; } = "seller";
+    public int Rating { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string Comment { get; init; } = string.Empty;
+    public string CreatedAt { get; init; } = string.Empty;
+    public string Status { get; init; } = "pending";
+    public string[] Reports { get; init; } = Array.Empty<string>();
+}
+
+/// <summary>
+/// DTO de review reportada para el panel de administración
+/// </summary>
+public record ReportedAdminReviewDto : AdminReviewDto
+{
+    public int ReportCount { get; init; }
+    public string[] ReportReasons { get; init; } = Array.Empty<string>();
+    public string LastReportedAt { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Lista paginada de reviews para el panel de administración
+/// </summary>
+public record AdminReviewListDto
+{
+    public IEnumerable<AdminReviewDto> Items { get; init; } = Enumerable.Empty<AdminReviewDto>();
+    public int Total { get; init; }
+}
+
+/// <summary>
+/// Estadísticas globales de reviews para el panel de administración
+/// </summary>
+public record AdminReviewStatsDto
+{
+    public int TotalReviews { get; init; }
+    public int PendingReviews { get; init; }
+    public int ApprovedReviews { get; init; }
+    public decimal AverageRating { get; init; }
+    public int ReportedReviews { get; init; }
+}

@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ChatbotService.Domain.Entities;
@@ -17,17 +18,23 @@ public class DealerInventoryStrategy : IChatModeStrategy
 {
     private readonly IVectorSearchService _vectorSearch;
     private readonly IChatbotVehicleRepository _vehicleRepository;
+    private readonly IChatbotConfigurationRepository _configRepository;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DealerInventoryStrategy> _logger;
-    
+
     public ChatMode Mode => ChatMode.DealerInventory;
 
     public DealerInventoryStrategy(
         IVectorSearchService vectorSearch,
         IChatbotVehicleRepository vehicleRepository,
+        IChatbotConfigurationRepository configRepository,
+        IHttpClientFactory httpClientFactory,
         ILogger<DealerInventoryStrategy> logger)
     {
         _vectorSearch = vectorSearch;
         _vehicleRepository = vehicleRepository;
+        _configRepository = configRepository;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -37,12 +44,15 @@ public class DealerInventoryStrategy : IChatModeStrategy
         string userMessage,
         CancellationToken ct = default)
     {
-        var botName = config.BotName ?? "Ana";
+        // Use empty botName when config has no custom name so the API returns '' and the
+        // frontend shows 'Asistente de [dealerName]' as the fallback display name.
+        var botName = string.IsNullOrWhiteSpace(config.BotName) ? "Asistente" : config.BotName;
         var dealerName = config.Name ?? "OKLA";
         var dealerId = session.DealerId ?? config.DealerId ?? Guid.Empty;
 
         // Contar inventario total
         var totalVehicles = 0;
+        List<LiveVehicleDto>? liveVehicles = null;
         try
         {
             var vehicles = await _vehicleRepository.GetByConfigurationIdAsync(config.Id, ct);
@@ -53,11 +63,24 @@ public class DealerInventoryStrategy : IChatModeStrategy
             _logger.LogWarning(ex, "Failed to count inventory for config {ConfigId}", config.Id);
         }
 
+        // When no local inventory for this config (real dealer using default fallback),
+        // fetch live vehicles from VehiclesService scoped to the specific dealer/seller.
+        if (totalVehicles == 0 && dealerId != Guid.Empty)
+        {
+            liveVehicles = await FetchLiveInventoryAsync(dealerId, ct);
+            totalVehicles = liveVehicles?.Count ?? 0;
+        }
+
         // RAG: buscar vehículos relevantes al mensaje del usuario
         var ragContext = "";
         try
         {
-            if (dealerId != Guid.Empty && !string.IsNullOrWhiteSpace(userMessage))
+            if (liveVehicles != null && liveVehicles.Count > 0)
+            {
+                // Use live vehicles from VehiclesService as static context
+                ragContext = BuildLiveInventoryContext(liveVehicles, userMessage);
+            }
+            else if (dealerId != Guid.Empty && !string.IsNullOrWhiteSpace(userMessage))
             {
                 // Extraer filtros del mensaje del usuario
                 var filters = ExtractFiltersFromMessage(userMessage);
@@ -100,11 +123,12 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
 1. SOLO menciona vehículos que aparezcan en los datos proporcionados. NO inventes vehículos.
 2. Si el usuario pide algo que no tienes en inventario, di claramente que no lo tienes y sugiere alternativas.
 3. Cuando el cliente pida comparar, presenta la información en formato estructurado.
-4. Si el usuario muestra interés serio, ofrece agendar una cita para ver el vehículo.
+4. Si el usuario muestra interés serio, ofrece agendar una cita para ver el vehículo. Cuando el usuario indique una fecha preferida, llama DIRECTAMENTE a schedule_appointment sin pedir nombre ni teléfono (el sistema ya tiene los datos del usuario registrado).
 5. NUNCA reveles precios mínimos del dealer, descuentos internos o márgenes.
 6. Si no tienes suficiente información para responder, sugiere contactar directamente al dealer.
 7. Responde en español dominicano, breve y amigable. Máximo 4-5 oraciones.
 8. Usa emojis moderadamente (1-2 por respuesta).
+9. NUNCA pidas nombre ni teléfono al usuario — el sistema los obtiene automáticamente de su cuenta registrada.
 
 ## 🏢 Información del Dealer
 - Nombre: {dealerName}
@@ -159,16 +183,14 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
             new()
             {
                 Name = "schedule_appointment",
-                Description = "Agenda una cita para que el cliente vea un vehículo",
+                Description = "Agenda una cita para que el cliente vea un vehículo. Los datos del cliente (nombre y teléfono) se obtienen automáticamente del sistema.",
                 Parameters = new Dictionary<string, FunctionParameter>
                 {
                     ["vehicle_id"] = new() { Type = "string", Description = "ID del vehículo que quiere ver" },
-                    ["customer_name"] = new() { Type = "string", Description = "Nombre del cliente" },
-                    ["customer_phone"] = new() { Type = "string", Description = "Teléfono del cliente" },
-                    ["preferred_date"] = new() { Type = "string", Description = "Fecha preferida (ej: 'mañana', 'este sábado', '2026-02-20')" },
-                    ["preferred_time"] = new() { Type = "string", Description = "Hora preferida (ej: 'en la mañana', '2:00 PM')" }
+                    ["preferred_date"] = new() { Type = "string", Description = "Fecha preferida (ej: 'este viernes', 'Mié 5 de Mar')" },
+                    ["preferred_time"] = new() { Type = "string", Description = "Hora preferida (ej: 'en la mañana', '2:00 PM', 'Por coordinar')" }
                 },
-                Required = new() { "vehicle_id", "customer_name", "customer_phone" }
+                Required = new() { "vehicle_id", "preferred_date" }
             },
             new()
             {
@@ -194,7 +216,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         {
             "search_inventory" => await ExecuteSearchInventoryAsync(session, functionCall.Arguments, ct),
             "compare_vehicles" => await ExecuteCompareVehiclesAsync(session, functionCall.Arguments, ct),
-            "schedule_appointment" => ExecuteScheduleAppointment(session, functionCall.Arguments),
+            "schedule_appointment" => await ExecuteScheduleAppointmentAsync(session, functionCall.Arguments, ct),
             "get_vehicle_details" => await ExecuteGetVehicleDetailsAsync(session, functionCall.Arguments, ct),
             _ => new FunctionCallResult
             {
@@ -345,27 +367,287 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         };
     }
 
-    private static FunctionCallResult ExecuteScheduleAppointment(
-        ChatSession session, Dictionary<string, object> args)
+    private async Task<FunctionCallResult> ExecuteScheduleAppointmentAsync(
+        ChatSession session, Dictionary<string, object> args, CancellationToken ct)
     {
         var vehicleId = args.GetValueOrDefault("vehicle_id")?.ToString() ?? "N/A";
-        var customerName = args.GetValueOrDefault("customer_name")?.ToString() ?? "N/A";
-        var customerPhone = args.GetValueOrDefault("customer_phone")?.ToString() ?? "N/A";
         var preferredDate = args.GetValueOrDefault("preferred_date")?.ToString() ?? "Por coordinar";
         var preferredTime = args.GetValueOrDefault("preferred_time")?.ToString() ?? "Por coordinar";
 
-        // En una implementación real, esto crearía un lead y notificaría al dealer
-        return new FunctionCallResult
+        // Los datos del cliente se obtienen del perfil registrado en la plataforma
+        var result = new FunctionCallResult
         {
             Success = true,
-            ResultText = $"CITA AGENDADA:\n" +
-                $"- Cliente: {customerName}\n" +
-                $"- Teléfono: {customerPhone}\n" +
+            ResultText = $"SOLICITUD DE CITA REGISTRADA:\n" +
                 $"- Vehículo ID: {vehicleId}\n" +
                 $"- Fecha preferida: {preferredDate}\n" +
                 $"- Hora preferida: {preferredTime}\n" +
-                $"Un asesor del dealer confirmará la cita por teléfono."
+                $"- Datos del cliente: obtenidos automáticamente del perfil registrado.\n" +
+                $"Un asesor del dealer se pondrá en contacto para confirmar la cita."
         };
+
+        // ── Send confirmation emails asynchronously (fire-and-forward; don't fail the main flow) ──
+        await SendAppointmentEmailsAsync(session, vehicleId, preferredDate, preferredTime, ct);
+
+        return result;
+    }
+
+    private async Task SendAppointmentEmailsAsync(
+        ChatSession session,
+        string vehicleId,
+        string preferredDate,
+        string preferredTime,
+        CancellationToken ct)
+    {
+        try
+        {
+            // Fetch dealer config for name + contact email
+            var config = await _configRepository.GetByIdAsync(session.ChatbotConfigurationId, ct);
+            var dealerName = config?.Name ?? "el dealer";
+            var dealerEmail = config?.ContactEmail;
+
+            var buyerName = session.UserName ?? "Cliente";
+            var buyerEmail = session.UserEmail;
+
+            var httpClient = _httpClientFactory.CreateClient("NotificationService");
+
+            // ── 1. Email to buyer ──────────────────────────────────────────
+            if (!string.IsNullOrWhiteSpace(buyerEmail))
+            {
+                var buyerBody = BuildBuyerAppointmentEmail(
+                    buyerName, dealerName, vehicleId, preferredDate, preferredTime);
+
+                var buyerPayload = new
+                {
+                    to = buyerEmail,
+                    subject = $"✅ Tu cita ha sido agendada — {dealerName}",
+                    body = buyerBody,
+                    isHtml = true,
+                    metadata = new Dictionary<string, object>
+                    {
+                        ["source"] = "chatbot",
+                        ["type"] = "appointment_buyer_confirmation"
+                    }
+                };
+
+                var buyerResponse = await httpClient.PostAsJsonAsync(
+                    "/api/internal/notifications/email", buyerPayload, ct);
+
+                if (buyerResponse.IsSuccessStatusCode)
+                    _logger.LogInformation(
+                        "Appointment confirmation email sent to buyer {Email}", buyerEmail);
+                else
+                    _logger.LogWarning(
+                        "Failed to send appointment email to buyer {Email}: {Status}",
+                        buyerEmail, buyerResponse.StatusCode);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "No buyer email available for session {SessionId} — skipping buyer email",
+                    session.Id);
+            }
+
+            // ── 2. Email to dealer ─────────────────────────────────────────
+            if (!string.IsNullOrWhiteSpace(dealerEmail))
+            {
+                var dealerBody = BuildDealerAppointmentEmail(
+                    buyerName, buyerEmail, dealerName, vehicleId, preferredDate, preferredTime);
+
+                var dealerPayload = new
+                {
+                    to = dealerEmail,
+                    subject = $"🚗 Nueva solicitud de cita — {buyerName}",
+                    body = dealerBody,
+                    isHtml = true,
+                    metadata = new Dictionary<string, object>
+                    {
+                        ["source"] = "chatbot",
+                        ["type"] = "appointment_dealer_notification"
+                    }
+                };
+
+                var dealerResponse = await httpClient.PostAsJsonAsync(
+                    "/api/internal/notifications/email", dealerPayload, ct);
+
+                if (dealerResponse.IsSuccessStatusCode)
+                    _logger.LogInformation(
+                        "Appointment notification email sent to dealer {Email}", dealerEmail);
+                else
+                    _logger.LogWarning(
+                        "Failed to send appointment email to dealer {Email}: {Status}",
+                        dealerEmail, dealerResponse.StatusCode);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "No dealer ContactEmail configured for config {ConfigId} — skipping dealer email",
+                    session.ChatbotConfigurationId);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Never fail the appointment confirmation because of an email error
+            _logger.LogError(ex,
+                "Error sending appointment emails for session {SessionId}", session.Id);
+        }
+    }
+
+    private static string BuildBuyerAppointmentEmail(
+        string buyerName,
+        string dealerName,
+        string vehicleId,
+        string preferredDate,
+        string preferredTime)
+    {
+        return $@"
+<!DOCTYPE html>
+<html lang=""es"">
+<head><meta charset=""utf-8""><meta name=""viewport"" content=""width=device-width, initial-scale=1.0""></head>
+<body style=""font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;"">
+  <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#f4f4f4; padding:24px 0;"">
+    <tr><td align=""center"">
+      <table width=""600"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);"">
+        <!-- Header -->
+        <tr>
+          <td style=""background-color:#1a1a2e; padding:32px 40px; text-align:center;"">
+            <h1 style=""color:#ffffff; font-size:24px; margin:0;"">🚗 OKLA Marketplace</h1>
+            <p style=""color:#a0a0b0; font-size:14px; margin:8px 0 0;"">República Dominicana</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style=""padding:40px;"">
+            <h2 style=""color:#1a1a2e; font-size:20px; margin:0 0 16px;"">✅ ¡Tu cita ha sido registrada!</h2>
+            <p style=""color:#444; font-size:16px; line-height:1.6; margin:0 0 24px;"">
+              Hola <strong>{buyerName}</strong>, tu solicitud de cita con <strong>{dealerName}</strong> ha sido registrada correctamente.
+              Un asesor se pondrá en contacto contigo para confirmar los detalles.
+            </p>
+            <!-- Appointment details box -->
+            <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#f8f9ff; border-left:4px solid #4f46e5; border-radius:4px; margin:0 0 24px;"">
+              <tr><td style=""padding:20px 24px;"">
+                <p style=""color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 12px;"">Detalles de la cita</p>
+                <table width=""100%"" cellpadding=""4"" cellspacing=""0"">
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px; width:140px;"">🏢 Dealer</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{dealerName}</td>
+                  </tr>
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px;"">🚘 Vehículo</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{vehicleId}</td>
+                  </tr>
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px;"">📅 Fecha</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{preferredDate}</td>
+                  </tr>
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px;"">⏰ Hora</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{preferredTime}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+            <p style=""color:#6b7280; font-size:14px; line-height:1.6; margin:0;"">
+              Si necesitas modificar o cancelar tu cita, comunícate directamente con el dealer a través de la plataforma OKLA.
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style=""background-color:#f4f4f4; padding:20px 40px; text-align:center; border-top:1px solid #e5e7eb;"">
+            <p style=""color:#9ca3af; font-size:12px; margin:0;"">Este correo fue generado automáticamente por OKLA Marketplace. Por favor no respondas a este mensaje.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>";
+    }
+
+    private static string BuildDealerAppointmentEmail(
+        string buyerName,
+        string? buyerEmail,
+        string dealerName,
+        string vehicleId,
+        string preferredDate,
+        string preferredTime)
+    {
+        var buyerEmailDisplay = string.IsNullOrWhiteSpace(buyerEmail) ? "(no disponible)" : buyerEmail;
+        return $@"
+<!DOCTYPE html>
+<html lang=""es"">
+<head><meta charset=""utf-8""><meta name=""viewport"" content=""width=device-width, initial-scale=1.0""></head>
+<body style=""font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;"">
+  <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#f4f4f4; padding:24px 0;"">
+    <tr><td align=""center"">
+      <table width=""600"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);"">
+        <!-- Header -->
+        <tr>
+          <td style=""background-color:#1a1a2e; padding:32px 40px; text-align:center;"">
+            <h1 style=""color:#ffffff; font-size:24px; margin:0;"">🚗 OKLA Marketplace</h1>
+            <p style=""color:#a0a0b0; font-size:14px; margin:8px 0 0;"">Portal de Dealers</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style=""padding:40px;"">
+            <h2 style=""color:#1a1a2e; font-size:20px; margin:0 0 16px;"">🔔 Nueva solicitud de cita recibida</h2>
+            <p style=""color:#444; font-size:16px; line-height:1.6; margin:0 0 24px;"">
+              <strong>{dealerName}</strong>, un cliente ha solicitado una cita a través del chatbot de OKLA.
+            </p>
+            <!-- Client details -->
+            <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#fffbeb; border-left:4px solid #f59e0b; border-radius:4px; margin:0 0 16px;"">
+              <tr><td style=""padding:20px 24px;"">
+                <p style=""color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 12px;"">Datos del cliente</p>
+                <table width=""100%"" cellpadding=""4"" cellspacing=""0"">
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px; width:140px;"">👤 Nombre</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{buyerName}</td>
+                  </tr>
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px;"">📧 Email</td>
+                    <td style=""color:#1a1a2e; font-size:14px;"">{buyerEmailDisplay}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+            <!-- Appointment details -->
+            <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#f8f9ff; border-left:4px solid #4f46e5; border-radius:4px; margin:0 0 24px;"">
+              <tr><td style=""padding:20px 24px;"">
+                <p style=""color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 12px;"">Detalles de la cita</p>
+                <table width=""100%"" cellpadding=""4"" cellspacing=""0"">
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px; width:140px;"">🚘 Vehículo</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{vehicleId}</td>
+                  </tr>
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px;"">📅 Fecha preferida</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{preferredDate}</td>
+                  </tr>
+                  <tr>
+                    <td style=""color:#6b7280; font-size:14px;"">⏰ Hora preferida</td>
+                    <td style=""color:#1a1a2e; font-size:14px; font-weight:bold;"">{preferredTime}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+            <p style=""color:#6b7280; font-size:14px; line-height:1.6; margin:0;"">
+              Por favor contacta al cliente para confirmar o reagendar la cita.
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style=""background-color:#f4f4f4; padding:20px 40px; text-align:center; border-top:1px solid #e5e7eb;"">
+            <p style=""color:#9ca3af; font-size:12px; margin:0;"">OKLA Marketplace — Sistema de notificaciones automáticas</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>";
     }
 
     private async Task<FunctionCallResult> ExecuteGetVehicleDetailsAsync(
@@ -526,4 +808,112 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
 
         return headers + string.Join("\n", rows);
     }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // LIVE INVENTORY — Fetch real dealer vehicles from VehiclesService API
+    // Used when chatbot_vehicles is empty (real dealer using default config)
+    // ══════════════════════════════════════════════════════════════════════
+
+    private async Task<List<LiveVehicleDto>?> FetchLiveInventoryAsync(Guid dealerId, CancellationToken ct)
+    {
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient("VehiclesApi");
+            var url = $"seller/{dealerId}?pageSize=50&status=Active";
+            var response = await httpClient.GetAsync(url, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("VehiclesService returned {StatusCode} for seller {DealerId}", response.StatusCode, dealerId);
+                return null;
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<LiveVehiclesResponse>(
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }, ct);
+
+            var items = data?.Items ?? data?.Data ?? [];
+            _logger.LogInformation("Live inventory: fetched {Count} vehicles for dealer {DealerId}", items.Count, dealerId);
+            return items;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch live inventory for dealer {DealerId}", dealerId);
+            return null;
+        }
+    }
+
+    private static string BuildLiveInventoryContext(List<LiveVehicleDto> vehicles, string userMessage)
+    {
+        if (vehicles.Count == 0) return "";
+
+        var lower = userMessage.ToLowerInvariant();
+
+        // Filter to most relevant vehicles (simple keyword match + limit)
+        var relevant = vehicles
+            .Where(v => v.IsActive != false)
+            .OrderByDescending(v => v.IsFeatured)
+            .Take(25)
+            .ToList();
+
+        // If user asked about something specific, try to surface matches first
+        if (!string.IsNullOrWhiteSpace(userMessage))
+        {
+            var keywordMatches = vehicles
+                .Where(v => v.IsActive != false &&
+                            ($"{v.Make} {v.Model} {v.Year} {v.BodyType} {v.FuelType}".ToLowerInvariant()
+                             .Split(' ')
+                             .Any(word => lower.Contains(word) && word.Length > 2)))
+                .Take(10)
+                .ToList();
+
+            if (keywordMatches.Count > 0)
+            {
+                // Merge keyword matches first, then fill up to 25
+                var ids = keywordMatches.Select(v => v.Id).ToHashSet();
+                var rest = relevant.Where(v => !ids.Contains(v.Id)).Take(25 - keywordMatches.Count);
+                relevant = keywordMatches.Concat(rest).ToList();
+            }
+        }
+
+        var lines = new List<string> { "\n\n## 🚗 INVENTARIO DEL DEALER (Vehículos publicados en OKLA)" };
+        foreach (var v in relevant)
+        {
+            var price = v.Price > 0 ? $"RD${v.Price:N0}" : "Consultar";
+            var mileage = v.Mileage > 0 ? $"{v.Mileage:N0}km" : "N/A";
+            var sale = v.IsOnSale && v.OriginalPrice > 0 ? $" 🏷️OFERTA (antes RD${v.OriginalPrice:N0})" : "";
+            lines.Add($"- {v.Year} {v.Make} {v.Model} {v.Trim ?? ""} | {price}{sale} | {v.FuelType ?? "N/A"} | {v.Transmission ?? "N/A"} | {mileage} | {v.ExteriorColor ?? "N/A"} | ID:{v.Id}");
+        }
+        lines.Add($"\nTotal disponibles en OKLA: {vehicles.Count(v => v.IsActive != false)}");
+        lines.Add("IMPORTANTE: SOLO recomienda vehículos de esta lista. Estos son los vehículos REALES publicados por este dealer en la plataforma OKLA.");
+        return string.Join("\n", lines);
+    }
+}
+
+// DTO for live inventory from VehiclesService API
+internal sealed class LiveVehiclesResponse
+{
+    public List<LiveVehicleDto> Items { get; set; } = [];
+    public List<LiveVehicleDto> Data { get; set; } = [];
+    public int TotalCount { get; set; }
+}
+
+internal sealed class LiveVehicleDto
+{
+    public Guid Id { get; set; }
+    public string Make { get; set; } = "";
+    public string Model { get; set; } = "";
+    public int Year { get; set; }
+    public string? Trim { get; set; }
+    public decimal Price { get; set; }
+    public decimal? OriginalPrice { get; set; }
+    public bool IsOnSale { get; set; }
+    public int Mileage { get; set; }
+    public string? FuelType { get; set; }
+    public string? Transmission { get; set; }
+    public string? BodyType { get; set; }
+    public string? ExteriorColor { get; set; }
+    public string? Description { get; set; }
+    public bool IsFeatured { get; set; }
+    public bool? IsActive { get; set; }
+    public string? Status { get; set; }
 }

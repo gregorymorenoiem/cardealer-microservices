@@ -27,15 +27,18 @@ export interface FavoriteVehicle {
     mileage: number;
     transmission: string;
     fuelType: string;
+    /** bodyType (del campo BodyStyle del backend) */
     bodyType: string;
     location: string;
     imageUrl: string;
     dealRating?: 'great' | 'good' | 'fair' | 'high';
+    /** Siempre en minúsculas: 'active' | 'sold' | 'pending' | 'removed' */
     status: 'active' | 'sold' | 'pending' | 'removed';
     priceChanged?: boolean;
     previousPrice?: number;
   };
   notes?: string;
+  /** notifyOnPriceChange — campo notifyPriceChange del backend mapeado con "On" */
   notifyOnPriceChange: boolean;
 }
 
@@ -159,7 +162,12 @@ export const favoritesService = {
     vehicleId: string,
     request: UpdateFavoriteRequest
   ): Promise<FavoriteVehicle> {
-    const response = await apiClient.put<FavoriteVehicle>(`/api/favorites/${vehicleId}`, request);
+    // Map frontend field name to backend field name
+    const payload: Record<string, unknown> = {};
+    if (request.notes !== undefined) payload.notes = request.notes;
+    if (request.notifyOnPriceChange !== undefined)
+      payload.notifyPriceChange = request.notifyOnPriceChange;
+    const response = await apiClient.put<FavoriteVehicle>(`/api/favorites/${vehicleId}`, payload);
     return response.data;
   },
 

@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft,
   Car,
@@ -29,12 +28,13 @@ import {
 import Link from 'next/link';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
+import { PlanGate } from '@/components/plan/plan-gate';
 
-export default function InventoryAnalyticsPage() {
+function InventoryAnalyticsContent() {
   const { data: dealer } = useCurrentDealer();
   const { data: vehiclesData, isLoading } = useVehiclesByDealer(dealer?.id || '');
 
-  const vehicles = vehiclesData?.items || [];
+  const vehicles = React.useMemo(() => vehiclesData?.items || [], [vehiclesData]);
 
   // Compute inventory stats from real data
   const inventoryStats = React.useMemo(() => {
@@ -49,7 +49,7 @@ export default function InventoryAnalyticsPage() {
         ? Math.round(
             vehicles.reduce((sum, v) => {
               const days = v.createdAt
-                ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+                ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
                 : 0;
               return sum + days;
             }, 0) / total
@@ -70,7 +70,7 @@ export default function InventoryAnalyticsPage() {
         views: v.viewCount || 0,
         leads: 0,
         daysActive: v.createdAt
-          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
           : 0,
       }));
   }, [vehicles]);
@@ -80,7 +80,7 @@ export default function InventoryAnalyticsPage() {
     return vehicles
       .filter(v => {
         const days = v.createdAt
-          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
           : 0;
         return days >= 30 && (v.viewCount || 0) < 30;
       })
@@ -92,7 +92,7 @@ export default function InventoryAnalyticsPage() {
         views: v.viewCount || 0,
         leads: 0,
         daysActive: v.createdAt
-          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000)
+          ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / 86400000) // eslint-disable-line react-hooks/purity
           : 0,
       }));
   }, [vehicles]);
@@ -148,8 +148,8 @@ export default function InventoryAnalyticsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Car className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Car className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Vehículos Activos</p>
@@ -211,7 +211,7 @@ export default function InventoryAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
+              <TrendingUp className="text-primary h-5 w-5" />
               Mejor Rendimiento
             </CardTitle>
             <CardDescription>Vehículos con más vistas y leads</CardDescription>
@@ -223,7 +223,7 @@ export default function InventoryAnalyticsPage() {
                   key={vehicle.id}
                   className="bg-muted/50 flex items-center gap-4 rounded-lg p-3"
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
+                  <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full font-bold">
                     {index + 1}
                   </div>
                   <div className="flex-1">
@@ -336,5 +336,13 @@ export default function InventoryAnalyticsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function InventoryAnalyticsPage() {
+  return (
+    <PlanGate feature="analytics">
+      <InventoryAnalyticsContent />
+    </PlanGate>
   );
 }

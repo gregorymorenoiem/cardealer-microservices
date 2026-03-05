@@ -4,9 +4,15 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["backend/ReviewService/ReviewService.Api/ReviewService.Api.csproj", "backend/ReviewService/ReviewService.Api/"]
 COPY ["backend/ReviewService/ReviewService.Application/ReviewService.Application.csproj", "backend/ReviewService/ReviewService.Application/"]
 COPY ["backend/ReviewService/ReviewService.Domain/ReviewService.Domain.csproj", "backend/ReviewService/ReviewService.Domain/"]

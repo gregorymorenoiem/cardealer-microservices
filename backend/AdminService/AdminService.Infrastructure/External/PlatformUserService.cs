@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using System.Web;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using AdminService.Application.Interfaces;
 using AdminService.Application.UseCases.PlatformUsers;
@@ -21,13 +22,16 @@ public class PlatformUserService : IPlatformUserService
     public PlatformUserService(
         HttpClient httpClient,
         IHttpContextAccessor httpContextAccessor,
-        ILogger<PlatformUserService> logger)
+        ILogger<PlatformUserService> logger,
+        IConfiguration configuration)
     {
         _httpClient = httpClient;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
-        // Use Docker network service discovery
-        _baseUrl = Environment.GetEnvironmentVariable("USERSERVICE_URL") ?? "http://userservice:80";
+        // Use configuration, then env var, then correct K8s service default
+        _baseUrl = configuration["ServiceUrls:UserService"]
+            ?? Environment.GetEnvironmentVariable("USERSERVICE_URL")
+            ?? "http://userservice:8080";
     }
 
     /// <summary>

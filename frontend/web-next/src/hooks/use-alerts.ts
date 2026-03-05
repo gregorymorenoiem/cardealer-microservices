@@ -14,6 +14,7 @@ import {
   alertService,
   type PriceAlert,
   type SavedSearch,
+  type NotifyFrequency,
   type CreatePriceAlertRequest,
   type UpdatePriceAlertRequest,
   type CreateSavedSearchRequest,
@@ -159,7 +160,8 @@ export function useTogglePriceAlert() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => alertService.togglePriceAlert(id),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      alertService.togglePriceAlert(id, isActive),
     onSuccess: updated => {
       queryClient.setQueryData(alertKeys.priceAlertDetail(updated.id), updated);
       queryClient.invalidateQueries({ queryKey: alertKeys.priceAlerts() });
@@ -185,6 +187,12 @@ export function useSavedSearches(
     queryFn: () => alertService.getSavedSearches(params),
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
+    // Don't retry on 401/403 — these indicate auth issues, not transient failures
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) return false;
+      return failureCount < 2;
+    },
   });
 }
 
@@ -264,13 +272,21 @@ export function useDeleteSavedSearch() {
 }
 
 /**
- * Toggle saved search mutation
+ * Toggle saved search notification mutation
  */
 export function useToggleSavedSearch() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => alertService.toggleSavedSearch(id),
+    mutationFn: ({
+      id,
+      notifyNewListings,
+      notifyFrequency,
+    }: {
+      id: string;
+      notifyNewListings: boolean;
+      notifyFrequency: NotifyFrequency;
+    }) => alertService.toggleSavedSearch(id, { notifyNewListings, notifyFrequency }),
     onSuccess: updated => {
       queryClient.setQueryData(alertKeys.savedSearchDetail(updated.id), updated);
       queryClient.invalidateQueries({ queryKey: alertKeys.savedSearches() });
@@ -296,7 +312,8 @@ export function useMarkMatchesAsSeen() {
 }
 
 /**
- * Run saved search mutation
+ * Run saved search — no-op mutation (backend has no /run endpoint).
+ * The caller navigates to /vehiculos with the saved search params directly.
  */
 export function useRunSavedSearch() {
   return useMutation({
@@ -319,6 +336,12 @@ export function useAlertStats() {
     queryFn: () => alertService.getAlertStats(),
     enabled: isAuthenticated,
     staleTime: 1 * 60 * 1000, // 1 minute
+    // Don't retry on 401/403 — these indicate auth/service issues, not transient failures
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) return false;
+      return failureCount < 2;
+    },
   });
 }
 

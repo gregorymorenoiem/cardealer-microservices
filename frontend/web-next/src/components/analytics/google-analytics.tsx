@@ -20,11 +20,7 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 // Declare gtag on window
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'set' | 'js',
-      targetId: string | Date,
-      params?: Record<string, unknown>
-    ) => void;
+    gtag: (...args: unknown[]) => void;
     dataLayer: unknown[];
   }
 }
@@ -46,9 +42,9 @@ export function GoogleAnalytics() {
     <>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="google-analytics" strategy="afterInteractive">
+      <Script id="google-analytics" strategy="lazyOnload">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -261,7 +257,7 @@ export function trackPurchase(transaction: {
  */
 export function trackDealerSubscription(subscription: {
   dealerId: string;
-  plan: 'starter' | 'pro' | 'enterprise';
+  plan: 'libre' | 'visible' | 'pro' | 'elite';
   value: number;
   isEarlyBird?: boolean;
 }) {
@@ -284,6 +280,36 @@ export function trackDealerSubscription(subscription: {
       },
     ],
   });
+}
+
+/**
+ * Track seller subscription
+ */
+export function trackSellerSubscription(subscription: {
+  sellerId: string;
+  plan: 'gratis' | 'premium' | 'pro';
+  value: number;
+}) {
+  trackEvent('seller_subscription', {
+    seller_id: subscription.sellerId,
+    plan: subscription.plan,
+    value: subscription.value,
+  });
+
+  if (subscription.value > 0) {
+    trackEvent('purchase', {
+      transaction_id: `seller_sub_${subscription.sellerId}_${Date.now()}`,
+      currency: 'DOP',
+      value: subscription.value,
+      items: [
+        {
+          item_id: `seller_plan_${subscription.plan}`,
+          item_name: `Seller Plan ${subscription.plan}`,
+          price: subscription.value,
+        },
+      ],
+    });
+  }
 }
 
 /**
@@ -386,6 +412,7 @@ export function useAnalytics() {
     trackListingCreated,
     trackPurchase,
     trackDealerSubscription,
+    trackSellerSubscription,
     trackSignUp,
     trackLogin,
     trackShare,

@@ -14,7 +14,7 @@
 'use client';
 
 import * as React from 'react';
-import { useParams, notFound, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,6 @@ import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { ReviewsSection } from '@/components/reviews';
 import { AppointmentCalendar } from '@/components/appointments';
 import { ChatWidget } from '@/components/chat/ChatWidget';
-import type { VehicleCardData } from '@/types';
 
 // =============================================================================
 // LOADING SKELETON
@@ -136,10 +135,12 @@ function getDealerBadges(dealer: Dealer): string[] {
     badges.push('Verificado');
   }
 
-  if (dealer.plan === 'pro') {
-    badges.push('Pro');
-  } else if (dealer.plan === 'enterprise') {
-    badges.push('Enterprise');
+  if (dealer.plan === 'visible') {
+    badges.push('VISIBLE');
+  } else if (dealer.plan === 'pro') {
+    badges.push('PRO');
+  } else if (dealer.plan === 'elite') {
+    badges.push('ÉLITE');
   }
 
   if (dealer.responseRate && dealer.responseRate >= 90) {
@@ -198,7 +199,7 @@ export default function DealerProfileClient({ params }: PageProps) {
     shortDescription:
       dealerData.description?.slice(0, 100) || `Concesionario en ${dealerData.city}`,
     isVerified: dealerData.verificationStatus === 'verified',
-    isPremium: dealerData.plan === 'pro' || dealerData.plan === 'enterprise',
+    isPremium: dealerData.plan === 'pro' || dealerData.plan === 'elite',
     memberSince: dealerData.createdAt
       ? new Date(dealerData.createdAt).getFullYear().toString()
       : 'N/A',

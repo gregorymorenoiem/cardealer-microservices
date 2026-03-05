@@ -233,6 +233,27 @@ public class VehicleRepository : IVehicleRepository
         if (p.HasCleanTitle.HasValue)
             query = query.Where(v => v.HasCleanTitle == p.HasCleanTitle.Value);
 
+        // Extended DR-market filters
+        if (p.MinSeats.HasValue)
+            query = query.Where(v => v.Seats >= p.MinSeats.Value);
+
+        if (p.Cylinders.HasValue)
+            query = query.Where(v => v.Cylinders == p.Cylinders.Value);
+
+        if (!string.IsNullOrWhiteSpace(p.InteriorColor))
+            query = query.Where(v => v.InteriorColor != null &&
+                v.InteriorColor.ToLower() == p.InteriorColor.ToLower());
+
+        if (p.Features != null && p.Features.Count > 0)
+        {
+            foreach (var feature in p.Features)
+            {
+                var f = feature.ToLower();
+                query = query.Where(v => v.FeaturesJson != null &&
+                    v.FeaturesJson.ToLower().Contains(f));
+            }
+        }
+
         return query;
     }
 }

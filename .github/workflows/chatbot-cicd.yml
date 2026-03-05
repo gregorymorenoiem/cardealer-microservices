@@ -63,7 +63,7 @@ jobs:
   # ============================================
   detect-changes:
     name: 🔍 Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     outputs:
       chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
       llm-server: ${{ steps.filter.outputs.llm-server }}
@@ -110,7 +110,7 @@ jobs:
     name: 🔨 Build ChatbotService
     needs: detect-changes
     if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - uses: actions/checkout@v4
@@ -160,20 +160,77 @@ jobs:
     name: 🐳 Docker ChatbotService
     needs: [detect-changes, build-chatbotservice]
     if: always() && (needs.build-chatbotservice.result == 'success' || needs.detect-changes.outputs.chatbotservice != 'true')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
 
-      - name: 🔐 Login to GHCR
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏗️ Build & Push ChatbotService
         if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
@@ -182,11 +239,18 @@ jobs:
           context: ./backend
           file: backend/ChatbotService/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
+          platforms: linux/amd64
+          network: host
           tags: |
             ${{ env.CHATBOT_IMAGE }}:${{ needs.detect-changes.outputs.version }}
             ${{ env.CHATBOT_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache-chatbotservice
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-chatbotservice,mode=max
+
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-chatbotservice
+          mv /tmp/.buildx-cache-new-chatbotservice /tmp/.buildx-cache-chatbotservice 2>/dev/null || true
 
       - name: 🔒 Trivy Scan ChatbotService
         if: needs.detect-changes.outputs.chatbotservice == 'true'
@@ -201,20 +265,77 @@ jobs:
     name: 🐳 Docker LLM Server
     needs: detect-changes
     if: needs.detect-changes.outputs.llm-server == 'true' || github.event.inputs.force_deploy == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
 
-      - name: 🔐 Login to GHCR
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏗️ Build & Push LLM Server
         uses: docker/build-push-action@v5
@@ -222,11 +343,18 @@ jobs:
           context: ./backend/ChatbotService/LlmServer
           file: backend/ChatbotService/LlmServer/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
+          platforms: linux/amd64
+          network: host
           tags: |
             ${{ env.LLM_IMAGE }}:${{ needs.detect-changes.outputs.version }}
             ${{ env.LLM_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache-llm-server
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-llm-server,mode=max
+
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-llm-server
+          mv /tmp/.buildx-cache-new-llm-server /tmp/.buildx-cache-llm-server 2>/dev/null || true
 
       - name: 🔒 Trivy Scan LLM Server
         uses: aquasecurity/trivy-action@master
@@ -247,22 +375,18 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.event.inputs.skip_eval_gate != 'true' &&
       !contains(needs.*.result, 'failure')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: 📦 Install eval dependencies
+      - name: � Install eval dependencies
         run: |
-          pip install requests tqdm
+          python3 -m venv /tmp/okla-eval-venv
+          /tmp/okla-eval-venv/bin/pip install --quiet requests tqdm
 
       - name: 🔍 Validate model-registry.json
         run: |
-          python -c "
+          python3 -c "
           import json, sys
 
           with open('backend/ChatbotService/LlmServer/model-registry.json') as f:
@@ -312,7 +436,7 @@ jobs:
 
       - name: 🧪 Validate Evaluation Script
         run: |
-          python -c "
+          python3 -c "
           import ast, sys
           try:
               with open('docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py') as f:
@@ -325,7 +449,7 @@ jobs:
 
       - name: 🧪 Validate Smoke Test Script
         run: |
-          python -c "
+          python3 -c "
           import ast, sys
           try:
               with open('backend/ChatbotService/LlmServer/smoke_test.py') as f:
@@ -362,16 +486,15 @@ jobs:
       always() &&
       github.ref == 'refs/heads/main' &&
       !contains(needs.*.result, 'failure')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     environment: production
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔧 Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: 🔐 Setup Kubernetes
         run: doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
@@ -379,8 +502,8 @@ jobs:
       - name: 🏷️ Update image tags in manifest
         run: |
           VERSION="${{ needs.detect-changes.outputs.version }}"
-          sed -i "s|ghcr.io/gregorymorenoiem/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
-          sed -i "s|ghcr.io/gregorymorenoiem/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i '' "s|ghcr.io/gregorymorenoiem/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i '' "s|ghcr.io/gregorymorenoiem/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
 
       - name: 🚀 Apply Kubernetes manifests
         run: |
@@ -401,7 +524,7 @@ jobs:
           echo "🔍 Running smoke tests..."
 
           # Install smoke test dependencies
-          pip install requests > /dev/null 2>&1
+          python3 -m venv /tmp/okla-smoke-venv && /tmp/okla-smoke-venv/bin/pip install --quiet requests > /dev/null 2>&1
 
           # Check if LLM Server is running (may be scaled to 0 for GPU cost savings)
           LLM_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
@@ -426,7 +549,7 @@ jobs:
 
           # Run smoke test in quick mode (health checks only for CI speed)
           # shellcheck disable=SC2086
-          python backend/ChatbotService/LlmServer/smoke_test.py \
+          /tmp/okla-smoke-venv/bin/python backend/ChatbotService/LlmServer/smoke_test.py \
             --llm-url http://localhost:8000 \
             --chatbot-url http://localhost:8080 \
             --quick \
@@ -473,7 +596,7 @@ jobs:
         deploy,
       ]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📊 Generate summary

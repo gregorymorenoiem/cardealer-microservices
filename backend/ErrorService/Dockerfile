@@ -1,6 +1,13 @@
+# syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Speed up dotnet restore and prevent network hangs
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 
 # Copy csproj files and restore
 COPY ["ErrorService/ErrorService.Api/ErrorService.Api.csproj", "ErrorService/ErrorService.Api/"]
@@ -22,7 +29,7 @@ WORKDIR "/src/ErrorService/ErrorService.Api"
 
 # Publish stage (dotnet publish implicitly builds)
 FROM build AS publish
-RUN dotnet publish "ErrorService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ErrorService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

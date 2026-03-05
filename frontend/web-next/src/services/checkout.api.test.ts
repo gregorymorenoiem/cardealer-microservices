@@ -401,8 +401,10 @@ describe('Checkout Service', () => {
     it('should have all required product types', () => {
       expect(getStaticProduct('boost-basic')).not.toBeNull();
       expect(getStaticProduct('boost-premium')).not.toBeNull();
-      expect(getStaticProduct('dealer-starter')).not.toBeNull();
+      expect(getStaticProduct('dealer-libre')).not.toBeNull();
+      expect(getStaticProduct('dealer-visible')).not.toBeNull();
       expect(getStaticProduct('dealer-pro')).not.toBeNull();
+      expect(getStaticProduct('dealer-elite')).not.toBeNull();
     });
   });
 });

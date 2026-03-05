@@ -101,21 +101,26 @@ public class UserSessionRepository : IUserSessionRepository
     /// <inheritdoc />
     public async Task<UserSession?> GetActiveSessionByDeviceAsync(
         string userId,
-        string deviceInfo,
-        string browser,
-        string ipAddress,
+        string deviceFingerprint,
         CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
-        return await _context.UserSessions
-            .AsNoTracking()
-            .Where(s => s.UserId == userId 
-                && s.DeviceInfo == deviceInfo 
-                && s.Browser == browser 
-                && s.IpAddress == ipAddress 
-                && !s.IsRevoked 
-                && (!s.ExpiresAt.HasValue || s.ExpiresAt > now))
-            .OrderByDescending(s => s.LastActiveAt)
-            .FirstOrDefaultAsync(cancellationToken);
+
+        // Primary lookup: by fingerprint (fast index scan on IX_UserSessions_UserId_DeviceFingerprint)
+        if (!string.IsNullOrEmpty(deviceFingerprint))
+        {
+            var byFingerprint = await _context.UserSessions
+                .FirstOrDefaultAsync(s =>
+                    s.UserId == userId
+                    && s.DeviceFingerprint == deviceFingerprint
+                    && !s.IsRevoked
+                    && (!s.ExpiresAt.HasValue || s.ExpiresAt > now),
+                    cancellationToken);
+
+            if (byFingerprint != null)
+                return byFingerprint;
+        }
+
+        return null;
     }
 }

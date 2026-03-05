@@ -1090,6 +1090,73 @@ namespace UserService.Infrastructure.Migrations
                     b.ToTable("PlatformEmployeeInvitations");
                 });
 
+            modelBuilder.Entity("UserService.Domain.Entities.Privacy.CommunicationPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowAnalytics")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowProfiling")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowRetargeting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowThirdPartySharing")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EmailActivityNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EmailListingUpdates")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EmailNewsletter")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EmailPriceAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EmailPromotions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PushNewMessages")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PushPriceChanges")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PushRecommendations")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SmsPriceAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SmsPromotions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SmsVerificationCodes")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommunicationPreferences");
+                });
+
             modelBuilder.Entity("UserService.Domain.Entities.Privacy.PrivacyRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1681,6 +1748,12 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<string>("PreferredContactMethod")
                         .HasColumnType("text");
 
+                    b.Property<string>("PreferredCurrency")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreferredLocale")
+                        .HasColumnType("text");
+
                     b.Property<string>("ProfilePicture")
                         .HasColumnType("text");
 
@@ -1984,6 +2057,17 @@ namespace UserService.Infrastructure.Migrations
                         .HasForeignKey("InvitedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("UserService.Domain.Entities.Privacy.CommunicationPreference", b =>
+                {
+                    b.HasOne("UserService.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("UserService.Domain.Entities.Privacy.PrivacyRequest", b =>

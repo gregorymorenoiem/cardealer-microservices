@@ -97,6 +97,7 @@ export interface UserFilters {
 export interface AdminVehicle {
   id: string;
   title: string;
+  slug?: string;
   make: string;
   model: string;
   year: number;
@@ -134,7 +135,7 @@ export interface AdminDealer {
   phone: string;
   status: 'active' | 'pending' | 'suspended' | 'rejected';
   verified: boolean;
-  plan: 'starter' | 'pro' | 'enterprise' | 'none';
+  plan: 'libre' | 'visible' | 'pro' | 'elite' | 'none';
   vehiclesCount: number;
   salesCount: number;
   rating: number;
@@ -273,11 +274,13 @@ export async function getVehicleById(id: string): Promise<AdminVehicle> {
 }
 
 export async function approveVehicle(id: string): Promise<void> {
-  await apiClient.post(`/api/admin/vehicles/${id}/approve`);
+  // Call VehiclesSaleService directly — PendingReview → Active
+  await apiClient.post(`/api/vehicles/${id}/approve`);
 }
 
 export async function rejectVehicle(id: string, reason: string): Promise<void> {
-  await apiClient.post(`/api/admin/vehicles/${id}/reject`, { reason });
+  // Call VehiclesSaleService directly — PendingReview → Rejected
+  await apiClient.post(`/api/vehicles/${id}/reject`, { reason });
 }
 
 export async function toggleFeatured(id: string, featured: boolean): Promise<void> {
@@ -340,7 +343,7 @@ export async function getDealerStats(): Promise<{
   pending: number;
   suspended: number;
   totalMrr: number;
-  byPlan: { starter: number; pro: number; enterprise: number };
+  byPlan: { libre: number; visible: number; pro: number; elite: number };
 }> {
   const response = await apiClient.get('/api/admin/dealers/stats');
   return response.data;

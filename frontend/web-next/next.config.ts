@@ -9,12 +9,37 @@ const nextConfig: NextConfig = {
   // Output standalone for Docker deployment
   output: 'standalone',
 
+  // Security: remove X-Powered-By header
+  poweredByHeader: false,
+
+  // Development: enable strict mode for catching bugs
+  reactStrictMode: true,
+
   // Image optimization configuration
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      // Test/seed data placeholder services
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
         port: '',
         pathname: '/**',
       },
@@ -69,6 +94,12 @@ const nextConfig: NextConfig = {
       'date-fns',
       'sonner',
       'recharts',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      'zod',
+      'react-hook-form',
     ],
     // KYC documents (cedula front/back/selfie) can be up to ~1MB each after base64 encoding.
     // Default Next.js limit is 1MB; raise to 10MB to handle higher-res camera captures.
@@ -77,9 +108,9 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // Compiler options
+  // Compiler options — keep console.error and console.warn in production for debugging
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
 
   // Headers for security and caching
@@ -116,11 +147,15 @@ const nextConfig: NextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
           },
-          // Prevent clickjacking
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
+          // Prevent clickjacking (disabled in dev so VS Code Simple Browser iframe works)
+          ...(isDev
+            ? []
+            : [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'SAMEORIGIN',
+                },
+              ]),
           // Prevent MIME type sniffing
           {
             key: 'X-Content-Type-Options',
@@ -198,6 +233,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Cache optimized images (Next.js image optimizer output)
+      {
+        source: '/_next/image/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
     ];
   },
 
@@ -244,6 +289,21 @@ const nextConfig: NextConfig = {
       process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
 
     return {
+      // beforeFiles rewrites run BEFORE filesystem routes (API route handlers).
+      // We use this to rewrite dynamic advertising paths to static BFF routes
+      // that can be handled by our API route handlers (which have fallback data).
+      beforeFiles: [
+        // /api/advertising/rotation/FeaturedSpot → /api/advertising/rotation?section=FeaturedSpot
+        {
+          source: '/api/advertising/rotation/:section',
+          destination: '/api/advertising/rotation?section=:section',
+        },
+        // /api/advertising/rotation/config/:section → /api/advertising/rotation?section=:section&subpath=config
+        {
+          source: '/api/advertising/rotation/config/:section',
+          destination: '/api/advertising/rotation?section=:section&subpath=config',
+        },
+      ],
       afterFiles: [
         {
           source: '/api/:path*',

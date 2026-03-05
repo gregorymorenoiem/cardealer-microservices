@@ -108,14 +108,18 @@ export interface ComplianceStats {
 export interface Banner {
   id: string;
   title: string;
+  subtitle?: string | null;
   image: string;
+  mobileImage?: string | null;
   link: string;
+  ctaText?: string | null;
   placement: string;
   status: 'active' | 'scheduled' | 'inactive';
   startDate: string;
   endDate: string;
   views: number;
   clicks: number;
+  displayOrder: number;
 }
 
 export interface StaticPage {
