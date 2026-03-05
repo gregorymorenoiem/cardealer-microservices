@@ -53,44 +53,68 @@ class VehicleModel extends Vehicle {
       year: (json['year'] as num?)?.toInt() ?? 0,
       price: (json['price'] as num?)?.toDouble() ?? 0,
       currency: json['currency']?.toString() ?? 'DOP',
-      mileage: (json['mileage'] as num?)?.toInt() ?? (json['kilometraje'] as num?)?.toInt(),
-      transmission: json['transmission']?.toString() ?? json['transmision']?.toString(),
+      mileage:
+          (json['mileage'] as num?)?.toInt() ??
+          (json['kilometraje'] as num?)?.toInt(),
+      transmission:
+          json['transmission']?.toString() ?? json['transmision']?.toString(),
       fuelType: json['fuelType']?.toString() ?? json['combustible']?.toString(),
       bodyType: json['bodyType']?.toString() ?? json['carroceria']?.toString(),
-      condition: json['condition']?.toString() ?? json['condicion']?.toString() ?? 'Usado',
+      condition:
+          json['condition']?.toString() ??
+          json['condicion']?.toString() ??
+          'Usado',
       color: json['color']?.toString(),
-      description: json['description']?.toString() ?? json['descripcion']?.toString(),
+      description:
+          json['description']?.toString() ?? json['descripcion']?.toString(),
       location: json['location']?.toString() ?? json['ubicacion']?.toString(),
       province: json['province']?.toString() ?? json['provincia']?.toString(),
       features: _parseStringList(json['features'] ?? json['caracteristicas']),
-      imageUrls: _parseStringList(json['imageUrls'] ?? json['images'] ?? json['fotos']),
-      mainImageUrl: json['mainImageUrl']?.toString() ??
+      imageUrls: _parseStringList(
+        json['imageUrls'] ?? json['images'] ?? json['fotos'],
+      ),
+      mainImageUrl:
+          json['mainImageUrl']?.toString() ??
           json['mainImage']?.toString() ??
           json['thumbnailUrl']?.toString(),
       engineSize: json['engineSize']?.toString() ?? json['motor']?.toString(),
-      doors: (json['doors'] as num?)?.toInt() ?? (json['puertas'] as num?)?.toInt(),
-      seats: (json['seats'] as num?)?.toInt() ?? (json['asientos'] as num?)?.toInt(),
+      doors:
+          (json['doors'] as num?)?.toInt() ??
+          (json['puertas'] as num?)?.toInt(),
+      seats:
+          (json['seats'] as num?)?.toInt() ??
+          (json['asientos'] as num?)?.toInt(),
       driveType: json['driveType']?.toString() ?? json['traccion']?.toString(),
       vin: json['vin']?.toString(),
       plateNumber: json['plateNumber']?.toString() ?? json['placa']?.toString(),
-      status: json['status']?.toString() ?? json['estado']?.toString() ?? 'active',
+      status:
+          json['status']?.toString() ?? json['estado']?.toString() ?? 'active',
       isFeatured: json['isFeatured'] == true || json['destacado'] == true,
       isPremium: json['isPremium'] == true || json['premium'] == true,
-      viewCount: (json['viewCount'] as num?)?.toInt() ?? (json['vistas'] as num?)?.toInt() ?? 0,
+      viewCount:
+          (json['viewCount'] as num?)?.toInt() ??
+          (json['vistas'] as num?)?.toInt() ??
+          0,
       favoriteCount:
-          (json['favoriteCount'] as num?)?.toInt() ?? (json['favoritos'] as num?)?.toInt() ?? 0,
+          (json['favoriteCount'] as num?)?.toInt() ??
+          (json['favoritos'] as num?)?.toInt() ??
+          0,
       contactCount:
-          (json['contactCount'] as num?)?.toInt() ?? (json['contactos'] as num?)?.toInt() ?? 0,
+          (json['contactCount'] as num?)?.toInt() ??
+          (json['contactos'] as num?)?.toInt() ??
+          0,
       sellerId: json['sellerId']?.toString() ?? json['userId']?.toString(),
       dealerId: json['dealerId']?.toString(),
       sellerName: json['sellerName']?.toString(),
       sellerAvatarUrl: json['sellerAvatarUrl']?.toString(),
       oklaScore: (json['oklaScore'] as num?)?.toDouble(),
       dealRating: json['dealRating']?.toString(),
-      createdAt:
-          json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
-      updatedAt:
-          json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())
+          : null,
     );
   }
 

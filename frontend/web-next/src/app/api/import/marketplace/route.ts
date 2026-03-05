@@ -41,7 +41,7 @@ interface ExtractedVehicle {
   rawSource: string;
 }
 
-const EXTRACTION_PROMPT = `Eres un experto en vehículos del mercado dominicano. Tu tarea es extraer datos estructurados de un anuncio de vehículo copiado de Facebook Marketplace u otra plataforma.
+const _EXTRACTION_PROMPT = `Eres un experto en vehículos del mercado dominicano. Tu tarea es extraer datos estructurados de un anuncio de vehículo copiado de Facebook Marketplace u otra plataforma.
 
 INSTRUCCIONES:
 1. Extrae todos los campos posibles del texto proporcionado

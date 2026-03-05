@@ -44,11 +44,16 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Crear cuenta', style: Theme.of(context).textTheme.headlineMedium),
+                Text(
+                  'Crear cuenta',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Regístrate gratis y encuentra tu vehículo ideal',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: OklaColors.neutral500),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: OklaColors.neutral500,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 Row(
@@ -60,7 +65,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           labelText: 'Nombre',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (v) => v?.isEmpty == true ? 'Requerido' : null,
+                        validator: (v) =>
+                            v?.isEmpty == true ? 'Requerido' : null,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -71,7 +77,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           labelText: 'Apellido',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (v) => v?.isEmpty == true ? 'Requerido' : null,
+                        validator: (v) =>
+                            v?.isEmpty == true ? 'Requerido' : null,
                       ),
                     ),
                   ],
@@ -86,7 +93,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (v) {
                     if (v?.isEmpty == true) return 'Requerido';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v!)) return 'Email inválido';
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(v!))
+                      return 'Email inválido';
                     return null;
                   },
                 ),
@@ -98,16 +108,24 @@ class _RegisterPageState extends State<RegisterPage> {
                     labelText: 'Contraseña',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
-                    helperText: 'Mínimo 8 caracteres, 1 mayúscula, 1 número, 1 especial',
+                    helperText:
+                        'Mínimo 8 caracteres, 1 mayúscula, 1 número, 1 especial',
                   ),
                   validator: (v) {
                     if (v?.isEmpty == true) return 'Requerido';
                     if (v!.length < 8) return 'Mínimo 8 caracteres';
-                    if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Incluye una mayúscula';
-                    if (!RegExp(r'[0-9]').hasMatch(v)) return 'Incluye un número';
+                    if (!RegExp(r'[A-Z]').hasMatch(v))
+                      return 'Incluye una mayúscula';
+                    if (!RegExp(r'[0-9]').hasMatch(v))
+                      return 'Incluye un número';
                     return null;
                   },
                 ),
@@ -122,12 +140,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: const [
                         TextSpan(
                           text: 'Términos de Servicio',
-                          style: TextStyle(color: OklaColors.primary500, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: OklaColors.primary500,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         TextSpan(text: ' y '),
                         TextSpan(
                           text: 'Política de Privacidad',
-                          style: TextStyle(color: OklaColors.primary500, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: OklaColors.primary500,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -139,11 +163,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 SizedBox(
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _acceptTerms ? () {
-                      if (_formKey.currentState!.validate()) {
-                        // Submit registration
-                      }
-                    } : null,
+                    onPressed: _acceptTerms
+                        ? () {
+                            if (_formKey.currentState!.validate()) {
+                              // Submit registration
+                            }
+                          }
+                        : null,
                     child: const Text('Crear cuenta'),
                   ),
                 ),
@@ -151,7 +177,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('¿Ya tienes cuenta? ', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      '¿Ya tienes cuenta? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                     TextButton(
                       onPressed: () => context.go('/login'),
                       child: const Text('Inicia sesión'),

@@ -4,50 +4,35 @@ abstract class Failure {
   final int? statusCode;
   final Map<String, dynamic>? errors;
 
-  const Failure({
-    required this.message,
-    this.statusCode,
-    this.errors,
-  });
+  const Failure({required this.message, this.statusCode, this.errors});
 }
 
 /// Server-side failures (API errors)
 class ServerFailure extends Failure {
-  const ServerFailure({
-    required super.message,
-    super.statusCode,
-    super.errors,
-  });
+  const ServerFailure({required super.message, super.statusCode, super.errors});
 }
 
 /// Network connectivity failures
 class NetworkFailure extends Failure {
   const NetworkFailure({
-    super.message = 'Sin conexión a internet. Verifica tu conexión e intenta de nuevo.',
+    super.message =
+        'Sin conexión a internet. Verifica tu conexión e intenta de nuevo.',
   });
 }
 
 /// Cache/local storage failures
 class CacheFailure extends Failure {
-  const CacheFailure({
-    super.message = 'Error al acceder a datos locales.',
-  });
+  const CacheFailure({super.message = 'Error al acceder a datos locales.'});
 }
 
 /// Authentication failures
 class AuthFailure extends Failure {
-  const AuthFailure({
-    required super.message,
-    super.statusCode,
-  });
+  const AuthFailure({required super.message, super.statusCode});
 }
 
 /// Validation failures
 class ValidationFailure extends Failure {
-  const ValidationFailure({
-    required super.message,
-    super.errors,
-  });
+  const ValidationFailure({required super.message, super.errors});
 }
 
 /// Timeout failures
@@ -70,11 +55,7 @@ class ServerException implements Exception {
   final int? statusCode;
   final Map<String, dynamic>? errors;
 
-  const ServerException({
-    required this.message,
-    this.statusCode,
-    this.errors,
-  });
+  const ServerException({required this.message, this.statusCode, this.errors});
 }
 
 class CacheException implements Exception {

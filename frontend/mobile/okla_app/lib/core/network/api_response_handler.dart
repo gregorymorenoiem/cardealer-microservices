@@ -4,7 +4,10 @@ import 'package:okla_app/core/errors/failures.dart';
 /// Handles API responses and converts errors to domain Failures
 class ApiResponseHandler {
   /// Extract data from standard ApiResponse<T> or return raw
-  static T handleResponse<T>(Response response, T Function(dynamic json) fromJson) {
+  static T handleResponse<T>(
+    Response response,
+    T Function(dynamic json) fromJson,
+  ) {
     final data = response.data;
 
     // Handle ApiResponse wrapper: { success: true, data: {...} }
@@ -35,11 +38,15 @@ class ApiResponseHandler {
     if (data is Map<String, dynamic>) {
       // Wrapped: { success: true, data: [...] }
       if (data.containsKey('data') && data['data'] is List) {
-        return (data['data'] as List).map((e) => fromJson(e as Map<String, dynamic>)).toList();
+        return (data['data'] as List)
+            .map((e) => fromJson(e as Map<String, dynamic>))
+            .toList();
       }
       // Wrapped: { items: [...] }
       if (data.containsKey('items') && data['items'] is List) {
-        return (data['items'] as List).map((e) => fromJson(e as Map<String, dynamic>)).toList();
+        return (data['items'] as List)
+            .map((e) => fromJson(e as Map<String, dynamic>))
+            .toList();
       }
     }
 
@@ -59,15 +66,21 @@ class ApiResponseHandler {
     final innerData = data['data'] ?? data;
 
     final items = innerData is Map
-        ? (innerData['items'] as List? ?? []).map((e) => fromJson(e as Map<String, dynamic>)).toList()
+        ? (innerData['items'] as List? ?? [])
+              .map((e) => fromJson(e as Map<String, dynamic>))
+              .toList()
         : <T>[];
 
     return PaginatedResponse<T>(
       items: items,
-      totalCount: innerData is Map ? (innerData['totalCount'] as int? ?? items.length) : items.length,
+      totalCount: innerData is Map
+          ? (innerData['totalCount'] as int? ?? items.length)
+          : items.length,
       page: innerData is Map ? (innerData['page'] as int? ?? 1) : 1,
       pageSize: innerData is Map ? (innerData['pageSize'] as int? ?? 20) : 20,
-      hasMore: innerData is Map ? (innerData['hasMore'] as bool? ?? false) : false,
+      hasMore: innerData is Map
+          ? (innerData['hasMore'] as bool? ?? false)
+          : false,
     );
   }
 
@@ -126,7 +139,10 @@ class ApiResponseHandler {
       return AuthFailure(message: message, statusCode: 401);
     }
     if (response.statusCode == 403) {
-      return AuthFailure(message: 'No tienes permiso para esta acción.', statusCode: 403);
+      return AuthFailure(
+        message: 'No tienes permiso para esta acción.',
+        statusCode: 403,
+      );
     }
     if (response.statusCode == 422) {
       return ValidationFailure(message: message, errors: errors);

@@ -72,19 +72,17 @@ class OklaColors {
   static const Color textTertiaryDark = Color(0xFF94A3B8);
 
   // Material Swatch
-  static const MaterialColor primarySwatch = MaterialColor(
-    0xFF00A870,
-    <int, Color>{
-      50: primary50,
-      100: primary100,
-      200: primary200,
-      300: primary300,
-      400: primary400,
-      500: primary500,
-      600: primary600,
-      700: primary700,
-      800: primary800,
-      900: primary900,
-    },
-  );
+  static const MaterialColor primarySwatch =
+      MaterialColor(0xFF00A870, <int, Color>{
+        50: primary50,
+        100: primary100,
+        200: primary200,
+        300: primary300,
+        400: primary400,
+        500: primary500,
+        600: primary600,
+        700: primary700,
+        800: primary800,
+        900: primary900,
+      });
 }

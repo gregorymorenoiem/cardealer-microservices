@@ -31,6 +31,7 @@ using System.Text;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 const string ServiceName = "NotificationService";
 
@@ -307,7 +308,15 @@ app.UseAuditMiddleware();
 app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // 9. Endpoints
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 app.MapControllers();
 
 Log.Information("NotificationService starting up with ErrorService middleware and RabbitMQ Consumer...");

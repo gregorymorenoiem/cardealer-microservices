@@ -235,10 +235,6 @@ class VehicleFilters {
       province != null ||
       color != null;
 
-  VehicleFilters clearAll() => VehicleFilters(
-        query: query,
-        page: 1,
-        pageSize: pageSize,
-        sortBy: sortBy,
-      );
+  VehicleFilters clearAll() =>
+      VehicleFilters(query: query, page: 1, pageSize: pageSize, sortBy: sortBy);
 }

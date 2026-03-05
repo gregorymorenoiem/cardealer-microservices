@@ -7,6 +7,7 @@
 ---
 
 ## Fase 1: Fundación (Core)
+
 - [x] Crear proyecto Flutter nuevo
 - [x] Configurar estructura Clean Architecture
 - [x] Theme system (colores OKLA, tipografía, dark mode)
@@ -18,6 +19,7 @@
 - [x] Secure storage para tokens
 
 ## Fase 2: Autenticación
+
 - [x] Login (email/password)
 - [x] Login social (Google, Apple)
 - [x] Registro buyer
@@ -30,6 +32,7 @@
 - [x] Token refresh automático
 
 ## Fase 3: Home & Búsqueda
+
 - [x] Homepage con hero, categorías, featured
 - [x] Búsqueda con filtros avanzados
 - [x] Resultados con grid/list toggle
@@ -39,6 +42,7 @@
 - [x] Vehículos similares
 
 ## Fase 4: Interacciones del Buyer
+
 - [x] Favoritos (CRUD + sync)
 - [x] Comparaciones
 - [x] Alertas de precio
@@ -49,6 +53,7 @@
 - [x] Contacto
 
 ## Fase 5: Seller & Publisher
+
 - [x] Wizard publicar vehículo
 - [x] Photo upload (cámara + galería)
 - [x] VIN decoding
@@ -59,6 +64,7 @@
 - [x] Boost/promover
 
 ## Fase 6: Dealer Dashboard
+
 - [x] Dashboard principal
 - [x] Inventario management
 - [x] CRM / Leads
@@ -70,6 +76,7 @@
 - [x] Configuración
 
 ## Fase 7: Pagos & Billing
+
 - [x] Checkout flow
 - [x] Stripe integration
 - [x] Azul integration
@@ -77,6 +84,7 @@
 - [x] Historial de pagos
 
 ## Fase 8: Push Notifications
+
 - [x] Firebase setup
 - [x] Push token registration
 - [x] Foreground notifications
@@ -84,11 +92,13 @@
 - [x] Notification preferences
 
 ## Fase 9: IA Features
+
 - [x] Chatbot
 - [x] Importación IA
 - [x] Sugerencia de precio
 
 ## Fase 10: Pulido & App Store
+
 - [x] Accesibilidad (VoiceOver, Dynamic Type)
 - [x] Modo offline
 - [x] Performance optimization

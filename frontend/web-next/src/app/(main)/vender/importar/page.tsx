@@ -69,13 +69,15 @@ export default function ImportarPage() {
   const [bulkListings, setBulkListings] = useState<Array<{ text: string; source: string }>>([
     { text: '', source: 'facebook' },
   ]);
-  const [bulkResults, setBulkResults] = useState<Array<{
-    index: number;
-    success: boolean;
-    data: ExtractedVehicle | null;
-    error: string | null;
-    source?: string;
-  }>>([]);
+  const [bulkResults, setBulkResults] = useState<
+    Array<{
+      index: number;
+      success: boolean;
+      data: ExtractedVehicle | null;
+      error: string | null;
+      source?: string;
+    }>
+  >([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   const handleExtract = useCallback(
@@ -149,8 +151,20 @@ export default function ImportarPage() {
       const result = await response.json();
       if (result.success) {
         // Enrich results with source from original listings
-        const enrichedResults = (result.results as Array<{ index: number; success: boolean; data: ExtractedVehicle | null; error: string | null }>).map(
-          (r: { index: number; success: boolean; data: ExtractedVehicle | null; error: string | null }) => ({
+        const enrichedResults = (
+          result.results as Array<{
+            index: number;
+            success: boolean;
+            data: ExtractedVehicle | null;
+            error: string | null;
+          }>
+        ).map(
+          (r: {
+            index: number;
+            success: boolean;
+            data: ExtractedVehicle | null;
+            error: string | null;
+          }) => ({
             ...r,
             source: validListings[r.index]?.source || 'other',
           })
@@ -523,11 +537,7 @@ export default function ImportarPage() {
               ))}
             </div>
             <div className="mt-4 flex justify-end border-t pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setBulkResults([])}
-                className="gap-2"
-              >
+              <Button variant="outline" onClick={() => setBulkResults([])} className="gap-2">
                 Limpiar resultados
               </Button>
             </div>

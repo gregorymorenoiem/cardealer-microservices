@@ -7,11 +7,14 @@ class AuthRemoteDataSource {
 
   AuthRemoteDataSource({required ApiClient client}) : _client = client;
 
-  Future<AuthTokens> login({required String email, required String password}) async {
-    final response = await _client.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
+  Future<AuthTokens> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _client.post(
+      '/auth/login',
+      data: {'email': email, 'password': password},
+    );
     return AuthTokens.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -21,12 +24,15 @@ class AuthRemoteDataSource {
     required String firstName,
     required String lastName,
   }) async {
-    final response = await _client.post('/auth/register', data: {
-      'email': email,
-      'password': password,
-      'firstName': firstName,
-      'lastName': lastName,
-    });
+    final response = await _client.post(
+      '/auth/register',
+      data: {
+        'email': email,
+        'password': password,
+        'firstName': firstName,
+        'lastName': lastName,
+      },
+    );
     return AuthTokens.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -45,15 +51,21 @@ class AuthRemoteDataSource {
     await _client.post('/auth/forgot-password', data: {'email': email});
   }
 
-  Future<void> resetPassword({required String token, required String newPassword}) async {
-    await _client.post('/auth/reset-password', data: {
-      'token': token,
-      'password': newPassword,
-    });
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _client.post(
+      '/auth/reset-password',
+      data: {'token': token, 'password': newPassword},
+    );
   }
 
   Future<AuthTokens> verify2FA(String code) async {
-    final response = await _client.post('/auth/2fa/verify', data: {'code': code});
+    final response = await _client.post(
+      '/auth/2fa/verify',
+      data: {'code': code},
+    );
     return AuthTokens.fromJson(response.data as Map<String, dynamic>);
   }
 

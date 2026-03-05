@@ -48,7 +48,9 @@ class OklaTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -60,7 +62,9 @@ class OklaTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: OklaColors.primary500,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           side: const BorderSide(color: OklaColors.primary500),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -82,7 +86,10 @@ class OklaTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: OklaColors.neutral50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: OklaColors.neutral200),
@@ -116,7 +123,10 @@ class OklaTheme {
         unselectedItemColor: OklaColors.neutral400,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 12),
       ),
       tabBarTheme: const TabBarThemeData(
@@ -190,7 +200,9 @@ class OklaTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -198,14 +210,19 @@ class OklaTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: OklaColors.primary400,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           side: const BorderSide(color: OklaColors.primary400),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF1E293B),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFF475569)),
@@ -252,21 +269,93 @@ class OklaTheme {
         : OklaColors.textPrimaryDark;
 
     return TextTheme(
-      displayLarge: TextStyle(fontSize: 48, fontWeight: FontWeight.w700, color: color, height: 1.1),
-      displayMedium: TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: color, height: 1.2),
-      displaySmall: TextStyle(fontSize: 30, fontWeight: FontWeight.w600, color: color, height: 1.2),
-      headlineLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: color, height: 1.3),
-      headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: color, height: 1.3),
-      headlineSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: color, height: 1.4),
-      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: color, height: 1.4),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: color, height: 1.4),
-      titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: color, height: 1.4),
-      bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: color, height: 1.5),
-      bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: color, height: 1.5),
-      bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: color, height: 1.5),
-      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color),
-      labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color),
-      labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color),
+      displayLarge: TextStyle(
+        fontSize: 48,
+        fontWeight: FontWeight.w700,
+        color: color,
+        height: 1.1,
+      ),
+      displayMedium: TextStyle(
+        fontSize: 36,
+        fontWeight: FontWeight.w700,
+        color: color,
+        height: 1.2,
+      ),
+      displaySmall: TextStyle(
+        fontSize: 30,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.2,
+      ),
+      headlineLarge: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: color,
+        height: 1.3,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.3,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.4,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.4,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: color,
+        height: 1.4,
+      ),
+      titleSmall: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: color,
+        height: 1.4,
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: color,
+        height: 1.5,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: color,
+        height: 1.5,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: color,
+        height: 1.5,
+      ),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: color,
+      ),
+      labelMedium: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: color,
+      ),
+      labelSmall: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: color,
+      ),
     );
   }
 }

@@ -78,8 +78,8 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
   bool _hasMore = false;
 
   VehiclesBloc({required VehicleRepository repository})
-      : _repository = repository,
-        super(VehiclesInitial()) {
+    : _repository = repository,
+      super(VehiclesInitial()) {
     on<VehiclesSearchRequested>(_onSearch);
     on<VehiclesLoadMore>(_onLoadMore);
     on<VehiclesFeaturedRequested>(_onFeatured);
@@ -87,7 +87,10 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     on<VehicleSimilarRequested>(_onSimilar);
   }
 
-  Future<void> _onSearch(VehiclesSearchRequested event, Emitter<VehiclesState> emit) async {
+  Future<void> _onSearch(
+    VehiclesSearchRequested event,
+    Emitter<VehiclesState> emit,
+  ) async {
     _currentFilters = event.filters;
     emit(VehiclesLoading());
 
@@ -96,56 +99,84 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
       _currentVehicles = result.items;
       _totalCount = result.totalCount;
       _hasMore = result.hasMore;
-      emit(VehiclesLoaded(
-        vehicles: _currentVehicles,
-        totalCount: _totalCount,
-        hasMore: _hasMore,
-        filters: _currentFilters,
-      ));
+      emit(
+        VehiclesLoaded(
+          vehicles: _currentVehicles,
+          totalCount: _totalCount,
+          hasMore: _hasMore,
+          filters: _currentFilters,
+        ),
+      );
     } else {
-      emit(VehiclesError(message: failure?.message ?? 'Error al buscar vehículos'));
+      emit(
+        VehiclesError(message: failure?.message ?? 'Error al buscar vehículos'),
+      );
     }
   }
 
-  Future<void> _onLoadMore(VehiclesLoadMore event, Emitter<VehiclesState> emit) async {
+  Future<void> _onLoadMore(
+    VehiclesLoadMore event,
+    Emitter<VehiclesState> emit,
+  ) async {
     if (!_hasMore) return;
 
-    emit(VehiclesLoadingMore(currentVehicles: _currentVehicles, filters: _currentFilters));
+    emit(
+      VehiclesLoadingMore(
+        currentVehicles: _currentVehicles,
+        filters: _currentFilters,
+      ),
+    );
 
-    final nextFilters = _currentFilters.copyWith(page: _currentFilters.page + 1);
+    final nextFilters = _currentFilters.copyWith(
+      page: _currentFilters.page + 1,
+    );
     final (result, failure) = await _repository.searchVehicles(nextFilters);
 
     if (result != null) {
       _currentFilters = nextFilters;
       _currentVehicles = [..._currentVehicles, ...result.items];
       _hasMore = result.hasMore;
-      emit(VehiclesLoaded(
-        vehicles: _currentVehicles,
-        totalCount: result.totalCount,
-        hasMore: _hasMore,
-        filters: _currentFilters,
-      ));
+      emit(
+        VehiclesLoaded(
+          vehicles: _currentVehicles,
+          totalCount: result.totalCount,
+          hasMore: _hasMore,
+          filters: _currentFilters,
+        ),
+      );
     } else {
-      emit(VehiclesLoaded(
-        vehicles: _currentVehicles,
-        totalCount: _totalCount,
-        hasMore: _hasMore,
-        filters: _currentFilters,
-      ));
+      emit(
+        VehiclesLoaded(
+          vehicles: _currentVehicles,
+          totalCount: _totalCount,
+          hasMore: _hasMore,
+          filters: _currentFilters,
+        ),
+      );
     }
   }
 
-  Future<void> _onFeatured(VehiclesFeaturedRequested event, Emitter<VehiclesState> emit) async {
+  Future<void> _onFeatured(
+    VehiclesFeaturedRequested event,
+    Emitter<VehiclesState> emit,
+  ) async {
     emit(VehiclesLoading());
     final (vehicles, failure) = await _repository.getFeaturedVehicles();
     if (vehicles != null) {
       emit(VehicleFeaturedLoaded(vehicles: vehicles));
     } else {
-      emit(VehiclesError(message: failure?.message ?? 'Error al cargar destacados'));
+      emit(
+        VehiclesError(
+          message: failure?.message ?? 'Error al cargar destacados',
+        ),
+      );
     }
   }
 
-  Future<void> _onDetail(VehicleDetailRequested event, Emitter<VehiclesState> emit) async {
+  Future<void> _onDetail(
+    VehicleDetailRequested event,
+    Emitter<VehiclesState> emit,
+  ) async {
     emit(VehiclesLoading());
     final result = event.isSlug
         ? await _repository.getVehicleBySlug(event.slugOrId)
@@ -157,18 +188,27 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
       // Track view
       _repository.trackView(vehicle.id);
     } else {
-      emit(VehiclesError(message: failure?.message ?? 'Vehículo no encontrado'));
+      emit(
+        VehiclesError(message: failure?.message ?? 'Vehículo no encontrado'),
+      );
     }
   }
 
-  Future<void> _onSimilar(VehicleSimilarRequested event, Emitter<VehiclesState> emit) async {
+  Future<void> _onSimilar(
+    VehicleSimilarRequested event,
+    Emitter<VehiclesState> emit,
+  ) async {
     if (state is VehicleDetailLoaded) {
       final currentState = state as VehicleDetailLoaded;
-      final (similar, _) = await _repository.getSimilarVehicles(event.vehicleId);
-      emit(VehicleDetailLoaded(
-        vehicle: currentState.vehicle,
-        similarVehicles: similar ?? [],
-      ));
+      final (similar, _) = await _repository.getSimilarVehicles(
+        event.vehicleId,
+      );
+      emit(
+        VehicleDetailLoaded(
+          vehicle: currentState.vehicle,
+          similarVehicles: similar ?? [],
+        ),
+      );
     }
   }
 }

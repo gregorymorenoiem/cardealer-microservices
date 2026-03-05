@@ -160,8 +160,8 @@ class _HomePageState extends State<HomePage> {
                           _CategoryCard(
                             icon: Icons.electric_car,
                             label: 'Eléctrico',
-                            onTap:
-                                () => context.go('/buscar?fuelType=Electric'),
+                            onTap: () =>
+                                context.go('/buscar?fuelType=Electric'),
                           ),
                           _CategoryCard(
                             icon: Icons.star,
@@ -212,27 +212,23 @@ class _HomePageState extends State<HomePage> {
                       horizontal: OklaDimens.spacing16,
                     ),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final vehicle = state.vehicles[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: OklaDimens.spacing8,
-                            ),
-                            child: VehicleCard(
-                              vehicle: vehicle,
-                              onTap: () {
-                                final slug =
-                                    (vehicle.slug ?? '').isNotEmpty
-                                        ? vehicle.slug!
-                                        : vehicle.id;
-                                context.push('/vehiculos/$slug');
-                              },
-                            ),
-                          );
-                        },
-                        childCount: state.vehicles.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final vehicle = state.vehicles[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: OklaDimens.spacing8,
+                          ),
+                          child: VehicleCard(
+                            vehicle: vehicle,
+                            onTap: () {
+                              final slug = (vehicle.slug ?? '').isNotEmpty
+                                  ? vehicle.slug!
+                                  : vehicle.id;
+                              context.push('/vehiculos/$slug');
+                            },
+                          ),
+                        );
+                      }, childCount: state.vehicles.length),
                     ),
                   );
                 }
@@ -249,10 +245,7 @@ class _HomePageState extends State<HomePage> {
                             color: OklaColors.error,
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            state.message,
-                            textAlign: TextAlign.center,
-                          ),
+                          Text(state.message, textAlign: TextAlign.center),
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: () {

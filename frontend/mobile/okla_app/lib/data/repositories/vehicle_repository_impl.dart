@@ -7,10 +7,13 @@ import 'package:okla_app/domain/repositories/vehicle_repository.dart';
 class VehicleRepositoryImpl implements VehicleRepository {
   final VehicleRemoteDataSource _remote;
 
-  VehicleRepositoryImpl({required VehicleRemoteDataSource remote}) : _remote = remote;
+  VehicleRepositoryImpl({required VehicleRemoteDataSource remote})
+    : _remote = remote;
 
   @override
-  Future<(PaginatedResponse<Vehicle>?, Failure?)> searchVehicles(VehicleFilters filters) async {
+  Future<(PaginatedResponse<Vehicle>?, Failure?)> searchVehicles(
+    VehicleFilters filters,
+  ) async {
     try {
       final result = await _remote.searchVehicles(filters);
       return (
@@ -21,7 +24,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
           pageSize: result.pageSize,
           hasMore: result.hasMore,
         ),
-        null
+        null,
       );
     } catch (e) {
       return (null, ApiResponseHandler.handleError(e));
@@ -49,7 +52,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<(List<Vehicle>?, Failure?)> getFeaturedVehicles({int limit = 10}) async {
+  Future<(List<Vehicle>?, Failure?)> getFeaturedVehicles({
+    int limit = 10,
+  }) async {
     try {
       final vehicles = await _remote.getFeaturedVehicles(limit: limit);
       return (vehicles.cast<Vehicle>(), null);
@@ -59,9 +64,15 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<(List<Vehicle>?, Failure?)> getSimilarVehicles(String vehicleId, {int limit = 6}) async {
+  Future<(List<Vehicle>?, Failure?)> getSimilarVehicles(
+    String vehicleId, {
+    int limit = 6,
+  }) async {
     try {
-      final vehicles = await _remote.getSimilarVehicles(vehicleId, limit: limit);
+      final vehicles = await _remote.getSimilarVehicles(
+        vehicleId,
+        limit: limit,
+      );
       return (vehicles.cast<Vehicle>(), null);
     } catch (e) {
       return (null, ApiResponseHandler.handleError(e));
@@ -79,7 +90,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<(Vehicle?, Failure?)> createVehicle(Map<String, dynamic> vehicleData) async {
+  Future<(Vehicle?, Failure?)> createVehicle(
+    Map<String, dynamic> vehicleData,
+  ) async {
     try {
       final vehicle = await _remote.createVehicle(vehicleData);
       return (vehicle as Vehicle, null);
@@ -89,7 +102,10 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<(Vehicle?, Failure?)> updateVehicle(String id, Map<String, dynamic> vehicleData) async {
+  Future<(Vehicle?, Failure?)> updateVehicle(
+    String id,
+    Map<String, dynamic> vehicleData,
+  ) async {
     try {
       final vehicle = await _remote.updateVehicle(id, vehicleData);
       return (vehicle as Vehicle, null);

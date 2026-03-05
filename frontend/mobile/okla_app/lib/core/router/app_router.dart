@@ -35,10 +35,7 @@ class AppRouter {
     debugLogDiagnostics: false,
     routes: [
       // ──── Auth Routes (no bottom nav) ────
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/registro',
         builder: (context, state) => const RegisterPage(),
@@ -56,27 +53,32 @@ class AppRouter {
           // Home Tab
           GoRoute(
             path: '/',
-            pageBuilder: (context, state) => const NoTransitionPage(child: HomePage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: HomePage()),
           ),
           // Search Tab
           GoRoute(
             path: '/buscar',
-            pageBuilder: (context, state) => const NoTransitionPage(child: SearchPage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SearchPage()),
           ),
           // Favorites Tab
           GoRoute(
             path: '/favoritos',
-            pageBuilder: (context, state) => const NoTransitionPage(child: FavoritesPage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: FavoritesPage()),
           ),
           // Messages Tab
           GoRoute(
             path: '/mensajes',
-            pageBuilder: (context, state) => const NoTransitionPage(child: MessagesPage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: MessagesPage()),
           ),
           // Profile Tab
           GoRoute(
             path: '/perfil',
-            pageBuilder: (context, state) => const NoTransitionPage(child: ProfilePage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProfilePage()),
           ),
         ],
       ),
@@ -84,9 +86,8 @@ class AppRouter {
       // ──── Detail Routes (fullscreen, no bottom nav) ────
       GoRoute(
         path: '/vehiculos/:slug',
-        builder: (context, state) => VehicleDetailPage(
-          slug: state.pathParameters['slug']!,
-        ),
+        builder: (context, state) =>
+            VehicleDetailPage(slug: state.pathParameters['slug']!),
       ),
       GoRoute(
         path: '/comparar',
@@ -132,9 +133,8 @@ class AppRouter {
       // ──── Reviews ────
       GoRoute(
         path: '/resenas/:targetId',
-        builder: (context, state) => ReviewsPage(
-          targetId: state.pathParameters['targetId']!,
-        ),
+        builder: (context, state) =>
+            ReviewsPage(targetId: state.pathParameters['targetId']!),
       ),
 
       // ──── Alerts ────

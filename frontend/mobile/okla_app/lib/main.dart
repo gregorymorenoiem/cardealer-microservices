@@ -44,9 +44,7 @@ class OklaApp extends StatelessWidget {
         BlocProvider<AuthBloc>(
           create: (_) => sl<AuthBloc>()..add(AuthCheckRequested()),
         ),
-        BlocProvider<VehiclesBloc>(
-          create: (_) => sl<VehiclesBloc>(),
-        ),
+        BlocProvider<VehiclesBloc>(create: (_) => sl<VehiclesBloc>()),
       ],
       child: MaterialApp.router(
         title: 'OKLA - Vehículos RD',

@@ -6,6 +6,7 @@ using ErrorService.Infrastructure.Services.Messaging;
 using ErrorService.Shared.Extensions;
 using ErrorService.Shared.Middleware;
 using ErrorService.Shared.RateLimiting;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using CarDealer.Shared.Middleware;
@@ -367,7 +368,15 @@ app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // 12. Endpoints
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 
 // Apply migrations conditionally (disabled in production to avoid race conditions with HPA replicas)
 var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);

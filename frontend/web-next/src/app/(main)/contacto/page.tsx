@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSiteConfig } from '@/providers/site-config-provider';
 import { sanitizeText, sanitizeEmail, sanitizePhone } from '@/lib/security/sanitize';
+import { csrfFetch } from '@/lib/security/csrf';
 
 // =============================================================================
 // TYPES
@@ -51,7 +52,7 @@ export default function ContactoPage() {
     setIsSubmitting(true);
 
     // Sanitize all inputs before sending
-    const _sanitizedData = {
+    const sanitizedData = {
       name: sanitizeText(formData.name.trim(), { maxLength: 100 }),
       email: sanitizeEmail(formData.email),
       phone: formData.phone ? sanitizePhone(formData.phone) : '',
@@ -59,11 +60,25 @@ export default function ContactoPage() {
       message: sanitizeText(formData.message.trim(), { maxLength: 5000 }),
     };
 
-    // TODO: Implement API call to send message with sanitizedData
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const response = await csrfFetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sanitizedData),
+      });
 
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.error || 'Error al enviar el mensaje');
+      }
+
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('Contact form error:', err);
+      // TODO: Show user-facing error toast
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (

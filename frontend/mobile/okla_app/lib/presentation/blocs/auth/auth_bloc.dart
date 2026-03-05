@@ -74,8 +74,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _repository;
 
   AuthBloc({required AuthRepository repository})
-      : _repository = repository,
-        super(AuthInitial()) {
+    : _repository = repository,
+      super(AuthInitial()) {
     on<AuthCheckRequested>(_onCheckAuth);
     on<AuthLoginRequested>(_onLogin);
     on<AuthRegisterRequested>(_onRegister);
@@ -84,7 +84,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthForgotPasswordRequested>(_onForgotPassword);
   }
 
-  Future<void> _onCheckAuth(AuthCheckRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onCheckAuth(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     final isLoggedIn = await _repository.isLoggedIn();
     if (!isLoggedIn) {
@@ -104,7 +107,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onLogin(AuthLoginRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onLogin(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     final (user, failure) = await _repository.login(
       email: event.email,
@@ -123,7 +129,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onRegister(AuthRegisterRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onRegister(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     final (user, failure) = await _repository.register(
       email: event.email,
@@ -138,7 +147,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onLogout(AuthLogoutRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onLogout(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     await _repository.logout();
     emit(AuthUnauthenticated());
   }
@@ -158,7 +170,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onForgotPassword(AuthForgotPasswordRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onForgotPassword(
+    AuthForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     final (success, failure) = await _repository.forgotPassword(event.email);
     if (success) {

@@ -17,27 +17,32 @@ final sl = GetIt.instance;
 Future<void> initDependencies({AppConfig config = AppConfig.production}) async {
   // ──── Core ────
   sl.registerSingleton<AppConfig>(config);
-  sl.registerSingleton<FlutterSecureStorage>(const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  ));
-  sl.registerSingleton<ApiClient>(ApiClient(
-    config: sl<AppConfig>(),
-    storage: sl<FlutterSecureStorage>(),
-  ));
+  sl.registerSingleton<FlutterSecureStorage>(
+    const FlutterSecureStorage(
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+    ),
+  );
+  sl.registerSingleton<ApiClient>(
+    ApiClient(config: sl<AppConfig>(), storage: sl<FlutterSecureStorage>()),
+  );
 
   // ──── Data Sources ────
   sl.registerLazySingleton(() => AuthRemoteDataSource(client: sl<ApiClient>()));
-  sl.registerLazySingleton(() => VehicleRemoteDataSource(client: sl<ApiClient>()));
+  sl.registerLazySingleton(
+    () => VehicleRemoteDataSource(client: sl<ApiClient>()),
+  );
 
   // ──── Repositories ────
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
-        remote: sl<AuthRemoteDataSource>(),
-        storage: sl<FlutterSecureStorage>(),
-      ));
-  sl.registerLazySingleton<VehicleRepository>(() => VehicleRepositoryImpl(
-        remote: sl<VehicleRemoteDataSource>(),
-      ));
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      remote: sl<AuthRemoteDataSource>(),
+      storage: sl<FlutterSecureStorage>(),
+    ),
+  );
+  sl.registerLazySingleton<VehicleRepository>(
+    () => VehicleRepositoryImpl(remote: sl<VehicleRemoteDataSource>()),
+  );
 
   // ──── BLoCs ────
   sl.registerFactory(() => AuthBloc(repository: sl<AuthRepository>()));

@@ -9,7 +9,9 @@ class VehicleRemoteDataSource {
 
   VehicleRemoteDataSource({required ApiClient client}) : _client = client;
 
-  Future<PaginatedResponse<VehicleModel>> searchVehicles(VehicleFilters filters) async {
+  Future<PaginatedResponse<VehicleModel>> searchVehicles(
+    VehicleFilters filters,
+  ) async {
     final response = await _client.get(
       '/vehicles/search',
       queryParameters: filters.toQueryParameters(),
@@ -47,7 +49,10 @@ class VehicleRemoteDataSource {
     );
   }
 
-  Future<List<VehicleModel>> getSimilarVehicles(String vehicleId, {int limit = 6}) async {
+  Future<List<VehicleModel>> getSimilarVehicles(
+    String vehicleId, {
+    int limit = 6,
+  }) async {
     final response = await _client.get(
       '/vehicles/$vehicleId/similar',
       queryParameters: {'limit': limit},
@@ -70,7 +75,10 @@ class VehicleRemoteDataSource {
     );
   }
 
-  Future<VehicleModel> updateVehicle(String id, Map<String, dynamic> data) async {
+  Future<VehicleModel> updateVehicle(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     final response = await _client.put('/vehicles/$id', data: data);
     return ApiResponseHandler.handleResponse<VehicleModel>(
       response,

@@ -13,16 +13,25 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required AuthRemoteDataSource remote,
     required FlutterSecureStorage storage,
-  })  : _remote = remote,
-        _storage = storage;
+  }) : _remote = remote,
+       _storage = storage;
 
   @override
-  Future<(User?, Failure?)> login({required String email, required String password}) async {
+  Future<(User?, Failure?)> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       final tokens = await _remote.login(email: email, password: password);
-      await _storage.write(key: OklaStrings.accessTokenKey, value: tokens.accessToken);
+      await _storage.write(
+        key: OklaStrings.accessTokenKey,
+        value: tokens.accessToken,
+      );
       if (tokens.refreshToken != null) {
-        await _storage.write(key: OklaStrings.refreshTokenKey, value: tokens.refreshToken);
+        await _storage.write(
+          key: OklaStrings.refreshTokenKey,
+          value: tokens.refreshToken,
+        );
       }
       return (tokens.user as User, null);
     } catch (e) {
@@ -33,7 +42,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<(User?, Failure?)> loginWithProvider(String provider) async {
     // TODO: Implement OAuth flow with Google/Apple sign-in packages
-    return (null, const ServerFailure(message: 'Login social no implementado aún'));
+    return (
+      null,
+      const ServerFailure(message: 'Login social no implementado aún'),
+    );
   }
 
   @override
@@ -50,9 +62,15 @@ class AuthRepositoryImpl implements AuthRepository {
         firstName: firstName,
         lastName: lastName,
       );
-      await _storage.write(key: OklaStrings.accessTokenKey, value: tokens.accessToken);
+      await _storage.write(
+        key: OklaStrings.accessTokenKey,
+        value: tokens.accessToken,
+      );
       if (tokens.refreshToken != null) {
-        await _storage.write(key: OklaStrings.refreshTokenKey, value: tokens.refreshToken);
+        await _storage.write(
+          key: OklaStrings.refreshTokenKey,
+          value: tokens.refreshToken,
+        );
       }
       return (tokens.user as User, null);
     } catch (e) {
@@ -81,7 +99,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<(bool, Failure?)> resetPassword({required String token, required String newPassword}) async {
+  Future<(bool, Failure?)> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
     try {
       await _remote.resetPassword(token: token, newPassword: newPassword);
       return (true, null);
@@ -116,9 +137,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<(bool, Failure?)> verify2FA(String code) async {
     try {
       final tokens = await _remote.verify2FA(code);
-      await _storage.write(key: OklaStrings.accessTokenKey, value: tokens.accessToken);
+      await _storage.write(
+        key: OklaStrings.accessTokenKey,
+        value: tokens.accessToken,
+      );
       if (tokens.refreshToken != null) {
-        await _storage.write(key: OklaStrings.refreshTokenKey, value: tokens.refreshToken);
+        await _storage.write(
+          key: OklaStrings.refreshTokenKey,
+          value: tokens.refreshToken,
+        );
       }
       return (true, null);
     } catch (e) {

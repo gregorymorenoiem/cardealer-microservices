@@ -43,7 +43,10 @@ class _LoginPageState extends State<LoginPage> {
             _show2FADialog(context);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: OklaColors.error),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: OklaColors.error,
+              ),
             );
           }
         },
@@ -65,7 +68,10 @@ class _LoginPageState extends State<LoginPage> {
                             height: 80,
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [OklaColors.primary500, OklaColors.primary600],
+                                colors: [
+                                  OklaColors.primary500,
+                                  OklaColors.primary600,
+                                ],
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -88,9 +94,8 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 8),
                           Text(
                             'Inicia sesión para continuar',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: OklaColors.neutral500,
-                                ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: OklaColors.neutral500),
                           ),
                         ],
                       ),
@@ -114,7 +119,9 @@ class _LoginPageState extends State<LoginPage> {
                               if (value == null || value.isEmpty) {
                                 return 'Ingresa tu correo electrónico';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
                                 return 'Correo electrónico inválido';
                               }
                               return null;
@@ -130,9 +137,13 @@ class _LoginPageState extends State<LoginPage> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -146,7 +157,8 @@ class _LoginPageState extends State<LoginPage> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => context.push('/recuperar-contrasena'),
+                              onPressed: () =>
+                                  context.push('/recuperar-contrasena'),
                               child: const Text('¿Olvidaste tu contraseña?'),
                             ),
                           ),
@@ -161,10 +173,12 @@ class _LoginPageState extends State<LoginPage> {
                                   ? null
                                   : () {
                                       if (_formKey.currentState!.validate()) {
-                                        context.read<AuthBloc>().add(AuthLoginRequested(
-                                              email: _emailController.text.trim(),
-                                              password: _passwordController.text,
-                                            ));
+                                        context.read<AuthBloc>().add(
+                                          AuthLoginRequested(
+                                            email: _emailController.text.trim(),
+                                            password: _passwordController.text,
+                                          ),
+                                        );
                                       }
                                     },
                               child: state is AuthLoading
@@ -193,9 +207,8 @@ class _LoginPageState extends State<LoginPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'o continuar con',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: OklaColors.neutral400,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: OklaColors.neutral400),
                           ),
                         ),
                         const Expanded(child: Divider()),
@@ -294,7 +307,9 @@ class _LoginPageState extends State<LoginPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              context.read<AuthBloc>().add(Auth2FARequested(code: codeController.text));
+              context.read<AuthBloc>().add(
+                Auth2FARequested(code: codeController.text),
+              );
             },
             child: const Text('Verificar'),
           ),

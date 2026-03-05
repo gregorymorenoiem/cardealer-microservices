@@ -23,12 +23,21 @@ class UserModel extends User {
       firstName: json['firstName']?.toString(),
       lastName: json['lastName']?.toString(),
       fullName: json['fullName']?.toString(),
-      avatarUrl: json['avatarUrl']?.toString() ?? json['profileImageUrl']?.toString(),
-      accountType: json['accountType']?.toString() ?? json['role']?.toString() ?? 'buyer',
-      isEmailVerified: json['isEmailVerified'] == true || json['emailVerified'] == true,
-      isTwoFactorEnabled: json['isTwoFactorEnabled'] == true || json['twoFactorEnabled'] == true,
+      avatarUrl:
+          json['avatarUrl']?.toString() ?? json['profileImageUrl']?.toString(),
+      accountType:
+          json['accountType']?.toString() ??
+          json['role']?.toString() ??
+          'buyer',
+      isEmailVerified:
+          json['isEmailVerified'] == true || json['emailVerified'] == true,
+      isTwoFactorEnabled:
+          json['isTwoFactorEnabled'] == true ||
+          json['twoFactorEnabled'] == true,
       dealerId: json['dealerId']?.toString(),
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
     );
   }
 
@@ -64,7 +73,8 @@ class AuthTokens {
   factory AuthTokens.fromJson(Map<String, dynamic> json) {
     final data = json['data'] ?? json;
     return AuthTokens(
-      accessToken: data['accessToken']?.toString() ?? data['token']?.toString() ?? '',
+      accessToken:
+          data['accessToken']?.toString() ?? data['token']?.toString() ?? '',
       refreshToken: data['refreshToken']?.toString(),
       user: UserModel.fromJson(data['user'] as Map<String, dynamic>? ?? {}),
     );

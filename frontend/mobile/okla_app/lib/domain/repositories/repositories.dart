@@ -14,15 +14,25 @@ abstract class FavoritesRepository {
 abstract class MessagingRepository {
   Future<(List<Conversation>?, Failure?)> getConversations();
   Future<(List<ChatMessage>?, Failure?)> getMessages(String conversationId);
-  Future<(ChatMessage?, Failure?)> sendMessage(String conversationId, String content);
+  Future<(ChatMessage?, Failure?)> sendMessage(
+    String conversationId,
+    String content,
+  );
   Future<(bool, Failure?)> markAsRead(String conversationId);
   Future<(int, Failure?)> getUnreadCount();
-  Future<(Conversation?, Failure?)> startConversation(String targetUserId, {String? vehicleId, String? initialMessage});
+  Future<(Conversation?, Failure?)> startConversation(
+    String targetUserId, {
+    String? vehicleId,
+    String? initialMessage,
+  });
 }
 
 /// Notifications repository
 abstract class NotificationsRepository {
-  Future<(List<AppNotification>?, Failure?)> getNotifications({int page = 1, int pageSize = 20});
+  Future<(List<AppNotification>?, Failure?)> getNotifications({
+    int page = 1,
+    int pageSize = 20,
+  });
   Future<(int, Failure?)> getUnreadCount();
   Future<(bool, Failure?)> markAsRead(String notificationId);
   Future<(bool, Failure?)> markAllAsRead();
@@ -57,9 +67,14 @@ abstract class AlertsRepository {
 
 /// Dealers repository
 abstract class DealersRepository {
-  Future<(List<Dealer>?, Failure?)> getDealers({int page = 1, String? province});
+  Future<(List<Dealer>?, Failure?)> getDealers({
+    int page = 1,
+    String? province,
+  });
   Future<(Dealer?, Failure?)> getDealerBySlug(String slug);
   Future<(Dealer?, Failure?)> getCurrentDealer();
   Future<(Map<String, dynamic>?, Failure?)> getDealerStats();
-  Future<(Map<String, dynamic>?, Failure?)> getDealerAnalytics({String period = '30d'});
+  Future<(Map<String, dynamic>?, Failure?)> getDealerAnalytics({
+    String period = '30d',
+  });
 }

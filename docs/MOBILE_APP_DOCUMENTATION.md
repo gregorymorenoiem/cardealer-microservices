@@ -12,14 +12,14 @@ OKLA Mobile es la aplicación móvil nativa del marketplace de vehículos #1 de 
 
 ### 1.1 Propuesta de Valor
 
-| Característica | Descripción |
-|---|---|
-| **Marketplace completo** | Buscar, comparar, contactar, comprar/vender vehículos |
-| **Panel de Dealer** | Gestión completa de inventario, leads, empleados, facturación |
-| **IA Integrada** | Chatbot, importación inteligente, scoring de vehículos |
-| **Notificaciones Push** | Alertas de precio, mensajes, leads, actividad |
-| **Modo Offline** | Favoritos, búsquedas guardadas, historial sin conexión |
-| **Seguridad** | Biometría, 2FA, JWT con refresh, SSL pinning |
+| Característica           | Descripción                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| **Marketplace completo** | Buscar, comparar, contactar, comprar/vender vehículos         |
+| **Panel de Dealer**      | Gestión completa de inventario, leads, empleados, facturación |
+| **IA Integrada**         | Chatbot, importación inteligente, scoring de vehículos        |
+| **Notificaciones Push**  | Alertas de precio, mensajes, leads, actividad                 |
+| **Modo Offline**         | Favoritos, búsquedas guardadas, historial sin conexión        |
+| **Seguridad**            | Biometría, 2FA, JWT con refresh, SSL pinning                  |
 
 ---
 
@@ -57,24 +57,24 @@ lib/
 
 ### 2.2 Stack Tecnológico
 
-| Categoría | Tecnología | Versión |
-|---|---|---|
-| **Framework** | Flutter | 3.38+ |
-| **Lenguaje** | Dart | 3.10+ |
-| **State Management** | flutter_bloc | ^8.1 |
-| **DI** | get_it + injectable | ^8.0 / ^2.5 |
-| **Networking** | dio + retrofit | ^5.7 / ^4.4 |
-| **Navegación** | go_router | ^14.0 |
-| **Cache Local** | hive_flutter | ^2.0 |
-| **Seguro** | flutter_secure_storage | ^9.2 |
-| **Push** | firebase_messaging | ^15.2 |
-| **Analytics** | firebase_analytics | ^11.4 |
-| **Crash Report** | firebase_crashlytics | ^4.2 |
-| **Pagos** | flutter_stripe | ^11.4 |
-| **Mapas** | google_maps_flutter | ^2.14 |
-| **Biometría** | local_auth | ^3.0 |
-| **Imágenes** | cached_network_image | ^3.4 |
-| **Linting** | flutter_lints | ^3.0 |
+| Categoría            | Tecnología             | Versión     |
+| -------------------- | ---------------------- | ----------- |
+| **Framework**        | Flutter                | 3.38+       |
+| **Lenguaje**         | Dart                   | 3.10+       |
+| **State Management** | flutter_bloc           | ^8.1        |
+| **DI**               | get_it + injectable    | ^8.0 / ^2.5 |
+| **Networking**       | dio + retrofit         | ^5.7 / ^4.4 |
+| **Navegación**       | go_router              | ^14.0       |
+| **Cache Local**      | hive_flutter           | ^2.0        |
+| **Seguro**           | flutter_secure_storage | ^9.2        |
+| **Push**             | firebase_messaging     | ^15.2       |
+| **Analytics**        | firebase_analytics     | ^11.4       |
+| **Crash Report**     | firebase_crashlytics   | ^4.2        |
+| **Pagos**            | flutter_stripe         | ^11.4       |
+| **Mapas**            | google_maps_flutter    | ^2.14       |
+| **Biometría**        | local_auth             | ^3.0        |
+| **Imágenes**         | cached_network_image   | ^3.4        |
+| **Linting**          | flutter_lints          | ^3.0        |
 
 ### 2.3 Conexión con Backend
 
@@ -94,197 +94,197 @@ Mobile App → HTTPS → okla.com.do/api/* → BFF (Next.js) → Gateway (Ocelot
 
 ### 3.1 🔐 Autenticación & Seguridad
 
-| Feature | Descripción |
-|---|---|
-| Login email/password | Con validación y rate limiting |
-| Login social | Google Sign-In, Apple Sign-In |
-| Registro (Buyer) | Formulario con validación |
-| Registro (Dealer) | Flujo de registro dealer |
-| Verificación de email | Pantalla de verificación |
-| Recuperación de contraseña | Flujo completo |
-| 2FA (TOTP) | Configuración y verificación |
-| Autenticación biométrica | Face ID / Touch ID / Fingerprint |
-| Gestión de sesiones | Ver y revocar sesiones activas |
-| SSL Pinning | Certificate pinning para API |
-| Token refresh | Automático con interceptor |
-| Logout seguro | Limpia tokens y datos sensibles |
+| Feature                    | Descripción                      |
+| -------------------------- | -------------------------------- |
+| Login email/password       | Con validación y rate limiting   |
+| Login social               | Google Sign-In, Apple Sign-In    |
+| Registro (Buyer)           | Formulario con validación        |
+| Registro (Dealer)          | Flujo de registro dealer         |
+| Verificación de email      | Pantalla de verificación         |
+| Recuperación de contraseña | Flujo completo                   |
+| 2FA (TOTP)                 | Configuración y verificación     |
+| Autenticación biométrica   | Face ID / Touch ID / Fingerprint |
+| Gestión de sesiones        | Ver y revocar sesiones activas   |
+| SSL Pinning                | Certificate pinning para API     |
+| Token refresh              | Automático con interceptor       |
+| Logout seguro              | Limpia tokens y datos sensibles  |
 
 ### 3.2 🏠 Home & Descubrimiento
 
-| Feature | Descripción |
-|---|---|
-| Hero carousel | Banners destacados con animación |
-| Búsqueda NLP | Búsqueda en lenguaje natural |
-| Categorías | Cards por tipo de carrocería |
-| Vehículos destacados | Grid premium/featured |
-| Marcas populares | Slider horizontal de marcas |
-| Sección de dealers | Promociones de dealers |
-| Por qué OKLA | Features grid |
-| CTA Section | Llamadas a la acción |
+| Feature              | Descripción                      |
+| -------------------- | -------------------------------- |
+| Hero carousel        | Banners destacados con animación |
+| Búsqueda NLP         | Búsqueda en lenguaje natural     |
+| Categorías           | Cards por tipo de carrocería     |
+| Vehículos destacados | Grid premium/featured            |
+| Marcas populares     | Slider horizontal de marcas      |
+| Sección de dealers   | Promociones de dealers           |
+| Por qué OKLA         | Features grid                    |
+| CTA Section          | Llamadas a la acción             |
 
 ### 3.3 🔍 Búsqueda & Filtros
 
-| Feature | Descripción |
-|---|---|
-| Búsqueda avanzada | Múltiples filtros combinados |
-| Filtros: marca, modelo, año | Dropdown con autocompletado |
-| Filtros: precio (rango) | Slider dual con formato moneda |
-| Filtros: tipo combustible | Gasolina, Diesel, Híbrido, Eléctrico |
-| Filtros: transmisión | Automática, Manual, CVT |
-| Filtros: ubicación/provincia | Todas las provincias RD |
-| Filtros: condición | Nuevo, Usado, Certificado |
-| Filtros: color, carrocería | Multiselección |
-| Ordenamiento | Precio, fecha, relevancia, km |
-| Búsquedas guardadas | Con notificaciones automáticas |
-| Historial de búsqueda | Últimas búsquedas |
+| Feature                      | Descripción                          |
+| ---------------------------- | ------------------------------------ |
+| Búsqueda avanzada            | Múltiples filtros combinados         |
+| Filtros: marca, modelo, año  | Dropdown con autocompletado          |
+| Filtros: precio (rango)      | Slider dual con formato moneda       |
+| Filtros: tipo combustible    | Gasolina, Diesel, Híbrido, Eléctrico |
+| Filtros: transmisión         | Automática, Manual, CVT              |
+| Filtros: ubicación/provincia | Todas las provincias RD              |
+| Filtros: condición           | Nuevo, Usado, Certificado            |
+| Filtros: color, carrocería   | Multiselección                       |
+| Ordenamiento                 | Precio, fecha, relevancia, km        |
+| Búsquedas guardadas          | Con notificaciones automáticas       |
+| Historial de búsqueda        | Últimas búsquedas                    |
 
 ### 3.4 🚗 Detalle de Vehículo
 
-| Feature | Descripción |
-|---|---|
-| Galería de fotos | Fullscreen, zoom, swipe |
-| Vista 360° | Visualización interactiva |
-| Especificaciones | Tabla completa de specs |
-| OKLA Score | Puntuación con desglose |
-| Precio deal rating | Excelente/Bueno/Justo/Alto |
-| Ubicación en mapa | Google Maps integrado |
-| Contactar vendedor | Mensaje directo |
-| Agendar cita | Calendario de disponibilidad |
-| Compartir | Share nativo (link, WhatsApp, etc.) |
-| Reportar | Reportar anuncio |
-| Vehículos similares | Grid de sugerencias |
-| Historial de precios | Gráfico de evolución |
+| Feature              | Descripción                         |
+| -------------------- | ----------------------------------- |
+| Galería de fotos     | Fullscreen, zoom, swipe             |
+| Vista 360°           | Visualización interactiva           |
+| Especificaciones     | Tabla completa de specs             |
+| OKLA Score           | Puntuación con desglose             |
+| Precio deal rating   | Excelente/Bueno/Justo/Alto          |
+| Ubicación en mapa    | Google Maps integrado               |
+| Contactar vendedor   | Mensaje directo                     |
+| Agendar cita         | Calendario de disponibilidad        |
+| Compartir            | Share nativo (link, WhatsApp, etc.) |
+| Reportar             | Reportar anuncio                    |
+| Vehículos similares  | Grid de sugerencias                 |
+| Historial de precios | Gráfico de evolución                |
 
 ### 3.5 ❤️ Favoritos & Comparaciones
 
-| Feature | Descripción |
-|---|---|
-| Guardar favorito | Con animación y haptic feedback |
-| Lista de favoritos | Grid con filtros |
-| Comparar vehículos | Hasta 4 side-by-side |
-| Compartir comparación | Link de comparación |
+| Feature               | Descripción                     |
+| --------------------- | ------------------------------- |
+| Guardar favorito      | Con animación y haptic feedback |
+| Lista de favoritos    | Grid con filtros                |
+| Comparar vehículos    | Hasta 4 side-by-side            |
+| Compartir comparación | Link de comparación             |
 
 ### 3.6 📨 Mensajería
 
-| Feature | Descripción |
-|---|---|
+| Feature                 | Descripción                      |
+| ----------------------- | -------------------------------- |
 | Lista de conversaciones | Inbox con preview y unread count |
-| Chat en tiempo real | Mensajes con timestamps |
-| Enviar texto | Con validación |
-| Agendar visita | Desde chat |
-| Archivar conversación | Gestión de inbox |
-| Notificaciones | Push para mensajes nuevos |
+| Chat en tiempo real     | Mensajes con timestamps          |
+| Enviar texto            | Con validación                   |
+| Agendar visita          | Desde chat                       |
+| Archivar conversación   | Gestión de inbox                 |
+| Notificaciones          | Push para mensajes nuevos        |
 
 ### 3.7 🔔 Notificaciones
 
-| Feature | Descripción |
-|---|---|
-| Push notifications | Firebase Cloud Messaging |
-| Centro de notificaciones | Lista con estados read/unread |
-| Alertas de precio | Notificación cuando baja precio |
-| Alertas de búsqueda | Nuevos vehículos matching |
-| Preferencias | Granular: email, push, in-app |
-| Badges | Contador en tab bar |
+| Feature                  | Descripción                     |
+| ------------------------ | ------------------------------- |
+| Push notifications       | Firebase Cloud Messaging        |
+| Centro de notificaciones | Lista con estados read/unread   |
+| Alertas de precio        | Notificación cuando baja precio |
+| Alertas de búsqueda      | Nuevos vehículos matching       |
+| Preferencias             | Granular: email, push, in-app   |
+| Badges                   | Contador en tab bar             |
 
 ### 3.8 🏷️ Publicar Vehículo (Seller)
 
-| Feature | Descripción |
-|---|---|
-| Wizard multipaso | Paso a paso con progreso |
-| Datos básicos | Marca, modelo, año, precio |
-| Decodificar VIN | Autocompletado por VIN |
-| Fotos | Cámara + galería, reordenar |
-| AI Background Removal | Remover fondo de fotos |
-| Descripción | Editor con sugerencias |
-| Ubicación | Mapa para pin de ubicación |
-| Preview | Vista previa del anuncio |
-| Publicar | Con pago si aplica |
+| Feature                    | Descripción                    |
+| -------------------------- | ------------------------------ |
+| Wizard multipaso           | Paso a paso con progreso       |
+| Datos básicos              | Marca, modelo, año, precio     |
+| Decodificar VIN            | Autocompletado por VIN         |
+| Fotos                      | Cámara + galería, reordenar    |
+| AI Background Removal      | Remover fondo de fotos         |
+| Descripción                | Editor con sugerencias         |
+| Ubicación                  | Mapa para pin de ubicación     |
+| Preview                    | Vista previa del anuncio       |
+| Publicar                   | Con pago si aplica             |
 | Importar desde plataformas | Facebook, Corotos, SuperCarros |
 
 ### 3.9 📊 Dashboard Seller
 
-| Feature | Descripción |
-|---|---|
-| Resumen | Stats rápidas (vistas, contactos, favoritos) |
-| Mis vehículos | Lista con estado y acciones |
-| Editar anuncio | Formulario completo |
-| Boost/Impulsar | Promocionar anuncio |
-| Leads | Contactos recibidos |
-| Estadísticas | Gráficos de rendimiento |
+| Feature        | Descripción                                  |
+| -------------- | -------------------------------------------- |
+| Resumen        | Stats rápidas (vistas, contactos, favoritos) |
+| Mis vehículos  | Lista con estado y acciones                  |
+| Editar anuncio | Formulario completo                          |
+| Boost/Impulsar | Promocionar anuncio                          |
+| Leads          | Contactos recibidos                          |
+| Estadísticas   | Gráficos de rendimiento                      |
 
 ### 3.10 🏢 Dashboard Dealer
 
-| Feature | Descripción |
-|---|---|
-| Home dashboard | KPIs, gráficos, alertas |
-| Inventario | CRUD completo de vehículos |
-| Importación masiva | Bulk import de anuncios |
-| CRM / Leads | Gestión de leads con pipeline |
-| Empleados | Invitar, roles, suspender |
-| Ubicaciones | Multi-sede |
-| Citas | Calendario y gestión |
-| Analytics | Dashboard con métricas |
-| Publicidad | Campañas, tracking, ROI |
-| Facturación | Invoices, métodos de pago |
-| Suscripción | Planes y upgrade |
-| Reportes | Exportables (PDF, CSV) |
-| Reseñas | Responder reseñas |
-| Configuración | Notificaciones, seguridad |
+| Feature            | Descripción                   |
+| ------------------ | ----------------------------- |
+| Home dashboard     | KPIs, gráficos, alertas       |
+| Inventario         | CRUD completo de vehículos    |
+| Importación masiva | Bulk import de anuncios       |
+| CRM / Leads        | Gestión de leads con pipeline |
+| Empleados          | Invitar, roles, suspender     |
+| Ubicaciones        | Multi-sede                    |
+| Citas              | Calendario y gestión          |
+| Analytics          | Dashboard con métricas        |
+| Publicidad         | Campañas, tracking, ROI       |
+| Facturación        | Invoices, métodos de pago     |
+| Suscripción        | Planes y upgrade              |
+| Reportes           | Exportables (PDF, CSV)        |
+| Reseñas            | Responder reseñas             |
+| Configuración      | Notificaciones, seguridad     |
 
 ### 3.11 💳 Pagos
 
-| Feature | Descripción |
-|---|---|
-| Stripe | Tarjetas internacionales |
-| Azul | Tarjetas dominicanas |
-| Checkout | Flujo de pago seguro |
-| Planes dealer | Comparación y selección |
-| Historial de pagos | Transacciones pasadas |
-| Métodos de pago | CRUD de tarjetas |
+| Feature            | Descripción              |
+| ------------------ | ------------------------ |
+| Stripe             | Tarjetas internacionales |
+| Azul               | Tarjetas dominicanas     |
+| Checkout           | Flujo de pago seguro     |
+| Planes dealer      | Comparación y selección  |
+| Historial de pagos | Transacciones pasadas    |
+| Métodos de pago    | CRUD de tarjetas         |
 
 ### 3.12 🤖 IA & Chatbot
 
-| Feature | Descripción |
-|---|---|
-| Chatbot OKLA | Asistente IA en español/slang DR |
-| Soporte automático | Respuestas a preguntas frecuentes |
-| Importación IA | Extraer datos de anuncios |
-| Sugerencia de precio | Precio recomendado con IA |
+| Feature              | Descripción                       |
+| -------------------- | --------------------------------- |
+| Chatbot OKLA         | Asistente IA en español/slang DR  |
+| Soporte automático   | Respuestas a preguntas frecuentes |
+| Importación IA       | Extraer datos de anuncios         |
+| Sugerencia de precio | Precio recomendado con IA         |
 
 ### 3.13 ⭐ Reseñas
 
-| Feature | Descripción |
-|---|---|
-| Ver reseñas | Lista con rating y comentarios |
-| Escribir reseña | Stars + texto |
-| Responder (dealer) | Respuesta del vendedor |
-| Votar reseña | Útil/no útil |
-| Reportar reseña | Contenido inapropiado |
+| Feature            | Descripción                    |
+| ------------------ | ------------------------------ |
+| Ver reseñas        | Lista con rating y comentarios |
+| Escribir reseña    | Stars + texto                  |
+| Responder (dealer) | Respuesta del vendedor         |
+| Votar reseña       | Útil/no útil                   |
+| Reportar reseña    | Contenido inapropiado          |
 
 ### 3.14 ⚙️ Configuración & Perfil
 
-| Feature | Descripción |
-|---|---|
-| Editar perfil | Nombre, email, avatar |
-| Tema | Light/dark/system |
-| Notificaciones | Preferencias granulares |
-| Seguridad | Contraseña, 2FA, biometría |
-| Privacidad | Configuración de privacidad |
-| Idioma | Español / English |
-| Caché | Limpiar datos en caché |
-| Sobre OKLA | Versión, legal, contacto |
-| Eliminar cuenta | Con confirmación |
+| Feature         | Descripción                 |
+| --------------- | --------------------------- |
+| Editar perfil   | Nombre, email, avatar       |
+| Tema            | Light/dark/system           |
+| Notificaciones  | Preferencias granulares     |
+| Seguridad       | Contraseña, 2FA, biometría  |
+| Privacidad      | Configuración de privacidad |
+| Idioma          | Español / English           |
+| Caché           | Limpiar datos en caché      |
+| Sobre OKLA      | Versión, legal, contacto    |
+| Eliminar cuenta | Con confirmación            |
 
 ### 3.15 📄 Legal & Info
 
-| Feature | Descripción |
-|---|---|
-| Términos de servicio | Página completa |
+| Feature                | Descripción                |
+| ---------------------- | -------------------------- |
+| Términos de servicio   | Página completa            |
 | Política de privacidad | RGPD + App Store compliant |
-| Política de cookies | Info |
-| Contacto | Formulario de contacto |
-| FAQ | Preguntas frecuentes |
-| Ayuda | Centro de ayuda |
+| Política de cookies    | Info                       |
+| Contacto               | Formulario de contacto     |
+| FAQ                    | Preguntas frecuentes       |
+| Ayuda                  | Centro de ayuda            |
 
 ---
 
@@ -292,23 +292,23 @@ Mobile App → HTTPS → okla.com.do/api/* → BFF (Next.js) → Gateway (Ocelot
 
 ### 4.1 Cumplimiento obligatorio
 
-| Requisito | Implementación |
-|---|---|
-| **Privacy Policy** | URL pública + in-app |
-| **App Privacy Labels** | Declaración de datos recolectados |
-| **IDFA (ATT)** | App Tracking Transparency dialog |
-| **Sign in with Apple** | Implementado como login social |
-| **Push Notification Permission** | Solicitado en contexto, no al inicio |
-| **Location Permission** | Solo cuando necesario (mapa, publicar) |
-| **Camera Permission** | Solo al subir fotos |
-| **Minimum OS** | iOS 16.0+ |
-| **64-bit** | Universal binary (arm64) |
-| **IPv6** | Soporte completo |
-| **HTTPS** | ATS (App Transport Security) |
-| **Content Rating** | 4+ (marketplace, sin contenido adulto) |
-| **In-App Purchases** | No aplica (pagos por servicio, no digital goods) |
-| **Account Deletion** | Opción de eliminar cuenta |
-| **Accessibility** | VoiceOver, Dynamic Type, contraste |
+| Requisito                        | Implementación                                   |
+| -------------------------------- | ------------------------------------------------ |
+| **Privacy Policy**               | URL pública + in-app                             |
+| **App Privacy Labels**           | Declaración de datos recolectados                |
+| **IDFA (ATT)**                   | App Tracking Transparency dialog                 |
+| **Sign in with Apple**           | Implementado como login social                   |
+| **Push Notification Permission** | Solicitado en contexto, no al inicio             |
+| **Location Permission**          | Solo cuando necesario (mapa, publicar)           |
+| **Camera Permission**            | Solo al subir fotos                              |
+| **Minimum OS**                   | iOS 16.0+                                        |
+| **64-bit**                       | Universal binary (arm64)                         |
+| **IPv6**                         | Soporte completo                                 |
+| **HTTPS**                        | ATS (App Transport Security)                     |
+| **Content Rating**               | 4+ (marketplace, sin contenido adulto)           |
+| **In-App Purchases**             | No aplica (pagos por servicio, no digital goods) |
+| **Account Deletion**             | Opción de eliminar cuenta                        |
+| **Accessibility**                | VoiceOver, Dynamic Type, contraste               |
 
 ### 4.2 App Store Metadata
 
@@ -340,18 +340,18 @@ Price: Free
 
 ### 5.1 Tipos de Notificaciones
 
-| Canal | Trigger | Prioridad |
-|---|---|---|
-| `messages` | Nuevo mensaje recibido | Alta |
-| `leads` | Nuevo lead/contacto | Alta |
-| `price_alerts` | Precio bajó de umbral | Alta |
-| `search_alerts` | Nuevo vehículo match | Normal |
-| `appointments` | Cita confirmada/recordatorio | Alta |
-| `deals` | Promociones y ofertas | Baja |
-| `system` | Actualizaciones de sistema | Baja |
-| `billing` | Factura, pago, suscripción | Alta |
-| `reviews` | Nueva reseña recibida | Normal |
-| `advertising` | Campaña completada/stats | Normal |
+| Canal           | Trigger                      | Prioridad |
+| --------------- | ---------------------------- | --------- |
+| `messages`      | Nuevo mensaje recibido       | Alta      |
+| `leads`         | Nuevo lead/contacto          | Alta      |
+| `price_alerts`  | Precio bajó de umbral        | Alta      |
+| `search_alerts` | Nuevo vehículo match         | Normal    |
+| `appointments`  | Cita confirmada/recordatorio | Alta      |
+| `deals`         | Promociones y ofertas        | Baja      |
+| `system`        | Actualizaciones de sistema   | Baja      |
+| `billing`       | Factura, pago, suscripción   | Alta      |
+| `reviews`       | Nueva reseña recibida        | Normal    |
+| `advertising`   | Campaña completada/stats     | Normal    |
 
 ### 5.2 Implementación
 
@@ -367,18 +367,18 @@ Price: Free
 
 ### 6.1 Medidas Implementadas
 
-| Medida | Detalle |
-|---|---|
-| SSL/TLS Pinning | Certificado pinned de okla.com.do |
-| JWT Tokens | Access + Refresh con rotación |
-| Biometric Auth | Face ID, Touch ID, Fingerprint |
-| Secure Storage | Tokens en Keychain (iOS) / Keystore (Android) |
-| 2FA TOTP | Google Authenticator compatible |
-| Input Validation | Sanitización de inputs |
-| Root/Jailbreak Detection | Advertencia, no bloqueo |
-| ProGuard/R8 | Ofuscación en release |
-| Anti-tampering | Integrity checks |
-| Session Management | Timeout, revocación |
+| Medida                   | Detalle                                       |
+| ------------------------ | --------------------------------------------- |
+| SSL/TLS Pinning          | Certificado pinned de okla.com.do             |
+| JWT Tokens               | Access + Refresh con rotación                 |
+| Biometric Auth           | Face ID, Touch ID, Fingerprint                |
+| Secure Storage           | Tokens en Keychain (iOS) / Keystore (Android) |
+| 2FA TOTP                 | Google Authenticator compatible               |
+| Input Validation         | Sanitización de inputs                        |
+| Root/Jailbreak Detection | Advertencia, no bloqueo                       |
+| ProGuard/R8              | Ofuscación en release                         |
+| Anti-tampering           | Integrity checks                              |
+| Session Management       | Timeout, revocación                           |
 
 ---
 
@@ -386,16 +386,16 @@ Price: Free
 
 ### 7.1 Objetivos
 
-| Métrica | Target |
-|---|---|
-| Cold start | < 2 segundos |
-| Hot start | < 500ms |
-| Frame rate | 60 FPS constante |
-| APK size | < 30 MB |
-| IPA size | < 40 MB |
-| Memory usage | < 200 MB en uso activo |
+| Métrica       | Target                  |
+| ------------- | ----------------------- |
+| Cold start    | < 2 segundos            |
+| Hot start     | < 500ms                 |
+| Frame rate    | 60 FPS constante        |
+| APK size      | < 30 MB                 |
+| IPA size      | < 40 MB                 |
+| Memory usage  | < 200 MB en uso activo  |
 | Battery drain | < 5%/hora en uso activo |
-| Offline start | < 1 segundo |
+| Offline start | < 1 segundo             |
 
 ### 7.2 Optimizaciones
 
@@ -413,14 +413,14 @@ Price: Free
 
 ### 8.1 Estrategia
 
-| Tipo | Herramienta | Cobertura |
-|---|---|---|
-| Unit Tests | dart test | > 80% domain/data |
-| Widget Tests | flutter_test | > 60% presentación |
-| BLoC Tests | bloc_test | 100% BLoCs |
-| Integration | integration_test | Flujos críticos |
-| E2E | Patrol / Appium | Smoke tests |
-| Snapshot | golden_toolkit | Componentes clave |
+| Tipo         | Herramienta      | Cobertura          |
+| ------------ | ---------------- | ------------------ |
+| Unit Tests   | dart test        | > 80% domain/data  |
+| Widget Tests | flutter_test     | > 60% presentación |
+| BLoC Tests   | bloc_test        | 100% BLoCs         |
+| Integration  | integration_test | Flujos críticos    |
+| E2E          | Patrol / Appium  | Smoke tests        |
+| Snapshot     | golden_toolkit   | Componentes clave  |
 
 ### 8.2 Flujos Críticos a Testear
 
@@ -435,14 +435,14 @@ Price: Free
 
 ## 9. Modo Offline
 
-| Feature | Offline Behavior |
-|---|---|
-| Favoritos | Disponibles desde cache |
-| Búsquedas guardadas | Disponibles |
-| Historial | Últimos 50 vehículos vistos |
-| Mensajes | Últimos mensajes cacheados |
-| Publicar | Draft guardado, sube al reconectar |
-| Dashboard | Datos en caché con timestamp |
+| Feature             | Offline Behavior                   |
+| ------------------- | ---------------------------------- |
+| Favoritos           | Disponibles desde cache            |
+| Búsquedas guardadas | Disponibles                        |
+| Historial           | Últimos 50 vehículos vistos        |
+| Mensajes            | Últimos mensajes cacheados         |
+| Publicar            | Draft guardado, sube al reconectar |
+| Dashboard           | Datos en caché con timestamp       |
 
 ---
 

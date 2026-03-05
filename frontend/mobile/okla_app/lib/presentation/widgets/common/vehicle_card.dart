@@ -66,7 +66,10 @@ class VehicleCard extends StatelessWidget {
                   top: 8,
                   left: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: vehicle.condition.toLowerCase() == 'nuevo'
                           ? OklaColors.success
@@ -104,7 +107,9 @@ class VehicleCard extends StatelessWidget {
                       child: Icon(
                         isFavorite ? Icons.favorite : Icons.favorite_border,
                         size: 20,
-                        color: isFavorite ? OklaColors.error : OklaColors.neutral400,
+                        color: isFavorite
+                            ? OklaColors.error
+                            : OklaColors.neutral400,
                       ),
                     ),
                   ),
@@ -115,19 +120,32 @@ class VehicleCard extends StatelessWidget {
                     bottom: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(OklaDimens.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          OklaDimens.radiusSm,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.photo_library, size: 14, color: Colors.white),
+                          const Icon(
+                            Icons.photo_library,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${vehicle.imageUrls.length}',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
@@ -160,22 +178,38 @@ class VehicleCard extends StatelessWidget {
                     children: [
                       Text(
                         '${vehicle.year}',
-                        style: const TextStyle(fontSize: 13, color: OklaColors.neutral500),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: OklaColors.neutral500,
+                        ),
                       ),
                       if (vehicle.mileage != null && vehicle.mileage! > 0) ...[
-                        const Text(' · ', style: TextStyle(color: OklaColors.neutral300)),
+                        const Text(
+                          ' · ',
+                          style: TextStyle(color: OklaColors.neutral300),
+                        ),
                         Text(
                           '${_formatMileage(vehicle.mileage!)} km',
-                          style: const TextStyle(fontSize: 13, color: OklaColors.neutral500),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: OklaColors.neutral500,
+                          ),
                         ),
                       ],
-                      if (vehicle.transmission != null && vehicle.transmission!.isNotEmpty) ...[
-                        const Text(' · ', style: TextStyle(color: OklaColors.neutral300)),
+                      if (vehicle.transmission != null &&
+                          vehicle.transmission!.isNotEmpty) ...[
+                        const Text(
+                          ' · ',
+                          style: TextStyle(color: OklaColors.neutral300),
+                        ),
                         Flexible(
                           child: Text(
                             vehicle.transmission!,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13, color: OklaColors.neutral500),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: OklaColors.neutral500,
+                            ),
                           ),
                         ),
                       ],
@@ -194,17 +228,26 @@ class VehicleCard extends StatelessWidget {
                   ),
 
                   // Location
-                  if (vehicle.location != null && vehicle.location!.isNotEmpty && !compact) ...[
+                  if (vehicle.location != null &&
+                      vehicle.location!.isNotEmpty &&
+                      !compact) ...[
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 14, color: OklaColors.neutral400),
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: OklaColors.neutral400,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             vehicle.location!,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: OklaColors.neutral400),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: OklaColors.neutral400,
+                            ),
                           ),
                         ),
                       ],
@@ -223,7 +266,13 @@ class VehicleCard extends StatelessWidget {
     return Container(
       color: OklaColors.neutral100,
       child: Center(
-        child: child ?? const Icon(Icons.directions_car, size: 48, color: OklaColors.neutral300),
+        child:
+            child ??
+            const Icon(
+              Icons.directions_car,
+              size: 48,
+              color: OklaColors.neutral300,
+            ),
       ),
     );
   }

@@ -4,6 +4,7 @@ using MediaService.Infrastructure.Extensions;
 using MediaService.Infrastructure.Middleware;
 using MediaService.Infrastructure.Messaging;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using MediaService.Infrastructure.HealthChecks;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -276,7 +277,15 @@ app.UseMiddleware<ServiceRegistrationMiddleware>();
 
 // 9. Endpoints
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 
 app.Run();
 
