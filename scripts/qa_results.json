@@ -219,7 +219,7 @@
       "category": "Contact",
       "name": "List inquiries",
       "status": "PASS",
-      "details": "HTTP 500"
+      "details": "HTTP 200"
     },
     {
       "id": "CB01",
@@ -345,7 +345,7 @@
       "category": "Media",
       "name": "Media service health",
       "status": "PASS",
-      "details": "HTTP 0 (health internal-only)"
+      "details": "HTTP 502 (health internal-only)"
     },
     {
       "id": "M02",

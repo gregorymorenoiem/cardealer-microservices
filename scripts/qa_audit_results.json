@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-03-05T18:20:42.812060+00:00",
+  "timestamp": "2026-03-05T18:36:58.120106+00:00",
   "environment": "production",
   "total": 102,
-  "passed": 102,
-  "failed": 0,
-  "pass_rate": "100.0%",
+  "passed": 101,
+  "failed": 1,
+  "pass_rate": "99.0%",
   "categories": {
     "Auth": {
       "passed": 7,
@@ -77,30 +77,30 @@
       "rate": "100%"
     },
     "Performance": {
-      "passed": 5,
-      "failed": 0,
-      "rate": "100%"
+      "passed": 4,
+      "failed": 1,
+      "rate": "80%"
     }
   },
   "timings": {
-    "admin_login": 9.256602764129639,
-    "vehicle_listing": 1.1678907871246338,
-    "vehicle_detail": 0.8970050811767578,
-    "homepage_sections": 2.807687759399414,
-    "chatbot_response": 12.400278091430664,
-    "page_Homepage": 0.2736928462982178,
-    "page_Vehiculos": 0.35651397705078125,
-    "page_Login": 0.32900285720825195,
-    "page_Registro": 0.3104979991912842,
-    "page_Dealers": 0.45267486572265625,
-    "page_Perfil": 0.7960677146911621,
-    "page_Publicar": 0.6054699420928955,
-    "page_Favoritos": 0.7051670551300049,
-    "page_MisVehiculos": 0.5277879238128662,
-    "page_Contacto": 0.26878786087036133,
-    "page_PanelAdmin": 0.653278112411499,
-    "page_AdminUsuarios": 0.8003242015838623,
-    "page_AdminVehiculos": 0.604421854019165
+    "admin_login": 9.769389867782593,
+    "vehicle_listing": 13.464524030685425,
+    "vehicle_detail": 1.4700548648834229,
+    "homepage_sections": 3.2164738178253174,
+    "chatbot_response": 10.537597894668579,
+    "page_Homepage": 0.271151065826416,
+    "page_Vehiculos": 0.2901430130004883,
+    "page_Login": 1.8982679843902588,
+    "page_Registro": 0.44191527366638184,
+    "page_Dealers": 0.29450392723083496,
+    "page_Perfil": 0.5150110721588135,
+    "page_Publicar": 0.5298969745635986,
+    "page_Favoritos": 0.5755331516265869,
+    "page_MisVehiculos": 0.5112171173095703,
+    "page_Contacto": 0.2745020389556885,
+    "page_PanelAdmin": 0.7084217071533203,
+    "page_AdminUsuarios": 0.6915731430053711,
+    "page_AdminVehiculos": 0.5714099407196045
   },
   "tests": [
     {
@@ -108,21 +108,21 @@
       "category": "Auth",
       "name": "Admin login",
       "status": "PASS",
-      "details": "HTTP 200 (9.26s)"
+      "details": "HTTP 200 (9.77s)"
     },
     {
       "id": "AUTH-02",
       "category": "Auth",
       "name": "Dealer login",
       "status": "PASS",
-      "details": "HTTP 200 (1.09s)"
+      "details": "HTTP 200 (0.88s)"
     },
     {
       "id": "AUTH-03",
       "category": "Auth",
       "name": "Buyer login",
       "status": "PASS",
-      "details": "HTTP 200 (0.91s)"
+      "details": "HTTP 200 (1.10s)"
     },
     {
       "id": "AUTH-04",
@@ -157,7 +157,7 @@
       "category": "Vehicles",
       "name": "Public listing",
       "status": "PASS",
-      "details": "10 vehicles, total=14 (1.17s)"
+      "details": "10 vehicles, total=14 (13.46s)"
     },
     {
       "id": "VEH-02",
@@ -206,7 +206,7 @@
       "category": "Vehicles",
       "name": "Vehicle detail by ID",
       "status": "PASS",
-      "details": "HTTP 200 (0.90s)"
+      "details": "HTTP 200 (1.47s)"
     },
     {
       "id": "VEH-07",
@@ -248,7 +248,7 @@
       "category": "Homepage",
       "name": "Homepage sections endpoint",
       "status": "PASS",
-      "details": "17 sections (2.81s)"
+      "details": "17 sections (3.22s)"
     },
     {
       "id": "HOME-02",
@@ -507,7 +507,7 @@
       "category": "Chatbot",
       "name": "Send message (Spanish)",
       "status": "PASS",
-      "details": "HTTP 200 (12.40s)"
+      "details": "HTTP 200 (10.54s)"
     },
     {
       "id": "CHAT-03",
@@ -570,7 +570,7 @@
       "category": "Admin",
       "name": "Error logs",
       "status": "PASS",
-      "details": "HTTP 200 (0.60s)"
+      "details": "HTTP 200 (12.94s)"
     },
     {
       "id": "ADM-05",
@@ -675,56 +675,56 @@
       "category": "Frontend",
       "name": "Vehiculos (/vehiculos)",
       "status": "PASS",
-      "details": "HTTP 200 (0.36s)"
+      "details": "HTTP 200 (0.29s)"
     },
     {
       "id": "FE-Login",
       "category": "Frontend",
       "name": "Login (/login)",
       "status": "PASS",
-      "details": "HTTP 200 (0.33s)"
+      "details": "HTTP 200 (1.90s)"
     },
     {
       "id": "FE-Registro",
       "category": "Frontend",
       "name": "Registro (/registro)",
       "status": "PASS",
-      "details": "HTTP 200 (0.31s)"
+      "details": "HTTP 200 (0.44s)"
     },
     {
       "id": "FE-Dealers",
       "category": "Frontend",
       "name": "Dealers (/dealers)",
       "status": "PASS",
-      "details": "HTTP 200 (0.45s)"
+      "details": "HTTP 200 (0.29s)"
     },
     {
       "id": "FE-Perfil",
       "category": "Frontend",
       "name": "Perfil (/perfil)",
       "status": "PASS",
-      "details": "HTTP 200 (0.80s)"
+      "details": "HTTP 200 (0.52s)"
     },
     {
       "id": "FE-Publicar",
       "category": "Frontend",
       "name": "Publicar (/publicar)",
       "status": "PASS",
-      "details": "HTTP 200 (0.61s)"
+      "details": "HTTP 200 (0.53s)"
     },
     {
       "id": "FE-Favoritos",
       "category": "Frontend",
       "name": "Favoritos (/favoritos)",
       "status": "PASS",
-      "details": "HTTP 200 (0.71s)"
+      "details": "HTTP 200 (0.58s)"
     },
     {
       "id": "FE-MisVehiculos",
       "category": "Frontend",
       "name": "MisVehiculos (/mis-vehiculos)",
       "status": "PASS",
-      "details": "HTTP 200 (0.53s)"
+      "details": "HTTP 200 (0.51s)"
     },
     {
       "id": "FE-Contacto",
@@ -738,21 +738,21 @@
       "category": "Frontend",
       "name": "PanelAdmin (/admin)",
       "status": "PASS",
-      "details": "HTTP 200 (0.65s)"
+      "details": "HTTP 200 (0.71s)"
     },
     {
       "id": "FE-AdminUsuarios",
       "category": "Frontend",
       "name": "AdminUsuarios (/admin/usuarios)",
       "status": "PASS",
-      "details": "HTTP 200 (0.80s)"
+      "details": "HTTP 200 (0.69s)"
     },
     {
       "id": "FE-AdminVehiculos",
       "category": "Frontend",
       "name": "AdminVehiculos (/admin/vehiculos)",
       "status": "PASS",
-      "details": "HTTP 200 (0.60s)"
+      "details": "HTTP 200 (0.57s)"
     },
     {
       "id": "FE-HP-Content",
@@ -786,36 +786,36 @@
       "id": "PERF-Homepage",
       "category": "Performance",
       "name": "Homepage API < 3.0s",
-      "status": "PASS",
-      "details": "2.43s"
+      "status": "FAIL",
+      "details": "3.40s"
     },
     {
       "id": "PERF-Vehicle ",
       "category": "Performance",
       "name": "Vehicle List < 2.0s",
       "status": "PASS",
-      "details": "0.90s"
+      "details": "0.44s"
     },
     {
       "id": "PERF-Featured",
       "category": "Performance",
       "name": "Featured < 2.0s",
       "status": "PASS",
-      "details": "0.70s"
+      "details": "0.94s"
     },
     {
       "id": "PERF-Categori",
       "category": "Performance",
       "name": "Categories < 2.0s",
       "status": "PASS",
-      "details": "0.38s"
+      "details": "0.73s"
     },
     {
       "id": "PERF-Brands",
       "category": "Performance",
       "name": "Brands < 2.0s",
       "status": "PASS",
-      "details": "0.49s"
+      "details": "0.37s"
     }
   ]
 }

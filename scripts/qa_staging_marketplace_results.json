@@ -1,5 +1,5 @@
 {
-  "date": "2026-03-05T14:21:59.500080",
+  "date": "2026-03-05T14:38:27.835393",
   "suite": "staging_marketplace_v4",
   "total": 95,
   "passed": 95,
@@ -10,22 +10,22 @@
       "id": "FN-01",
       "category": "Functional",
       "name": "Admin login flow",
-      "passed": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjlkMTY5MTVjLWUyYmUtNDdjOS05MTM0LTg2YjE5MzA0YmQyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluQG9rbGEubG9jYWwiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5Ab2tsYS5sb2NhbCIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsImp0aSI6IjFkODU3MTAyLTk0MDQtNDJiYi05YTUyLWYxODQ3N2Y1OTYwMyIsImRlYWxlcklkIjoiIiwiYWNjb3VudF90eXBlIjoiNCIsImFjY291bnRUeXBlIjoiYWRtaW4iLCJ1c2VySW50ZW50IjoiYnJvd3NlIiwiU2Vzc2lvbklkIjoiODU4NzliMGMtMTJlNC00MDg4LTg4YmItYWY1NWI4YmRhZTE5IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjpbIkFkbWluIiwiQ29tcGxpYW5jZSJdLCJleHAiOjE3NzI3Mzg0NTMsImlzcyI6Im9rbGEtYXBpIiwiYXVkIjoib2tsYS1jbGllbnRzIn0.rDqY0duVf7Idf4qmq2w7DLdxPSWq2O6lfmEPoDC8V8s",
-      "detail": "HTTP 200 (0.93s)"
+      "passed": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjlkMTY5MTVjLWUyYmUtNDdjOS05MTM0LTg2YjE5MzA0YmQyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluQG9rbGEubG9jYWwiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5Ab2tsYS5sb2NhbCIsImVtYWlsX3ZlcmlmaWVkIjoidHJ1ZSIsImp0aSI6IjhjYTZmNDgyLTI1YWQtNDdhZi1hM2Y3LTE2YzNhYjE2NTE0MiIsImRlYWxlcklkIjoiIiwiYWNjb3VudF90eXBlIjoiNCIsImFjY291bnRUeXBlIjoiYWRtaW4iLCJ1c2VySW50ZW50IjoiYnJvd3NlIiwiU2Vzc2lvbklkIjoiODU4NzliMGMtMTJlNC00MDg4LTg4YmItYWY1NWI4YmRhZTE5IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjpbIkFkbWluIiwiQ29tcGxpYW5jZSJdLCJleHAiOjE3NzI3Mzk0MjksImlzcyI6Im9rbGEtYXBpIiwiYXVkIjoib2tsYS1jbGllbnRzIn0.UOupf7miIohzo6cYNFdPLZBMN3mBmtTXsd6tnsveYCc",
+      "detail": "HTTP 200 (7.32s)"
     },
     {
       "id": "FN-02",
       "category": "Functional",
       "name": "Dealer login flow",
-      "passed": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImYzYWFhZGM1LWQ2YWItNDk5Mi05ZTQ4LWU3NDQ1NGZiNmNhMiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Im5tYXRlb0Bva2xhLmNvbS5kbyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJubWF0ZW8iLCJlbWFpbF92ZXJpZmllZCI6InRydWUiLCJqdGkiOiJiN2Q4ZjEzNy00ZTc2LTQ1NjUtYjA1YS0zMzI3M2VhYTJjNTYiLCJkZWFsZXJJZCI6IiIsImFjY291bnRfdHlwZSI6IjIiLCJhY2NvdW50VHlwZSI6ImRlYWxlciIsInVzZXJJbnRlbnQiOiJicm93c2UiLCJTZXNzaW9uSWQiOiI5NTk1YzNhOC01ZDFlLTRlZGItODZmZi00YTVkMzQyZWVmZTEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEZWFsZXIiLCJleHAiOjE3NzI3Mzg0NTYsImlzcyI6Im9rbGEtYXBpIiwiYXVkIjoib2tsYS1jbGllbnRzIn0.rg1aRYF4lj9CLaYv5ZHzNKsa7yMVPRrv7eRO1qhzSIE",
-      "detail": "HTTP 200 (0.94s)"
+      "passed": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImYzYWFhZGM1LWQ2YWItNDk5Mi05ZTQ4LWU3NDQ1NGZiNmNhMiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Im5tYXRlb0Bva2xhLmNvbS5kbyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJubWF0ZW8iLCJlbWFpbF92ZXJpZmllZCI6InRydWUiLCJqdGkiOiJhNmQ4ZmZkYi0yMjA5LTQ4YmQtOGI3MC0yMTY0MzFiNGQxZGYiLCJkZWFsZXJJZCI6IiIsImFjY291bnRfdHlwZSI6IjIiLCJhY2NvdW50VHlwZSI6ImRlYWxlciIsInVzZXJJbnRlbnQiOiJicm93c2UiLCJTZXNzaW9uSWQiOiI5NTk1YzNhOC01ZDFlLTRlZGItODZmZi00YTVkMzQyZWVmZTEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEZWFsZXIiLCJleHAiOjE3NzI3Mzk0MzIsImlzcyI6Im9rbGEtYXBpIiwiYXVkIjoib2tsYS1jbGllbnRzIn0.eNSGVx9b8MiFFBK_nnn5CNHnxgObnhvtQP6ebX_7oeI",
+      "detail": "HTTP 200 (0.76s)"
     },
     {
       "id": "FN-03",
       "category": "Functional",
       "name": "Buyer login flow",
-      "passed": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjdlZGJmMzU1LWQ0MWQtNGZkZS1hNTk2LWM2MWJiNDcwNGU0MyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImJ1eWVyMDAyQG9rbGEtdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYnV5ZXIwMDIiLCJlbWFpbF92ZXJpZmllZCI6InRydWUiLCJqdGkiOiI3ZTQ2YTBkMi05YWYyLTQyYmMtOTE0My0zMjAzMmFhNzQwYmMiLCJkZWFsZXJJZCI6IiIsImFjY291bnRfdHlwZSI6IjEiLCJhY2NvdW50VHlwZSI6ImJ1eWVyIiwidXNlckludGVudCI6ImJyb3dzZSIsIlNlc3Npb25JZCI6ImE0MzI2NmEyLTA5NzMtNGYyNy05OGQzLTM2ZmFmZjc0MTczZiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3NzI3Mzg0NTksImlzcyI6Im9rbGEtYXBpIiwiYXVkIjoib2tsYS1jbGllbnRzIn0.UxpVn5iJTmCqz-on4ZY1d4XwRv67vsDU4fMJvSfGd3c",
-      "detail": "HTTP 200 (1.39s)"
+      "passed": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjdlZGJmMzU1LWQ0MWQtNGZkZS1hNTk2LWM2MWJiNDcwNGU0MyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImJ1eWVyMDAyQG9rbGEtdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYnV5ZXIwMDIiLCJlbWFpbF92ZXJpZmllZCI6InRydWUiLCJqdGkiOiI3ZGYyNzZmNy1jZGUzLTQ3YmYtOTljOC03YzVkOTVhZGEyNmMiLCJkZWFsZXJJZCI6IiIsImFjY291bnRfdHlwZSI6IjEiLCJhY2NvdW50VHlwZSI6ImJ1eWVyIiwidXNlckludGVudCI6ImJyb3dzZSIsIlNlc3Npb25JZCI6ImE0MzI2NmEyLTA5NzMtNGYyNy05OGQzLTM2ZmFmZjc0MTczZiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3NzI3Mzk0MzUsImlzcyI6Im9rbGEtYXBpIiwiYXVkIjoib2tsYS1jbGllbnRzIn0.UXOAX4LRAtkItwr5tEriHDh8iL2mnyAUQe18VBweS1k",
+      "detail": "HTTP 200 (0.89s)"
     },
     {
       "id": "FN-04",
@@ -39,7 +39,7 @@
       "category": "Functional",
       "name": "Vehicle detail page data",
       "passed": true,
-      "detail": "HTTP 200 (0.57s)"
+      "detail": "HTTP 200 (0.81s)"
     },
     {
       "id": "FN-06",
@@ -172,42 +172,42 @@
       "category": "Performance",
       "name": "Vehicle listing response time",
       "passed": true,
-      "detail": "HTTP 200 (0.50s, limit 3s)"
+      "detail": "HTTP 200 (0.82s, limit 3s)"
     },
     {
       "id": "PERF-02",
       "category": "Performance",
       "name": "Homepage sections response time",
       "passed": true,
-      "detail": "HTTP 200 (0.86s, limit 3s)"
+      "detail": "HTTP 200 (1.69s, limit 3s)"
     },
     {
       "id": "PERF-03",
       "category": "Performance",
       "name": "Ad catalog response time",
       "passed": true,
-      "detail": "HTTP 200 (0.26s, limit 3s)"
+      "detail": "HTTP 200 (0.59s, limit 3s)"
     },
     {
       "id": "PERF-04",
       "category": "Performance",
       "name": "Categories response time",
       "passed": true,
-      "detail": "HTTP 200 (1.07s, limit 3s)"
+      "detail": "HTTP 200 (0.51s, limit 3s)"
     },
     {
       "id": "PERF-05",
       "category": "Performance",
       "name": "Brands response time",
       "passed": true,
-      "detail": "HTTP 200 (0.47s, limit 3s)"
+      "detail": "HTTP 200 (0.49s, limit 3s)"
     },
     {
       "id": "PERF-06",
       "category": "Performance",
       "name": "Burst test (5 rapid requests)",
       "passed": true,
-      "detail": "Avg: 0.75s"
+      "detail": "Avg: 0.98s"
     },
     {
       "id": "SEC-01",
@@ -389,35 +389,35 @@
       "category": "Smoke",
       "name": "Homepage accessible",
       "passed": true,
-      "detail": "HTTP 200 (1.03s)"
+      "detail": "HTTP 200 (1.02s)"
     },
     {
       "id": "SMOKE-02",
       "category": "Smoke",
       "name": "Vehicles page accessible",
       "passed": true,
-      "detail": "HTTP 200 (0.90s)"
+      "detail": "HTTP 200 (0.57s)"
     },
     {
       "id": "SMOKE-03",
       "category": "Smoke",
       "name": "Login page accessible",
       "passed": true,
-      "detail": "HTTP 200 (0.73s)"
+      "detail": "HTTP 200 (0.40s)"
     },
     {
       "id": "SMOKE-04",
       "category": "Smoke",
       "name": "Dealers page accessible",
       "passed": true,
-      "detail": "HTTP 200 (1.03s)"
+      "detail": "HTTP 200 (0.61s)"
     },
     {
       "id": "SMOKE-05",
       "category": "Smoke",
       "name": "Contact page accessible",
       "passed": true,
-      "detail": "HTTP 200 (0.72s)"
+      "detail": "HTTP 200 (0.49s)"
     },
     {
       "id": "UAT-01",
@@ -445,7 +445,7 @@
       "category": "Recovery",
       "name": "System responds after test load",
       "passed": true,
-      "detail": "HTTP 200 (0.48s)"
+      "detail": "HTTP 200 (1.08s)"
     },
     {
       "id": "RECOV-02",
@@ -522,7 +522,7 @@
       "category": "Detail",
       "name": "Vehicle detail page renders",
       "passed": true,
-      "detail": "HTTP 200 (0.98s)"
+      "detail": "HTTP 200 (1.12s)"
     },
     {
       "id": "MKT-09",
@@ -585,7 +585,7 @@
       "category": "Notifications",
       "name": "Chatbot responds to queries",
       "passed": true,
-      "detail": "HTTP 400 (0.51s)"
+      "detail": "HTTP 400 (0.47s)"
     },
     {
       "id": "MKT-18",
@@ -613,14 +613,14 @@
       "category": "Load",
       "name": "Complex search performance",
       "passed": true,
-      "detail": "HTTP 200 (1.00s)"
+      "detail": "HTTP 200 (1.02s)"
     },
     {
       "id": "MKT-22",
       "category": "Load",
       "name": "Homepage sections load time",
       "passed": true,
-      "detail": "HTTP 200 (1.40s)"
+      "detail": "HTTP 200 (1.28s)"
     },
     {
       "id": "MKT-23",
@@ -673,12 +673,12 @@
     }
   ],
   "timings": {
-    "admin_login": 0.9318656921386719,
-    "vehicle_listing": 0.49712204933166504,
-    "homepage_sections": 1.4031403064727783,
-    "ad_catalog": 0.2589402198791504,
-    "categories": 1.0745410919189453,
-    "brands": 0.47119998931884766,
-    "chatbot_response": 0.5076439380645752
+    "admin_login": 7.320897102355957,
+    "vehicle_listing": 0.8206472396850586,
+    "homepage_sections": 1.2755708694458008,
+    "ad_catalog": 0.5916757583618164,
+    "categories": 0.5089578628540039,
+    "brands": 0.4940369129180908,
+    "chatbot_response": 0.46559596061706543
   }
 }

@@ -247,8 +247,7 @@ function fallbackExtraction(text: string): ExtractedVehicle {
   ];
 
   // Extract brand
-  const make =
-    brands.find(b => upperText.includes(b.toUpperCase())) || '';
+  const make = brands.find(b => upperText.includes(b.toUpperCase())) || '';
 
   // Extract year (4-digit number between 1990-2027)
   const yearMatch = text.match(/\b(19[9]\d|20[0-2]\d)\b/);
@@ -266,7 +265,9 @@ function fallbackExtraction(text: string): ExtractedVehicle {
   }
 
   // Extract mileage
-  const mileageMatch = text.match(/([0-9]{1,3}(?:[,.]?[0-9]{3})*)\s*(?:km|kms|kilómetros|kilometros)/i);
+  const mileageMatch = text.match(
+    /([0-9]{1,3}(?:[,.]?[0-9]{3})*)\s*(?:km|kms|kilómetros|kilometros)/i
+  );
   const mileage = mileageMatch ? parseInt(mileageMatch[1].replace(/[,.]/g, '')) : null;
 
   // Extract transmission

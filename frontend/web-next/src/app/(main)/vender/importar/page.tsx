@@ -22,6 +22,9 @@ import {
   ArrowRight,
   Car,
   Edit3,
+  Layers,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,6 +65,18 @@ export default function ImportarPage() {
   const [extractedData, setExtractedData] = useState<ExtractedVehicle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  // Bulk import state
+  const [bulkListings, setBulkListings] = useState<Array<{ text: string; source: string }>>([
+    { text: '', source: 'facebook' },
+  ]);
+  const [bulkResults, setBulkResults] = useState<Array<{
+    index: number;
+    success: boolean;
+    data: ExtractedVehicle | null;
+    error: string | null;
+    source?: string;
+  }>>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   const handleExtract = useCallback(
     async (mode: 'text' | 'url') => {
@@ -82,9 +97,7 @@ export default function ImportarPage() {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify(
-            mode === 'text' ? { text: listingText } : { url: listingUrl }
-          ),
+          body: JSON.stringify(mode === 'text' ? { text: listingText } : { url: listingUrl }),
         });
 
         const result = await response.json();
@@ -106,10 +119,68 @@ export default function ImportarPage() {
 
   const handlePublish = useCallback(() => {
     if (!extractedData) return;
-    // Store extracted data in sessionStorage and navigate to publish page
     sessionStorage.setItem('importedVehicle', JSON.stringify(extractedData));
     router.push('/vender/publicar?from=import');
   }, [extractedData, router]);
+
+  const handleBulkImport = useCallback(async () => {
+    const validListings = bulkListings.filter(l => l.text.length >= 10);
+    if (validListings.length === 0) return;
+
+    setIsBulkProcessing(true);
+    setError(null);
+    setBulkResults([]);
+
+    try {
+      const token = document.cookie
+        .split(';')
+        .find(c => c.trim().startsWith('token='))
+        ?.split('=')[1];
+
+      const response = await fetch('/api/import/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ listings: validListings }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Enrich results with source from original listings
+        const enrichedResults = (result.results as Array<{ index: number; success: boolean; data: ExtractedVehicle | null; error: string | null }>).map(
+          (r: { index: number; success: boolean; data: ExtractedVehicle | null; error: string | null }) => ({
+            ...r,
+            source: validListings[r.index]?.source || 'other',
+          })
+        );
+        setBulkResults(enrichedResults);
+      } else {
+        setError(result.error || 'Error al procesar importación masiva');
+      }
+    } catch {
+      setError('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  }, [bulkListings]);
+
+  const addBulkListing = () => {
+    if (bulkListings.length < 50) {
+      setBulkListings([...bulkListings, { text: '', source: 'facebook' }]);
+    }
+  };
+
+  const removeBulkListing = (index: number) => {
+    setBulkListings(bulkListings.filter((_, i) => i !== index));
+  };
+
+  const updateBulkListing = (index: number, field: 'text' | 'source', value: string) => {
+    const updated = [...bulkListings];
+    updated[index] = { ...updated[index], [field]: value };
+    setBulkListings(updated);
+  };
 
   const formatPrice = (price: number, currency: string) => {
     if (currency === 'USD') return `US$${price.toLocaleString('en-US')}`;
@@ -189,6 +260,10 @@ export default function ImportarPage() {
                 <Globe className="h-4 w-4" />
                 URL del anuncio
               </TabsTrigger>
+              <TabsTrigger value="bulk" className="gap-2">
+                <Layers className="h-4 w-4" />
+                Importación masiva
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="text">
@@ -232,7 +307,7 @@ export default function ImportarPage() {
                   <Label htmlFor="marketplace-url">URL del anuncio</Label>
                   <div className="mt-1.5 flex gap-2">
                     <div className="relative flex-1">
-                      <Facebook className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+                      <Facebook className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                       <Input
                         id="marketplace-url"
                         placeholder="https://www.facebook.com/marketplace/item/..."
@@ -267,6 +342,80 @@ export default function ImportarPage() {
                 </Alert>
               </div>
             </TabsContent>
+
+            <TabsContent value="bulk">
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-sm">
+                  Importa múltiples vehículos a la vez. Pega el texto de cada anuncio por separado.
+                  Soporta Facebook Marketplace, Corotos, SuperCarros, y MercadoLibre.
+                </p>
+                {bulkListings.map((listing, index) => (
+                  <div key={index} className="rounded-lg border p-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-medium">Anuncio #{index + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={listing.source}
+                          onChange={e => updateBulkListing(index, 'source', e.target.value)}
+                          className="bg-background rounded-md border px-2 py-1 text-xs"
+                        >
+                          <option value="facebook">Facebook Marketplace</option>
+                          <option value="corotos">Corotos.com.do</option>
+                          <option value="supercarros">SuperCarros.com</option>
+                          <option value="mercadolibre">MercadoLibre RD</option>
+                          <option value="other">Otra plataforma</option>
+                        </select>
+                        {bulkListings.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeBulkListing(index)}
+                            className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder="Pega aquí el texto del anuncio..."
+                      value={listing.text}
+                      onChange={e => updateBulkListing(index, 'text', e.target.value)}
+                      className="min-h-[100px] resize-y text-sm"
+                    />
+                  </div>
+                ))}
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addBulkListing}
+                    disabled={bulkListings.length >= 50}
+                    className="gap-1.5"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Agregar otro anuncio ({bulkListings.length}/50)
+                  </Button>
+                  <Button
+                    onClick={handleBulkImport}
+                    disabled={isBulkProcessing || bulkListings.every(l => l.text.length < 10)}
+                    className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  >
+                    {isBulkProcessing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Importar {bulkListings.filter(l => l.text.length >= 10).length} anuncios
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -281,6 +430,109 @@ export default function ImportarPage() {
             {hint && <p className="mt-1 font-medium">{hint}</p>}
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* Bulk import results */}
+      {bulkResults && bulkResults.length > 0 && (
+        <Card className="mb-8 border-purple-200 dark:border-purple-900">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-purple-600" />
+                <CardTitle>Resultados de importación masiva</CardTitle>
+              </div>
+              <div className="flex gap-2">
+                <Badge className="bg-green-100 text-green-700">
+                  {bulkResults.filter(r => r.success).length} exitosos
+                </Badge>
+                {bulkResults.filter(r => !r.success).length > 0 && (
+                  <Badge className="bg-red-100 text-red-700">
+                    {bulkResults.filter(r => !r.success).length} fallidos
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <CardDescription>
+              Revisa cada vehículo extraído y publícalo individualmente
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {bulkResults.map((result, index) => (
+                <div
+                  key={index}
+                  className={`rounded-lg border p-4 ${result.success ? 'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20' : 'border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20'}`}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {result.success ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-red-600" />
+                      )}
+                      <span className="text-sm font-medium">
+                        Anuncio #{index + 1}
+                        {result.source && (
+                          <span className="text-muted-foreground ml-1 text-xs">
+                            ({result.source})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {result.success && result.data && (
+                      <Badge variant="secondary" className="text-xs">
+                        {result.data.confidence}% confianza
+                      </Badge>
+                    )}
+                  </div>
+                  {result.success && result.data ? (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <DataField label="Marca" value={result.data.make} />
+                      <DataField label="Modelo" value={result.data.model} />
+                      <DataField label="Año" value={result.data.year?.toString()} />
+                      <DataField
+                        label="Precio"
+                        value={
+                          result.data.price
+                            ? formatPrice(result.data.price, result.data.currency)
+                            : null
+                        }
+                        highlight
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-red-600">{result.error || 'Error desconocido'}</p>
+                  )}
+                  {result.success && result.data && (
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setExtractedData(result.data!);
+                          setBulkResults([]);
+                        }}
+                        className="gap-1.5 text-xs"
+                      >
+                        Ver detalles y publicar
+                        <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end border-t pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setBulkResults([])}
+                className="gap-2"
+              >
+                Limpiar resultados
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Extracted data preview */}
@@ -331,7 +583,9 @@ export default function ImportarPage() {
                   />
                   <DataField
                     label="Kilometraje"
-                    value={extractedData.mileage ? `${extractedData.mileage.toLocaleString()} km` : null}
+                    value={
+                      extractedData.mileage ? `${extractedData.mileage.toLocaleString()} km` : null
+                    }
                   />
                   <DataField label="Transmisión" value={extractedData.transmission} />
                   <DataField label="Combustible" value={extractedData.fuelType} />
@@ -378,11 +632,7 @@ export default function ImportarPage() {
 
             {/* Actions */}
             <div className="mt-6 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setExtractedData(null)}
-                className="gap-2"
-              >
+              <Button variant="outline" onClick={() => setExtractedData(null)} className="gap-2">
                 <Edit3 className="h-4 w-4" />
                 Modificar texto y re-extraer
               </Button>
@@ -439,7 +689,9 @@ function DataField({
   return (
     <div>
       <span className="text-muted-foreground text-xs">{label}</span>
-      <p className={`text-sm font-medium ${highlight ? 'text-emerald-600' : ''} ${!value ? 'text-muted-foreground italic' : ''}`}>
+      <p
+        className={`text-sm font-medium ${highlight ? 'text-emerald-600' : ''} ${!value ? 'text-muted-foreground italic' : ''}`}
+      >
         {value || 'No detectado'}
       </p>
     </div>
