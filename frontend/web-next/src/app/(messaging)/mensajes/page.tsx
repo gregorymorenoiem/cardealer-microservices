@@ -105,7 +105,7 @@ function ConversationsError({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center p-6 text-center">
       <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
-      <h3 className="mb-2 font-semibold">Error al cargar</h3>
+      <h2 className="mb-2 font-semibold">Error al cargar</h2>
       <p className="text-muted-foreground mb-4 text-sm">No se pudieron cargar las conversaciones</p>
       <Button variant="outline" onClick={onRetry}>
         <RefreshCw className="mr-2 h-4 w-4" />
@@ -439,7 +439,7 @@ function EmptyState() {
           <Inbox className="h-12 w-12 text-white" />
         </div>
       </div>
-      <h3 className="text-foreground mb-2 text-xl font-bold">Sin mensajes aún</h3>
+      <h2 className="text-foreground mb-2 text-xl font-bold">Sin mensajes aún</h2>
       <p className="text-muted-foreground mb-2 max-w-sm text-sm">
         Aquí aparecen tus conversaciones con vendedores y dealers — cuando contactas a alguien desde
         una publicación de vehículo.
@@ -1252,7 +1252,7 @@ export default function MessagesPage() {
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#00A870]/10">
                       <Bot className="h-8 w-8 text-[#00A870]" />
                     </div>
-                    <h3 className="mb-1 font-semibold text-gray-700">Sin conversaciones IA</h3>
+                    <h2 className="mb-1 font-semibold text-gray-700">Sin conversaciones IA</h2>
                     <p className="text-muted-foreground mb-4 text-sm">
                       Chatea con el asistente de un dealer desde la p&aacute;gina de su
                       veh&iacute;culo
@@ -1369,9 +1369,9 @@ export default function MessagesPage() {
                       <MessageCircle className="h-10 w-10 text-[#00A870]" />
                     </div>
                   </div>
-                  <h3 className="text-foreground mb-2 text-lg font-semibold">
+                  <h2 className="text-foreground mb-2 text-lg font-semibold">
                     Selecciona una conversación
-                  </h3>
+                  </h2>
                   <p className="text-muted-foreground mb-4 max-w-xs text-sm">
                     Elige una conversación de la lista para ver los mensajes
                   </p>

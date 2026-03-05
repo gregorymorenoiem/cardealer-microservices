@@ -488,7 +488,7 @@ export function DocumentCapture({
           // Show captured image
           <Image
             src={capturedPhoto}
-            alt={`Captured ${side}`}
+            alt={`Captura ${side}`}
             fill
             className="object-contain"
             unoptimized

@@ -51,7 +51,8 @@ metadata:
     app: postgres-backup
     tier: infrastructure
 spec:
-  schedule: "0 3 * * *" # Daily at 3:00 AM UTC
+  # Schedule: daily at 3:00 AM UTC. For lower RPO, change to "0 */6 * * *" (every 6 hours).
+  schedule: "0 3 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 7
   failedJobsHistoryLimit: 3
@@ -72,7 +73,7 @@ spec:
                 - |
                   set -e
                   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-                  DATABASES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice reviewservice"
+                  DATABASES="authservice userservice roleservice vehiclessaleservice mediaservice billingservice notificationservice errorservice reviewservice adminservice auditservice contactservice"
 
                   for DB in $DATABASES; do
                     echo "📦 Backing up $DB..."
@@ -85,6 +86,14 @@ spec:
                   # Cleanup backups older than 30 days
                   find /backups -name "*.dump" -mtime +30 -delete
                   echo "🧹 Old backups cleaned up"
+
+                  # === UPLOAD TO DO SPACES (uncomment when configured) ===
+                  # for DB in $DATABASES; do
+                  #   BACKUP_FILE="/backups/${DB}_${TIMESTAMP}.dump"
+                  #   if [ -f "$BACKUP_FILE" ]; then
+                  #     s3cmd put "$BACKUP_FILE" s3://okla-backups/postgres/ --host=nyc3.digitaloceanspaces.com --host-bucket="%(bucket)s.nyc3.digitaloceanspaces.com"
+                  #   fi
+                  # done
               env:
                 - name: PGPASSWORD
                   valueFrom:

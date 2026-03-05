@@ -521,7 +521,7 @@ export function LivenessChallenge({
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-black">
         {isComplete && finalSelfie ? (
           // Show final selfie
-          <Image src={finalSelfie} alt="Final selfie" fill className="object-cover" unoptimized />
+          <Image src={finalSelfie} alt="Selfie final" fill className="object-cover" unoptimized />
         ) : !cameraEnabled ? (
           // Camera not activated yet - show activation button
           <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-white">

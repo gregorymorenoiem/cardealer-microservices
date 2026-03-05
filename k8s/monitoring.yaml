@@ -1,0 +1,348 @@
+# =============================================================================
+# MONITORING STACK - Prometheus + Grafana
+# =============================================================================
+# Provides metrics collection and visualization for all OKLA microservices.
+#
+# Prometheus scrapes /metrics on port 8080 from every service in the okla
+# namespace.  Grafana ships with a pre-configured Prometheus datasource so
+# dashboards can be built immediately after deployment.
+#
+# Prerequisites:
+#   - The "okla" namespace must already exist.
+#   - Each microservice must expose a /metrics endpoint (e.g., via
+#     prometheus-net in .NET or prom-client in Node).
+#
+# Apply:
+#   kubectl apply -f monitoring.yaml
+# =============================================================================
+
+---
+# =============================================================================
+# Namespace
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    purpose: observability
+
+---
+# =============================================================================
+# Prometheus ConfigMap
+# =============================================================================
+# This ConfigMap holds the prometheus.yml scrape configuration.
+# Each OKLA service is listed as a static target using its in-cluster DNS name.
+# All services expose metrics on port 8080 at /metrics.
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      # -----------------------------------------------------------------
+      # Prometheus self-monitoring
+      # -----------------------------------------------------------------
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      # -----------------------------------------------------------------
+      # OKLA microservices (all expose :8080/metrics)
+      # -----------------------------------------------------------------
+      - job_name: "okla-services"
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets:
+              - "authservice.okla.svc.cluster.local:8080"
+              - "userservice.okla.svc.cluster.local:8080"
+              - "roleservice.okla.svc.cluster.local:8080"
+              - "vehiclessaleservice.okla.svc.cluster.local:8080"
+              - "mediaservice.okla.svc.cluster.local:8080"
+              - "billingservice.okla.svc.cluster.local:8080"
+              - "notificationservice.okla.svc.cluster.local:8080"
+              - "errorservice.okla.svc.cluster.local:8080"
+              - "kycservice.okla.svc.cluster.local:8080"
+              - "auditservice.okla.svc.cluster.local:8080"
+              - "adminservice.okla.svc.cluster.local:8080"
+              - "reviewservice.okla.svc.cluster.local:8080"
+              - "contactservice.okla.svc.cluster.local:8080"
+            labels:
+              group: "backend"
+
+          - targets:
+              - "gateway.okla.svc.cluster.local:8080"
+            labels:
+              group: "gateway"
+
+          - targets:
+              - "frontend-web.okla.svc.cluster.local:8080"
+            labels:
+              group: "frontend"
+
+      # -----------------------------------------------------------------
+      # Infrastructure: Redis & RabbitMQ (optional exporters)
+      # If you deploy redis-exporter / rabbitmq-exporter, add targets here.
+      # -----------------------------------------------------------------
+      # - job_name: "redis"
+      #   static_configs:
+      #     - targets: ["redis-exporter.okla.svc.cluster.local:9121"]
+      #
+      # - job_name: "rabbitmq"
+      #   static_configs:
+      #     - targets: ["rabbitmq.okla.svc.cluster.local:15692"]
+
+---
+# =============================================================================
+# Prometheus PVC
+# =============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-data-pvc
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: do-block-storage
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# =============================================================================
+# Prometheus Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time=30d"
+            - "--web.enable-lifecycle"
+          ports:
+            - containerPort: 9090
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus
+            - name: prometheus-data
+              mountPath: /prometheus
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          persistentVolumeClaim:
+            claimName: prometheus-data-pvc
+
+---
+# =============================================================================
+# Prometheus Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9090
+      targetPort: 9090
+      name: http
+  selector:
+    app: prometheus
+
+---
+# =============================================================================
+# Grafana Datasource ConfigMap
+# =============================================================================
+# Pre-configures Prometheus as the default datasource so Grafana is ready
+# to use immediately after first boot.
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus.monitoring.svc.cluster.local:9090
+        isDefault: true
+        editable: true
+
+---
+# =============================================================================
+# Grafana PVC
+# =============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data-pvc
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: do-block-storage
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+# =============================================================================
+# Grafana Deployment
+# =============================================================================
+# Admin credentials are read from the "grafana-secrets" secret in the
+# monitoring namespace.  Create it before deploying:
+#
+#   kubectl create secret generic grafana-secrets -n monitoring \
+#     --from-literal=GF_SECURITY_ADMIN_USER=admin \
+#     --from-literal=GF_SECURITY_ADMIN_PASSWORD=<strong-password>
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secrets
+                  key: GF_SECURITY_ADMIN_USER
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secrets
+                  key: GF_SECURITY_ADMIN_PASSWORD
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          volumeMounts:
+            - name: grafana-data
+              mountPath: /var/lib/grafana
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: grafana-data
+          persistentVolumeClaim:
+            claimName: grafana-data-pvc
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
+
+---
+# =============================================================================
+# Grafana Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  selector:
+    app: grafana

@@ -1,4 +1,4 @@
-Que otra auditoria falta por hacer a esta plataforma.
+Implementatame la auditorias de "docs/REMAINING_AUDITS_REPORT.md" y realizame toda esas auditorias.
 
 OKLA Admin Account
 Username: admin@okla.local

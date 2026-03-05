@@ -501,7 +501,7 @@ export function Vehicle360UploadWizard({ vehicleId, onComplete, onCancel }: Prop
                 >
                   <Image
                     src={url}
-                    alt={`Frame ${i + 1}`}
+                    alt={`Cuadro ${i + 1}`}
                     width={120}
                     height={120}
                     className="h-full w-full object-cover"
