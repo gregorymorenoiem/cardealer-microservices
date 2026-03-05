@@ -52,6 +52,8 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     acceptTerms: false,
+    acceptDataTransfer: false,
+    ageVerification: false,
     accountType: 'buyer' as 'buyer' | 'seller',
   });
 
@@ -108,6 +110,16 @@ export default function RegisterPage() {
 
     if (!formData.acceptTerms) {
       setError('Debes aceptar los términos y condiciones');
+      return;
+    }
+
+    if (!formData.ageVerification) {
+      setError('Debes confirmar que tienes 18 años o más');
+      return;
+    }
+
+    if (!formData.acceptDataTransfer) {
+      setError('Debes aceptar la transferencia internacional de datos para continuar');
       return;
     }
 
@@ -434,8 +446,38 @@ export default function RegisterPage() {
           </span>
         </label>
 
+        {/* Age Verification — Ley 172-13 */}
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={formData.ageVerification}
+            onChange={e => setFormData({ ...formData, ageVerification: e.target.checked })}
+            className="text-primary focus:ring-primary border-border mt-0.5 h-4 w-4 rounded"
+          />
+          <span className="text-muted-foreground text-sm">
+            Declaro que tengo 18 años o más de edad
+          </span>
+        </label>
+
+        {/* International Data Transfer Consent — Ley 172-13, Art. 27 */}
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={formData.acceptDataTransfer}
+            onChange={e => setFormData({ ...formData, acceptDataTransfer: e.target.checked })}
+            className="text-primary focus:ring-primary border-border mt-0.5 h-4 w-4 rounded"
+          />
+          <span className="text-muted-foreground text-sm">
+            Acepto que mis datos personales sean transferidos y procesados en servidores ubicados
+            en Estados Unidos, conforme al Art. 27 de la Ley 172-13.{' '}
+            <Link href="/privacidad" className="text-primary hover:underline">
+              Ver Política de Privacidad
+            </Link>
+          </span>
+        </label>
+
         {/* Submit button */}
-        <Button type="submit" className="w-full" disabled={isLoading || !formData.acceptTerms}>
+        <Button type="submit" className="w-full" disabled={isLoading || !formData.acceptTerms || !formData.ageVerification || !formData.acceptDataTransfer}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

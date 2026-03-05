@@ -83,9 +83,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </Link>
           </div>
 
-          <main id="main-content">
-            {children}
-          </main>
+          <main id="main-content">{children}</main>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { GoogleAnalytics } from '@/components/analytics/google-analytics';
 import { SiteJsonLd } from '@/lib/seo';
 import { PWAComponents } from '@/components/pwa/pwa-wrapper';
+import { CookieConsentBanner, CookieSettingsButton } from '@/components/legal/cookie-consent';
 import './globals.css';
 
 const inter = Inter({
@@ -147,7 +148,7 @@ export default function RootLayout({
       >
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-sm focus:font-medium"
+          className="focus:bg-primary focus:text-primary-foreground sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-lg focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg"
         >
           Ir al contenido principal
         </a>
@@ -165,6 +166,8 @@ export default function RootLayout({
           </PWAComponents>
         </Providers>
         <GoogleAnalytics />
+        <CookieConsentBanner />
+        <CookieSettingsButton />
       </body>
     </html>
   );

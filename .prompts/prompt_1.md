@@ -1,4 +1,4 @@
-Implementatame la auditorias de "docs/REMAINING_AUDITS_REPORT.md" y realizame toda esas auditorias.
+Ahora implementame eta auditoria, "docs/LEGAL_COMPLIANCE_AUDIT_RD.md" y las cosas que conyevan un procedimiento legal proque no tiene que ver con codigo en la plataforma generame un documento que esplique como hacer este proceso. Te recomiendo que crees un folder pra que pongas toda la documentacion genrada.
 
 OKLA Admin Account
 Username: admin@okla.local
