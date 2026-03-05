@@ -13,17 +13,20 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
     private readonly IClaudeSupportService _claudeService;
     private readonly IChatSessionRepository _sessionRepository;
     private readonly ISupportAgentConfigRepository _configRepository;
+    private readonly IFaqResponseCache _faqCache;
     private readonly ILogger<SendMessageCommandHandler> _logger;
 
     public SendMessageCommandHandler(
         IClaudeSupportService claudeService,
         IChatSessionRepository sessionRepository,
         ISupportAgentConfigRepository configRepository,
+        IFaqResponseCache faqCache,
         ILogger<SendMessageCommandHandler> logger)
     {
         _claudeService = claudeService;
         _sessionRepository = sessionRepository;
         _configRepository = configRepository;
+        _faqCache = faqCache;
         _logger = logger;
     }
 
@@ -149,20 +152,55 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
         };
         await _sessionRepository.AddMessageAsync(userMessage, ct);
 
-        // Call Claude API with the sanitized message and enhanced prompt
-        var claudeResponse = await _claudeService.SendMessageAsync(
-            processedMessage,
-            conversationHistory,
-            SupportAgentPrompts.SystemPromptV2,
-            config.Temperature,
-            config.MaxTokens,
-            ct);
+        // ══════════════════════════════════════════════════════════════
+        // PERFORMANCE: FAQ Response Cache (check before Claude API call)
+        // First-message queries without conversation history are FAQ candidates.
+        // Cache hit resolves in <5 ms vs 4-8 s for a Claude API round-trip.
+        // ══════════════════════════════════════════════════════════════
+        string? cachedFaqResponse = null;
+        var isFaqCandidate = conversationHistory.Count == 0; // Only cache first-turn questions
+        if (isFaqCandidate && _faqCache.TryGet(processedMessage, out var cached))
+        {
+            cachedFaqResponse = cached;
+            _logger.LogInformation(
+                "FAQ cache HIT. Session={SessionId}, Module={Module}, Latency={Latency}ms",
+                sessionId, detectedModule, sw.ElapsedMilliseconds);
+        }
+
+        string responseText;
+        int inputTokens = 0, outputTokens = 0;
+
+        if (cachedFaqResponse != null)
+        {
+            responseText = cachedFaqResponse;
+        }
+        else
+        {
+            // Call Claude API with the sanitized message and enhanced prompt
+            var claudeResponse = await _claudeService.SendMessageAsync(
+                processedMessage,
+                conversationHistory,
+                SupportAgentPrompts.SystemPromptV2,
+                config.Temperature,
+                config.MaxTokens,
+                ct);
+
+            responseText = claudeResponse.Response;
+            inputTokens = claudeResponse.InputTokens;
+            outputTokens = claudeResponse.OutputTokens;
+
+            // Store in FAQ cache for future hits (only first-turn, non-PII messages)
+            if (isFaqCandidate && !piiResult.DetectionInfo.WasSanitized)
+            {
+                _faqCache.Set(processedMessage, responseText);
+            }
+        }
 
         // ══════════════════════════════════════════════════════════════
         // SAFETY LAYER 3: PII Echo-Back Prevention (post-LLM)
         // ══════════════════════════════════════════════════════════════
-        var sanitizedResponse = PiiDetector.SanitizeResponse(claudeResponse.Response);
-        if (sanitizedResponse != claudeResponse.Response)
+        var sanitizedResponse = PiiDetector.SanitizeResponse(responseText);
+        if (sanitizedResponse != responseText)
         {
             _logger.LogWarning("PII echo-back detected and sanitized in SupportAgent response");
         }
@@ -189,8 +227,8 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
             Role = "assistant",
             Content = sanitizedResponse,
             DetectedModule = detectedModule,
-            InputTokens = claudeResponse.InputTokens,
-            OutputTokens = claudeResponse.OutputTokens,
+            InputTokens = inputTokens,
+            OutputTokens = outputTokens,
             LatencyMs = (int)sw.ElapsedMilliseconds
         };
         await _sessionRepository.AddMessageAsync(assistantMessage, ct);
@@ -202,9 +240,9 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
         await _sessionRepository.UpdateAsync(session, ct);
 
         _logger.LogInformation(
-            "SupportAgent response generated. Session={SessionId}, Module={Module}, Tokens={In}/{Out}, Latency={Latency}ms, Grounded={IsGrounded}",
-            sessionId, detectedModule, claudeResponse.InputTokens, claudeResponse.OutputTokens,
-            sw.ElapsedMilliseconds, groundingResult.IsGrounded);
+            "SupportAgent response generated. Session={SessionId}, Module={Module}, Tokens={In}/{Out}, Latency={Latency}ms, Grounded={IsGrounded}, CacheHit={CacheHit}",
+            sessionId, detectedModule, inputTokens, outputTokens,
+            sw.ElapsedMilliseconds, groundingResult.IsGrounded, cachedFaqResponse != null);
 
         return new SupportChatResponse
         {

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SupportAgent.Domain.Interfaces;
@@ -19,6 +20,10 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
         services.AddScoped<ISupportAgentConfigRepository, SupportAgentConfigRepository>();
+
+        // FAQ Response Cache (in-memory, 5-min TTL, bounded at ~50 MB)
+        services.AddMemoryCache(options => options.SizeLimit = 50_000_000);
+        services.AddSingleton<IFaqResponseCache, InMemoryFaqResponseCache>();
 
         // Claude API HttpClient
         services.AddHttpClient("ClaudeApi", client =>

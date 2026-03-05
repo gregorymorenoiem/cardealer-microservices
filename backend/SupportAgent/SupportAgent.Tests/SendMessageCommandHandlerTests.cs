@@ -14,6 +14,7 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IClaudeSupportService> _claudeServiceMock;
     private readonly Mock<IChatSessionRepository> _sessionRepoMock;
     private readonly Mock<ISupportAgentConfigRepository> _configRepoMock;
+    private readonly Mock<IFaqResponseCache> _faqCacheMock;
     private readonly Mock<ILogger<SendMessageCommandHandler>> _loggerMock;
     private readonly SendMessageCommandHandler _handler;
 
@@ -22,15 +23,21 @@ public class SendMessageCommandHandlerTests
         _claudeServiceMock = new Mock<IClaudeSupportService>();
         _sessionRepoMock = new Mock<IChatSessionRepository>();
         _configRepoMock = new Mock<ISupportAgentConfigRepository>();
+        _faqCacheMock = new Mock<IFaqResponseCache>();
         _loggerMock = new Mock<ILogger<SendMessageCommandHandler>>();
 
         _configRepoMock.Setup(x => x.GetActiveConfigAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SupportAgentConfig());
 
+        // Default: cache miss
+        _faqCacheMock.Setup(x => x.TryGet(It.IsAny<string>(), out It.Ref<string>.IsAny))
+            .Returns(false);
+
         _handler = new SendMessageCommandHandler(
             _claudeServiceMock.Object,
             _sessionRepoMock.Object,
             _configRepoMock.Object,
+            _faqCacheMock.Object,
             _loggerMock.Object);
     }
 
