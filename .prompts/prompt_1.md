@@ -1,3 +1,5 @@
+Analizalo hay cosas nueavas.
+
 Nuevamente Analiza este documento completo porque he hecho nuevos cambios en los parrafos cambios en casis todos los parrafos, e implementa lo que no habias visto.
 
 Necesito que me hagas una auditoria, con el objetivo de como reducir costo en infrestrutura optimiz

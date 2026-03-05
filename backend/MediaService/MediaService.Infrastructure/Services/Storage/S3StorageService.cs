@@ -44,10 +44,20 @@ public class S3StorageService : IMediaStorageService
 
         // AWS SDK v3.7+ handles clock skew correction automatically via its retry mechanism.
         // See UploadFileAsync for explicit retry handling when Docker clock drift is extreme.
-        var s3Config = new AmazonS3Config
+        var s3Config = new AmazonS3Config();
+        
+        // Support DigitalOcean Spaces and other S3-compatible providers via custom ServiceUrl
+        if (!string.IsNullOrEmpty(_options.ServiceUrl))
         {
-            RegionEndpoint = region,
-        };
+            s3Config.ServiceURL = _options.ServiceUrl;
+            s3Config.ForcePathStyle = false; // DO Spaces requires virtual-hosted style
+            _logger.LogInformation("S3StorageService: Using custom endpoint: {ServiceUrl}", _options.ServiceUrl);
+        }
+        else
+        {
+            s3Config.RegionEndpoint = region;
+        }
+        
         _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, s3Config);
         
         _logger.LogInformation("S3StorageService initialized successfully with bucket: {Bucket}, region: {Region}", 
