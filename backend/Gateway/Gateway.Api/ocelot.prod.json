@@ -2948,7 +2948,7 @@
         "GET",
         "POST"
       ],
-      "DownstreamPathTemplate": "/api/chat/whatsapp/webhook",
+      "DownstreamPathTemplate": "/api/whatsapp/webhook",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

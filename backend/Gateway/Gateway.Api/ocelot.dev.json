@@ -2904,7 +2904,7 @@
     {
       "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",
       "UpstreamHttpMethod": ["GET", "POST"],
-      "DownstreamPathTemplate": "/api/chat/whatsapp/webhook",
+      "DownstreamPathTemplate": "/api/whatsapp/webhook",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "host.docker.internal", "Port": 5060 }],
       "QoSOptions": {
