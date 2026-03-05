@@ -137,7 +137,11 @@ export default function DealerPublicarPage() {
         </div>
 
         {/* Smart Publish Wizard - Dealer Mode */}
-        <SmartPublishWizard mode="dealer" dealerId={dealer?.id} dealerPlan={dealer?.plan as DealerPlan} />
+        <SmartPublishWizard
+          mode="dealer"
+          dealerId={dealer?.id}
+          dealerPlan={dealer?.plan as DealerPlan}
+        />
       </div>
     </div>
   );

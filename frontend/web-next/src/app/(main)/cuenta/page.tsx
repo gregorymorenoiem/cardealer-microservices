@@ -66,6 +66,7 @@ import { useSellerByUserId, useSellerStats } from '@/hooks/use-seller';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useAlertStats } from '@/hooks/use-alerts';
 import { PlanBadge } from '@/components/plan/plan-gate';
+import { UpgradeBanner } from '@/components/shared/upgrade-banner';
 
 // ============================================================
 // MAIN EXPORT — dispatches to the right dashboard by role
@@ -281,6 +282,9 @@ function DealerDashboard() {
 
       {/* Verification banner — shown while unverified */}
       <DealerVerificationBanner />
+
+      {/* Upgrade banner — shown to dealers on free plan */}
+      <UpgradeBanner variant="inline" userType="dealer" upgradeUrl="/cuenta/upgrade?plan=visible&type=dealer" />
 
       {dealerLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -510,6 +514,9 @@ function SellerDashboard() {
 
       {/* Seller profile setup banner — shown after KYC approval when profile not yet configured */}
       <SellerProfileBanner />
+
+      {/* Upgrade banner — shown to sellers on free plan */}
+      <UpgradeBanner variant="inline" userType="seller" upgradeUrl="/cuenta/upgrade?plan=premium&type=seller" />
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

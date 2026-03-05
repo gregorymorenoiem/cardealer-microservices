@@ -17,12 +17,7 @@ import {
   type UploadQueueCallbacks,
 } from './upload-queue-manager';
 import { uploadVehicleImage, uploadImage } from '@/services/media';
-import {
-  DEALER_PLAN_LIMITS,
-  SELLER_PLAN_LIMITS,
-  DealerPlan,
-  SellerPlan,
-} from '@/lib/plan-config';
+import { DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS, DealerPlan, SellerPlan } from '@/lib/plan-config';
 
 // ============================================================
 // TYPES
@@ -140,11 +135,14 @@ export function PhotoUploadManager({
   // ─── Upload Queue Setup ───────────────────────────────────
   useEffect(() => {
     // Upload function that the queue manager will call for each file
-    const uploadFn = async (file: File, onProgress: (progress: number) => void): Promise<UploadResult> => {
+    const uploadFn = async (
+      file: File,
+      onProgress: (progress: number) => void
+    ): Promise<UploadResult> => {
       if (vehicleId) {
         const result = await uploadVehicleImage(
           { file, vehicleId, imageType: 'exterior', compress: true },
-          (p) => onProgress(p.percentage)
+          p => onProgress(p.percentage)
         );
         return {
           mediaId: result.mediaId,
@@ -156,7 +154,7 @@ export function PhotoUploadManager({
           contentType: file.type,
         };
       } else {
-        const result = await uploadImage(file, 'vehicles', (p) => onProgress(p.percentage));
+        const result = await uploadImage(file, 'vehicles', p => onProgress(p.percentage));
         return {
           mediaId: result.publicId,
           url: result.url,
@@ -171,19 +169,11 @@ export function PhotoUploadManager({
     // Callbacks
     const callbacks: UploadQueueCallbacks = {
       onFileProgress: (fileId: string, progress: number) => {
-        setPhotos(prev =>
-          prev.map(p =>
-            p.id === fileId ? { ...p, progress } : p
-          )
-        );
+        setPhotos(prev => prev.map(p => (p.id === fileId ? { ...p, progress } : p)));
       },
       onFileStatusChange: (fileId: string, status: string) => {
         setPhotos(prev =>
-          prev.map(p =>
-            p.id === fileId
-              ? { ...p, status: status as PhotoStatus }
-              : p
-          )
+          prev.map(p => (p.id === fileId ? { ...p, status: status as PhotoStatus } : p))
         );
       },
       onFileComplete: (fileId: string, result: UploadResult) => {
@@ -227,7 +217,9 @@ export function PhotoUploadManager({
           }
         }
       },
-      onCompressionResult: () => { /* tracked via status change */ },
+      onCompressionResult: () => {
+        /* tracked via status change */
+      },
     };
 
     queueRef.current = new UploadQueueManager(uploadFn, callbacks, {
@@ -279,7 +271,7 @@ export function PhotoUploadManager({
 
         // Map queue IDs back to our photo items so callbacks match
         setPhotos(prev =>
-          prev.map((p) => {
+          prev.map(p => {
             const photoIdx = newPhotos.findIndex(np => np.id === p.id);
             if (photoIdx >= 0 && queueIds[photoIdx]) {
               return { ...p, id: queueIds[photoIdx] };
@@ -357,11 +349,7 @@ export function PhotoUploadManager({
         const ids = queueRef.current.addFiles([croppedFile]);
         // Update photo ID to match the new queue entry
         if (ids[0]) {
-          setPhotos(prev =>
-            prev.map(p =>
-              p.id === cropPhotoId ? { ...p, id: ids[0] } : p
-            )
-          );
+          setPhotos(prev => prev.map(p => (p.id === cropPhotoId ? { ...p, id: ids[0] } : p)));
         }
       }
 

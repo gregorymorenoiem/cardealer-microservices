@@ -22,6 +22,7 @@ import {
   useUsageMetrics,
 } from '@/hooks/use-dealer-billing';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
+import { UpgradeBanner } from '@/components/shared/upgrade-banner';
 
 // =============================================================================
 // HELPERS
@@ -219,6 +220,16 @@ export default function DealerSubscriptionPage() {
           <p className="text-muted-foreground">Gestiona tu plan y uso</p>
         </div>
       </div>
+
+      {/* Upgrade Banner — floating for libre plan */}
+      {dealer.plan === 'libre' && !earlyBird.isActive && (
+        <UpgradeBanner
+          variant="inline"
+          userType="dealer"
+          currentPlan="Libre"
+          upgradeUrl="/cuenta/upgrade?plan=visible&type=dealer"
+        />
+      )}
 
       {/* Early Bird Banner */}
       {earlyBird.isActive && dealer.plan === 'libre' && (

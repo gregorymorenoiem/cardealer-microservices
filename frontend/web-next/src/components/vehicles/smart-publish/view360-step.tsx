@@ -34,12 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  DEALER_PLAN_LIMITS,
-  SELLER_PLAN_LIMITS,
-  DealerPlan,
-  SellerPlan,
-} from '@/lib/plan-config';
+import { DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS, DealerPlan, SellerPlan } from '@/lib/plan-config';
 
 // ============================================================
 // TYPES

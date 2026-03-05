@@ -16,12 +16,7 @@ import { CsvImportWizard } from './csv-import-wizard';
 import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
 import { useSellerByUserId } from '@/hooks/use-seller';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  DEALER_PLAN_LIMITS,
-  SELLER_PLAN_LIMITS,
-  DealerPlan,
-  SellerPlan,
-} from '@/lib/plan-config';
+import { DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS, DealerPlan, SellerPlan } from '@/lib/plan-config';
 import type { SmartVinDecodeResult, CreateVehicleRequest } from '@/services/vehicles';
 import type { CsvVehicleRow } from './csv-import-wizard';
 import { toast } from 'sonner';
@@ -859,18 +854,58 @@ export function SmartPublishWizard({
           />
         )}
 
-        {currentStep === 'csv-import' && (() => {
-          // Plan-based gating for bulk CSV import
-          const isBulkUploadAllowed = (() => {
-            if (mode === 'dealer') {
-              const plan = dealerPlan || DealerPlan.LIBRE;
-              return DEALER_PLAN_LIMITS[plan]?.bulkUpload ?? false;
-            }
-            // Individual sellers don't have bulkUpload in their plan features
-            return false;
-          })();
+        {currentStep === 'csv-import' &&
+          (() => {
+            // Plan-based gating for bulk CSV import
+            const isBulkUploadAllowed = (() => {
+              if (mode === 'dealer') {
+                const plan = dealerPlan || DealerPlan.LIBRE;
+                return DEALER_PLAN_LIMITS[plan]?.bulkUpload ?? false;
+              }
+              // Individual sellers don't have bulkUpload in their plan features
+              return false;
+            })();
 
-          if (!isBulkUploadAllowed) {
+            if (!isBulkUploadAllowed) {
+              return (
+                <div className="space-y-6">
+                  <button
+                    onClick={() => setCurrentStep('method')}
+                    className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Volver
+                  </button>
+                  <div className="mx-auto max-w-md rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-8 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-amber-500"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                    </div>
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">
+                      Importación Masiva — Función Premium
+                    </h3>
+                    <p className="mb-6 text-sm text-gray-600">
+                      La importación masiva por CSV está disponible en los planes Visible, Pro y
+                      Elite. Actualiza tu plan para publicar hasta 50 vehículos a la vez.
+                    </p>
+                    <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 text-sm font-medium text-white shadow-sm hover:from-amber-600 hover:to-yellow-600">
+                      Actualizar Plan
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div className="space-y-6">
                 <button
@@ -879,43 +914,16 @@ export function SmartPublishWizard({
                 >
                   <ChevronLeft className="mr-1 h-4 w-4" /> Volver
                 </button>
-                <div className="mx-auto max-w-md rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-8 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
-                  <h3 className="mb-2 text-xl font-bold text-gray-900">
-                    Importación Masiva — Función Premium
-                  </h3>
-                  <p className="mb-6 text-sm text-gray-600">
-                    La importación masiva por CSV está disponible en los planes Visible, Pro y Elite.
-                    Actualiza tu plan para publicar hasta 50 vehículos a la vez.
-                  </p>
-                  <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 text-sm font-medium text-white shadow-sm hover:from-amber-600 hover:to-yellow-600">
-                    Actualizar Plan
-                  </button>
-                </div>
+                <CsvImportWizard
+                  onImportComplete={(rows: CsvVehicleRow[]) => {
+                    toast.success(`${rows.length} vehículos importados`);
+                    setCurrentStep('method');
+                  }}
+                  onCancel={() => setCurrentStep('method')}
+                />
               </div>
             );
-          }
-
-          return (
-            <div className="space-y-6">
-              <button
-                onClick={() => setCurrentStep('method')}
-                className="flex items-center text-sm text-gray-500 hover:text-gray-700"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" /> Volver
-              </button>
-              <CsvImportWizard
-                onImportComplete={(rows: CsvVehicleRow[]) => {
-                  toast.success(`${rows.length} vehículos importados`);
-                  setCurrentStep('method');
-                }}
-                onCancel={() => setCurrentStep('method')}
-              />
-            </div>
-          );
-        })()}
+          })()}
       </div>
 
       {/* Navigation buttons (main steps only — hidden on review since ReviewStep has its own actions) */}
