@@ -1,10 +1,5 @@
-Ya tengo cosas nuevas.
+Auditame si en la publicacion de un vehiculo dependiendo del tipo de cuenta la persona puesubir fotos limitadas, que el usuario puede hacer vista 360 subiendo un video 360 del vehiculo y tambien si el usuario puede suber viedeo. Vas a tener que hacer ajustes a la vista detalla para que soporte todo esto.
 
-neceisto que me hagas una funcion con IA para los dealers o vendeores que tiene su inventrario en Facebook Marketplace que el dealer o vendedor ponga la url de su inventario y que OKLA los importe automaticamente a su plataforma. Y que el dealer o vende dor si desea lo pueda importar de forma masiva. Haz lo mismo para las distintas plataforma de vehiculos de la republia domincana que se pueda importar el inventario del usuario a la plataforma.
-
-Ahora hazme la aplicaicon mobile de la plataforma utilizando el mismo codigo de colores, para que todo lo que la persona haga via web lo pueda hacer via movil, y tambine el usuario pueda recibir push notification. haz la aplicacion en flutter y yo prefiero que elimines el folder de la aplicacion mobile frontend/mobile, pero hazlo nuevamente como se hace a nivel profesional. Recuerda que toda la funcionalidad web, implementala en la aplicacion mobile. Y genera un documento de todo lo que va tener la aplicacion mobile y haz un plan de implementacion, tienes que hacer la aplicacion contoda la seguridad y requicitos necesarios para que apple me permita publicarla en su app store. Y audita todo le codigo mobile para corregir errores.
-
-Haz la aplicacion mobile completa.
 
 OKLA Admin Account
 Username: admin@okla.local

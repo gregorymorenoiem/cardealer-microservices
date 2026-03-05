@@ -11,6 +11,7 @@ import type { PhotoItem } from '@/components/vehicles/photos/photo-card';
 import { PricingStep } from './pricing-step';
 import { ReviewStep } from './review-step';
 import { View360Step } from './view360-step';
+import { VideoUploadStep } from './video-upload-step';
 import { CsvImportWizard } from './csv-import-wizard';
 import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
 import { useSellerByUserId } from '@/hooks/use-seller';
@@ -58,6 +59,9 @@ export interface VehicleFormData {
   features: string[];
   // Photos
   images: UploadedImage[];
+  // Videos
+  videoUrl: string;
+  videoThumbnailUrl: string;
   // Pricing
   price: number;
   currency: 'DOP' | 'USD';
@@ -93,17 +97,19 @@ type WizardStep =
   | 'vin-results'
   | 'info'
   | 'photos'
+  | 'video'
   | 'view360'
   | 'pricing'
   | 'review'
   | 'csv-import';
 
-const STEP_ORDER: WizardStep[] = ['method', 'info', 'photos', 'view360', 'pricing', 'review'];
+const STEP_ORDER: WizardStep[] = ['method', 'info', 'photos', 'video', 'view360', 'pricing', 'review'];
 
 const STEP_LABELS: Record<string, string> = {
   method: 'Método',
   info: 'Información',
   photos: 'Fotos',
+  video: 'Video',
   view360: 'Vista 360°',
   pricing: 'Precio',
   review: 'Revisión',
@@ -272,6 +278,8 @@ const initialFormData: VehicleFormData = {
   interiorColor: '',
   features: [],
   images: [],
+  videoUrl: '',
+  videoThumbnailUrl: '',
   price: 0,
   currency: 'DOP',
   isNegotiable: true,
@@ -789,6 +797,22 @@ export function SmartPublishWizard({
             accountType={mode === 'dealer' ? 'dealer' : 'individual'}
             show360Tab={mode === 'dealer'}
             showBgRemoval={mode === 'dealer'}
+          />
+        )}
+
+        {currentStep === 'video' && (
+          <VideoUploadStep
+            accountType={mode === 'dealer' ? 'dealer' : 'individual'}
+            videoUrl={formData.videoUrl}
+            onVideoUploaded={(url, thumbnailUrl) => {
+              setFormData(prev => ({
+                ...prev,
+                videoUrl: url,
+                videoThumbnailUrl: thumbnailUrl || '',
+              }));
+            }}
+            onSkip={() => goToNext()}
+            onComplete={() => goToNext()}
           />
         )}
 

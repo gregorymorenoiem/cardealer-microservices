@@ -45,6 +45,8 @@ export interface DealerPlanFeatures {
   dashboardLevel: 'none' | 'basic' | 'advanced' | 'complete';
   canExportAnalytics: boolean;
   videoTour: boolean;
+  maxVideos: number;
+  view360Available: boolean;
 }
 
 export const DEALER_PLAN_PRICES: Record<DealerPlan, number> = {
@@ -81,6 +83,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     dashboardLevel: 'none',
     canExportAnalytics: false,
     videoTour: false,
+    maxVideos: 0,
+    view360Available: false,
   },
   [DealerPlan.VISIBLE]: {
     maxListings: 999999,
@@ -108,6 +112,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     dashboardLevel: 'basic',
     canExportAnalytics: false,
     videoTour: false,
+    maxVideos: 1,
+    view360Available: false,
   },
   [DealerPlan.PRO]: {
     maxListings: 999999,
@@ -135,6 +141,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     dashboardLevel: 'advanced',
     canExportAnalytics: false,
     videoTour: false,
+    maxVideos: 2,
+    view360Available: true,
   },
   [DealerPlan.ELITE]: {
     maxListings: 999999,
@@ -162,6 +170,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     dashboardLevel: 'complete',
     canExportAnalytics: true,
     videoTour: true,
+    maxVideos: 5,
+    view360Available: true,
   },
 };
 
@@ -189,6 +199,8 @@ export interface SellerPlanFeatures {
   boostAvailable: boolean;
   socialSharing: boolean;
   priceDropAlerts: boolean;
+  maxVideos: number;
+  view360Available: boolean;
 }
 
 export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
@@ -205,6 +217,8 @@ export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
     boostAvailable: false,
     socialSharing: false,
     priceDropAlerts: false,
+    maxVideos: 0,
+    view360Available: false,
   },
   [SellerPlan.PREMIUM]: {
     maxListings: 5,
@@ -219,6 +233,8 @@ export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
     boostAvailable: true,
     socialSharing: true,
     priceDropAlerts: false,
+    maxVideos: 1,
+    view360Available: true,
   },
   [SellerPlan.PRO]: {
     maxListings: 15,
@@ -233,5 +249,7 @@ export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
     boostAvailable: true,
     socialSharing: true,
     priceDropAlerts: true,
+    maxVideos: 3,
+    view360Available: true,
   },
 };
