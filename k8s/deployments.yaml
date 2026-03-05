@@ -7,13 +7,16 @@
 # ServiceAccounts: Dedicated accounts with minimal permissions
 # =============================================================================
 #
-# CLUSTER INFO (Feb 2026):
+# CLUSTER INFO (Mar 2026):
 # Current cluster: 2× s-4vcpu-8gb nodes (~12GB allocatable, autoscale to 3).
 # Pool name: okla-pool-upgraded
-# 16 core services run with replicas: 1.
+# 14 core services run with replicas: 1 (essential services).
+# 11 non-essential services set to replicas: 0 for staging cost savings.
 # 28 services without Docker images are set to replicas: 0.
 # To enable services after building images:
 #   kubectl scale deployment/<name> --replicas=1 -n okla
+# STAGING OPTIMIZATION: 12 non-essential services disabled to reduce
+# resource usage from ~2.9 vCPU/6.8Gi to ~1.6 vCPU/3.5Gi
 # =============================================================================
 
 ---
@@ -1608,7 +1611,7 @@ metadata:
     app: alertservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: alertservice
@@ -1798,7 +1801,7 @@ metadata:
     app: appointmentservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: appointmentservice
@@ -2178,7 +2181,7 @@ metadata:
     app: configurationservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: configurationservice
@@ -2653,7 +2656,7 @@ metadata:
     app: dealermanagementservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: dealermanagementservice
@@ -2843,7 +2846,7 @@ metadata:
     app: inventorymanagementservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: inventorymanagementservice
@@ -3033,7 +3036,7 @@ metadata:
     app: maintenanceservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: maintenanceservice
@@ -3888,7 +3891,7 @@ metadata:
     app: staffservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: staffservice
@@ -4078,7 +4081,7 @@ metadata:
     app: video360service
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: video360service
@@ -4276,7 +4279,7 @@ metadata:
     app: advertisingservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: advertisingservice
@@ -4373,7 +4376,7 @@ metadata:
     app: searchagent
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: searchagent
@@ -4473,7 +4476,7 @@ metadata:
     app: supportagent
     tier: backend
 spec:
-  replicas: 1
+  replicas: 0 # STAGING: non-essential
   selector:
     matchLabels:
       app: supportagent
