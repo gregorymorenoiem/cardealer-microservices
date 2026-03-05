@@ -1,5 +1,8 @@
-Auditame si en la publicacion de un vehiculo dependiendo del tipo de cuenta la persona puesubir fotos limitadas, que el usuario puede hacer vista 360 subiendo un video 360 del vehiculo y tambien si el usuario puede suber viedeo. Vas a tener que hacer ajustes a la vista detalla para que soporte todo esto.
+Tengo algo nuevo.
 
+Analiza todos los tipos de subcripcion de en okla dependiendo del tipo de usuario y valida que los usuario stienes las restriciones que establece cada subcripcion.
+
+Auditame que los planes y las subcripciones de oklas se puedan administrar y crear planes desde el portal de administracion y que esta vista de crear plane tenta todas las funcionalidades de okla y que se pueda crear un plan desde esta vista. Y que el plannes actual aparezcan en esta vista con todas sus funcionalidades y que este plan se pueda editar y que se pueda copiar tambien un plan para tomarlo como base para crear otro plan. Todos los los dealers y vendedores indiviuales deben tener el plan gratis de su tipo de cuenta y la aplicacion debe motivarlo con notificaciones y barner para que pasen aun plan pagado. hazme el proceso de upgrade de un plan a otro
 
 OKLA Admin Account
 Username: admin@okla.local

@@ -14,6 +14,7 @@ import { SmartPublishWizard } from '@/components/vehicles/smart-publish';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useCanSell } from '@/hooks/use-kyc';
 import { Button } from '@/components/ui/button';
+import type { DealerPlan } from '@/lib/plan-config';
 
 export default function DealerPublicarPage() {
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
@@ -136,7 +137,7 @@ export default function DealerPublicarPage() {
         </div>
 
         {/* Smart Publish Wizard - Dealer Mode */}
-        <SmartPublishWizard mode="dealer" dealerId={dealer?.id} />
+        <SmartPublishWizard mode="dealer" dealerId={dealer?.id} dealerPlan={dealer?.plan as DealerPlan} />
       </div>
     </div>
   );

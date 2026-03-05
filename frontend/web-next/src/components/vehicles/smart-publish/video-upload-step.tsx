@@ -116,7 +116,7 @@ export function VideoUploadStep({
         const xhr = new XMLHttpRequest();
 
         await new Promise<void>((resolve, reject) => {
-          xhr.upload.addEventListener('progress', (e) => {
+          xhr.upload.addEventListener('progress', e => {
             if (e.lengthComputable) {
               const pct = Math.round((e.loaded / e.total) * 100);
               setUploadProgress(pct);
@@ -250,7 +250,9 @@ export function VideoUploadStep({
           <p className="text-lg font-semibold text-gray-600">
             Arrastra tu video aquí o haz clic para seleccionar
           </p>
-          <p className="mt-1 text-sm text-gray-400">MP4, MOV, WebM — máximo {MAX_VIDEO_SIZE_MB} MB</p>
+          <p className="mt-1 text-sm text-gray-400">
+            MP4, MOV, WebM — máximo {MAX_VIDEO_SIZE_MB} MB
+          </p>
           <input
             ref={fileInputRef}
             type="file"
@@ -272,7 +274,7 @@ export function VideoUploadStep({
               >
                 Tu navegador no soporta la reproducción de video.
               </video>
-              <div className="absolute left-3 top-3">
+              <div className="absolute top-3 left-3">
                 <Badge className="gap-1 bg-black/60 text-white backdrop-blur-sm">
                   <Play className="h-3 w-3" />
                   Video

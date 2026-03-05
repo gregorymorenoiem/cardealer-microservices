@@ -17,6 +17,12 @@ import {
   type UploadQueueCallbacks,
 } from './upload-queue-manager';
 import { uploadVehicleImage, uploadImage } from '@/services/media';
+import {
+  DEALER_PLAN_LIMITS,
+  SELLER_PLAN_LIMITS,
+  DealerPlan,
+  SellerPlan,
+} from '@/lib/plan-config';
 
 // ============================================================
 // TYPES
@@ -31,6 +37,10 @@ export interface PhotoUploadManagerProps {
   vehicleId?: string;
   /** Account type affects limits */
   accountType: 'individual' | 'dealer';
+  /** Dealer plan for plan-based image limits */
+  dealerPlan?: DealerPlan;
+  /** Seller plan for plan-based image limits */
+  sellerPlan?: SellerPlan;
   /** Show 360° tab */
   show360Tab?: boolean;
   /** Show background removal (dealer only) */
@@ -46,10 +56,28 @@ type TabId = 'photos' | '360';
 // CONSTANTS
 // ============================================================
 
-const LIMITS = {
-  individual: { min: 3, max: 20 },
-  dealer: { min: 5, max: 50 },
+/** Fallback limits when no plan is provided */
+const FALLBACK_LIMITS = {
+  individual: { min: 3, max: 10 },
+  dealer: { min: 5, max: 10 },
 };
+
+/** Derive photo limits from plan configuration */
+function getPlanPhotoLimits(
+  accountType: 'individual' | 'dealer',
+  dealerPlan?: DealerPlan,
+  sellerPlan?: SellerPlan
+): { min: number; max: number } {
+  if (accountType === 'dealer') {
+    const plan = dealerPlan || DealerPlan.LIBRE;
+    const maxImages = DEALER_PLAN_LIMITS[plan]?.maxImages ?? FALLBACK_LIMITS.dealer.max;
+    return { min: FALLBACK_LIMITS.dealer.min, max: maxImages };
+  } else {
+    const plan = sellerPlan || SellerPlan.GRATIS;
+    const maxImages = SELLER_PLAN_LIMITS[plan]?.maxImages ?? FALLBACK_LIMITS.individual.max;
+    return { min: FALLBACK_LIMITS.individual.min, max: maxImages };
+  }
+}
 
 // ============================================================
 // HELPERS
@@ -83,6 +111,8 @@ export function PhotoUploadManager({
   onPhotosChange,
   vehicleId,
   accountType,
+  dealerPlan,
+  sellerPlan,
   show360Tab = false,
   showBgRemoval = false,
   compressionPreset = 'standard',
@@ -105,7 +135,7 @@ export function PhotoUploadManager({
   const queueRef = useRef<UploadQueueManager | null>(null);
   const dropzoneRef = useRef<HTMLDivElement>(null);
 
-  const { min, max } = LIMITS[accountType];
+  const { min, max } = getPlanPhotoLimits(accountType, dealerPlan, sellerPlan);
 
   // ─── Upload Queue Setup ───────────────────────────────────
   useEffect(() => {

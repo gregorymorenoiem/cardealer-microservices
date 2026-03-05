@@ -34,6 +34,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+  DEALER_PLAN_LIMITS,
+  SELLER_PLAN_LIMITS,
+  DealerPlan,
+  SellerPlan,
+} from '@/lib/plan-config';
 
 // ============================================================
 // TYPES
@@ -42,6 +48,8 @@ import { toast } from 'sonner';
 interface View360StepProps {
   vehicleId?: string;
   accountType: 'individual' | 'dealer';
+  dealerPlan?: DealerPlan;
+  sellerPlan?: SellerPlan;
   onSkip: () => void;
   onComplete: () => void;
 }
@@ -154,7 +162,9 @@ function AngleGuideCard({
 
 export function View360Step({
   vehicleId,
-  accountType: _accountType,
+  accountType,
+  dealerPlan,
+  sellerPlan,
   onSkip,
   onComplete,
 }: View360StepProps) {
@@ -165,8 +175,16 @@ export function View360Step({
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeGuideIndex, setActiveGuideIndex] = useState(0);
 
-  // For now, 360 is available to all - plan gating will be enforced via the backend
-  const is360Available = true;
+  // Plan-based gating for 360° view
+  const is360Available = (() => {
+    if (accountType === 'dealer') {
+      const plan = dealerPlan || DealerPlan.LIBRE;
+      return DEALER_PLAN_LIMITS[plan]?.view360Available ?? false;
+    } else {
+      const plan = sellerPlan || SellerPlan.GRATIS;
+      return SELLER_PLAN_LIMITS[plan]?.view360Available ?? false;
+    }
+  })();
 
   const handleVideoUpload = useCallback(
     async (file: File) => {
