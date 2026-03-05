@@ -46,6 +46,17 @@ public class CsrfValidationMiddleware
         "/api/search-agent/",
         "/api/support/",
         "/api/reco-agent/",
+        // Admin homepage management: JWT-authenticated admin-only operations
+        "/api/homepagesections",
+        "/api/admin/",
+        // Vehicles: Feature toggle and management (JWT-protected)
+        "/api/vehicles/",
+        // Advertising: Campaign and catalog management (JWT-protected)
+        "/api/advertising/",
+        // Billing & OKLA Coins: JWT-authenticated dealer operations
+        "/api/dealer-billing/",
+        "/api/okla-coins/",
+        "/api/billing/",
         "/swagger",
         "/metrics",
     };

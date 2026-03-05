@@ -416,9 +416,19 @@ public class DealerBillingController : ControllerBase
 
     private PlanConfigDto MapToPlanConfigDto(PlanPricingInfo plan)
     {
+        // Map to OKLA v2 display names
+        var displayName = plan.Plan switch
+        {
+            SubscriptionPlan.Free => "Libre",
+            SubscriptionPlan.Basic => "Visible",
+            SubscriptionPlan.Professional => "Pro",
+            SubscriptionPlan.Enterprise => "Elite",
+            _ => plan.PlanName
+        };
+
         return new PlanConfigDto(
             Id: plan.Plan.ToString().ToLower(),
-            Name: plan.PlanName,
+            Name: displayName,
             Description: GetPlanDescription(plan.Plan),
             Prices: new PlanPricesDto(
                 Monthly: plan.MonthlyPrice,
@@ -426,27 +436,31 @@ public class DealerBillingController : ControllerBase
                 Yearly: plan.YearlyPrice
             ),
             Features: GetDefaultFeatures(plan.Plan.ToString().ToLower()),
-            Popular: plan.Plan == SubscriptionPlan.Professional,
+            Popular: plan.Plan == SubscriptionPlan.Professional, // Pro is the recommended plan
             Enterprise: plan.Plan == SubscriptionPlan.Enterprise
         );
     }
 
     private string GetPlanDescription(SubscriptionPlan plan) => plan switch
     {
-        SubscriptionPlan.Free => "Para empezar tu negocio",
-        SubscriptionPlan.Basic => "Para dealers en crecimiento",
-        SubscriptionPlan.Professional => "Para dealers establecidos",
-        SubscriptionPlan.Enterprise => "Para grandes operaciones",
+        SubscriptionPlan.Free => "Libre — Acceso básico gratuito. Publicaciones ilimitadas, 10 fotos.",
+        SubscriptionPlan.Basic => "Visible — Prioridad media, 3 destacados/mes, $15 OKLA Coins, badge Verificado.",
+        SubscriptionPlan.Professional => "Pro — Alta prioridad, 10 destacados, ChatAgent IA 500 conv/mes, $45 OKLA Coins.",
+        SubscriptionPlan.Enterprise => "Elite — Top prioridad, 25 destacados, ChatAgent ilimitado, $120 OKLA Coins, video tour.",
         _ => "Plan personalizado"
     };
 
     private FeaturesDto GetDefaultFeatures(string plan) => plan.ToLower() switch
     {
-        "free" => new FeaturesDto(3, 1, "1 GB", false, false, false, false, false, false, false, false, false, false),
-        "basic" => new FeaturesDto(50, 5, "5 GB", true, false, false, true, false, true, true, false, true, true),
-        "professional" => new FeaturesDto(500, 20, "20 GB", true, true, true, true, true, true, true, true, true, true),
+        // Libre: Publicaciones ilimitadas, 10 fotos, sin extras
+        "free" => new FeaturesDto(-1, 1, "1 GB", false, false, false, false, false, false, false, false, false, false),
+        // Visible $29: Ilimitadas, 20 fotos, analytics básico, lead mgmt
+        "basic" => new FeaturesDto(-1, 5, "5 GB", true, false, false, false, false, true, true, false, true, true),
+        // Pro $89: Ilimitadas, 30 fotos, ChatAgent, WhatsApp, analytics avanzado
+        "professional" => new FeaturesDto(-1, 20, "20 GB", true, false, true, true, false, true, true, true, true, true),
+        // Elite $199: Ilimitadas, 40 fotos + video, todo incluido
         "enterprise" => new FeaturesDto(-1, -1, "unlimited", true, true, true, true, true, true, true, true, true, true),
-        _ => new FeaturesDto(3, 1, "1 GB", false, false, false, false, false, false, false, false, false, false)
+        _ => new FeaturesDto(-1, 1, "1 GB", false, false, false, false, false, false, false, false, false, false)
     };
 }
 

@@ -199,16 +199,21 @@ public enum VerificationStatus
     RequiresMoreInfo = 5
 }
 
+/// <summary>
+/// Planes de dealer OKLA — El acceso básico siempre es gratuito.
+/// Los planes se diferencian por visibilidad y herramientas.
+/// DB-compatible: int values preserved (Free=0, Basic/Visible=1, Pro=2, Enterprise/Elite=3).
+/// </summary>
 public enum DealerPlan
 {
-    Free = 0,           // Free tier - 3 listings
-    Basic = 1,          // $49/month - 50 listings  
-    Pro = 2,            // $129/month - 200 listings
-    Enterprise = 3      // $299/month - Unlimited listings
+    Free = 0,           // Libre — $0/mes — Publicaciones ilimitadas, 10 fotos
+    Basic = 1,          // Visible — $29/mes — Prioridad media, 3 destacados
+    Pro = 2,            // Pro — $89/mes — Alta prioridad, 10 destacados, ChatAgent
+    Enterprise = 3      // Elite — $199/mes — Top prioridad, 25 destacados, ChatAgent ilimitado
 }
 
 /// <summary>
-/// Límites y features por plan
+/// Límites y features por plan — Estructura OKLA v2 (4 tiers: Libre/Visible/Pro/Elite)
 /// </summary>
 public static class DealerPlanLimits
 {
@@ -216,11 +221,27 @@ public static class DealerPlanLimits
     {
         return plan switch
         {
+            // ═══════════════════════════════════════════
+            // LIBRE ($0/mes) — Acceso básico gratuito
+            // ═══════════════════════════════════════════
             DealerPlan.Free => new DealerPlanFeatures
             {
-                MaxListings = 3,
-                MaxImages = 5,
-                MaxFeaturedListings = 0,
+                MaxListings = 999999,       // ILIMITADAS
+                MaxImages = 10,             // Hasta 10 fotos
+                MaxFeaturedListings = 0,    // Sin destacados incluidos
+                SearchPriority = SearchPriorityLevel.Standard,
+                MonthlyOklaCoinsCredits = 0m,
+                BadgeType = DealerBadgeType.None,
+                ChatAgentWebConversations = 0,
+                ChatAgentWhatsAppConversations = 0,
+                AutoScheduling = false,
+                WhatsAppReminders = false,
+                PricingAgentFreeUsages = 1,
+                PricingAgentMonthlyUsages = 0,
+                PricingAgentPdfReport = false,
+                DashboardAnalytics = DashboardLevel.None,
+                CanExportAnalytics = false,
+                IncludesVideoTour = false,
                 AnalyticsAccess = false,
                 BulkUpload = false,
                 PrioritySupport = false,
@@ -233,11 +254,28 @@ public static class DealerPlanLimits
                 WhiteLabel = false,
                 DedicatedAccountManager = false
             },
+
+            // ═══════════════════════════════════════════
+            // VISIBLE ($29/mes) — Para dealers en crecimiento
+            // ═══════════════════════════════════════════
             DealerPlan.Basic => new DealerPlanFeatures
             {
-                MaxListings = 50,
-                MaxImages = 10,
-                MaxFeaturedListings = 3,
+                MaxListings = 999999,       // ILIMITADAS
+                MaxImages = 20,             // Hasta 20 fotos
+                MaxFeaturedListings = 3,    // 3 destacados/mes
+                SearchPriority = SearchPriorityLevel.Medium,
+                MonthlyOklaCoinsCredits = 15m,  // $15 en créditos OKLA Coins
+                BadgeType = DealerBadgeType.Verified,
+                ChatAgentWebConversations = 0,  // No incluido
+                ChatAgentWhatsAppConversations = 0,
+                AutoScheduling = false,
+                WhatsAppReminders = false,
+                PricingAgentFreeUsages = 0,
+                PricingAgentMonthlyUsages = 5,  // 5/mes
+                PricingAgentPdfReport = false,
+                DashboardAnalytics = DashboardLevel.Basic,
+                CanExportAnalytics = false,
+                IncludesVideoTour = false,
                 AnalyticsAccess = true,
                 BulkUpload = true,
                 PrioritySupport = false,
@@ -250,11 +288,28 @@ public static class DealerPlanLimits
                 WhiteLabel = false,
                 DedicatedAccountManager = false
             },
+
+            // ═══════════════════════════════════════════
+            // PRO ($89/mes) — Para dealers establecidos
+            // ═══════════════════════════════════════════
             DealerPlan.Pro => new DealerPlanFeatures
             {
-                MaxListings = 200,
-                MaxImages = 20,
-                MaxFeaturedListings = 10,
+                MaxListings = 999999,       // ILIMITADAS
+                MaxImages = 30,             // Hasta 30 fotos
+                MaxFeaturedListings = 10,   // 10 destacados/mes
+                SearchPriority = SearchPriorityLevel.High,
+                MonthlyOklaCoinsCredits = 45m,  // $45 en créditos OKLA Coins
+                BadgeType = DealerBadgeType.VerifiedGold,
+                ChatAgentWebConversations = 500,   // 500 conv/mes
+                ChatAgentWhatsAppConversations = 500,
+                AutoScheduling = true,
+                WhatsAppReminders = false,
+                PricingAgentFreeUsages = 0,
+                PricingAgentMonthlyUsages = 999999, // Ilimitada
+                PricingAgentPdfReport = false,
+                DashboardAnalytics = DashboardLevel.Advanced,
+                CanExportAnalytics = false,
+                IncludesVideoTour = false,
                 AnalyticsAccess = true,
                 BulkUpload = true,
                 PrioritySupport = true,
@@ -267,11 +322,28 @@ public static class DealerPlanLimits
                 WhiteLabel = false,
                 DedicatedAccountManager = false
             },
+
+            // ═══════════════════════════════════════════
+            // ELITE ($199/mes) — Para grandes operaciones
+            // ═══════════════════════════════════════════
             DealerPlan.Enterprise => new DealerPlanFeatures
             {
-                MaxListings = 999999, // Unlimited
-                MaxImages = 30,
-                MaxFeaturedListings = 999999, // Unlimited
+                MaxListings = 999999,       // ILIMITADAS
+                MaxImages = 40,             // Hasta 40 fotos + video tour
+                MaxFeaturedListings = 25,   // 25 destacados/mes
+                SearchPriority = SearchPriorityLevel.Top,
+                MonthlyOklaCoinsCredits = 120m, // $120 en créditos OKLA Coins
+                BadgeType = DealerBadgeType.VerifiedPremium,
+                ChatAgentWebConversations = 999999,   // ILIMITADO
+                ChatAgentWhatsAppConversations = 999999,
+                AutoScheduling = true,
+                WhatsAppReminders = true,   // + recordatorios WA
+                PricingAgentFreeUsages = 0,
+                PricingAgentMonthlyUsages = 999999, // Ilimitada
+                PricingAgentPdfReport = true,       // + informe PDF
+                DashboardAnalytics = DashboardLevel.Complete,
+                CanExportAnalytics = true,  // Completo + exportar
+                IncludesVideoTour = true,   // Fotos + video tour
                 AnalyticsAccess = true,
                 BulkUpload = true,
                 PrioritySupport = true,
@@ -292,10 +364,10 @@ public static class DealerPlanLimits
     {
         return plan switch
         {
-            DealerPlan.Free => 0m,
-            DealerPlan.Basic => 49m,
-            DealerPlan.Pro => 129m,
-            DealerPlan.Enterprise => 299m,
+            DealerPlan.Free => 0m,          // Libre
+            DealerPlan.Basic => 29m,        // Visible
+            DealerPlan.Pro => 89m,          // Pro
+            DealerPlan.Enterprise => 199m,  // Elite
             _ => 0m
         };
     }
@@ -304,23 +376,99 @@ public static class DealerPlanLimits
     {
         return plan switch
         {
-            DealerPlan.Free => "Gratis",
-            DealerPlan.Basic => "Básico",
-            DealerPlan.Pro => "Profesional",
-            DealerPlan.Enterprise => "Empresarial",
-            _ => "Gratis"
+            DealerPlan.Free => "Libre",
+            DealerPlan.Basic => "Visible",
+            DealerPlan.Pro => "Pro",
+            DealerPlan.Enterprise => "Elite",
+            _ => "Libre"
+        };
+    }
+
+    /// <summary>
+    /// Costo operativo estimado de OKLA por dealer/mes
+    /// </summary>
+    public static decimal GetOklaCostPerDealer(DealerPlan plan)
+    {
+        return plan switch
+        {
+            DealerPlan.Free => 0.50m,       // $0.05–$1.00 promedio
+            DealerPlan.Basic => 1.50m,
+            DealerPlan.Pro => 68m,
+            DealerPlan.Enterprise => 228m,
+            _ => 0m
         };
     }
 }
 
 /// <summary>
-/// Features disponibles por plan
+/// Nivel de prioridad en búsquedas
+/// </summary>
+public enum SearchPriorityLevel
+{
+    Standard = 0,
+    Medium = 1,
+    High = 2,
+    Top = 3
+}
+
+/// <summary>
+/// Tipo de badge de verificación del dealer
+/// </summary>
+public enum DealerBadgeType
+{
+    None = 0,
+    Verified = 1,           // "Verificado" — Plan Visible
+    VerifiedGold = 2,       // "Verificado Dorado" — Plan Pro
+    VerifiedPremium = 3     // "Verificado Premium" — Plan Elite
+}
+
+/// <summary>
+/// Nivel del dashboard de analytics
+/// </summary>
+public enum DashboardLevel
+{
+    None = 0,
+    Basic = 1,
+    Advanced = 2,
+    Complete = 3
+}
+
+/// <summary>
+/// Features disponibles por plan — OKLA v2 con visibilidad, ChatAgent, OKLA Coins
 /// </summary>
 public class DealerPlanFeatures
 {
+    // ── Listings & Media ──
     public int MaxListings { get; set; }
     public int MaxImages { get; set; }
     public int MaxFeaturedListings { get; set; }
+    public bool IncludesVideoTour { get; set; }
+
+    // ── Visibilidad ──
+    public SearchPriorityLevel SearchPriority { get; set; }
+    public DealerBadgeType BadgeType { get; set; }
+
+    // ── OKLA Coins ──
+    public decimal MonthlyOklaCoinsCredits { get; set; }
+
+    // ── ChatAgent (IA 24/7) ──
+    public int ChatAgentWebConversations { get; set; }
+    public int ChatAgentWhatsAppConversations { get; set; }
+
+    // ── Agendamiento ──
+    public bool AutoScheduling { get; set; }
+    public bool WhatsAppReminders { get; set; }
+
+    // ── PricingAgent (Valoración IA) ──
+    public int PricingAgentFreeUsages { get; set; }
+    public int PricingAgentMonthlyUsages { get; set; }
+    public bool PricingAgentPdfReport { get; set; }
+
+    // ── Analytics ──
+    public DashboardLevel DashboardAnalytics { get; set; }
+    public bool CanExportAnalytics { get; set; }
+
+    // ── Legacy fields (backward compatibility) ──
     public bool AnalyticsAccess { get; set; }
     public bool BulkUpload { get; set; }
     public bool PrioritySupport { get; set; }
