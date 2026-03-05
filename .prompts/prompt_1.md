@@ -1,6 +1,8 @@
 Nuevamente Analiza este documento completo porque he hecho nuevos cambios en los parrafos cambios en casis todos los parrafos, e implementa lo que no habias visto.
 
-Necesito que me hagas una auditoria, con el objetivo de como reducir costo en infrestrutura optimizando el sitema lo mas que se pueda y hasta combinar microservicio si es posible. Quiero que me hagas un reporte de esta auditoria.
+Necesito que me hagas una auditoria, con el objetivo de como reducir costo en infrestrutura optimiz
+
+ando el sitema lo mas que se pueda y hasta combinar microservicio si es posible. Quiero que me hagas un reporte de esta auditoria.
 
 TAmbien quiero que me implementes todos las recomendaciones de la auditoria. Pero todo loque hags valida que se mentiene la funcionalidad del sistema.
 
@@ -16,7 +18,7 @@ Auditame tambine todos los placesholder que tiene los campos de los formularios 
 
 Si me falto hacer otros tipos de auditoria al sistema, realizacelo y genra los documentos de reportes de esas autitorias. tambien si a nivel de analisis economicos faltan mas aditorias tambien realizacelas y genera los reportes y luego haz un plan para implementar todoas las recomendaciones de estas auditorias y luego implementalas y si desde el punto de vista de QA y unittesting faltaron mas pruebas tambien realizalas y haz un plan para hacerla en produccions.
 
-Tambien necesito que me busques un estrategia, para que los dealers y vendedores y compradores me reporten cuando una publicacion que hicieron ya se cerro la venta, para asi poder medir la eficiencia de la publiciad, analiza para que me puedes servir esto. Hazme un analisis como mercadolo y hazme un reporte. Y audita y para ver como implentar esto en la plataforma y luego implementa esto, pero necesito que me hagas un reparte de esto,, y dime en el reporte como puedo sacar bentajas competitivas de esto, y que esto pueda afectar el score del dealer de forma venficioza, y tambien analiza que tecnica puedo utilizar para que los dealer no simulen bentas creando cuentas de de comparadores y 
+Tambien necesito que me busques un estrategia, para que los dealers y vendedores y compradores me reporten cuando una publicacion que hicieron ya se cerro la venta, para asi poder medir la eficiencia de la publiciad, analiza para que me puedes servir esto. Hazme un analisis como mercadolo y hazme un reporte. Y audita y para ver como implentar esto en la plataforma y luego implementa esto, pero necesito que me hagas un reparte de esto,, y dime en el reporte como puedo sacar bentajas competitivas de esto, y que esto pueda afectar el score del dealer de forma venficioza, y tambien analiza que tecnica puedo utilizar para que los dealer no simulen bentas creando cuentas de de comparadores y simulando compras para subir su score, analiza eso y valida que se puede hacer para evitar esto.
 
 OKLA Admin Account
 Username: admin@okla.local

@@ -547,7 +547,13 @@ export default function DealerSubscriptionPage() {
                     pro: false,
                     elite: true,
                   },
-                  { feature: 'Acceso a API', libre: false, visible: false, pro: false, elite: true },
+                  {
+                    feature: 'Acceso a API',
+                    libre: false,
+                    visible: false,
+                    pro: false,
+                    elite: true,
+                  },
                   { feature: 'Empleados', libre: '1', visible: '1', pro: '5', elite: 'Ilimitado' },
                   {
                     feature: 'Soporte',
