@@ -57,6 +57,12 @@ public class CsrfValidationMiddleware
         "/api/dealer-billing/",
         "/api/okla-coins/",
         "/api/billing/",
+        // Contact, Appointments, Reviews: JWT-authenticated user operations
+        "/api/contactrequests",
+        "/api/contactmessages",
+        "/api/appointments",
+        "/api/timeslots",
+        "/api/reviews",
         "/swagger",
         "/metrics",
     };
