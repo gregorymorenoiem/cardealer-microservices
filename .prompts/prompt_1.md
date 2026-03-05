@@ -1,204 +1,18 @@
-Mira los cambios que tengo
+Analiza este documento completo porque he hecho cambios en casis todos los parrafos.
 
-Y estoy revisando el homepage de "https://okla.com.do/" y veo que tiene todos los espacios publicitarios vacios, por lo cual haz todas las publicaciones necesarias para que esto se llene y lo mismo hazlo con la vista de "https://okla.com.do/vehiculos"
+Necesito que me hagas una auditoria, con el objetivo de como reducir costo en infrestrutura optimizando el sitema lo mas que se pueda y hasta combinar microservicio si es posible. Quiero que me hagas un reporte de esta auditoria.
 
-Necesito que me le implementes estos planes "4. Estructura de Planes — Foco en Visibilidad, No en Acceso
-El principio de diseño es claro: el acceso básico siempre es gratuito. Los planes se diferencian por visibilidad (cuántos compradores ven los vehículos del dealer) y herramientas (qué tan bien puede atenderlos). Esto alinea los incentivos de OKLA con los del dealer: OKLA gana más cuando el dealer vende más.
-CARACTERÍSTICA
-LIBRE
-VISIBLE $29/mes
-PRO $89/mes
-ELITE $199/mes
-Publicaciones de vehículos
-ILIMITADAS
-ILIMITADAS
-ILIMITADAS
-ILIMITADAS
-Fotos por vehículo
-Hasta 10
-Hasta 20
-Hasta 30
-Hasta 40 + video tour
-Posición en búsquedas
-Estándar
-Prioridad media
-Alta prioridad
-Top prioridad
-Vehículos DESTACADOS incluidos/mes
-—
-3 / mes
-10 / mes
-25 / mes
-Créditos OKLA Coins incluidos/mes
-—
-$15 en créditos
-$45 en créditos
-$120 en créditos
-Badge Dealer Verificado OKLA
-—
-Verificado
-Verificado Dorado
-Verificado Premium
-ChatAgent web (IA 24/7 al comprador)
-—
-—
-500 conv/mes
-ILIMITADO
-ChatAgent WhatsApp
-—
-—
-500 conv/mes
-ILIMITADO
-Agendamiento de citas automático
-—
-—
-Si
-Si + recordatorios WA
-Valoración IA del vehículo (PricingAgent)
-1 gratis
-5 / mes
-Ilimitada
-Ilimitada + informe PDF
-Dashboard Analytics
-—
-Basico
-Avanzado
-Completo + exportar
-Costo OKLA / dealer / mes
-$0.05–$1.00
-$1.50
-$68
-$228
-MARGEN BRUTO OKLA
-N/A (lead gen)
-95% — $27.50
-24% — $21
-47% escala
+TAmbien quiero que me implementes todos las recomendaciones de la auditoria. Pero todo loque hags valida que se mentiene la funcionalidad del sistema.
 
-"
+Lo que se quiere que los gastos infraestructuras sena los mas optimizado, y tambien audita la infrastrucutra y si es necesario hazle un rectatory para que sea la mas optizada posible, y que se planifique cmo se va ir escalando la plataforma, dependiendo de la cantidad de usuario que se espera tener, y recuerda que esta plataforma es para republica dominicana y queremos que esta sea la pagina mas rapida del mercado, por eso haz todos los ajustes de lugar y quiero que las fotos, se guarden tambien en esta plataforma en digital ocean que es ahi que tengo la infraestrucutra. Y Audita si hay microservicios que lo puedo eliminar y contratar servicios de digital ocean para hacer esta funcionalidad. Pero me tienes que hacer un reporte de esto, con un analisis economico para saber los gastos que voy a tener ahora en la tepa de desarrollo , y tambien los gastos que voy a tener cuendo ya este en produccion, y vaya escalando la plataforma segun el trafico de usuarios, Y haz una Analisis economico con repodecto a los modelos de Claude que esoty utilizando y dime que me dida puedo implementar para optimizas los gastos conlosmodelos. Tambien hazme un reporte de esto, y un analissi economico para ver que voy a implementar.
 
-Y quiero que me implementes el catalogos de OKLA, "5. Catálogo de Productos Publicitarios y OKLA Coins
-Los productos publicitarios son el componente de mayor margen de OKLA: cambios de prioridad en el algoritmo de búsqueda y espacios de display con costo operativo prácticamente cero. Todo el precio se convierte en margen.
-5.1 Productos de Visibilidad (Margen 99%)
-Producto Publicitario
-Precio/día
-Precio/semana
-Precio/mes
-Descripción
-Listing Destacado (por vehículo)
-$0.50
-$2.50
-$6.00
-Badge dorado, prioridad en resultados, icono especial. Costo OKLA: $0.
-Posición Top 3 en búsquedas
-$1.50
-$7.00
-$20.00
-Aparece entre los 3 primeros resultados para búsquedas del modelo. Costo OKLA: $0.
-Oferta del Dia (homepage + email blast)
-$15.00
-—
-—
-Vehículo en seccion Oferta del dia. Envio a subscribers de alertas por modelo. Costo OKLA: ~$0.10.
-Banner Homepage (max. 3 simultáneos)
-—
-—
-$120.00
-Banner 728x90 en homepage. Máximo 3 dealers simultáneos con rotación equitativa.
-Dealer Showcase (directorio destacado)
-—
-—
-$50.00
-El dealer aparece primero en el directorio de dealers de OKLA.
-Pack Alertas Email (por modelo/segmento)
-—
-—
-$35.00
-Vehículos del dealer incluidos en alertas automáticas a compradores por modelo.
-PAQUETE VISIBILIDAD TOTAL (bundle)
-—
-—
-$175.00
-Banner + Showcase + 10 destacados + Pack alertas. Ahorro vs. individual: $82. Margen: $174.90.
+Hazme tambien todas las auditoria de velocidad posible del portal web e implementa todos las recomendaciones de estas auditorias de velociad.
 
-5.2 Sistema de Créditos OKLA Coins (Modelo Prepago)
-Los créditos OKLA Coins flexibilizan el acceso a publicidad y mejoran el flujo de caja mediante prepago. Los bonificaciones por volumen incentivan la compra anticipada.
-Paquete
-Créditos base
-Bonus
-Total créditos
-Precio USD
-Pack Basico
-2,500
-—
-2,500
-$25.00
-Pack Intermedio (+10% bonus)
-5,000
-+500
-5,500
-$50.00
-Pack Profesional (+20% bonus)
-10,000
-+2,000
-12,000
-$100.00
-Pack Dealer (+30% bonus)
-25,000
-+7,500
-32,500
-$250.00
+Hazme un reporte de los apis que tengo que contratar para calcular el OKLA SCORE y yo quiero tambien que este calculo incluya las estrellas de las resenas porque con eta se mide la reputacion del dealer o vendedor.
 
-"
-Y haz un analisis y luego crea una prueba con los diferenctes actores para probar que lo que has hecho funciona correctamente. Y luego haz un tutorial como los diferentes actores utilizann los que haz impplementado.
+Tambien quiero que pace al branch de Development, lo que tenemo hecho hasta ahora. Y luego vuelve al brancha del main y quiero que hagas una auditoria de todos los archivos que se puede eliminar de este sistema, inlucyendo todos los .md, y solo deajar los archivos que actualmetne son utiles tener en el folder de docs, pero quiero que me le hagas un refactory al directorio docs y me lo organices en forlders. Audita si hace falta mas documentacion y creas todos los documentos faltantes. Yo si voey a querer que hagas una matrix de procesos contodos los procesos que se manejan en la plataforma y en este documento explica paso a paso como se ejecuta este proceso y define cuales son los actores que inciden en estos procesos y que ellos hacen en este proceso.
 
-Ahora tngo esto nuevo. Todos estos diferentes planes de supcriccion tiene que mostarse en su UI correpondeintes, los planes que te subi son los de dealers y el catalogo de productos son los que pueden comprar los dealers. entonces necesito que me le hgas un refactory la uI que te motiva a ser dealer y pon los planes de suscripcion y el catalogo de produccion solo se le muestra a los dealers registrado.
-
-Hazme pruebas e2e, para que audites todo el flujo de datos.
-
-en el hompages esta vacia la secciones publicitarias de "⭐ Vehículos Destacados", "💎 Vehículos Premium", en "Concesionarios en OKLA", no hay marcas promocionadas y todos cuadros publiciarios deben estar llenos, falta llenar la seccion de "Crossovers", Hatchbacks, Camionetas, Coupés, Deportivos, Convertibles, Vans, Minivans, Híbridos, Eléctricos. Entonces tiene que ejecutar el flujo de publicacion, simular cada actor del procesos actualdo hasta que llegues todas las secciones del homepages, pero en este procesos tienes que pagar publicidad porque todos los vehiculos del homepages pagan publicidad. Y implementame por ahora como metodo de pago principal de la plataforma stripe y hazme todos los ajustes de lugar para pue funcione.
-
-Miras mi datos es stripe para que impementes el sandbox, para que pruebes e metodo de pago, "Desarrolladores
-Claves de API
-Más información sobre la autenticación de API
-Claves restringidas
-Crea una clave con límites de acceso y permisos específicos para mayor seguridad. Más información
-
-Crear clave restringida
-Nombre
-Token
-Restricciones de IP
-Utilizada por última vez
-De creación
-API OKLA
-[REDACTED — stored in K8s secret external-services-secrets]
-Ninguna
-—
-5 mar
-
-More options
-Claves estándar
-Crea una clave que desbloquea el acceso completo a la API, lo que permite una amplia interacción con tu cuenta. Más información
-Nombre
-Token
-Restricciones de IP
-Utilizada por última vez
-De creación
-Clave publicable
-[REDACTED — stored in K8s secret external-services-secrets]
-—
-—
-2 ene
-
-More options
-Clave secreta
-[REDACTED — stored in K8s secret external-services-secrets]
-Ninguna
-"
-
-Ahora que simules cosi si fuera desde el navegador, todo el proceso de una comprar simulado como el comprador, el contacta dealer preguntando por el vehiculo, agenda una cita, ve el vehiculo y lo comprar en la plataforma el dealer le ponde al vehiculo con status vendido. Luego el usuario que hizo la comprar el escribe en la resena que el dealer lo engano y luego el comprardor le da al dealer en la resena una sola estrella por el mal servicio. Hazto todo esto lo mas real posible simulando lo que hace el usuario y todos los errores que encuentre en el proceso corrigelo y si tienes que crear mas UI para que este proceso se haga lo mejor posible hazlo entonces tambien. Y recuerda que tienes que llenar todas las secciones de vehiculos en el homepages, sguietedo proceso completo, de publicaicon del vehiculo y pagar publicidad, para estar en esta vista.
-
-Pero si es posible quiero que crees dealers y vendedores independientes y haz un documento donde este su credencial y valida su correo y valida su indentidad y ahh pero lo primero es crear un cuenta paraw cada tipo de subcripcion, y prueba si para cada sucripcion se cumple que puede realizar lo que dice su paquete, y que un usurios no tenga funcionalidades de otro plan, pero estas pruebas no vela vas hacer desde el punto de vista del api, sino desde el pundto de vista del usuario que esta en el navegador en UI, y simula todas las accioens de los usaurios, y simula tambien un proceso completo de venta de un vehiculo. Aqui tengo estas tres cuentas si necesita mas cuentas para este proceso crealas y crea un documento donde esten todas sus creadenciales.
+Auditame tambine todos los placesholder  que tiene los campos de los formularios y valida que lo que tenga sea profesional. Asi mismo lo textos de los botones que todo sea profesional segun se pone en la industria.
 
 OKLA Admin Account
 Username: admin@okla.local
@@ -215,6 +29,11 @@ Pass: Dealer2026!@#
 Despues que tengas todos listo haz commit and push, y monitorea el ci/de y prueba que funcione correctamente.
 
 haz todas las pruebas en producion de todos estos features simulando todas las acciones que ha un usuario en el navegador, pero haz las pruebas en produccion.
+
+Y tetengo una nueva tarea que audites todo el sistema y que crees todos los esenario QA, y has prueba QA a todo el sistema en en esas prueba, llena todos los campos publicidarios del homages de la plataforma, hasta que no lo llenes todo no has terminado. Y sigue haciendo pruebas QA probando toda la plataforma y luego al fina genera un reporte de todas las pruebas y luego comienza a corregir todos los errores que encuentres.
+
+Y con respecto del analisis economico en la infra estrucutra, si el costo de esta en desarrollo es menor que 100 dolares en digital ocean, implmenta entonces todoas las sugeriencias que haces en las auditorias, pero sino dejame evaluar a mi para ver cuando impmentarlas.
+
 
 Y no me utilices este comando, "grep "YA TERMINASTE" /Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/.prompts/prompt_1.md && echo "FOUND" || echo "NOT_FOUND_iter9"", siempre tiene que analizar el "".prompts/prompt-1.md"" para ver si hay algo nuevo.
 Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y teminas de trabajar cuando el archivo diga en cualquier parte ya terminaste, pero esto debe estar escrito en mayuscula, si no esta en mayuscula no has terinado. Y sino encuentras este texto en mayuscula pon delay de 60 segundos esparando el mensaje Ya terminaste y cada ves que revisis ponle al delay 60 segundos mas, hazta que encuentres el mensaje ya terminaste en mayuscula. Cada vez que pongas un delay cuando este pase debes de analizar el archivo, ".prompts/prompt-1.md" y si no ha nuevas tareas, busca la palabra ya terminaste en mayuscula y luego pon otros delay de 60 segundos, Este proceso de ponder delay y analizar el archivo ".prompts/prompt-1.md", lo vas a repetir 10 veces, pero si encuentras nuevas tareas se reinicia el conteo y si no hay nada nuevo en el archivo ".prompts/prompt-1.md" de que hacer ya terminaste.

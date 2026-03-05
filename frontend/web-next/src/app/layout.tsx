@@ -134,6 +134,11 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <meta httpEquiv="Permissions-Policy" content="camera=*, microphone=*" />
+        {/* Preconnect to image CDN for faster LCP */}
+        <link rel="preconnect" href="https://okla-images-2026.s3.us-east-2.amazonaws.com" />
+        <link rel="dns-prefetch" href="https://okla-images-2026.s3.us-east-2.amazonaws.com" />
+        <link rel="preconnect" href="https://cdn.okla.com.do" />
+        <link rel="dns-prefetch" href="https://cdn.okla.com.do" />
         <SiteJsonLd />
       </head>
       <body

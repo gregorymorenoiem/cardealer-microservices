@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   // Output standalone for Docker deployment
   output: 'standalone',
 
+  // Security: remove X-Powered-By header
+  poweredByHeader: false,
+
+  // Development: enable strict mode for catching bugs
+  reactStrictMode: true,
+
   // Image optimization configuration
   images: {
     remotePatterns: [
@@ -88,6 +94,12 @@ const nextConfig: NextConfig = {
       'date-fns',
       'sonner',
       'recharts',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      'zod',
+      'react-hook-form',
     ],
     // KYC documents (cedula front/back/selfie) can be up to ~1MB each after base64 encoding.
     // Default Next.js limit is 1MB; raise to 10MB to handle higher-res camera captures.
@@ -218,6 +230,16 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+        ],
+      },
+      // Cache optimized images (Next.js image optimizer output)
+      {
+        source: '/_next/image/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
           },
         ],
       },
