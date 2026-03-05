@@ -1,6 +1,8 @@
-Ahora necesito que me le haga una auditoria profunda a todo le sistema y determiname que otras cosas le tengo que hacer a la plataforma okla y luego genera un documento con un plan de accion para implementar estas funcioanlidades.
+Y los microservicios ya se combinaron para que en esos que van utilizar en la infractructura tenga toda la funcionalidad.
 
-Ahora implementame esto "docs/INFRASTRUCTURE_COST_ANALYSIS.md" en staging.
+TAmbien haz una auditoria profunda de todo el frontend y haz un refactory para que el codigo este lo mas profesional posible y lo mas optimizado posible y que sea mobile first y que sea completamente responsive (PC con monitores de distintas ttamanos, laptos con pantalla de distintos tamanos, tables de distintos tamnos, celulares con pantalla de distintos tamanos) y para que el usuario mobiel tenga una mejor esperiencia de usuario, que sea SPA y que le salga al usuario quiere instalarlo en su celular que lo haga y despues que lo instales que no le salga mas este mensaje.
+
+Tienes que hacer una preuba full QA probando todo porque este es un cambio critico.
 
 OKLA Admin Account
 Username: admin@okla.local

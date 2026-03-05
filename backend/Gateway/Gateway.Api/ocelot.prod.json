@@ -224,7 +224,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ]
@@ -239,7 +239,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -261,7 +261,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -283,7 +283,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ]
@@ -297,7 +297,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -319,7 +319,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -341,7 +341,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -364,7 +364,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -386,7 +386,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -408,7 +408,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -430,7 +430,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -454,7 +454,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "inventorymanagementservice",
+          "Host": "vehiclessaleservice",
           "Port": 8080
         }
       ],
@@ -1960,7 +1960,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "dealermanagementservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -1976,7 +1976,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "dealermanagementservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -2001,7 +2001,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "dealermanagementservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -2023,7 +2023,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "dealermanagementservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -2049,7 +2049,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "dealermanagementservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -2094,7 +2094,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "dealermanagementservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -2669,7 +2669,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "appointmentservice",
+          "Host": "contactservice",
           "Port": 8080
         }
       ]
@@ -2687,7 +2687,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "appointmentservice",
+          "Host": "contactservice",
           "Port": 8080
         }
       ],
@@ -2709,7 +2709,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "appointmentservice",
+          "Host": "contactservice",
           "Port": 8080
         }
       ]
@@ -2727,7 +2727,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "appointmentservice",
+          "Host": "contactservice",
           "Port": 8080
         }
       ],
@@ -2751,7 +2751,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "appointmentservice",
+          "Host": "contactservice",
           "Port": 8080
         }
       ],
@@ -2775,7 +2775,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "appointmentservice",
+          "Host": "contactservice",
           "Port": 8080
         }
       ],
@@ -3224,7 +3224,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ]
@@ -3240,7 +3240,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3265,7 +3265,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3287,7 +3287,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3309,7 +3309,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3331,7 +3331,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3353,7 +3353,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3375,7 +3375,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3397,7 +3397,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ]
@@ -3413,7 +3413,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3437,7 +3437,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3460,7 +3460,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ]
@@ -3476,7 +3476,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3500,7 +3500,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3522,7 +3522,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3544,7 +3544,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3566,7 +3566,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -3588,7 +3588,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "alertservice",
+          "Host": "notificationservice",
           "Port": 8080
         }
       ],
@@ -4102,7 +4102,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4116,7 +4116,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4130,7 +4130,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4148,7 +4148,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4168,7 +4168,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4188,7 +4188,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4207,7 +4207,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4229,7 +4229,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4250,7 +4250,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4272,7 +4272,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4292,7 +4292,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4312,7 +4312,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4332,7 +4332,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4353,7 +4353,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "configurationservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4373,7 +4373,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4387,7 +4387,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4404,7 +4404,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4421,7 +4421,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4439,7 +4439,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4456,7 +4456,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4473,7 +4473,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4490,7 +4490,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4507,7 +4507,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4524,7 +4524,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4542,7 +4542,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "maintenanceservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4752,7 +4752,7 @@
       }
     },
     {
-      "_comment": "AdvertisingService: Create Campaign",
+      "_comment": "AdvertisingService (consolidated to AdminService): Create Campaign",
       "UpstreamPathTemplate": "/api/advertising/campaigns",
       "UpstreamHttpMethod": [
         "POST"
@@ -4761,7 +4761,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4778,7 +4778,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4795,7 +4795,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4812,7 +4812,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4829,7 +4829,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4846,7 +4846,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4863,7 +4863,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4877,7 +4877,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4891,7 +4891,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4905,7 +4905,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4922,7 +4922,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4939,7 +4939,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4956,7 +4956,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -4970,7 +4970,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -4987,7 +4987,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5001,7 +5001,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -5018,7 +5018,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -5035,7 +5035,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -5052,7 +5052,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -5069,7 +5069,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5083,7 +5083,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5097,7 +5097,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5111,7 +5111,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5125,7 +5125,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "advertisingservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5174,7 +5174,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "staffservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ]
@@ -5193,7 +5193,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "staffservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -5216,7 +5216,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "staffservice",
+          "Host": "adminservice",
           "Port": 8080
         }
       ],
@@ -5588,7 +5588,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ]
@@ -5602,7 +5602,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ],
@@ -5624,7 +5624,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ],
@@ -5643,7 +5643,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ],
@@ -5662,7 +5662,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ],
@@ -5684,7 +5684,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ],
@@ -5701,7 +5701,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "video360service",
+          "Host": "mediaservice",
           "Port": 8080
         }
       ],
