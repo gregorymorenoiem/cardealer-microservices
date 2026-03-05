@@ -284,7 +284,11 @@ function DealerDashboard() {
       <DealerVerificationBanner />
 
       {/* Upgrade banner — shown to dealers on free plan */}
-      <UpgradeBanner variant="inline" userType="dealer" upgradeUrl="/cuenta/upgrade?plan=visible&type=dealer" />
+      <UpgradeBanner
+        variant="inline"
+        userType="dealer"
+        upgradeUrl="/cuenta/upgrade?plan=visible&type=dealer"
+      />
 
       {dealerLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -516,7 +520,11 @@ function SellerDashboard() {
       <SellerProfileBanner />
 
       {/* Upgrade banner — shown to sellers on free plan */}
-      <UpgradeBanner variant="inline" userType="seller" upgradeUrl="/cuenta/upgrade?plan=premium&type=seller" />
+      <UpgradeBanner
+        variant="inline"
+        userType="seller"
+        upgradeUrl="/cuenta/upgrade?plan=premium&type=seller"
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

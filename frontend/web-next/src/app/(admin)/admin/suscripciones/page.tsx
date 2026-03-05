@@ -185,7 +185,11 @@ interface FeatureDisplay {
 
 function getDealerFeatureDisplay(features: DealerPlanFeatures): FeatureDisplay[] {
   return [
-    { label: 'Publicaciones', value: features.maxListings >= 999999 ? 'Ilimitadas' : String(features.maxListings), icon: CreditCard },
+    {
+      label: 'Publicaciones',
+      value: features.maxListings >= 999999 ? 'Ilimitadas' : String(features.maxListings),
+      icon: CreditCard,
+    },
     { label: 'Fotos por vehículo', value: String(features.maxImages), icon: Camera },
     { label: 'Publicaciones destacadas', value: String(features.featuredListings), icon: Sparkles },
     { label: 'Analíticas', value: features.analyticsAccess, icon: BarChart3 },
@@ -199,9 +203,26 @@ function getDealerFeatureDisplay(features: DealerPlanFeatures): FeatureDisplay[]
     { label: 'WhatsApp', value: features.whatsappIntegration, icon: MessageSquare },
     { label: 'Prioridad búsqueda', value: features.searchPriority, icon: TrendingUp },
     { label: 'OKLA Coins/mes', value: String(features.monthlyOklaCoinsCredits), icon: DollarSign },
-    { label: 'Badge', value: features.badgeType === 'none' ? false : features.badgeType, icon: Crown },
-    { label: 'ChatBot IA (web)', value: features.chatAgentWeb === -1 ? 'Ilimitado' : features.chatAgentWeb === 0 ? false : String(features.chatAgentWeb), icon: MessageSquare },
-    { label: 'Dashboard', value: features.dashboardLevel === 'none' ? false : features.dashboardLevel, icon: BarChart3 },
+    {
+      label: 'Badge',
+      value: features.badgeType === 'none' ? false : features.badgeType,
+      icon: Crown,
+    },
+    {
+      label: 'ChatBot IA (web)',
+      value:
+        features.chatAgentWeb === -1
+          ? 'Ilimitado'
+          : features.chatAgentWeb === 0
+            ? false
+            : String(features.chatAgentWeb),
+      icon: MessageSquare,
+    },
+    {
+      label: 'Dashboard',
+      value: features.dashboardLevel === 'none' ? false : features.dashboardLevel,
+      icon: BarChart3,
+    },
     { label: 'Vista 360°', value: features.view360Available, icon: Eye },
     { label: 'Video tour', value: features.videoTour, icon: Camera },
     { label: 'Máx. videos', value: String(features.maxVideos), icon: Camera },
@@ -212,7 +233,11 @@ function getSellerFeatureDisplay(features: SellerPlanFeatures): FeatureDisplay[]
   return [
     { label: 'Publicaciones activas', value: String(features.maxListings), icon: CreditCard },
     { label: 'Fotos por vehículo', value: String(features.maxImages), icon: Camera },
-    { label: 'Duración publicación', value: features.listingDuration === 0 ? 'Permanente' : `${features.listingDuration} días`, icon: CreditCard },
+    {
+      label: 'Duración publicación',
+      value: features.listingDuration === 0 ? 'Permanente' : `${features.listingDuration} días`,
+      icon: CreditCard,
+    },
     { label: 'Publicaciones destacadas', value: String(features.featuredListings), icon: Sparkles },
     { label: 'Analíticas', value: features.analyticsAccess, icon: BarChart3 },
     { label: 'Prioridad búsqueda', value: features.searchPriority, icon: TrendingUp },
@@ -336,14 +361,8 @@ export default function SuscripcionesPage() {
   const totalSellerSubs = SELLER_PLAN_CARDS.reduce((s, p) => s + p.subscriberCount, 0);
   const totalSubs = totalDealerSubs + totalSellerSubs;
 
-  const dealerMrr = DEALER_PLAN_CARDS.reduce(
-    (s, p) => s + p.monthlyPrice * p.subscriberCount,
-    0
-  );
-  const sellerMrr = SELLER_PLAN_CARDS.reduce(
-    (s, p) => s + p.monthlyPrice * p.subscriberCount,
-    0
-  );
+  const dealerMrr = DEALER_PLAN_CARDS.reduce((s, p) => s + p.monthlyPrice * p.subscriberCount, 0);
+  const sellerMrr = SELLER_PLAN_CARDS.reduce((s, p) => s + p.monthlyPrice * p.subscriberCount, 0);
   const totalMrr = dealerMrr + sellerMrr;
 
   const paidSubs =
@@ -444,9 +463,7 @@ export default function SuscripcionesPage() {
               <PlanDetailCard
                 key={plan.id}
                 plan={plan}
-                features={getDealerFeatureDisplay(
-                  DEALER_PLAN_LIMITS[plan.key as DealerPlan]
-                )}
+                features={getDealerFeatureDisplay(DEALER_PLAN_LIMITS[plan.key as DealerPlan])}
               />
             ))}
           </div>
@@ -458,9 +475,7 @@ export default function SuscripcionesPage() {
               <PlanDetailCard
                 key={plan.id}
                 plan={plan}
-                features={getSellerFeatureDisplay(
-                  SELLER_PLAN_LIMITS[plan.key as SellerPlan]
-                )}
+                features={getSellerFeatureDisplay(SELLER_PLAN_LIMITS[plan.key as SellerPlan])}
               />
             ))}
           </div>

@@ -22,6 +22,7 @@ import {
   type TitleType,
   getScoreLevel,
 } from '@/types/okla-score';
+import { DOP_USD_EXCHANGE_RATE } from '@/lib/constants';
 
 // =============================================================================
 // INPUT TYPES
@@ -593,7 +594,8 @@ export function calculateOklaScore(input: ScoreInput): OklaScoreReport {
   const level = getScoreLevel(clampedScore);
 
   // Price analysis
-  const rate = input.exchangeRate || 58.5;
+  // Falls back to the default constant when no live rate is provided
+  const rate = input.exchangeRate || DOP_USD_EXCHANGE_RATE;
   const fairPriceUSD =
     input.marketPriceUSD || (input.marketPriceDOP ? input.marketPriceDOP / rate : 0);
   const fairPriceDOP = input.marketPriceDOP || fairPriceUSD * rate;

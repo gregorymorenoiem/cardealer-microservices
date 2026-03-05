@@ -24,15 +24,14 @@ export function ChatWidget({ dealerId }: ChatWidgetProps) {
   const chat = useChatbot({
     dealerId,
     maxRetries: 2,
-    onLeadGenerated: leadId => {
-      // Could track with analytics
-      console.log('[OKLA Chat] Lead generated:', leadId);
+    onLeadGenerated: _leadId => {
+      // TODO: track with analytics service
     },
-    onTransfer: agentName => {
-      console.log('[OKLA Chat] Transferred to:', agentName);
+    onTransfer: _agentName => {
+      // TODO: track with analytics service
     },
     onLimitReached: () => {
-      console.log('[OKLA Chat] Interaction limit reached');
+      // TODO: track with analytics service
     },
   });
 

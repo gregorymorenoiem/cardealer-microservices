@@ -103,7 +103,6 @@ export default function KYCDetailPage() {
     async function fetchDocumentsIfMissing() {
       if (profile && (!profile.documents || profile.documents.length === 0)) {
         try {
-          console.log('Documents missing from profile response, fetching separately...');
           const documents = await getKYCDocuments(profileId);
           if (documents && documents.length > 0) {
             setProfile(prev => (prev ? { ...prev, documents } : null));

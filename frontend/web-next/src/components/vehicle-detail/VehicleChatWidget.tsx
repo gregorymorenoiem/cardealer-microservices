@@ -30,14 +30,14 @@ export function VehicleChatWidget({
   // No dealerId — global OKLA support mode (not dealer-specific)
   const chat = useChatbot({
     maxRetries: 2,
-    onLeadGenerated: leadId => {
-      console.log('[OKLA Support] Lead generated:', leadId);
+    onLeadGenerated: _leadId => {
+      // TODO: track with analytics service
     },
-    onTransfer: agentName => {
-      console.log('[OKLA Support] Transferred to:', agentName);
+    onTransfer: _agentName => {
+      // TODO: track with analytics service
     },
     onLimitReached: () => {
-      console.log('[OKLA Support] Limit reached');
+      // TODO: track with analytics service
     },
   });
 

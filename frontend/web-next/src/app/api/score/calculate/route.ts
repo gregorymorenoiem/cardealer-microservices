@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { VinDecodeResult, NhtsaRecall, NhtsaSafetyRating } from '@/types/okla-score';
 import { calculateOklaScore, type ScoreInput } from '@/lib/okla-score-engine';
+import { DOP_USD_EXCHANGE_RATE } from '@/lib/constants';
 
 // =============================================================================
 // BFF: OKLA Score™ Calculate — Orchestrates all APIs + scoring
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       recalls,
       safetyRating,
       sellerType: sellerType || 'individual',
-      exchangeRate: 58.5, // TODO: fetch live from BCRD or ExchangeRate-API
+      exchangeRate: DOP_USD_EXCHANGE_RATE, // TODO: fetch live from BCRD or ExchangeRate-API
     };
 
     const report = calculateOklaScore(input);

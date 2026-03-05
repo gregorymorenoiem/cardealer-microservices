@@ -39,7 +39,6 @@ export default function OAuthCallbackPage() {
     const handleCallback = async () => {
       // Prevent duplicate processing
       if (hasProcessed.current) {
-        console.log('OAuth callback already processed, skipping...');
         return;
       }
       hasProcessed.current = true;

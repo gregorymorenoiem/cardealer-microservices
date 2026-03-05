@@ -38,12 +38,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  DealerPlan,
-  SellerPlan,
-  DEALER_PLAN_LIMITS,
-  SELLER_PLAN_LIMITS,
-} from '@/lib/plan-config';
+import { DealerPlan, SellerPlan, DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS } from '@/lib/plan-config';
 
 // =============================================================================
 // TYPES

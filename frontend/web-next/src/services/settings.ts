@@ -143,20 +143,9 @@ export function saveTheme(theme: Theme): void {
 export function applyTheme(theme: Theme): void {
   if (typeof window === 'undefined') return;
 
-  console.log('=== [applyTheme] START ===');
-  console.log('[applyTheme] Requested theme:', theme);
-
   const root = document.documentElement;
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
-
-  console.log('[applyTheme] System prefers dark:', prefersDark);
-  console.log('[applyTheme] Will apply dark mode:', isDark);
-  console.log('[applyTheme] BEFORE - <html> classList:', root.className);
-  console.log(
-    '[applyTheme] BEFORE - --background CSS var:',
-    getComputedStyle(root).getPropertyValue('--background')
-  );
 
   if (isDark) {
     root.classList.add('dark');
@@ -166,17 +155,6 @@ export function applyTheme(theme: Theme): void {
 
   // Force reflow to ensure CSS variables are recalculated
   void root.offsetHeight;
-
-  console.log('[applyTheme] AFTER - <html> classList:', root.className);
-  console.log(
-    '[applyTheme] AFTER - --background CSS var:',
-    getComputedStyle(root).getPropertyValue('--background')
-  );
-  console.log(
-    '[applyTheme] AFTER - body backgroundColor:',
-    getComputedStyle(document.body).backgroundColor
-  );
-  console.log('=== [applyTheme] END ===');
 }
 
 // ============================================================

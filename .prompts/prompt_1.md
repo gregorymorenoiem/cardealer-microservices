@@ -1,5 +1,4 @@
-Tengo algo nuevo.
-
+Ahora necesito que me le haga una auditoria profunda a todo le sistema y determiname que otras cosas le tengo que hacer a la plataforma okla y luego genera un documento con un plan de accion para implementar estas funcioanlidades.
 
 OKLA Admin Account
 Username: admin@okla.local
