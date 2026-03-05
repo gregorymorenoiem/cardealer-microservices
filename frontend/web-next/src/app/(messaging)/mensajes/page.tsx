@@ -58,6 +58,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { sanitizeText } from '@/lib/security/sanitize';
+import { csrfFetch } from '@/lib/security/csrf';
 import { toast } from 'sonner';
 import { messagingService, type Conversation, type Message } from '@/services/messaging';
 
@@ -700,7 +702,7 @@ function DealerBotPanel({
   }, [chat.messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSend = () => {
-    const text = inputValue.trim();
+    const text = sanitizeText(inputValue.trim(), { maxLength: 2000 });
     if (!text || chat.isLoading) return;
     setInputValue('');
     setShowAppointmentScheduler(false);
@@ -716,14 +718,14 @@ function DealerBotPanel({
     chat.sendMessage(message);
     // Call appointment booking API (fire-and-forget, non-blocking)
     try {
-      await fetch('/api/appointments/book', {
+      await csrfFetch('/api/appointments/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dealerId: dealerId || '',
-          dealerName,
+          dealerId: sanitizeText(dealerId || '', { maxLength: 100 }),
+          dealerName: sanitizeText(dealerName, { maxLength: 200 }),
           dealerEmail: dealerEmail || '',
-          vehicleTitle: vehicleTitle || dealerName,
+          vehicleTitle: sanitizeText(vehicleTitle || dealerName, { maxLength: 300 }),
           date,
           time,
         }),
@@ -1146,7 +1148,10 @@ export default function MessagesPage() {
   // Handle send
   const handleSend = () => {
     if (!newMessage.trim() || !selectedConversationId) return;
-    sendMutation.mutate({ conversationId: selectedConversationId, content: newMessage.trim() });
+    sendMutation.mutate({
+      conversationId: selectedConversationId,
+      content: sanitizeText(newMessage.trim(), { maxLength: 5000 }),
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

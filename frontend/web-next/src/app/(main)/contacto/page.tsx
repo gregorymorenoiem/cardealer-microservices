@@ -10,6 +10,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,8 +75,8 @@ export default function ContactoPage() {
 
       setIsSubmitted(true);
     } catch (err) {
-      console.error('Contact form error:', err);
-      // TODO: Show user-facing error toast
+      const error = err as { message?: string };
+      toast.error(error?.message || 'Error al enviar el mensaje. Inténtalo de nuevo.');
     } finally {
       setIsSubmitting(false);
     }

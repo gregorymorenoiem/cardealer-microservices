@@ -1,8 +1,15 @@
-Tengo nuevas tareas.
+Ejecuta esta tarea nueva.
+Implementa todo las observaciones de la auditoria.
 
-TAmbien haz una auditoria profunda de todo el frontend y haz un refactory para que el codigo este lo mas profesional posible y lo mas optimizado posible y que sea mobile first y que sea completamente responsive (PC con monitores de distintas ttamanos, laptos con pantalla de distintos tamanos, tables de distintos tamnos, celulares con pantalla de distintos tamanos) y para que el usuario mobiel tenga una mejor esperiencia de usuario, que sea SPA y que le salga al usuario quiere instalarlo en su celular que lo haga y despues que lo instales que no le salga mas este mensaje.
+Auditame si ahora ya el servicio MediaService ahora por defecto sube las fotos a digital ocean y audita si ya la infraestruuctura esta preparada para recibir esta fotos y almacenarla en digital ocenan. Y recuer que en republica dominicana y personas que tiene internet lento, para para todos los tipos de interne esta aplciacion web debe funcionar de forma optima, entonces toma todas las medidas de lugar, para que las imagenes se cargen de forma rapida aunque hayan casos que tengan velcoidad de internet lenta analiza que es lo mejor que se puede hacer e implementalo en el sistema.
 
-Tienes que hacer una preuba full QA probando todo porque este es un cambio critico.
+Quiero que me hagas undocumento donde me listes todas las API que utiliza la plataforma y dime en el documento donde tengo que poner las credenciales y apikey para que estos api funcionen, es decir ponme el path del archivo donde tengo que poner las credenciales de cada API.
+
+TAmbein quier que hagas una auditorai de lo que tengo en infrastrucutra en digital ocean actualmente y hazme un analisis de costo y dime cuanto voy a pagar mensualmetne. Y tambien hazme un analisis economico de los API que se integra enla plataforma y dime cuanto voy a pagar mensualmene por concepto de api.
+
+Eudita en la plataforma que lo scroll infirnito enla vista de vehiculo funciona correctametne.
+
+hazme una auditoria profunda de vulnerabilidad, y para que la apicacion tenga toda la seguridad posible para que no sea tumbada por los hackerts y que tenga la seguridad y menotireo necesario para que no sea hackeada. En esta adutioria audita todas las areas de seguridad que se requieran.
 
 OKLA Admin Account
 Username: admin@okla.local

@@ -79,6 +79,19 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // DigitalOcean Spaces CDN — for image storage migration
+      {
+        protocol: 'https',
+        hostname: '*.cdn.digitaloceanspaces.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.digitaloceanspaces.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -233,13 +246,14 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Cache optimized images (Next.js image optimizer output)
+      // Cache optimized images (Next.js image optimizer output) — 7 days with 30-day stale-while-revalidate
+      // Vehicle photos rarely change; aggressive caching reduces bandwidth for slow DR connections
       {
         source: '/_next/image/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
+            value: 'public, max-age=604800, stale-while-revalidate=2592000',
           },
         ],
       },

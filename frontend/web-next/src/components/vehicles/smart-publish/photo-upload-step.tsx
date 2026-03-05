@@ -4,6 +4,8 @@ import { useState, useCallback, useRef } from 'react';
 import { PhotoGuide } from './photo-guide';
 import type { UploadedImage } from './smart-publish-wizard';
 import { sanitizeFilename } from '@/lib/security/sanitize';
+import { uploadImage } from '@/services/media';
+import { compressImage, shouldCompress } from '../photos/image-compressor';
 import { Upload, X, Star, GripVertical, ImagePlus, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -38,7 +40,7 @@ export function PhotoUploadStep({ images, onChange, mode }: PhotoUploadStepProps
   const minPhotos = mode === 'dealer' ? MIN_PHOTOS_DEALER : MIN_PHOTOS_INDIVIDUAL;
   const maxPhotos = mode === 'dealer' ? MAX_PHOTOS_DEALER : MAX_PHOTOS_INDIVIDUAL;
 
-  // Handle file validation and upload
+  // Handle file validation and upload to MediaService
   const processFiles = useCallback(
     async (files: FileList | File[]) => {
       const fileArray = Array.from(files);
@@ -65,24 +67,66 @@ export function PhotoUploadStep({ images, onChange, mode }: PhotoUploadStepProps
 
       setUploadingCount(validFiles.length);
 
-      // Create preview URLs (in a real app, this would upload to MediaService)
-      const newImages: UploadedImage[] = validFiles.map((file, index) => ({
-        id: `img_${Date.now()}_${index}`,
-        file,
-        url: URL.createObjectURL(file),
-        order: images.length + index,
-        isPrimary: images.length === 0 && index === 0,
-        alt: sanitizeFilename(file.name.replace(/\.[^/.]+$/, '')),
-      }));
+      const newImages: UploadedImage[] = [];
 
-      // Simulate brief upload delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        const previewUrl = URL.createObjectURL(file);
+
+        try {
+          // Compress before upload (saves bandwidth on slow DR connections)
+          let fileToUpload = file;
+          if (shouldCompress(file)) {
+            const result = await compressImage(file, {
+              maxSizeMB: 1.5,
+              maxWidthOrHeight: 2048,
+              useWebWorker: true,
+              preserveExif: true,
+            });
+            if (result.wasCompressed) {
+              fileToUpload = result.compressed;
+            }
+          }
+
+          // Upload to MediaService via Gateway
+          const uploadResult = await uploadImage(fileToUpload, 'vehicles');
+
+          newImages.push({
+            id: uploadResult.publicId || `img_${Date.now()}_${i}`,
+            file,
+            url: uploadResult.url,
+            order: images.length + i,
+            isPrimary: images.length === 0 && i === 0,
+            alt: sanitizeFilename(file.name.replace(/\.[^/.]+$/, '')),
+          });
+
+          // Revoke the preview blob URL since we now have the real URL
+          URL.revokeObjectURL(previewUrl);
+        } catch {
+          // If upload fails, still add with preview URL and mark as uploading
+          // The blob URL filter in handlePublish will prevent submission
+          newImages.push({
+            id: `img_${Date.now()}_${i}`,
+            file,
+            url: previewUrl,
+            order: images.length + i,
+            isPrimary: images.length === 0 && i === 0,
+            alt: sanitizeFilename(file.name.replace(/\.[^/.]+$/, '')),
+            isUploading: true,
+          });
+          toast.error(`Error al subir ${file.name}. Intenta de nuevo.`);
+        }
+      }
 
       onChange([...images, ...newImages]);
       setUploadingCount(0);
-      toast.success(
-        `${validFiles.length} foto${validFiles.length > 1 ? 's' : ''} agregada${validFiles.length > 1 ? 's' : ''}`
-      );
+
+      const successCount = newImages.filter(img => !img.isUploading).length;
+      if (successCount > 0) {
+        toast.success(
+          `${successCount} foto${successCount > 1 ? 's' : ''} subida${successCount > 1 ? 's' : ''} correctamente`
+        );
+      }
     },
     [images, maxPhotos, onChange]
   );

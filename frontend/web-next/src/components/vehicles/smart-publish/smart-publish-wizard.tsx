@@ -85,6 +85,7 @@ export interface UploadedImage {
   url: string;
   file?: File;
   preview?: string;
+  alt?: string;
   order: number;
   isPrimary: boolean;
   isUploading?: boolean;
@@ -593,7 +594,7 @@ export function SmartPublishWizard({
       description: formData.description || undefined,
       features: formData.features,
       images: formData.images
-        .filter(img => img.url)
+        .filter(img => img.url && !img.url.startsWith('blob:') && !img.isUploading)
         .map(img => ({
           url: img.url,
           order: img.order,

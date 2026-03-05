@@ -651,6 +651,13 @@ spec:
               value: "okla-images-2026"
             - name: Storage__S3__Region
               value: "us-east-2"
+            # DigitalOcean Spaces endpoint (S3-compatible)
+            # When migrating to DO Spaces, set ServiceUrl to https://{region}.digitaloceanspaces.com
+            # and CdnBaseUrl to https://{bucket}.{region}.cdn.digitaloceanspaces.com
+            - name: Storage__S3__ServiceUrl
+              value: ""
+            - name: Storage__S3__CdnBaseUrl
+              value: ""
             - name: Storage__S3__AccessKey
               valueFrom:
                 secretKeyRef:

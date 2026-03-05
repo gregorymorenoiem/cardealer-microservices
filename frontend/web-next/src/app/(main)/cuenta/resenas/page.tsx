@@ -39,6 +39,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { sanitizeText } from '@/lib/security/sanitize';
 import type { Review } from '@/services/reviews';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ function ReviewResponseForm({ reviewId, sellerId, onClose }: ReviewResponseFormP
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = text.trim();
+    const trimmed = sanitizeText(text.trim(), { maxLength: 1000 });
     if (trimmed.length < 10) {
       toast.error('La respuesta debe tener al menos 10 caracteres');
       return;

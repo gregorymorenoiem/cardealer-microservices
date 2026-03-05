@@ -71,16 +71,20 @@ export function VehicleCard({
           className
         )}
       >
-        {/* Image */}
+        {/* Image — optimized for slow internet (DR 3G/4G) */}
         <div className="relative h-48 w-full shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 sm:h-32 sm:w-48 dark:from-slate-800 dark:to-slate-700">
           {!imageError && vehicle.imageUrl ? (
             <Image
               src={vehicle.imageUrl}
               alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
               fill
-              sizes="192px"
+              sizes="(max-width: 640px) 100vw, 192px"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
+              quality={75}
+              loading={priority ? 'eager' : 'lazy'}
               priority={priority}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
               onError={() => setImageError(true)}
             />
           ) : (
@@ -151,7 +155,7 @@ export function VehicleCard({
           className
         )}
       >
-        {/* Image */}
+        {/* Image — optimized for slow internet (DR 3G/4G) */}
         <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
           {!imageError && vehicle.imageUrl ? (
             <Image
@@ -160,7 +164,11 @@ export function VehicleCard({
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
+              quality={75}
+              loading={priority ? 'eager' : 'lazy'}
               priority={priority}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
               onError={() => setImageError(true)}
             />
           ) : (
