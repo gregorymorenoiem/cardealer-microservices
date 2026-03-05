@@ -2476,6 +2476,21 @@ data:
           }
         },
         {
+          "UpstreamPathTemplate": "/api/dealer-billing/plans",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/dealer-billing/plans",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "Priority": 1
+        },
+        {
           "UpstreamPathTemplate": "/api/dealer-billing/{everything}",
           "UpstreamHttpMethod": [
             "OPTIONS",
@@ -2500,20 +2515,6 @@ data:
             "DurationOfBreak": 10,
             "TimeoutValue": 30000
           }
-        },
-        {
-          "UpstreamPathTemplate": "/api/dealer-billing/plans",
-          "UpstreamHttpMethod": [
-            "GET"
-          ],
-          "DownstreamPathTemplate": "/api/dealer-billing/plans",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [
-            {
-              "Host": "billingservice",
-              "Port": 8080
-            }
-          ]
         },
         {
           "UpstreamPathTemplate": "/api/payment-methods/{everything}",
