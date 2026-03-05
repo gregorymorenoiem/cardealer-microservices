@@ -115,8 +115,12 @@ function FeaturedListingCard({
               alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              quality={75}
+              loading={priority ? 'eager' : 'lazy'}
               priority={priority}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
 
             {/* Badge Overlay - Top Right */}

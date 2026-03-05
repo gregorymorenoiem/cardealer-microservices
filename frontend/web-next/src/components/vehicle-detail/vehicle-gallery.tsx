@@ -175,6 +175,9 @@ export function VehicleGallery({
             fill
             priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 800px"
+            quality={75}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
             className="object-cover"
           />
 
@@ -249,7 +252,11 @@ export function VehicleGallery({
                     src={image.thumbnailUrl || image.url}
                     alt={image.alt || `${title} - Imagen ${index + 1}`}
                     fill
-                    sizes="64px"
+                    sizes="80px"
+                    quality={60}
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
                     className="object-cover"
                   />
                 </button>
@@ -318,6 +325,9 @@ export function VehicleGallery({
               alt={currentImage?.alt || title}
               fill
               sizes="100vw"
+              quality={85}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTExODI3Ii8+PC9zdmc+"
               className="object-contain"
             />
           </div>

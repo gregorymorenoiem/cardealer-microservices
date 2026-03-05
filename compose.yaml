@@ -2728,7 +2728,7 @@ services:
       - NODE_OPTIONS=--max-old-space-size=1536
       - VITE_API_URL=http://localhost:18443
       - VITE_AUTH_SERVICE_URL=http://localhost:15085/api
-      - VITE_GOOGLE_MAPS_KEY=AIzaSyBHYPOPdUI45VrntYnM173q19BYVQ7k4nY
+      - VITE_GOOGLE_MAPS_KEY=${GOOGLE_MAPS_API_KEY:-}
       - VITE_PRODUCT_SERVICE_URL=http://localhost:15006/api
       - VITE_MEDIA_SERVICE_URL=http://localhost:15090/api
       - VITE_USE_MOCK_AUTH=false

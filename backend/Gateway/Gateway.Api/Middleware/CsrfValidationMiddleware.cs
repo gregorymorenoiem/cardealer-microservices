@@ -21,50 +21,42 @@ public class CsrfValidationMiddleware
         "GET", "HEAD", "OPTIONS"
     };
 
-    // Paths that are exempt from CSRF validation (webhooks, OAuth callbacks, health checks)
+    // Paths that are exempt from CSRF validation.
+    // SECURITY: Keep this list MINIMAL. Only exempt paths that genuinely cannot
+    // send CSRF tokens (webhooks from external services, pre-auth endpoints,
+    // public chatbot for visitors, and non-browser API-key-only AI agents).
+    // All other endpoints MUST validate CSRF via Double Submit Cookie.
     private static readonly string[] ExemptPaths = new[]
     {
+        // Infrastructure — no browser interaction
         "/health",
+        "/swagger",
+        "/metrics",
+        // Webhooks — called by external services (Stripe, Azul), not browsers
         "/api/webhooks/",
+        // OAuth callbacks — redirects from external identity providers
         "/api/auth/oauth/",
         "/api/ExternalAuth/",
+        // Pre-authentication endpoints — user has no CSRF cookie yet
         "/api/auth/login",
         "/api/auth/register",
         "/api/auth/refresh",
         "/api/auth/forgot-password",
         "/api/auth/reset-password",
         "/api/auth/verify-email",
-        // Security: Narrowed invitation exemptions to specific accept endpoint only
+        // Invitation acceptance — user may not have a session cookie
         "/api/invitations/accept",
         "/api/staff/invitations/accept",
-        // ChatbotService: Public chatbot endpoints (visitors without login)
+        // ChatbotService: Public chatbot endpoints (anonymous visitors without login)
         "/api/chat/start",
         "/api/chat/message",
         "/api/chat/end",
         "/api/chat/transfer",
-        // AI Agent APIs: JWT-authenticated only — CSRF redundant (no browser cookies involved)
+        // AI Agent APIs: These use JWT Bearer auth only (no browser cookies).
+        // Requests come from server-side BFF, not directly from browser.
         "/api/search-agent/",
         "/api/support/",
         "/api/reco-agent/",
-        // Admin homepage management: JWT-authenticated admin-only operations
-        "/api/homepagesections",
-        "/api/admin/",
-        // Vehicles: Feature toggle and management (JWT-protected)
-        "/api/vehicles/",
-        // Advertising: Campaign and catalog management (JWT-protected)
-        "/api/advertising/",
-        // Billing & OKLA Coins: JWT-authenticated dealer operations
-        "/api/dealer-billing/",
-        "/api/okla-coins/",
-        "/api/billing/",
-        // Contact, Appointments, Reviews: JWT-authenticated user operations
-        "/api/contactrequests",
-        "/api/contactmessages",
-        "/api/appointments",
-        "/api/timeslots",
-        "/api/reviews",
-        "/swagger",
-        "/metrics",
     };
 
     public CsrfValidationMiddleware(RequestDelegate next)

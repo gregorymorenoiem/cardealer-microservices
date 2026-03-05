@@ -1,5 +1,4 @@
-Ejecuta esta tarea nueva.
-Implementa todo las observaciones de la auditoria.
+Quiero que implementes las observaciones de esta adutioria de seguria, "docs/SECURITY_VULNERABILITY_AUDIT.md"
 
 Auditame si ahora ya el servicio MediaService ahora por defecto sube las fotos a digital ocean y audita si ya la infraestruuctura esta preparada para recibir esta fotos y almacenarla en digital ocenan. Y recuer que en republica dominicana y personas que tiene internet lento, para para todos los tipos de interne esta aplciacion web debe funcionar de forma optima, entonces toma todas las medidas de lugar, para que las imagenes se cargen de forma rapida aunque hayan casos que tengan velcoidad de internet lenta analiza que es lo mejor que se puede hacer e implementalo en el sistema.
 

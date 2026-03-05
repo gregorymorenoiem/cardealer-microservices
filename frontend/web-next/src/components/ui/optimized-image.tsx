@@ -12,8 +12,9 @@
 'use client';
 
 import Image, { ImageProps } from 'next/image';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { getConnectionSpeed, getOptimalQuality } from '@/lib/image-utils';
 
 // =============================================================================
 // TYPES
@@ -97,10 +98,29 @@ export function OptimizedImage({
   width,
   height,
   priority = false,
+  quality,
   ...props
-}: OptimizedImageProps) {
+}: OptimizedImageProps & { quality?: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [adaptiveQuality, setAdaptiveQuality] = useState(
+    () => quality ?? getOptimalQuality(getConnectionSpeed())
+  );
+
+  // Subscribe to connection changes — only update quality when connection type changes
+  useEffect(() => {
+    if (quality) return; // explicit quality takes precedence
+
+    const conn =
+      typeof navigator !== 'undefined'
+        ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
+        : null;
+    if (conn?.addEventListener) {
+      const handleChange = () => setAdaptiveQuality(getOptimalQuality(getConnectionSpeed()));
+      conn.addEventListener('change', handleChange);
+      return () => conn.removeEventListener?.('change', handleChange);
+    }
+  }, [quality]);
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);
@@ -134,6 +154,7 @@ export function OptimizedImage({
         width={fill ? undefined : width}
         height={fill ? undefined : height}
         sizes={getResponsiveSizes(width)}
+        quality={adaptiveQuality}
         placeholder="blur"
         blurDataURL={BLUR_DATA_URL}
         loading={priority ? 'eager' : 'lazy'}

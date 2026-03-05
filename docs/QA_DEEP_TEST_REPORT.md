@@ -253,21 +253,22 @@ The following areas should be tested manually by a human QA tester:
 
 ## 9. Live External API Tests (from local machine)
 
-| Test | Status | Details |
-| --- | --- | --- |
-| Homepage (https://okla.com.do/) | ✅ 200 | Loads correctly |
-| Login page (/iniciar-sesion) | ✅ 307 | Redirects (expected for auth pages) |
-| Vehicles page (/vehiculos) | ✅ 200 | Loads correctly |
-| Planes page (/planes) | ✅ 307 | Redirects (auth required) |
-| Registro page (/registro) | ✅ 200 | Loads correctly |
-| Admin page (/admin) | ✅ 307 | Redirects (auth required) |
-| Auth login API | ✅ 200 | Returns JWT token, userId, accountType |
-| Vehicles list API | ✅ 200 | Returns 14 vehicles with full data |
-| User profile API | ⚠️ 400 | Route interprets "profile" as userId - needs gateway route fix |
-| Contact API (GET) | ⚠️ 404 | GET not supported, only POST - expected |
-| Reviews API | ⚠️ Empty | No JSON response - likely gateway route issue |
+| Test                            | Status   | Details                                                        |
+| ------------------------------- | -------- | -------------------------------------------------------------- |
+| Homepage (https://okla.com.do/) | ✅ 200   | Loads correctly                                                |
+| Login page (/iniciar-sesion)    | ✅ 307   | Redirects (expected for auth pages)                            |
+| Vehicles page (/vehiculos)      | ✅ 200   | Loads correctly                                                |
+| Planes page (/planes)           | ✅ 307   | Redirects (auth required)                                      |
+| Registro page (/registro)       | ✅ 200   | Loads correctly                                                |
+| Admin page (/admin)             | ✅ 307   | Redirects (auth required)                                      |
+| Auth login API                  | ✅ 200   | Returns JWT token, userId, accountType                         |
+| Vehicles list API               | ✅ 200   | Returns 14 vehicles with full data                             |
+| User profile API                | ⚠️ 400   | Route interprets "profile" as userId - needs gateway route fix |
+| Contact API (GET)               | ⚠️ 404   | GET not supported, only POST - expected                        |
+| Reviews API                     | ⚠️ Empty | No JSON response - likely gateway route issue                  |
 
 ### Known Issues from Live Testing:
+
 1. **User profile route**: `/api/users/profile` is parsed as `/api/users/{id}` with id="profile". Gateway needs a specific route for the profile endpoint.
 2. **Reviews endpoint**: Returns empty response through external API. Internal health check passes so service is running.
 
