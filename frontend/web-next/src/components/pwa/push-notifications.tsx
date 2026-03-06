@@ -239,7 +239,7 @@ export function PushNotificationToggle({ className = '' }: PushNotificationToggl
   return (
     <div className={`flex items-center justify-between ${className}`}>
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+        <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
           <svg
             className={`h-5 w-5 ${isSubscribed ? 'text-green-600' : 'text-muted-foreground'}`}
             fill="none"
@@ -255,8 +255,8 @@ export function PushNotificationToggle({ className = '' }: PushNotificationToggl
           </svg>
         </div>
         <div>
-          <p className="font-medium text-foreground">Notificaciones</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-foreground font-medium">Notificaciones</p>
+          <p className="text-muted-foreground text-sm">
             {isSubscribed ? 'Recibirás alertas de nuevos vehículos' : 'Activa para recibir alertas'}
           </p>
         </div>

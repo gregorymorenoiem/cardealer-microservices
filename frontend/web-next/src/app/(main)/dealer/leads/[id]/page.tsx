@@ -150,7 +150,7 @@ function LeadDetailContent() {
 
   const handleSaveNotes = async () => {
     if (!lead || !notes.trim()) return;
-    const _sanitized = sanitizeText(notes.trim(), { maxLength: 1000 });
+    const sanitizedNotes = sanitizeText(notes.trim(), { maxLength: 1000 });
     try {
       await updateLead.mutateAsync({
         id: lead.id,
@@ -161,6 +161,7 @@ function LeadDetailContent() {
           phone: lead.phone,
           company: lead.company,
           jobTitle: lead.jobTitle,
+          notes: sanitizedNotes,
           status: lead.status,
           score: lead.score,
           estimatedValue: lead.estimatedValue,

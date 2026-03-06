@@ -20,9 +20,11 @@ function formatPrice(price: number, currency: string = 'DOP') {
 function FeaturedVehicleCard({
   vehicle,
   placementType,
+  priority = false,
 }: {
   vehicle: RotatedVehicle;
   placementType: 'FeaturedSpot' | 'PremiumSpot';
+  priority?: boolean;
 }) {
   const impressionRecorded = useRef(false);
   const recordImpression = useRecordImpression();
@@ -72,7 +74,8 @@ function FeaturedVehicleCard({
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               quality={75}
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
+              priority={priority}
               placeholder="blur"
               blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
             />
@@ -288,11 +291,12 @@ export default function FeaturedVehicles({
           </Link>
         </div>
         <div className={gridClass}>
-          {vehicles.map(vehicle => (
+          {vehicles.map((vehicle, index) => (
             <FeaturedVehicleCard
               key={vehicle.vehicleId}
               vehicle={vehicle}
               placementType={placementType}
+              priority={index < 2}
             />
           ))}
           {fillCount > 0 &&

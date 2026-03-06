@@ -24,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 import { sanitizeEmail, sanitizePhone, sanitizeText } from '@/lib/security/sanitize';
 import type { AccountFormData } from '@/lib/validations/seller-onboarding';
 
@@ -94,7 +95,7 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
             <RadioGroupItem value="individual" id="individual" className="mt-0.5" />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-primary" />
+                <User className="text-primary h-4 w-4" />
                 <span className="font-medium">Vendedor individual</span>
               </div>
               <p className="text-muted-foreground text-xs">
@@ -114,7 +115,7 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
             <RadioGroupItem value="dealer" id="dealer" className="mt-0.5" />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-primary" />
+                <Building2 className="text-primary h-4 w-4" />
                 <span className="font-medium">Dealer / Empresa</span>
               </div>
               <p className="text-muted-foreground text-xs">
@@ -296,13 +297,23 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
           className="text-muted-foreground cursor-pointer text-sm leading-relaxed"
         >
           Acepto los{' '}
-          <a href="/terminos" target="_blank" className="text-primary underline">
+          <Link
+            href="/terminos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
+          >
             Términos y Condiciones
-          </a>{' '}
+          </Link>{' '}
           y la{' '}
-          <a href="/privacidad" target="_blank" className="text-primary underline">
+          <Link
+            href="/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
+          >
             Política de Privacidad
-          </a>
+          </Link>
         </Label>
       </div>
 
@@ -318,7 +329,7 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
       <Button
         type="submit"
         size="lg"
-        className="w-full bg-primary hover:bg-primary/90"
+        className="bg-primary hover:bg-primary/90 w-full"
         disabled={isLoading || !isPasswordValid || !doPasswordsMatch || !data.acceptTerms}
       >
         {isLoading ? (

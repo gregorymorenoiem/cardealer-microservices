@@ -364,6 +364,7 @@ function LeadsPageContent() {
                             <a
                               href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
                               target="_blank"
+                              rel="noopener noreferrer"
                             >
                               <MessageSquare className="h-4 w-4" />
                             </a>

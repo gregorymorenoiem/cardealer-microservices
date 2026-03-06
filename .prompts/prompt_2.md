@@ -20,6 +20,8 @@ Entonces de las tareas de los sprints debes definir cuales tareas le tocan al de
 
 Dentro de tus funciones debes hacer investigaciones un online para de estas investigaciones ir mejorando la plataformula de okla e ir agregando nuevos feature que se puedan agregar a los planes de subcripcion es los usarios, y veo que las tareas que esas asignando en los sprints no le esta poniendo spritns para probar la tarea en produccion haciend todos los tipos de pruebas incluyenddo la e2e. Esto si tu no puedes hacerlo, los monitoreos de los ci/cd los hace el desarrolldor y tambien el desarrolldor hace las pruebas QA en produccion.
 
+No estoy viendo que estes escribiendo los sprints en ".prompts/prompt_1.md" para que el desarrolador las hagas. Veo que no le estas dejando tareas al desarrollador, tu la estas haciendo todas.
+
 OKLA Admin Account
 Username: admin@okla.local
 Password: Admin123!@#

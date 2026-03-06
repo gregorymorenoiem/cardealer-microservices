@@ -82,13 +82,13 @@ export default function PublicarPreviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
             <Badge className="mb-2 bg-blue-100 text-blue-800">Vista Previa</Badge>
-            <h1 className="text-2xl font-bold text-foreground">Así se verá tu publicación</h1>
+            <h1 className="text-foreground text-2xl font-bold">Así se verá tu publicación</h1>
             <p className="text-muted-foreground">Revisa que todo esté correcto antes de publicar</p>
           </div>
           <Link href="/publicar">
@@ -116,8 +116,8 @@ export default function PublicarPreviewPage() {
           <div className="space-y-6 lg:col-span-2">
             {/* Image Gallery */}
             <Card className="overflow-hidden">
-              <div className="relative aspect-[16/10] bg-muted">
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+              <div className="bg-muted relative aspect-[16/10]">
+                <div className="text-muted-foreground absolute inset-0 flex items-center justify-center">
                   <Car className="h-20 w-20" />
                 </div>
 
@@ -144,10 +144,20 @@ export default function PublicarPreviewPage() {
 
                 {/* Action buttons */}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white" aria-label="Agregar a favoritos">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="bg-white/90 hover:bg-white"
+                    aria-label="Agregar a favoritos"
+                  >
                     <Heart className="h-5 w-5" />
                   </Button>
-                  <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white" aria-label="Compartir">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="bg-white/90 hover:bg-white"
+                    aria-label="Compartir"
+                  >
                     <Share2 className="h-5 w-5" />
                   </Button>
                 </div>
@@ -159,8 +169,8 @@ export default function PublicarPreviewPage() {
                   <button
                     key={i}
                     onClick={() => setCurrentImageIndex(i)}
-                    className={`h-16 w-16 flex-shrink-0 rounded-lg bg-muted ${
-                      i === currentImageIndex ? 'ring-2 ring-primary' : ''
+                    className={`bg-muted h-16 w-16 flex-shrink-0 rounded-lg ${
+                      i === currentImageIndex ? 'ring-primary ring-2' : ''
                     }`}
                   />
                 ))}
@@ -172,7 +182,7 @@ export default function PublicarPreviewPage() {
               <CardContent className="p-6">
                 <div className="mb-4 flex items-start justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground">
+                    <h2 className="text-foreground text-2xl font-bold">
                       {vehicle.make} {vehicle.model} {vehicle.version}
                     </h2>
                     <p className="text-muted-foreground">
@@ -180,7 +190,7 @@ export default function PublicarPreviewPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-primary">
+                    <p className="text-primary text-3xl font-bold">
                       RD$ {vehicle.price.toLocaleString()}
                     </p>
                     <div className="mt-1 flex gap-2">
@@ -198,7 +208,7 @@ export default function PublicarPreviewPage() {
                   </div>
                 </div>
 
-                <div className="mb-6 flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground mb-6 flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   <span>
                     {vehicle.city}, {vehicle.province}
@@ -207,37 +217,37 @@ export default function PublicarPreviewPage() {
 
                 {/* Specs Grid */}
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                  <div className="rounded-lg bg-muted/50 p-3 text-center">
-                    <Gauge className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Kilometraje</p>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <Gauge className="text-muted-foreground mx-auto mb-1 h-5 w-5" />
+                    <p className="text-muted-foreground text-sm">Kilometraje</p>
                     <p className="font-medium">{vehicle.mileage.toLocaleString()} km</p>
                   </div>
-                  <div className="rounded-lg bg-muted/50 p-3 text-center">
-                    <Fuel className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Combustible</p>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <Fuel className="text-muted-foreground mx-auto mb-1 h-5 w-5" />
+                    <p className="text-muted-foreground text-sm">Combustible</p>
                     <p className="font-medium">{vehicle.fuelType}</p>
                   </div>
-                  <div className="rounded-lg bg-muted/50 p-3 text-center">
-                    <Settings className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Transmisión</p>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <Settings className="text-muted-foreground mx-auto mb-1 h-5 w-5" />
+                    <p className="text-muted-foreground text-sm">Transmisión</p>
                     <p className="font-medium">{vehicle.transmission}</p>
                   </div>
-                  <div className="rounded-lg bg-muted/50 p-3 text-center">
-                    <Palette className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Color</p>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <Palette className="text-muted-foreground mx-auto mb-1 h-5 w-5" />
+                    <p className="text-muted-foreground text-sm">Color</p>
                     <p className="font-medium">{vehicle.color}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 <div className="mb-6">
-                  <h3 className="mb-2 font-semibold text-foreground">Descripción</h3>
-                  <p className="whitespace-pre-line text-muted-foreground">{vehicle.description}</p>
+                  <h3 className="text-foreground mb-2 font-semibold">Descripción</h3>
+                  <p className="text-muted-foreground whitespace-pre-line">{vehicle.description}</p>
                 </div>
 
                 {/* Features */}
                 <div>
-                  <h3 className="mb-2 font-semibold text-foreground">Características</h3>
+                  <h3 className="text-foreground mb-2 font-semibold">Características</h3>
                   <div className="flex flex-wrap gap-2">
                     {vehicle.features.map((feature, i) => (
                       <Badge key={i} variant="secondary" className="bg-muted">
@@ -256,9 +266,9 @@ export default function PublicarPreviewPage() {
             {/* Contact Card (Preview) */}
             <Card className="border-primary bg-primary/10">
               <CardContent className="p-6">
-                <h3 className="mb-4 font-semibold text-foreground">Contactar Vendedor</h3>
+                <h3 className="text-foreground mb-4 font-semibold">Contactar Vendedor</h3>
                 <div className="space-y-3">
-                  <Button className="w-full bg-primary hover:bg-primary/90" disabled>
+                  <Button className="bg-primary hover:bg-primary/90 w-full" disabled>
                     <Phone className="mr-2 h-4 w-4" />
                     Ver Teléfono
                   </Button>
@@ -267,7 +277,7 @@ export default function PublicarPreviewPage() {
                     Enviar Mensaje
                   </Button>
                 </div>
-                <p className="mt-3 text-center text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-3 text-center text-xs">
                   * Los botones estarán activos cuando se publique
                 </p>
               </CardContent>
@@ -278,9 +288,9 @@ export default function PublicarPreviewPage() {
               <CardContent className="p-6">
                 <div className="mb-3 flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-amber-600" />
-                  <h3 className="font-semibold text-foreground">Destacar Publicación</h3>
+                  <h3 className="text-foreground font-semibold">Destacar Publicación</h3>
                 </div>
-                <p className="mb-4 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mb-4 text-sm">
                   Obtén hasta 10x más vistas destacando tu anuncio
                 </p>
                 <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
@@ -292,33 +302,35 @@ export default function PublicarPreviewPage() {
             {/* Publication Status */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="mb-4 font-semibold text-foreground">Estado de Publicación</h3>
+                <h3 className="text-foreground mb-4 font-semibold">Estado de Publicación</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                      <Check className="h-4 w-4 text-primary" />
+                    <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                      <Check className="text-primary h-4 w-4" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">Información completa</p>
-                      <p className="text-xs text-muted-foreground">Todos los campos requeridos</p>
+                      <p className="text-muted-foreground text-xs">Todos los campos requeridos</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                      <Check className="h-4 w-4 text-primary" />
+                    <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                      <Check className="text-primary h-4 w-4" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{vehicle.photos} fotos subidas</p>
-                      <p className="text-xs text-muted-foreground">Mínimo requerido: 5</p>
+                      <p className="text-muted-foreground text-xs">Mínimo requerido: 5</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full">
+                      <Clock className="text-muted-foreground h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Pendiente de revisión</p>
-                      <p className="text-xs text-muted-foreground">Aproximadamente 24 horas</p>
+                      <p className="text-muted-foreground text-sm font-medium">
+                        Pendiente de revisión
+                      </p>
+                      <p className="text-muted-foreground text-xs">Aproximadamente 24 horas</p>
                     </div>
                   </div>
                 </div>
@@ -328,7 +340,7 @@ export default function PublicarPreviewPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-8 flex items-center justify-between rounded-lg border bg-card p-6 shadow-sm">
+        <div className="bg-card mt-8 flex items-center justify-between rounded-lg border p-6 shadow-sm">
           <Link href="/publicar/fotos">
             <Button variant="outline">
               <ChevronLeft className="mr-2 h-4 w-4" />
@@ -339,7 +351,7 @@ export default function PublicarPreviewPage() {
           <div className="flex gap-3">
             <Button variant="outline">Guardar Borrador</Button>
             <Button
-              className="bg-primary px-8 hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 px-8"
               onClick={handlePublish}
               disabled={isSubmitting}
             >

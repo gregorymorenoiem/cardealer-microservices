@@ -1,6 +1,6 @@
 /**
  * CRM Service
- * 
+ *
  * API client for CRM operations: leads, deals, activities
  */
 
@@ -10,9 +10,24 @@ import { apiClient } from '@/lib/api-client';
 // Types
 // ============================================================================
 
-export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Proposal' | 'Negotiating' | 'Won' | 'Lost';
+export type LeadStatus =
+  | 'New'
+  | 'Contacted'
+  | 'Qualified'
+  | 'Proposal'
+  | 'Negotiating'
+  | 'Won'
+  | 'Lost';
 
-export type LeadSource = 'Website' | 'WhatsApp' | 'Phone' | 'WalkIn' | 'Referral' | 'SocialMedia' | 'Email' | 'Other';
+export type LeadSource =
+  | 'Website'
+  | 'WhatsApp'
+  | 'Phone'
+  | 'WalkIn'
+  | 'Referral'
+  | 'SocialMedia'
+  | 'Email'
+  | 'Other';
 
 export interface LeadDto {
   id: string;
@@ -56,6 +71,7 @@ export interface UpdateLeadRequest {
   phone?: string;
   company?: string;
   jobTitle?: string;
+  notes?: string;
   status?: string;
   score?: number;
   assignedToUserId?: string;
@@ -123,7 +139,7 @@ export async function getLeadsByStatus(status: LeadStatus): Promise<LeadDto[]> {
  */
 export async function searchLeads(query: string): Promise<LeadDto[]> {
   const response = await apiClient.get<LeadDto[]>('/api/crm/leads/search', {
-    params: { query }
+    params: { query },
   });
   return response.data;
 }
@@ -150,8 +166,8 @@ export async function getRecentLeads(count: number = 10): Promise<LeadDto[]> {
 export async function createLead(request: CreateLeadRequest, dealerId: string): Promise<LeadDto> {
   const response = await apiClient.post<LeadDto>('/api/crm/leads', request, {
     headers: {
-      'X-Dealer-Id': dealerId
-    }
+      'X-Dealer-Id': dealerId,
+    },
   });
   return response.data;
 }

@@ -130,7 +130,7 @@ export default function ConversationPage() {
                     </AvatarFallback>
                   </Avatar>
                   {conversation.contact.isOnline && (
-                    <div className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white bg-primary/100" />
+                    <div className="bg-primary/100 absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white" />
                   )}
                 </div>
                 <div>
@@ -164,7 +164,7 @@ export default function ConversationPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{conversation.vehicle.title}</p>
-                <p className="text-sm font-semibold text-primary">
+                <p className="text-primary text-sm font-semibold">
                   RD$ {conversation.vehicle.price.toLocaleString()}
                 </p>
               </div>
@@ -194,7 +194,7 @@ export default function ConversationPage() {
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                   message.sender === 'me'
-                    ? 'rounded-br-md bg-primary text-white'
+                    ? 'bg-primary rounded-br-md text-white'
                     : 'bg-card rounded-bl-md border'
                 }`}
               >
@@ -220,7 +220,7 @@ export default function ConversationPage() {
           <Card className="border-primary bg-primary/10">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Calendar className="mt-0.5 h-5 w-5 text-primary" />
+                <Calendar className="text-primary mt-0.5 h-5 w-5" />
                 <div>
                   <p className="text-foreground font-medium">Cita Programada</p>
                   <p className="text-muted-foreground text-sm">Sábado, 10:00 AM</p>
@@ -276,7 +276,7 @@ export default function ConversationPage() {
 
             <Button
               size="icon"
-              className="shrink-0 bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 shrink-0"
               onClick={handleSend}
               disabled={!newMessage.trim() || isSending}
               aria-label="Enviar mensaje"

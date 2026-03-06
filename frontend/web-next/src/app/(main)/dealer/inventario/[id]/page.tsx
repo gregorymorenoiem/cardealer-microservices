@@ -310,7 +310,7 @@ export default function DealerEditVehiclePage() {
           >
             {isActive ? 'Activo' : 'Pausado'}
           </Badge>
-          <Link href={`/vehiculos/${vehicle.slug}`} target="_blank">
+          <Link href={`/vehiculos/${vehicle.slug}`} target="_blank" rel="noopener noreferrer">
             <Button
               variant="outline"
               className="border-slate-700 text-slate-300 hover:bg-slate-800"
@@ -550,7 +550,7 @@ export default function DealerEditVehiclePage() {
                           <GripVertical className="h-4 w-4 cursor-move text-white drop-shadow" />
                         </div>
                         {index === 0 && (
-                          <Badge className="absolute bottom-2 left-2 bg-primary text-xs">
+                          <Badge className="bg-primary absolute bottom-2 left-2 text-xs">
                             Principal
                           </Badge>
                         )}

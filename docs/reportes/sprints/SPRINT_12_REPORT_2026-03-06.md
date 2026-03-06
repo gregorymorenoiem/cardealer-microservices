@@ -1,11 +1,13 @@
 # 📊 Sprint 12 Report — Security, Accessibility & Design Token Cleanup
+
 **Fecha:** 2026-03-06  
 **Commit:** `6b00b544`  
-**Build:** ✅ 213 páginas, 12.5s compilación  
+**Build:** ✅ 213 páginas, 12.5s compilación
 
 ---
 
 ## 🎯 Objetivos del Sprint
+
 Proteger mutaciones admin/upload/push con csrfFetch, mejorar accesibilidad con aria-labels, y ejecutar limpieza masiva de colores hardcodeados en toda la base de código.
 
 ---
@@ -13,24 +15,30 @@ Proteger mutaciones admin/upload/push con csrfFetch, mejorar accesibilidad con a
 ## ✅ Tareas Completadas
 
 ### Task 58: csrfFetch en mutaciones admin, upload y push
+
 **Archivos:** `admin/okla-score/page.tsx`, `view360-step.tsx`, `push-notifications.tsx`  
 **Cambios:**
+
 - **admin/okla-score**: POST `/api/configurations/bulk` → `csrfFetch` (configuración admin)
 - **view360-step**: POST `/api/vehicle360/upload` → `csrfFetch` (upload de video 360°)
 - **push-notifications**: POST subscribe endpoint + POST unsubscribe endpoint → `csrfFetch`
 - Total: 4 endpoints protegidos con CSRF token automático
 
 ### Task 59: aria-label en botones de solo icono
+
 **Archivos:** 4 archivos, 19 botones corregidos  
 **Cambios:**
+
 - **cuenta/mensajes/[conversationId]** (7): "Volver", "Llamar", "Más opciones", "Adjuntar archivo", "Insertar imagen", "Emojis", "Enviar mensaje"
 - **vender/leads** (4): "Volver", "Página anterior", "Página siguiente", "Enviar respuesta"
 - **publicar/preview** (4): "Imagen anterior", "Imagen siguiente", "Agregar a favoritos", "Compartir"
 - **dealer/citas/calendario** (4): "Volver" (×2), "Mes anterior", "Mes siguiente"
 
 ### Tasks 60-61: Limpieza masiva de design tokens (colores hardcodeados)
+
 **Archivos:** 70+ archivos modificados  
 **Cambios:**
+
 - Reemplazados ~200+ instancias de hex colors hardcodeados con design tokens Tailwind
 - Mapeo aplicado:
   - `bg-[#00A870]` → `bg-primary`
@@ -48,16 +56,16 @@ Proteger mutaciones admin/upload/push con csrfFetch, mejorar accesibilidad con a
 
 ## 📈 Métricas
 
-| Métrica | Valor |
-|---|---|
-| Archivos modificados | 74 |
-| Endpoints protegidos con CSRF | 4 (acumulado: 10) |
-| Botones con aria-label agregado | 19 |
-| Instancias de hex color eliminadas | ~200+ |
-| Archivos con colores limpiados | 70+ |
+| Métrica                             | Valor                               |
+| ----------------------------------- | ----------------------------------- |
+| Archivos modificados                | 74                                  |
+| Endpoints protegidos con CSRF       | 4 (acumulado: 10)                   |
+| Botones con aria-label agregado     | 19                                  |
+| Instancias de hex color eliminadas  | ~200+                               |
+| Archivos con colores limpiados      | 70+                                 |
 | Hex colors restantes (justificados) | ~12 (OG image, meta, email, tokens) |
-| Páginas generadas | 213 |
-| Tiempo de compilación | 12.5s |
+| Páginas generadas                   | 213                                 |
+| Tiempo de compilación               | 12.5s                               |
 
 ---
 
@@ -72,6 +80,7 @@ Proteger mutaciones admin/upload/push con csrfFetch, mejorar accesibilidad con a
 ---
 
 ## 🚀 Próximos Pasos (Sprint 13+)
+
 - Formularios restantes sin Zod+RHF (leads reply, mensajes input)
 - Investigación de mercado: features para planes de suscripción
 - Testing E2E con Playwright para flujos críticos

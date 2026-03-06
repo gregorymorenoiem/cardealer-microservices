@@ -54,6 +54,7 @@ import {
 } from '@/services/auth';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type ThemeOption = Theme;
 
@@ -596,9 +597,9 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button variant="link" size="sm" asChild>
-              <a href="/privacidad" target="_blank">
+              <Link href="/privacidad" target="_blank" rel="noopener noreferrer">
                 Ver
-              </a>
+              </Link>
             </Button>
           </div>
           <Separator />
@@ -610,9 +611,9 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button variant="link" size="sm" asChild>
-              <a href="/terminos" target="_blank">
+              <Link href="/terminos" target="_blank" rel="noopener noreferrer">
                 Ver
-              </a>
+              </Link>
             </Button>
           </div>
         </CardContent>

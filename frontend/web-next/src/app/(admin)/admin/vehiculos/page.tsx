@@ -776,7 +776,11 @@ function VehiclesGridTab() {
                 <span>{new Date(vehicle.createdAt).toLocaleDateString('es-DO')}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link href={`/vehiculos/${vehicle.slug || vehicle.id}`} target="_blank">
+                <Link
+                  href={`/vehiculos/${vehicle.slug || vehicle.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Button variant="outline" size="sm">
                     <Eye className="mr-1 h-4 w-4" />
                     Ver

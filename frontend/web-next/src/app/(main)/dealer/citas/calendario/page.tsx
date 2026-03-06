@@ -300,13 +300,23 @@ export default function CalendarPage() {
               {getMonthLabel(currentYear, currentMonth)}
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToPrevMonth} aria-label="Mes anterior">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToPrevMonth}
+                aria-label="Mes anterior"
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="sm" onClick={goToToday}>
                 Hoy
               </Button>
-              <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Mes siguiente">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextMonth}
+                aria-label="Mes siguiente"
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -337,7 +347,7 @@ export default function CalendarPage() {
                     className={`relative aspect-square rounded-lg p-2 text-sm transition-colors ${
                       item.day ? 'hover:bg-muted' : 'text-gray-300'
                     } ${isToday ? 'bg-primary/10 font-bold' : ''} ${
-                      isSelected ? 'ring-2 ring-primary' : ''
+                      isSelected ? 'ring-primary ring-2' : ''
                     }`}
                     onClick={() => item.date && setSelectedDate(item.date)}
                     disabled={!item.day}
@@ -347,10 +357,10 @@ export default function CalendarPage() {
                       <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-0.5">
                         {aptCount <= 3 ? (
                           Array.from({ length: aptCount }).map((_, i) => (
-                            <span key={i} className="h-1.5 w-1.5 rounded-full bg-primary/100" />
+                            <span key={i} className="bg-primary/100 h-1.5 w-1.5 rounded-full" />
                           ))
                         ) : (
-                          <span className="text-xs font-medium text-primary">{aptCount}</span>
+                          <span className="text-primary text-xs font-medium">{aptCount}</span>
                         )}
                       </span>
                     )}
@@ -362,11 +372,11 @@ export default function CalendarPage() {
             {/* Legend */}
             <div className="text-muted-foreground mt-4 flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-primary/100" />
+                <span className="bg-primary/100 h-2 w-2 rounded-full" />
                 Citas programadas
               </div>
               <div className="flex items-center gap-1">
-                <span className="h-4 w-4 rounded bg-primary/10" />
+                <span className="bg-primary/10 h-4 w-4 rounded" />
                 Hoy
               </div>
             </div>
