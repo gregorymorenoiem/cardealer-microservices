@@ -13,21 +13,43 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado.
+**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 en progreso.
 
 ---
 
 ## ✅ SPRINT 3 — Credibilidad, SEO técnico y Conversión (6 marzo 2026)
 
-| #   | Tarea                                           | Estado               | Notas                                                                                                  |
-| --- | ----------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------ |
-| 22  | Crear constante unificada PLATFORM_STATS        | ✅ Commit `385d4010` | `src/lib/platform-stats.ts` — Single source of truth, importado en 4 páginas                           |
-| 23  | Agregar Testimonios + Stats al Homepage         | ✅ Commit `385d4010` | TestimonialsCarousel + HOMEPAGE_STATS en homepage-client.tsx                                            |
-| 24  | Fix /nosotros: team avatars + año fundación     | ✅ Commit `385d4010` | Emoji → iniciales con gradient, año → PLATFORM_STATS.foundingYear (2025)                               |
-| 25  | Metadata SEO para páginas client                | ✅ Commit `385d4010` | layout.tsx para /contacto, /buscar, /comparar, /ayuda (global-error.tsx ya existía)                    |
+| #   | Tarea                                       | Estado               | Notas                                                                               |
+| --- | ------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------- |
+| 22  | Crear constante unificada PLATFORM_STATS    | ✅ Commit `385d4010` | `src/lib/platform-stats.ts` — Single source of truth, importado en 4 páginas        |
+| 23  | Agregar Testimonios + Stats al Homepage     | ✅ Commit `385d4010` | TestimonialsCarousel + HOMEPAGE_STATS en homepage-client.tsx                        |
+| 24  | Fix /nosotros: team avatars + año fundación | ✅ Commit `385d4010` | Emoji → iniciales con gradient, año → PLATFORM_STATS.foundingYear (2025)            |
+| 25  | Metadata SEO para páginas client            | ✅ Commit `385d4010` | layout.tsx para /contacto, /buscar, /comparar, /ayuda (global-error.tsx ya existía) |
 
 **Build verificado**: `pnpm build` exitoso
 **Commit**: `385d4010` pushed to main
+
+---
+
+## 🚀 SPRINT 4 — SEO Completeness + Content + Performance (6 marzo 2026)
+
+### Análisis previo: Sitemap incompleto + guías rotas + loading states faltantes
+
+**Hallazgos:**
+
+- Sitemap falta: /faq, /empleos, /prensa, /cookies, /politica-reembolso, /herramientas/\*, /blog/[slug]
+- /guias 6 botones "Leer Guía" apuntan a /ayuda o /precios — contenido no existe
+- /vehiculos/[slug] (página más visitada) sin loading.tsx
+- Calculadora de financiamiento no linkeada desde detalle de vehículo
+
+---
+
+| #   | Tarea                                          | Estado       | Notas                                                                                                |
+| --- | ---------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| 26  | Completar sitemap.xml con páginas faltantes    | ⏳ Pendiente | Agregar /faq, /empleos, /prensa, /herramientas/\*, blog/[slug] dinámico                              |
+| 27  | Crear contenido de guías (/guias/[slug]) SSG   | ⏳ Pendiente | 6 guías con contenido real, generateStaticParams, arreglar links en /guias                           |
+| 28  | Loading states para páginas críticas           | ⏳ Pendiente | /vehiculos/[slug]/loading.tsx, /blog/loading.tsx, /blog/[slug]/loading.tsx                           |
+| 29  | Link calculadora financiamiento desde vehículo | ⏳ Pendiente | Agregar CTA "Calcular cuota" en vehicle-detail-client.tsx → /herramientas/calculadora-financiamiento |
 
 ---
 

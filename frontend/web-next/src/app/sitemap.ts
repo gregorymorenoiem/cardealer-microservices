@@ -9,6 +9,7 @@
  */
 
 import { MetadataRoute } from 'next';
+import { blogPosts } from './(main)/blog/blog-data';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do';
 
@@ -185,6 +186,60 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.6,
     },
+    {
+      url: `${SITE_URL}/faq`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/prensa`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    },
+    {
+      url: `${SITE_URL}/empleos`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/cookies`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${SITE_URL}/politica-reembolso`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${SITE_URL}/herramientas`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/herramientas/calculadora-financiamiento`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/herramientas/calculadora-importacion`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/buscar`,
+      lastModified: now,
+      changeFrequency: 'hourly',
+      priority: 0.8,
+    },
   ];
 
   // Category pages (makes)
@@ -268,6 +323,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Dynamic blog post pages
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map(post => ({
+    url: `${SITE_URL}/blog/${post.slug}`,
+    lastModified: post.date,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   // Combine all pages
   return [
     ...staticPages,
@@ -277,5 +340,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...provincePages,
     ...vehiclePages,
     ...dealerPages,
+    ...blogPages,
   ];
 }

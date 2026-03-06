@@ -8,6 +8,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSiteConfig } from '@/providers/site-config-provider';
+import { PLATFORM_STATS } from '@/lib/platform-stats';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const config = useSiteConfig();
@@ -49,15 +50,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {/* Stats */}
             <div className="flex gap-8 pt-4">
               <div>
-                <div className="text-3xl font-bold">15K+</div>
+                <div className="text-3xl font-bold">{PLATFORM_STATS.vehiclesPublished}</div>
                 <div className="text-sm text-white/80">Vehículos</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">500+</div>
+                <div className="text-3xl font-bold">{PLATFORM_STATS.registeredDealers}</div>
                 <div className="text-sm text-white/80">Dealers</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">50K+</div>
+                <div className="text-3xl font-bold">{PLATFORM_STATS.activeUsers}</div>
                 <div className="text-sm text-white/80">Usuarios</div>
               </div>
             </div>
