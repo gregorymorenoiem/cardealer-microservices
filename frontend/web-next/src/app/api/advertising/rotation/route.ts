@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
         section,
         rotatedAt: new Date().toISOString(),
         source: 'vehicles-api',
+        algorithm: 'WeightedRandom',
       },
     });
   }
@@ -110,17 +111,22 @@ function transformRotatedVehicle(item: Record<string, unknown>): Record<string, 
 }
 
 /**
- * Fetch real active vehicles from the vehicles API to fill ad rotation slots.
- * Uses the most expensive/newest vehicles for Premium, newest for Featured.
+ * Fetch real active vehicles from the vehicles API and apply rotation algorithm.
+ * Uses WeightedRandom rotation — vehicles compete for slots based on quality scores
+ * that factor in: photo count, recency, price competitiveness, and randomized position.
+ * Rotation changes every 5 minutes (aligned to revalidate cache).
  */
 async function enrichWithRealVehicles(
   existingItems: Record<string, unknown>[],
   section: string
 ): Promise<Record<string, unknown>[]> {
   try {
-    const sortBy = section.includes('Premium') ? 'price_desc' : 'newest';
-    const pageSize = section.includes('Premium') ? 12 : 6;
-    const vehiclesUrl = `${API_URL}/api/vehicles?pageSize=${pageSize}&page=1&sortBy=${sortBy}&status=Active`;
+    const isPremium = section.includes('Premium');
+    const targetCount = isPremium ? 12 : 6;
+    // Fetch 2x to have rotation pool
+    const fetchCount = Math.min(targetCount * 3, 50);
+    const sortBy = isPremium ? 'price_desc' : 'newest';
+    const vehiclesUrl = `${API_URL}/api/vehicles?pageSize=${fetchCount}&page=1&sortBy=${sortBy}&status=Active`;
     const res = await fetch(vehiclesUrl, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 300 },
@@ -132,57 +138,110 @@ async function enrichWithRealVehicles(
     const vehicles = data?.vehicles || data?.data?.vehicles || data?.data?.items || [];
     if (!vehicles.length) return [];
 
-    return vehicles.map((v: Record<string, unknown>, idx: number) => {
-      // Extract the best image URL from the vehicle's images array
+    // === ROTATION ALGORITHM: Weighted Random with Time-Based Seed ===
+    // Quality score based on vehicle attributes (simplified GSP auction)
+    const scored = vehicles.map((v: Record<string, unknown>) => {
       const images = (v.images as Record<string, unknown>[]) || [];
-      const sortedImages = images.slice().sort((a, b) => {
-        const aOrder = (a.sortOrder as number) ?? (a.order as number) ?? 99;
-        const bOrder = (b.sortOrder as number) ?? (b.order as number) ?? 99;
-        return aOrder - bOrder;
-      });
-      const primaryImage = sortedImages[0];
-      let imageUrl = (primaryImage?.url as string) || '';
+      const photoCount = images.length;
+      const year = (v.year as number) || 2020;
+      const price = (v.price as number) || 0;
 
-      // Strip query params from pre-signed S3 URLs to get a public URL
-      // If the S3 bucket is not public, this won't work, but the pre-signed URL
-      // should still be valid for its TTL (24h in production)
-      if (!imageUrl) {
-        imageUrl = '/placeholder-car.jpg';
-      }
+      // Quality Score = photoQuality (35%) + recency (40%) + priceCompetitiveness (25%)
+      const photoScore = Math.min(photoCount / 10, 1) * 100; // 0-100: more photos = better
+      const recencyScore = Math.min((year - 2018) / 8, 1) * 100; // 0-100: newer = better
+      const priceScore = price > 0 ? Math.min(price / 5000000, 1) * 100 : 50; // higher-priced vehicles for premium
+      const qualityScore = Math.round(photoScore * 0.35 + recencyScore * 0.4 + priceScore * 0.25);
 
-      // Collect up to 3 image URLs for gallery display
-      const imageUrls = sortedImages
-        .slice(0, 3)
-        .map((img: Record<string, unknown>) => (img.url as string) || '')
-        .filter(Boolean);
-
-      // Build slug
-      const year = v.year || '';
-      const make = String(v.make || '').toLowerCase();
-      const model = String(v.model || '').toLowerCase();
-      const shortId = String(v.id || '').slice(0, 8);
-      const slug = `${year}-${make}-${model}-${shortId}`.replace(/\s+/g, '-');
-
-      const isPremium = section.includes('Premium');
-
-      return {
-        campaignId: `real-${isPremium ? 'p' : 'f'}${idx + 1}`,
-        vehicleId: v.id || '',
-        title: v.title || `${year} ${v.make} ${v.model}`,
-        slug,
-        imageUrl,
-        imageUrls: imageUrls.length > 0 ? imageUrls : [imageUrl],
-        price: v.price || 0,
-        currency: v.currency || 'DOP',
-        qualityScore: 90 + Math.floor(Math.random() * 10),
-        location: v.city || v.state || 'República Dominicana',
-        photoCount: imageUrls.length || 1,
-        isFeatured: !isPremium,
-        isPremium,
-        placementType: section,
-        position: idx + 1,
-      };
+      return { vehicle: v, qualityScore, images };
     });
+
+    // Time-based seed: changes every 5 minutes so rotation is visible
+    const timeSeed = Math.floor(Date.now() / (5 * 60 * 1000));
+    const sectionSeed = section.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    let seed = timeSeed * 31 + sectionSeed;
+
+    // Seeded PRNG (mulberry32)
+    const seededRandom = () => {
+      seed |= 0;
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+
+    // Weighted random selection: higher quality = higher chance of being selected
+    const selected: typeof scored = [];
+    const pool = [...scored];
+    while (selected.length < targetCount && pool.length > 0) {
+      // Calculate weights (quality + random noise for variety)
+      const weights = pool.map(item => item.qualityScore + seededRandom() * 30);
+      const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+      let r = seededRandom() * totalWeight;
+      let pickedIdx = 0;
+      for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) {
+          pickedIdx = i;
+          break;
+        }
+      }
+      selected.push(pool[pickedIdx]);
+      pool.splice(pickedIdx, 1);
+    }
+
+    return selected.map(
+      (
+        entry: {
+          vehicle: Record<string, unknown>;
+          qualityScore: number;
+          images: Record<string, unknown>[];
+        },
+        idx: number
+      ) => {
+        const v = entry.vehicle;
+        const sortedImages = entry.images
+          .slice()
+          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+            const aOrder = (a.sortOrder as number) ?? (a.order as number) ?? 99;
+            const bOrder = (b.sortOrder as number) ?? (b.order as number) ?? 99;
+            return aOrder - bOrder;
+          });
+        const primaryImage = sortedImages[0] as Record<string, unknown> | undefined;
+        let imageUrl = (primaryImage?.url as string) || '';
+        if (!imageUrl) imageUrl = '/placeholder-car.jpg';
+
+        const imageUrls = sortedImages
+          .slice(0, 3)
+          .map((img: Record<string, unknown>) => (img.url as string) || '')
+          .filter(Boolean);
+
+        const year = v.year || '';
+        const make = String(v.make || '').toLowerCase();
+        const model = String(v.model || '').toLowerCase();
+        const shortId = String(v.id || '').slice(0, 8);
+        const slug = `${year}-${make}-${model}-${shortId}`.replace(/\s+/g, '-');
+
+        return {
+          campaignId: `real-${isPremium ? 'p' : 'f'}${idx + 1}`,
+          vehicleId: v.id || '',
+          title: v.title || `${year} ${v.make} ${v.model}`,
+          slug,
+          imageUrl,
+          imageUrls: imageUrls.length > 0 ? imageUrls : [imageUrl],
+          price: v.price || 0,
+          currency: v.currency || 'DOP',
+          qualityScore: entry.qualityScore,
+          location: v.city || v.state || 'República Dominicana',
+          photoCount: imageUrls.length || 1,
+          isFeatured: !isPremium,
+          isPremium,
+          placementType: section,
+          position: idx + 1,
+          rotationAlgorithm: 'WeightedRandom',
+          rotationSeed: timeSeed,
+        };
+      }
+    );
   } catch {
     return [];
   }
