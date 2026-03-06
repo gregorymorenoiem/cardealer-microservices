@@ -15,7 +15,7 @@ import * as React from 'react';
 import dynamic from 'next/dynamic';
 import type ReactWebcam from 'react-webcam';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-webcam dynamic import type incompatibility
 const Webcam = dynamic<any>((() => import('react-webcam')) as any, {
   ssr: false,
   loading: () => (

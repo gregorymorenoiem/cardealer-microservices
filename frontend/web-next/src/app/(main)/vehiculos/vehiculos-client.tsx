@@ -71,6 +71,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { csrfFetch } from '@/lib/security/csrf';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
 import { toast } from 'sonner';
@@ -151,12 +152,12 @@ function useSearchLeaderboardBanners() {
 function ConfigurableBannerCard({ banner }: { banner: ConfigurableBanner }) {
   const handleClick = React.useCallback(() => {
     // Fire-and-forget analytics
-    fetch(`/api/banners/${banner.id}/click`, { method: 'POST' }).catch(() => {});
+    csrfFetch(`/api/banners/${banner.id}/click`, { method: 'POST' }).catch(() => {});
   }, [banner.id]);
 
   // Track view on mount
   React.useEffect(() => {
-    fetch(`/api/banners/${banner.id}/view`, { method: 'POST' }).catch(() => {});
+    csrfFetch(`/api/banners/${banner.id}/view`, { method: 'POST' }).catch(() => {});
   }, [banner.id]);
 
   return (

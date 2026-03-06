@@ -30,7 +30,7 @@ export default function DealerError({
         </p>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button onClick={reset} className="gap-2 bg-[#00A870] hover:bg-[#00A870]/90">
+          <Button onClick={reset} className="bg-primary hover:bg-primary/90 gap-2">
             <RefreshCw className="h-4 w-4" />
             Intentar de nuevo
           </Button>

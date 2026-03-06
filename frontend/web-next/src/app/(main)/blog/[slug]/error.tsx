@@ -23,9 +23,7 @@ export default function BlogPostError({
           <AlertTriangle className="h-10 w-10 text-red-500" />
         </div>
 
-        <h1 className="text-foreground mb-2 text-2xl font-bold">
-          No pudimos cargar este artículo
-        </h1>
+        <h1 className="text-foreground mb-2 text-2xl font-bold">No pudimos cargar este artículo</h1>
 
         <p className="text-muted-foreground mb-6">
           Puede que el artículo haya sido removido o haya un problema temporal con nuestro servidor.
@@ -37,7 +35,7 @@ export default function BlogPostError({
         )}
 
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button onClick={reset} className="bg-[#00A870] hover:bg-[#007850]">
+          <Button onClick={reset} className="bg-primary hover:bg-primary/85">
             <RefreshCw className="mr-2 h-4 w-4" />
             Intentar de nuevo
           </Button>

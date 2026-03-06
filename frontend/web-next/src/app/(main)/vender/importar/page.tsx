@@ -10,6 +10,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { csrfFetch } from '@/lib/security/csrf';
 import {
   Upload,
   Sparkles,
@@ -93,7 +94,7 @@ export default function ImportarPage() {
           .find(c => c.trim().startsWith('token='))
           ?.split('=')[1];
 
-        const response = await fetch('/api/import/marketplace', {
+        const response = await csrfFetch('/api/import/marketplace', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -139,7 +140,7 @@ export default function ImportarPage() {
         .find(c => c.trim().startsWith('token='))
         ?.split('=')[1];
 
-      const response = await fetch('/api/import/bulk', {
+      const response = await csrfFetch('/api/import/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

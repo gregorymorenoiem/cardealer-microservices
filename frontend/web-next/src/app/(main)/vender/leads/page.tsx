@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { csrfFetch } from '@/lib/security/csrf';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -156,7 +157,7 @@ function SellerLeadsContent() {
     if (!selectedLead || !replyText.trim()) return;
     setReplying(true);
     try {
-      const res = await fetch(`/api/leads/${selectedLead.id}/reply`, {
+      const res = await csrfFetch(`/api/leads/${selectedLead.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: replyText.trim() }),
@@ -179,7 +180,7 @@ function SellerLeadsContent() {
 
   async function updateLeadStatus(leadId: string, newStatus: string) {
     try {
-      await fetch(`/api/leads/${leadId}/status`, {
+      await csrfFetch(`/api/leads/${leadId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),

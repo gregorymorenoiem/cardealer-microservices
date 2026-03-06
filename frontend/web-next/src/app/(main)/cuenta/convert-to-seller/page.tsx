@@ -11,6 +11,9 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Store,
   ArrowRight,
@@ -33,47 +36,58 @@ import { sanitizeText } from '@/lib/security/sanitize';
 
 type ConversionStep = 'info' | 'form' | 'processing' | 'success' | 'error';
 
+const sellerFormSchema = z.object({
+  businessName: z
+    .string()
+    .min(1, 'El nombre del negocio es requerido')
+    .max(150, 'Máximo 150 caracteres'),
+  description: z.string().max(2000, 'Máximo 2000 caracteres').optional().or(z.literal('')),
+  location: z.string().max(200, 'Máximo 200 caracteres').optional().or(z.literal('')),
+  acceptTerms: z.literal(true, {
+    error: 'Debes aceptar los términos y condiciones para continuar',
+  }),
+});
+
+type SellerFormData = z.infer<typeof sellerFormSchema>;
+
 export default function ConvertToSellerPage() {
   const router = useRouter();
   const [step, setStep] = useState<ConversionStep>('info');
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    businessName: '',
-    description: '',
-    location: '',
-    acceptTerms: false,
+
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    setValue,
+    watch,
+    formState: { errors: formErrors },
+  } = useForm<SellerFormData>({
+    resolver: zodResolver(sellerFormSchema),
+    defaultValues: {
+      businessName: '',
+      description: '',
+      location: '',
+      acceptTerms: false as unknown as true,
+    },
   });
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const acceptTerms = watch('acceptTerms');
+  const businessName = watch('businessName');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: SellerFormData) => {
     setError(null);
-
-    if (!formData.acceptTerms) {
-      setError('Debes aceptar los términos y condiciones para continuar.');
-      return;
-    }
-
-    if (!formData.businessName.trim()) {
-      setError('El nombre del negocio es requerido.');
-      return;
-    }
-
     setStep('processing');
 
     try {
       const sanitizedData: ConvertToSellerRequest = {
-        businessName: sanitizeText(formData.businessName.trim(), { maxLength: 150 }),
-        description: formData.description
-          ? sanitizeText(formData.description.trim(), { maxLength: 2000 })
+        businessName: sanitizeText(data.businessName.trim(), { maxLength: 150 }),
+        description: data.description
+          ? sanitizeText(data.description.trim(), { maxLength: 2000 })
           : undefined,
-        location: formData.location
-          ? sanitizeText(formData.location.trim(), { maxLength: 200 })
+        location: data.location
+          ? sanitizeText(data.location.trim(), { maxLength: 200 })
           : undefined,
-        acceptTerms: formData.acceptTerms,
+        acceptTerms: data.acceptTerms,
       };
 
       // Generate idempotency key to prevent duplicate conversions
@@ -213,7 +227,7 @@ export default function ConvertToSellerPage() {
 
         <h1 className="mb-6 text-2xl font-bold">Información del Vendedor</h1>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={rhfHandleSubmit(onSubmit)}>
           <Card>
             <CardContent className="space-y-5 p-6">
               <div>
@@ -221,11 +235,12 @@ export default function ConvertToSellerPage() {
                 <Input
                   id="businessName"
                   placeholder="Ej: Vehículos Juan Pérez"
-                  value={formData.businessName}
-                  onChange={e => handleInputChange('businessName', e.target.value)}
+                  {...register('businessName')}
                   maxLength={150}
-                  required
                 />
+                {formErrors.businessName && (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.businessName.message}</p>
+                )}
                 <p className="text-muted-foreground mt-1 text-xs">
                   Este nombre se mostrará en tu perfil de vendedor.
                 </p>
@@ -236,11 +251,13 @@ export default function ConvertToSellerPage() {
                 <Textarea
                   id="description"
                   placeholder="Cuéntanos sobre ti como vendedor..."
-                  value={formData.description}
-                  onChange={e => handleInputChange('description', e.target.value)}
+                  {...register('description')}
                   maxLength={2000}
                   rows={4}
                 />
+                {formErrors.description && (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.description.message}</p>
+                )}
               </div>
 
               <div>
@@ -248,17 +265,21 @@ export default function ConvertToSellerPage() {
                 <Input
                   id="location"
                   placeholder="Ej: Santo Domingo, DN"
-                  value={formData.location}
-                  onChange={e => handleInputChange('location', e.target.value)}
+                  {...register('location')}
                   maxLength={200}
                 />
+                {formErrors.location && (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.location.message}</p>
+                )}
               </div>
 
               <div className="flex items-start gap-3 rounded-lg border p-4">
                 <Checkbox
                   id="acceptTerms"
-                  checked={formData.acceptTerms}
-                  onCheckedChange={checked => handleInputChange('acceptTerms', !!checked)}
+                  checked={acceptTerms === true}
+                  onCheckedChange={checked =>
+                    setValue('acceptTerms', checked as true, { shouldValidate: true })
+                  }
                 />
                 <label htmlFor="acceptTerms" className="cursor-pointer text-sm leading-snug">
                   Acepto los{' '}
@@ -268,6 +289,9 @@ export default function ConvertToSellerPage() {
                   para vendedores individuales en OKLA, incluyendo el precio de $29 por publicación.
                 </label>
               </div>
+              {formErrors.acceptTerms && (
+                <p className="text-xs text-red-600">{formErrors.acceptTerms.message}</p>
+              )}
 
               {error && (
                 <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
@@ -282,7 +306,7 @@ export default function ConvertToSellerPage() {
             <Button variant="outline" type="button" onClick={() => setStep('info')}>
               Atrás
             </Button>
-            <Button type="submit" disabled={!formData.acceptTerms || !formData.businessName.trim()}>
+            <Button type="submit" disabled={!acceptTerms || !businessName?.trim()}>
               <Store className="mr-2 h-4 w-4" />
               Convertirme en Vendedor
             </Button>

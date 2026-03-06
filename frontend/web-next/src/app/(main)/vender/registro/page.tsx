@@ -306,9 +306,8 @@ export default function SellerRegistrationPage() {
       const validation = schema.safeParse(profileData);
 
       if (!validation.success) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const issues = (validation as any).error?.issues ?? (validation as any).error?.errors ?? [];
-        const errors = (issues as Array<{ message: string }>).map(e => e.message).join(', ');
+        const issues = validation.error.issues ?? [];
+        const errors = issues.map((e: { message: string }) => e.message).join(', ');
         setGlobalError(`Validación: ${errors}`);
         return;
       }

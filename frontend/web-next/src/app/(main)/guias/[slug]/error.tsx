@@ -35,7 +35,7 @@ export default function GuideError({
         )}
 
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button onClick={reset} className="bg-[#00A870] hover:bg-[#007850]">
+          <Button onClick={reset} className="bg-primary hover:bg-primary/85">
             <RefreshCw className="mr-2 h-4 w-4" />
             Intentar de nuevo
           </Button>
