@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatDateTime } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -167,16 +168,6 @@ export default function KYCDetailPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-DO', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   // UTC-safe date-only formatter: prevents off-by-one day from UTC→local conversion
   const formatDateOnly = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A';
@@ -272,7 +263,7 @@ export default function KYCDetailPage() {
                 </div>
                 <div className="text-muted-foreground flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>Solicitud: {formatDate(profile.createdAt)}</span>
+                  <span>Solicitud: {formatDateTime(profile.createdAt)}</span>
                 </div>
               </div>
             </div>

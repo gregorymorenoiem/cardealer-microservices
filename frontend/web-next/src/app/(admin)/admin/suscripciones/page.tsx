@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { formatCurrency } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -370,13 +371,6 @@ export default function SuscripcionesPage() {
     SELLER_PLAN_CARDS.filter(p => p.monthlyPrice > 0).reduce((s, p) => s + p.subscriberCount, 0);
 
   const conversionRate = totalSubs > 0 ? ((paidSubs / totalSubs) * 100).toFixed(1) : '0';
-
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(v);
 
   return (
     <div className="space-y-6">

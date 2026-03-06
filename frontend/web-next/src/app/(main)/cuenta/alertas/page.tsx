@@ -32,14 +32,7 @@ import {
   useAlertStats,
   type PriceAlert,
 } from '@/hooks/use-alerts';
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
+import { formatPrice } from '@/lib/format';
 
 export default function AlertsPage() {
   // Fetch alerts from API

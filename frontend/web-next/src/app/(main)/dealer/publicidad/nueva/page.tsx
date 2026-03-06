@@ -29,7 +29,7 @@ import {
   Calendar,
   Search,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 // =============================================================================
 // TYPES
@@ -212,13 +212,6 @@ export default function NewCampaignPage() {
       slots: d.slots.includes(slot) ? d.slots.filter(s => s !== slot) : [...d.slots, slot],
     }));
   };
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(amount);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

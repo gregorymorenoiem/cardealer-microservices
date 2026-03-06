@@ -12,6 +12,7 @@
 
 import { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/format';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -328,13 +329,6 @@ function UpgradeCheckoutInner() {
     billingPeriod === 'annual' ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice;
   const savings =
     billingPeriod === 'annual' ? targetPlan.monthlyPrice * 12 - targetPlan.annualPrice : 0;
-
-  const formatPrice = (p: number) =>
-    new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(p);
 
   const handleConfirmUpgrade = () => {
     setIsProcessing(true);

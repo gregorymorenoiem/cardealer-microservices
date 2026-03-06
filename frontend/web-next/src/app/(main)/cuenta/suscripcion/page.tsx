@@ -19,18 +19,11 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePlanAccess } from '@/hooks/use-plan-access';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 import { PlanBadge, PlanUsageBar } from '@/components/plan/plan-gate';
+import { formatPrice } from '@/lib/format';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
 
 // Plan features description
 function getPlanFeatures() {
@@ -134,7 +127,7 @@ export default function SellerSubscriptionPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="h-5 w-5 text-primary" />
+            <BarChart3 className="text-primary h-5 w-5" />
             Resumen de Tu Plan
           </CardTitle>
         </CardHeader>
@@ -221,11 +214,11 @@ export default function SellerSubscriptionPage() {
       </Card>
 
       {/* ── Upgrade to Dealer CTA ──────────────────────────── */}
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-emerald-50">
+      <Card className="border-primary/20 from-primary/5 bg-gradient-to-r to-emerald-50">
         <CardContent className="flex flex-col items-center gap-4 p-6 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Crown className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-xl">
+              <Crown className="text-primary h-6 w-6" />
             </div>
             <div>
               <h3 className="font-semibold">¿Eres un negocio o concesionario?</h3>
@@ -235,7 +228,7 @@ export default function SellerSubscriptionPage() {
             </div>
           </div>
           <Link href="/dealers/registro">
-            <Button variant="outline" className="gap-2 border-primary text-primary">
+            <Button variant="outline" className="border-primary text-primary gap-2">
               Ver Planes Dealer
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -314,7 +307,7 @@ function PlanCard({
     <Card
       className={`relative flex flex-col ${
         isPopular
-          ? 'border-2 border-primary shadow-lg shadow-primary/10'
+          ? 'border-primary shadow-primary/10 border-2 shadow-lg'
           : isCurrent
             ? 'border-2 border-blue-400'
             : 'border-border'
@@ -362,7 +355,7 @@ function PlanCard({
         <ul className="mb-6 flex-1 space-y-2.5">
           {features.map((feature, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
-              <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <Check className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
               <span className="text-muted-foreground">{feature}</span>
             </li>
           ))}
@@ -450,7 +443,7 @@ function ComparisonTable({ currentPlan }: { currentPlan: string }) {
             >
               {h}
               {planColumns[i] === currentPlan && (
-                <Badge className="ml-1 bg-primary text-[10px]">Actual</Badge>
+                <Badge className="bg-primary ml-1 text-[10px]">Actual</Badge>
               )}
             </th>
           ))}
@@ -466,7 +459,7 @@ function ComparisonTable({ currentPlan }: { currentPlan: string }) {
                 <td key={col} className="py-3 text-center">
                   {typeof val === 'boolean' ? (
                     val ? (
-                      <Check className="mx-auto h-4 w-4 text-primary" />
+                      <Check className="text-primary mx-auto h-4 w-4" />
                     ) : (
                       <X className="text-muted-foreground/30 mx-auto h-4 w-4" />
                     )

@@ -11,6 +11,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { csrfFetch } from '@/lib/security/csrf';
+import { formatPrice } from '@/lib/format';
 import {
   Upload,
   Sparkles,
@@ -195,11 +196,6 @@ export default function ImportarPage() {
     const updated = [...bulkListings];
     updated[index] = { ...updated[index], [field]: value };
     setBulkListings(updated);
-  };
-
-  const formatPrice = (price: number, currency: string) => {
-    if (currency === 'USD') return `US$${price.toLocaleString('en-US')}`;
-    return `RD$${price.toLocaleString('es-DO')}`;
   };
 
   return (

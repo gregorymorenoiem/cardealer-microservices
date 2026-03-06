@@ -14,6 +14,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice as _fp } from '@/lib/format';
+import { formatDateTime } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,16 +101,6 @@ const getStatusBadge = (status: string) => {
 const formatPrice = (price: number, currency?: string) => {
   if (!price) return 'N/A';
   return _fp(price, currency || 'DOP');
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString('es-DO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 };
 
 const rejectionReasons = [
@@ -336,7 +327,7 @@ function ModerationItemCard({
             <div className="text-muted-foreground flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {formatDate(item.submittedAt)}
+                {formatDateTime(item.submittedAt)}
               </span>
             </div>
 

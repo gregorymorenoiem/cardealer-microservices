@@ -30,18 +30,11 @@ import { toast } from 'sonner';
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useTrends, useExportReport, useMonthlyReport } from '@/hooks/use-dealer-analytics';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { formatPrice } from '@/lib/format';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
 
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('es-DO').format(num);

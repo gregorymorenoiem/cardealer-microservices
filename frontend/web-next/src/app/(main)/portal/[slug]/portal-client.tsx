@@ -13,6 +13,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { formatPrice } from '@/lib/format';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -412,11 +413,6 @@ function ShareDialog({ dealerName, slug }: { dealerName: string; slug: string })
 // ============================================================
 
 function PortalVehicleCard({ vehicle }: { vehicle: PortalVehicle }) {
-  const formatPrice = (price: number, currency: string) => {
-    if (currency === 'USD') return `US$${price.toLocaleString()}`;
-    return `RD$${price.toLocaleString()}`;
-  };
-
   return (
     <Link href={`/vehiculos/${vehicle.slug || vehicle.id}`}>
       <Card className="group h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">

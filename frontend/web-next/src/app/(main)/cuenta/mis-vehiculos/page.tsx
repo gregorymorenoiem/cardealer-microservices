@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/format';
 import { userService, type UserVehicleDto } from '@/services/users';
 import { vehicleService } from '@/services/vehicles';
 import { toast } from 'sonner';
@@ -71,14 +72,6 @@ function VehicleCard({
   onActivate: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-col sm:flex-row">
@@ -151,7 +144,7 @@ function VehicleCard({
               {vehicle.status === 'active' && vehicle.expiresAt && (
                 <div className="mt-2">
                   {/* eslint-disable-next-line react-hooks/purity */}
-              {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
+                  {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
                     <div className="flex items-center gap-1 text-sm text-yellow-700">
                       <AlertCircle className="h-4 w-4" />
                       Expira el {new Date(vehicle.expiresAt).toLocaleDateString('es-DO')}

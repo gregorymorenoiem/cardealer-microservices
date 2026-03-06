@@ -10,6 +10,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/format';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -128,14 +129,6 @@ interface HistoryItemProps {
 
 function HistoryItem({ item, onRemove, isRemoving, onToggleFavorite }: HistoryItemProps) {
   const { vehicle, isFavorite, viewedAt } = item;
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   const isAvailable = vehicle.status === 'active';
 

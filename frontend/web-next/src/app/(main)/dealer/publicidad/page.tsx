@@ -23,19 +23,11 @@ import {
 } from '@/hooks/use-advertising';
 import type { AdCampaignSummary, CampaignStatus } from '@/types/advertising';
 import { PlanGate } from '@/components/plan/plan-gate';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatShortDate } from '@/lib/utils';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('es-DO', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 function statusBadge(status: CampaignStatus) {
   const variants: Record<
@@ -79,7 +71,7 @@ function CampaignCard({ campaign }: { campaign: AdCampaignSummary }) {
               {statusBadge(campaign.status)}
             </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              {formatDate(campaign.startDate)} — {formatDate(campaign.endDate)}
+              {formatShortDate(campaign.startDate)} — {formatShortDate(campaign.endDate)}
             </p>
           </div>
           <div className="text-right">

@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Car, Filter, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import type { VehicleCardData } from '@/types';
+import { formatPrice } from '@/lib/format';
 
 interface BrandVehiclesClientProps {
   brand: string;
@@ -92,13 +93,6 @@ export function BrandVehiclesClient({ brand, brandName }: BrandVehiclesClientPro
       avg: prices.reduce((a, b) => a + b, 0) / prices.length,
     };
   }, [vehicles]);
-
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(price);
 
   if (loading) {
     return (

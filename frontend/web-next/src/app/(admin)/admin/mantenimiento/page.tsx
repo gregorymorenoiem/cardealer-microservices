@@ -40,21 +40,11 @@ import {
   type MaintenanceStatusResponse,
   type MaintenanceWindowDto,
 } from '@/services/maintenance';
+import { formatDateTime } from '@/lib/utils';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('es-DO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 function formatDuration(start: string, end: string): string {
   const diff = new Date(end).getTime() - new Date(start).getTime();
@@ -423,7 +413,7 @@ export default function AdminMaintenancePage() {
                 </p>
                 {activeWindow && (
                   <p className="mt-1 text-sm text-red-600">
-                    Desde {formatDate(activeWindow.actualStart || activeWindow.scheduledStart)}
+                    Desde {formatDateTime(activeWindow.actualStart || activeWindow.scheduledStart)}
                     {' · '}
                     {activeWindow.description}
                   </p>
@@ -662,7 +652,7 @@ export default function AdminMaintenancePage() {
                         {getTypeBadge(window.type)}
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {formatDate(window.scheduledStart)} — {formatDate(window.scheduledEnd)}
+                        {formatDateTime(window.scheduledStart)} — {formatDateTime(window.scheduledEnd)}
                         <span className="ml-2 text-xs">
                           ({formatDuration(window.scheduledStart, window.scheduledEnd)})
                         </span>
@@ -779,11 +769,11 @@ export default function AdminMaintenancePage() {
                         {getTypeBadge(window.type)}
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {formatDate(window.actualStart || window.scheduledStart)}
+                        {formatDateTime(window.actualStart || window.scheduledStart)}
                         {window.actualEnd && (
                           <>
                             {' — '}
-                            {formatDate(window.actualEnd)}
+                            {formatDateTime(window.actualEnd)}
                             <span className="ml-2 text-xs">
                               (
                               {formatDuration(

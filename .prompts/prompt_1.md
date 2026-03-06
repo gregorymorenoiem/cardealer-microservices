@@ -67,11 +67,40 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 
 ---
 
+## 🚧 Sprint 15 — Mobile UX & Performance Quick Wins (Asignado al Desarrollador)
+
+**Objetivo:** Corregir layout mobile en cuenta dashboard, optimizar polling de localStorage, y mejorar responsive en componentes clave.
+
+### Task 70: Fix BuyerDashboard mobile grid (cuenta/page.tsx ~L669)
+
+- Cambiar `grid-cols-3` a `grid-cols-2 sm:grid-cols-3` para que las 3 tarjetas de resumen (Favoritos, Búsquedas, Alertas) no se compriman en pantallas ≤375px
+- La tarjeta "Alertas de Precio" wrappea texto en 2+ líneas en mobile
+
+### Task 71: Optimizar polling de localStorage en mensajes/page.tsx (~L178)
+
+- El polling actual corre cada 3 segundos iterando TODOS los keys de localStorage
+- Cambiar intervalo a 15 segundos
+- Opcional: despachar custom event 'okla-chat-update' al escribir en localStorage y escuchar ese evento
+
+### Task 72: Lazy-load componentes heavy de mensajes
+
+- Extraer DealerBotPanel + AppointmentScheduler (~475 líneas) a archivos separados
+- Usar `dynamic(() => import(...), { ssr: false })` para cargarlos solo cuando se necesiten
+- Reducción estimada: ~30% del bundle de /mensajes
+
+### Task 73: Documentar en código los design tokens de OKLA
+
+- Agregar JSDoc comments en `lib/design-tokens.ts` explicando cuándo usar cada token
+- Agregar comentarios en `globals.css` sobre la paleta de colores y cómo extenderla
+
+---
+
 ## ✅ Sprint 14 — DRY Refactoring & Error Handling (COMPLETADO)
+
 **Commit:** `2c3519e5` | **Build:** 213 páginas, 12.2s
 
 - [x] **Task 66**: Consolidar 8 formatPrice duplicadas → import de @/lib/format
-- [x] **Task 67**: Consolidar 9 formatCurrency duplicadas → import de @/lib/utils  
+- [x] **Task 67**: Consolidar 9 formatCurrency duplicadas → import de @/lib/utils
 - [x] **Task 68**: Consolidar 4 formatDate duplicadas → import de @/lib/utils
 - [x] **Task 69**: Fix 13 empty catch blocks en recuperar-contrasena, admin/vehiculos, admin/dealers, admin/usuarios
 

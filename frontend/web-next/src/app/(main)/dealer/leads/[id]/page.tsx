@@ -38,6 +38,7 @@ import type { LeadStatus } from '@/services/crm';
 import { PlanGate } from '@/components/plan/plan-gate';
 import { toast } from 'sonner';
 import { sanitizeText } from '@/lib/security/sanitize';
+import { formatDateTime } from '@/lib/utils';
 
 // ============================================================================
 // Skeleton Components
@@ -100,16 +101,6 @@ function getScoreBadge(score: number) {
   if (score >= 80) return <Badge className="bg-primary/10 text-primary">Alto ({score})</Badge>;
   if (score >= 50) return <Badge className="bg-yellow-100 text-yellow-700">Medio ({score})</Badge>;
   return <Badge className="bg-red-100 text-red-700">Bajo ({score})</Badge>;
-}
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('es-DO', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 // ============================================================================
@@ -400,16 +391,16 @@ function LeadDetailContent() {
               )}
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Creado</span>
-                <span className="font-medium">{formatDate(lead.createdAt)}</span>
+                <span className="font-medium">{formatDateTime(lead.createdAt)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Actualizado</span>
-                <span className="font-medium">{formatDate(lead.updatedAt)}</span>
+                <span className="font-medium">{formatDateTime(lead.updatedAt)}</span>
               </div>
               {lead.convertedAt && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Convertido</span>
-                  <span className="text-primary font-medium">{formatDate(lead.convertedAt)}</span>
+                  <span className="text-primary font-medium">{formatDateTime(lead.convertedAt)}</span>
                 </div>
               )}
             </CardContent>

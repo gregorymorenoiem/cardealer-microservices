@@ -23,18 +23,11 @@ import {
 } from '@/hooks/use-dealer-billing';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 import { UpgradeBanner } from '@/components/shared/upgrade-banner';
+import { formatPrice } from '@/lib/format';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(price);
-};
 
 // Plan features (dynamic based on pricing config)
 function getPlanFeatures(_pricing: { earlyBirdFreeMonths: number }) {
