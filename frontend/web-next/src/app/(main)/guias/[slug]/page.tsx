@@ -11,6 +11,7 @@ import { ChevronRight, ArrowLeft, Clock, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { guides, getGuideBySlug, getAllGuideSlugs } from '../guide-data';
+import { generateBreadcrumbJsonLd } from '@/lib/seo';
 
 // =============================================================================
 // SSG
@@ -217,12 +218,22 @@ export default async function GuiaDetailPage({ params }: { params: Promise<{ slu
     },
   };
 
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Inicio', url: '/' },
+    { name: 'Guías', url: '/guias' },
+    { name: guide.title, url: `/guias/${guide.slug}` },
+  ]);
+
   return (
     <div className="min-h-screen">
       {/* JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       {/* Breadcrumbs */}

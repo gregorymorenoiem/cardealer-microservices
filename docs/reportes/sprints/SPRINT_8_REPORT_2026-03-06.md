@@ -30,10 +30,12 @@ Análisis de seguridad frontend + SEO coverage identificó 4 gaps críticos:
 **Archivo**: `src/app/(main)/reclamaciones/page.tsx`
 
 Refactor completo de la gestión del formulario:
+
 - **Antes**: `useState` + `onChange` manual + `required` HTML nativo
 - **Después**: Zod schema + `react-hook-form` + `zodResolver` + sanitización
 
 Schema Zod incluye:
+
 - `nombreCompleto`: min 2, max 100 caracteres
 - `cedula`: min 11, max 15, regex `/^[\d\-]+$/` (solo números y guiones)
 - `email`: validación email estándar
@@ -42,6 +44,7 @@ Schema Zod incluye:
 - `tipoReclamacion`: min 1 (requerido)
 
 Sanitización en `onSubmit`:
+
 - `sanitizeText()` en nombre, descripción, tipo
 - `sanitizeEmail()` en email
 - `sanitizePhone()` en teléfono
@@ -52,6 +55,7 @@ Sanitización en `onSubmit`:
 **Archivo**: `src/app/(main)/reportar-contenido/page.tsx`
 
 Mismo patrón de refactor:
+
 - Schema Zod con `z.string().url()` para URL del contenido infractor
 - `z.literal(true)` para checkbox de declaración jurada (fuerza aceptación)
 - `sanitizeUrl()` en URL de contenido
@@ -84,24 +88,24 @@ Mismo patrón de refactor:
 
 ## Impacto de Seguridad
 
-| Métrica                     | Antes        | Después                |
-| --------------------------- | ------------ | ---------------------- |
-| Forms sin Zod validation    | 2 (legal)    | 0                      |
-| Forms sin sanitización      | 2            | 0                      |
-| Forms con raw useState      | 2            | 0 (react-hook-form)    |
-| Dealer JSON-LD schemas      | 0            | 2 (AutoDealer + Breadcrumb) |
-| Dynamic routes sin error.tsx| /dealers/[slug] | 0                   |
+| Métrica                      | Antes           | Después                     |
+| ---------------------------- | --------------- | --------------------------- |
+| Forms sin Zod validation     | 2 (legal)       | 0                           |
+| Forms sin sanitización       | 2               | 0                           |
+| Forms con raw useState       | 2               | 0 (react-hook-form)         |
+| Dealer JSON-LD schemas       | 0               | 2 (AutoDealer + Breadcrumb) |
+| Dynamic routes sin error.tsx | /dealers/[slug] | 0                           |
 
 ---
 
 ## Archivos Modificados
 
-| Archivo                                        | Cambio                                 |
-| ---------------------------------------------- | -------------------------------------- |
-| `src/app/(main)/reclamaciones/page.tsx`         | Zod + RHF + sanitización               |
-| `src/app/(main)/reportar-contenido/page.tsx`    | Zod + RHF + sanitización + sanitizeUrl |
-| `src/app/(main)/dealers/[slug]/dealer-profile-client.tsx` | AutoDealer + BreadcrumbList JSON-LD |
-| `src/app/(main)/dealers/[slug]/error.tsx`       | NUEVO — error boundary                 |
+| Archivo                                                   | Cambio                                 |
+| --------------------------------------------------------- | -------------------------------------- |
+| `src/app/(main)/reclamaciones/page.tsx`                   | Zod + RHF + sanitización               |
+| `src/app/(main)/reportar-contenido/page.tsx`              | Zod + RHF + sanitización + sanitizeUrl |
+| `src/app/(main)/dealers/[slug]/dealer-profile-client.tsx` | AutoDealer + BreadcrumbList JSON-LD    |
+| `src/app/(main)/dealers/[slug]/error.tsx`                 | NUEVO — error boundary                 |
 
 ---
 

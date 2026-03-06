@@ -155,7 +155,13 @@ function HistoryItem({ item, onRemove, isRemoving, onToggleFavorite }: HistoryIt
             className="bg-muted relative flex h-20 w-32 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg"
           >
             {vehicle.imageUrl ? (
-              <Image src={vehicle.imageUrl} alt={vehicle.title} fill className="object-cover" />
+              <Image
+                src={vehicle.imageUrl}
+                alt={vehicle.title}
+                fill
+                className="object-cover"
+                sizes="128px"
+              />
             ) : (
               <Car className="text-muted-foreground h-8 w-8" />
             )}

@@ -288,6 +288,7 @@ export default function DealerProfileClient({ params }: PageProps) {
           alt={`${dealer.name} cover`}
           fill
           className="object-cover"
+          sizes="100vw"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -299,7 +300,13 @@ export default function DealerProfileClient({ params }: PageProps) {
           <div className="flex flex-col gap-6 md:flex-row">
             {/* Logo */}
             <div className="relative -mt-16 h-24 w-24 overflow-hidden rounded-xl border-4 border-white bg-white shadow-lg md:-mt-20 md:h-32 md:w-32">
-              <Image src={dealer.logo} alt={dealer.name} fill className="object-cover" />
+              <Image
+                src={dealer.logo}
+                alt={dealer.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 96px, 128px"
+              />
             </div>
 
             {/* Info */}

@@ -923,7 +923,7 @@ function FavoriteMiniCard({
       {/* Image */}
       <div className="bg-muted relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg">
         {v.imageUrl ? (
-          <Image src={v.imageUrl} alt={title} fill className="object-cover" />
+          <Image src={v.imageUrl} alt={title} fill className="object-cover" sizes="80px" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-2xl">🚗</div>
         )}
@@ -1099,6 +1099,7 @@ function VehicleListItem({ vehicle }: { vehicle: UserVehicleDto }) {
           alt={vehicle.title}
           fill
           className="object-cover"
+          sizes="96px"
         />
       </div>
 

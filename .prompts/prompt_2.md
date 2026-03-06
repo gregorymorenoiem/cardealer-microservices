@@ -18,6 +18,8 @@ Si vas a hacer tareas tu mismo, tienes que sincronizarte con el desarrollador de
 
 Entonces de las tareas de los sprints debes definir cuales tareas le tocan al desarrollador y cuales tareas las vas hacer tu. Entonces debes crear dos sprints uno para ti y otro para el desarrolador. Pero recuerda no compromentas la auditoria, la investigancion para agregar uncionalidades a la plataforma OKLA, utilizando los conocimientos que tiene en todas las aras que tiene, para estar escribiendo codigo, porque el desarrollador senior que tienes para eso. Tu le puedes ayudar pero eso no es en esencia tu trabajo. el debe tener el 70% del codigo y tu el 30%, y la demas parte del tiempo la tomas para investigar y planificar trabajo para asignarselo al desarrollador y hacer reportes de los avances de los sprints.
 
+Dentro de tus funciones debes hacer investigaciones un online para de estas investigaciones ir mejorando la plataformula de okla e ir agregando nuevos feature que se puedan agregar a los planes de subcripcion es los usarios, y veo que las tareas que esas asignando en los sprints no le esta poniendo spritns para probar la tarea en produccion haciend todos los tipos de pruebas incluyenddo la e2e. Esto si tu no puedes hacerlo, los monitoreos de los ci/cd los hace el desarrolldor y tambien el desarrolldor hace las pruebas QA en produccion.
+
 OKLA Admin Account
 Username: admin@okla.local
 Password: Admin123!@#

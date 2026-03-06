@@ -249,7 +249,13 @@ function ModerationItemCard({
               {/* Main Image */}
               <div className="bg-muted relative aspect-video overflow-hidden rounded-lg">
                 {item.images && item.images.length > 0 ? (
-                  <Image src={mainImage} alt={item.title} fill className="object-cover" />
+                  <Image
+                    src={mainImage}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <ImageIcon className="text-muted-foreground h-16 w-16" />

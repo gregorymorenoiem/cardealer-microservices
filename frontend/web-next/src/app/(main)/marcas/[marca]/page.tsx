@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { BrandVehiclesClient } from './brand-vehicles-client';
+import { generateBreadcrumbJsonLd } from '@/lib/seo';
 
 // Top 10 marcas en RD
 const TOP_BRANDS = [
@@ -102,6 +103,12 @@ export default async function BrandPage({ params }: PageProps) {
     numberOfItems: 0, // Will be updated client-side
   };
 
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Inicio', url: '/' },
+    { name: 'Marcas', url: '/marcas' },
+    { name: brandName, url: `/marcas/${marca.toLowerCase()}` },
+  ]);
+
   return (
     <div className="bg-background min-h-screen">
       {/* Hero Section */}
@@ -168,6 +175,10 @@ export default async function BrandPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
     </div>
   );

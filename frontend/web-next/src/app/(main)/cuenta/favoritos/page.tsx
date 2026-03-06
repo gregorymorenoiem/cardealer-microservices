@@ -188,7 +188,13 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
           className="bg-muted relative h-40 w-full flex-shrink-0 sm:h-auto sm:w-56"
         >
           {vehicle.imageUrl ? (
-            <Image src={vehicle.imageUrl} alt={vehicle.title} fill className="object-cover" />
+            <Image
+              src={vehicle.imageUrl}
+              alt={vehicle.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, 224px"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Car className="text-muted-foreground h-12 w-12" />
