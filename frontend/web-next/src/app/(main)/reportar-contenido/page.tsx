@@ -2,6 +2,10 @@
 
 import * as React from 'react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,26 +19,85 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle2, ExternalLink, Flag, Mail, Scale, Shield } from 'lucide-react';
+import { sanitizeText, sanitizeEmail, sanitizePhone } from '@/lib/security/sanitize';
+import { sanitizeUrl } from '@/lib/security/sanitize';
+
+// =============================================================================
+// VALIDATION SCHEMA
+// =============================================================================
+
+const reporteSchema = z.object({
+  urlContenido: z.string().url('URL inválida — debe ser una URL completa (https://...)'),
+  tipoInfraccion: z.string().min(1, 'Selecciona el tipo de infracción'),
+  descripcion: z
+    .string()
+    .min(10, 'La descripción debe tener al menos 10 caracteres')
+    .max(5000, 'La descripción no puede exceder 5000 caracteres'),
+  nombreReclamante: z
+    .string()
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  emailReclamante: z.string().email('Correo electrónico inválido'),
+  telefonoReclamante: z
+    .string()
+    .optional()
+    .refine(val => !val || /^[\d\s()\-+]{7,20}$/.test(val), {
+      message: 'Formato de teléfono inválido',
+    }),
+  esPropietario: z.literal(true, {
+    error: 'Debes declarar que eres el titular de los derechos',
+  }),
+});
+
+type ReporteFormData = z.infer<typeof reporteSchema>;
 
 export default function ReportarContenidoPage() {
   const [submitted, setSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    urlContenido: '',
-    tipoInfraccion: '',
-    descripcion: '',
-    nombreReclamante: '',
-    emailReclamante: '',
-    telefonoReclamante: '',
-    esPropietario: false,
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ReporteFormData>({
+    resolver: zodResolver(reporteSchema),
+    defaultValues: {
+      urlContenido: '',
+      tipoInfraccion: '',
+      descripcion: '',
+      nombreReclamante: '',
+      emailReclamante: '',
+      telefonoReclamante: '',
+      esPropietario: undefined as unknown as true,
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSubmitted(true);
-    setIsLoading(false);
+  const tipoInfraccion = watch('tipoInfraccion');
+  const esPropietario = watch('esPropietario');
+
+  const onSubmit = async (data: ReporteFormData) => {
+    // Sanitize all inputs before sending
+    const sanitizedData = {
+      urlContenido: sanitizeUrl(data.urlContenido),
+      tipoInfraccion: sanitizeText(data.tipoInfraccion, { maxLength: 50 }),
+      descripcion: sanitizeText(data.descripcion.trim(), { maxLength: 5000 }),
+      nombreReclamante: sanitizeText(data.nombreReclamante.trim(), { maxLength: 100 }),
+      emailReclamante: sanitizeEmail(data.emailReclamante),
+      telefonoReclamante: data.telefonoReclamante ? sanitizePhone(data.telefonoReclamante) : '',
+      esPropietario: data.esPropietario,
+    };
+
+    try {
+      // TODO: Replace with csrfFetch when API endpoint is ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Sanitized reporte data:', sanitizedData);
+      setSubmitted(true);
+      toast.success('Reporte enviado exitosamente');
+    } catch {
+      toast.error('Error al enviar el reporte. Inténtalo de nuevo.');
+    }
   };
 
   if (submitted) {
@@ -57,15 +120,7 @@ export default function ReportarContenidoPage() {
             <Button
               onClick={() => {
                 setSubmitted(false);
-                setFormData({
-                  urlContenido: '',
-                  tipoInfraccion: '',
-                  descripcion: '',
-                  nombreReclamante: '',
-                  emailReclamante: '',
-                  telefonoReclamante: '',
-                  esPropietario: false,
-                });
+                reset();
               }}
               variant="outline"
               className="mt-4"
@@ -106,7 +161,7 @@ export default function ReportarContenidoPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {/* URL del contenido */}
                 <div className="space-y-2">
                   <Label htmlFor="urlContenido">URL del contenido infractor *</Label>
@@ -114,24 +169,25 @@ export default function ReportarContenidoPage() {
                     id="urlContenido"
                     type="url"
                     placeholder="https://okla.com.do/vehiculos/..."
-                    value={formData.urlContenido}
-                    onChange={e => setFormData(prev => ({ ...prev, urlContenido: e.target.value }))}
-                    required
+                    {...register('urlContenido')}
                   />
-                  <p className="text-muted-foreground text-xs">
-                    Pega la URL completa del listado o contenido que deseas reportar.
-                  </p>
+                  {errors.urlContenido ? (
+                    <p className="text-sm text-red-500">{errors.urlContenido.message}</p>
+                  ) : (
+                    <p className="text-muted-foreground text-xs">
+                      Pega la URL completa del listado o contenido que deseas reportar.
+                    </p>
+                  )}
                 </div>
 
                 {/* Tipo de infracción */}
                 <div className="space-y-2">
                   <Label htmlFor="tipoInfraccion">Tipo de infracción *</Label>
                   <Select
-                    value={formData.tipoInfraccion}
+                    value={tipoInfraccion}
                     onValueChange={value =>
-                      setFormData(prev => ({ ...prev, tipoInfraccion: value }))
+                      setValue('tipoInfraccion', value, { shouldValidate: true })
                     }
-                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccione el tipo de infracción" />
@@ -152,6 +208,9 @@ export default function ReportarContenidoPage() {
                       <SelectItem value="otro">Otro tipo de violación</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.tipoInfraccion && (
+                    <p className="text-sm text-red-500">{errors.tipoInfraccion.message}</p>
+                  )}
                 </div>
 
                 {/* Descripción */}
@@ -160,12 +219,13 @@ export default function ReportarContenidoPage() {
                   <Textarea
                     id="descripcion"
                     placeholder="Describa detalladamente la infracción, incluyendo qué derechos se están violando y cómo puede verificarse la titularidad de los mismos..."
-                    value={formData.descripcion}
-                    onChange={e => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
-                    required
+                    {...register('descripcion')}
                     rows={5}
                     className="resize-y"
                   />
+                  {errors.descripcion && (
+                    <p className="text-sm text-red-500">{errors.descripcion.message}</p>
+                  )}
                 </div>
 
                 {/* Datos del reclamante */}
@@ -177,12 +237,11 @@ export default function ReportarContenidoPage() {
                     <Input
                       id="nombreReclamante"
                       placeholder="Nombre del titular de los derechos"
-                      value={formData.nombreReclamante}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, nombreReclamante: e.target.value }))
-                      }
-                      required
+                      {...register('nombreReclamante')}
                     />
+                    {errors.nombreReclamante && (
+                      <p className="text-sm text-red-500">{errors.nombreReclamante.message}</p>
+                    )}
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -192,12 +251,11 @@ export default function ReportarContenidoPage() {
                         id="emailReclamante"
                         type="email"
                         placeholder="tu@email.com"
-                        value={formData.emailReclamante}
-                        onChange={e =>
-                          setFormData(prev => ({ ...prev, emailReclamante: e.target.value }))
-                        }
-                        required
+                        {...register('emailReclamante')}
                       />
+                      {errors.emailReclamante && (
+                        <p className="text-sm text-red-500">{errors.emailReclamante.message}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="telefonoReclamante">Teléfono</Label>
@@ -205,26 +263,24 @@ export default function ReportarContenidoPage() {
                         id="telefonoReclamante"
                         type="tel"
                         placeholder="809-555-0123"
-                        value={formData.telefonoReclamante}
-                        onChange={e =>
-                          setFormData(prev => ({
-                            ...prev,
-                            telefonoReclamante: e.target.value,
-                          }))
-                        }
+                        {...register('telefonoReclamante')}
                       />
+                      {errors.telefonoReclamante && (
+                        <p className="text-sm text-red-500">{errors.telefonoReclamante.message}</p>
+                      )}
                     </div>
                   </div>
 
                   <label className="flex cursor-pointer items-start gap-2">
                     <input
                       type="checkbox"
-                      checked={formData.esPropietario}
+                      checked={esPropietario === true}
                       onChange={e =>
-                        setFormData(prev => ({ ...prev, esPropietario: e.target.checked }))
+                        setValue('esPropietario', e.target.checked as true, {
+                          shouldValidate: true,
+                        })
                       }
                       className="text-primary focus:ring-primary border-border mt-0.5 h-4 w-4 rounded"
-                      required
                     />
                     <span className="text-muted-foreground text-xs">
                       Declaro bajo juramento que soy el titular de los derechos infringidos o estoy
@@ -232,22 +288,13 @@ export default function ReportarContenidoPage() {
                       proporcionada es veraz y exacta. *
                     </span>
                   </label>
+                  {errors.esPropietario && (
+                    <p className="text-sm text-red-500">{errors.esPropietario.message}</p>
+                  )}
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    isLoading ||
-                    !formData.urlContenido ||
-                    !formData.tipoInfraccion ||
-                    !formData.descripcion ||
-                    !formData.nombreReclamante ||
-                    !formData.emailReclamante ||
-                    !formData.esPropietario
-                  }
-                >
-                  {isLoading ? 'Enviando...' : 'Enviar Reporte'}
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Enviando...' : 'Enviar Reporte'}
                 </Button>
               </form>
             </CardContent>

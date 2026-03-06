@@ -68,13 +68,13 @@ Análisis de SEO structured data y WCAG compliance identificó 4 gaps:
 
 ## Impacto SEO
 
-| Métrica              | Antes         | Después                         |
-| -------------------- | ------------- | ------------------------------- |
-| JSON-LD en /vehiculos | 0 schemas     | 2 (BreadcrumbList + ItemList)   |
-| Google SERP breadcrumbs | No disponible | Inicio → Vehículos en Venta    |
-| ItemList vehicles    | N/A           | Top 10 vehículos en structured data |
-| alert() usage        | 1 instancia   | 0 (migrado a toast)            |
-| Touch targets < 44px | Hero pills    | 0 violaciones                  |
+| Métrica                 | Antes         | Después                             |
+| ----------------------- | ------------- | ----------------------------------- |
+| JSON-LD en /vehiculos   | 0 schemas     | 2 (BreadcrumbList + ItemList)       |
+| Google SERP breadcrumbs | No disponible | Inicio → Vehículos en Venta         |
+| ItemList vehicles       | N/A           | Top 10 vehículos en structured data |
+| alert() usage           | 1 instancia   | 0 (migrado a toast)                 |
+| Touch targets < 44px    | Hero pills    | 0 violaciones                       |
 
 ---
 
@@ -85,7 +85,7 @@ Análisis de SEO structured data y WCAG compliance identificó 4 gaps:
 | `src/lib/seo.tsx`                          | +generateItemListJsonLd function |
 | `src/app/(main)/vehiculos/page.tsx`        | async + JSON-LD + SSR fetch      |
 | `src/app/(main)/comparar/page.tsx`         | alert→toast.success + import     |
-| `src/components/homepage/hero-compact.tsx`  | pill touch targets 44px          |
+| `src/components/homepage/hero-compact.tsx` | pill touch targets 44px          |
 
 ---
 

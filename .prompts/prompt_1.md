@@ -15,7 +15,7 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-7 completados.
+**Estado**: Sprint 1-7 completados. Sprint 8 en progreso.
 
 ---
 

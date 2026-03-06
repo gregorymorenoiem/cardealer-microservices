@@ -2,6 +2,10 @@
 
 import * as React from 'react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,30 +28,83 @@ import {
   Shield,
   Upload,
 } from 'lucide-react';
+import { sanitizeText, sanitizeEmail, sanitizePhone } from '@/lib/security/sanitize';
+
+// =============================================================================
+// VALIDATION SCHEMA
+// =============================================================================
+
+const reclamacionSchema = z.object({
+  tipoReclamacion: z.string().min(1, 'Selecciona el tipo de reclamación'),
+  descripcion: z
+    .string()
+    .min(10, 'La descripción debe tener al menos 10 caracteres')
+    .max(5000, 'La descripción no puede exceder 5000 caracteres'),
+  nombreCompleto: z
+    .string()
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  cedula: z
+    .string()
+    .min(11, 'La cédula debe tener al menos 11 caracteres')
+    .max(15, 'La cédula no puede exceder 15 caracteres')
+    .regex(/^[\d\-]+$/, 'La cédula solo puede contener números y guiones'),
+  email: z.string().email('Correo electrónico inválido'),
+  telefono: z
+    .string()
+    .min(7, 'El teléfono debe tener al menos 7 caracteres')
+    .regex(/^[\d\s()\-+]{7,20}$/, 'Formato de teléfono inválido'),
+});
+
+type ReclamacionFormData = z.infer<typeof reclamacionSchema>;
 
 export default function ReclamacionesPage() {
   const [submitted, setSubmitted] = useState(false);
   const [ticketNumber, setTicketNumber] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    tipoReclamacion: '',
-    descripcion: '',
-    nombreCompleto: '',
-    cedula: '',
-    email: '',
-    telefono: '',
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ReclamacionFormData>({
+    resolver: zodResolver(reclamacionSchema),
+    defaultValues: {
+      tipoReclamacion: '',
+      descripcion: '',
+      nombreCompleto: '',
+      cedula: '',
+      email: '',
+      telefono: '',
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const tipoReclamacion = watch('tipoReclamacion');
 
-    // Simulate ticket generation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const ticket = `OKLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-    setTicketNumber(ticket);
-    setSubmitted(true);
-    setIsLoading(false);
+  const onSubmit = async (data: ReclamacionFormData) => {
+    // Sanitize all inputs before sending
+    const sanitizedData = {
+      tipoReclamacion: sanitizeText(data.tipoReclamacion, { maxLength: 50 }),
+      descripcion: sanitizeText(data.descripcion.trim(), { maxLength: 5000 }),
+      nombreCompleto: sanitizeText(data.nombreCompleto.trim(), { maxLength: 100 }),
+      cedula: data.cedula.replace(/[^\d\-]/g, ''),
+      email: sanitizeEmail(data.email),
+      telefono: sanitizePhone(data.telefono),
+    };
+
+    try {
+      // TODO: Replace with csrfFetch when API endpoint is ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Sanitized reclamación data:', sanitizedData);
+      const ticket = `OKLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      setTicketNumber(ticket);
+      setSubmitted(true);
+      toast.success('Reclamación enviada exitosamente');
+    } catch {
+      toast.error('Error al enviar la reclamación. Inténtalo de nuevo.');
+    }
   };
 
   if (submitted) {
@@ -80,14 +137,7 @@ export default function ReclamacionesPage() {
             <Button
               onClick={() => {
                 setSubmitted(false);
-                setFormData({
-                  tipoReclamacion: '',
-                  descripcion: '',
-                  nombreCompleto: '',
-                  cedula: '',
-                  email: '',
-                  telefono: '',
-                });
+                reset();
               }}
               variant="outline"
               className="mt-4"
@@ -125,16 +175,15 @@ export default function ReclamacionesPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {/* Tipo de reclamación */}
                 <div className="space-y-2">
                   <Label htmlFor="tipoReclamacion">Tipo de reclamación *</Label>
                   <Select
-                    value={formData.tipoReclamacion}
+                    value={tipoReclamacion}
                     onValueChange={value =>
-                      setFormData(prev => ({ ...prev, tipoReclamacion: value }))
+                      setValue('tipoReclamacion', value, { shouldValidate: true })
                     }
-                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccione el tipo de reclamación" />
@@ -158,6 +207,9 @@ export default function ReclamacionesPage() {
                       <SelectItem value="otro">Otro</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.tipoReclamacion && (
+                    <p className="text-sm text-red-500">{errors.tipoReclamacion.message}</p>
+                  )}
                 </div>
 
                 {/* Descripción */}
@@ -166,12 +218,13 @@ export default function ReclamacionesPage() {
                   <Textarea
                     id="descripcion"
                     placeholder="Describa su reclamación con el mayor detalle posible, incluyendo fechas, montos y cualquier información relevante..."
-                    value={formData.descripcion}
-                    onChange={e => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
-                    required
+                    {...register('descripcion')}
                     rows={5}
                     className="resize-y"
                   />
+                  {errors.descripcion && (
+                    <p className="text-sm text-red-500">{errors.descripcion.message}</p>
+                  )}
                 </div>
 
                 {/* Datos de contacto */}
@@ -184,22 +237,18 @@ export default function ReclamacionesPage() {
                       <Input
                         id="nombreCompleto"
                         placeholder="Juan Pérez"
-                        value={formData.nombreCompleto}
-                        onChange={e =>
-                          setFormData(prev => ({ ...prev, nombreCompleto: e.target.value }))
-                        }
-                        required
+                        {...register('nombreCompleto')}
                       />
+                      {errors.nombreCompleto && (
+                        <p className="text-sm text-red-500">{errors.nombreCompleto.message}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cedula">Cédula *</Label>
-                      <Input
-                        id="cedula"
-                        placeholder="001-0000000-0"
-                        value={formData.cedula}
-                        onChange={e => setFormData(prev => ({ ...prev, cedula: e.target.value }))}
-                        required
-                      />
+                      <Input id="cedula" placeholder="001-0000000-0" {...register('cedula')} />
+                      {errors.cedula && (
+                        <p className="text-sm text-red-500">{errors.cedula.message}</p>
+                      )}
                     </div>
                   </div>
 
@@ -210,10 +259,11 @@ export default function ReclamacionesPage() {
                         id="email"
                         type="email"
                         placeholder="tu@email.com"
-                        value={formData.email}
-                        onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        required
+                        {...register('email')}
                       />
+                      {errors.email && (
+                        <p className="text-sm text-red-500">{errors.email.message}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="telefono">Teléfono *</Label>
@@ -221,10 +271,11 @@ export default function ReclamacionesPage() {
                         id="telefono"
                         type="tel"
                         placeholder="809-555-0123"
-                        value={formData.telefono}
-                        onChange={e => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                        required
+                        {...register('telefono')}
                       />
+                      {errors.telefono && (
+                        <p className="text-sm text-red-500">{errors.telefono.message}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -245,20 +296,8 @@ export default function ReclamacionesPage() {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    isLoading ||
-                    !formData.tipoReclamacion ||
-                    !formData.descripcion ||
-                    !formData.nombreCompleto ||
-                    !formData.cedula ||
-                    !formData.email ||
-                    !formData.telefono
-                  }
-                >
-                  {isLoading ? 'Enviando...' : 'Enviar Reclamación'}
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Enviando...' : 'Enviar Reclamación'}
                 </Button>
               </form>
             </CardContent>
