@@ -34,10 +34,10 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 | #   | Tarea                                              | Estado               | Notas                                                           |
 | --- | -------------------------------------------------- | -------------------- | --------------------------------------------------------------- |
-| 50  | blog/[slug]/error.tsx + guias/[slug]/error.tsx      | ✅ Commit pendiente  | Branded error boundaries con retry + back-to-listing CTA        |
-| 51  | Blog metadata: canonical, OG locale/siteName        | ✅ Commit pendiente  | alternates.canonical, openGraph.url/locale/siteName              |
-| 52  | Remove console.log in reclamaciones + reportar      | ✅ Commit pendiente  | Eliminados console.log de datos sanitizados (privacy leak)      |
-| 53  | Admin contenido: aria-label en icon buttons         | ✅ Commit pendiente  | 11 buttons con aria-label descriptivo (WCAG 4.1.2 fix)          |
+| 50  | blog/[slug]/error.tsx + guias/[slug]/error.tsx      | ✅ Commit `a86e965f` | Branded error boundaries con retry + back-to-listing CTA        |
+| 51  | Blog metadata: canonical, OG locale/siteName        | ✅ Commit `a86e965f` | alternates.canonical, openGraph.url/locale/siteName              |
+| 52  | Remove console.log in reclamaciones + reportar      | ✅ Commit `a86e965f` | Eliminados console.log de datos sanitizados (privacy leak)      |
+| 53  | Admin contenido: aria-label en icon buttons         | ✅ Commit `a86e965f` | 11 buttons con aria-label descriptivo (WCAG 4.1.2 fix)          |
 
 ---
 
