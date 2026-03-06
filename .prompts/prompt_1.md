@@ -67,34 +67,13 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 
 ---
 
-## 🚧 Sprint 14 — DRY Refactoring & Error Handling (Asignado al Desarrollador)
+## ✅ Sprint 14 — DRY Refactoring & Error Handling (COMPLETADO)
+**Commit:** `2c3519e5` | **Build:** 213 páginas, 12.2s
 
-**Objetivo:** Eliminar ~28 funciones utilitarias duplicadas y corregir ~12 catch blocks silenciosos.
-
-### Task 66: Consolidar 8 funciones `formatPrice` duplicadas
-
-- Existe versión canónica en `lib/format.ts` o `lib/utils.ts`
-- Eliminar copias locales en: featured-vehicles.tsx, vehicle-card.tsx, publicar pages, dealer/analytics, vender/promover
-- Reemplazar con `import { formatPrice } from '@/lib/format'` o similar
-
-### Task 67: Consolidar 10 funciones `formatCurrency` duplicadas
-
-- Existe versión canónica en `lib/utils.ts`
-- Eliminar copias en: vender/publicidad, dealer/publicidad, dealer/publicidad/paquetes, dealer/publicidad/roi, impulsar/mis-campanas, admin/espacios-publicitarios, admin/publicidad
-- Reemplazar con `import { formatCurrency } from '@/lib/utils'`
-
-### Task 68: Consolidar 7 funciones `formatDate` duplicadas
-
-- Existe versión canónica en `lib/utils.ts`
-- Eliminar copias en: admin/mantenimiento, cuenta/resenas, dealer/resenas, dealer/publicidad, dealer/leads/[id]
-- Usar `formatDate`, `formatDateTime`, o `formatShortDate` según contexto
-
-### Task 69: Corregir empty catch blocks en páginas críticas
-
-- recuperar-contrasena/page.tsx: password recovery resend falla silenciosamente — agregar toast.error
-- admin/vehiculos/page.tsx: 6 empty catches — agregar console.error para debugging
-- admin/dealers/page.tsx: 3 empty catches — agregar console.error
-- admin/usuarios/page.tsx: 3 empty catches — agregar console.error
+- [x] **Task 66**: Consolidar 8 formatPrice duplicadas → import de @/lib/format
+- [x] **Task 67**: Consolidar 9 formatCurrency duplicadas → import de @/lib/utils  
+- [x] **Task 68**: Consolidar 4 formatDate duplicadas → import de @/lib/utils
+- [x] **Task 69**: Fix 13 empty catch blocks en recuperar-contrasena, admin/vehiculos, admin/dealers, admin/usuarios
 
 ---
 
