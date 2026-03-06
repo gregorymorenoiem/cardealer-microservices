@@ -1,6 +1,7 @@
 /**
  * Similar Vehicles Component
  * Shows related vehicles based on make, price range, etc.
+ * Uses TanStack Query for caching, deduplication, and automatic retry.
  */
 
 'use client';
@@ -8,6 +9,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { VehicleCard, VehicleCardSkeleton } from '@/components/ui/vehicle-card';
 import { cn } from '@/lib/utils';
 import { vehicleService } from '@/services/vehicles';
@@ -28,30 +30,14 @@ export function SimilarVehicles({
   variant = 'default',
   className,
 }: SimilarVehiclesProps) {
-  const [vehicles, setVehicles] = React.useState<VehicleCardData[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const fetchSimilar = async () => {
-      try {
-        setIsLoading(true);
-        const data = await vehicleService.getSimilar(vehicleId, limit);
-        setVehicles(data);
-      } catch (err) {
-        console.error('Error fetching similar vehicles:', err);
-        setError('No se pudieron cargar vehículos similares');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSimilar();
-  }, [vehicleId, limit]);
-
-  if (error) {
-    return null; // Silently fail for similar vehicles
-  }
+  const { data: vehicles = [], isLoading } = useQuery<VehicleCardData[]>({
+    queryKey: ['similar-vehicles', vehicleId, limit],
+    queryFn: () => vehicleService.getSimilar(vehicleId, limit),
+    staleTime: 5 * 60 * 1000, // 5 min — similar vehicles don't change often
+    gcTime: 10 * 60 * 1000, // 10 min garbage collection
+    retry: 2,
+    enabled: !!vehicleId,
+  });
 
   if (isLoading) {
     return (

@@ -28,6 +28,20 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'OKLA',
     locale: 'es_DO',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'OKLA — Vehículos en venta en República Dominicana',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vehículos en Venta | OKLA',
+    description: 'Miles de vehículos nuevos y usados verificados en República Dominicana.',
+    images: ['/opengraph-image'],
   },
 };
 

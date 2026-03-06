@@ -13,7 +13,30 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 completado.
+**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 completado. Sprint 5 en progreso.
+
+---
+
+## 🔄 SPRINT 5 — Error Recovery + SEO Hardening + Performance (6 marzo 2026)
+
+### Análisis previo: Páginas críticas sin error boundaries, checkout indexable, SimilarVehicles sin cache
+
+**Hallazgos:**
+
+- /vehiculos/[slug] y /checkout NO tienen error.tsx — crash = usuario perdido
+- Checkout pages indexables por Google (sin noindex) — SEO pollution
+- /vehiculos falta OG image — WhatsApp shares sin preview
+- SimilarVehicles usa useEffect raw en vez de TanStack Query (sin cache, sin retry)
+- /comparar, /herramientas/calculadora-\* sin loading.tsx
+
+---
+
+| #   | Tarea                                                   | Estado       | Notas                                           |
+| --- | ------------------------------------------------------- | ------------ | ----------------------------------------------- |
+| 30  | error.tsx para /vehiculos/[slug] y /checkout            | 🔄 Pendiente | Branded error boundaries con retry + nav back   |
+| 31  | Checkout noindex layout + OG image en /vehiculos        | 🔄 Pendiente | robots noindex + openGraph images para WhatsApp |
+| 32  | SimilarVehicles → TanStack Query                        | 🔄 Pendiente | useQuery con cache, staleTime, retry automático |
+| 33  | loading.tsx para /comparar y /herramientas/calculadoras | 🔄 Pendiente | Skeleton loaders matching page layout           |
 
 ---
 
